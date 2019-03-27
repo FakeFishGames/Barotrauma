@@ -265,7 +265,7 @@ namespace Barotrauma.Tutorials
         {
             if (objectiveFrame != null && activeObjectives.Count > 0)
             {
-                objectiveFrame.AddToGUIUpdateList();
+                objectiveFrame.AddToGUIUpdateList(order: -1);
             }
             base.AddToGUIUpdateList();
             if (videoPlayer != null)

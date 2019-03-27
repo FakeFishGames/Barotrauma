@@ -1019,6 +1019,10 @@ namespace Barotrauma
                     }
                     else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
                     {
+                        targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
+                    }
+                    else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
+                    {
                         if (targetCharacter.AIController is EnemyAIController enemy)
                         {
                             if (enemy.combatStrength > combatStrength)
@@ -1177,11 +1181,6 @@ namespace Barotrauma
         {
             latchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
-        }
-
-        private int GetMinimumPassableHoleCount()
-        {
-            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
         }
 
         #endregion
