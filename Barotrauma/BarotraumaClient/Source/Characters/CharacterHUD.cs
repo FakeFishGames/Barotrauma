@@ -248,7 +248,7 @@ namespace Barotrauma
                             scale: scale);
                     }
 
-                    if (!GUI.DisableItemHighlights)
+                    if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
                         var hudTexts = focusedItem.GetHUDTexts(character);
 

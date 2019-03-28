@@ -2744,5 +2744,8 @@
   <ItemMsgEquipSelect>Equip [select]</ItemMsgEquipSelect>
   <ItemMsgPickUpSelect>Pick up [select]</ItemMsgPickUpSelect>
   <ItemMsgClimbSelect>Climb [select]</ItemMsgClimbSelect>
+
+  <DropItem>Drop</DropItem>
+  <PutItemIn>Put in [itemname]</PutItemIn>
   
 </infotexts>
