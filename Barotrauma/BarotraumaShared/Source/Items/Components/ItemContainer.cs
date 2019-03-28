@@ -155,7 +155,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Container != null) { return false; }
 
-            if (AutoInteractWithContained)
+            if (AutoInteractWithContained && character.SelectedConstruction == null)
             {
                 foreach (Item contained in Inventory.Items)
                 {
