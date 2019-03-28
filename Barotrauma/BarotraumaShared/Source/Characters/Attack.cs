@@ -96,6 +96,9 @@ namespace Barotrauma
         [Serialize(0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "Used as the attack cooldown between different kind of attacks. Does not have effect, if set to 0.")]
         public float SecondaryCoolDown { get; private set; } = 0;
 
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2, ToolTip = "Random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases).")]
+        public float CoolDownRandomFactor { get; private set; } = 0;
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; private set; }
 
@@ -444,8 +447,10 @@ namespace Barotrauma
 
         public void SetCoolDown()
         {
-            CoolDownTimer = CoolDown;
-            SecondaryCoolDownTimer = SecondaryCoolDown;
+            float randomFraction = CoolDown * CoolDownRandomFactor;
+            CoolDownTimer = CoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
+            randomFraction = SecondaryCoolDown * CoolDownRandomFactor;
+            SecondaryCoolDownTimer = SecondaryCoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
         }
 
         public void ResetCoolDown()
