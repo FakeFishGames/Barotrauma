@@ -20,6 +20,8 @@ namespace Barotrauma
             Controls,
         }
 
+        private readonly Point MinSupportedResolution = new Point(1024, 540);
+
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
 
@@ -135,6 +137,7 @@ namespace Barotrauma
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
+                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
                 if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
