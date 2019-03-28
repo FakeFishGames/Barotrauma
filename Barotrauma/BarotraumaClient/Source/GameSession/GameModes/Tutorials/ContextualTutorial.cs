@@ -345,14 +345,7 @@ namespace Barotrauma.Tutorials
 
         private void ClosePreTextAndTriggerVideoCallback()
         {
-            if (!string.IsNullOrEmpty(activeSegment.Objective))
-            {
-                videoPlayer.LoadContentWithObjective(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
-            }
-            else
-            {
-                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, CurrentSegmentStopCallback);
-            }
+            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
         }
 
         private void CurrentSegmentStopCallback()
@@ -804,7 +797,7 @@ namespace Barotrauma.Tutorials
         {
             if (ContentRunning) return;
             ContentRunning = true;
-            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, () => ContentRunning = false);
+            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
         }
 
         private IEnumerable<object> WaitToStop()
