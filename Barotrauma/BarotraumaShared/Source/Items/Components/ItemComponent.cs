@@ -208,12 +208,6 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-
-        public AITarget AITarget
-        {
-            get;
-            private set;
-        }
         
         public ItemComponent(Item item, XElement element) 
         {
