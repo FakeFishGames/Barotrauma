@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Xml.Linq;
-using System.Collections.Generic;
 using Barotrauma.Media;
 using System.IO;
 using Microsoft.Xna.Framework.Input;
@@ -13,6 +12,7 @@ namespace Barotrauma
     {
         private Video currentVideo;
         private string filePath;
+        private bool isPlaying;
 
         private GUIFrame background, videoFrame, textFrame;
         private GUITextBlock title, textContent, objectiveTitle, objectiveText;
@@ -20,13 +20,6 @@ namespace Barotrauma
 
         private Color backgroundColor = new Color(0f, 0f, 0f, 1f);
         private Action callbackOnStop;
-
-        private bool isPlaying;
-
-        public bool IsPlaying()
-        {
-            return isPlaying;
-        }
 
         private Point scaledResolution;
         private readonly int borderSize = 20;
@@ -57,7 +50,7 @@ namespace Barotrauma
             }
         }
 
-        public VideoPlayer()
+        public VideoPlayer() // GUI elements with size set to Point.Zero are resized based on content
         {
             int screenWidth = (int)(GameMain.GraphicsWidth * 0.55f);
             scaledResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
@@ -66,21 +59,19 @@ namespace Barotrauma
             int height = scaledResolution.Y;
 
             background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
-            videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point((int)(-100 / (GUI.Scale * 0.6f)), 0) }, "SonarFrame");
-            //videoFrame.RectTransform.AbsoluteOffset = new Point(-borderSize, 0);
+            videoFrame = new GUIFrame(new RectTransform(Point.Zero, background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point((int)(-100 / (GUI.Scale * 0.6f)), 0) }, "SonarFrame");
 
-            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "TextFrame");
-            textFrame.RectTransform.AbsoluteOffset = new Point(borderSize + videoFrame.Rect.Width, 0);
+            textFrame = new GUIFrame(new RectTransform(Point.Zero, videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "TextFrame");
+            textFrame.RectTransform.AbsoluteOffset = new Point(width + borderSize * 2, 0);
 
-            videoView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
-            (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
+            videoView = new GUICustomComponent(new RectTransform(Point.Zero, videoFrame.RectTransform, Anchor.Center), (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
             title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(5, 10) }, string.Empty, font: GUI.VideoTitleFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
 
-            textContent = new GUITextBlock(new RectTransform(new Vector2(1f, .8f), textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, borderSize + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
+            textContent = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, borderSize + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
 
             objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight, textColor: Color.White);
             objectiveTitle.Text = TextManager.Get("NewObjective");
-            objectiveText = new GUITextBlock(new RectTransform(new Point(textFrame.Rect.Width, textHeight), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveNameFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
+            objectiveText = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveNameFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
 
             objectiveTitle.Visible = objectiveText.Visible = false;
         }
@@ -124,7 +115,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
-            if (!IsPlaying()) return;
+            if (!isPlaying) return;
             background.AddToGUIUpdateList(ignoreChildren, order);
         }
 
@@ -161,7 +152,7 @@ namespace Barotrauma
                 textSettings.Text = ToolBox.WrapText(textSettings.Text, textSettings.Width, GUI.Font);
                 int wrappedHeight = textSettings.Text.Split('\n').Length * textHeight;
                 textFrame.RectTransform.NonScaledSize += new Point(textSettings.Width + borderSize, wrappedHeight + borderSize + buttonSize.Y + titleHeight);
-                textContent.RectTransform.NonScaledSize = new Point(textSettings.Width, wrappedHeight);
+                textContent.RectTransform.NonScaledSize += new Point(textSettings.Width, wrappedHeight);
             }
 
             textContent.Text = textSettings.Text;
@@ -209,7 +200,6 @@ namespace Barotrauma
 
             try
             {
-                //video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
                 video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, filePath, (uint)resolution.X, (uint)resolution.Y);
             }
             catch (Exception e)
