@@ -11,7 +11,7 @@
   </limb>
   <limb name="Huskappendage 4" id="16" height="10" width="15" attackpriority="2" flip="True" pullpos="0,25" type="None" healthindex="0" steerforce="0" stepoffset="0,0" radius="0" density="10" refjoint="-1" ignorecollisions="False" notes="" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Humanhusk/Husk_Injector.png" sourcerect="91,86,20,15" depth="0.5" origin="0.5,0.5" />
-    <attack range="70" damagerange="50" duration="0.1" targetforce="0" structuresoundtype="StructureBlunt" force="6" applyforceonlimbs="1" torque="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="10" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" afterattack="Pursue" cooldown="5" secondarycooldown="0">
+    <attack range="70" damagerange="50" duration="0.1" targetforce="0" structuresoundtype="StructureBlunt" force="6" applyforceonlimbs="1" torque="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="10" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" afterattack="Pursue" cooldown="5" secondarycooldown="0" cooldownrandomfactor="0.25">
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <ReduceAffliction identifier="internaldamage" strength="5" />
       </StatusEffect>
