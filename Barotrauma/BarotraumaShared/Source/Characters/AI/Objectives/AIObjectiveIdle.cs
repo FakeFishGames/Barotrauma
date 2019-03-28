@@ -133,16 +133,25 @@ namespace Barotrauma
                 }
                 else if (leftDist < WallAvoidDistance)
                 {
-                    PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance - leftDist) / WallAvoidDistance);
+                    //PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance - leftDist) / WallAvoidDistance);
+                    PathSteering.SteeringManual(deltaTime, Vector2.UnitX);
                     PathSteering.WanderAngle = 0.0f;
                 }
                 else if (rightDist < WallAvoidDistance)
                 {
-                    PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance - rightDist) / WallAvoidDistance);
+                    //PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance - rightDist) / WallAvoidDistance);
+                    PathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
                     PathSteering.WanderAngle = MathHelper.Pi;
                 }
+                else
+                {
+                    SteeringManager.SteeringWander();
+                }
             }
-            SteeringManager.SteeringWander();
+            else
+            {
+                SteeringManager.SteeringWander();
+            }
             if (!character.IsClimbing && !character.AnimController.InWater)
             {
                 //reset vertical steering to prevent dropping down from platforms etc
