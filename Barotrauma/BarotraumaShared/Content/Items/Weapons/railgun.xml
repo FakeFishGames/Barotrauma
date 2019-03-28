@@ -57,6 +57,7 @@
         identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="6" itempos="53,-140" iteminterval="48,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="railgunammo" />
     </ItemContainer>
     <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="840" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
@@ -72,6 +73,7 @@
   <Item name="Railgun Loader Single" identifier="railgunloadersinglevertical" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,276,84,236" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="43,-130" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
@@ -79,6 +81,7 @@
   <Item name="Railgun Loader Single" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="86,278,241,86" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="130,-43" iteminterval="0,0" itemrotation="180" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>

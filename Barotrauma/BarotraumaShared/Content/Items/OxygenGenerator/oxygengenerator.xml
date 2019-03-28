@@ -59,6 +59,7 @@
     <trigger/>
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="false" itempos="28,-125" iteminterval="22,0" msg="Insert oxygen tank to refill it">
+      <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="oxygentank,oxygenitetank"/>
     </ItemContainer>
     

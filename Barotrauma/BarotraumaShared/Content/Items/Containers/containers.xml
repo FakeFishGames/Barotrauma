@@ -3,32 +3,36 @@
   <Item name="Supplies Cabinet" identifier="suppliescabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="containers.png" depth="0.84" sourcerect="160,1,120,132" origin="0.5,0.5" />
     <ItemContainer capacity="6" slotsperrow="3" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.25" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Medium Steel Cabinet" identifier="mediumsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="545,2,175,374" origin="0.5,0.5" />
     <ItemContainer capacity="15" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+    <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Medium Windowed Steel Cabinet" aliases="Diving Gear Cabinet" identifier="mediumwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="375,0,168,377" origin="0.5,0.5" />
     <ItemContainer capacity="15" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+    <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Large Steel Cabinet" identifier="steelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="2,1,364,373" origin="0.5,0.5" />
-    <ItemContainer capacity="30" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+    <ItemContainer capacity="30" slotsperrow="6" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.3,0.45" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
-      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" anchor="Center" style="ItemUI" />
     </ItemContainer>
   </Item>
   <!-- TODO: switch to SecureSteelLockRed.png when access denied and SecureSteelLockGreen.png when access granted-->
   <Item name="Secure Steel Cabinet" identifier="securesteelcabinet" tags="cabinet" linkable="true" spritecolor="255,255,255,255" pickdistance="150" scale="0.5">
     <Sprite texture="SecureSteelLock.png" depth="0.84" sourcerect="0,0,291,446" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI" />
       <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
@@ -36,24 +40,28 @@
   <Item name="Railgun Shell Rack" identifier="railgunshellrack" pickdistance="120" scale="0.6">
     <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.84" sourcerect="210,197,182,176" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="railgunshell,nuclearshell" />
     </ItemContainer>
   </Item>
   <Item name="Coilgun Ammunition Shelf" identifier="coilgunammoshelf" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="3,379,140,306" canflipx="false" origin="0.5,0.5" />
     <ItemContainer capacity="3" canbeselected="true" hideitems="false" itempos="70,-52" iteminterval="0,-96" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="coilgunammobox" />
     </ItemContainer>
   </Item>
   <Item name="Medicine Cabinet" identifier="medcabinet" linkable="true" pickdistance="150" waterproof="true">
     <Sprite texture="containers.png" depth="0.84" sourcerect="233,172,104,173" canflipx="false" />
-    <ItemContainer capacity="30" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+    <ItemContainer capacity="30" slotsperrow="6" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.3,0.5" anchor="Center" slotsperrow="6" style="ItemUI" />
       <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>
   <Item name="Toxic Cabinet" identifier="toxcabinet" linkable="true" pickdistance="150" waterproof="true" scale="0.4">
     <Sprite texture="containers.png" depth="0.84" sourcerect="0,0,157,185" canflipx="false" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,chem,medical" />
     </ItemContainer>
   </Item>
@@ -75,7 +83,7 @@
     <DecorativeSprite name="Diving Suit Locker Light" texture="DivingSuitLocker.png" depth="0.84" sourcerect="330,77,241,67" origin="0.5,0.5" />
     -->
     <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="5" itempos="124,-45" iteminterval="0,-66" itemrotation="0" containedspritedepth="0.83" canbeselected="true" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="divingsuit" />
     </ItemContainer>
   </Item>
