@@ -496,7 +496,11 @@ namespace Barotrauma.Items.Components
                 {
                     msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
                 }
-                Msg = msg;
+                DisplayMsg = msg;
+            }
+            else
+            {
+                DisplayMsg = Msg;
             }
         }
     }
