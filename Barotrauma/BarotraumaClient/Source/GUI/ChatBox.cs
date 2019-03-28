@@ -178,9 +178,14 @@ namespace Barotrauma
 
             string displayedText = message.TranslatedText;
             string senderName = "";
+            Color senderColor = Color.White;
             if (!string.IsNullOrWhiteSpace(message.SenderName))
             {
                 senderName = (message.Type == ChatMessageType.Private ? "[PM] " : "") + message.SenderName;
+            }
+            if (message.Sender?.Info?.Job != null)
+            {
+                senderColor = Color.Lerp(message.Sender.Info.Job.Prefab.UIColor, Color.White, 0.25f);
             }
 
             var msgHolder = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.0f), chatBox.Content.RectTransform, Anchor.TopCenter), style: null,
@@ -191,7 +196,7 @@ namespace Barotrauma
             {
                 senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform)
                 { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
-                    senderName, textColor: Color.White, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
+                    senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
                 {
                     CanBeFocused = true
                 };
@@ -230,7 +235,7 @@ namespace Barotrauma
                     Visible = false
                 };
                 var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), popupMsg.RectTransform, Anchor.TopRight),
-                    senderName, textColor: Color.White, font: GUI.SmallFont, textAlignment: Alignment.TopRight)
+                    senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopRight)
                 {
                     CanBeFocused = false
                 };
@@ -328,6 +333,7 @@ namespace Barotrauma
                 var popupMsg = popupMessages.Count > 0 ? popupMessages.Peek() : null;
                 if (popupMsg != null)
                 {
+                    int offset = -popupMsg.Rect.Width - toggleButton.Rect.Width * 2 - (int)(50 * GUI.Scale) - (guiFrame.Rect.X - GameMain.GraphicsWidth);
                     popupMsg.Visible = true;
                     //popup messages appear and disappear faster when there's more pending messages
                     popupMessageTimer += deltaTime * popupMessages.Count * popupMessages.Count;
@@ -335,7 +341,7 @@ namespace Barotrauma
                     {
                         //move the message out of the screen and delete it
                         popupMsg.RectTransform.ScreenSpaceOffset =
-                            new Point((int)MathHelper.SmoothStep(-popupMsg.Rect.Width - toggleButton.Rect.Width * 2, 10, (popupMessageTimer - PopupMessageDuration) * 5.0f), 0);
+                            new Point((int)MathHelper.SmoothStep(offset, 10, (popupMessageTimer - PopupMessageDuration) * 5.0f), 0);
                         if (popupMessageTimer > PopupMessageDuration + 1.0f)
                         {
                             popupMessageTimer = 0.0f;
@@ -347,7 +353,7 @@ namespace Barotrauma
                     {
                         //move the message on the screen
                         popupMsg.RectTransform.ScreenSpaceOffset = new Point(
-                            (int)MathHelper.SmoothStep(0, -popupMsg.Rect.Width - toggleButton.Rect.Width * 2 - (int)(35 * GUI.Scale), popupMessageTimer * 5.0f), 0);
+                            (int)MathHelper.SmoothStep(0, offset, popupMessageTimer * 5.0f), 0);
                     }
                 }
             }
