@@ -1186,6 +1186,10 @@ namespace Barotrauma
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.F))
             {
                 AnimController.ReleaseStuckLimbs();
+                if (AIController != null && AIController is EnemyAIController enemyAI)
+                {
+                    enemyAI.LatchOntoAI?.DeattachFromBody();
+                }
             }
 #endif
 
