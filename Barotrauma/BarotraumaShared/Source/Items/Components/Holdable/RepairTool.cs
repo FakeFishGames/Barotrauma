@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
         private readonly List<string> fixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
+
+        private Vector2 debugRayStartPos, debugRayEndPos;
         
         [Serialize(0.0f, false)]
         public float Range { get; set; }
@@ -121,10 +123,19 @@ namespace Barotrauma.Items.Components
             Vector2 rayStart    = ConvertUnits.ToSimUnits(item.WorldPosition);
             Vector2 rayEnd      = ConvertUnits.ToSimUnits(targetPosition);
 
+            debugRayStartPos = item.WorldPosition;
+            debugRayEndPos = ConvertUnits.ToDisplayUnits(rayEnd);
+
             if (character.Submarine == null)
             {
                 foreach (Submarine sub in Submarine.Loaded)
                 {
+                    Rectangle subBorders = sub.Borders;
+                    subBorders.Location += new Point((int)sub.WorldPosition.X, (int)sub.WorldPosition.Y - sub.Borders.Height);
+                    if (!MathUtils.CircleIntersectsRectangle(item.WorldPosition, Range * 5.0f, subBorders))
+                    {
+                        continue;
+                    }
                     Repair(rayStart - sub.SimPosition, rayEnd - sub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
                 }
                 Repair(rayStart, rayEnd, deltaTime, character, degreeOfSuccess, ignoredBodies);
@@ -238,6 +249,7 @@ namespace Barotrauma.Items.Components
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.IsActive &&
+                    levelResource.requiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
                     levelResource.DeattachTimer += deltaTime;
