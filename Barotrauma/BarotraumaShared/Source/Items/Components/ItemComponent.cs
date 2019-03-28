@@ -192,7 +192,6 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
 
-        //TODO: this shouldn't be saved as-is, causes tags ("ItemMsgPressSelect" etc) to be converted into actual texts when saving the subs
         [Editable, Serialize("", true)]
         public string Msg
         {
