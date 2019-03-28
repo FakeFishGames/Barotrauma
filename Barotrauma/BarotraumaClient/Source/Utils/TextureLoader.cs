@@ -11,9 +11,14 @@ namespace Barotrauma
     /// </summary>
     public static class TextureLoader
     {
+        public static Texture2D PlaceHolderTexture
+        {
+            get;
+            private set;
+        }
+
         static TextureLoader()
         {
-
             BlendColorBlendState = new BlendState
             {
                 ColorDestinationBlend = Blend.Zero,
@@ -38,6 +43,15 @@ namespace Barotrauma
             _graphicsDevice = graphicsDevice;
             _needsBmp = needsBmp;
             _spriteBatch = new SpriteBatch(_graphicsDevice);
+
+            PlaceHolderTexture = new Texture2D(graphicsDevice, 32, 32);
+
+            Color[] data = new Color[32 * 32];
+            for (int i = 0; i < 32 * 32; i++)
+            {
+                data[i] = Color.Magenta;
+            }
+            PlaceHolderTexture.SetData(data);
         }
 
         public static Texture2D FromFile(string path, bool preMultiplyAlpha = true)

@@ -140,8 +140,8 @@
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="Research" buyprice="125" />
     <Deconstruct time="10">
-      <Item identifier="zinc" mincondition="0.5"/>
-      <Item identifier="lithium" mincondition="0.5"/>
+      <Item identifier="zinc" />
+      <Item identifier="lithium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" />
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
@@ -151,8 +151,8 @@
   
   <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium.">
     <Deconstruct time="10">
-      <Item identifier="zinc" mincondition="0.5"/>
-      <Item identifier="fulgurium" mincondition="0.5"/>
+      <Item identifier="zinc" />
+      <Item identifier="fulgurium" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" />
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />

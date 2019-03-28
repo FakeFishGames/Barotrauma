@@ -503,6 +503,22 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            if (sprite == null)
+            {
+                DebugConsole.ThrowError("Item \"" + Name + "\" has no sprite!");
+#if SERVER
+                sprite = new Sprite("", Vector2.Zero);
+                sprite.SourceRect = new Rectangle(0, 0, 32, 32);
+#else
+                sprite = new Sprite(TextureLoader.PlaceHolderTexture, null, null)
+                {
+                    Origin = TextureLoader.PlaceHolderTexture.Bounds.Size.ToVector2() / 2
+                };
+#endif
+                size = sprite.size;
+                sprite.EntityID = identifier;
+            }
             
             if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
             {
