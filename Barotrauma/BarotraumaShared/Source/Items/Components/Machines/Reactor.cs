@@ -212,7 +212,7 @@ namespace Barotrauma.Items.Components
             float heatAmount = fissionRate * (AvailableFuel / 100.0f) * 2.0f;
             float temperatureDiff = (heatAmount - turbineOutput) - Temperature;
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
-            if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
+            //if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
             
             FissionRate = MathHelper.Lerp(fissionRate, Math.Min(targetFissionRate, AvailableFuel), deltaTime);
             TurbineOutput = MathHelper.Lerp(turbineOutput, targetTurbineOutput, deltaTime);
