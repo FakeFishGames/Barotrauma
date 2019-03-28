@@ -381,6 +381,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\8_Approach1\BaroTutorial_Approach.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\tutorialAtlas.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="$(MSBuildThisFileDirectory)Content\Fonts\BebasNeue-Regular.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

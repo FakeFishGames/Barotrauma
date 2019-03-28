@@ -392,10 +392,18 @@ namespace Barotrauma.Tutorials
         {
             objective.IsTriggered = true;
 
-            RectTransform rectT = new RectTransform(new Point((int)GUI.CheckmarkIcon.size.X, (int)GUI.CheckmarkIcon.size.Y), objective.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-            rectT.AbsoluteOffset = new Point(-rectT.Rect.Width - 5, 0);
-            GUIImage checkmark = new GUIImage(rectT, GUI.CheckmarkIcon);
-            checkmark.Color = Color.Green;
+            int checkMarkHeight = (int)(objective.ReplayButton.Rect.Height * 1.2f);
+            int checkMarkWidth = (int)(checkMarkHeight * 0.93f);
+
+            Color color = new Color(4, 180, 108);
+            RectTransform rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), objective.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
+            rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5, 0);
+            GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
+            checkmark.Color = color;
+
+            RectTransform rectTB = new RectTransform(new Vector2(1.1f, .8f), objective.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
+            GUIImage stroke = new GUIImage(rectTB, "Stroke");
+            stroke.Color = color;
 
             CoroutineManager.StartCoroutine(WaitForObjectiveEnd(objective));
         }
