@@ -88,8 +88,17 @@ namespace Barotrauma
             {
                 if (Items[i] == null) return i;                   
             }
-            
+
             return -1;
+        }
+
+        public bool CanBePut(Item item)
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (CanBePut(item, i)) { return true; }
+            }
+            return false;
         }
 
         public virtual bool CanBePut(Item item, int i)

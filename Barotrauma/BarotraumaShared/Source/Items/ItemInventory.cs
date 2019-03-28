@@ -43,9 +43,8 @@ namespace Barotrauma
         {
             if (ItemOwnsSelf(item)) return false;
             if (i < 0 || i >= Items.Length) return false;
-            return (item!=null && Items[i]==null && container.CanBeContained(item));
+            return (item != null && Items[i] == null && container.CanBeContained(item));
         }
-
 
         public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
