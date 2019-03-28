@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
             
             if (attachable)
             {
-                prevMsg = Msg;
+                prevMsg = DisplayMsg;
                 prevPickKey = PickKey;
                 prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
                                 
@@ -191,7 +191,7 @@ namespace Barotrauma.Items.Components
             base.Load(componentElement);
             if (attachable)
             {
-                prevMsg = Msg;
+                prevMsg = DisplayMsg;
                 prevPickKey = PickKey;
                 prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
             }
@@ -404,8 +404,8 @@ namespace Barotrauma.Items.Components
 
             body.Enabled = false;
             item.body = null;
-            
-            Msg = prevMsg;
+
+            DisplayMsg = prevMsg;
             PickKey = prevPickKey;
             requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(prevRequiredItems);
 
@@ -420,7 +420,7 @@ namespace Barotrauma.Items.Components
 
             //make the item pickable with the default pick key and with no specific tools/items when it's deattached
             requiredItems.Clear();
-            Msg = "";
+            DisplayMsg = "";
             PickKey = InputType.Select;
         }
 

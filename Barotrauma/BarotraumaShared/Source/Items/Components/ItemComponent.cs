@@ -56,9 +56,7 @@ namespace Barotrauma.Items.Components
         protected const float CorrectionDelay = 1.0f;
         protected CoroutineHandle delayedCorrectionCoroutine;
         protected float correctionTimer;
-
-        private string msg;
-        
+                
         [Editable, Serialize(0.0f, false)]
         public float PickingTime
         {
@@ -191,13 +189,18 @@ namespace Barotrauma.Items.Components
         {
             get { return name; }
         }
-
-        //TODO: this shouldn't be saved as-is, causes tags ("ItemMsgPressSelect" etc) to be converted into actual texts when saving the subs
+        
         [Editable, Serialize("", true)]
         public string Msg
         {
-            get { return msg; }
-            set { msg = value; }
+            get;
+            set;
+        }
+
+        public string DisplayMsg
+        {
+            get;
+            set;
         }
 
         public AITarget AITarget
@@ -238,13 +241,13 @@ namespace Barotrauma.Items.Components
             {
                 string pickKeyStr = element.GetAttributeString("pickkey", "Select");
                 pickKeyStr = ToolBox.ConvertInputType(pickKeyStr);
-                PickKey = (InputType)Enum.Parse(typeof(InputType),pickKeyStr, true);
+                PickKey = (InputType)Enum.Parse(typeof(InputType), pickKeyStr, true);
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
-            
+
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             ParseMsg();
 
