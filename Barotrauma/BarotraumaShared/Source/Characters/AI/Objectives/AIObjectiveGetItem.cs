@@ -99,7 +99,8 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
-                SteeringManager.SteeringWander();
+                HumanAIController.ObjectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                //SteeringManager.SteeringWander();
                 return;
             }
 
