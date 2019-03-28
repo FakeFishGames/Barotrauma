@@ -503,10 +503,14 @@ namespace Barotrauma
                 if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
                 {
                     foreach (MapEntity e in selectedList)
+                    {
+                        e.prefab.DrawPlacing(spriteBatch,
+                            new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size));
                         GUI.DrawRectangle(spriteBatch,
                             new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount,
                             new Vector2(e.rect.Width, e.rect.Height),
                             Color.DarkRed, false, 0, (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
+                    }
 
                     //stop dragging the "selection rectangle"
                     selectionPos = Vector2.Zero;
