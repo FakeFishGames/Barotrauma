@@ -113,14 +113,12 @@ namespace Barotrauma
             }
             else
             {
-                if (Vector2.Distance(character.Position, container.Item.Position) > container.Item.InteractDistance
-                    && !container.Item.IsInsideTrigger(character.WorldPosition))
+                if (container.Item.CurrentHull != character.CurrentHull || (Vector2.Distance(character.Position, container.Item.Position) > container.Item.InteractDistance && !container.Item.IsInsideTrigger(character.WorldPosition)))
                 {
                     goToObjective = new AIObjectiveGoTo(container.Item, character);
                     AddSubObjective(goToObjective);
                     return;
                 }
-
                 container.Combine(itemToContain);
             }
 
