@@ -11,7 +11,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="786,296,227,139" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="2" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -27,7 +27,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="23,733,212,142" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="2" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -43,7 +43,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="520,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="20,875,224,147" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="2" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -60,7 +60,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="5,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="29,3,203,150" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="3" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -77,7 +77,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="8,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="17,590,225,145" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="3" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -93,7 +93,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="385,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="532,740,230,142" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -109,7 +109,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="130,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="542,581,203,159" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="3" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -126,7 +126,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="196,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="800,0,198,151" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -143,7 +143,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="273,296,220,142" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -160,7 +160,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="455,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="797,740,215,137" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -175,7 +175,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="645,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="530,293,222,150" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -191,7 +191,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="710,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="795,885,220,139" origin="0.4975047,0.5467778" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -205,7 +205,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="532,445,225,145" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -221,7 +221,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="281,593,213,142" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="4" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -237,7 +237,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="267,878,227,142" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -251,7 +251,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="269,6,225,144" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -267,7 +267,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="390,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="541,151,216,152" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -284,7 +284,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="269,445,227,140" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -301,7 +301,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="27,442,208,153" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -316,7 +316,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="795,151,222,154" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="5" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -331,7 +331,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="132,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="550,0,194,155" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -347,7 +347,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="271,158,222,138" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="7" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -362,7 +362,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="323,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="288,728,200,152" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -376,7 +376,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="964,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="795,443,215,138" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -392,7 +392,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="525,890,239,134" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -407,7 +407,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="22,160,227,136" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="6" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -421,7 +421,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,515,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="30,293,203,145" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="7" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />
@@ -435,7 +435,7 @@
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="195,580,60,60" />
     <Sprite texture="Content/Items/Materials/MineralEnvironment.png" depth="0.2" sourcerect="795,581,198,157" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="200" height="100" density="50" />
     <LevelResource deattachduration="10">
       <Commonness commonness="7" />
       <RequiredItem identifier="plasmacutter" type="Equipped" />

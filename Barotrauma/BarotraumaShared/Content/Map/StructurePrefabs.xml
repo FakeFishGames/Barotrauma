@@ -515,7 +515,10 @@
   <smallverticalback2 identifier="smallverticalback2" allowattachitems="true" description="A decorative structure with no collision detection" width="32" height="128" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="160,96,32,352" depth="0.9" />
   </smallverticalback2>
-  <engineeringLabel identifier="engineeringLabel" width="153" height="16">
+  <doorlabel identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/structures2.png" sourcerect="2,263,76,132" depth="0.85" canflipx="false" />
+  </doorlabel>
+  <engineeringLabel identifier="engineeringLabel" width="153">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.97" canflipx="false" />
   </engineeringLabel>
   <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16">

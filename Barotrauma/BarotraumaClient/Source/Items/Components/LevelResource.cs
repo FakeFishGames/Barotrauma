@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
     {
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            DeattachTimer = msg.ReadSingle();
+            deattachTimer = msg.ReadSingle();
             if (deattachTimer >= DeattachDuration)
             {
                 holdable.DeattachFromWall();

@@ -101,8 +101,14 @@ namespace Barotrauma
             }
         }
 
+
         public WayPoint(Rectangle newRect, Submarine submarine)
-            : base (null, submarine)
+            : this (MapEntityPrefab.Find(null, "waypoint"), newRect, submarine)
+        {
+        }
+
+        public WayPoint(MapEntityPrefab prefab, Rectangle newRect, Submarine submarine)
+            : base (prefab, submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
@@ -602,11 +608,14 @@ namespace Barotrauma
                 int.Parse(element.Attribute("y").Value),
                 (int)Submarine.GridSize.X, (int)Submarine.GridSize.Y);
 
-            WayPoint w = new WayPoint(rect, submarine);
 
-            w.ID = (ushort)int.Parse(element.Attribute("ID").Value);
+            Enum.TryParse(element.GetAttributeString("spawn", "Path"), out SpawnType spawnType);
+            WayPoint w = new WayPoint(MapEntityPrefab.Find(null, spawnType == SpawnType.Path ? "waypoint" : "spawnpoint"), rect, submarine)
+            {
+                ID = (ushort)int.Parse(element.Attribute("ID").Value)
+            };
 
-            Enum.TryParse(element.GetAttributeString("spawn", "Path"), out w.spawnType);
+            w.spawnType = spawnType;
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
             if (!string.IsNullOrWhiteSpace(idCardDescString))

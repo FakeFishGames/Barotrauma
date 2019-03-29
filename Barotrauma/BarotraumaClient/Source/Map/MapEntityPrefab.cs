@@ -44,7 +44,7 @@ namespace Barotrauma
                 drawRect.Location -= Submarine.MainSub.Position.ToPoint();
             }
             drawRect.Y = -drawRect.Y;
-            GUI.DrawRectangle(spriteBatch, drawRect, Color.DarkBlue);
+            GUI.DrawRectangle(spriteBatch, drawRect, Color.White);
         }
         public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
         {
