@@ -769,6 +769,20 @@ namespace Barotrauma
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
 
+#if !DEBUG
+            var vanilla = GameMain.VanillaContent;
+            if (vanilla != null)
+            {
+                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
+                string pathToCompare = savePath.Replace(@"\", @"/").ToLowerInvariant();
+                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
+                {
+                    GUI.AddMessage(TextManager.Get("CannotEditVanillaSubs"), Color.Red, font: GUI.LargeFont);
+                    return false;
+                }
+            }
+#endif
+
             /*foreach (var contentPackage in GameMain.Config.SelectedContentPackages)
             {
                 Submarine.MainSub.RequiredContentPackages.Add(contentPackage.Name);

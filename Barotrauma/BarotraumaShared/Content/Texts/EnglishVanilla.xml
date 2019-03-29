@@ -1962,7 +1962,6 @@
   <CharacterEditor.DisplayColliders>Display Colliders</CharacterEditor.DisplayColliders>
   <CharacterEditor.EditBackgroundColor>Edit Background Color</CharacterEditor.EditBackgroundColor>
   <CharacterEditor.QuickSaveAnimations>Quick Save Animations</CharacterEditor.QuickSaveAnimations>
-  <CharacterEditor.CantEditVanillaContent>Can't edit Vanilla content!</CharacterEditor.CantEditVanillaContent>
   <CharacterEditor.AllAnimationsSaved>All animations saved</CharacterEditor.AllAnimationsSaved>
   <CharacterEditor.QuickSaveRagdoll>Quick Save Ragdoll</CharacterEditor.QuickSaveRagdoll>
   <CharacterEditor.RagdollSavedTo>Ragdoll saved to [path]</CharacterEditor.RagdollSavedTo>
@@ -2739,7 +2738,6 @@
   <CharacterEditor.Limb>Limb</CharacterEditor.Limb>
   <CharacterEditor.Joint>Joint</CharacterEditor.Joint>
 
-
   <ItemMsgInteractSelect>Interact [select]</ItemMsgInteractSelect>
   <ItemMsgEquipSelect>Equip [select]</ItemMsgEquipSelect>
   <ItemMsgPickUpSelect>Pick up [select]</ItemMsgPickUpSelect>
@@ -2747,5 +2745,8 @@
 
   <DropItem>Drop</DropItem>
   <PutItemIn>Put in [itemname]</PutItemIn>
-  
+
+  <CannotEditVanillaSubs>Cannot edit the submarines defined in the Vanilla content package!</CannotEditVanillaSubs>
+  <CharacterEditor.CannotEditVanillaCharacters>Cannot edit the characters defined in the Vanilla content package!</CharacterEditor.CannotEditVanillaCharacters>
+
 </infotexts>
