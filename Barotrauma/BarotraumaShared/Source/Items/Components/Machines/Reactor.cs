@@ -318,7 +318,12 @@ namespace Barotrauma.Items.Components
             return fissionRate * (prevAvailableFuel / 100.0f) * 2.0f;
         }
 
-        private bool NeedMoreFuel()
+        /// <summary>
+        /// Do we need more fuel to generate enough power to match the current load.
+        /// </summary>
+        /// <param name="minimumOutputRatio">How low we allow the output/load ratio to go before loading more fuel. 
+        /// 1.0 = always load more fuel when maximum output is too low, 0.5 = load more if max output is 50% of the load</param>
+        private bool NeedMoreFuel(float minimumOutputRatio)
         {
             if (prevAvailableFuel <= 0.0f && load > 0.0f)
             {
@@ -335,7 +340,7 @@ namespace Barotrauma.Items.Components
             float theoreticalMaxOutput = Math.Min(maxTurbineOutput / 100.0f, temperatureFactor) * MaxPowerOutput;
 
             //maximum output not enough, we need more fuel
-            return theoreticalMaxOutput < load;
+            return theoreticalMaxOutput < load * minimumOutputRatio;
         }
 
         private bool TooMuchFuel()
@@ -406,7 +411,9 @@ namespace Barotrauma.Items.Components
             targetFissionRate = MathHelper.Clamp(targetFissionRate, 0.0f, 100.0f);
 
             //don't push the target too far from the current fission rate
-            targetFissionRate = MathHelper.Clamp(targetFissionRate, FissionRate - 10, FissionRate + 10);
+            //otherwise we may "overshoot", cranking the target fission rate all the way up because it takes a while
+            //for the actual fission rate and temperature to follow
+            targetFissionRate = MathHelper.Clamp(targetFissionRate, FissionRate - 5, FissionRate + 5);
         }
         
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -487,8 +494,8 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
 
-                //we need more fuel
-                if (NeedMoreFuel())
+                //load more fuel if the current maximum output is only 50% of the current load
+                if (NeedMoreFuel(minimumOutputRatio: 0.5f))
                 {
                     var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>())
                     {
@@ -514,10 +521,12 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (Item item in item.ContainedItems)
                     {
-                        //TODO: put in a container instead of dropping?
                         if (item != null && item.HasTag("reactorfuel"))
                         {
-                            item.Drop(character);
+                            if (!character.Inventory.TryPutItem(item, character, allowedSlots: item.AllowedSlots))
+                            {
+                                item.Drop(character);
+                            }
                             break;
                         }
                     }
