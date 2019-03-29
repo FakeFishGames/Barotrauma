@@ -635,6 +635,7 @@ namespace Barotrauma
                                     var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
                                     if (newLimb != null)
                                     {
+                                        // Attack with the new limb
                                         AttackingLimb = newLimb;
                                     }
                                     else
@@ -656,6 +657,49 @@ namespace Barotrauma
                             {
                                 // Cooldown not yet expired, cannot attack -> steer towards the target
                                 canAttack = false;
+                            }
+                        }
+                        break;
+                    case AIBehaviorAfterAttack.FallBackUntilCanAttack:
+                        if (AttackingLimb.attack.SecondaryCoolDown <= 0)
+                        {
+                            // No (valid) secondary cooldown defined.
+                            UpdateFallBack(attackWorldPos, deltaTime);
+                            return;
+                        }
+                        else
+                        {
+                            if (AttackingLimb.attack.SecondaryCoolDownTimer <= 0)
+                            {
+                                // Don't allow attacking when the attack target has just changed.
+                                if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
+                                {
+                                    UpdateFallBack(attackWorldPos, deltaTime);
+                                    return;
+                                }
+                                else
+                                {
+                                    // If the secondary cooldown is defined and expired, check if we can switch the attack
+                                    var previousLimb = AttackingLimb;
+                                    var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
+                                    if (newLimb != null)
+                                    {
+                                        // Attack with the new limb
+                                        AttackingLimb = newLimb;
+                                    }
+                                    else
+                                    {
+                                        // No new limb was found.
+                                        UpdateFallBack(attackWorldPos, deltaTime);
+                                        return;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Cooldown not yet expired -> steer away from the target
+                                UpdateFallBack(attackWorldPos, deltaTime);
+                                return;
                             }
                         }
                         break;
@@ -784,20 +828,39 @@ namespace Barotrauma
         {
             AttackContext currentContext = Character.GetAttackContext();
             var target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget.Entity;
-            var limbs = Character.AnimController.Limbs
-                .Where(l =>
-                    l != ignoredLimb &&
-                    l.attack != null &&
-                    l.attack.CoolDownTimer <= 0 &&
-                    !l.IsSevered &&
-                    !l.IsStuck &&
-                    l.attack.IsValidContext(currentContext) &&
-                    l.attack.IsValidTarget(target) &&
-                    l.attack.Conditionals.All(c => (target is ISerializableEntity se && c.Matches(se)) || !(target is ISerializableEntity) || !(target is Character)))
-                .OrderByDescending(l => l.attack.Priority)
-                .ThenBy(l => Vector2.Distance(l.WorldPosition, attackWorldPos));
-            // TODO: priority should probably not override the distance -> use values instead of booleans
-            return limbs.FirstOrDefault();
+            Limb selectedLimb = null;
+            float currentPriority = 0;
+            foreach (Limb limb in Character.AnimController.Limbs)
+            {
+                if (limb == ignoredLimb) { continue; }
+                if (limb.IsSevered || limb.IsStuck) { continue; }
+                var attack = limb.attack;
+                if (attack == null) { continue; }
+                if (attack.CoolDownTimer > 0) { continue; }
+                if (!attack.IsValidContext(currentContext)) { continue; }
+                if (!attack.IsValidTarget(target)) { continue; }
+                if (target is ISerializableEntity se && target is Character)
+                {
+                    // TODO: allow conditionals of which matching any is enough instead of having to fulfill all
+                    if (attack.Conditionals.Any(c => !c.Matches(se))) { continue; }
+                }
+                float priority = CalculatePriority(limb, attackWorldPos);
+                if (priority > currentPriority)
+                {
+                    currentPriority = priority;
+                    selectedLimb = limb;
+                }
+            }
+            return selectedLimb;
+
+            float CalculatePriority(Limb limb, Vector2 attackPos)
+            {
+                float dist = Vector2.Distance(limb.WorldPosition, attackPos);
+                // The limb is ignored if the target is not close. Prevents character going in reverse if very far away from it.
+                // We also need a max value that is more than the actual range.
+                float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, limb.attack.Range * 3, dist));
+                return (1 + limb.attack.Priority) * distanceFactor;
+            }
         }
 
         private void UpdateWallTarget()
