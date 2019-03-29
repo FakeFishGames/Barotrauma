@@ -2465,21 +2465,14 @@
   <SkillName.medical>Medical</SkillName.medical>  
 
   <!-- Item messages -->
-  <ItemMsgPressSelect>Press [select]</ItemMsgPressSelect>
   <ItemMsgUnauthorizedAccess>UNAUTHORIZED ACCESS</ItemMsgUnauthorizedAccess>
-  <ItemMsgRewireScrewdriver>Rewire [Screwdriver]</ItemMsgRewireScrewdriver>
-  <ItemMsgDetachWrench>Detach [Wrench]</ItemMsgDetachWrench>
-  <ItemMsgForceOpenCrowbar>Force open [Crowbar]</ItemMsgForceOpenCrowbar>
-  <ItemMsgRepairScrewdriver>Repair [Screwdriver]</ItemMsgRepairScrewdriver>
-  <ItemMsgRepairWeldingTool>Repair [Welding Tool]</ItemMsgRepairWeldingTool>
-  <ItemMsgRepairWrench>Repair [Wrench]</ItemMsgRepairWrench>
+
   <ItemMsgBatteryCellRequired>Battery cell required</ItemMsgBatteryCellRequired>
   <ItemMsgWeldingFuelRequired>Welding fuel required</ItemMsgWeldingFuelRequired>
   <ItemMsgOxygenTankRequired>Oxygen tank required</ItemMsgOxygenTankRequired>
   <ItemMsgSpearRequired>Out of spears</ItemMsgSpearRequired>
   <ItemMsgAmmoRequired>Out of ammo</ItemMsgAmmoRequired>
   <ItemMsgSyringeRequired>Out of syringes</ItemMsgSyringeRequired>
-  <ItemMsgUsePlasmaCutter>Cut [Plasma Cutter]</ItemMsgUsePlasmaCutter>
 
   <IDCardName>This belongs to [name].</IDCardName>
   <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
@@ -2738,11 +2731,19 @@
   <CharacterEditor.Limb>Limb</CharacterEditor.Limb>
   <CharacterEditor.Joint>Joint</CharacterEditor.Joint>
 
-  <ItemMsgInteractSelect>Interact [select]</ItemMsgInteractSelect>
-  <ItemMsgEquipSelect>Equip [select]</ItemMsgEquipSelect>
-  <ItemMsgPickUpSelect>Pick up [select]</ItemMsgPickUpSelect>
-  <ItemMsgClimbSelect>Climb [select]</ItemMsgClimbSelect>
-
+  <ItemMsgInteractSelect>[[select]] Interact</ItemMsgInteractSelect>
+  <ItemMsgEquipSelect>[[select]] Equip</ItemMsgEquipSelect>
+  <ItemMsgPickUpSelect>[[select]] Pick up</ItemMsgPickUpSelect>
+  <ItemMsgClimbSelect>[[select]] Climb</ItemMsgClimbSelect>
+  <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
+  <ItemMsgRewireScrewdriver>[Screwdriver] Rewire</ItemMsgRewireScrewdriver>
+  <ItemMsgDetachWrench>[Wrench] Detach</ItemMsgDetachWrench>
+  <ItemMsgForceOpenCrowbar>[Crowbar] Force open</ItemMsgForceOpenCrowbar>
+  <ItemMsgRepairScrewdriver>[Screwdriver] Repair</ItemMsgRepairScrewdriver>
+  <ItemMsgRepairWeldingTool>[Welding Tool] Repair</ItemMsgRepairWeldingTool>
+  <ItemMsgRepairWrench>[Wrench] Repair</ItemMsgRepairWrench>
+  <ItemMsgUsePlasmaCutter>[Plasma Cutter] Cut</ItemMsgUsePlasmaCutter>
+  
   <DropItem>Drop</DropItem>
   <PutItemIn>Put in [itemname]</PutItemIn>
 

@@ -420,7 +420,7 @@ namespace Barotrauma
 
             FireSource.UpdateAll(FireSources, deltaTime);
 
-            aiTarget.SightRange = Submarine == null ? 0.0f : Math.Max(Submarine.Velocity.Length() * 500.0f, 500.0f);
+            aiTarget.SightRange = Submarine == null ? 0.0f : Math.Max(Submarine.Velocity.Length() * 2000.0f, AITarget.StaticSightRange);
             aiTarget.SoundRange -= deltaTime * 1000.0f;
          
             if (!update)
