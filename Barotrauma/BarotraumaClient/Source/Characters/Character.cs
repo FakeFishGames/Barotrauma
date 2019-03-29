@@ -224,13 +224,6 @@ namespace Barotrauma
                     }
                 }
 
-                if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)))
-                {
-                    //emulate a Select input to get the character to deselect the item server-side
-                    keys[(int)InputType.Select].Hit = true;
-                    SelectedConstruction = null;
-                }
-
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 

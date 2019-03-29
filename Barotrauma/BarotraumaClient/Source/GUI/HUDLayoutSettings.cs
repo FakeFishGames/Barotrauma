@@ -200,9 +200,6 @@ namespace Barotrauma
     {
         public static bool CloseHUD(Rectangle rect)
         {
-            // Always close when hitting escape
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)) { return true; }
-
             //don't close when the cursor is on a UI element
             if (GUI.MouseOn != null) return false;
 

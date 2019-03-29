@@ -2,15 +2,12 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class LevelResource : ItemComponent, IServerSerializable
     {
-        private float lastSentDeattachTimer;
-
         [Serialize(1.0f, false)]
         public float DeattachDuration
         {
@@ -24,29 +21,12 @@ namespace Barotrauma.Items.Components
             get { return deattachTimer; }
             set
             {
-                //clients don't deattach the item until the server says so (handled in ClientRead)
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
-                {
-                    return;
-                }
                 deattachTimer = Math.Max(0.0f, value);
-#if SERVER
-                if (deattachTimer >= DeattachDuration)
-                {
-                    if (holdable.Attached){ item.CreateServerEvent(this); }
-                    holdable.DeattachFromWall();
-                }
-                else if (Math.Abs(lastSentDeattachTimer - deattachTimer) > 0.1f)
-                {
-                    item.CreateServerEvent(this);
-                    lastSentDeattachTimer = deattachTimer;
-                }
-#else
-                if (deattachTimer >= DeattachDuration)
+                //clients don't deattach the item until the server says so (handled in ClientRead)
+                if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && deattachTimer >= DeattachDuration)
                 {
                     holdable.DeattachFromWall();
                 }
-#endif
             }
         }
 
@@ -87,10 +67,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
             holdable.Reattachable = false;
-            if (requiredItems.Any())
-            {
-                holdable.PickingTime = float.MaxValue;
-            }
+            holdable.PickingTime = float.MaxValue;
 
             var body = item.body ?? holdable.Body;
             

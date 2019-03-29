@@ -678,24 +678,17 @@ namespace Barotrauma
             Body closestBody = null;
             if (allowInsideFixture)
             {
-                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.One * 0.001f, rayStart + Vector2.One * 0.001f);
+                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.UnitY * 0.001f, rayStart + Vector2.UnitY * 0.001f);
                 GameMain.World.QueryAABB((fixture) =>
                 {
-                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return true; }
-
-                    fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
-                    if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
-
+                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return false; }
                     closestFraction = 0.0f;
                     closestNormal = Vector2.Normalize(rayEnd - rayStart);
                     if (fixture.Body != null) closestBody = fixture.Body;                    
-                    return false;
+                    return true;
                 }, ref aabb);
                 if (closestFraction <= 0.0f)
                 {
-                    lastPickedPosition = rayStart;
-                    lastPickedFraction = closestFraction;
-                    lastPickedNormal = closestNormal;
                     return closestBody;
                 }
             }
@@ -747,21 +740,14 @@ namespace Barotrauma
 
             if (allowInsideFixture)
             {
-                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.One * 0.001f, rayStart + Vector2.One * 0.001f);
+                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.UnitY * 0.001f, rayStart + Vector2.UnitY * 0.001f);
                 GameMain.World.QueryAABB((fixture) =>
                 {
-                    if (bodies.Contains(fixture.Body) || fixture.Body == null) { return true; }
-                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return true; }
-
-                    fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
-                    if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
-
+                    if (bodies.Contains(fixture.Body) || fixture.Body == null) { return false; }
+                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return false; }
                     closestFraction = 0.0f;
-                    lastPickedPosition = rayStart;
-                    lastPickedFraction = 0.0f;
-                    lastPickedNormal = Vector2.Normalize(rayEnd - rayStart);
                     bodies.Add(fixture.Body);
-                    return false;
+                    return true;
                 }, ref aabb);
             }
 

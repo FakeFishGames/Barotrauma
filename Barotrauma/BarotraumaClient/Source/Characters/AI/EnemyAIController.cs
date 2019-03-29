@@ -51,19 +51,19 @@ namespace Barotrauma
             }
             GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 80.0f, State.ToString(), stateColor, Color.Black);
 
-            if (LatchOntoAI != null)
+            if (latchOntoAI != null)
             {
-                foreach (Joint attachJoint in LatchOntoAI.AttachJoints)
+                foreach (Joint attachJoint in latchOntoAI.AttachJoints)
                 {
                     GUI.DrawLine(spriteBatch,
                         ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorA.X, -attachJoint.WorldAnchorA.Y)),
                         ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), Color.Green, 0, 4);
                 }
 
-                if (LatchOntoAI.WallAttachPos.HasValue)
+                if (latchOntoAI.WallAttachPos.HasValue)
                 {
                     GUI.DrawLine(spriteBatch, pos,
-                        ConvertUnits.ToDisplayUnits(new Vector2(LatchOntoAI.WallAttachPos.Value.X, -LatchOntoAI.WallAttachPos.Value.Y)), Color.Green, 0, 3);
+                        ConvertUnits.ToDisplayUnits(new Vector2(latchOntoAI.WallAttachPos.Value.X, -latchOntoAI.WallAttachPos.Value.Y)), Color.Green, 0, 3);
                 }
             }
 

@@ -976,7 +976,7 @@ namespace Barotrauma
                 foreach (GUIComponent c in prevCharacterListBox.Content.Children)
                 {
                     Character character = c.UserData as Character;
-                    if (character == null) continue;
+                    if (character == null || character.IsDead || character.Removed) continue;
                     AddCharacter(character);
                     DisplayCharacterOrder(character, character.CurrentOrder);
                 }

@@ -601,9 +601,8 @@ namespace Barotrauma
                         {
                             ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
-                        else if ((GUI.MouseOn == null || GUI.IsMouseOn(GUI.PauseMenu)) && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                        else // Otherwise toggle pausing.
                         {
-                            // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
                         }
                     }

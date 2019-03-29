@@ -81,9 +81,6 @@ namespace Barotrauma
         [Serialize(AIBehaviorAfterAttack.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
         public AIBehaviorAfterAttack AfterAttack { get; private set; }
 
-        [Serialize(false, true), Editable(ToolTip = "Should the ai try to reverse when aiming with this attack?")]
-        public bool Reverse { get; private set; }
-
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target before the AI tries to attack.")]
         public float Range { get; private set; }
 

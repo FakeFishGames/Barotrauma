@@ -49,6 +49,9 @@ namespace Barotrauma.Tutorials
         private float medicalTutorialTimer = 0.0f;
         private const float medicalTutorialDelay = 2.0f;
 
+        private Point screenResolution;
+        private float prevUIScale;
+
         private class TutorialSegment
         {
             public string Id;
@@ -231,19 +234,34 @@ namespace Barotrauma.Tutorials
         {
             holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
             objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveAnchor, holderFrame.RectTransform), style: null);
+
+            for (int i = 0; i < activeObjectives.Count; i++)
+            {
+                CreateObjectiveGUI(activeObjectives[i], i);
+            }
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            prevUIScale = GUI.Scale;
         }
 
         public override void AddToGUIUpdateList()
         {
+            if (videoPlayer != null)
+            {
+                videoPlayer.AddToGUIUpdateList(order: 100);
+            }
+
+            if (GUI.DisableHUD) return;
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale)
+            {
+                CreateObjectiveFrame();
+            }
+
             if (objectiveFrame != null && activeObjectives.Count > 0)
             {
                 objectiveFrame.AddToGUIUpdateList(order: -1);
             }
             base.AddToGUIUpdateList();
-            if (videoPlayer != null)
-            {
-                videoPlayer.AddToGUIUpdateList(order: 100);
-            }
         }
 
         public override void Update(float deltaTime)
@@ -299,19 +317,25 @@ namespace Barotrauma.Tutorials
         private void AddNewObjective(TutorialSegment segment)
         {
             activeObjectives.Add(segment);
+            CreateObjectiveGUI(segment, activeObjectives.Count - 1);
+        }
 
-            Point replayButtonSize = new Point((int)GUI.ObjectiveNameFont.MeasureString(segment.Objective).X, (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f));
+        private void CreateObjectiveGUI(TutorialSegment segment, int index)
+        {
+            Point replayButtonSize = new Point((int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).X * GUI.Scale), (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f * GUI.Scale));
 
-            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(/*(int)(-2.5f * toggleButton.Rect.Width)*/0, (replayButtonSize.Y + 20) * (activeObjectives.Count - 1)) }, style: null);
+            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 ReplaySegmentVideo(segment);
                 return true;
             };
 
-            int yOffset = (int)(GUI.ObjectiveNameFont.MeasureString(objectiveTranslated).Y / 2f) + 5;
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, objectiveTranslated, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point(10, 0) }, segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveTranslated).Y / 2f + 5) * GUI.Scale);
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.BottomCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, objectiveTranslated, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+
+            segment.LinkedTitle.TextScale = segment.LinkedText.TextScale = GUI.Scale;
 
             segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
             segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;

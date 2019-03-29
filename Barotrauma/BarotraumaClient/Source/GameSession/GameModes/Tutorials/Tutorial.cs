@@ -188,17 +188,19 @@ namespace Barotrauma.Tutorials
             Anchor anchor = Anchor.TopRight;
             Enum.TryParse(anchorStr, out anchor);
 
-            var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
+            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
             infoBlock.Flash(Color.Green);
 
             if (title.Length > 0)
             {
                 var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1f, .35f), infoBlock.RectTransform, Anchor.TopCenter,
                 Pivot.TopCenter), title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
+                titleBlock.TextScale = GUI.Scale;
             }
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1f), infoBlock.RectTransform, Anchor.BottomCenter),
                 text, wrap: true);
+            textBlock.TextScale = GUI.Scale;
 
             infoBoxClosedCallback = callback;
 
