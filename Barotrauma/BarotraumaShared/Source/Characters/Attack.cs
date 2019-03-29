@@ -28,6 +28,7 @@ namespace Barotrauma
     public enum AIBehaviorAfterAttack
     {
         FallBack,
+        FallBackUntilCanAttack,
         PursueIfCanAttack,
         Pursue
     }
@@ -188,7 +189,7 @@ namespace Barotrauma
         public readonly List<Affliction> Afflictions = new List<Affliction>();
 
         /// <summary>
-        /// Only affects ai decision making.
+        /// Only affects ai decision making. All the conditionals has to be met in order to select the attack. TODO: allow to define conditionals using any (implemented in StatusEffect -> move from there to PropertyConditional?)
         /// </summary>
         public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
