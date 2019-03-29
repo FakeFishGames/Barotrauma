@@ -70,11 +70,9 @@ namespace Barotrauma
 
         private float raycastTimer;
                 
-        private bool IsCoolDownRunning => attackingLimb != null && attackingLimb.attack.CoolDownTimer > 0;
+        private bool IsCoolDownRunning => AttackingLimb != null && AttackingLimb.attack.CoolDownTimer > 0;
         
         private bool aggressiveBoarding;
-
-        private LatchOntoAI latchOntoAI;
 
         //a point in a wall which the Character is currently targeting
         private WallTarget wallTarget;
@@ -116,6 +114,8 @@ namespace Barotrauma
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
 
+        public LatchOntoAI LatchOntoAI { get; private set; }
+
         public bool AttackHumans
         {
             get
@@ -134,11 +134,6 @@ namespace Barotrauma
             }
         }
 
-        public Limb AttackingLimb
-        {
-            get { return attackingLimb; }
-        }
-
         public float CombatStrength
         {
             get { return combatStrength; }
@@ -149,7 +144,7 @@ namespace Barotrauma
             get
             {
                 //can't enter a submarine when attached to something
-                return latchOntoAI == null || !latchOntoAI.IsAttached;
+                return LatchOntoAI == null || !LatchOntoAI.IsAttached;
             }
         }
 
@@ -157,10 +152,12 @@ namespace Barotrauma
         {
             get
             {
-                //can't flip when attached to something
-                return latchOntoAI == null || !latchOntoAI.IsAttached;
+                //can't flip when attached to something or when reversing
+                return !Reverse && (LatchOntoAI == null || !LatchOntoAI.IsAttached);
             }
         }
+
+        public bool Reverse { get; private set; }
 
         public EnemyAIController(Character c, string file, string seed) : base(c)
         {
@@ -209,7 +206,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "latchonto":
-                        latchOntoAI = new LatchOntoAI(subElement, this);
+                        LatchOntoAI = new LatchOntoAI(subElement, this);
                         break;
                     case "targetpriority":
                         targetingPriorities.Add(subElement.GetAttributeString("tag", "").ToLowerInvariant(), new TargetingPriority(subElement));
@@ -318,7 +315,7 @@ namespace Barotrauma
                 }
             }
 
-            latchOntoAI?.Update(this, deltaTime);
+            LatchOntoAI?.Update(this, deltaTime);
 
             if (SelectedAiTarget != null && (SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed))
             {
@@ -574,7 +571,7 @@ namespace Barotrauma
                             if (Character.WorldPosition.Y < door.Item.WorldRect.Y && Character.WorldPosition.Y > door.Item.WorldRect.Y - door.Item.Rect.Height)
                             {
                                 velocity.Y = 0;
-                                latchOntoAI?.DeattachFromBody();
+                                LatchOntoAI?.DeattachFromBody();
                                 Character.AnimController.ReleaseStuckLimbs();
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
@@ -585,7 +582,7 @@ namespace Barotrauma
                             if (Character.WorldPosition.X < door.Item.WorldRect.X && Character.WorldPosition.X > door.Item.WorldRect.Right)
                             {
                                 velocity.X = 0;
-                                latchOntoAI?.DeattachFromBody();
+                                LatchOntoAI?.DeattachFromBody();
                                 Character.AnimController.ReleaseStuckLimbs();
                                 steeringManager.SteeringManual(deltaTime, velocity);
                                 return;
@@ -598,14 +595,14 @@ namespace Barotrauma
             bool canAttack = true;
             if (IsCoolDownRunning)
             {
-                switch (attackingLimb.attack.AfterAttack)
+                switch (AttackingLimb.attack.AfterAttack)
                 {
                     case AIBehaviorAfterAttack.Pursue:
                     case AIBehaviorAfterAttack.PursueIfCanAttack:
-                        if (attackingLimb.attack.SecondaryCoolDown <= 0)
+                        if (AttackingLimb.attack.SecondaryCoolDown <= 0)
                         {
                             // No (valid) secondary cooldown defined.
-                            if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
+                            if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                             {
                                 canAttack = false;
                             }
@@ -617,33 +614,33 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (attackingLimb.attack.SecondaryCoolDownTimer <= 0)
+                            if (AttackingLimb.attack.SecondaryCoolDownTimer <= 0)
                             {
                                 // Don't allow attacking when the attack target has just changed.
                                 if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
                                 {
                                     canAttack = false;
-                                    if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
+                                    if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
                                     {
                                         // Fall back if cannot attack.
                                         UpdateFallBack(attackWorldPos, deltaTime);
                                         return;
                                     }
-                                    attackingLimb = null;
+                                    AttackingLimb = null;
                                 }
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var previousLimb = attackingLimb;
+                                    var previousLimb = AttackingLimb;
                                     var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
                                     if (newLimb != null)
                                     {
-                                        attackingLimb = newLimb;
+                                        AttackingLimb = newLimb;
                                     }
                                     else
                                     {
                                         // No new limb was found.
-                                        if (attackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
+                                        if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                                         {
                                             canAttack = false;
                                         }
@@ -670,20 +667,20 @@ namespace Barotrauma
                 }
             }
 
-            if (attackingLimb == null || _previousAiTarget != SelectedAiTarget)
+            if (AttackingLimb == null || _previousAiTarget != SelectedAiTarget)
             {
-                attackingLimb = GetAttackLimb(attackWorldPos);
+                AttackingLimb = GetAttackLimb(attackWorldPos);
             }
             if (canAttack)
             {
-                canAttack = attackingLimb != null && attackingLimb.attack.CoolDownTimer <= 0;
+                canAttack = AttackingLimb != null && AttackingLimb.attack.CoolDownTimer <= 0;
             }
             float distance = 0;
             if (canAttack)
             {
                 // Check that we can reach the target
-                distance = Vector2.Distance(attackingLimb.WorldPosition, attackWorldPos);
-                canAttack = distance < attackingLimb.attack.Range;
+                distance = Vector2.Distance(AttackingLimb.WorldPosition, attackWorldPos);
+                canAttack = distance < AttackingLimb.attack.Range;
             }
 
             // If the attacking limb is a hand or claw, for example, using it as the steering limb can end in the result where the character circles around the target. For example the Hammerhead steering with the claws when it should use the torso.
@@ -692,7 +689,7 @@ namespace Barotrauma
             Limb steeringLimb;
             var torso = Character.AnimController.GetLimb(LimbType.Torso);
             var head = Character.AnimController.GetLimb(LimbType.Head);
-            if (attackingLimb == null)
+            if (AttackingLimb == null)
             {
                 steeringLimb = head ?? torso;
             }
@@ -700,7 +697,7 @@ namespace Barotrauma
             {
                 if (head != null && torso != null)
                 {
-                    steeringLimb = Vector2.DistanceSquared(attackingLimb.SimPosition, head.SimPosition) < Vector2.DistanceSquared(attackingLimb.SimPosition, torso.SimPosition) ? head : torso;
+                    steeringLimb = Vector2.DistanceSquared(AttackingLimb.SimPosition, head.SimPosition) < Vector2.DistanceSquared(AttackingLimb.SimPosition, torso.SimPosition) ? head : torso;
                 }
                 else
                 {
@@ -751,7 +748,7 @@ namespace Barotrauma
 
             if (canAttack)
             {
-                UpdateLimbAttack(deltaTime, attackingLimb, attackSimPos, distance);
+                UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
         }
 
@@ -768,7 +765,7 @@ namespace Barotrauma
                 {
                     targetWorldPos.X = targetHull.WorldRect.Center.X;
                 }
-                latchOntoAI?.DeattachFromBody();
+                LatchOntoAI?.DeattachFromBody();
                 Character.AnimController.ReleaseStuckLimbs();
                 if (steeringManager is IndoorsSteeringManager)
                 {
@@ -791,6 +788,7 @@ namespace Barotrauma
                 .Where(l =>
                     l != ignoredLimb &&
                     l.attack != null &&
+                    l.attack.CoolDownTimer <= 0 &&
                     !l.IsSevered &&
                     !l.IsStuck &&
                     l.attack.IsValidContext(currentContext) &&
@@ -859,7 +857,7 @@ namespace Barotrauma
                     attachTargetNormal = new Vector2(Math.Sign(WorldPosition.X - wall.WorldPosition.X), 0.0f);
                     sectionPos.X += (wall.BodyWidth <= 0.0f ? wall.Rect.Width : wall.BodyWidth) / 2 * attachTargetNormal.X;
                 }
-                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, ConvertUnits.ToSimUnits(sectionPos), attachTargetNormal);
+                LatchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, ConvertUnits.ToSimUnits(sectionPos), attachTargetNormal);
                 wallTarget = new WallTarget(sectionPos, wall, sectionIndex);
             }         
         }
@@ -877,7 +875,7 @@ namespace Barotrauma
                 }
             }
             
-            latchOntoAI?.DeattachFromBody();
+            LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
 
             if (attacker == null || attacker.AiTarget == null) return;
@@ -987,7 +985,7 @@ namespace Barotrauma
 
         #region Targeting
 
-        private bool IsProperlyLatched => latchOntoAI != null && latchOntoAI.IsAttached && SelectedAiTarget?.Entity == wallTarget?.Structure;
+        private bool IsProperlyLatched => LatchOntoAI != null && LatchOntoAI.IsAttached && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
@@ -1245,10 +1243,11 @@ namespace Barotrauma
 
         protected override void OnStateChanged(AIState from, AIState to)
         {
-            latchOntoAI?.DeattachFromBody();
+            LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
             escapePoint = Vector2.Zero;
             wallTarget = null;
+            AttackingLimb = null;
         }
 
         private int GetMinimumPassableHoleCount()

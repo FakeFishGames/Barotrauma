@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
         private readonly List<string> fixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
+
+        private Vector2 debugRayStartPos, debugRayEndPos;
         
         [Serialize(0.0f, false)]
         public float Range { get; set; }
@@ -247,6 +249,7 @@ namespace Barotrauma.Items.Components
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.IsActive &&
+                    levelResource.requiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
                     levelResource.DeattachTimer += deltaTime;

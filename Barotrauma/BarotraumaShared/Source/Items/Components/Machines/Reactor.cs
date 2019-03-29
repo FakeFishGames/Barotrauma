@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         private bool shutDown;
 
-        const float AIUpdateInterval = 1.0f;
+        const float AIUpdateInterval = 0.2f;
         private float aiUpdateTimer;
 
         private Character lastUser;
@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
             allowedFissionRate = Vector2.Lerp(new Vector2(20, AvailableFuel), new Vector2(10, AvailableFuel), degreeOfSuccess);
             allowedFissionRate.X = Math.Min(allowedFissionRate.X, allowedFissionRate.Y - 10);
 
-            float heatAmount = fissionRate * (AvailableFuel / 100.0f) * 2.0f;
+            float heatAmount = GetGeneratedHeat(fissionRate);
             float temperatureDiff = (heatAmount - turbineOutput) - Temperature;
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
             //if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
@@ -313,6 +313,48 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private float GetGeneratedHeat(float fissionRate)
+        {
+            return fissionRate * (prevAvailableFuel / 100.0f) * 2.0f;
+        }
+
+        /// <summary>
+        /// Do we need more fuel to generate enough power to match the current load.
+        /// </summary>
+        /// <param name="minimumOutputRatio">How low we allow the output/load ratio to go before loading more fuel. 
+        /// 1.0 = always load more fuel when maximum output is too low, 0.5 = load more if max output is 50% of the load</param>
+        private bool NeedMoreFuel(float minimumOutputRatio)
+        {
+            if (prevAvailableFuel <= 0.0f && load > 0.0f)
+            {
+                return true;
+            }
+
+            //fission rate is clamped to the amount of available fuel
+            float maxFissionRate = Math.Min(prevAvailableFuel, 100.0f);
+            float maxTurbineOutput = 100.0f;
+
+            //calculate the maximum output if the fission rate is cranked as high as it goes and turbine output is at max
+            float theoreticalMaxHeat = GetGeneratedHeat(fissionRate: maxFissionRate);             
+            float temperatureFactor = Math.Min(theoreticalMaxHeat / 50.0f, 1.0f);
+            float theoreticalMaxOutput = Math.Min(maxTurbineOutput / 100.0f, temperatureFactor) * MaxPowerOutput;
+
+            //maximum output not enough, we need more fuel
+            return theoreticalMaxOutput < load * minimumOutputRatio;
+        }
+
+        private bool TooMuchFuel()
+        {
+            var containedItems = item.ContainedItems;
+            if (containedItems != null && containedItems.Count() <= 1) { return false; }
+
+            //get the amount of heat we'd generate if the fission rate was at the low end of the optimal range
+            float minimumHeat = GetGeneratedHeat(optimalFissionRate.X);
+
+            //if we need a very high turbine output to keep the engine from overheating, there's too much fuel
+            return minimumHeat > Math.Min(correctTurbineOutput * 1.5f, 90);
+        }
+
         private void UpdateFailures(float deltaTime)
         {
             if (temperature > allowedTemperature.Y)
@@ -367,6 +409,11 @@ namespace Barotrauma.Items.Components
                 targetFissionRate = Math.Min(targetFissionRate + speed * 2 * deltaTime, 100.0f);
             }
             targetFissionRate = MathHelper.Clamp(targetFissionRate, 0.0f, 100.0f);
+
+            //don't push the target too far from the current fission rate
+            //otherwise we may "overshoot", cranking the target fission rate all the way up because it takes a while
+            //for the actual fission rate and temperature to follow
+            targetFissionRate = MathHelper.Clamp(targetFissionRate, FissionRate - 5, FissionRate + 5);
         }
         
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -441,12 +488,18 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                //we need more fuel
-                if (-currPowerConsumption < load * 0.5f && prevAvailableFuel <= 0.0f)
+                if (aiUpdateTimer > 0.0f)
+                {
+                    aiUpdateTimer -= deltaTime;
+                    return false;
+                }
+
+                //load more fuel if the current maximum output is only 50% of the current load
+                if (NeedMoreFuel(minimumOutputRatio: 0.5f))
                 {
                     var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>())
                     {
-                        MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
+                        MinContainedAmount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
                         GetItemPriority = (Item fuelItem) =>
                         {
                             if (fuelItem.ParentInventory?.Owner is Item)
@@ -461,6 +514,7 @@ namespace Barotrauma.Items.Components
 
                     character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
 
+                    aiUpdateTimer = AIUpdateInterval;
                     return false;
                 }
                 else if (TooMuchFuel())
@@ -477,12 +531,6 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }
-
-            if (aiUpdateTimer > 0.0f)
-            {
-                aiUpdateTimer -= deltaTime;
-                return false;
             }
 
             if (lastUser != character && lastUser != null && lastUser.SelectedConstruction == item)
@@ -506,7 +554,7 @@ namespace Barotrauma.Items.Components
                     {
                         AutoTemp = false;
                         unsentChanges = true;
-                        UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, 1.0f);
+                        UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
                     }
 #if CLIENT
                     onOffSwitch.BarScroll = 0.0f;

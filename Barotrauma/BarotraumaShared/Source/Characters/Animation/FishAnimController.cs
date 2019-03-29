@@ -369,8 +369,8 @@ namespace Barotrauma
                 return;
             }
 
-            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
-
+            Vector2 transformedMovement = reverse ? -movement : movement;
+            float movementAngle = MathUtils.VectorToAngle(transformedMovement) - MathHelper.PiOver2;
             float mainLimbAngle = 0;
             if (MainLimb.type == LimbType.Torso && TorsoAngle.HasValue)
             {
@@ -388,7 +388,7 @@ namespace Barotrauma
             while (MainLimb.Rotation - (movementAngle + mainLimbAngle) < -MathHelper.Pi)
             {
                 movementAngle -= MathHelper.TwoPi;
-            }            
+            }
 
             if (CurrentSwimParams.RotateTowardsMovement)
             {
@@ -412,16 +412,19 @@ namespace Barotrauma
                 if (TailAngle.HasValue)
                 {
                     Limb tail = GetLimb(LimbType.Tail);
-                    //tail?.body.SmoothRotate(movementAngle + TailAngle.Value * Dir, TailTorque);
                     if (tail != null)
                     {
                         SmoothRotateWithoutWrapping(tail, movementAngle + TailAngle.Value * Dir, MainLimb, TailTorque);
                     }
                 }
             }
-            else
+            else if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)
             {
                 movementAngle = Dir > 0 ? -MathHelper.PiOver2 : MathHelper.PiOver2;
+                if (reverse)
+                {
+                    movementAngle = MathUtils.WrapAngleTwoPi(movementAngle - MathHelper.Pi);
+                }
                 if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)
                 {
                     Collider.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
@@ -451,7 +454,7 @@ namespace Barotrauma
             var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
             if (waveLength > 0 && waveAmplitude > 0)
             {
-                WalkPos -= movement.Length() / Math.Abs(waveLength);
+                WalkPos -= transformedMovement.Length() / Math.Abs(waveLength);
                 WalkPos = MathUtils.WrapAngleTwoPi(WalkPos);
             }
 

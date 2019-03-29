@@ -1239,7 +1239,7 @@ namespace Barotrauma
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
             {
-                GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
+                GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                 return false;
             }
 #endif
@@ -1879,7 +1879,7 @@ namespace Barotrauma
 #if !DEBUG
                 if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                     return false;
                 }
 #endif
@@ -1894,7 +1894,7 @@ namespace Barotrauma
 #if !DEBUG
                 if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                     return false;
                 }
 #endif
@@ -1966,7 +1966,7 @@ namespace Barotrauma
 #if !DEBUG
                     if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                         box.Close();
                         return false;
                     }
@@ -2099,7 +2099,7 @@ namespace Barotrauma
 #if !DEBUG
                     if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                         box.Close();
                         return false;
                     }
