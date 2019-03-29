@@ -657,9 +657,10 @@ namespace Barotrauma.Tutorials
         {
             foreach (Gap gap in Gap.GapList)
             {
-                if (gap.ConnectedWall == null) continue;
+                if (gap.ConnectedWall == null || gap.IsRoomToRoom) continue;
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) continue;
                 if (gap.Submarine == null) continue;
+                if (gap.Submarine.IsOutpost) continue;
                 if (gap.Submarine != Submarine.MainSub) continue;
                 return true;
             }
