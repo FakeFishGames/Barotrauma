@@ -337,24 +337,7 @@ namespace Barotrauma
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
                 Selected = lightingEnabled,
-                OnSelected = (GUITickBox obj) => 
-                {
-                    lightingEnabled = obj.Selected;
-                    if (lightingEnabled)
-                    {
-                        //turn off lights that are inside containers
-                        foreach (Item item in Item.ItemList)
-                        {
-                            foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
-                            {
-                                lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
-                                    Color.Transparent :
-                                    lightComponent.LightColor;
-                            }
-                        }
-                    }
-                    return true;
-                }
+                OnSelected = (GUITickBox obj) => { lightingEnabled = obj.Selected; return true; }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWalls"))
             {

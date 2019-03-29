@@ -162,7 +162,6 @@ namespace Barotrauma.Items.Components
                     if (contained == null) continue;
                     if (contained.TryInteract(character))
                     {
-                        character.FocusedItem = contained;
                         return false;
                     }
                 }
@@ -179,7 +178,6 @@ namespace Barotrauma.Items.Components
                     if (contained == null) continue;
                     if (contained.TryInteract(picker))
                     {
-                        picker.FocusedItem = contained;
                         return true;
                     }
                 }

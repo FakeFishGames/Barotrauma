@@ -453,10 +453,7 @@ namespace Barotrauma.Lights
 
             //raster pattern on top of everything
             spriteBatch.Begin(blendState: BlendState.AlphaBlend, samplerState: SamplerState.LinearWrap);
-            spriteBatch.Draw(highlightRaster, 
-                new Rectangle(0, 0, HighlightMap.Width, HighlightMap.Height), 
-                new Rectangle(0, 0, (int)(HighlightMap.Width / currLightMapScale * 0.5f), (int)(HighlightMap.Height / currLightMapScale * 0.5f)), 
-                Color.White * 0.5f);
+            spriteBatch.Draw(highlightRaster, new Rectangle(0, 0, HighlightMap.Width, HighlightMap.Height), new Rectangle(0, 0, HighlightMap.Width, HighlightMap.Height), Color.White * 0.5f);
             spriteBatch.End();
 
             DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];

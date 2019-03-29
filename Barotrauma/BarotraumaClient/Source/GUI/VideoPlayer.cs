@@ -17,11 +17,12 @@ namespace Barotrauma
         private GUIFrame background, videoFrame, textFrame;
         private GUITextBlock title, textContent, objectiveTitle, objectiveText;
         private GUICustomComponent videoView;
+        private GUIButton okButton;
 
         private Color backgroundColor = new Color(0f, 0f, 0f, 1f);
         private Action callbackOnStop;
 
-        private Point scaledResolution;
+        private Point scaledVideoResolution;
         private readonly int borderSize = 20;
         private readonly Point buttonSize = new Point(160, 50);
         private readonly int titleHeight = 30;
@@ -53,21 +54,20 @@ namespace Barotrauma
         public VideoPlayer() // GUI elements with size set to Point.Zero are resized based on content
         {
             int screenWidth = (int)(GameMain.GraphicsWidth * 0.55f);
-            scaledResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
+            scaledVideoResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
 
-            int width = scaledResolution.X;
-            int height = scaledResolution.Y;
+            int width = scaledVideoResolution.X;
+            int height = scaledVideoResolution.Y;
 
-            background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
-            videoFrame = new GUIFrame(new RectTransform(Point.Zero, background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point((int)(-100 / (GUI.Scale * 0.6f)), 0) }, "SonarFrame");
+            background = new GUIFrame(new RectTransform(Point.Zero, GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
+            videoFrame = new GUIFrame(new RectTransform(Point.Zero, background.RectTransform, Anchor.Center, Pivot.Center), "SonarFrame");
 
             textFrame = new GUIFrame(new RectTransform(Point.Zero, videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "TextFrame");
-            textFrame.RectTransform.AbsoluteOffset = new Point(width + borderSize * 2, 0);
 
             videoView = new GUICustomComponent(new RectTransform(Point.Zero, videoFrame.RectTransform, Anchor.Center), (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
-            title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(5, 10) }, string.Empty, font: GUI.VideoTitleFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
+            title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft), string.Empty, font: GUI.VideoTitleFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
 
-            textContent = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, borderSize + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
+            textContent = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft), string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
 
             objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight, textColor: Color.White);
             objectiveTitle.Text = TextManager.Get("NewObjective");
@@ -110,7 +110,7 @@ namespace Barotrauma
 
             currentVideo.Dispose();
             currentVideo = null;
-            currentVideo = CreateVideo(scaledResolution);
+            currentVideo = CreateVideo(scaledVideoResolution);
         }
 
         public void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
@@ -131,67 +131,100 @@ namespace Barotrauma
                 return;
             }
 
-            ResetFrameSizes();
-
             if (currentVideo != null)
             {
                 currentVideo.Dispose();
                 currentVideo = null;
             }
 
-            currentVideo = CreateVideo(scaledResolution);
-
-            videoFrame.RectTransform.NonScaledSize += scaledResolution + new Point(borderSize, borderSize);
-            videoView.RectTransform.NonScaledSize += scaledResolution;
-
+            currentVideo = CreateVideo(scaledVideoResolution);
             title.Text = TextManager.Get(contentId);
-            title.RectTransform.NonScaledSize += new Point(textSettings.Width, titleHeight);
-
-            if (!string.IsNullOrEmpty(textSettings.Text))
-            {
-                textSettings.Text = ToolBox.WrapText(textSettings.Text, textSettings.Width, GUI.Font);
-                int wrappedHeight = textSettings.Text.Split('\n').Length * textHeight;
-                textFrame.RectTransform.NonScaledSize += new Point(textSettings.Width + borderSize, wrappedHeight + borderSize + buttonSize.Y + titleHeight);
-                textContent.RectTransform.NonScaledSize += new Point(textSettings.Width, wrappedHeight);
-            }
-
             textContent.Text = textSettings.Text;
+            objectiveText.Text = objective;
 
-            if (!string.IsNullOrEmpty(objective))
-            {
-                objectiveTitle.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + (int)(textHeight * 1.95f));
-                objectiveText.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + (int)(textHeight * 2.25f));
-
-                textFrame.RectTransform.NonScaledSize += new Point(0, objectiveFrameHeight);
-                objectiveText.RectTransform.NonScaledSize += new Point(textFrame.Rect.Width, textHeight);
-                objectiveText.Text = objective;
-                objectiveTitle.Visible = objectiveText.Visible = true;
-            }
-            else
-            {
-                textFrame.RectTransform.NonScaledSize += new Point(0, borderSize);
-                objectiveTitle.Visible = objectiveText.Visible = false;
-            }
-
-            var okButton = new GUIButton(new RectTransform(buttonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(20, 20) },
-                TextManager.Get("OK"))
-            {
-                OnClicked = DisposeVideo
-            };
+            AdjustFrames(videoSettings, textSettings);
 
             if (startPlayback) Play();
         }
 
-        private void ResetFrameSizes()
+        private void AdjustFrames(VideoSettings videoSettings, TextSettings textSettings)
         {
+            int screenWidth = (int)(GameMain.GraphicsWidth * 0.55f);
+            scaledVideoResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
+
+            background.RectTransform.NonScaledSize = Point.Zero;
             videoFrame.RectTransform.NonScaledSize = Point.Zero;
             videoView.RectTransform.NonScaledSize = Point.Zero;
 
             title.RectTransform.NonScaledSize = Point.Zero;
             textFrame.RectTransform.NonScaledSize = Point.Zero;
             textContent.RectTransform.NonScaledSize = Point.Zero;
-            
+
             objectiveText.RectTransform.NonScaledSize = Point.Zero;
+
+            title.TextScale = textContent.TextScale = objectiveText.TextScale = objectiveTitle.TextScale = GUI.Scale;
+
+            int scaledBorderSize = (int)(borderSize * GUI.Scale);
+            int scaledTextWidth = (int)(textSettings.Width * GUI.Scale);
+            int scaledTitleHeight = (int)(titleHeight * GUI.Scale);
+            int scaledTextHeight = (int)(textHeight * GUI.Scale);
+            int scaledObjectiveFrameHeight = (int)(objectiveFrameHeight * GUI.Scale);
+
+            Point scaledButtonSize = new Point((int)(buttonSize.X * GUI.Scale), (int)(buttonSize.Y * GUI.Scale));
+
+            background.RectTransform.NonScaledSize = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+            videoFrame.RectTransform.NonScaledSize += scaledVideoResolution + new Point(scaledBorderSize, scaledBorderSize);
+            videoView.RectTransform.NonScaledSize += scaledVideoResolution;
+
+            title.RectTransform.NonScaledSize += new Point(scaledTextWidth, scaledTitleHeight);
+            title.RectTransform.AbsoluteOffset = new Point((int)(5 * GUI.Scale), (int)(10 * GUI.Scale));
+
+            if (!string.IsNullOrEmpty(textSettings.Text))
+            {
+                textSettings.Text = ToolBox.WrapText(textSettings.Text, scaledTextWidth, GUI.Font);
+                int wrappedHeight = textSettings.Text.Split('\n').Length * scaledTextHeight;
+
+                textFrame.RectTransform.NonScaledSize += new Point(scaledTextWidth + scaledBorderSize, wrappedHeight + scaledBorderSize + scaledButtonSize.Y + scaledTitleHeight);
+                textFrame.RectTransform.AbsoluteOffset = new Point(scaledVideoResolution.X + scaledBorderSize * 2, 0);
+
+                textContent.RectTransform.NonScaledSize += new Point(scaledTextWidth, wrappedHeight);
+                textContent.RectTransform.AbsoluteOffset = new Point(0, scaledBorderSize + scaledTitleHeight);
+            }
+
+            if (!string.IsNullOrEmpty(objectiveText.Text))
+            {
+                int scaledXOffset = (int)(-10 * GUI.Scale);
+
+                objectiveTitle.RectTransform.AbsoluteOffset = new Point(scaledXOffset, textContent.RectTransform.Rect.Height + (int)(scaledTextHeight * 1.95f));
+                objectiveText.RectTransform.AbsoluteOffset = new Point(scaledXOffset, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + (int)(scaledTextHeight * 2.25f));
+
+                textFrame.RectTransform.NonScaledSize += new Point(0, scaledObjectiveFrameHeight);
+                objectiveText.RectTransform.NonScaledSize += new Point(textFrame.Rect.Width, scaledTextHeight);
+                objectiveTitle.Visible = objectiveText.Visible = true;
+            }
+            else
+            {
+                textFrame.RectTransform.NonScaledSize += new Point(0, scaledBorderSize);
+                objectiveTitle.Visible = objectiveText.Visible = false;
+            }
+
+            int totalFrameWidth = videoFrame.Rect.Width + textFrame.Rect.Width + scaledBorderSize * 2;
+            int xOffset = videoFrame.Rect.Width / 2 + scaledBorderSize - (videoFrame.Rect.Width / 2 - textFrame.Rect.Width / 2);
+
+
+            videoFrame.RectTransform.AbsoluteOffset = new Point(-xOffset, (int)(50 * GUI.Scale));
+
+            if (okButton != null)
+            {
+                textFrame.RemoveChild(okButton);
+                okButton = null;
+            }
+
+            okButton = new GUIButton(new RectTransform(scaledButtonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(scaledBorderSize, scaledBorderSize) }, TextManager.Get("OK"))
+            {
+                OnClicked = DisposeVideo
+            };
         }
 
         private Video CreateVideo(Point resolution)

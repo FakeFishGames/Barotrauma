@@ -662,6 +662,7 @@ namespace Barotrauma.Tutorials
                 if (gap.Submarine == null) continue;
                 if (gap.Submarine.IsOutpost) continue;
                 if (gap.Submarine != Submarine.MainSub) continue;
+                if (gap.FlowTargetHull.WaterPercentage <= 0.0f) continue;
                 return true;
             }
 
