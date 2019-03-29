@@ -468,6 +468,7 @@ namespace Barotrauma
         public Item FocusedItem
         {
             get { return focusedItem; }
+            set { focusedItem = value; }
         }
 
         public Item PickingItem
