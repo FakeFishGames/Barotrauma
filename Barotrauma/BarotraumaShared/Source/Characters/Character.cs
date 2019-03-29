@@ -1656,7 +1656,8 @@ namespace Barotrauma
 #if CLIENT
             if (isLocalPlayer)
             {
-                if (GUI.MouseOn == null && !CharacterInventory.IsMouseOnInventory())
+                if (GUI.MouseOn == null && 
+                    (!CharacterInventory.IsMouseOnInventory() || CharacterInventory.DraggingItemToWorld))
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
