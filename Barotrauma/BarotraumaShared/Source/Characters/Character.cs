@@ -268,6 +268,7 @@ namespace Barotrauma
         public Character FocusedCharacter
         {
             get { return focusedCharacter; }
+            set { focusedCharacter = value; }
         }
 
         public Character SelectedCharacter
@@ -1709,7 +1710,7 @@ namespace Barotrauma
                 }
             }
             
-            if (SelectedCharacter != null && IsKeyHit(InputType.Grab)) //Let people use ladders and buttons and stuff when dragging chars
+            if (SelectedCharacter != null && (IsKeyHit(InputType.Grab) || IsKeyHit(InputType.Health))) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
             }
