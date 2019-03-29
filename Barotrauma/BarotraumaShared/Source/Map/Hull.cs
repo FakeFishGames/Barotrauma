@@ -79,6 +79,7 @@ namespace Barotrauma
             }
             set
             {
+                float prevOxygenPercentage = OxygenPercentage;
                 base.Rect = value;
 
                 if (Submarine == null || !Submarine.Loading)
@@ -87,6 +88,7 @@ namespace Barotrauma
                     Gap.UpdateHulls();
                 }
 
+                OxygenPercentage = prevOxygenPercentage;
                 surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
                 Pressure = surface;
             }
@@ -162,7 +164,7 @@ namespace Barotrauma
 
         public float OxygenPercentage
         {
-            get { return oxygen / Volume * 100.0f; }
+            get { return Volume <= 0.0f ? 100.0f : oxygen / Volume * 100.0f; }
             set { Oxygen = (value / 100.0f) * Volume; }
         }
 
