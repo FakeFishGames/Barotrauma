@@ -356,7 +356,7 @@ namespace Barotrauma.Items.Components
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y)), -rotation);
-            projectile.FindHull();
+            projectile.UpdateTransform();
             projectile.Submarine = projectile.body.Submarine;
 
             Projectile projectileComponent = projectile.GetComponent<Projectile>();
