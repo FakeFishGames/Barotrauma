@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Xml.Linq;
+using System.Collections.Generic;
 using Barotrauma.Media;
 using System.IO;
 using Microsoft.Xna.Framework.Input;
@@ -11,8 +12,8 @@ namespace Barotrauma
     class VideoPlayer
     {
         private Video currentVideo;
+        private Point resolution;
         private string filePath;
-        private bool isPlaying;
 
         private GUIFrame background, videoFrame, textFrame;
         private GUITextBlock title, textContent, objectiveTitle, objectiveText;
@@ -21,7 +22,14 @@ namespace Barotrauma
         private Color backgroundColor = new Color(0f, 0f, 0f, 1f);
         private Action callbackOnStop;
 
-        private Point scaledResolution;
+        private bool isPlaying;
+
+        public bool IsPlaying()
+        {
+            return isPlaying;
+        }
+
+        private Point defaultResolution = new Point(936, 540);
         private readonly int borderSize = 20;
         private readonly Point buttonSize = new Point(160, 50);
         private readonly int titleHeight = 30;
@@ -43,35 +51,41 @@ namespace Barotrauma
         public struct VideoSettings
         {
             public string File;
+            public int Width;
+            public int Height;
 
             public VideoSettings(XElement element)
             {
                 File = element.GetAttributeString("file", string.Empty);
+                Width = 0;
+                Height = 0;
             }
         }
 
-        public VideoPlayer() // GUI elements with size set to Point.Zero are resized based on content
+        public VideoPlayer()
         {
             int screenWidth = (int)(GameMain.GraphicsWidth * 0.55f);
-            scaledResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
+            defaultResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
 
-            int width = scaledResolution.X;
-            int height = scaledResolution.Y;
+            int width = defaultResolution.X;
+            int height = defaultResolution.Y;
 
             background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
-            videoFrame = new GUIFrame(new RectTransform(Point.Zero, background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point((int)(-100 / (GUI.Scale * 0.6f)), 0) }, "SonarFrame");
+            videoFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize), background.RectTransform, Anchor.Center, Pivot.Center) { AbsoluteOffset = new Point((int)(-100 / (GUI.Scale * 0.6f)), 0) }, "SonarFrame");
+            //videoFrame.RectTransform.AbsoluteOffset = new Point(-borderSize, 0);
 
-            textFrame = new GUIFrame(new RectTransform(Point.Zero, videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "TextFrame");
-            textFrame.RectTransform.AbsoluteOffset = new Point(width + borderSize * 2, 0);
+            textFrame = new GUIFrame(new RectTransform(new Point(width + borderSize, height + borderSize * 2), videoFrame.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), "TextFrame");
+            textFrame.RectTransform.AbsoluteOffset = new Point(borderSize + videoFrame.Rect.Width, 0);
 
-            videoView = new GUICustomComponent(new RectTransform(Point.Zero, videoFrame.RectTransform, Anchor.Center), (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
+            videoView = new GUICustomComponent(new RectTransform(new Point(width, height), videoFrame.RectTransform, Anchor.Center),
+            (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
             title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(5, 10) }, string.Empty, font: GUI.VideoTitleFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
 
-            textContent = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, borderSize + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
+            textContent = new GUITextBlock(new RectTransform(new Vector2(1f, .8f), textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, borderSize + titleHeight) }, string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
 
             objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight, textColor: Color.White);
             objectiveTitle.Text = TextManager.Get("NewObjective");
-            objectiveText = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveNameFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
+            objectiveText = new GUITextBlock(new RectTransform(new Point(textFrame.Rect.Width, textHeight), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.ObjectiveNameFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
 
             objectiveTitle.Visible = objectiveText.Visible = false;
         }
@@ -110,16 +124,16 @@ namespace Barotrauma
 
             currentVideo.Dispose();
             currentVideo = null;
-            currentVideo = CreateVideo(scaledResolution);
+            currentVideo = CreateVideo();
         }
 
         public void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
-            if (!isPlaying) return;
+            if (!IsPlaying()) return;
             background.AddToGUIUpdateList(ignoreChildren, order);
         }
 
-        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, string objective = "", Action callback = null)
+        public void LoadContentWithObjective(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, string objective, Action callback = null)
         {
             callbackOnStop = callback;
             filePath = contentPath + videoSettings.File;
@@ -139,10 +153,19 @@ namespace Barotrauma
                 currentVideo = null;
             }
 
-            currentVideo = CreateVideo(scaledResolution);
+            resolution = new Point(videoSettings.Width, videoSettings.Height);
 
-            videoFrame.RectTransform.NonScaledSize += scaledResolution + new Point(borderSize, borderSize);
-            videoView.RectTransform.NonScaledSize += scaledResolution;
+            if (resolution.X == 0 || resolution.Y == 0)
+            {
+                resolution = defaultResolution;
+            }
+
+            currentVideo = CreateVideo();
+
+            objectiveTitle.Visible = objectiveText.Visible = true;
+
+            videoFrame.RectTransform.NonScaledSize += resolution + new Point(borderSize, borderSize);
+            videoView.RectTransform.NonScaledSize += resolution;
 
             title.Text = TextManager.Get(contentId);
             title.RectTransform.NonScaledSize += new Point(textSettings.Width, titleHeight);
@@ -152,26 +175,78 @@ namespace Barotrauma
                 textSettings.Text = ToolBox.WrapText(textSettings.Text, textSettings.Width, GUI.Font);
                 int wrappedHeight = textSettings.Text.Split('\n').Length * textHeight;
                 textFrame.RectTransform.NonScaledSize += new Point(textSettings.Width + borderSize, wrappedHeight + borderSize + buttonSize.Y + titleHeight);
-                textContent.RectTransform.NonScaledSize += new Point(textSettings.Width, wrappedHeight);
+                textContent.RectTransform.NonScaledSize = new Point(textSettings.Width, wrappedHeight);
             }
 
             textContent.Text = textSettings.Text;
 
-            if (!string.IsNullOrEmpty(objective))
-            {
-                objectiveTitle.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + (int)(textHeight * 1.95f));
-                objectiveText.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + (int)(textHeight * 2.25f));
+            objectiveTitle.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + (int)(textHeight * 1.75f));
+            objectiveText.RectTransform.AbsoluteOffset = new Point(-10, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + (int)(textHeight * 2.25f));
 
-                textFrame.RectTransform.NonScaledSize += new Point(0, objectiveFrameHeight);
-                objectiveText.RectTransform.NonScaledSize += new Point(textFrame.Rect.Width, textHeight);
-                objectiveText.Text = objective;
-                objectiveTitle.Visible = objectiveText.Visible = true;
-            }
-            else
+            textFrame.RectTransform.NonScaledSize += new Point(0, objectiveFrameHeight);
+            objectiveText.RectTransform.NonScaledSize += new Point(textFrame.Rect.Width, textHeight);
+            objectiveText.Text = objective;
+
+            var okButton = new GUIButton(new RectTransform(buttonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(20, 20) },
+                TextManager.Get("OK"))
             {
-                textFrame.RectTransform.NonScaledSize += new Point(0, borderSize);
-                objectiveTitle.Visible = objectiveText.Visible = false;
+                OnClicked = DisposeVideo
+            };
+
+            if (startPlayback) Play();
+        }
+
+        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, Action callback = null)
+        {
+            callbackOnStop = callback;
+            filePath = contentPath + videoSettings.File;
+
+            if (!File.Exists(filePath))
+            {
+                DebugConsole.ThrowError("No video found at: " + filePath);
+                DisposeVideo(null, null);
+                return;
             }
+
+            ResetFrameSizes();
+
+            if (currentVideo != null)
+            {
+                currentVideo.Dispose();
+                currentVideo = null;
+            }
+
+            resolution = new Point(0, 0);
+
+            if (currentVideo == null) // No preloaded video found
+            {
+                resolution = new Point(videoSettings.Width, videoSettings.Height);
+
+                if (resolution.X == 0 || resolution.Y == 0)
+                {
+                    resolution = defaultResolution;
+                }
+
+                currentVideo = CreateVideo();
+            }
+
+            objectiveTitle.Visible = objectiveText.Visible = false;
+
+            videoFrame.RectTransform.NonScaledSize += resolution + new Point(borderSize, borderSize);
+            videoView.RectTransform.NonScaledSize += resolution;
+
+            title.Text = TextManager.Get(contentId);
+            title.RectTransform.NonScaledSize += new Point(textSettings.Width, titleHeight);
+
+            if (textSettings.Text != string.Empty)
+            {
+                textSettings.Text = ToolBox.WrapText(textSettings.Text, textSettings.Width, GUI.Font);
+                int wrappedHeight = textSettings.Text.Split('\n').Length * textHeight;
+                textFrame.RectTransform.NonScaledSize += new Point(textSettings.Width + borderSize, wrappedHeight + borderSize + buttonSize.Y + titleHeight);
+                textContent.RectTransform.NonScaledSize = new Point(textSettings.Width, wrappedHeight);
+            }
+
+            textContent.Text = textSettings.Text;
 
             var okButton = new GUIButton(new RectTransform(buttonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(20, 20) },
                 TextManager.Get("OK"))
@@ -194,12 +269,13 @@ namespace Barotrauma
             objectiveText.RectTransform.NonScaledSize = Point.Zero;
         }
 
-        private Video CreateVideo(Point resolution)
+        private Video CreateVideo()
         {
             Video video = null;
 
             try
             {
+                //video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, "Content/splashscreen.mp4", 1280, 720);
                 video = new Video(GameMain.Instance.GraphicsDevice, GameMain.SoundManager, filePath, (uint)resolution.X, (uint)resolution.Y);
             }
             catch (Exception e)

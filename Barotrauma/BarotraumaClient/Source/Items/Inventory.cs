@@ -301,7 +301,7 @@ namespace Barotrauma
         protected virtual void ControlInput(Camera cam)
         {
             // Note that these targets are static. Therefore the outcome is the same if this method is called multiple times or only once.
-            if (selectedSlot != null && !DraggingItemToWorld)
+            if (selectedSlot != null || draggingItem != null)
             {
                 cam.Freeze = true;
             }
@@ -609,17 +609,8 @@ namespace Barotrauma
                 
                 if (selectedSlot == null)
                 {
-                    if (DraggingItemToWorld &&
-                        Character.Controlled.FocusedItem?.OwnInventory != null &&
-                        Character.Controlled.FocusedItem.OwnInventory.TryPutItem(draggingItem, Character.Controlled))
-                    {
-                        GUI.PlayUISound(GUISoundType.PickItem);
-                    }
-                    else
-                    {
-                        GUI.PlayUISound(GUISoundType.DropItem);
-                        draggingItem.Drop(Character.Controlled);
-                    }
+                    draggingItem.Drop(Character.Controlled);
+                    GUI.PlayUISound(GUISoundType.DropItem);
                 }
                 else if (selectedSlot.ParentInventory.Items[selectedSlot.SlotIndex] != draggingItem)
                 {
@@ -711,27 +702,10 @@ namespace Barotrauma
                     int iconSize = (int)(64 * GUI.Scale);
                     float scale = Math.Min(Math.Min(iconSize / sprite.size.X, iconSize / sprite.size.Y), 1.5f);
                     Vector2 itemPos = PlayerInput.MousePosition;
-
-                    if (GUI.MouseOn == null && selectedSlot == null)
-                    {
-                        var shadowSprite = GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0];
-                        string toolTip = Character.Controlled.FocusedItem != null ?
-                            TextManager.Get("PutItemIn").Replace("[itemname]", Character.Controlled.FocusedItem.Name) :
-                            TextManager.Get("DropItem");
-                        int textWidth = (int)Math.Max(GUI.Font.MeasureString(draggingItem.Name).X, GUI.SmallFont.MeasureString(toolTip).X);
-                        int textSpacing = (int)(15 * GUI.Scale);
-                        Point shadowBorders = (new Point(40, 10)).Multiply(GUI.Scale);
-                        shadowSprite.Draw(spriteBatch,
-                            new Rectangle(itemPos.ToPoint() - new Point(iconSize / 2) - shadowBorders, new Point(iconSize + textWidth + textSpacing, iconSize) + shadowBorders.Multiply(2)), Color.Black * 0.8f);
-                        GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y - iconSize / 2), draggingItem.Name, Color.White);
-                        GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y), toolTip,
-                            color: Character.Controlled.FocusedItem == null ? Color.Red : Color.LightGreen,
-                            font: GUI.SmallFont);
-                    }
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black, scale: scale);
-                    sprite.Draw(spriteBatch,
-                        itemPos,
-                        sprite == draggingItem.Sprite ? draggingItem.GetSpriteColor() : draggingItem.GetInventoryIconColor(),
+                    sprite.Draw(spriteBatch, 
+                        itemPos, 
+                        sprite == draggingItem.Sprite ? draggingItem.GetSpriteColor() : draggingItem.GetInventoryIconColor(), 
                         scale: scale);
                 }
             }

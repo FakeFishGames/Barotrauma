@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Barotrauma.Items.Components;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using System.Windows;
 
 namespace Barotrauma.Tutorials
 {
@@ -41,8 +42,12 @@ namespace Barotrauma.Tutorials
         private bool disableTutorialOnDeficiencyFound = true;
 
         private GUIFrame holderFrame, objectiveFrame;
+        //private GUIButton toggleButton;
+        //private bool objectivesOpen = false;
+        //private float openState = 0f;
         private List<TutorialSegment> activeObjectives = new List<TutorialSegment>();
         private string objectiveTranslated;
+        //private Point objectiveBaseOffset = Point.Zero;
 
         private float floodTutorialTimer = 0.0f;
         private const float floodTutorialDelay = 2.0f;
@@ -108,6 +113,7 @@ namespace Barotrauma.Tutorials
             base.Initialize();
             videoPlayer = new VideoPlayer();
             characterTimeOnSonar = new List<Pair<Character, float>>();
+            //objectivesOpen = true;
         }
 
         public void LoadPartiallyComplete(XElement element)
@@ -129,6 +135,15 @@ namespace Barotrauma.Tutorials
             {
                 segments[completedSegments[i]].IsTriggered = true;
             }
+        }
+
+        private void PreloadVideoContent() // Have to see if needed with videos
+        {
+            /*for (int i = 0; i < segments.Count; i++)
+            {
+                if (segments[i].ContentType != ContentTypes.Video || segments[i].IsTriggered) continue;
+                spriteSheetPlayer.PreloadContent(playableContentPath, "tutorial", segments[i].Id, segments[i].VideoContent);
+            }*/
         }
 
         public void SavePartiallyComplete(XElement element)
@@ -162,7 +177,10 @@ namespace Barotrauma.Tutorials
         {
             if (!Initialized) return;
 
+            PreloadVideoContent();
+
             base.Start();
+
             injuredMember = null;
             activeObjectives.Clear();
             objectiveTranslated = TextManager.Get("Objective");
@@ -231,6 +249,21 @@ namespace Barotrauma.Tutorials
         {
             holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
             objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveAnchor, holderFrame.RectTransform), style: null);
+
+            /*int toggleButtonWidth = (int)(30 * GUI.Scale);
+            int toggleButtonHeight = (int)(40 * GUI.Scale);
+            toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, toggleButtonHeight), objectiveFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(0, 20) }, style: "UIToggleButton");
+            toggleButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                objectivesOpen = !objectivesOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = objectivesOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
+                return true;
+            };
+
+            objectiveBaseOffset = new Point((int)(-2.5f * toggleButton.Rect.Width), 0);*/
         }
 
         public override void AddToGUIUpdateList()
@@ -278,11 +311,48 @@ namespace Barotrauma.Tutorials
             {
                 CheckActiveObjectives(activeObjectives[i], deltaTime);
             }
+
+            /*if (activeObjectives.Count > 0)
+            {
+                if (objectivesOpen)
+                {
+                    openState -= deltaTime * 5.0f;
+                }
+                else
+                {
+                    openState += deltaTime * 5.0f;
+                }
+
+                openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
+
+                float widestObjective = 0f;
+                for (int i = 0; i < activeObjectives.Count; i++)
+                {
+                    if (activeObjectives[i].ReplayButton.Rect.Width > widestObjective)
+                    {
+                        widestObjective = activeObjectives[i].ReplayButton.Rect.Width;
+                    }
+                }
+
+                float objectivesHiddenOffset = widestObjective + toggleButton.Rect.Width + 100f;
+
+                for (int i = 0; i < activeObjectives.Count; i++)
+                {
+                    activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = objectiveBaseOffset + new Point((int)MathHelper.SmoothStep(0, objectivesHiddenOffset, openState), 0);
+                }
+            }*/
         }
 
         private void ClosePreTextAndTriggerVideoCallback()
         {
-            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
+            if (!string.IsNullOrEmpty(activeSegment.Objective))
+            {
+                videoPlayer.LoadContentWithObjective(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, activeSegment.Objective, CurrentSegmentStopCallback);
+            }
+            else
+            {
+                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(activeSegment.VideoContent), new VideoPlayer.TextSettings(activeSegment.VideoContent), activeSegment.Id, true, CurrentSegmentStopCallback);
+            }
         }
 
         private void CurrentSegmentStopCallback()
@@ -734,7 +804,7 @@ namespace Barotrauma.Tutorials
         {
             if (ContentRunning) return;
             ContentRunning = true;
-            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
+            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, () => ContentRunning = false);
         }
 
         private IEnumerable<object> WaitToStop()
