@@ -52,6 +52,9 @@
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>
       <Containable identifiers="fulguriumfuelrod">
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true"/>
+      </Containable>
+      <Containable identifiers="thoriumfuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
       </Containable>
     </ItemContainer>
@@ -94,8 +97,9 @@
   <Item
     name="Fulgurium Fuel Rod"
     identifier="fulguriumfuelrod"
-    Tags="smallitem,reactorfuel"    
+    Tags="smallitem,reactorfuel"
     cargocontaineridentifier="metalcrate"
+    health="150"
     scale="0.5">
 
     <Deconstruct time="10">
@@ -116,6 +120,7 @@
     identifier="thoriumfuelrod"
     Tags="smallitem,reactorfuel"
     cargocontaineridentifier="metalcrate"
+    health="200"
     scale="0.5">
 
     <Deconstruct time="10">

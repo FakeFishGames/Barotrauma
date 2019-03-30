@@ -1718,11 +1718,9 @@
   <EntityName.ladder>Ladder</EntityName.ladder>
   <EntityDescription.ladder>Allows for vertical locomotion</EntityDescription.ladder>
   <EntityName.fuelrod>Fuel Rod</EntityName.fuelrod>
-  <EntityDescription.fuelrod>A bar of enriched uranium, for use within a reactor</EntityDescription.fuelrod>
+  <EntityDescription.fuelrod>A rod of enriched uranium, for use within a reactor</EntityDescription.fuelrod>
   <EntityName.fulguriumfuelrod>Fulgurium Fuel Rod</EntityName.fulguriumfuelrod>
-  <EntityDescription.fulguriumfuelrod>A bar of enriched fulgurium, for use within a reactor</EntityDescription.fulguriumfuelrod>
   <EntityName.thoriumfuelrod>Thorium Fuel Rod</EntityName.thoriumfuelrod>
-  <EntityDescription.thoriumfuelrod>A thorium bar, for use within a reactor</EntityDescription.thoriumfuelrod>
   <EntityName.coilgunbolt>Coilgun Bolt</EntityName.coilgunbolt>
   <EntityDescription.coilgunbolt>For firing from a coilgun</EntityDescription.coilgunbolt>
   <EntityName.depthchargeshell>Depth Charge Shell</EntityName.depthchargeshell>
@@ -2749,5 +2747,9 @@
 
   <CannotEditVanillaSubs>Cannot edit the submarines defined in the Vanilla content package!</CannotEditVanillaSubs>
   <CharacterEditor.CannotEditVanillaCharacters>Cannot edit the characters defined in the Vanilla content package!</CharacterEditor.CannotEditVanillaCharacters>
+
+  <EntityDescription.fulguriumfuelrod>A rod of enriched fulgurium, for use within a reactor. Generates significantly more heat and lasts longer than uranium fuel rods.</EntityDescription.fulguriumfuelrod>
+  <EntityDescription.thoriumfuelrod>A thorium bar, for use within a reactor. Generates slightly more heat and lasts longer than uranium fuel rods.</EntityDescription.thoriumfuelrod>
+
 
 </infotexts>
