@@ -211,6 +211,11 @@ namespace Barotrauma
                                 return success;
                         }
                     }
+                    else if (Operator == OperatorType.NotEquals)
+                    {
+                        //no status effects, so the tags cannot be equal -> condition met
+                        return true;
+                    }
                     return success;
                 case ConditionType.SpeciesName:
                     Character targetCharacter = target as Character;
