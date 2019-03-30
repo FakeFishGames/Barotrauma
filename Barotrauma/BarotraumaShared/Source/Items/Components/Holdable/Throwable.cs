@@ -104,8 +104,8 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
-
-                    item.Drop(picker, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
+                    Character thrower = picker;
+                    item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
 
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector*10.0f);
@@ -115,7 +115,15 @@ namespace Barotrauma.Items.Components
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;
                     throwPos = 0;
                     throwDone = true;
-                    ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, picker); //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
+
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                    {
+                        GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnSecondaryUse, this, thrower.ID });
+                    }
+                    if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                    {
+                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, thrower); //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
+                    }
                     throwing = false;
                 }
             }
