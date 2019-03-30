@@ -1,13 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Items.Components;
-#if CLIENT
-using Barotrauma.Particles;
-using Barotrauma.Sounds;
-#endif
 
 namespace Barotrauma
 {
@@ -90,20 +86,12 @@ namespace Barotrauma
             }
         }
 
+
         private TargetType targetTypes;
         protected HashSet<string> targetIdentifiers;
 
         private List<RelatedItem> requiredItems;
-
-#if CLIENT
-        private List<ParticleEmitter> particleEmitters;
-
-        private List<RoundSound> sounds = new List<RoundSound>();
-        private SoundSelectionMode soundSelectionMode;
-        private SoundChannel soundChannel;
-        private bool loopSound;
-#endif
-
+        
         public string[] propertyNames;
         private object[] propertyEffects;
 
@@ -192,10 +180,6 @@ namespace Barotrauma
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
 
             Range = element.GetAttributeFloat("range", 0.0f);
-
-#if CLIENT
-            particleEmitters = new List<ParticleEmitter>();
-#endif
 
             IEnumerable<XAttribute> attributes = element.Attributes();
             List<XAttribute> propertyAttributes = new List<XAttribute>();
@@ -373,28 +357,16 @@ namespace Barotrauma
                         var newSpawnItem = new ItemSpawnInfo(subElement, parentDebugName);
                         if (newSpawnItem.ItemPrefab != null) spawnItems.Add(newSpawnItem);
                         break;
-#if CLIENT
-                    case "particleemitter":
-                        particleEmitters.Add(new ParticleEmitter(subElement));
-                        break;
-                    case "sound":
-                        var sound = Submarine.LoadRoundSound(subElement);
-                        if (sound != null)
-                        {
-                            loopSound = subElement.GetAttributeBool("loop", false);
-                            if (subElement.Attribute("selectionmode") != null)
-                            {
-                                if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
-                                {
-                                    soundSelectionMode = selectionMode;
-                                }
-                            }
-                            sounds.Add(sound);
-                        }
-                        break;
-#endif
                 }
             }
+            InitProjSpecific(element, parentDebugName);
+        }
+
+        partial void InitProjSpecific(XElement element, string parentDebugName);
+
+        public bool HasTargetType(TargetType targetType)
+        {
+            return (targetTypes & targetType) != 0;
         }
 
         public bool HasTargetType(TargetType targetType)
@@ -601,46 +573,10 @@ namespace Barotrauma
             {
                 hull = ((Item)entity).CurrentHull;
             }
-#if CLIENT
-            if (entity != null && sounds.Count > 0)
-            {
-                if (soundChannel == null || !soundChannel.IsPlaying)
-                {
-                    if (soundSelectionMode == SoundSelectionMode.All)
-                    {
-                        foreach (RoundSound sound in sounds)
-                        {
-                            soundChannel = SoundPlayer.PlaySound(sound.Sound, sound.Volume, sound.Range, entity.WorldPosition, hull);
-                            if (soundChannel != null) soundChannel.Looping = loopSound;
-                        }
-                    }
-                    else
-                    {
-                        int selectedSoundIndex = 0;
-                        if (soundSelectionMode == SoundSelectionMode.ItemSpecific && entity is Item item)
-                        {
-                            selectedSoundIndex = item.ID % sounds.Count;
-                        }
-                        else if (soundSelectionMode == SoundSelectionMode.CharacterSpecific && entity is Character user)
-                        {
-                            selectedSoundIndex = user.ID % sounds.Count;
-                        }
-                        else
-                        {
-                            selectedSoundIndex = Rand.Int(sounds.Count);
-                        }
-                        var selectedSound = sounds[selectedSoundIndex];
-                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, entity.WorldPosition, hull);
-                        if (soundChannel != null) soundChannel.Looping = loopSound;
-                    }
-                }
-            }
-#endif            
 
             foreach (ISerializableEntity serializableEntity in targets)
             {
-                Item item = serializableEntity as Item;
-                if (item == null) continue;
+                if (!(serializableEntity is Item item)) continue;
 
                 Character targetCharacter = targets.FirstOrDefault(t => t is Character character && !character.Removed) as Character;
                 if (targetCharacter == null)
@@ -740,11 +676,7 @@ namespace Barotrauma
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
             
-            bool isNotClient = true;
-#if CLIENT
-            isNotClient = GameMain.Client == null;
-#endif
-
+            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
             if (isNotClient && entity != null && Entity.Spawner != null) //clients are not allowed to spawn items
             {
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
@@ -801,25 +733,10 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            if (entity != null)
-            {
-                foreach (ParticleEmitter emitter in particleEmitters)
-                {
-                    float angle = 0.0f;
-                    if (emitter.Prefab.CopyEntityAngle)
-                    {
-                        if (entity is Item it)
-                        {
-                            angle = it.body == null ? 0.0f : it.body.Rotation;
-                        }
-                    }
-
-                    emitter.Emit(deltaTime, entity.WorldPosition, hull, angle);
-                }
-            }
-#endif
+            ApplyProjSpecific(deltaTime, entity, targets, hull);
         }
+
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull currentHull);
 
         private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {
@@ -857,6 +774,8 @@ namespace Barotrauma
 
         public static void UpdateAll(float deltaTime)
         {
+            UpdateAllProjSpecific(deltaTime);
+
             DelayedEffect.Update(deltaTime);
             for (int i = DurationList.Count - 1; i >= 0; i--)
             {
@@ -925,11 +844,16 @@ namespace Barotrauma
             }
         }
 
+        static partial void UpdateAllProjSpecific(float deltaTime);
+
         public static void StopAll()
         {
             CoroutineManager.StopCoroutines("statuseffect");
             DelayedEffect.DelayList.Clear();
             DurationList.Clear();
+#if CLIENT
+            //ActiveLoopingSounds.Clear();
+#endif
         }
 
         public void AddTag(string tag)
