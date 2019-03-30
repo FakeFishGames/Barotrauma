@@ -2449,7 +2449,6 @@
   
   <!-- Huskification -->
   <HuskDormant>Your throat feels sore</HuskDormant>
-  <HuskDormant>Your feel feverish</HuskDormant>
   <HuskDormant>It feels as if something was stuck in your throat</HuskDormant>
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
@@ -2751,5 +2750,5 @@
   <EntityDescription.fulguriumfuelrod>A rod of enriched fulgurium, for use within a reactor. Generates significantly more heat and lasts longer than uranium fuel rods.</EntityDescription.fulguriumfuelrod>
   <EntityDescription.thoriumfuelrod>A thorium bar, for use within a reactor. Generates slightly more heat and lasts longer than uranium fuel rods.</EntityDescription.thoriumfuelrod>
 
-
+  <HuskDormant>You feel feverish</HuskDormant>
 </infotexts>
