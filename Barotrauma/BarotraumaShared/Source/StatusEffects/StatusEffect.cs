@@ -369,11 +369,6 @@ namespace Barotrauma
             return (targetTypes & targetType) != 0;
         }
 
-        public bool HasTargetType(TargetType targetType)
-        {
-            return (targetTypes & targetType) != 0;
-        }
-
         public virtual bool HasRequiredItems(Entity entity)
         {
             if (requiredItems == null) return true;
