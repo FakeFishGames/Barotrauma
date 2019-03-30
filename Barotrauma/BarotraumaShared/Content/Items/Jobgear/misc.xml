@@ -32,7 +32,7 @@
     </Deconstruct>
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5" />
-      <StatusEffect type="OnWearing" target="Character" HideFace="true" />
+      <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false"/>
     </Wearable>
   </Item>
   <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother.">
