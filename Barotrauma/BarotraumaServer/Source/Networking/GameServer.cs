@@ -1370,7 +1370,8 @@ namespace Barotrauma.Networking
             while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
             {
                 var entity = c.PendingPositionUpdates.Peek();
-                if (entity == null || entity.Removed)
+                if (entity == null || entity.Removed || 
+                    (entity is Item item && item.PositionUpdateInterval == float.PositiveInfinity))
                 {
                     c.PendingPositionUpdates.Dequeue();
                     continue;
