@@ -2752,5 +2752,5 @@
 
   <HuskDormant>You feel feverish</HuskDormant>
 
-  <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver to submarine.</MiniMapOutpostDockingInfo>
+  <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver the submarine.</MiniMapOutpostDockingInfo>
 </infotexts>
