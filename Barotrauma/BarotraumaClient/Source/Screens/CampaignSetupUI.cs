@@ -58,10 +58,7 @@ namespace Barotrauma
 
             // New game left side
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("SelectedSub") + ":", textAlignment: Alignment.BottomLeft);
-            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform))
-            {
-                OnSelected = CheckForPax
-            };
+            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform));
 
             UpdateSubList(submarines);
 
@@ -362,27 +359,9 @@ namespace Barotrauma
         {
             if (isMultiplayer) return;
             Tutorial contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial);
-
-            Submarine selectedSub = subList.SelectedData as Submarine;
-
-            if (selectedSub == null || selectedSub.Name != "PAX")
-            {
-                contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
-            }
-            else
-            {
-                contextualTutorialBox.Selected = true;
-            }
+            contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
         }
-
-        private bool CheckForPax(GUIComponent component, object obj)
-        {
-            if (!(obj is Submarine) || contextualTutorialBox == null) return false;
-            Submarine sub = obj as Submarine;
-            contextualTutorialBox.Selected = sub.Name == "PAX";
-            return true;
-        }
-
+        
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
             if (isMultiplayer)
