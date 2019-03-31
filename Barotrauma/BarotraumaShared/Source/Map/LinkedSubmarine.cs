@@ -229,6 +229,8 @@ namespace Barotrauma
 
             if (myPort != null)
             {
+                myPort.Undock();
+
                 Vector2 portDiff = myPort.Item.WorldPosition - sub.WorldPosition;
                 Vector2 offset = (myPort.IsHorizontal ?
                     Vector2.UnitX * Math.Sign(linkedPort.Item.WorldPosition.X - myPort.Item.WorldPosition.X) :
