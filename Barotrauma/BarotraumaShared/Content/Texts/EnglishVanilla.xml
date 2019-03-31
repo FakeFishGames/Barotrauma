@@ -2751,4 +2751,6 @@
   <EntityDescription.thoriumfuelrod>A thorium bar, for use within a reactor. Generates slightly more heat and lasts longer than uranium fuel rods.</EntityDescription.thoriumfuelrod>
 
   <HuskDormant>You feel feverish</HuskDormant>
+
+  <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver to submarine.</MiniMapOutpostDockingInfo>
 </infotexts>
