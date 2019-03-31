@@ -1142,9 +1142,13 @@ namespace Barotrauma.Networking
 
         public IEnumerable<object> EndGame(string endMessage)
         {
-            if (!gameStarted) yield return CoroutineStatus.Success;
+            if (!gameStarted)
+            {
+                GameMain.NetLobbyScreen.Select();
+                yield return CoroutineStatus.Success;
+            }
 
-            if (GameMain.GameSession != null) GameMain.GameSession.GameMode.End(endMessage);
+            if (GameMain.GameSession != null) { GameMain.GameSession.GameMode.End(endMessage); }
 
             gameStarted = false;
             Character.Controlled = null;
