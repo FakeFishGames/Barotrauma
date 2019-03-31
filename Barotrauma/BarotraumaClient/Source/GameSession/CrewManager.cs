@@ -130,7 +130,12 @@ namespace Barotrauma
                 {
                     OnEnterMessage = (textbox, text) =>
                     {
-                        if (Character.Controlled == null) { return true; }
+                        if (Character.Controlled?.Info == null)
+                        {
+                            textbox.Deselect();
+                            textbox.Text = "";
+                            return true;
+                        }
 
                         textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
 
