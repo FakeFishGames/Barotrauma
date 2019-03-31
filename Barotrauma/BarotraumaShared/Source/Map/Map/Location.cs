@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -76,10 +77,10 @@ namespace Barotrauma
             }
         }
 
-        public Location(Vector2 mapPosition, int? zone)
+        public Location(Vector2 mapPosition, int? zone, Random rand)
         {
-            this.Type = LocationType.Random("", zone);
-            this.Name = RandomName(Type);
+            this.Type = LocationType.Random(rand, zone);
+            this.Name = RandomName(Type, rand);
             this.MapPosition = mapPosition;
 
             PortraitId = ToolBox.StringToInt(Name);
@@ -87,9 +88,9 @@ namespace Barotrauma
             Connections = new List<LocationConnection>();
         }
 
-        public static Location CreateRandom(Vector2 position, int? zone)
+        public static Location CreateRandom(Vector2 position, int? zone , Random rand)
         {
-            return new Location(position, zone);        
+            return new Location(position, zone, rand);        
         }
 
         public IEnumerable<Mission> GetMissionsInConnection(LocationConnection connection)
@@ -129,10 +130,10 @@ namespace Barotrauma
             availableMissions.RemoveAll(m => m.Completed);
         }
 
-        private string RandomName(LocationType type)
+        private string RandomName(LocationType type, Random rand)
         {
-            baseName = type.GetRandomName();
-            nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
+            baseName = type.GetRandomName(rand);
+            nameFormatIndex = rand.Next() % type.NameFormats.Count;
             return type.NameFormats[nameFormatIndex].Replace("[name]", baseName);
         }
 

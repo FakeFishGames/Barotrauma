@@ -155,19 +155,14 @@ namespace Barotrauma
             return portraits[Math.Abs(portraitId) % portraits.Count];
         }
 
-        public string GetRandomName()
+        public string GetRandomName(Random rand)
         {
-            return names[Rand.Int(names.Count, Rand.RandSync.Server)];
+            return names[rand.Next() % names.Count];
         }
 
-        public static LocationType Random(string seed = "", int? zone = null)
+        public static LocationType Random(Random rand, int? zone = null)
         {
             Debug.Assert(List.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
-
-            if (!string.IsNullOrWhiteSpace(seed))
-            {
-                Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
-            }
 
             List<LocationType> allowedLocationTypes = zone.HasValue ? List.FindAll(lt => lt.CommonnessPerZone.ContainsKey(zone.Value)) : List;
 
@@ -180,12 +175,12 @@ namespace Barotrauma
             {
                 return ToolBox.SelectWeightedRandom(
                     allowedLocationTypes, 
-                    allowedLocationTypes.Select(a => a.CommonnessPerZone[zone.Value]).ToList(), 
-                    Rand.RandSync.Server);
+                    allowedLocationTypes.Select(a => a.CommonnessPerZone[zone.Value]).ToList(),
+                    rand);
             }
             else
             {
-                return allowedLocationTypes[Rand.Int(allowedLocationTypes.Count, Rand.RandSync.Server)];
+                return allowedLocationTypes[rand.Next() % allowedLocationTypes.Count];
             }
         }
 

@@ -148,7 +148,7 @@ namespace Barotrauma
 
                 lastUpdateID++;
                 levelSeed = value;
-                LocationType.Random(levelSeed); //call to sync up with clients
+                LocationType.Random(new MTRandom(ToolBox.StringToInt(levelSeed))); //call to sync up with clients
             }
         }
         
