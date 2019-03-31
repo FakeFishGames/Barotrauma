@@ -196,7 +196,7 @@ namespace Barotrauma
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
                     int zone = MathHelper.Clamp(generationParams.DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, generationParams.DifficultyZones);
-                    newLocations[i] = Location.CreateRandom(position, zone);
+                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.Server));
                     Locations.Add(newLocations[i]);
                 }
 

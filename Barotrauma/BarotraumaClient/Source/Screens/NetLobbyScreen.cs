@@ -233,7 +233,8 @@ namespace Barotrauma
 
                 levelSeed = value;
 
-                backgroundSprite = LocationType.Random(levelSeed)?.GetPortrait(ToolBox.StringToInt(levelSeed));
+                int intSeed = ToolBox.StringToInt(levelSeed);
+                backgroundSprite = LocationType.Random(new MTRandom(intSeed))?.GetPortrait(intSeed);
                 seedBox.Text = levelSeed;
 
                 //lastUpdateID++;
