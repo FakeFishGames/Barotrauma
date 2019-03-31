@@ -426,11 +426,11 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!attachable || item.body == null) return (character == null || character.IsKeyDown(InputType.Aim));
+            if (!attachable || item.body == null) { return character == null || character.IsKeyDown(InputType.Aim); }
             if (character != null)
             {
-                if (!character.IsKeyDown(InputType.Aim)) return false;
-                if (!CanBeAttached()) return false;
+                if (!character.IsKeyDown(InputType.Aim)) { return false; }
+                if (!CanBeAttached()) { return false; }
 #if SERVER
                 if (GameMain.Server != null)
                 {
@@ -438,10 +438,13 @@ namespace Barotrauma.Items.Components
                     GameServer.Log(character.LogName + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
                 }
 #endif
-                item.Drop(character);
             }
-            
-            AttachToWall();
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                if (character != null) { item.Drop(character); }
+                AttachToWall();
+            }
 
             return true;
         }
@@ -552,7 +555,7 @@ namespace Barotrauma.Items.Components
         public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             base.ServerWrite(msg, c, extraData);
-            if (!attachable || body == null) return;
+            if (!attachable || body == null) { return; }
 
             msg.Write(Attached);
             msg.Write(body.SimPosition.X);
