@@ -25,6 +25,12 @@ namespace Barotrauma.Items.Components
                 DrawHUDBack, null);
             submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
+            new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
+                DrawHUDFront, null)
+            {
+                CanBeFocused = false
+            };
+
             hullInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.13f), GUI.Canvas, minSize: new Point(250, 150)),
                 style: "InnerFrame")
             {
@@ -47,7 +53,7 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            if (hasPower) hullInfoFrame.AddToGUIUpdateList();
+            hullInfoFrame.AddToGUIUpdateList();
         }
 
         public override void OnMapLoaded()
@@ -94,6 +100,27 @@ namespace Barotrauma.Items.Components
                     hullData.DistortionTimer = Rand.Range(1.0f, 10.0f);
                 }
             }
+        }
+
+        private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
+        {
+            foreach (GUIComponent child in submarineContainer.Children.First().Children)
+            {
+                if (child.UserData is Hull hull)
+                {
+                    if (hull.Submarine == null || !hull.Submarine.IsOutpost) { continue; }
+                    string text = TextManager.Get("MiniMapOutpostDockingInfo").Replace("[outpost]", hull.Submarine.Name);
+                    Vector2 textSize = GUI.Font.MeasureString(text);
+                    Vector2 textPos = child.Center;
+                    if (textPos.X + textSize.X / 2 > submarineContainer.Rect.Right)
+                        textPos.X -= ((textPos.X + textSize.X / 2) - submarineContainer.Rect.Right) + 10;
+                    if (textPos.X - textSize.X / 2 < submarineContainer.Rect.X)
+                        textPos.X += (submarineContainer.Rect.X - (textPos.X - textSize.X / 2)) + 10;
+                    GUI.DrawString(spriteBatch, textPos - textSize / 2, text,
+                       Color.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f);
+                    break;
+                }
+            }            
         }
 
         private void DrawHUDBack(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -221,7 +248,7 @@ namespace Barotrauma.Items.Components
             foreach (Submarine sub in subs)
             {
                 if (sub.HullVertices == null) { continue; }
-
+                
                 Rectangle worldBorders = sub.GetDockedBorders();
                 worldBorders.Location += sub.WorldPosition.ToPoint();
                 
@@ -242,6 +269,8 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
                 }
             }
+
+
         }
 
         private void GetLinkedHulls(Hull hull, List<Hull> linkedHulls)

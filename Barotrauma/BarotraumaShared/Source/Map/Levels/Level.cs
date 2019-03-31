@@ -1519,6 +1519,14 @@ namespace Barotrauma
                 string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
                 var outpost = new Submarine(outpostFile, tryLoad: false);
                 outpost.Load(unloadPrevious: false);
+                if (i == 0)
+                {
+                    if (GameMain.GameSession?.StartLocation != null) { outpost.Name = GameMain.GameSession.StartLocation.Name; }
+                }
+                else
+                {
+                    if (GameMain.GameSession?.EndLocation != null) { outpost.Name = GameMain.GameSession.EndLocation.Name; }
+                }
                 outpost.MakeOutpost();
 
                 Point? minSize = null;
