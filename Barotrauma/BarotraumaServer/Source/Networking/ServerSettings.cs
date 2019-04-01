@@ -337,37 +337,56 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
-                string permissionsStr = clientElement.GetAttributeString("permissions", "");
                 ClientPermissions permissions = Networking.ClientPermissions.None;
-                if (permissionsStr.ToLowerInvariant() == "all")
+                List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+
+                if (clientElement.Attribute("preset") == null)
                 {
-                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    string permissionsStr = clientElement.GetAttributeString("permissions", "");
+                    if (permissionsStr.ToLowerInvariant() == "all")
                     {
-                        permissions |= permission;
+                        foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                        {
+                            permissions |= permission;
+                        }
+                    }
+                    else if (!Enum.TryParse(permissionsStr, out permissions))
+                    {
+                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
+                        continue;
+                    }
+
+                    if (permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
+                    {
+                        foreach (XElement commandElement in clientElement.Elements())
+                        {
+                            if (commandElement.Name.ToString().ToLowerInvariant() != "command") continue;
+
+                            string commandName = commandElement.GetAttributeString("name", "");
+                            DebugConsole.Command command = DebugConsole.FindCommand(commandName);
+                            if (command == null)
+                            {
+                                DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + commandName + "\" is not a valid console command.");
+                                continue;
+                            }
+
+                            permittedCommands.Add(command);
+                        }
                     }
                 }
-                else if (!Enum.TryParse(permissionsStr, out permissions))
+                else
                 {
-                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
-                    continue;
-                }
-
-                List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
-                if (permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
-                {
-                    foreach (XElement commandElement in clientElement.Elements())
+                    string presetName = clientElement.GetAttributeString("preset", "");
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name == presetName);
+                    if (preset == null)
                     {
-                        if (commandElement.Name.ToString().ToLowerInvariant() != "command") continue;
-
-                        string commandName = commandElement.GetAttributeString("name", "");
-                        DebugConsole.Command command = DebugConsole.FindCommand(commandName);
-                        if (command == null)
-                        {
-                            DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + commandName + "\" is not a valid console command.");
-                            continue;
-                        }
-
-                        permittedCommands.Add(command);
+                        DebugConsole.ThrowError("Failed to restore saved permissions to the client \"" + clientName + "\". Permission preset \"" + presetName + "\" not found.");
+                        return;
+                    }
+                    else
+                    {
+                        permissions = preset.Permissions;
+                        permittedCommands = preset.PermittedCommands.ToList();
                     }
                 }
 
@@ -440,9 +459,14 @@ namespace Barotrauma.Networking
 
             foreach (SavedClientPermission clientPermission in ClientPermissions)
             {
+                var matchingPreset = PermissionPreset.List.Find(p => p.MatchesPermissions(clientPermission.Permissions, clientPermission.PermittedCommands));
+                if (matchingPreset != null && matchingPreset.Name == "None")
+                {
+                    continue;
+                }
+
                 XElement clientElement = new XElement("Client",
-                    new XAttribute("name", clientPermission.Name),
-                    new XAttribute("permissions", clientPermission.Permissions.ToString()));
+                    new XAttribute("name", clientPermission.Name));
 
                 if (clientPermission.SteamID > 0)
                 {
@@ -453,14 +477,21 @@ namespace Barotrauma.Networking
                     clientElement.Add(new XAttribute("ip", clientPermission.IP));
                 }
 
-                if (clientPermission.Permissions.HasFlag(Barotrauma.Networking.ClientPermissions.ConsoleCommands))
+                if (matchingPreset == null)
                 {
-                    foreach (DebugConsole.Command command in clientPermission.PermittedCommands)
+                    clientElement.Add(new XAttribute("permissions", clientPermission.Permissions.ToString()));
+                    if (clientPermission.Permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
                     {
-                        clientElement.Add(new XElement("command", new XAttribute("name", command.names[0])));
+                        foreach (DebugConsole.Command command in clientPermission.PermittedCommands)
+                        {
+                            clientElement.Add(new XElement("command", new XAttribute("name", command.names[0])));
+                        }
                     }
                 }
-
+                else
+                {
+                    clientElement.Add(new XAttribute("preset", matchingPreset.Name));
+                }
                 doc.Root.Add(clientElement);
             }
 

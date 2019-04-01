@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Networking
@@ -54,7 +55,9 @@ namespace Barotrauma.Networking
                     DebugConsole.Command command = DebugConsole.FindCommand(commandName);
                     if (command == null)
                     {
+#if SERVER
                         DebugConsole.ThrowError("Error in permission preset \"" + Name + "\" - " + commandName + "\" is not a valid console command.");
+#endif
                         continue;
                     }
 
@@ -74,6 +77,11 @@ namespace Barotrauma.Networking
             {
                 List.Add(new PermissionPreset(element));
             }
+        }
+
+        public bool MatchesPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        {
+            return permissions == this.Permissions && PermittedCommands.SequenceEqual(permittedConsoleCommands);
         }
     }
 }
