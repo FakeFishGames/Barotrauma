@@ -130,7 +130,7 @@ namespace Barotrauma
                     FixtureFactory.AttachRectangle(
                         ConvertUnits.ToSimUnits(rect.Width),
                         ConvertUnits.ToSimUnits(rect.Height),
-                        5.0f,
+                        100.0f,
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
                         farseerBody, this);
 
@@ -207,7 +207,6 @@ namespace Barotrauma
             farseerBody.Restitution = Restitution;
             farseerBody.Friction = Friction;
             farseerBody.FixedRotation = true;
-            //mass = Body.Mass;
             farseerBody.Awake = true;
             farseerBody.SleepingAllowed = false;
             farseerBody.IgnoreGravity = true;
@@ -649,9 +648,7 @@ namespace Barotrauma
             Vector2 avgContactNormal = Vector2.Zero;
             foreach (Contact levelContact in levelContacts)
             {
-                Vector2 contactNormal;
-                FixedArray2<Vector2> temp;
-                levelContact.GetWorldManifold(out contactNormal, out temp);
+                levelContact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> temp);
 
                 //if the contact normal is pointing from the sub towards the level cell we collided with, flip the normal
                 VoronoiCell cell = levelContact.FixtureB.UserData is VoronoiCell ? 
