@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -90,38 +92,21 @@ namespace Barotrauma.Lights
         public static List<ConvexHullList> HullLists = new List<ConvexHullList>();
         public static BasicEffect shadowEffect;
         public static BasicEffect penumbraEffect;
+
+        private Segment[] segments = new Segment[4];
+        private SegmentPoint[] vertices = new SegmentPoint[4];
+        private SegmentPoint[] losVertices = new SegmentPoint[4];
         
-        Segment[] segments = new Segment[4];
-        SegmentPoint[] vertices = new SegmentPoint[4];
-        SegmentPoint[] losVertices = new SegmentPoint[4];
-        
-        private bool[] backFacing;
-        private bool[] ignoreEdge;
+        private readonly bool[] backFacing;
+        private readonly bool[] ignoreEdge;
 
-        private VertexPositionColor[] shadowVertices;
-        private VertexPositionTexture[] penumbraVertices;
+        private readonly bool isHorizontal;
 
-        public VertexPositionColor[] ShadowVertices
-        {
-            get { return shadowVertices; }
-        }
+        public VertexPositionColor[] ShadowVertices { get; private set; }
+        public VertexPositionTexture[] PenumbraVertices { get; private set; }
+        public int ShadowVertexCount { get; private set; }
 
-        public VertexPositionTexture[] PenumbraVertices
-        {
-            get { return penumbraVertices; }
-        }
-
-        public int shadowVertexCount;
-
-        private MapEntity parentEntity;
-
-        private Rectangle boundingBox;
-
-        public MapEntity ParentEntity
-        {
-            get { return parentEntity; }
-
-        }
+        public MapEntity ParentEntity { get; private set; }
 
         private bool enabled;
         public bool Enabled
@@ -147,17 +132,16 @@ namespace Barotrauma.Lights
             private set;
         }
 
-        public Rectangle BoundingBox
-        {
-            get { return boundingBox; }
-        }
-                
+        public Rectangle BoundingBox { get; private set; }
+
         public ConvexHull(Vector2[] points, Color color, MapEntity parent)
         {
             if (shadowEffect == null)
             {
-                shadowEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
-                shadowEffect.VertexColorEnabled = true;
+                shadowEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                {
+                    VertexColorEnabled = true
+                };
             }
             if (penumbraEffect == null)
             {
@@ -169,21 +153,28 @@ namespace Barotrauma.Lights
                 };
             }
 
-            parentEntity = parent;
+            ParentEntity = parent;
 
-            //cachedShadows = new Dictionary<LightSource, CachedShadow>();
-            
-            shadowVertices = new VertexPositionColor[6 * 2];
-            penumbraVertices = new VertexPositionTexture[6];
+            ShadowVertices = new VertexPositionColor[6 * 2];
+            PenumbraVertices = new VertexPositionTexture[6];
             
             backFacing = new bool[4];
             ignoreEdge = new bool[4];
 
-            //vertices = points;
-            SetVertices(points);
-            //CalculateDimensions();            
+            SetVertices(points);          
                         
             Enabled = true;
+
+            isHorizontal = BoundingBox.Width > BoundingBox.Height;
+            if (ParentEntity is Structure structure)
+            {
+                isHorizontal = structure.IsHorizontal;
+            }
+            else if (ParentEntity is Item item)
+            {
+                var door = item.GetComponent<Door>();
+                if (door != null) { isHorizontal = door.IsHorizontal; }
+            }
 
             var chList = HullLists.Find(x => x.Submarine == parent.Submarine);
             if (chList == null)
@@ -204,44 +195,98 @@ namespace Barotrauma.Lights
         private void MergeOverlappingSegments(ConvexHull ch)
         {
             if (ch == this) return;
-
-            //hide segments that are roughly at the some position as some other segment (e.g. the ends of two adjacent wall pieces)
-            //TODO: prevent "gaps" between shadows when the segments are not exactly at the same position (see the hatches in Humpback for example)
-            /*float mergeDist = 16;
-            float mergeDistSqr = mergeDist * mergeDist;
-            for (int i = 0; i < segments.Length; i++)
+            
+            if (isHorizontal == ch.isHorizontal)
             {
-                for (int j = 0; j < ch.segments.Length; j++)
+                //hide segments that are roughly at the some position as some other segment (e.g. the ends of two adjacent wall pieces)
+                float mergeDist = 32;
+                float mergeDistSqr = mergeDist * mergeDist;
+                for (int i = 0; i < segments.Length; i++)
                 {
-                    if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].Start.Pos) < mergeDistSqr &&
-                        Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].End.Pos) < mergeDistSqr)
+                    for (int j = 0; j < ch.segments.Length; j++)
                     {
-                        ignoreEdge[i] = true;
-                        ch.ignoreEdge[j] = true;
-                    }
-                    else if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].End.Pos) < mergeDistSqr &&
-                        Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].Start.Pos) < mergeDistSqr)
-                    {
-                        ignoreEdge[i] = true;
-                        ch.ignoreEdge[j] = true;
-                    }
-                }
-            }*/
+                        if (segments[i].IsHorizontal != ch.segments[j].IsHorizontal) { continue; }
 
+                        //the segments must be at different sides of the convex hulls to be merged
+                        //(e.g. the right edge of a wall piece and the left edge of another one)
+                        var segment1Center = (segments[i].Start.Pos + segments[i].End.Pos) / 2.0f;
+                        var segment2Center = (ch.segments[j].Start.Pos + ch.segments[j].End.Pos) / 2.0f;
+                        if (Vector2.Dot(segment1Center - BoundingBox.Center.ToVector2(), segment2Center - ch.BoundingBox.Center.ToVector2()) > 0) { continue; }
+
+                        if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].Start.Pos) < mergeDistSqr &&
+                            Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].End.Pos) < mergeDistSqr)
+                        {
+                            ignoreEdge[i] = true;
+                            ch.ignoreEdge[j] = true;
+                            MergeSegments(segments[i], ch.segments[j], true);
+                        }
+                        else if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].End.Pos) < mergeDistSqr &&
+                                Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].Start.Pos) < mergeDistSqr)
+                        {
+                            ignoreEdge[i] = true;
+                            ch.ignoreEdge[j] = true;
+                            MergeSegments(segments[i], ch.segments[j], false);
+                        }
+                    }             
+                }
+            }
+            else
+            {
+                //TODO: do something to corner areas where a vertical wall meets a horizontal one
+            }
+            
             //ignore edges that are inside some other convex hull
             for (int i = 0; i < vertices.Length; i++)
             {
-                if (vertices[i].Pos.X >= ch.boundingBox.X && vertices[i].Pos.X <= ch.boundingBox.Right && 
-                    vertices[i].Pos.Y >= ch.boundingBox.Y && vertices[i].Pos.Y <= ch.boundingBox.Bottom)
+                if (vertices[i].Pos.X >= ch.BoundingBox.X && vertices[i].Pos.X <= ch.BoundingBox.Right && 
+                    vertices[i].Pos.Y >= ch.BoundingBox.Y && vertices[i].Pos.Y <= ch.BoundingBox.Bottom)
                 {
                     Vector2 p = vertices[(i + 1) % vertices.Length].Pos;
 
-                    if (p.X >= ch.boundingBox.X && p.X <= ch.boundingBox.Right && 
-                        p.Y >= ch.boundingBox.Y && p.Y <= ch.boundingBox.Bottom)
+                    if (p.X >= ch.BoundingBox.X && p.X <= ch.BoundingBox.Right && 
+                        p.Y >= ch.BoundingBox.Y && p.Y <= ch.BoundingBox.Bottom)
                     {
                         ignoreEdge[i] = true;
                     }
                 }
+            }
+        }
+
+        private void MergeSegments(Segment segment1, Segment segment2, bool startPointsMatch)
+        {
+            int startPointIndex = -1, endPointIndex = -1;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                if (vertices[i].Pos.NearlyEquals(segment1.Start.Pos))                
+                    startPointIndex = i;                
+                else if (vertices[i].Pos.NearlyEquals(segment1.End.Pos))                
+                    endPointIndex = i;                
+            }
+            if (startPointIndex == -1 || endPointIndex == -1) { return; }
+
+            int startPoint2Index = -1, endPoint2Index = -1;
+            for (int i = 0; i < segment2.ConvexHull.vertices.Length; i++)
+            {
+                if (segment2.ConvexHull.vertices[i].Pos.NearlyEquals(segment2.Start.Pos))                
+                    startPoint2Index = i;                
+                else if (segment2.ConvexHull.vertices[i].Pos.NearlyEquals(segment2.End.Pos))                
+                    endPoint2Index = i;
+            }
+            if (startPoint2Index == -1 || endPoint2Index == -1) { return; }
+
+            if (startPointsMatch)
+            {
+                losVertices[startPointIndex].Pos = segment2.ConvexHull.losVertices[startPoint2Index].Pos =
+                    (segment1.Start.Pos + segment2.Start.Pos) / 2.0f;
+                losVertices[endPointIndex].Pos = segment2.ConvexHull.losVertices[endPoint2Index].Pos =
+                    (segment1.End.Pos + segment2.End.Pos) / 2.0f;
+            }
+            else
+            {
+                losVertices[startPointIndex].Pos = segment2.ConvexHull.losVertices[startPoint2Index].Pos =
+                    (segment1.Start.Pos + segment2.End.Pos) / 2.0f;
+                losVertices[endPointIndex].Pos = segment2.ConvexHull.losVertices[endPoint2Index].Pos =
+                    (segment1.End.Pos + segment2.Start.Pos) / 2.0f;
             }
         }
 
@@ -267,7 +312,7 @@ namespace Barotrauma.Lights
                 if (vertices[i].Pos.Y > minY) maxY = vertices[i].Pos.Y;
             }
 
-            boundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
+            BoundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
         }
                 
         public void Move(Vector2 amount)
@@ -296,11 +341,6 @@ namespace Barotrauma.Lights
             {
                 vertices[i]     = new SegmentPoint(points[i], this);
                 losVertices[i]  = new SegmentPoint(points[i], this);
-
-            }
-            for (int i = 0; i < 4; i++)
-            {
-                segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4], this);
             }
 
             for (int i = 0; i < 4; i++)
@@ -332,12 +372,16 @@ namespace Barotrauma.Lights
                     losVertices[i].Pos = Vector2.Transform(losVertices[i].Pos, rotationMatrix.Value);
                 }
             }
+            for (int i = 0; i < 4; i++)
+            {
+                segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4], this);
+            }
 
             CalculateDimensions();
 
-            if (parentEntity == null) return;
+            if (ParentEntity == null) return;
 
-            var chList = HullLists.Find(x => x.Submarine == parentEntity.Submarine);
+            var chList = HullLists.Find(x => x.Submarine == ParentEntity.Submarine);
             if (chList != null)
             {
                 foreach (ConvexHull ch in chList.List)
@@ -351,11 +395,11 @@ namespace Barotrauma.Lights
         {
             if (!Enabled) return false;
 
-            Rectangle transformedBounds = boundingBox;
-            if (parentEntity != null && parentEntity.Submarine != null)
+            Rectangle transformedBounds = BoundingBox;
+            if (ParentEntity != null && ParentEntity.Submarine != null)
             {
-                transformedBounds.X += (int)parentEntity.Submarine.Position.X;
-                transformedBounds.Y += (int)parentEntity.Submarine.Position.Y;
+                transformedBounds.X += (int)ParentEntity.Submarine.Position.X;
+                transformedBounds.Y += (int)ParentEntity.Submarine.Position.Y;
             }
             return transformedBounds.Intersects(rect);
         }
@@ -396,24 +440,24 @@ namespace Barotrauma.Lights
                 segments[i].Start.WorldPos = segments[i].Start.Pos;
                 segments[i].End.WorldPos = segments[i].End.Pos;
             }
-            if (parentEntity == null || parentEntity.Submarine == null) { return; }
+            if (ParentEntity == null || ParentEntity.Submarine == null) { return; }
             for (int i = 0; i < 4; i++)
             {
-                vertices[i].WorldPos += parentEntity.Submarine.DrawPosition;
-                segments[i].Start.WorldPos += parentEntity.Submarine.DrawPosition;
-                segments[i].End.WorldPos += parentEntity.Submarine.DrawPosition;
+                vertices[i].WorldPos += ParentEntity.Submarine.DrawPosition;
+                segments[i].Start.WorldPos += ParentEntity.Submarine.DrawPosition;
+                segments[i].End.WorldPos += ParentEntity.Submarine.DrawPosition;
             }
         }
 
         public void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
         {
             Vector3 offset = Vector3.Zero;
-            if (parentEntity != null && parentEntity.Submarine != null)
+            if (ParentEntity != null && ParentEntity.Submarine != null)
             {
-                offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
+                offset = new Vector3(ParentEntity.Submarine.DrawPosition.X, ParentEntity.Submarine.DrawPosition.Y, 0.0f);
             }
 
-            shadowVertexCount = 0;
+            ShadowVertexCount = 0;
 
             var vertices = los ? losVertices : this.vertices;
             
@@ -456,16 +500,16 @@ namespace Barotrauma.Lights
 
             //nr of vertices that are in the shadow
             if (endingIndex > startingIndex)
-                shadowVertexCount = endingIndex - startingIndex + 1;
+                ShadowVertexCount = endingIndex - startingIndex + 1;
             else
-                shadowVertexCount = 4 + 1 - startingIndex + endingIndex;
+                ShadowVertexCount = 4 + 1 - startingIndex + endingIndex;
 
             //shadowVertices = new VertexPositionColor[shadowVertexCount * 2];
 
             //create a triangle strip that has the shape of the shadow
             int currentIndex = startingIndex;
             int svCount = 0;
-            while (svCount != shadowVertexCount * 2)
+            while (svCount != ShadowVertexCount * 2)
             {
                 Vector3 vertexPos = new Vector3(vertices[currentIndex].Pos, 0.0f);
 
@@ -473,18 +517,22 @@ namespace Barotrauma.Lights
                 int j = los ? svCount + 1 : svCount;
 
                 //one vertex on the hull
-                shadowVertices[i] = new VertexPositionColor();
-                shadowVertices[i].Color = los ? Color.Black : Color.Transparent;
-                shadowVertices[i].Position = vertexPos+ offset;
+                ShadowVertices[i] = new VertexPositionColor
+                {
+                    Color = los ? Color.Black : Color.Transparent,
+                    Position = vertexPos + offset
+                };
 
                 //one extruded by the light direction
-                shadowVertices[j] = new VertexPositionColor();
-                shadowVertices[j].Color = shadowVertices[i].Color;
+                ShadowVertices[j] = new VertexPositionColor
+                {
+                    Color = ShadowVertices[i].Color
+                };
 
                 Vector3 L2P = vertexPos - new Vector3(lightSourcePos, 0);
                 L2P.Normalize();
                 
-                shadowVertices[j].Position = new Vector3(lightSourcePos, 0) + L2P * 9000 + offset;
+                ShadowVertices[j].Position = new Vector3(lightSourcePos, 0) + L2P * 9000 + offset;
 
                 svCount += 2;
                 currentIndex = (currentIndex + 1) % 4;
@@ -501,23 +549,24 @@ namespace Barotrauma.Lights
             var vertices = los ? losVertices : this.vertices;
 
             Vector3 offset = Vector3.Zero;
-            if (parentEntity != null && parentEntity.Submarine != null)
+            if (ParentEntity != null && ParentEntity.Submarine != null)
             {
-                offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
+                offset = new Vector3(ParentEntity.Submarine.DrawPosition.X, ParentEntity.Submarine.DrawPosition.Y, 0.0f);
             }
 
             for (int n = 0; n < 4; n += 3)
             {
                 Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex].Pos : vertices[endingIndex].Pos, 0.0f);
 
-                penumbraVertices[n] = new VertexPositionTexture();
-                penumbraVertices[n].Position = penumbraStart + offset;
-                penumbraVertices[n].TextureCoordinate = new Vector2(0.0f, 1.0f);
-                //penumbraVertices[0].te = fow ? Color.Black : Color.Transparent;
+                PenumbraVertices[n] = new VertexPositionTexture
+                {
+                    Position = penumbraStart + offset,
+                    TextureCoordinate = new Vector2(0.0f, 1.0f)
+                };
 
                 for (int i = 0; i < 2; i++)
                 {
-                    penumbraVertices[n + i + 1] = new VertexPositionTexture();
+                    PenumbraVertices[n + i + 1] = new VertexPositionTexture();
                     Vector3 vertexDir = penumbraStart - new Vector3(lightSourcePos, 0);
                     vertexDir.Normalize();
 
@@ -526,23 +575,23 @@ namespace Barotrauma.Lights
 
                     vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
                     vertexDir.Normalize();
-                    penumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000 + offset;
+                    PenumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000 + offset;
 
                     if (los)
                     {
-                        penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
+                        PenumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
                     }
                     else
                     {
-                        penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f) : Vector2.Zero;
+                        PenumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f) : Vector2.Zero;
                     }
                 }
 
                 if (n > 0)
                 {
-                    var temp = penumbraVertices[4];
-                    penumbraVertices[4] = penumbraVertices[5];
-                    penumbraVertices[5] = temp;
+                    var temp = PenumbraVertices[4];
+                    PenumbraVertices[4] = PenumbraVertices[5];
+                    PenumbraVertices[5] = temp;
                 }
             }
         }
@@ -614,7 +663,7 @@ namespace Barotrauma.Lights
         
         public void Remove()
         {
-            var chList = HullLists.Find(x => x.Submarine == parentEntity.Submarine);
+            var chList = HullLists.Find(x => x.Submarine == ParentEntity.Submarine);
 
             if (chList != null)
             {
