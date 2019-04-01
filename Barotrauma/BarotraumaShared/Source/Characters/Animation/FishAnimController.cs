@@ -329,7 +329,7 @@ namespace Barotrauma
                     if (nonSeveredJoints.Length == 0)
                     {
                         //only one limb left, the character is now full eaten
-                        Entity.Spawner.AddToRemoveQueue(targetCharacter);
+                        Entity.Spawner?.AddToRemoveQueue(targetCharacter);
                         character.SelectedCharacter = null;
                     }
                     else //sever a random joint
