@@ -50,33 +50,32 @@ namespace Barotrauma
             var leftColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.015f
             };
 
             var rightColumn = new GUILayoutGroup(new RectTransform(isMultiplayer ? Vector2.Zero : new Vector2(1.5f, 1.0f), columnContainer.RectTransform))
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.015f
             };
 
             columnContainer.Recalculate();
 
             // New game left side
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.07f), leftColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), string.Empty);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), TextManager.Get("SaveName") + ":");
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), string.Empty);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.07f), leftColumn.RectTransform), TextManager.Get("MapSeed") + ":", textAlignment: Alignment.BottomLeft);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), ToolBox.RandomSeed(8));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), TextManager.Get("MapSeed") + ":");
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), ToolBox.RandomSeed(8));
 
             if (!isMultiplayer)
             {
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
-                contextualTutorialBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("TutorialActive"));
+                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("TutorialActive"));
                 UpdateTutorialSelection();
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("SelectedSub") + ":", textAlignment: Alignment.BottomLeft);
-            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), TextManager.Get("SelectedSub") + ":");
+            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
 
             if (!isMultiplayer) { subList.OnSelected = OnSubSelected; }
 
@@ -237,10 +236,7 @@ namespace Barotrauma
             foreach (Submarine sub in subsToShow)
             {
                 var textBlock = new GUITextBlock(
-                    new RectTransform(new Vector2(1, 0.2f), subList.Content.RectTransform)
-                    {
-                        AbsoluteOffset = new Point(10, 0)
-                    },
+                    new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform),
                     ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), style: "ListBoxElement")
                     {
                         ToolTip = sub.Description,
