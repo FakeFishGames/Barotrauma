@@ -18,6 +18,8 @@ namespace Barotrauma
         private GUITextBox saveNameBox, seedBox;
         private GUITickBox contextualTutorialBox;
 
+        private GUILayoutGroup subPreviewContainer;
+
         private GUIButton loadGameButton;
         
         public Action<Submarine, string, string> StartNewGame;
@@ -51,34 +53,46 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
+            var rightColumn = new GUILayoutGroup(new RectTransform(isMultiplayer ? Vector2.Zero : new Vector2(1.5f, 1.0f), columnContainer.RectTransform))
             {
+                Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
+            columnContainer.Recalculate();
+
             // New game left side
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.07f), leftColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), string.Empty);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("MapSeed") + ":", textAlignment: Alignment.BottomLeft);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.07f), leftColumn.RectTransform), TextManager.Get("MapSeed") + ":", textAlignment: Alignment.BottomLeft);
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), ToolBox.RandomSeed(8));
 
             if (!isMultiplayer)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("TutorialActive") + ":", textAlignment: Alignment.BottomLeft);
-                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(30, 30), leftColumn.RectTransform), string.Empty);
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+                contextualTutorialBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("TutorialActive"));
                 UpdateTutorialSelection();
             }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("SelectedSub") + ":", textAlignment: Alignment.BottomLeft);
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform));
 
-            UpdateSubList(submarines);
+            if (!isMultiplayer) { subList.OnSelected = OnSubSelected; }
 
             // New game right side
-            var startButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.13f), rightColumn.RectTransform, Anchor.BottomRight), TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
+            subPreviewContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform))
             {
-                IgnoreLayoutGroups = true,
+                Stretch = true
+            };
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.13f), 
+                (isMultiplayer ? leftColumn : rightColumn).RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.TopRight);
+
+            var startButton = new GUIButton(new RectTransform(isMultiplayer ? new Vector2(0.5f, 2.0f) : Vector2.One,
+                buttonContainer.RectTransform, Anchor.BottomRight) { MaxSize = new Point(350, 60) }, 
+                TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
+            {
                 OnClicked = (GUIButton btn, object userData) =>
                 {
                     if (string.IsNullOrWhiteSpace(saveNameBox.Text))
@@ -160,7 +174,25 @@ namespace Barotrauma
                 }
             };
 
+            leftColumn.Recalculate();
+            rightColumn.Recalculate();
+
+
+            UpdateSubList(submarines);
             UpdateLoadMenu(saveFiles);
+        }
+
+        private bool OnSubSelected(GUIComponent component, object obj)
+        {
+            if (subPreviewContainer == null) { return false; }
+
+            subPreviewContainer.ClearChildren();
+
+            Submarine sub = obj as Submarine;
+            if (sub == null) { return true; }
+
+            sub.CreatePreviewWindow(subPreviewContainer);
+            return true;
         }
 
         private IEnumerable<object> WaitForCampaignSetup()
@@ -214,18 +246,7 @@ namespace Barotrauma
                         ToolTip = sub.Description,
                         UserData = sub
                     };
-
-
-                var infoButton = new GUIButton(new RectTransform(new Vector2(0.12f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), text: "?")
-                {
-                    UserData = sub
-                };
-                infoButton.OnClicked += (component, userdata) =>
-                {
-                    // TODO: use relative size
-                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
-                    return true;
-                };
+                               
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
@@ -233,8 +254,7 @@ namespace Barotrauma
 
                     var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterRight)
                     {
-                        IsFixedSize = false,
-                        RelativeOffset = new Vector2(infoButton.RectTransform.RelativeSize.X + 0.01f, 0)
+                        IsFixedSize = false
                     },
                         TextManager.Get("Shuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
                     {
