@@ -51,7 +51,7 @@ namespace Barotrauma
             new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f, 0.05f) },
                 style: "TitleText");
 
-            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft)
+            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft)
             {
                 AbsoluteOffset = new Point(50, 0)
             })
@@ -61,7 +61,7 @@ namespace Barotrauma
             };
             
             // === CAMPAIGN
-            var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
+            var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
             {
@@ -107,7 +107,7 @@ namespace Barotrauma
             };
 
             // === MULTIPLAYER
-            var multiplayerHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, isHorizontal: true);
+            var multiplayerHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), multiplayerHolder.RectTransform), "MainMenuMultiplayerIcon")
             {
@@ -152,7 +152,7 @@ namespace Barotrauma
             };
 
             // === CUSTOMIZE
-            var customizeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.15f, 0.0f) }, isHorizontal: true);
+            var customizeHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.15f, 0.0f) }, isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), customizeHolder.RectTransform), "MainMenuCustomizeIcon")
             {
@@ -209,7 +209,7 @@ namespace Barotrauma
             }
 
             // === OPTION
-            var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);
+            var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.15f, 0.6f), optionHolder.RectTransform), "MainMenuOptionIcon")
             {
@@ -219,7 +219,7 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.0f), optionHolder.RectTransform), style: null);
 
-            var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) });
+            var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.15f) });
 
             var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), parent: optionButtons.RectTransform))
             {
@@ -241,7 +241,7 @@ namespace Barotrauma
 
             //debug button for quickly starting a new round
 #if DEBUG
-            new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), buttonsParent.RectTransform, Anchor.TopLeft, Pivot.BottomLeft) { AbsoluteOffset = new Point(0, -40) },
+            new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), buttonsParent.RectTransform, Anchor.TopLeft, Pivot.BottomLeft) { AbsoluteOffset = new Point(0, -40) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
             { 
                 IgnoreLayoutGroups = true,
@@ -255,7 +255,7 @@ namespace Barotrauma
 #endif
 
             var minButtonSize = new Point(120, 20);
-            var maxButtonSize = new Point(240, 40);
+            var maxButtonSize = new Point(480, 80);
 
             /*new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
             {
@@ -270,16 +270,21 @@ namespace Barotrauma
             SetupButtons(buttons);
             buttons.ForEach(b => b.TextBlock.SetTextPos());*/
 
-            var relativeSize = new Vector2(0.5f, 0.5f);
+            var relativeSize = new Vector2(0.6f, 0.5f);
             var minSize = new Point(600, 400);
-            var maxSize = new Point(900, 600);
-            var anchor = Anchor.Center;
-            var pivot = Pivot.Center;
-            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
+            var maxSize = new Point(2000, 1500);
+            var anchor = Anchor.CenterRight;
+            var pivot = Pivot.CenterRight;
+            Vector2 relativeSpacing = new Vector2(0.05f, 0.0f);
             
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize));
+            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
+
+            menuTabs[(int)Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing },
+                style: null);
+
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
             var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center), style: null);
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
             var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center), style: null);
             
             campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, Submarine.SavedSubmarines)
@@ -290,13 +295,13 @@ namespace Barotrauma
 
             var hostServerScale = new Vector2(0.7f, 1.0f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
-                Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)));
+                Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)) { RelativeOffset = relativeSpacing });
 
             CreateHostServerFields();
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
 
             //PLACEHOLDER
             var tutorialList = new GUIListBox(
@@ -377,6 +382,7 @@ namespace Barotrauma
                     return false;
                 }
 
+                GameMain.Config.ResetSettingsFrame();
                 selectedTab = (Tab)obj;
 
                 switch (selectedTab)
@@ -389,8 +395,9 @@ namespace Barotrauma
                         campaignSetupUI.UpdateLoadMenu();
                         break;
                     case Tab.Settings:
-                        GameMain.Config.ResetSettingsFrame();
-                        menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
+                        menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
+                        GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
+                        GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
                         break;
                     case Tab.JoinServer:
                         GameMain.ServerListScreen.Select();

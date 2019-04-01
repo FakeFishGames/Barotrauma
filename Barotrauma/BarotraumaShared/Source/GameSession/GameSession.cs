@@ -139,7 +139,7 @@ namespace Barotrauma
             MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
             for (int i = 0; i < 2; i++)
             {
-                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null);
+                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null, rand);
             }
         }
 
@@ -208,7 +208,7 @@ namespace Barotrauma
                     DockingPort myPort = null, outPostPort = null;
                     foreach (DockingPort port in DockingPort.List)
                     {
-                        if (port.IsHorizontal) { continue; }
+                        if (port.IsHorizontal || port.Docked) { continue; }
                         if (port.Item.Submarine == level.StartOutpost)
                         {
                             outPostPort = port;

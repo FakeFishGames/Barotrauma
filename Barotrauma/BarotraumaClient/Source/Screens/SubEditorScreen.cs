@@ -337,7 +337,24 @@ namespace Barotrauma
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
                 Selected = lightingEnabled,
-                OnSelected = (GUITickBox obj) => { lightingEnabled = obj.Selected; return true; }
+                OnSelected = (GUITickBox obj) => 
+                {
+                    lightingEnabled = obj.Selected;
+                    if (lightingEnabled)
+                    {
+                        //turn off lights that are inside containers
+                        foreach (Item item in Item.ItemList)
+                        {
+                            foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
+                            {
+                                lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
+                                    Color.Transparent :
+                                    lightComponent.LightColor;
+                            }
+                        }
+                    }
+                    return true;
+                }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWalls"))
             {
@@ -564,6 +581,9 @@ namespace Barotrauma
 
             MapEntityPrefab.Selected = null;
 
+            saveFrame = null;
+            loadFrame = null;
+
             MapEntity.DeselectAll();
             MapEntity.SelectionGroups.Clear();
 
@@ -765,6 +785,20 @@ namespace Barotrauma
             {
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
+
+#if !DEBUG
+            var vanilla = GameMain.VanillaContent;
+            if (vanilla != null)
+            {
+                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
+                string pathToCompare = savePath.Replace(@"\", @"/").ToLowerInvariant();
+                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
+                {
+                    GUI.AddMessage(TextManager.Get("CannotEditVanillaSubs"), Color.Red, font: GUI.LargeFont);
+                    return false;
+                }
+            }
+#endif
 
             /*foreach (var contentPackage in GameMain.Config.SelectedContentPackages)
             {
@@ -2039,6 +2073,10 @@ namespace Barotrauma
                     {
                         dummyCharacter.SelectedConstruction = null;
                     }
+                }
+                else if (MapEntity.SelectedList.Count == 1)
+                {
+                    (MapEntity.SelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                 }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);

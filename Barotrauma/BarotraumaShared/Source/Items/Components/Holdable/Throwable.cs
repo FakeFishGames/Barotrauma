@@ -104,8 +104,8 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
-
-                    item.Drop(picker, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
+                    Character thrower = picker;
+                    item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
 
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector*10.0f);

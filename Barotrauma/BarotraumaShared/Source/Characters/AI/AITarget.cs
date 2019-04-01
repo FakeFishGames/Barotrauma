@@ -115,7 +115,7 @@ namespace Barotrauma
             SonarLabel = element.GetAttributeString("sonarlabel", "");
         }
 
-        public AITarget(Entity e)
+        public AITarget(Entity e, float sightRange = -1, float soundRange = 0)
         {
             Entity = e;
             if (sightRange < 0)

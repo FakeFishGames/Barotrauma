@@ -28,6 +28,7 @@ namespace Barotrauma
     public enum AIBehaviorAfterAttack
     {
         FallBack,
+        FallBackUntilCanAttack,
         PursueIfCanAttack,
         Pursue
     }
@@ -81,6 +82,9 @@ namespace Barotrauma
         [Serialize(AIBehaviorAfterAttack.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
         public AIBehaviorAfterAttack AfterAttack { get; private set; }
 
+        [Serialize(false, true), Editable(ToolTip = "Should the ai try to reverse when aiming with this attack?")]
+        public bool Reverse { get; private set; }
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target before the AI tries to attack.")]
         public float Range { get; private set; }
 
@@ -95,6 +99,9 @@ namespace Barotrauma
 
         [Serialize(0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "Used as the attack cooldown between different kind of attacks. Does not have effect, if set to 0.")]
         public float SecondaryCoolDown { get; private set; } = 0;
+
+        [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2, ToolTip = "Random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases).")]
+        public float CoolDownRandomFactor { get; private set; } = 0;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; private set; }
@@ -182,7 +189,7 @@ namespace Barotrauma
         public readonly List<Affliction> Afflictions = new List<Affliction>();
 
         /// <summary>
-        /// Only affects ai decision making.
+        /// Only affects ai decision making. All the conditionals has to be met in order to select the attack. TODO: allow to define conditionals using any (implemented in StatusEffect -> move from there to PropertyConditional?)
         /// </summary>
         public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
@@ -444,8 +451,10 @@ namespace Barotrauma
 
         public void SetCoolDown()
         {
-            CoolDownTimer = CoolDown;
-            SecondaryCoolDownTimer = SecondaryCoolDown;
+            float randomFraction = CoolDown * CoolDownRandomFactor;
+            CoolDownTimer = CoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
+            randomFraction = SecondaryCoolDown * CoolDownRandomFactor;
+            SecondaryCoolDownTimer = SecondaryCoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
         }
 
         public void ResetCoolDown()

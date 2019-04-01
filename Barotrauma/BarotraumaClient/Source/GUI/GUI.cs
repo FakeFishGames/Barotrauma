@@ -56,7 +56,7 @@ namespace Barotrauma
         private static List<GUIMessage> messages = new List<GUIMessage>();
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
-        private static GUIFrame pauseMenu;
+        public static GUIFrame PauseMenu { get; private set; }
         private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
 
         public static KeyboardDispatcher KeyboardDispatcher { get; set; }
@@ -69,6 +69,9 @@ namespace Barotrauma
         public static ScalableFont Font => Style?.Font;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
+        public static ScalableFont VideoTitleFont => Style?.VideoTitleFont;
+        public static ScalableFont ObjectiveTitleFont => Style?.ObjectiveTitleFont;
+        public static ScalableFont ObjectiveNameFont => Style?.ObjectiveNameFont;
 
         public static UISprite UIGlow => Style.UIGlow;
 
@@ -530,14 +533,19 @@ namespace Barotrauma
             if (list.Count == 0) { return; }
             foreach (var item in list)
             {
-                int i = updateList.Count - 1;
-                while (updateList[i].UpdateOrder > item.UpdateOrder)
+                int index = 0;
+                if (updateList.Count > 0)
                 {
-                    i--;
+                    index = updateList.Count - 1;
+                    while (updateList[index].UpdateOrder > item.UpdateOrder)
+                    {
+                        index--;
+                        if (index == 0) { break; }
+                    }
                 }
                 if (!updateListSet.Contains(item))
                 {
-                    updateList.Insert(Math.Max(i, 0), item);
+                    updateList.Insert(index, item);
                     updateListSet.Add(item);
                 }
             }
@@ -553,7 +561,7 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu.AddToGUIUpdateList();
+                PauseMenu.AddToGUIUpdateList();
             }
             if (settingsMenuOpen)
             {
@@ -648,6 +656,7 @@ namespace Barotrauma
                 msg.Timer -= deltaTime;                
                 msg.Pos += msg.Velocity * deltaTime;                
             }
+        }
 
             messages.RemoveAll(m => m.Timer <= 0.0f);
         }
@@ -721,6 +730,10 @@ namespace Barotrauma
                 Vector2 textSize = font.MeasureString(text);
                 DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);
             }
+            else
+            {
+                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y + rect.Height - thickness, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
 
             font.DrawString(sb, text, pos, color);
         }
@@ -1412,9 +1425,9 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
+                PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
                     
-                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), pauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
+                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
 
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenuInner.RectTransform, Anchor.Center))
                 {

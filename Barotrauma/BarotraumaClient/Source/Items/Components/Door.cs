@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
         
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            Color color = Color.White;
+            Color color = item.SpriteColor;
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,
-                    weldSpritePos, Color.White * (stuck / 100.0f), scale: item.Scale);
+                    weldSpritePos, item.SpriteColor * (stuck / 100.0f), scale: item.Scale);
             }
 
             if (openState == 1.0f)

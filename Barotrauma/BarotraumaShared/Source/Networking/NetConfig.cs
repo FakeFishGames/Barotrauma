@@ -32,11 +32,14 @@ namespace Barotrauma.Networking
         public const float HighPrioCharacterPositionUpdateInterval = 0.0f;
         public const float LowPrioCharacterPositionUpdateInterval = 1.0f;
 
-        //how much the physics body of an item has to move until the server 
-        //send a position update to clients (in sim units)
-        public const float ItemPosUpdateDistance = 2.0f;
-        
-        public const float DeleteDisconnectedTime = 10.0f;
+        public const float DeleteDisconnectedTime = 20.0f;
+
+        public const float ItemConditionUpdateInterval = 0.15f;
+        public const float LevelObjectUpdateInterval = 0.5f;
+        public const float HullUpdateInterval = 0.5f;
+        public const float HullUpdateDistance = 20000.0f;
+
+        public const int MaxEventPacketsPerUpdate = 4;
 
         /// <summary>
         /// Interpolates the positional error of a physics body towards zero.

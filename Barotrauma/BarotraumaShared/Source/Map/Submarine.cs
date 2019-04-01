@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -493,7 +494,7 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null)
+        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null, float subDockingPortOffset = 0.0f)
         {
             Rectangle dockedBorders = GetDockedBorders();
             Vector2 diffFromDockedBorders = 
@@ -532,6 +533,10 @@ namespace Barotrauma
                 {
                     maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
                 }
+                else
+                {
+                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                }
             }
             
             if (minX < 0.0f && maxX > Level.Loaded.Size.X)
@@ -552,6 +557,26 @@ namespace Barotrauma
             {
                 //walls found at both sides, use their midpoint
                 spawnPos.X = (minX + maxX) / 2;
+            }
+            
+            if (minX < 0.0f && maxX > Level.Loaded.Size.X)
+            {
+                //no walls found at either side, just use the initial spawnpos and hope for the best
+            }
+            else if (minX < 0)
+            {
+                //no wall found at the left side, spawn to the left from the right-side wall
+                spawnPos.X = maxX - minWidth - 100.0f + subDockingPortOffset;
+            }
+            else if (maxX > Level.Loaded.Size.X)
+            {
+                //no wall found at right side, spawn to the right from the left-side wall
+                spawnPos.X = minX + minWidth + 100.0f + subDockingPortOffset;
+            }
+            else
+            {
+                //walls found at both sides, use their midpoint
+                spawnPos.X = (minX + maxX) / 2 + subDockingPortOffset;
             }
             
             spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
@@ -665,7 +690,7 @@ namespace Barotrauma
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -677,21 +702,20 @@ namespace Barotrauma
             Body closestBody = null;
             if (allowInsideFixture)
             {
-                if (fixture == null ||
-                    (ignoreSensors && fixture.IsSensor) ||
-                    fixture.CollisionCategories == Category.None ||
-                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
-                
-                if (customPredicate != null && !customPredicate(fixture)) return -1;
-                
-                if (collisionCategory != null && 
-                    !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
-                    !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
+                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.One * 0.001f, rayStart + Vector2.One * 0.001f);
+                GameMain.World.QueryAABB((fixture) =>
+                {
+                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return true; }
 
                     fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
                     if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
 
-                if (fixture.Body.UserData is Structure structure)
+                    closestFraction = 0.0f;
+                    closestNormal = Vector2.Normalize(rayEnd - rayStart);
+                    if (fixture.Body != null) closestBody = fixture.Body;                    
+                    return false;
+                }, ref aabb);
+                if (closestFraction <= 0.0f)
                 {
                     lastPickedPosition = rayStart;
                     lastPickedFraction = closestFraction;
@@ -721,7 +745,7 @@ namespace Barotrauma
             return closestBody;
         }
 
-        public static List<Body> PickBodies(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        public static List<Body> PickBodies(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -732,25 +756,9 @@ namespace Barotrauma
             List<Body> bodies = new List<Body>();
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null ||
-                    (ignoreSensors && fixture.IsSensor) ||
-                    fixture.CollisionCategories == Category.None ||
-                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
+                if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return -1; }
 
-                if (customPredicate != null && !customPredicate(fixture)) return -1;
-
-                if (collisionCategory != null &&
-                    !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
-                    !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
-
-                if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
-
-                if (fixture.Body.UserData is Structure structure)
-                {
-                    if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
-                }
-
-                bodies.Add(fixture.Body);
+                if (fixture.Body != null) { bodies.Add(fixture.Body); }
                 if (fraction < closestFraction)
                 {
                     lastPickedPosition = rayStart + (rayEnd - rayStart) * fraction;
@@ -760,8 +768,66 @@ namespace Barotrauma
 
                 return fraction;
             }, rayStart, rayEnd);
-            
+
+            if (allowInsideFixture)
+            {
+                var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.One * 0.001f, rayStart + Vector2.One * 0.001f);
+                GameMain.World.QueryAABB((fixture) =>
+                {
+                    if (bodies.Contains(fixture.Body) || fixture.Body == null) { return true; }
+                    if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return true; }
+
+                    fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
+                    if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
+
+                    closestFraction = 0.0f;
+                    lastPickedPosition = rayStart;
+                    lastPickedFraction = 0.0f;
+                    lastPickedNormal = Vector2.Normalize(rayEnd - rayStart);
+                    bodies.Add(fixture.Body);
+                    return false;
+                }, ref aabb);
+            }
+
             return bodies;
+        }
+
+        private static bool CheckFixtureCollision(Fixture fixture, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
+        {
+            if (fixture == null ||
+                (ignoreSensors && fixture.IsSensor) ||
+                fixture.CollisionCategories == Category.None ||
+                fixture.CollisionCategories == Physics.CollisionItem)
+            {
+                return false;
+            }
+
+            if (customPredicate != null && !customPredicate(fixture))
+            {
+                return false;
+            }
+
+            if (collisionCategory != null &&
+                !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
+                !((Category)collisionCategory).HasFlag(fixture.CollisionCategories))
+            {
+                return false;
+            }
+
+            if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body))
+            {
+                return false;
+            }
+
+            if (fixture.Body.UserData is Structure structure)
+            {
+                if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

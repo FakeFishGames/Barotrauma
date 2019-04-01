@@ -193,7 +193,7 @@ namespace Barotrauma
                             // is not attached or is attached to something else
                             if (!IsAttached || IsAttached && attachJoints[0].BodyB == attachTargetBody)
                             {
-                                if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.Range * enemyAI.AttackingLimb.attack.Range)
+                                if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.DamageRange * enemyAI.AttackingLimb.attack.DamageRange)
                                 {
                                     AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, transformedAttachPos);
                                 }

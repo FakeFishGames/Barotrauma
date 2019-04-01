@@ -189,7 +189,7 @@ namespace Barotrauma.Items.Components
         {
             get { return name; }
         }
-
+        
         [Editable, Serialize("", true)]
         public string Msg
         {
@@ -201,12 +201,6 @@ namespace Barotrauma.Items.Components
         {
             get;
             set;
-        }
-
-        public AITarget AITarget
-        {
-            get;
-            private set;
         }
 
         public AITarget AITarget
@@ -253,7 +247,7 @@ namespace Barotrauma.Items.Components
             {
                 DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
-            
+
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             ParseMsg();
 

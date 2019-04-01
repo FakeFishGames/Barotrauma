@@ -3,7 +3,6 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {

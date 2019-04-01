@@ -224,6 +224,20 @@ namespace Barotrauma
                     }
                 }
 
+                if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)))
+                {
+                    if (GameMain.Client != null)
+                    {
+                        //emulate a Select input to get the character to deselect the item server-side
+                        keys[(int)InputType.Select].Hit = true;
+                    }
+                    //reset focus to prevent us from accidentally interacting with another entity
+                    focusedItem = null;
+                    focusedCharacter = null;
+                    findFocusedTimer = 0.2f;
+                    SelectedConstruction = null;
+                }
+
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 
@@ -327,6 +341,8 @@ namespace Barotrauma
             debugInteractablesAtCursor.Clear();
             debugInteractablesNearCursor.Clear();
 
+            bool draggingItemToWorld = CharacterInventory.DraggingItemToWorld;
+
             //reduce the amount of aim assist if an item has been selected 
             //= can't switch selection to another item without deselecting the current one first UNLESS the cursor is directly on the item
             //otherwise it would be too easy to accidentally switch the selected item when rewiring items
@@ -348,6 +364,15 @@ namespace Barotrauma
                 if (item.body != null && !item.body.Enabled) continue;
                 if (item.ParentInventory != null) continue;
                 if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+
+                if (draggingItemToWorld)
+                {
+                    if (item.OwnInventory == null || 
+                        !item.OwnInventory.CanBePut(CharacterInventory.draggingItem))
+                    {
+                        continue;
+                    }
+                }
                 
                 float distanceToItem = float.PositiveInfinity;
                 if (item.IsInsideTrigger(displayPosition, out Rectangle transformedTrigger))

@@ -118,6 +118,19 @@ namespace Barotrauma
             instance = this;
         }
 
+        private void Reset()
+        {
+            AnimParams.ForEach(a => a.Reset(true));
+            RagdollParams.Reset(true);
+            RagdollParams.ClearHistory();
+            CurrentAnimation.ClearHistory();
+            if (!character.Removed)
+            {
+                character.Remove();
+            }
+            character = null;
+        }
+
         public override void Deselect()
         {
             base.Deselect();
@@ -128,15 +141,7 @@ namespace Barotrauma
                 isEndlessRunner = false;
                 if (character != null)
                 {
-                    AnimParams.ForEach(a => a.Reset(true));
-                    RagdollParams.Reset(true);
-                    RagdollParams.ClearHistory();
-                    CurrentAnimation.ClearHistory();
-                    if (!character.Removed)
-                    {
-                        character.Remove();
-                    }
-                    character = null;
+                    Reset();
                 }
                 GameMain.World.ProcessChanges();
             }
@@ -393,6 +398,12 @@ namespace Barotrauma
             }
             if (!isFreezed)
             {
+                if (character.AnimController.Invalid)
+                {
+                    Reset();
+                    SpawnCharacter(currentCharacterConfig);
+                }
+
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
 
@@ -1215,7 +1226,7 @@ namespace Barotrauma
             Cam.Position = character.WorldPosition;
         }
 
-        private bool CreateCharacter(string name, bool isHumanoid, params object[] ragdollConfig)
+        private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, params object[] ragdollConfig)
         {
             var contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
             if (contentPackage == null)
@@ -1228,23 +1239,22 @@ namespace Barotrauma
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
             {
-                GUI.AddMessage($"Cannot edit the Vanilla content!", Color.Red, font: GUI.LargeFont);
+                GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                 return false;
             }
 #endif
 
             string speciesName = name;
-            string mainFolder = $"Content/Characters/{speciesName}";
             // Config file
-            string configFilePath = $"{mainFolder}/{speciesName}.xml";
+            string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
             if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
             {
                 // Create the config file
                 XElement mainElement = new XElement("Character",
                     new XAttribute("name", speciesName),
                     new XAttribute("humanoid", isHumanoid),
-                    new XElement("ragdolls"),
-                    new XElement("animations"),
+                    new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
+                    new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
                     new XElement("health"),
                     new XElement("ai"));
                 XDocument doc = new XDocument(mainElement);
@@ -1259,13 +1269,13 @@ namespace Barotrauma
                 DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
             }
             // Ragdoll
-            string ragdollFolder = RagdollParams.GetDefaultFolder(speciesName);
+            string ragdollFolder = RagdollParams.GetFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)
                 : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, speciesName, ragdollConfig) as RagdollParams;
             // Animations
-            string animFolder = AnimationParams.GetDefaultFolder(speciesName);
+            string animFolder = AnimationParams.GetFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
             {
                 if (animType != AnimationType.NotDefined)
@@ -1869,7 +1879,7 @@ namespace Barotrauma
 #if !DEBUG
                 if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                     return false;
                 }
 #endif
@@ -1884,7 +1894,7 @@ namespace Barotrauma
 #if !DEBUG
                 if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                     return false;
                 }
 #endif
@@ -1956,7 +1966,7 @@ namespace Barotrauma
 #if !DEBUG
                     if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                         box.Close();
                         return false;
                     }
@@ -2089,7 +2099,7 @@ namespace Barotrauma
 #if !DEBUG
                     if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CantEditVanillaContent"), Color.Red, font: GUI.LargeFont);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
                         box.Close();
                         return false;
                     }
@@ -3918,7 +3928,7 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, float rotationOffset = 0)
         {
-            rotationOffset -= MathHelper.ToRadians(RagdollParams.SpritesheetOrientation);
+            rotationOffset += MathHelper.ToRadians(RagdollParams.SpritesheetOrientation);
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"joint.jointParams.Name {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
@@ -4652,7 +4662,7 @@ namespace Barotrauma
                                 LimbXElements.Values,
                                 JointXElements
                         };
-                        if (CharacterEditorScreen.instance.CreateCharacter(Name, IsHumanoid, ragdollParams))
+                        if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ragdollParams))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                         }

@@ -68,6 +68,14 @@ namespace Barotrauma
 
         private float dropItemAnimDuration = 0.5f;
         private float dropItemAnimTimer;
+
+        public Item DroppedItem
+        {
+            get
+            {
+                return droppedItem;
+            }
+        }
         private Item droppedItem;
 
         private GUIComponent draggingMed;
@@ -100,13 +108,15 @@ namespace Barotrauma
                 if (openHealthWindow == value) return;
                 if (value != null && !value.UseHealthWindow) return;
 
+                var prevOpenHealthWindow = openHealthWindow;
+
                 openHealthWindow = value;
                 toggledThisFrame = true;
                 if (Character.Controlled == null) { return; }
 
                 if (value == null &&
                     Character.Controlled?.SelectedCharacter?.CharacterHealth != null &&
-                    Character.Controlled.SelectedCharacter.CharacterHealth == openHealthWindow &&
+                    Character.Controlled.SelectedCharacter.CharacterHealth == prevOpenHealthWindow &&
                     !Character.Controlled.SelectedCharacter.CanInventoryBeAccessed)
                 {
                     Character.Controlled.DeselectCharacter();
@@ -537,11 +547,13 @@ namespace Barotrauma
             }
 
             if (PlayerInput.KeyHit(InputType.Health) && GUI.KeyboardDispatcher.Subscriber == null &&
-                Character.AllowInput && Character.FocusedCharacter == null && !toggledThisFrame)
+                Character.Controlled.AllowInput && !toggledThisFrame)
             {
                 if (openHealthWindow != null)
+                {
                     OpenHealthWindow = null;
-                else
+                }
+                else if (Character.Controlled == Character && Character.Controlled.FocusedCharacter == null)
                 {
                     OpenHealthWindow = this;
                     forceAfflictionContainerUpdate = true;
@@ -554,7 +566,10 @@ namespace Barotrauma
                     HUD.CloseHUD(HUDLayoutSettings.HealthWindowAreaLeft))
                 {
                     //emulate a Health input to get the character to deselect the item server-side
-                    Character.Keys[(int)InputType.Health].Hit = true;
+                    if (GameMain.Client != null)
+                    {
+                        Character.Controlled.Keys[(int)InputType.Health].Hit = true;
+                    }
                     OpenHealthWindow = null;
                 }
             }

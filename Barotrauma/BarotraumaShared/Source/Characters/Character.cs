@@ -810,6 +810,7 @@ namespace Barotrauma
 
         public void LoadHeadAttachments()
         {
+            if (Info == null) { return; }
             if (AnimController == null) { return; }
             var head = AnimController.GetLimb(LimbType.Head);
             if (head == null) { return; }
@@ -1112,13 +1113,15 @@ namespace Barotrauma
             ViewTarget = null;
             if (!AllowInput) return;
 
-            Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
-            if (Controlled == this)
+            if (Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer))
             {
                 SmoothedCursorPosition = cursorPosition;
             }
             else
             {
+                //apply some smoothing to the cursor positions of remote players when playing as a client
+                //to make aiming look a little less choppy
+                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
                 smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
                 SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
             }
@@ -1185,6 +1188,10 @@ namespace Barotrauma
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.F))
             {
                 AnimController.ReleaseStuckLimbs();
+                if (AIController != null && AIController is EnemyAIController enemyAI)
+                {
+                    enemyAI.LatchOntoAI?.DeattachFromBody();
+                }
             }
 #endif
 
@@ -1264,15 +1271,7 @@ namespace Barotrauma
                     if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
                 }
             }
-
-#if CLIENT
-            if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect))) 
-            { 
-                //emulate a Select input to get the character to deselect the item server-side
-                keys[(int)InputType.Select].Hit = true;
-                SelectedConstruction = null;
-            }
-#endif
+            
             if (SelectedConstruction != null)
             {
                 if (IsKeyDown(InputType.Use)) SelectedConstruction.Use(deltaTime, this);
@@ -1650,7 +1649,8 @@ namespace Barotrauma
 #if CLIENT
             if (isLocalPlayer)
             {
-                if (GUI.MouseOn == null && !CharacterInventory.IsMouseOnInventory())
+                if (GUI.MouseOn == null && 
+                    (!CharacterInventory.IsMouseOnInventory() || CharacterInventory.DraggingItemToWorld))
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
@@ -1665,10 +1665,12 @@ namespace Barotrauma
                     focusedItem = null; 
                 }
                 findFocusedTimer -= deltaTime;
-            }            
+            }
 #endif
             //climb ladders automatically when pressing up/down inside their trigger area
-            if (SelectedConstruction == null && !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
+            Ladder currentLadder = SelectedConstruction?.GetComponent<Ladder>();
+            if ((SelectedConstruction == null || currentLadder != null) && 
+                !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
                 bool isControlled = Controlled == this;
@@ -1679,6 +1681,19 @@ namespace Barotrauma
                     float minDist = float.PositiveInfinity;
                     foreach (Ladder ladder in Ladder.List)
                     {
+                        if (ladder == currentLadder)
+                        {
+                            continue;
+                        }
+                        else if (currentLadder != null)
+                        {
+                            //only switch from ladder to another if the ladders are above the current ladders and pressing up, or vice versa
+                            if (ladder.Item.WorldPosition.Y > currentLadder.Item.WorldPosition.Y != IsKeyDown(InputType.Up))
+                            {
+                                continue;
+                            }
+                        }
+
                         if (CanInteractWith(ladder.Item, out float dist, checkLinked: false) && dist < minDist)
                         {
                             minDist = dist;
@@ -1695,7 +1710,7 @@ namespace Barotrauma
                 }
             }
             
-            if (SelectedCharacter != null && IsKeyHit(InputType.Grab)) //Let people use ladders and buttons and stuff when dragging chars
+            if (SelectedCharacter != null && (IsKeyHit(InputType.Grab) || IsKeyHit(InputType.Health))) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
             }

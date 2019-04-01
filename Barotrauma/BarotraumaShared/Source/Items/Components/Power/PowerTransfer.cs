@@ -180,7 +180,8 @@ namespace Barotrauma.Items.Components
 #endif
 
                 //items in a bad condition are more sensitive to overvoltage
-                float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / item.MaxCondition);
+                float maxOverVoltage = MathHelper.Lerp(OverloadVoltage * 0.75f, OverloadVoltage, item.Condition / item.MaxCondition);
+                maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
 
                 //if the item can't be fixed, don't allow it to break
                 if (!item.Repairables.Any() || !CanBeOverloaded) continue;
@@ -319,7 +320,13 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
+            //float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
+            RelayComponent thisRelayComponent = this as RelayComponent;
+            if (thisRelayComponent != null)
+            {
+                clampPower = Math.Min(Math.Min(clampPower, thisRelayComponent.MaxPower), powerLoad);
+                clampLoad = Math.Min(clampLoad, thisRelayComponent.MaxPower);
+            }
 
             foreach (Connection c in PowerConnections)
             {
@@ -357,6 +364,8 @@ namespace Barotrauma.Items.Components
                             continue;
                         }
 
+                        float addLoad = 0.0f;
+                        float addPower = 0.0f;
                         if (powered is PowerContainer powerContainer)
                         {
                             if (recipient.Name == "power_in")
@@ -365,7 +374,7 @@ namespace Barotrauma.Items.Components
                             }
                             else
                             {
-                                fullPower += Math.Min(powerContainer.CurrPowerOutput, maxPower);
+                                addPower = powerContainer.CurrPowerOutput;
                             }
                         }
                         else
@@ -380,10 +389,16 @@ namespace Barotrauma.Items.Components
                             //negative power consumption = the construction is a 
                             //generator/battery or another junction box
                             {
-                                fullPower -= Math.Max(powered.CurrPowerConsumption, -maxPower);
+                                addPower -= powered.CurrPowerConsumption;
                             }
                         }
-                    }                    
+
+                        if (addPower + fullPower > clampPower) { addPower -= (addPower + fullPower) - clampPower; };
+                        if (addPower > 0) { fullPower += addPower; }
+
+                        if (addLoad + fullLoad > clampLoad) { addLoad -= (addLoad + fullLoad) - clampLoad; };
+                        if (addLoad > 0) { fullLoad += addLoad; }
+                    }
                 }
             }
         }

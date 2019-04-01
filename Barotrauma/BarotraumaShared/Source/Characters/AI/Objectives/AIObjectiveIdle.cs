@@ -98,14 +98,7 @@ namespace Barotrauma
                     PathSteering.Reset();
                     return;
                 }
-
                 if (standStillTimer < -walkDuration)
-                {
-                    standStillTimer = Rand.Range(standStillMin, standStillMax);
-                }
-
-                //steer away from edges of the hull
-                if (character.AnimController.CurrentHull != null && !character.IsClimbing)
                 {
                     standStillTimer = Rand.Range(standStillMin, standStillMax);
                 }
@@ -114,44 +107,55 @@ namespace Barotrauma
                 return;
             }
 
-                    if (leftDist < WallAvoidDistance && rightDist < WallAvoidDistance)
-                    {
-                        if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
-                        {
-                            PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
-                        }
-                        else
-                        {
-                            PathSteering.Reset();
-                            return;
-                        }
-                    }
-                    else if (leftDist < WallAvoidDistance)
-                    {
-                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist) / WallAvoidDistance);
-                        PathSteering.WanderAngle = 0.0f;
-                        return;
-                    }
-                    else
-                    {
-                        PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist) / WallAvoidDistance);
-                        PathSteering.WanderAngle = MathHelper.Pi;
-                        return;
-                    }
-                }
-                
-                character.AIController.SteeringManager.SteeringWander();
-                if (!character.IsClimbing && !character.AnimController.InWater)
-                {
-                    //reset vertical steering to prevent dropping down from platforms etc
-                    character.AIController.SteeringManager.ResetY();
-                }             
-                return;                
-            }
-
             if (currentTarget != null)
             {
                 character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition);
+            }
+        }
+
+        public void Wander(float deltaTime)
+        {
+            //steer away from edges of the hull
+            if (character.AnimController.CurrentHull != null && !character.IsClimbing)
+            {
+                float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
+                float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
+                if (leftDist < WallAvoidDistance && rightDist < WallAvoidDistance)
+                {
+                    if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
+                    {
+                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
+                    }
+                    else
+                    {
+                        PathSteering.Reset();
+                    }
+                }
+                else if (leftDist < WallAvoidDistance)
+                {
+                    //PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance - leftDist) / WallAvoidDistance);
+                    PathSteering.SteeringManual(deltaTime, Vector2.UnitX);
+                    PathSteering.WanderAngle = 0.0f;
+                }
+                else if (rightDist < WallAvoidDistance)
+                {
+                    //PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance - rightDist) / WallAvoidDistance);
+                    PathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
+                    PathSteering.WanderAngle = MathHelper.Pi;
+                }
+                else
+                {
+                    SteeringManager.SteeringWander();
+                }
+            }
+            else
+            {
+                SteeringManager.SteeringWander();
+            }
+            if (!character.IsClimbing && !character.AnimController.InWater)
+            {
+                //reset vertical steering to prevent dropping down from platforms etc
+                character.AIController.SteeringManager.ResetY();
             }
         }
 

@@ -403,6 +403,11 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
             AssignRelayToServer("freecam", false);
+#if DEBUG
+            AssignRelayToServer("simulatedlatency", false);
+            AssignRelayToServer("simulatedloss", false);
+            AssignRelayToServer("simulatedduplicateschance", false);
+#endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
@@ -957,6 +962,8 @@ namespace Barotrauma
                             }
                         }
                     }
+                    element.Value = lines[i];
+                    i++;
                 }
             }, isCheat: false));
 #endif

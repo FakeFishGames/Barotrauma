@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
         private readonly List<string> fixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
+
+        private Vector2 debugRayStartPos, debugRayEndPos;
         
         [Serialize(0.0f, false)]
         public float Range { get; set; }
@@ -156,7 +158,7 @@ namespace Barotrauma.Items.Components
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
             if (RepairThroughWalls)
             {
-                var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false);
+                var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true);
                 foreach (Body body in bodies)
                 {
                     FixBody(user, deltaTime, degreeOfSuccess, body);
@@ -164,7 +166,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                FixBody(user, deltaTime, degreeOfSuccess, Submarine.PickBody(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false));
+                FixBody(user, deltaTime, degreeOfSuccess, Submarine.PickBody(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true));
             }
             
             if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
@@ -247,6 +249,7 @@ namespace Barotrauma.Items.Components
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.IsActive &&
+                    levelResource.requiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
                     levelResource.DeattachTimer += deltaTime;
