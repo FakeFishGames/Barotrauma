@@ -631,8 +631,7 @@ namespace Barotrauma
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var previousLimb = AttackingLimb;
-                                    var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, AttackingLimb);
                                     if (newLimb != null)
                                     {
                                         // Attack with the new limb
@@ -680,8 +679,7 @@ namespace Barotrauma
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var previousLimb = AttackingLimb;
-                                    var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, AttackingLimb);
                                     if (newLimb != null)
                                     {
                                         // Attack with the new limb
@@ -725,6 +723,11 @@ namespace Barotrauma
                 // Check that we can reach the target
                 distance = Vector2.Distance(AttackingLimb.WorldPosition, attackWorldPos);
                 canAttack = distance < AttackingLimb.attack.Range;
+                if (!canAttack && !IsCoolDownRunning)
+                {
+                    // If not, reset the attacking limb, if the cooldown is not running
+                    AttackingLimb = null;
+                }
             }
 
             // If the attacking limb is a hand or claw, for example, using it as the steering limb can end in the result where the character circles around the target. For example the Hammerhead steering with the claws when it should use the torso.
