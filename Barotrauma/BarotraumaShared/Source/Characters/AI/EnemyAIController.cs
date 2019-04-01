@@ -1043,7 +1043,7 @@ namespace Barotrauma
             }
             else
             {
-                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition));
+                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
             }
         }
 
