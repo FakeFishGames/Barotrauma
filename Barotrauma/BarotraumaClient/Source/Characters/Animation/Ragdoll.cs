@@ -44,29 +44,25 @@ namespace Barotrauma
                         return;
                     }
 
-                    if (character.MemState[0].SelectedCharacter == null || character.MemState[0].SelectedCharacter.Removed)
+                    if (character.MemState[0].Interact == null || character.MemState[0].Interact.Removed)
                     {
                         character.DeselectCharacter();
-                    }
-                    else if (character.MemState[0].SelectedCharacter != null)
-                    {
-                        character.SelectCharacter(character.MemState[0].SelectedCharacter);
-                    }
-
-                    if (character.MemState[0].SelectedItem == null || character.MemState[0].SelectedItem.Removed)
-                    {
                         character.SelectedConstruction = null;
                     }
-                    else
+                    else if (character.MemState[0].Interact is Character)
                     {
-                        if (character.SelectedConstruction != character.MemState[0].SelectedItem)
+                        character.SelectCharacter((Character)character.MemState[0].Interact);
+                    }
+                    else if (character.MemState[0].Interact is Item newSelectedConstruction)
+                    {
+                        if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
-                            foreach (var ic in character.MemState[0].SelectedItem.Components)
+                            foreach (var ic in newSelectedConstruction.Components)
                             {
                                 if (ic.CanBeSelected) ic.Select(character);
                             }
                         }
-                        character.SelectedConstruction = character.MemState[0].SelectedItem;
+                        character.SelectedConstruction = newSelectedConstruction;
                     }
 
                     if (character.MemState[0].Animation == AnimController.Animation.CPR)
@@ -92,13 +88,13 @@ namespace Barotrauma
                     Collider.AngularVelocity = newAngularVelocity;
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    float errorTolerance = character.AllowInput ? 0.01f : 0.2f;
+                    float errorTolerance = character.AllowInput ? 0.01f : 0.1f;
                     if (distSqrd > errorTolerance)
                     {
                         if (distSqrd > 10.0f || !character.AllowInput)
                         {
                             Collider.TargetRotation = newRotation;
-                            SetPosition(newPosition, lerp: distSqrd < 5.0f);
+                            SetPosition(newPosition, lerp: distSqrd < 1.0f);
                         }
                         else
                         {
@@ -112,15 +108,8 @@ namespace Barotrauma
                     // -> we need to correct it manually
                     if (!character.AllowInput)
                     {
-                        float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, Collider.SimPosition);
-                        float mainLimbErrorTolerance = 0.1f;
-                        //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
-                        //don't attempt to correct the position.
-                        if (mainLimbDistSqrd > mainLimbErrorTolerance || Collider.LinearVelocity.LengthSquared() > 0.05f)
-                        {
-                            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-                            MainLimb.PullJointEnabled = true;
-                        }
+                        MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                        MainLimb.PullJointEnabled = true;
                     }
                 }
                 character.MemLocalState.Clear();
@@ -173,30 +162,25 @@ namespace Barotrauma
                     CharacterStateInfo localPos = character.MemLocalState[localPosIndex];
                     
                     //the entity we're interacting with doesn't match the server's
-                    if (localPos.SelectedCharacter != serverPos.SelectedCharacter)
+                    if (localPos.Interact != serverPos.Interact)
                     {
-                        if (serverPos.SelectedCharacter == null || serverPos.SelectedCharacter.Removed)
+                        if (serverPos.Interact == null || serverPos.Interact.Removed)
                         {
                             character.DeselectCharacter();
-                        }
-                        else if (serverPos.SelectedCharacter != null)
-                        {
-                            character.SelectCharacter(serverPos.SelectedCharacter);
-                        }
-                    }
-                    if (localPos.SelectedItem != serverPos.SelectedItem)
-                    {
-                        if (serverPos.SelectedItem == null || serverPos.SelectedItem.Removed)
-                        {
                             character.SelectedConstruction = null;
                         }
-                        else if (serverPos.SelectedItem != null)
+                        else if (serverPos.Interact is Character)
                         {
-                            if (character.SelectedConstruction != serverPos.SelectedItem)
+                            character.SelectCharacter((Character)serverPos.Interact);
+                        }
+                        else
+                        {
+                            var newSelectedConstruction = (Item)serverPos.Interact;
+                            if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                             {
-                                serverPos.SelectedItem.TryInteract(character, true, true);
+                                newSelectedConstruction.TryInteract(character, true, true);
                             }
-                            character.SelectedConstruction = serverPos.SelectedItem;
+                            character.SelectedConstruction = newSelectedConstruction;
                         }
                     }
 

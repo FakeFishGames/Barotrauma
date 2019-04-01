@@ -362,8 +362,7 @@ namespace Barotrauma
                 if (SelectedCharacter != null || SelectedConstruction != null)
                 {
                     tempBuffer.Write(true);
-                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : NullEntityID);
-                    tempBuffer.Write(SelectedConstruction != null ? SelectedConstruction.ID : NullEntityID);
+                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : SelectedConstruction.ID);
                     if (SelectedCharacter != null)
                     {
                         tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
@@ -377,9 +376,8 @@ namespace Barotrauma
                 tempBuffer.Write(SimPosition.X);
                 tempBuffer.Write(SimPosition.Y);
                 float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
-                AnimController.Collider.LinearVelocity = NetConfig.Quantize(AnimController.Collider.LinearVelocity, -MaxVel, MaxVel, 12);
-                tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12);
-                tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12);
+                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
+                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
 
                 bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation;
                 tempBuffer.Write(fixedRotation);
@@ -387,7 +385,6 @@ namespace Barotrauma
                 {
                     tempBuffer.Write(AnimController.Collider.Rotation);
                     float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
-                    AnimController.Collider.AngularVelocity = NetConfig.Quantize(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
                     tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
                 }
 

@@ -1,7 +1,11 @@
-﻿using Barotrauma.Networking;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using System;
 
 namespace Barotrauma
 {
@@ -33,12 +37,10 @@ namespace Barotrauma
             if (FarseerBody.Awake)
             {
                 body.Enabled = true;
-                body.LinearVelocity = NetConfig.Quantize(body.LinearVelocity, -MaxVel, MaxVel, 12);
-                msg.WriteRangedSingle(body.LinearVelocity.X, -MaxVel, MaxVel, 12);
-                msg.WriteRangedSingle(body.LinearVelocity.Y, -MaxVel, MaxVel, 12);
+                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
+                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
                 if (!FarseerBody.FixedRotation)
                 {
-                    body.AngularVelocity = NetConfig.Quantize(body.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
                     msg.WriteRangedSingle(MathHelper.Clamp(body.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
                 }
             }

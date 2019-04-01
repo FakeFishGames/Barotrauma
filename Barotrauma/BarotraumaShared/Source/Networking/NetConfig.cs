@@ -74,23 +74,5 @@ namespace Barotrauma.Networking
             if (lengthSqr > 1000.0f) { return Vector2.Zero; }
             return cursorPositionError *= 0.7f;
         }
-
-        public static Vector2 Quantize(Vector2 value, float min, float max, int numberOfBits)
-        {
-            return new Vector2(
-                Quantize(value.X, min, max, numberOfBits), 
-                Quantize(value.Y, min, max, numberOfBits));
-        }
-
-        public static float Quantize(float value, float min, float max, int numberOfBits)
-        {
-            float step = (max - min) / (1 << (numberOfBits + 1));
-            if (Math.Abs(value) < step + 0.00001f)
-            {
-                return 0.0f;
-            }
-
-            return MathUtils.RoundTowardsClosest(MathHelper.Clamp(value, min, max), step);
-        }
     }
 }
