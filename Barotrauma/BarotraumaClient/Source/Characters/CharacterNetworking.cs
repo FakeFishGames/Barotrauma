@@ -211,6 +211,7 @@ namespace Barotrauma
                     Vector2 linearVelocity = new Vector2(
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12), 
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+                    linearVelocity = NetConfig.Quantize(linearVelocity, -MaxVel, MaxVel, 12);
 
                     bool fixedRotation = msg.ReadBoolean();
                     float? rotation = null;
@@ -220,6 +221,7 @@ namespace Barotrauma
                         rotation = msg.ReadFloat();
                         float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
                         angularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
+                        angularVelocity = NetConfig.Quantize(angularVelocity.Value, -MaxAngularVel, MaxAngularVel, 8);
                     }
 
                     bool readStatus = msg.ReadBoolean();
