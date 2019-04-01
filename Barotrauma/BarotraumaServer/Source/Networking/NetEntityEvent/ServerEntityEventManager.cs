@@ -369,6 +369,12 @@ namespace Barotrauma.Networking
                 (entityEvent as ServerEntityEvent).Sent = true;
                 client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
             }
+
+            foreach (NetEntityEvent entityEvent in sentEvents)
+            {
+                (entityEvent as ServerEntityEvent).Sent = true;
+                client.EntityEventLastSent[entityEvent.ID] = NetTime.Now;
+            }
             sentEvents = eventsToSync;
         }
 
