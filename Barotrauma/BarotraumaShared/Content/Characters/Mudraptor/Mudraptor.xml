@@ -53,7 +53,7 @@
     <targetpriority tag="door" state="Attack" priority="100"/>
     <targetpriority tag="nasonov" state="Attack" priority="60"/>
     <targetpriority tag="sonar" state="Attack" priority="55"/>
-    <targetpriority tag="wall" state="Attack" priority="20"/>
+    <targetpriority tag="wall" state="Attack" priority="40"/>
     <targetpriority tag="room" state="Attack" priority="5"/>
   </ai>
 </Character>
