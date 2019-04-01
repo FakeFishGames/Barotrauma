@@ -1105,6 +1105,20 @@ namespace Barotrauma
                     }
                     else if (targetCharacter.AIController is EnemyAIController enemy)
                     {
+                        targetingTag = "dead";
+                        if (targetCharacter.Submarine != Character.Submarine)
+                        {
+                            // In a different sub or the target is outside when we are inside or vice versa -> Ignore the target
+                            continue;
+                        }
+                        else if (targetCharacter.CurrentHull != Character.CurrentHull)
+                        {
+                            // In the same sub, halve the priority, if not in the same hull.
+                            valueModifier = 0.5f;
+                        }
+                    }
+                    else if (targetCharacter.AIController is EnemyAIController enemy)
+                    {
                         if (enemy.combatStrength > combatStrength)
                         {
                             targetingTag = "stronger";
