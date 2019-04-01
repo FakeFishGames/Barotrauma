@@ -39,44 +39,32 @@ namespace Barotrauma
             this.newGameContainer = newGameContainer;
             this.loadGameContainer = loadGameContainer;
 
-            var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
+            var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform)) { RelativeSpacing = 0.005f };
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
+            //var rightColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform));
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
-            {
-                RelativeSpacing = 0.02f
-            };
+            //var leftColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform));
 
-            // New game left side
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), leftColumn.RectTransform), TextManager.Get("SelectedSub") + ":", textAlignment: Alignment.BottomLeft);
-            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform));
+            // New game right side
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnContainer.RectTransform), TextManager.Get("SaveName") + ":");
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.075f), columnContainer.RectTransform), string.Empty);
 
-            UpdateSubList(submarines);
-
-            // New game right sideon
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), string.Empty);
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("MapSeed") + ":", textAlignment: Alignment.BottomLeft);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), ToolBox.RandomSeed(8));
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnContainer.RectTransform), TextManager.Get("MapSeed") + ":");
+            seedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.075f), columnContainer.RectTransform), ToolBox.RandomSeed(8));
 
             if (!isMultiplayer)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("TutorialActive") + ":", textAlignment: Alignment.BottomLeft);
-                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(30, 30), rightColumn.RectTransform), string.Empty);
+                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(30, 30), columnContainer.RectTransform), TextManager.Get("TutorialActive"));
                 UpdateTutorialSelection();
             }
 
-            var startButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.13f), rightColumn.RectTransform, Anchor.BottomRight), TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
+            // New game left side
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), columnContainer.RectTransform), TextManager.Get("SelectedSub") + ":");
+            subList = new GUIListBox(new RectTransform(new Vector2(0.5f, 0.5f), columnContainer.RectTransform));
+
+            UpdateSubList(submarines);
+
+            var startButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), columnContainer.RectTransform, Anchor.BottomCenter), TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (GUIButton btn, object userData) =>
@@ -205,12 +193,13 @@ namespace Barotrauma
             foreach (Submarine sub in subsToShow)
             {
                 var textBlock = new GUITextBlock(
-                    new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform)
+                    new RectTransform(new Vector2(1, 0.2f), subList.Content.RectTransform)
                     {
                         AbsoluteOffset = new Point(10, 0)
                     },
                     ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), style: "ListBoxElement")
                     {
+                        IgnoreLayoutGroups = true,
                         ToolTip = sub.Description,
                         UserData = sub
                     };
