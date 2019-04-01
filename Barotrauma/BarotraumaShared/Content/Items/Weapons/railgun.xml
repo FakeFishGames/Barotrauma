@@ -93,6 +93,10 @@
     <Deconstruct time="10">
       <Item identifier="steel" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="25"/>
+      <RequiredItem identifier="steel"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="2,91,215,33" depth="0.55" origin="0.5,0.5" />
     <Body width="215" height="30" density="30" />
@@ -122,6 +126,12 @@
       <Item identifier="uranium" />
       <Item identifier="uex" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="30">
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="uranium"/>
+      <RequiredItem identifier="uex"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,131,217,33" depth="0.55" origin="0.5,0.5" />
     <Body width="215" height="30" density="35" />
@@ -161,6 +171,10 @@
     <Deconstruct time="20">
       <Item identifier="physicorium" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="30"/>
+      <RequiredItem identifier="physicorium"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,959,61,65" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,170,216,34" depth="0.55" origin="0.5,0.5" />
     <Body width="215" height="30" density="35" />

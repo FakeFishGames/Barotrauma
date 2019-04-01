@@ -24,6 +24,10 @@
       <Item identifier="copper" outcondition="0.2" />
       <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+      <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
@@ -39,6 +43,10 @@
       <Item identifier="copper" outcondition="0.2" />
       <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+      <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
@@ -54,6 +62,10 @@
       <Item identifier="copper" outcondition="0.2" />
       <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+      <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
@@ -69,6 +81,10 @@
       <Item identifier="copper" outcondition="0.2" />
       <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+      <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
@@ -84,6 +100,10 @@
       <Item identifier="copper" outcondition="0.2" />
       <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+      <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
@@ -99,6 +119,10 @@
       <Item identifier="copper" outcondition="0.2" />
       <Item identifier="rubber" outcondition="0.2" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredItem identifier="copper" mincondition="0.2" usecondition="true"/>
+      <RequiredItem identifier="rubber" mincondition="0.2" usecondition="true"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.55" sourcerect="169,224,84,32" origin="0.5,0.5" />
     <Body radius="14" width="60" density="30" />
@@ -114,6 +138,10 @@
       <Item identifier="plastic" />
       <Item identifier="copper" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="5">
+      <RequiredItem identifier="plastic" />
+      <RequiredItem identifier="copper" />
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,64,64,64" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="122,68,36,36" origin="0.5,0.5" />
     <Body width="36" height="36" density="30" />
@@ -128,6 +156,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="65,391,63,52" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="1,1,30,28" origin="0.5,0.5" />
     <AndComponent canbeselected="true" />
@@ -153,6 +185,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="833,900,63,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="193,36,31,26" origin="0.5,0.5" />
     <EqualsComponent canbeselected="true" />
@@ -177,6 +213,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="769,900,63,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="161,35,30,27" origin="0.5,0.5" />
     <GreaterComponent canbeselected="true" />
@@ -201,6 +241,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="575,837,65,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,96,31,25" origin="0.5,0.5" />
     <AdderComponent canbeselected="true" />
@@ -225,6 +269,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="447,900,65,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="129,2,32,25" origin="0.5,0.5" />
     <ColorComponent canbeselected="true" />
@@ -251,6 +299,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,900,63,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="192,2,31,25" origin="0.5,0.5" />
     <SubtractComponent canbeselected="true" />
@@ -275,6 +327,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,837,64,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,96,31,25" origin="0.5,0.5" />
     <MultiplyComponent canbeselected="true" />
@@ -299,6 +355,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="705,900,63,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="224,2,31,25" origin="0.5,0.5" />
     <DivideComponent canbeselected="true" />
@@ -323,6 +383,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="129,390,64,53" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,2,32,26" origin="0.5,0.5" />
     <OrComponent canbeselected="true" />
@@ -348,6 +412,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,900,63,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="160,3,31,25" origin="0.5,0.5" />
     <XorComponent canbeselected="true" />
@@ -373,6 +441,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,390,64,53" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,2,31,26" origin="0.5,0.5" />
     <NotComponent canbeselected="true" />
@@ -396,6 +468,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,388,63,57" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="96,35,31,26" origin="0.5,0.5" />
     <RelayComponent canbeselected="true" vulnerabletoemp="false" canbeoverloaded="false">
@@ -428,6 +504,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,388,63,57" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,67,31,27" origin="0.5,0.5" />
     <DelayComponent canbeselected="true" />
@@ -451,6 +531,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,900,63,54" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="128,36,31,25" origin="0.5,0.5" />
     <MemoryComponent canbeselected="true" />
@@ -475,6 +559,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="phosphorus" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="phosphorus"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,388,59,57" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,4,28,23" origin="0.5,0.5" />
     <LightComponent canbeselected="true" color="1.0,0.0,0.0,0.5" castshadows="false">
@@ -502,6 +590,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="silicon"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,256,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="128,0,140,89" origin="0.5,0.5" />
     <OxygenDetector canbeselected="true" />
@@ -524,6 +616,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="silicon"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,256,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="0,0,129,89" origin="0.5,0.5" />
     <WaterDetector canbeselected="true" />
@@ -546,6 +642,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="silicon"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,320,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="269,0,140,89" origin="0.5,0.5" />
     <SmokeDetector FireSizeThreshold="50" />
@@ -568,6 +668,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="silicon" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="silicon"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,256,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="0,89,140,133" origin="0.5,0.5" />
     <MotionSensor range="100" canbeselected="true" />
@@ -590,6 +694,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,388,63,57" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,35,31,26" origin="0.5,0.5" />
     <SignalCheckComponent canbeselected="true" />
@@ -615,6 +723,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,390,64,52" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,35,31,26" origin="0.5,0.5" />
     <RegExFindComponent canbeselected="true" />
@@ -638,6 +750,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,388,59,55" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="35,130,28,26" origin="0.5,0.5" />
     <OscillatorComponent canbeselected="true" outputtype="Pulse" frequency="1" />
@@ -662,6 +778,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,388,64,57" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,67,28,26" origin="0.5,0.5" />
     <WifiComponent canbeselected="true" MinChatMessageInterval="1.0" DiscardDuplicateChatMessages="true" />
@@ -685,6 +805,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="steel" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="steel"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="204,133,39,52" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,64,42,63" origin="0.5,0.5" />
     <Body radius="20" height="20" density="30" />
@@ -710,6 +834,10 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="tin" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="tin"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="142,133,43,47" origin="0.5,0.5" />
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,137,42,47" origin="0.5,0.5" />
     <Body radius="20" density="20" />

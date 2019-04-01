@@ -5,6 +5,11 @@
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="125" />
     <Price locationtype="Research" buyprice="75" />
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="60"/>
+      <RequiredItem identifier="sodium"/>
+      <RequiredItem identifier="phosphorus"/>
+    </Fabricate>
     <!-- TODO: sprite and inventory icon -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
@@ -26,6 +31,11 @@
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Research" buyprice="125" />
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="70"/>
+      <RequiredItem identifier="uex"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,58,23,16" />
     <Body width="23" height="16" density="20" />
@@ -42,6 +52,12 @@
     </Throwable>
   </Item>
   <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+    <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
+      <RequiredSkill identifier="medical" level="60"/>
+      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="potassium"/>
+      <RequiredItem identifier="sulphuricacid"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,75,24,16" />
     <Body width="24" height="16" density="20" />
@@ -60,6 +76,11 @@
     </Throwable>
   </Item>
   <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+    <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
+      <RequiredSkill identifier="medical" level="40"/>
+      <RequiredItem identifier="compoundn"/>
+      <RequiredItem identifier="flashpowder"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,108,23,17" />
     <Body width="24" height="8" density="20" />
@@ -84,6 +105,11 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,91,23,16" />
     <Body width="24" height="16" density="20" />
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="50"/>
+      <RequiredItem identifier="c4block"/>
+      <RequiredItem identifier="incendium"/>
+    </Fabricate>
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris4.ogg" type="OnUse" range="10000" />
