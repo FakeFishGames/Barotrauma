@@ -1217,20 +1217,6 @@ namespace Barotrauma
                                 valueModifier *= isOpen ? 5 : 1;
                             }
                         }
-                        else
-                        {
-                            // Ignore disabled walls
-                            bool isDisabled = true;
-                            for (int i = 0; i < s.Sections.Length; i++)
-                            {
-                                valueModifier = isOutdoor ? 0 : 1;
-                                valueModifier *= isOpen ? 0 : 1;
-                            }
-                            if (isDisabled)
-                            {
-                                valueModifier = 0;
-                            }
-                        }
                     }
                     else
                     {
@@ -1250,18 +1236,9 @@ namespace Barotrauma
                         {
                             if (character.CurrentHull == null)
                             {
-                                valueModifier = isOutdoor ? 1 : 0;
-                                valueModifier *= isOpen ? 5 : 1;
-                            }
-                            else if (targetCharacter.CurrentHull != Character.CurrentHull)
-                            {
                                 valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;
                             }
-                        }
-                        else if (isOpen) //ignore broken and open doors
-                        {
-                            continue;
                         }
                         else if (isOpen) //ignore broken and open doors
                         {
