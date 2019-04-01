@@ -734,15 +734,13 @@ namespace Barotrauma.Items.Components
         private void OverrideRequiredItems(XElement element)
         {
             var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
-            bool overrideRequiredItems = false;
+            requiredItems.Clear();
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
-                        if (!overrideRequiredItems) requiredItems.Clear();
-                        overrideRequiredItems = true;
-
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
                         if (newRequiredItem == null) continue;
 
