@@ -58,8 +58,15 @@ namespace Barotrauma.Networking
                     eventCount++;
                     continue;
                 }
-
-                if (msg.LengthBytes + tempBuffer.LengthBytes + tempEventBuffer.LengthBytes > MaxEventBufferLength)
+                //the ID has been taken by another entity (the original entity has been removed) -> write an empty event
+                /*else if (Entity.FindEntityByID(e.Entity.ID) != e.Entity || e.Entity.IdFreed)
+                {
+                    //technically the clients don't have any use for these, but removing events and shifting the IDs of all 
+                    //consecutive ones is so error-prone that I think this is a safer option
+                    tempBuffer.Write(Entity.NullEntityID);
+                    tempBuffer.WritePadBits();
+                }*/
+                else
                 {
                     //no more room in this packet
                     break;

@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
-                Vector2 currForce = new Vector2((force / 10.0f) * maxForce * Math.Min(voltage / minVoltage, 1.0f), 0.0f);
+                Vector2 currForce = new Vector2((force / 100.0f) * maxForce * Math.Min(voltage / minVoltage, 1.0f), 0.0f);
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
 

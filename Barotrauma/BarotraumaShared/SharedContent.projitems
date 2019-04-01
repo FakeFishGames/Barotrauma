@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycrawler\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Endworm\Animations\" />
@@ -45,25 +45,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\Ragdolls\CarrierDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Animations\CharybdisSwimFast.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Animations\CharybdisSwimSlow.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Charybdis.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Charybdis.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Ragdolls\CharybdisDefaultRagdoll.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\Legacycharybdis.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\Ragdolls\LegacycharybdisDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\Coelanth.xml">
@@ -357,36 +342,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Effects\waterbump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\1_CommandReactor\BaroTutorial_CommandReactor.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\2_NavConsole\BaroTutorial_NavConsole.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\3_Flood\BaroTutorial_Flood.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\4_Reactor\BaroTutorial_Reactor.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\5_EnemyOnSonar\BaroTutorial_EnemyOnSonar.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\6_Degrading2\BaroTutorial_Degrading.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\7_Medical\BaroTutorial_Medical.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\8_Approach1\BaroTutorial_Approach.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\UI\tutorialAtlas.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="$(MSBuildThisFileDirectory)Content\Fonts\BebasNeue-Regular.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Content Include="$(MSBuildThisFileDirectory)Content\Fonts\NotoSans\LICENSE_OFL.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -942,13 +897,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\Animations\CarrierSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\charybdis.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\charybdis.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\Animations\LegacycharybdisSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Animations\CharybdisSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\Animations\LegacycharybdisSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\Animations\CharybdisSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\Animations\CoelanthSwimFast.xml">
@@ -2000,9 +1955,6 @@
     <Content Include="$(MSBuildThisFileDirectory)serversettings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="$(MSBuildThisFileDirectory)Content\Items\Misc\GuitarClown.ogg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\CARRIER_alarmLoop.ogg">
@@ -2404,7 +2356,7 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Mudraptor\MUDRAPTOR_idle3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Legacycharybdis\charybdisattack.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Charybdis\charybdisattack.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Coelanth\attack1.ogg">
@@ -3162,7 +3114,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Muikku.sub">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Orca.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3180,9 +3132,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\RemoraDrone.sub">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\Selkie.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Typhon.sub">

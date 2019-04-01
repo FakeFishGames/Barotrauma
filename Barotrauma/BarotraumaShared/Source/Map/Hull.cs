@@ -88,7 +88,6 @@ namespace Barotrauma
                     Gap.UpdateHulls();
                 }
 
-                OxygenPercentage = prevOxygenPercentage;
                 surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
                 Pressure = surface;
             }

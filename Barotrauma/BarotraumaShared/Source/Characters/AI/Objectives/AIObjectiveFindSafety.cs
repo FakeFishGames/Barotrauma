@@ -115,8 +115,7 @@ namespace Barotrauma
                         unreachable.Add(goToObjective.Target as Hull);
                     }
                     goToObjective = null;
-                    HumanAIController.ObjectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-                    //SteeringManager.SteeringWander();
+                    SteeringManager.SteeringWander();
                 }
             }
             else if (currentHull != null)

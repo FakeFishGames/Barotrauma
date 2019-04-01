@@ -107,10 +107,7 @@ namespace Barotrauma.Items.Components
             {
                 var warningBtn = new GUIButton(new RectTransform(new Point(buttonWidth, buttonHeight), columnLeft.RectTransform)
                 { AbsoluteOffset = new Point((i % buttonsPerRow) * (buttonWidth + spacing), (int)Math.Floor(i / (float)buttonsPerRow) * (buttonHeight + spacing)) },
-                    TextManager.Get(warningTexts[i]), style: "IndicatorButton")
-                {
-                    CanBeFocused = false
-                };
+                    TextManager.Get(warningTexts[i]), style: "IndicatorButton");
 
                 var btnText = warningBtn.GetChild<GUITextBlock>();
                 btnText.Font = GUI.SmallFont;

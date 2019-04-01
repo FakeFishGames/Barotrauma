@@ -130,12 +130,7 @@ namespace Barotrauma
                 {
                     OnEnterMessage = (textbox, text) =>
                     {
-                        if (Character.Controlled?.Info == null)
-                        {
-                            textbox.Deselect();
-                            textbox.Text = "";
-                            return true;
-                        }
+                        if (Character.Controlled == null) { return true; }
 
                         textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
 
@@ -981,7 +976,7 @@ namespace Barotrauma
                 foreach (GUIComponent c in prevCharacterListBox.Content.Children)
                 {
                     Character character = c.UserData as Character;
-                    if (character == null || character.IsDead || character.Removed) continue;
+                    if (character == null) continue;
                     AddCharacter(character);
                     DisplayCharacterOrder(character, character.CurrentOrder);
                 }

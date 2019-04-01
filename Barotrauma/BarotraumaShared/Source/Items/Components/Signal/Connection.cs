@@ -163,14 +163,6 @@ namespace Barotrauma.Items.Components
         {
             wires[index] = wire;
             recipientsDirty = true;
-            if (wire != null)
-            {
-                var otherConnection = wire.OtherConnection(this);
-                if (otherConnection != null)
-                {
-                    otherConnection.recipientsDirty = true;
-                }
-            }
         }
         
         public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power, float signalStrength = 1.0f)

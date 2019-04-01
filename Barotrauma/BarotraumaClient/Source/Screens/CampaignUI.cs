@@ -457,14 +457,11 @@ namespace Barotrauma
                 {
                     IgnoreLayoutGroups = true,
                     OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; },
-                    Enabled = true
+                    Enabled = true,
+                    Visible = GameMain.Client == null ||
+                        GameMain.Client.HasPermission(Networking.ClientPermissions.ManageRound) ||
+                        GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign)
                 };
-                if (GameMain.Client != null)
-                {
-                    startButton.Visible = !GameMain.Client.GameStarted &&
-                        (GameMain.Client.HasPermission(Networking.ClientPermissions.ManageRound) ||
-                        GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
-                }
             }
 
             OnLocationSelected?.Invoke(location, connection);

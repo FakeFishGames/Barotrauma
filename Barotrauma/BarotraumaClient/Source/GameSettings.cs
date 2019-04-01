@@ -14,12 +14,11 @@ namespace Barotrauma
     {
         private enum Tab
         {
+            General,
             Graphics,
             Audio,
             Controls,
         }
-
-        private readonly Point MinSupportedResolution = new Point(1024, 540);
 
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
@@ -72,79 +71,16 @@ namespace Barotrauma
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
+            settingsFrame = new GUIFrame(new RectTransform(new Point(500, 500), GUI.Canvas, Anchor.Center));
 
-            var settingsFramePadding = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), settingsFrame.RectTransform),
+                TextManager.Get("Settings"), textAlignment: Alignment.Center, font: GUI.LargeFont);
 
-            /// General tab --------------------------------------------------------------
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), settingsFrame.RectTransform, Anchor.Center)
+            { RelativeOffset = new Vector2(0.0f, 0.06f) }, style: null);
 
-            var leftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), settingsFramePadding.RectTransform, Anchor.TopLeft));
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform),
-                TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont);
-
-            var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), leftPanel.RectTransform, Anchor.TopLeft));
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), generalLayoutGroup.RectTransform))
-            {
-                CanBeFocused = false
-            };
-
-            foreach (ContentPackage contentPackage in ContentPackage.List)
-            {
-                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.067f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
-                {
-                    UserData = contentPackage,
-                    OnSelected = SelectContentPackage,
-                    Selected = SelectedContentPackages.Contains(contentPackage)
-                };
-                if (!contentPackage.IsCompatible())
-                {
-                    tickBox.TextColor = Color.Red;
-                    tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                    .Replace("[packagename]", contentPackage.Name)
-                                    .Replace("[packageversion]", contentPackage.GameVersion.ToString())
-                                    .Replace("[gameversion]", GameMain.Version.ToString());
-                }
-                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
-                {
-                    tickBox.TextColor = Color.Red;
-                    tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.Get("ContentPackageMissingCoreFiles")
-                                    .Replace("[packagename]", contentPackage.Name)
-                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes));
-                }
-            }
-
-            new GUITextBlock(new RectTransform(new Vector2(0.92f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
-            var languageDD = new GUIDropDown(new RectTransform(new Vector2(0.92f, 0.05f), generalLayoutGroup.RectTransform));
-            foreach (string language in TextManager.AvailableLanguages)
-            {
-                languageDD.AddItem(TextManager.Get("Language." + language), language);
-            }
-            languageDD.SelectItem(TextManager.Language);
-            languageDD.OnSelected = (guiComponent, obj) =>
-            {
-                string newLanguage = obj as string;
-                if (newLanguage == Language) return true;
-
-                UnsavedSettings = true;
-                Language = newLanguage;
-
-                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
-
-                return true;
-            };
-
-            var rightPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftPanel.RectTransform.RelativeSize.X, 0.95f),
-                settingsFramePadding.RectTransform, Anchor.TopRight));
-
-            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightPanel.RectTransform, Anchor.TopCenter), isHorizontal: true);
-
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), rightPanel.RectTransform, Anchor.Center), style: null);
-
+            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.05f), settingsFrame.RectTransform, Anchor.TopCenter)
+            { RelativeOffset = new Vector2(0.0f, 0.11f) }, isHorizontal: true);
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
             tabButtons = new GUIButton[tabs.Length];
@@ -168,10 +104,10 @@ namespace Barotrauma
 
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.CenterLeft)
             { RelativeOffset = new Vector2(0.02f, 0.0f) })
-            { RelativeSpacing = 0.01f };
+            { RelativeSpacing = 0.01f, Stretch = true };
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.CenterRight)
             { RelativeOffset = new Vector2(0.02f, 0.0f) })
-            { RelativeSpacing = 0.01f };
+            { RelativeSpacing = 0.01f, Stretch = true };
 
             var supportedDisplayModes = new List<DisplayMode>();
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
@@ -199,7 +135,6 @@ namespace Barotrauma
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
-                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
                 if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
@@ -238,6 +173,9 @@ namespace Barotrauma
                 return true;
             };
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
                 ToolTip = TextManager.Get("EnableVSyncToolTip"),
@@ -253,6 +191,8 @@ namespace Barotrauma
                 Selected = VSyncEnabled
             };
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform), style: null);
             GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));
             GUIScrollBar particleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
@@ -269,6 +209,8 @@ namespace Barotrauma
             };
             particleScrollBar.OnMoved(particleScrollBar, particleScrollBar.BarScroll);
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LosEffect"));
             var losModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
             losModeDD.AddItem(TextManager.Get("LosModeNone"), LosMode.None);
@@ -287,6 +229,8 @@ namespace Barotrauma
                 return true;
             };
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
             GUITextBlock LightText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"))
             {
                 ToolTip = TextManager.Get("LightMapScaleToolTip")
@@ -307,6 +251,8 @@ namespace Barotrauma
             };
             lightScrollBar.OnMoved(lightScrollBar, lightScrollBar.BarScroll);
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("SpecularLighting"))
             {
                 ToolTip = TextManager.Get("SpecularLightingToolTip"),
@@ -319,6 +265,8 @@ namespace Barotrauma
                 }
             };
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ChromaticAberration"))
             {
                 ToolTip = TextManager.Get("ChromaticAberrationToolTip"),
@@ -330,6 +278,9 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: null);
 
             GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"));
             GUIScrollBar HUDScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
@@ -349,6 +300,9 @@ namespace Barotrauma
             };
             HUDScaleScrollBar.OnMoved(HUDScaleScrollBar, HUDScaleScrollBar.BarScroll);
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), rightColumn.RectTransform), style: null);
+
             GUITextBlock inventoryScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("InventoryScale"));
             GUIScrollBar inventoryScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), barSize: 0.1f)
             {
@@ -364,6 +318,9 @@ namespace Barotrauma
                 Step = 0.05f
             };
             inventoryScaleScrollBar.OnMoved(inventoryScaleScrollBar, inventoryScaleScrollBar.BarScroll);
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null);
 
             /// Audio tab ----------------------------------------------------------------
 
@@ -610,10 +567,9 @@ namespace Barotrauma
             var inputNames = Enum.GetValues(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
-                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform)) { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f };
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
-                    TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform),
+                var inputContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform), style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform), TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont);
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform, Anchor.TopRight),
                     text: keyMapping[i].ToString(), font: GUI.SmallFont)
                 {
                     UserData = i
@@ -637,11 +593,88 @@ namespace Barotrauma
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
 
+            /// General tab --------------------------------------------------------------
+
+            var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.General].RectTransform, Anchor.Center)
+                { RelativeOffset = new Vector2(0.0f, 0.0f) }) { RelativeSpacing = 0.01f, Stretch = true };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), generalLayoutGroup.RectTransform))
+            {
+                CanBeFocused = false
+            };
+
+
+            foreach (ContentPackage contentPackage in ContentPackage.List)
+            {
+                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
+                {
+                    UserData = contentPackage,
+                    OnSelected = SelectContentPackage,
+                    Selected = SelectedContentPackages.Contains(contentPackage)
+                };
+                if (!contentPackage.IsCompatible())
+                {
+                    tickBox.TextColor = Color.Red;
+                    tickBox.Enabled = false;
+                    tickBox.ToolTip = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                    .Replace("[packagename]", contentPackage.Name)
+                                    .Replace("[packageversion]", contentPackage.GameVersion.ToString())
+                                    .Replace("[gameversion]", GameMain.Version.ToString());
+                }
+                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+                {
+                    tickBox.TextColor = Color.Red;
+                    tickBox.Enabled = false;
+                    tickBox.ToolTip = TextManager.Get("ContentPackageMissingCoreFiles")
+                                    .Replace("[packagename]", contentPackage.Name)
+                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes));
+                }
+            }
+            GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("AimAssist"));
+            GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform),
+                barSize: 0.1f)
+            {
+                UserData = aimAssistText,
+                BarScroll = MathUtils.InverseLerp(0.0f, 5.0f, AimAssistAmount),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
+                    return true;
+                },
+                Step = 0.1f
+            };
+            aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
+            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform));
+            foreach (string language in TextManager.AvailableLanguages)
+            {
+                languageDD.AddItem(TextManager.Get("Language." + language), language);
+            }
+            languageDD.SelectItem(TextManager.Language);
+            languageDD.OnSelected = (guiComponent, obj) =>
+            {
+                string newLanguage = obj as string;
+                if (newLanguage == Language) return true;
+
+                UnsavedSettings = true;
+                Language = newLanguage;
+
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
+
+                return true;
+            };
+
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+                TextManager.Get("Cancel"))
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) =>
@@ -657,7 +690,7 @@ namespace Barotrauma
             };
 
             applyButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
-                TextManager.Get("ApplySettingsButton"), style: "GUIButtonLarge")
+                TextManager.Get("ApplySettingsButton"))
             {
                 IgnoreLayoutGroups = true,
                 Enabled = false
@@ -665,7 +698,7 @@ namespace Barotrauma
             applyButton.OnClicked = ApplyClicked;
 
             UnsavedSettings = false; // Reset unsaved settings to false once the UI has been created
-            SelectTab(Tab.Graphics);
+            SelectTab(Tab.General);
         }
 
         private void SelectTab(Tab tab)

@@ -601,10 +601,8 @@ namespace Barotrauma
                         {
                             ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
-                        else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                        else // Otherwise toggle pausing.
                         {
-                            // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
                         }
                     }

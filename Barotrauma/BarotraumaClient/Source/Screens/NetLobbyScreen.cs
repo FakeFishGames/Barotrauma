@@ -233,8 +233,7 @@ namespace Barotrauma
 
                 levelSeed = value;
 
-                int intSeed = ToolBox.StringToInt(levelSeed);
-                backgroundSprite = LocationType.Random(new MTRandom(intSeed))?.GetPortrait(intSeed);
+                backgroundSprite = LocationType.Random(levelSeed)?.GetPortrait(ToolBox.StringToInt(levelSeed));
                 seedBox.Text = levelSeed;
 
                 //lastUpdateID++;
@@ -727,12 +726,6 @@ namespace Barotrauma
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
-                if (campaignUI?.StartButton != null)
-                {
-                    campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
-                        (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
-                        GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
-                }
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }
             else
@@ -854,9 +847,9 @@ namespace Barotrauma
 
             if (campaignUI?.StartButton != null)
             {
-                campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
-                    (GameMain.Client.HasPermission(ClientPermissions.ManageRound) || 
-                    GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                campaignUI.StartButton.Visible = 
+                    GameMain.Client.HasPermission(ClientPermissions.ManageRound) || 
+                    GameMain.Client.HasPermission(ClientPermissions.ManageCampaign);
             }
         }
 
@@ -867,21 +860,18 @@ namespace Barotrauma
             spectateButton.Enabled = true;
         }
 
-        public void SetCampaignCharacterInfo(CharacterInfo newCampaignCharacterInfo)
-        {            
-            if (newCampaignCharacterInfo != null)
+        public void SetCampaignCharacterInfo(CharacterInfo characterInfo)
+        {
+            if (CampaignCharacterDiscarded) return;
+
+            campaignCharacterInfo = characterInfo;
+            if (campaignCharacterInfo != null)
             {
-                if (CampaignCharacterDiscarded) { return; }
-                if (campaignCharacterInfo != newCampaignCharacterInfo)
-                {
-                    campaignCharacterInfo = newCampaignCharacterInfo;
-                    UpdatePlayerFrame(campaignCharacterInfo, false);
-                }
+                UpdatePlayerFrame(campaignCharacterInfo, false);
             }
-            else if (campaignCharacterInfo != null)
+            else
             {
-                campaignCharacterInfo = null;
-                UpdatePlayerFrame(campaignCharacterInfo, false);                
+                UpdatePlayerFrame(null, true);
             }
         }
 

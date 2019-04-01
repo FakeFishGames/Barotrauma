@@ -88,13 +88,13 @@ namespace Barotrauma
                     Collider.AngularVelocity = newAngularVelocity;
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    float errorTolerance = character.AllowInput ? 0.01f : 0.1f;
+                    float errorTolerance = character.AllowInput ? 0.01f : 0.2f;
                     if (distSqrd > errorTolerance)
                     {
                         if (distSqrd > 10.0f || !character.AllowInput)
                         {
                             Collider.TargetRotation = newRotation;
-                            SetPosition(newPosition, lerp: distSqrd < 1.0f);
+                            SetPosition(newPosition, lerp: distSqrd < 5.0f);
                         }
                         else
                         {
@@ -108,8 +108,15 @@ namespace Barotrauma
                     // -> we need to correct it manually
                     if (!character.AllowInput)
                     {
-                        MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-                        MainLimb.PullJointEnabled = true;
+                        float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, Collider.SimPosition);
+                        float mainLimbErrorTolerance = 0.1f;
+                        //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
+                        //don't attempt to correct the position.
+                        if (mainLimbDistSqrd > mainLimbErrorTolerance || Collider.LinearVelocity.LengthSquared() > 0.05f)
+                        {
+                            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                            MainLimb.PullJointEnabled = true;
+                        }
                     }
                 }
                 character.MemLocalState.Clear();

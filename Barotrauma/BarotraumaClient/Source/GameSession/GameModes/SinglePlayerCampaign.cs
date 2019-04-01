@@ -44,7 +44,7 @@ namespace Barotrauma
 
             ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
 
-            if (ContextualTutorial.Selected) // Selected when starting a new game -> initialize
+            if (ContextualTutorial.Selected && !ContextualTutorial.Initialized) // Selected when starting a new game -> initialize
             {
                 ContextualTutorial.Initialize();
             }

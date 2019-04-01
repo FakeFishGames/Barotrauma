@@ -231,7 +231,7 @@ namespace Barotrauma
 
         public static Level CreateRandom(LocationConnection locationConnection)
         {
-            string seed = locationConnection.Locations[0].BaseName + locationConnection.Locations[1].BaseName;
+            string seed = locationConnection.Locations[0].Name + locationConnection.Locations[1].Name;
 
             float sizeFactor = MathUtils.InverseLerp(
                 MapGenerationParams.Instance.SmallLevelConnectionLength, 
@@ -1522,49 +1522,21 @@ namespace Barotrauma
                 outpost.MakeOutpost();
 
                 Point? minSize = null;
-                DockingPort subPort = null;
                 if (Submarine.MainSub != null)
                 {
                     Point subSize = Submarine.MainSub.GetDockedBorders().Size;
                     Point outpostSize = outpost.GetDockedBorders().Size;
                     minSize = new Point(Math.Max(subSize.X, outpostSize.X), subSize.Y + outpostSize.Y);
-
-                    float closestDistance = float.MaxValue;
-                    foreach (DockingPort port in DockingPort.List)
-                    {
-                        if (port.IsHorizontal || port.Docked) { continue; }
-                        if (port.Item.Submarine != Submarine.MainSub) { continue; }
-                        //the submarine port has to be at the top of the sub
-                        if (port.Item.WorldPosition.Y < Submarine.MainSub.WorldPosition.Y) { continue; }
-                        float dist = Math.Abs(port.Item.WorldPosition.X - Submarine.MainSub.WorldPosition.X);
-                        if (dist < closestDistance)
-                        {
-                            subPort = port;
-                            closestDistance = dist;
-                        }
-                    }
                 }
 
-                float subDockingPortOffset = subPort == null ? 0.0f : subPort.Item.WorldPosition.X - Submarine.MainSub.WorldPosition.X;
-                //don't try to compensate if the port is very far from the sub's center of mass
-                if (Math.Abs(subDockingPortOffset) > 2000.0f)
-                {
-                    subDockingPortOffset = MathHelper.Clamp(subDockingPortOffset, -2000.0f, 2000.0f);
-                    string warningMsg = "Docking port very far from the sub's center of mass (submarine: " + Submarine.MainSub.Name + ", dist: " + subDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
-                    DebugConsole.NewMessage(warningMsg, Color.Orange);
-                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
-                }
-
-                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, subDockingPortOffset));
+                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize));
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;
-                    if (GameMain.GameSession?.StartLocation != null) { outpost.Name = GameMain.GameSession.StartLocation.Name; }
                 }
                 else
                 {
                     EndOutpost = outpost;
-                    if (GameMain.GameSession?.EndLocation != null) { outpost.Name = GameMain.GameSession.EndLocation.Name; }
                 }
             }            
         }

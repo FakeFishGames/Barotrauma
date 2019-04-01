@@ -155,14 +155,13 @@ namespace Barotrauma.Items.Components
         {
             if (item.Container != null) { return false; }
 
-            if (AutoInteractWithContained && character.SelectedConstruction == null)
+            if (AutoInteractWithContained)
             {
                 foreach (Item contained in Inventory.Items)
                 {
                     if (contained == null) continue;
                     if (contained.TryInteract(character))
                     {
-                        character.FocusedItem = contained;
                         return false;
                     }
                 }
@@ -179,7 +178,6 @@ namespace Barotrauma.Items.Components
                     if (contained == null) continue;
                     if (contained.TryInteract(picker))
                     {
-                        picker.FocusedItem = contained;
                         return true;
                     }
                 }

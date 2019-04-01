@@ -79,7 +79,7 @@ namespace Barotrauma
                     new XAttribute("sourcerect", $"0, 0, 1, 1")))
         };
 
-        public static string GetFolder(string speciesName)
+        protected static string GetFolder(string speciesName)
         {
             var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName))?.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")

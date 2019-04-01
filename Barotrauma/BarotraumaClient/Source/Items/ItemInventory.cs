@@ -10,6 +10,12 @@ namespace Barotrauma
 
         protected override void ControlInput(Camera cam)
         {
+            if (draggingItem == null && HUD.CloseHUD(BackgroundFrame))
+            {
+                // TODO: fix so that works with the server side
+                Character.Controlled.SelectedConstruction = null;
+                return;
+            }
             base.ControlInput(cam);
             if (BackgroundFrame.Contains(PlayerInput.MousePosition))
             {

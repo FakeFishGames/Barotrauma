@@ -196,7 +196,7 @@ namespace Barotrauma
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
                     int zone = MathHelper.Clamp(generationParams.DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, generationParams.DifficultyZones);
-                    newLocations[i] = Location.CreateRandom(position, zone, Rand.GetRNG(Rand.RandSync.Server));
+                    newLocations[i] = Location.CreateRandom(position, zone);
                     Locations.Add(newLocations[i]);
                 }
 
@@ -578,12 +578,10 @@ namespace Barotrauma
                         location.MissionsCompleted = missionsCompleted;
                         if (showNotifications && prevLocationType != location.Type)
                         {
-                            var change = prevLocationType.CanChangeTo.Find(c =>
-                                c.ChangeToType.ToLowerInvariant() == location.Type.Identifier.ToLowerInvariant());
-                            if (change != null)
-                            {
-                                ChangeLocationType(location, prevLocationName, change);
-                            }
+                            ChangeLocationType(
+                                location,
+                                prevLocationName,
+                                prevLocationType.CanChangeTo.Find(c => c.ChangeToType.ToLowerInvariant() == location.Type.Identifier.ToLowerInvariant()));
                         }
                         break;
                     case "connection":

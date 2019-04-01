@@ -484,14 +484,26 @@ namespace Barotrauma.Items.Components
                     user = Character.Controlled;
                 }
             }
-            if (!AutoPilot && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
+            if (!AutoPilot && Character.DisableControls)
             {
                 steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                 Vector2 input = Vector2.Zero;
-                if (PlayerInput.KeyDown(InputType.Left)) { input -= Vector2.UnitX; }
-                if (PlayerInput.KeyDown(InputType.Right)) { input += Vector2.UnitX; }
-                if (PlayerInput.KeyDown(InputType.Up)) { input += Vector2.UnitY; }
-                if (PlayerInput.KeyDown(InputType.Down)) { input -= Vector2.UnitY; }
+                if (PlayerInput.KeyDown(InputType.Left))
+                {
+                    input -= Vector2.UnitX;
+                }
+                if (PlayerInput.KeyDown(InputType.Right))
+                {
+                    input += Vector2.UnitX;
+                }
+                if (PlayerInput.KeyDown(InputType.Up))
+                {
+                    input += Vector2.UnitY;
+                }
+                if (PlayerInput.KeyDown(InputType.Down))
+                {
+                    input -= Vector2.UnitY;
+                }
                 if (PlayerInput.KeyDown(Keys.LeftShift))
                 {
                     SteeringInput += input * deltaTime * 200;

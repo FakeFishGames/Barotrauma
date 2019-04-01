@@ -75,10 +75,7 @@ namespace Barotrauma
             };
 
             var h = new ConvexHull(verts, Color.Black, this);
-            if (Math.Abs(rotation) > 0.001f)
-            {
-                h.Rotate(position, rotation);
-            }
+            h.Rotate(position, rotation);
             convexHulls.Add(h);
         }
 
@@ -295,7 +292,8 @@ namespace Barotrauma
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = MathHelper.Lerp(0.0f, 0.65f, Sections[i].damage / Prefab.Health);
+                        float newCutoff = Sections[i].damage > 0 ?
+                            MathHelper.Lerp(0.2f, 0.65f, Sections[i].damage / Prefab.Health) : 0.0f;
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
@@ -362,7 +360,6 @@ namespace Barotrauma
                             -Bodies[i].Rotation, Color.White);
                     }
                 }
-                AiTarget?.Draw(spriteBatch);
             }
         }
 

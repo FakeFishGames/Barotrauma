@@ -50,11 +50,6 @@ namespace Barotrauma
             get; private set;
         }
 
-        public static Rectangle ObjectiveAnchor
-        {
-            get; private set;
-        }
-
         public static Rectangle InventoryAreaLower
         {
             get; private set;
@@ -161,10 +156,6 @@ namespace Barotrauma
                 new Rectangle(Padding, CrewArea.Y, chatBoxWidth, chatBoxHeight) :
                 new Rectangle(GameMain.GraphicsWidth - Padding - chatBoxWidth, CrewArea.Y, chatBoxWidth, chatBoxHeight);
 
-            int objectiveAnchorWidth = (int)(250 * GUI.Scale);
-            int objectiveAnchorOffsetY = (int)(100 * GUI.Scale);
-            ObjectiveAnchor = new Rectangle(GameMain.GraphicsWidth - Padding - objectiveAnchorWidth, CrewArea.Y + crewAreaHeight + objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
-
             int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.25f, 280);
             InventoryAreaLower = new Rectangle(Padding, GameMain.GraphicsHeight - lowerAreaHeight, GameMain.GraphicsWidth - Padding * 2, lowerAreaHeight);
 
@@ -200,9 +191,6 @@ namespace Barotrauma
     {
         public static bool CloseHUD(Rectangle rect)
         {
-            // Always close when hitting escape
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)) { return true; }
-
             //don't close when the cursor is on a UI element
             if (GUI.MouseOn != null) return false;
 

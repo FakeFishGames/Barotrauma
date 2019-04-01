@@ -15,8 +15,6 @@ namespace Barotrauma
 
         private bool networkUpdateSent;
 
-        private double LastInputTime;
-
         public float GetPositionUpdateInterval(Client recipient)
         {
             if (!Enabled) { return 1000.0f; }
@@ -63,15 +61,6 @@ namespace Barotrauma
                 else if (memInput.Count == 0)
                 {
                     AnimController.Frozen = true;
-                    if (Timing.TotalTime > LastInputTime + 0.5)
-                    {
-                        //no inputs have been received in 0.5 seconds, reset input
-                        //(if there's a temporary network hiccup that prevents us from receiving inputs, we assume the inputs haven't changed,
-                        //but if it takes too long, for example due to a client crashing/disconnecting, we don't want to keep the character
-                        //firing a welding tool or whatever else they were doing until the kill disconnect timer kicks in)
-                        prevDequeuedInput = dequeuedInput =
-                            dequeuedInput.HasFlag(InputNetFlags.FacingLeft) ? InputNetFlags.FacingLeft : InputNetFlags.None;
-                    }
                 }
                 else
                 {
@@ -201,7 +190,6 @@ namespace Barotrauma
                                 networkUpdateID = (ushort)(networkUpdateID - i)
                             };
                             memInput.Insert(i, newMem);
-                            LastInputTime = Timing.TotalTime;
                         }
                     }
 

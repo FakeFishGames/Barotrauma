@@ -880,7 +880,8 @@ namespace Barotrauma.Items.Components
             List<MapEntity> linked = new List<MapEntity>(item.linkedTo);
             foreach (MapEntity entity in linked)
             {
-                if (!(entity is Item linkedItem)) { continue; }
+                Item linkedItem = entity as Item;
+                if (linkedItem == null) { continue; }
 
                 var dockingPort = linkedItem.GetComponent<DockingPort>();
                 if (dockingPort != null)

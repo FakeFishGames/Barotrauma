@@ -615,7 +615,7 @@ namespace Barotrauma
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
 
-            w.spawnType = spawnType;
+            Enum.TryParse(element.GetAttributeString("spawn", "Path"), out w.spawnType);
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
             if (!string.IsNullOrWhiteSpace(idCardDescString))

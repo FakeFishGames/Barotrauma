@@ -99,7 +99,7 @@ namespace Barotrauma
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Animations/";
         public static string GetDefaultFile(string speciesName, AnimationType animType) => $"{GetFolder(speciesName)}{GetDefaultFileName(speciesName, animType)}.xml";
 
-        public static string GetFolder(string speciesName)
+        protected static string GetFolder(string speciesName)
         {
             var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName))?.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")

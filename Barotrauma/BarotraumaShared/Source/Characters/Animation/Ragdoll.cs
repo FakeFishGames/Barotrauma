@@ -1035,6 +1035,8 @@ namespace Barotrauma
 
             CheckValidity();
 
+            CheckValidity();
+
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
             UpdateCollisionCategories();
@@ -1295,42 +1297,17 @@ namespace Barotrauma
             UpdateProjSpecific(deltaTime);
         }
 
-        public bool Invalid { get; private set; }
-        private int validityResets;
-        private bool CheckValidity()
+        private void CheckValidity()
         {
-            bool isColliderValid = CheckValidity(Collider);
-            bool limbsValid = true;
+            CheckValidity(Collider);
             foreach (Limb limb in limbs)
             {
                 if (limb.body == null || !limb.body.Enabled) { continue; }
-                if (!CheckValidity(limb.body))
-                {
-                    limbsValid = false;
-                    break;
-                }
+                CheckValidity(limb.body);
             }
-            bool isValid = isColliderValid && limbsValid;
-            if (!isValid)
-            {
-                validityResets++;
-                if (validityResets > 1)
-                {
-                    Invalid = true;
-                    DebugConsole.ThrowError("Invalid ragdoll physics. Ragdoll freezed to prevent crashes.");
-                    Collider.SetTransform(Vector2.Zero, 0.0f);
-                    foreach (Limb limb in Limbs)
-                    {
-                        limb.body.SetTransform(Collider.SimPosition, 0.0f);
-                        limb.body.ResetDynamics();
-                    }
-                    Frozen = true;
-                }
-            }
-            return isValid;
         }
 
-        private bool CheckValidity(PhysicsBody body)
+        private void CheckValidity(PhysicsBody body)
         {
             string errorMsg = null;
             string bodyName = body.UserData is Limb ? "Limb" : "Collider";
@@ -1382,7 +1359,7 @@ namespace Barotrauma
                     limb.body.ResetDynamics();
                 }
                 SetInitialLimbPositions();
-                return false;
+                return;
             }
             return true;
         }
@@ -1524,7 +1501,8 @@ namespace Barotrauma
             float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;                        
             float resetDist = allowedDist * 5.0f;
 
-            float distSqrd = Vector2.DistanceSquared(Collider.SimPosition, MainLimb.SimPosition);
+            Vector2 diff = Collider.SimPosition - MainLimb.SimPosition;
+            float distSqrd = diff.LengthSquared();
 
             if (distSqrd > resetDist * resetDist)
             {
@@ -1535,10 +1513,13 @@ namespace Barotrauma
             {
                 //ragdoll too far from the collider, disable collisions until it's close enough
                 //(in case the ragdoll has gotten stuck somewhere)
+
+                Vector2 forceDir = diff / (float)Math.Sqrt(distSqrd);
                 foreach (Limb limb in Limbs)
                 {
                     if (limb.IsSevered) continue;
                     limb.body.CollidesWith = Physics.CollisionNone;
+                    limb.body.ApplyForce(forceDir * limb.Mass * 10.0f, maxVelocity: 10.0f);
                 }
 
                 collisionsDisabled = true;

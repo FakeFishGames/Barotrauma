@@ -10,7 +10,6 @@ using System.Text;
 using System.IO.Compression;
 using System.IO;
 using Barotrauma.Steam;
-using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -716,25 +715,23 @@ namespace Barotrauma.Networking
                     {
                         string savePath = inc.ReadString();
                         string seed = inc.ReadString();
-                        string subName = inc.ReadString();
-                        string subHash = inc.ReadString();
+                        string subPath = inc.ReadString();
 
-                        var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
-
-                        if (matchingSub == null)
+                        if (!File.Exists(subPath))
                         {
                             SendDirectChatMessage(
-                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subname]", subName), 
+                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subpath]", subPath), 
                                 connectedClient, ChatMessageType.MessageBox);
                         }
                         else
                         {
-                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, matchingSub.FilePath, seed);
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, subPath, seed);
                         }
                      }
                     else
                     {
                         string saveName = inc.ReadString();
+
                         if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.LoadCampaign(saveName);
                     }
                     break;
@@ -814,16 +811,7 @@ namespace Barotrauma.Networking
 
             Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
             GameAnalyticsManager.AddErrorEventOnce("GameServer.HandleClientError:LevelsDontMatch" + error, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorStr);
-
-            if (c.Connection == OwnerConnection)
-            {
-                SendDirectChatMessage(errorStr, c, ChatMessageType.MessageBox);
-                EndGame();
-            }
-            else
-            {
-                KickClient(c, errorStr);
-            }
+            KickClient(c, errorStr);
         }
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)
@@ -1040,7 +1028,7 @@ namespace Barotrauma.Networking
             if (command == ClientPermissions.ManageRound && inc.PeekBoolean() && 
                 GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
             {
-                if (!mpCampaign.AllowedToEndRound(sender.Character) && !sender.HasPermission(command))
+                if (!mpCampaign.AllowedToEndRound(sender.Character))
                 {
                     return;
                 }
@@ -1126,22 +1114,9 @@ namespace Barotrauma.Networking
                     UInt16 modeIndex = inc.ReadUInt16();
                     if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.ToLowerInvariant() == "multiplayercampaign")
                     {
-                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
-                        for (int i = 0; i < saveFiles.Length; i++)
-                        {
-                            XDocument doc = SaveUtil.LoadGameSessionDoc(saveFiles[i]);
-                            if (doc?.Root != null)
-                            {
-                                saveFiles[i] =
-                                    string.Join(";",
-                                        saveFiles[i].Replace(';', ' '),
-                                        doc.Root.GetAttributeString("submarine", ""),
-                                        doc.Root.GetAttributeString("savetime", ""));
-                            }
-                        }
-
                         NetOutgoingMessage msg = server.CreateMessage();
                         msg.Write((byte)ServerPacketHeader.CAMPAIGN_SETUP_INFO);
+                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
                         msg.Write((UInt16)saveFiles.Count());
                         foreach (string saveFile in saveFiles)
                         {
@@ -1226,7 +1201,6 @@ namespace Barotrauma.Networking
                 ClientWriteLobby(c);
 
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && 
-                    GameMain.NetLobbyScreen.SelectedMode == campaign.Preset &&
                     NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
                     //already sent an up-to-date campaign save
@@ -1361,6 +1335,10 @@ namespace Barotrauma.Networking
             WriteClientList(c, outmsg);
             clientListBytes = outmsg.LengthBytes - clientListBytes;
 
+            int eventManagerBytes = outmsg.LengthBytes;
+            entityEventManager.Write(c, outmsg, out List<NetEntityEvent> sentEvents);
+            eventManagerBytes = outmsg.LengthBytes - eventManagerBytes;
+
             int chatMessageBytes = outmsg.LengthBytes;
             WriteChatMessages(outmsg, c);
             chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
@@ -1370,8 +1348,7 @@ namespace Barotrauma.Networking
             while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
             {
                 var entity = c.PendingPositionUpdates.Peek();
-                if (entity == null || entity.Removed || 
-                    (entity is Item item && item.PositionUpdateInterval == float.PositiveInfinity))
+                if (entity == null || entity.Removed)
                 {
                     c.PendingPositionUpdates.Dequeue();
                     continue;
@@ -1410,55 +1387,25 @@ namespace Barotrauma.Networking
                 errorMsg +=
                     "  Client list size: " + clientListBytes + " bytes\n" +
                     "  Chat message size: " + chatMessageBytes + " bytes\n" +
+                    "  Event size: " + eventManagerBytes + " bytes\n" +
                     "  Position update size: " + positionUpdateBytes + " bytes\n\n";
+
+                if (sentEvents != null && sentEvents.Count > 0)
+                {
+                    errorMsg += "Sent events: \n";
+                    foreach (var entityEvent in sentEvents)
+                    {
+                        errorMsg += "  - " + (entityEvent.Entity?.ToString() ?? "null") + "\n";
+                    }
+                }
+
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
 
             CompressOutgoingMessage(outmsg);
+
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
-
-            //---------------------------------------------------------------------------
-
-            for (int i = 0; i < NetConfig.MaxEventPacketsPerUpdate; i++)
-            {
-                outmsg = server.CreateMessage();
-                outmsg.Write((byte)ServerPacketHeader.UPDATE_INGAME);
-                outmsg.Write((float)NetTime.Now);
-
-                int eventManagerBytes = outmsg.LengthBytes;
-                entityEventManager.Write(c, outmsg, out List<NetEntityEvent> sentEvents);
-                eventManagerBytes = outmsg.LengthBytes - eventManagerBytes;
-
-                if (sentEvents.Count == 0)
-                {
-                    break;
-                }
-
-                outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-
-                if (outmsg.LengthBytes > NetPeerConfiguration.MaximumTransmissionUnit)
-                {
-                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + NetPeerConfiguration.MaximumTransmissionUnit + ")\n";
-                    errorMsg +=
-                        "  Event size: " + eventManagerBytes + " bytes\n";
-
-                    if (sentEvents != null && sentEvents.Count > 0)
-                    {
-                        errorMsg += "Sent events: \n";
-                        foreach (var entityEvent in sentEvents)
-                        {
-                            errorMsg += "  - " + (entityEvent.Entity?.ToString() ?? "null") + "\n";
-                        }
-                    }
-
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame2:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                }
-
-                CompressOutgoingMessage(outmsg);
-                server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);     
-            }                  
         }
 
         private void WriteClientList(Client c, NetOutgoingMessage outmsg)
@@ -1545,8 +1492,7 @@ namespace Barotrauma.Networking
             }
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-            if (campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode && 
-                NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
+            if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();

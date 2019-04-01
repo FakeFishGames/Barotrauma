@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Particles;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,21 +11,12 @@ using System.Xml.Linq;
 namespace Barotrauma.Items.Components
 {
     partial class RepairTool
-#if DEBUG
-        : IDrawableComponent
-#endif
     {
         public ParticleEmitter ParticleEmitter
         {
             get;
             private set;
         }
-#if DEBUG
-        public Vector2 DrawSize
-        {
-            get { return GameMain.DebugDraw ? Vector2.One * Range : Vector2.Zero; }
-        }            
-#endif
 
         private List<ParticleEmitter> ParticleEmitterHitStructure = new List<ParticleEmitter>();
         private List<ParticleEmitter> ParticleEmitterHitCharacter = new List<ParticleEmitter>();
@@ -132,17 +122,5 @@ namespace Barotrauma.Items.Components
                 emitter.Second.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
             }            
         }
-#if DEBUG
-        public void Draw(SpriteBatch spriteBatch, bool editing)
-        {
-            if (GameMain.DebugDraw && IsActive)
-            {
-                GUI.DrawLine(spriteBatch, 
-                    new Vector2(debugRayStartPos.X, -debugRayStartPos.Y),
-                    new Vector2(debugRayEndPos.X, -debugRayEndPos.Y),
-                    Color.Yellow);
-            }
-        }
-#endif
     }
 }

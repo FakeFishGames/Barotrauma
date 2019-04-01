@@ -62,7 +62,7 @@ namespace Barotrauma
 
             UpdateSubList(submarines);
 
-            // New game right sideon
+            // New game right side
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), TextManager.Get("SaveName") + ":", textAlignment: Alignment.BottomLeft);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), string.Empty);
 
@@ -266,12 +266,15 @@ namespace Barotrauma
             {
                 OnSelected = SelectSaveFile
             };
+
+            saveList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform, Anchor.CenterLeft))
+            {
+                OnSelected = SelectSaveFile
+            };
             
             foreach (string saveFile in saveFiles)
             {
-                string fileName = saveFile;
-                string subName = "";
-                string saveTime = "";
+                XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
                 var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform), style: "ListBoxElement")
                 {
                     UserData = saveFile
@@ -279,38 +282,25 @@ namespace Barotrauma
 
                 var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform),
                     text: Path.GetFileNameWithoutExtension(saveFile));
+                if (doc?.Root == null)
+                {
+                    DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
+                    nameText.Color = Color.Red;
+                    continue;
+                }
 
-                if (!isMultiplayer)
-                {
-                    XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
-                    if (doc?.Root == null)
-                    {
-                        DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
-                        nameText.Color = Color.Red;
-                        continue;
-                    }
-                    subName =  doc.Root.GetAttributeString("submarine", "");
-                    saveTime = doc.Root.GetAttributeString("savetime", "");
-                }
-                else
-                {
-                    string[] splitSaveFile = saveFile.Split(';');
-                    saveFrame.UserData = splitSaveFile[0];
-                    fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
-                    if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
-                    if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
-                }
-                
+                string submarineName = doc.Root.GetAttributeString("submarine", "");
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: subName, font: GUI.SmallFont)
+                    text: submarineName, font: GUI.SmallFont)
                 {
-                    UserData = fileName
+                    UserData = saveFile
                 };
 
+                string saveTime = doc.Root.GetAttributeString("savetime", "");
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
                     text: saveTime, textAlignment: Alignment.Right, font: GUI.SmallFont)
                 {
-                    UserData = fileName
+                    UserData = saveFile
                 };
             }
 
@@ -353,6 +343,13 @@ namespace Barotrauma
                 },
                 Enabled = false
             };
+        }
+
+        public void UpdateTutorialSelection()
+        {
+            if (isMultiplayer) return;
+            Tutorial contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial);
+            contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
         }
 
         public void UpdateTutorialSelection()

@@ -232,11 +232,11 @@ namespace Barotrauma
         {
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor * 0.8f, scale: Scale * scale);
+                sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor, scale: Scale * scale);
             }
             else
             {
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), null, SpriteColor * 0.8f);
+                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), null, SpriteColor);
             }
         }
     }

@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
                 Dictionary<AfflictionPrefab, float> combinedAfflictionStrengths = new Dictionary<AfflictionPrefab, float>();
                 foreach (Affliction affliction in allAfflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ShowInHealthScannerThreshold || affliction.Strength <= 0.0f) continue;
+                    if (affliction.Strength < affliction.Prefab.ActivationThreshold || affliction.Strength <= 0.0f) continue;
                     if (combinedAfflictionStrengths.ContainsKey(affliction.Prefab))
                     {
                         combinedAfflictionStrengths[affliction.Prefab] += affliction.Strength;
