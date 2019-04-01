@@ -72,7 +72,8 @@
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
           <Affliction identifier="burn" strength="500" />
-          <Affliction identifier="internaldamage" strength="500" />
+          <Affliction identifier="radiationsickness" strength="100"/>
+          <Affliction identifier="internaldamage" strength="400" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
       </StatusEffect>

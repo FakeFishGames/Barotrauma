@@ -146,7 +146,8 @@
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
           <Affliction identifier="burn" strength="500" />
-          <Affliction identifier="internaldamage" strength="500" />
+          <Affliction identifier="radiationsickness" strength="100"/>
+          <Affliction identifier="internaldamage" strength="400" />
           <Affliction identifier="stun" strength="10" />
         </Explosion>
       </StatusEffect>
