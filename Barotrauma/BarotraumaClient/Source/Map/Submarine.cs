@@ -278,19 +278,23 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) messageBox.Close(); return true; }
             };
             background.RectTransform.SetAsFirstChild();
+            CreatePreviewWindow(messageBox.Content);
+        }
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
+        public void CreatePreviewWindow(GUIComponent parent)
+        {
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), parent.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
 
-            var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), messageBox.Content.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
-            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.35f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter));
+            var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), parent.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
+            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.35f), parent.RectTransform, Anchor.Center, Pivot.TopCenter));
 
             if (PreviewImage == null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
             }
             else
             {
-                new GUIImage(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), PreviewImage);
+                new GUIImage(new RectTransform(new Vector2(0.6f, 1), upperPart.RectTransform), PreviewImage, scaleToFit: true);
             }
 
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
@@ -298,7 +302,7 @@ namespace Barotrauma
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
 
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform, Anchor.TopRight));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.38f, 1), upperPart.RectTransform, Anchor.TopRight));
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
                 $"{TextManager.Get("Dimensions")}: {dimensionsStr}",
@@ -321,7 +325,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
         }
-
+        
         public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
         {
             Rectangle worldBorders = GetDockedBorders();

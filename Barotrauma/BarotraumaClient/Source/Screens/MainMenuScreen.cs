@@ -270,7 +270,7 @@ namespace Barotrauma
             SetupButtons(buttons);
             buttons.ForEach(b => b.TextBlock.SetTextPos());*/
 
-            var relativeSize = new Vector2(0.6f, 0.5f);
+            var relativeSize = new Vector2(0.6f, 0.65f);
             var minSize = new Point(600, 400);
             var maxSize = new Point(2000, 1500);
             var anchor = Anchor.CenterRight;
@@ -340,9 +340,7 @@ namespace Barotrauma
             Submarine.Unload();
 
             UpdateTutorialList();
-
-            campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
-
+            
             ResetButtonStates(null);
 
             GameAnalyticsManager.SetCustomDimension01("");
@@ -390,6 +388,7 @@ namespace Barotrauma
                     case Tab.NewGame:
                         campaignSetupUI.CreateDefaultSaveName();
                         campaignSetupUI.UpdateTutorialSelection();
+                        campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
                         break;
                     case Tab.LoadGame:
                         campaignSetupUI.UpdateLoadMenu();
