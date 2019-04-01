@@ -583,7 +583,7 @@ namespace Barotrauma.Lights
                         convexHull.CalculateShadowVertices(relativeLightPos, true);
 
                         //convert triangle strips to a triangle list
-                        for (int i = 0; i < convexHull.shadowVertexCount * 2 - 2; i++)
+                        for (int i = 0; i < convexHull.ShadowVertexCount * 2 - 2; i++)
                         {
                             if (i % 2 == 0)
                             {

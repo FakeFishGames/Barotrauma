@@ -656,13 +656,6 @@ namespace Barotrauma
                 msg.Timer -= deltaTime;                
                 msg.Pos += msg.Velocity * deltaTime;                
             }
-            
-            foreach (GUIMessage msg in messages)
-            {
-                if (!msg.WorldSpace) continue;
-                msg.Timer -= deltaTime;                
-                msg.Pos += msg.Velocity * deltaTime;                
-            }
         }
 
             messages.RemoveAll(m => m.Timer <= 0.0f);
