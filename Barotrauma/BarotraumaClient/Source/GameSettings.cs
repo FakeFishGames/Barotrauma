@@ -74,11 +74,11 @@ namespace Barotrauma
         {
             settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
 
-            var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.005f, IsHorizontal = true };
+            var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.01f, IsHorizontal = true };
 
             /// General tab --------------------------------------------------------------
 
-            var leftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), settingsFramePadding.RectTransform, Anchor.TopLeft));
+            var leftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), settingsFramePadding.RectTransform, Anchor.TopLeft));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform),
                 TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont);
@@ -139,8 +139,8 @@ namespace Barotrauma
                 return true;
             };
 
-            var rightPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftPanel.RectTransform.RelativeSize.X, 0.95f),
-                settingsFramePadding.RectTransform, Anchor.TopRight));
+            var rightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.99f - leftPanel.RectTransform.RelativeSize.X, 0.95f),
+                settingsFramePadding.RectTransform, Anchor.TopLeft));
 
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightPanel.RectTransform, Anchor.TopCenter), isHorizontal: true);
 

@@ -47,7 +47,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f
             };
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.905f), columnContainer.RectTransform))
             {
                 Stretch = true,
                 RelativeSpacing = 0.015f
