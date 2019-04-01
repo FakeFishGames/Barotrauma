@@ -65,6 +65,7 @@
         <RequiredItem identifier="oxygentank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
+        <Conditional IsDead="false" />
         <RequiredItem identifier="weldingfueltank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
@@ -163,9 +164,11 @@
         <RequiredItem identifier="oxygentank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
+        <Conditional IsDead="false" />
         <RequiredItem identifier="weldingfueltank" type="Contained" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
+        <Conditional IsDead="false" />
         <RequiredItem identifier="incendiumfueltank" type="Contained" />
         <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
