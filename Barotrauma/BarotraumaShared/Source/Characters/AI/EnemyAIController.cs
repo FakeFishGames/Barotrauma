@@ -797,6 +797,7 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
+            return false;
         }
 
         private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
@@ -1215,16 +1216,7 @@ namespace Barotrauma
                                 valueModifier = isOutdoor ? 1 : 0;
                                 valueModifier *= isOpen ? 5 : 1;
                             }
-                        }
-                    }
-                    else if (target.Entity is Structure s)
-                    {
-                        targetingTag = "wall";
-                        if (aggressiveBoarding)
-                        {
-                            // Ignore walls when inside.
-                            valueModifier = character.CurrentHull == null ? 2 : 0;
-                            if (valueModifier > 0)
+                            for (int i = 0; i < s.Sections.Length; i++)
                             {
                                 valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;
@@ -1240,11 +1232,6 @@ namespace Barotrauma
                          continue;
                     }
                 }
-
-                if (targetingTag == null) continue;
-                if (!targetingPriorities.ContainsKey(targetingTag)) continue;
-
-                valueModifier *= targetingPriorities[targetingTag].Priority;
 
                 if (targetingTag == null) continue;
                 if (!targetingPriorities.ContainsKey(targetingTag)) continue;
