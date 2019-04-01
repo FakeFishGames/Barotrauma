@@ -362,7 +362,8 @@ namespace Barotrauma
                 if (SelectedCharacter != null || SelectedConstruction != null)
                 {
                     tempBuffer.Write(true);
-                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : SelectedConstruction.ID);
+                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : NullEntityID);
+                    tempBuffer.Write(SelectedConstruction != null ? SelectedConstruction.ID : NullEntityID);
                     if (SelectedCharacter != null)
                     {
                         tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);

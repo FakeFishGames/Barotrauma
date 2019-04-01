@@ -30,12 +30,13 @@ namespace Barotrauma
                 else
                 {
                     var posInfo = new CharacterStateInfo(
-                    SimPosition,
-                    AnimController.Collider.Rotation,
-                    LastNetworkUpdateID,
-                    AnimController.TargetDir,
-                    SelectedCharacter == null ? (Entity)SelectedConstruction : (Entity)SelectedCharacter,
-                    AnimController.Anim);
+                        SimPosition,
+                        AnimController.Collider.Rotation,
+                        LastNetworkUpdateID,
+                        AnimController.TargetDir,
+                        SelectedCharacter,
+                        SelectedConstruction,
+                        AnimController.Anim);
 
                     memLocalState.Add(posInfo);
 
@@ -187,14 +188,17 @@ namespace Barotrauma
                     }
 
                     bool entitySelected = msg.ReadBoolean();
-                    Entity selectedEntity = null;
+                    Character selectedCharacter = null;
+                    Item selectedItem = null;
 
                     AnimController.Animation animation = AnimController.Animation.None;
                     if (entitySelected)
                     {
-                        ushort entityID = msg.ReadUInt16();
-                        selectedEntity = FindEntityByID(entityID);
-                        if (selectedEntity is Character)
+                        ushort characterID = msg.ReadUInt16();
+                        ushort itemID = msg.ReadUInt16();
+                        selectedCharacter = FindEntityByID(characterID) as Character;
+                        selectedItem = FindEntityByID(itemID) as Item;
+                        if (selectedCharacter != null)
                         {
                             bool doingCpr = msg.ReadBoolean();
                             if (doingCpr && SelectedCharacter != null)
@@ -235,7 +239,11 @@ namespace Barotrauma
                     int index = 0;
                     if (GameMain.Client.Character == this && AllowInput)
                     {
-                        var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(
+                            pos, rotation, 
+                            networkUpdateID, 
+                            facingRight ? Direction.Right : Direction.Left, 
+                            selectedCharacter, selectedItem, animation);
 
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                             index++;
@@ -243,7 +251,11 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var posInfo = new CharacterStateInfo(pos, rotation, linearVelocity, angularVelocity, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(
+                            pos, rotation, 
+                            linearVelocity, angularVelocity, 
+                            sendingTime, facingRight ? Direction.Right : Direction.Left, 
+                            selectedCharacter, selectedItem, animation);
                         
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
