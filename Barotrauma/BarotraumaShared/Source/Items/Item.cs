@@ -491,6 +491,9 @@ namespace Barotrauma
                     case "levelcommonness":
                     case "suitabletreatment":
                     case "containedsprite":
+                    case "fabricate":
+                    case "fabricable":
+                    case "fabricableitem":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
