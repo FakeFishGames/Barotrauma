@@ -74,11 +74,11 @@ namespace Barotrauma
         {
             settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
 
-            var settingsFramePadding = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
+            var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.005f, IsHorizontal = true };
 
             /// General tab --------------------------------------------------------------
 
-            var leftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), settingsFramePadding.RectTransform, Anchor.TopLeft));
+            var leftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), settingsFramePadding.RectTransform, Anchor.TopLeft));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform),
                 TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont);
@@ -88,7 +88,8 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
             var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), generalLayoutGroup.RectTransform))
             {
-                CanBeFocused = false
+                CanBeFocused = false,
+                ScrollBarVisible = true
             };
 
             foreach (ContentPackage contentPackage in ContentPackage.List)
@@ -118,8 +119,8 @@ namespace Barotrauma
                 }
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
-            var languageDD = new GUIDropDown(new RectTransform(new Vector2(0.95f, 0.045f), generalLayoutGroup.RectTransform));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
+            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
             {
                 languageDD.AddItem(TextManager.Get("Language." + language), language);
