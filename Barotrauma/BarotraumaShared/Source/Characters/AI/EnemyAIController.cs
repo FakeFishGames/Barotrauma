@@ -705,16 +705,15 @@ namespace Barotrauma
                     default:
                         UpdateFallBack(attackWorldPos, deltaTime);
                         return;
-
                 }
             }
 
-            if (AttackingLimb == null || _previousAiTarget != SelectedAiTarget)
-            {
-                AttackingLimb = GetAttackLimb(attackWorldPos);
-            }
             if (canAttack)
             {
+                if (AttackingLimb == null || _previousAiTarget != SelectedAiTarget)
+                {
+                    AttackingLimb = GetAttackLimb(attackWorldPos);
+                }
                 canAttack = AttackingLimb != null && AttackingLimb.attack.CoolDownTimer <= 0;
             }
             float distance = 0;
