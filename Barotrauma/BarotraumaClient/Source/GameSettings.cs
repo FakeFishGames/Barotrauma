@@ -428,11 +428,7 @@ namespace Barotrauma
 
                 return true;
             };
-
-            //var voiceSettings = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.5f), tabs[(int)Tab.Audio].RectTransform, Anchor.BottomCenter)
-            //    { RelativeOffset = new Vector2(0.0f, 0.04f) })
-            //    { RelativeSpacing = 0.01f };
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), audioSliders.RectTransform), TextManager.Get("VoiceChat"));
 
             IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
@@ -514,9 +510,9 @@ namespace Barotrauma
             };
             micVolumeSlider.OnMoved(micVolumeSlider, micVolumeSlider.BarScroll);
 
-            var voiceInputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), audioSliders.RectTransform, Anchor.BottomCenter));
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.1f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice") + ": ");
-            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.1f), voiceInputContainer.RectTransform, Anchor.TopRight),
+            var voiceInputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), audioSliders.RectTransform, Anchor.BottomCenter));
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.5f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice") + ": ");
+            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.5f), voiceInputContainer.RectTransform, Anchor.TopRight),
                 text: keyMapping[(int)InputType.Voice].ToString())
             {
                 UserData = InputType.Voice
@@ -524,22 +520,22 @@ namespace Barotrauma
             voiceKeyBox.OnSelected += KeyBoxSelected;
             voiceKeyBox.SelectedColor = Color.Gold * 0.3f;
 
-            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), audioSliders.RectTransform));
-            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
+            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), audioSliders.RectTransform));
+            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
             {
                 TextGetter = () =>
                 {
                     return TextManager.Get("NoiseGateThreshold") + " " + ((int)NoiseGateThreshold).ToString() + " dB";
                 }
             };
-            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.1f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
+            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
             {
                 if (VoipCapture.Instance == null) return 0.0f;
                 dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
                 return ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
             };
-            var noiseGateSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.1f), dbMeter.RectTransform, Anchor.Center), color: Color.White, barSize: 0.03f);
+            var noiseGateSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 1.0f), dbMeter.RectTransform, Anchor.Center), color: Color.White, barSize: 0.03f);
             noiseGateSlider.Frame.Visible = false;
             noiseGateSlider.Step = 0.01f;
             noiseGateSlider.Range = new Vector2(-100.0f, 0.0f);
