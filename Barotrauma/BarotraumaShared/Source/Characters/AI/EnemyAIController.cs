@@ -726,8 +726,7 @@ namespace Barotrauma
                 if (!canAttack && !IsCoolDownRunning)
                 {
                     // If not, reset the attacking limb, if the cooldown is not running
-                    // Don't use the property, because we don't want cancel reversing, if we are reversing.
-                    _attackingLimb = null;
+                    AttackingLimb = null;
                 }
             }
 
@@ -798,6 +797,7 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
+            return false;
         }
 
         private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
@@ -1169,15 +1169,15 @@ namespace Barotrauma
                     else if (target.Entity is Structure s)
                     {
                         targetingTag = "wall";
-                        if (!s.HasBody)
-                        {
-                            // Ignore structures that doesn't have a body (not walls)
-                            continue;
-                        }
-                        // Ignore walls when inside.
-                        valueModifier = character.CurrentHull == null ? 1 : 0;
                         if (aggressiveBoarding)
                         {
+                            // Ignore walls when inside.
+                            valueModifier = character.CurrentHull == null ? 2 : 0;
+                            if (valueModifier > 0)
+                            {
+                                // Ignore structures that doesn't have a body (not walls)
+                                valueModifier *= s.HasBody ? 1 : 0;
+                            }
                             for (int i = 0; i < s.Sections.Length; i++)
                             {
                                 var section = s.Sections[i];
@@ -1194,17 +1194,37 @@ namespace Barotrauma
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        targetingTag = "room";
+                    }
+                    if (door != null)
+                    {
+                        // If there's not a more specific tag for the door
+                        if (string.IsNullOrEmpty(targetingTag) || targetingTag == "room")
+                        {
+                            targetingTag = "door";
+                        }
+                        bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
+                        bool isOpen = door.IsOpen || door.Item.Condition <= 0.0f;
+                        //increase priority if the character is outside and an aggressive boarder, and the door is from outside to inside
+                        if (aggressiveBoarding)
+                        {
+                            if (character.CurrentHull == null)
+                            {
+                                valueModifier = isOutdoor ? 1 : 0;
+                                valueModifier *= isOpen ? 5 : 1;
+                            }
+                        }
                         else
                         {
                             // Ignore disabled walls
                             bool isDisabled = true;
                             for (int i = 0; i < s.Sections.Length; i++)
                             {
-                                if (!s.SectionBodyDisabled(i))
-                                {
-                                    isDisabled = false;
-                                    break;
-                                }
+                                valueModifier = isOutdoor ? 0 : 1;
+                                valueModifier *= isOpen ? 0 : 1;
                             }
                             if (isDisabled)
                             {
@@ -1238,6 +1258,10 @@ namespace Barotrauma
                                 valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;
                             }
+                        }
+                        else if (isOpen) //ignore broken and open doors
+                        {
+                            continue;
                         }
                         else if (isOpen) //ignore broken and open doors
                         {
