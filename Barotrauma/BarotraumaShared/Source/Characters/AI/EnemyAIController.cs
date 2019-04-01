@@ -1232,52 +1232,11 @@ namespace Barotrauma
                                 valueModifier = isOutdoor ? 1 : 0;
                                 valueModifier *= isOpen ? 5 : 1;
                             }
-                        }
-                        else
-                        {
-                            // Ignore disabled walls
-                            bool isDisabled = true;
-                            for (int i = 0; i < s.Sections.Length; i++)
-                            {
-                                valueModifier = isOutdoor ? 0 : 1;
-                                valueModifier *= isOpen ? 0 : 1;
-                            }
-                            if (isDisabled)
-                            {
-                                valueModifier = 0;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        targetingTag = "room";
-                    }
-                    if (door != null)
-                    {
-                        // If there's not a more specific tag for the door
-                        if (string.IsNullOrEmpty(targetingTag) || targetingTag == "room")
-                        {
-                            targetingTag = "door";
-                        }
-                        bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
-                        bool isOpen = door.IsOpen || door.Item.Condition <= 0.0f;
-                        //increase priority if the character is outside and an aggressive boarder, and the door is from outside to inside
-                        if (aggressiveBoarding)
-                        {
-                            if (character.CurrentHull == null)
-                            {
-                                valueModifier = isOutdoor ? 1 : 0;
-                                valueModifier *= isOpen ? 5 : 1;
-                            }
                             if (isDisabled)
                             {
                                 valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;
                             }
-                        }
-                        else if (isOpen) //ignore broken and open doors
-                        {
-                            continue;
                         }
                         else if (isOpen) //ignore broken and open doors
                         {
