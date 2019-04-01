@@ -176,12 +176,12 @@ namespace Barotrauma.Lights
             shadowVertices = new VertexPositionColor[6 * 2];
             penumbraVertices = new VertexPositionTexture[6];
             
-            //vertices = points;
-            SetVertices(points);
-            //CalculateDimensions();
-            
             backFacing = new bool[4];
             ignoreEdge = new bool[4];
+
+            //vertices = points;
+            SetVertices(points);
+            //CalculateDimensions();            
                         
             Enabled = true;
 
@@ -194,16 +194,40 @@ namespace Barotrauma.Lights
             
             foreach (ConvexHull ch in chList.List)
             {
-                UpdateIgnoredEdges(ch);
-                ch.UpdateIgnoredEdges(this);
+                MergeOverlappingSegments(ch);
+                ch.MergeOverlappingSegments(this);
             }
 
             chList.List.Add(this);
         }
 
-        private void UpdateIgnoredEdges(ConvexHull ch)
+        private void MergeOverlappingSegments(ConvexHull ch)
         {
             if (ch == this) return;
+
+            //hide segments that are roughly at the some position as some other segment (e.g. the ends of two adjacent wall pieces)
+            //TODO: prevent "gaps" between shadows when the segments are not exactly at the same position (see the hatches in Humpback for example)
+            /*float mergeDist = 16;
+            float mergeDistSqr = mergeDist * mergeDist;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                for (int j = 0; j < ch.segments.Length; j++)
+                {
+                    if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].Start.Pos) < mergeDistSqr &&
+                        Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].End.Pos) < mergeDistSqr)
+                    {
+                        ignoreEdge[i] = true;
+                        ch.ignoreEdge[j] = true;
+                    }
+                    else if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].End.Pos) < mergeDistSqr &&
+                        Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].Start.Pos) < mergeDistSqr)
+                    {
+                        ignoreEdge[i] = true;
+                        ch.ignoreEdge[j] = true;
+                    }
+                }
+            }*/
+
             //ignore edges that are inside some other convex hull
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -223,15 +247,11 @@ namespace Barotrauma.Lights
 
         public void Rotate(Vector2 origin, float amount)
         {
-            Matrix rotationMatrix = Matrix.CreateRotationZ(amount);
-
-            Vector2[] newVerts = new Vector2[vertices.Length];
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                newVerts[i] = Vector2.Transform(vertices[i].Pos - origin, rotationMatrix) + origin;
-            }
-
-            SetVertices(newVerts);
+            Matrix rotationMatrix = 
+                Matrix.CreateTranslation(-origin.X, -origin.Y, 0.0f) * 
+                Matrix.CreateRotationZ(amount) *
+                Matrix.CreateTranslation(origin.X, origin.Y, 0.0f);
+            SetVertices(vertices.Select(v => v.Pos).ToArray(), rotationMatrix);
         }
 
         private void CalculateDimensions()
@@ -266,7 +286,7 @@ namespace Barotrauma.Lights
             CalculateDimensions();
         }
 
-        public void SetVertices(Vector2[] points)
+        public void SetVertices(Vector2[] points, Matrix? rotationMatrix = null)
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
 
@@ -282,10 +302,14 @@ namespace Barotrauma.Lights
             {
                 segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4], this);
             }
-            
-            int margin = 0;
 
-            if (Math.Abs(points[0].X - points[2].X) < Math.Abs(points[0].Y - points[1].Y))
+            for (int i = 0; i < 4; i++)
+            {
+                ignoreEdge[i] = false;
+            }
+
+            int margin = 0;
+            if (Math.Abs(points[0].X - points[2].X) < Math.Abs(points[0].Y - points[2].Y))
             {
                 losVertices[0].Pos = new Vector2(points[0].X + margin, points[0].Y);
                 losVertices[1].Pos = new Vector2(points[1].X + margin, points[1].Y);
@@ -300,45 +324,28 @@ namespace Barotrauma.Lights
                 losVertices[3].Pos = new Vector2(points[3].X, points[3].Y + margin);
             }
 
+            if (rotationMatrix.HasValue)
+            {
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i].Pos = Vector2.Transform(vertices[i].Pos, rotationMatrix.Value);
+                    losVertices[i].Pos = Vector2.Transform(losVertices[i].Pos, rotationMatrix.Value);
+                }
+            }
+
             CalculateDimensions();
 
-            if (parentEntity == null || ignoreEdge == null) return;
-            for (int i = 0; i<4; i++)
-            {
-                ignoreEdge[i] = false;
-            }
+            if (parentEntity == null) return;
 
             var chList = HullLists.Find(x => x.Submarine == parentEntity.Submarine);
             if (chList != null)
             {
                 foreach (ConvexHull ch in chList.List)
                 {
-                    UpdateIgnoredEdges(ch);
+                    MergeOverlappingSegments(ch);
                 }
             }
         }
-
-        /*private void RemoveCachedShadow(Lights.LightSource light)
-        {
-            CachedShadow shadow = null;
-            cachedShadows.TryGetValue(light, out shadow);
-
-            if (shadow != null)
-            {
-                shadow.Dispose();
-                cachedShadows.Remove(light);
-            }
-        }
-
-        private void ClearCachedShadows()
-        {
-            foreach (KeyValuePair<LightSource, CachedShadow> cachedShadow in cachedShadows)
-            {
-                cachedShadow.Key.NeedsHullUpdate = true;
-                cachedShadow.Value.Dispose();
-            }
-            cachedShadows.Clear();
-        }*/
 
         public bool Intersects(Rectangle rect)
         {
@@ -491,6 +498,8 @@ namespace Barotrauma.Lights
 
         private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
         {
+            var vertices = los ? losVertices : this.vertices;
+
             Vector3 offset = Vector3.Zero;
             if (parentEntity != null && parentEntity.Submarine != null)
             {

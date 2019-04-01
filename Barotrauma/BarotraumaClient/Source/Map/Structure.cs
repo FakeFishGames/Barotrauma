@@ -75,7 +75,10 @@ namespace Barotrauma
             };
 
             var h = new ConvexHull(verts, Color.Black, this);
-            h.Rotate(position, rotation);
+            if (Math.Abs(rotation) > 0.001f)
+            {
+                h.Rotate(position, rotation);
+            }
             convexHulls.Add(h);
         }
 
