@@ -332,7 +332,8 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (NetEntityEvent entityEvent in sentEvents)
+            //too many events for one packet
+            if (eventsToSync.Count > 200)
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
                 msg.Write(client.UnreceivedEntityEventCount);
