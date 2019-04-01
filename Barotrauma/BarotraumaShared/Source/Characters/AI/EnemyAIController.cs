@@ -726,7 +726,8 @@ namespace Barotrauma
                 if (!canAttack && !IsCoolDownRunning)
                 {
                     // If not, reset the attacking limb, if the cooldown is not running
-                    AttackingLimb = null;
+                    // Don't use the property, because we don't want cancel reversing, if we are reversing.
+                    _attackingLimb = null;
                 }
             }
 
