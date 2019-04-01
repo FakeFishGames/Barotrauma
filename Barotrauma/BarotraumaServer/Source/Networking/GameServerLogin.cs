@@ -494,15 +494,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                var defaultPerms = PermissionPreset.List.Find(p => p.Name == "None");
-                if (defaultPerms != null)
-                {
-                    newClient.SetPermissions(defaultPerms.Permissions, defaultPerms.PermittedCommands);
-                }
-                else
-                {
-                    newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
-                }
+                newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
             }
         }
                 

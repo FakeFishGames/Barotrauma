@@ -72,7 +72,7 @@ namespace Barotrauma
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
+            settingsFrame = new GUIFrame(new RectTransform(new Point(1024, 768), GUI.Canvas, Anchor.Center));
 
             var settingsFramePadding = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
 
@@ -85,11 +85,12 @@ namespace Barotrauma
 
             var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), leftPanel.RectTransform, Anchor.TopLeft));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
+            //new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
             var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), generalLayoutGroup.RectTransform))
             {
                 CanBeFocused = false
             };
+
 
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
@@ -611,9 +612,8 @@ namespace Barotrauma
             for (int i = 0; i < inputNames.Length; i++)
             {
                 var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform)) { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f };
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
-                    TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform),
+                new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft), TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), inputContainer.RectTransform),
                     text: keyMapping[i].ToString(), font: GUI.SmallFont)
                 {
                     UserData = i
@@ -641,7 +641,7 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+                TextManager.Get("Cancel"))
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) =>
@@ -657,7 +657,7 @@ namespace Barotrauma
             };
 
             applyButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
-                TextManager.Get("ApplySettingsButton"), style: "GUIButtonLarge")
+                TextManager.Get("ApplySettingsButton"))
             {
                 IgnoreLayoutGroups = true,
                 Enabled = false
