@@ -1082,6 +1082,39 @@ namespace Barotrauma
 
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
+            if (sprite == null)
+            {
+                DebugConsole.ThrowError("Item \"" + Name + "\" has no sprite!");
+#if SERVER
+                sprite = new Sprite("", Vector2.Zero);
+                sprite.SourceRect = new Rectangle(0, 0, 32, 32);
+#else
+                sprite = new Sprite(TextureLoader.PlaceHolderTexture, null, null)
+                {
+                    Origin = TextureLoader.PlaceHolderTexture.Bounds.Size.ToVector2() / 2
+                };
+#endif
+                size = sprite.size;
+                sprite.EntityID = identifier;
+            }
+            
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
+            }
+
+            AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
+
             List.Add(this);
         }
 
