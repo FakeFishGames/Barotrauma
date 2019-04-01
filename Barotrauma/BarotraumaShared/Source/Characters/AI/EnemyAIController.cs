@@ -1150,65 +1150,6 @@ namespace Barotrauma
                     Door door = null;
                     if (target.Entity is Item item)
                     {
-                        targetingTag = "dead";
-                        if (targetCharacter.Submarine != Character.Submarine)
-                        {
-                            // In a different sub or the target is outside when we are inside or vice versa -> Ignore the target
-                            continue;
-                        }
-                        else if (targetCharacter.CurrentHull != Character.CurrentHull)
-                        {
-                            // In the same sub, halve the priority, if not in the same hull.
-                            valueModifier = 0.5f;
-                        }
-                    }
-                    else if (targetCharacter.AIController is EnemyAIController enemy)
-                    {
-                        if (enemy.combatStrength > combatStrength)
-                        {
-                            targetingTag = "stronger";
-                        }
-                        else if (enemy.combatStrength < combatStrength)
-                        {
-                            targetingTag = "weaker";
-                        }
-                        if (State == AIState.Escape && targetingTag == "stronger")
-                        {
-                            // Frightened
-                            valueModifier = 2;
-                        }
-                        else
-                        {
-                            if (targetCharacter.Submarine != Character.Submarine)
-                            {
-                                // In a different sub or the target is outside when we are inside or vice versa -> Ignore the target
-                                continue;
-                            }
-                            else if (targetCharacter.CurrentHull != Character.CurrentHull)
-                            {
-                                // In the same sub, halve the priority, if not in the same hull.
-                                valueModifier = 0.5f;
-                            }
-                        }
-                    }
-                    else if (targetCharacter.Submarine != null && Character.Submarine == null)
-                    {
-                        //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
-                        targetingTag = "room";
-                    }
-                    else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
-                    {
-                        targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
-                    }
-                }
-                else if (target.Entity != null)
-                {
-                    //skip the target if it's a room and the character is already inside a sub
-                    if (character.CurrentHull != null && target.Entity is Hull) continue;
-                    
-                    Door door = null;
-                    if (target.Entity is Item item)
-                    {
                         //item inside and we're outside -> attack the hull
                         if (item.CurrentHull != null && character.CurrentHull == null)
                         {
@@ -1275,10 +1216,64 @@ namespace Barotrauma
                                 valueModifier = isOutdoor ? 1 : 0;
                                 valueModifier *= isOpen ? 5 : 1;
                             }
-                            else if (targetCharacter.CurrentHull != Character.CurrentHull)
+                        }
+                    }
+                    else if (targetCharacter.Submarine != null && Character.Submarine == null)
+                    {
+                        //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
+                        targetingTag = "room";
+                    }
+                    else if (targetingPriorities.ContainsKey(targetCharacter.SpeciesName.ToLowerInvariant()))
+                    {
+                        targetingTag = targetCharacter.SpeciesName.ToLowerInvariant();
+                    }
+                }
+                else if (target.Entity != null)
+                {
+                    //skip the target if it's a room and the character is already inside a sub
+                    if (character.CurrentHull != null && target.Entity is Hull) continue;
+                    
+                    Door door = null;
+                    if (target.Entity is Item item)
+                    {
+                        targetingTag = "dead";
+                        if (targetCharacter.Submarine != Character.Submarine)
+                        {
+                            // In a different sub or the target is outside when we are inside or vice versa -> Ignore the target
+                            continue;
+                        }
+                        else if (targetCharacter.CurrentHull != Character.CurrentHull)
+                        {
+                            // In the same sub, halve the priority, if not in the same hull.
+                            valueModifier = 0.5f;
+                        }
+                    }
+                    else if (targetCharacter.AIController is EnemyAIController enemy)
+                    {
+                        if (enemy.combatStrength > combatStrength)
+                        {
+                            targetingTag = "stronger";
+                        }
+                        else if (enemy.combatStrength < combatStrength)
+                        {
+                            targetingTag = "weaker";
+                        }
+                        if (State == AIState.Escape && targetingTag == "stronger")
+                        {
+                            // Frightened
+                            valueModifier = 2;
+                        }
+                        else
+                        {
+                            if (targetCharacter.Submarine != Character.Submarine)
                             {
                                 valueModifier = isOutdoor ? 0 : 1;
                                 valueModifier *= isOpen ? 0 : 1;
+                            }
+                            else if (targetCharacter.CurrentHull != Character.CurrentHull)
+                            {
+                                // In the same sub, halve the priority, if not in the same hull.
+                                valueModifier = 0.5f;
                             }
                         }
                         else if (isOpen) //ignore broken and open doors
@@ -1291,6 +1286,11 @@ namespace Barotrauma
                          continue;
                     }
                 }
+
+                if (targetingTag == null) continue;
+                if (!targetingPriorities.ContainsKey(targetingTag)) continue;
+
+                valueModifier *= targetingPriorities[targetingTag].Priority;
 
                 if (targetingTag == null) continue;
                 if (!targetingPriorities.ContainsKey(targetingTag)) continue;
