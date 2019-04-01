@@ -44,7 +44,9 @@ namespace Barotrauma.Items.Components
         private float displayScale;
 
         private float zoomSqrt;
-        
+
+        private float showDirectionalIndicatorTimer;
+
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
         List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
@@ -145,6 +147,7 @@ namespace Barotrauma.Items.Components
             {
                 OnMoved = (scrollbar, scroll) =>
                 {
+                    showDirectionalIndicatorTimer = 1.0f;
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                     if (GameMain.Client != null)
@@ -175,6 +178,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            showDirectionalIndicatorTimer -= deltaTime;
             if (GameMain.Client != null)
             {
                 if (unsentChanges)
@@ -378,12 +382,13 @@ namespace Barotrauma.Items.Components
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
             }
 
-            if (useDirectionalPing && IsActive)
+            float directionalPingVisibility = useDirectionalPing && IsActive ? 1.0f : showDirectionalIndicatorTimer;
+            if (directionalPingVisibility > 0.0f)
             {
                 Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
                 Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
-                GUI.DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f, width: 3);
-                GUI.DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f, width: 3);
+                GUI.DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
+                GUI.DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
             }
 
             if (GameMain.DebugDraw)
