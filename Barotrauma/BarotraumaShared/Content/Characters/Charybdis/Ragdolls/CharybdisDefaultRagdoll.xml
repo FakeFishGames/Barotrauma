@@ -4,7 +4,7 @@
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="936,51,305,153" origin="0.5,0.5" depth="0" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="0" />
     </deformablesprite>
-    <attack range="300" damagerange="200" duration="0.25" structuredamage="10" structuresoundtype="StructureSlash" torque="100" force="20" targetforce="-50" severlimbsprobability="1" context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="Pursue" cooldown="1" secondarycooldown="1" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="0, 1" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.25" cooldownrandomfactor="0.5" reverse="False">
+    <attack range="300" damagerange="200" duration="0.25" structuredamage="10" structuresoundtype="StructureSlash" torque="100" force="20" targetforce="-50" severlimbsprobability="1" context="NotDefined" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" cooldown="1" secondarycooldown="1" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="0, 1" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="1" cooldownrandomfactor="0.5" reverse="False">
       <Affliction identifier="internaldamage" strength="30" />
       <Affliction identifier="bleeding" strength="100" />
       <Affliction identifier="stun" strength="0.2" />
@@ -14,7 +14,7 @@
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="285,54,303,126" origin="0.5,0.5" depth="0" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="0" />
     </deformablesprite>
-    <attack range="300" damagerange="200" duration="0.1" structuredamage="30" structuresoundtype="StructureSlash" torque="0" force="30" targetimpulse="40" severlimbsprobability="1" context="NotDefined" targettype="Structure" hitdetectiontype="Distance" afterattack="FallBackUntilCanAttack" cooldown="15" secondarycooldown="3" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="8, 1" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.5" cooldownrandomfactor="0" targetforce="0" reverse="False"></attack>
+    <attack range="300" damagerange="200" duration="0.1" structuredamage="30" structuresoundtype="StructureSlash" torque="0" force="30" targetimpulse="40" severlimbsprobability="1" context="NotDefined" targettype="Structure" hitdetectiontype="Distance" afterattack="FallBackUntilCanAttack" cooldown="15" secondarycooldown="2" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="8, 1" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.1" cooldownrandomfactor="0" targetforce="0" reverse="False"></attack>
   </limb>
   <limb id="2" name="Neck" type="None" radius="90" width="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="285,243,252,214" origin="0.5,0.5" depth="0.1" subdivisions="5,5">
@@ -25,7 +25,7 @@
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="795,270,177,262" origin="0.5732965,0.3092121" depth="0" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="20" />
     </deformablesprite>
-    <attack duration="0.1" structuredamage="5" structuresoundtype="StructureSlash" torque="-1000" force="20" targetimpulse="20" severlimbsprobability="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" cooldown="5" secondarycooldown="0.5" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.1" cooldownrandomfactor="0.1" targetforce="0" range="400" damagerange="200" reverse="False">
+    <attack duration="0.1" structuredamage="5" structuresoundtype="StructureSlash" torque="-1000" force="20" targetimpulse="20" severlimbsprobability="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" cooldown="5" secondarycooldown="0.5" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.1" cooldownrandomfactor="0.1" targetforce="0" range="600" damagerange="250" reverse="False">
       <Affliction identifier="internaldamage" strength="10" />
       <Affliction identifier="stun" strength="0.5" />
     </attack>
@@ -34,6 +34,7 @@
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="972,270,171,262" origin="0.5034575,0.2802967" depth="0" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="20" />
     </deformablesprite>
+    <attack duration="0.1" structuredamage="5" structuresoundtype="StructureSlash" torque="-1000" force="20" targetimpulse="20" severlimbsprobability="0" context="NotDefined" targettype="Structure" hitdetectiontype="Distance" afterattack="Pursue" cooldown="5" secondarycooldown="0.5" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.1" cooldownrandomfactor="0.1" targetforce="0" range="400" damagerange="300" reverse="True"></attack>
   </limb>
   <limb id="5" name="Cocktail2" type="Tail" radius="0" height="180" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="100" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="1142,270,118,265" origin="0.5365707,0.4538102" depth="0" subdivisions="5,5">
@@ -54,7 +55,7 @@
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="3,462,633,464" origin="0.5,0.5" depth="0" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="0" />
     </deformablesprite>
-    <attack duration="0.2" structuredamage="5" structuresoundtype="StructureSlash" torque="0" force="20" targetimpulse="0" severlimbsprobability="0" context="NotDefined" targettype="Structure" hitdetectiontype="Distance" afterattack="Pursue" cooldown="10" secondarycooldown="0.25" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="1" cooldownrandomfactor="0.25" targetforce="0" range="800" damagerange="450" reverse="True"></attack>
+    <attack duration="0.2" structuredamage="5" structuresoundtype="StructureSlash" torque="0" force="20" targetimpulse="20" severlimbsprobability="0" context="NotDefined" targettype="Structure" hitdetectiontype="Distance" afterattack="FallbackUntilCanAttack" cooldown="10" secondarycooldown="0.1" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.25" cooldownrandomfactor="0" targetforce="0" range="800" damagerange="450" reverse="True"></attack>
   </limb>
   <limb id="9" name="Tentacle23" type="None" radius="0" height="60" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" width="140" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="1537,888,162,187" origin="0.5043385,0.3153959" depth="0" subdivisions="5,5">

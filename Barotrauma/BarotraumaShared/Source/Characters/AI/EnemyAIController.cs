@@ -1168,15 +1168,15 @@ namespace Barotrauma
                     else if (target.Entity is Structure s)
                     {
                         targetingTag = "wall";
+                        if (!s.HasBody)
+                        {
+                            // Ignore structures that doesn't have a body (not walls)
+                            continue;
+                        }
+                        // Ignore walls when inside.
+                        valueModifier = character.CurrentHull == null ? 1 : 0;
                         if (aggressiveBoarding)
                         {
-                            // Ignore walls when inside.
-                            valueModifier = character.CurrentHull == null ? 2 : 0;
-                            if (valueModifier > 0)
-                            {
-                                // Ignore structures that doesn't have a body (not walls)
-                                valueModifier *= s.HasBody ? 1 : 0;
-                            }
                             for (int i = 0; i < s.Sections.Length; i++)
                             {
                                 var section = s.Sections[i];
@@ -1191,6 +1191,23 @@ namespace Barotrauma
                                     // up to 100% priority increase for every gap in the wall
                                     valueModifier *= 1 + section.gap.Open;
                                 }
+                            }
+                        }
+                        else
+                        {
+                            // Ignore disabled walls
+                            bool isDisabled = true;
+                            for (int i = 0; i < s.Sections.Length; i++)
+                            {
+                                if (!s.SectionBodyDisabled(i))
+                                {
+                                    isDisabled = false;
+                                    break;
+                                }
+                            }
+                            if (isDisabled)
+                            {
+                                valueModifier = 0;
                             }
                         }
                     }
