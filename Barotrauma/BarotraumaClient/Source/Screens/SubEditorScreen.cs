@@ -22,7 +22,7 @@ namespace Barotrauma
             "CrewExperienceHigh"
         };
 
-        private readonly Point defaultPreviewImageSize = new Point(1200, 600);
+        private readonly Point defaultPreviewImageSize = new Point(512, 368);
 
         private Camera cam;
 
