@@ -569,12 +569,24 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth="0.85" />
   </RightWallHeavy>
-  <CableHolderHorizontal name="Cable Holder Horizontal" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="24" resizehorizontal="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="478,902,96,24" depth="0.85" />
+  <CableHolderHorizontal name="Cable Holder Horizontal" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="16" resizehorizontal="true">
+  <sprite texture="Content/Map/testroom.png" sourcerect="533,907,32,16" depth="0.85" />
   </CableHolderHorizontal>
-  <CableHolderVertical name="Cable Holder Vertical" identifier="CableHolderVertical" allowattachitems="true" width="24" height="32" resizevertical="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="550,804,24,96" depth="0.85" />
+    <CableHolderHorizontal2 name="Cable Holder Horizontal 2" identifier="CableHolderHorizontal2" allowattachitems="true" width="32" height="28" resizehorizontal="true">
+    <sprite texture="Content/Map/testroom.png" sourcerect="491,907,32,28" depth="0.85" />
+  </CableHolderHorizontal2>
+    <CableHolderHorizontal3 name="Cable Holder Horizontal 3" identifier="CableHolderHorizontal3" allowattachitems="true" width="32" height="38" resizehorizontal="true">
+    <sprite texture="Content/Map/testroom.png" sourcerect="449,907,32,38" depth="0.85" />
+  </CableHolderHorizontal3>
+  <CableHolderVertical name="Cable Holder Vertical" identifier="CableHolderVertical" allowattachitems="true" width="16" height="32" resizevertical="true">
+    <sprite texture="Content/Map/testroom.png" sourcerect="423,907,16,32" depth="0.85" />
   </CableHolderVertical>
+    <CableHolderVertical2 name="Cable Holder Vertical 2" identifier="CableHolderVertical 2" allowattachitems="true" width="27" height="32" resizevertical="true">
+    <sprite texture="Content/Map/testroom.png" sourcerect="386,907,27,32" depth="0.85" />
+  </CableHolderVertical2>
+      <CableHolderVertical3 name="Cable Holder Vertical 3" identifier="CableHolderVertical 3" allowattachitems="true" width="38" height="32" resizevertical="true">
+    <sprite texture="Content/Map/testroom.png" sourcerect="338,907,38,32" depth="0.85" />
+  </CableHolderVertical3>
   <topwindow name="Window Top" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
     <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,80" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,80" depth="0.85" />
