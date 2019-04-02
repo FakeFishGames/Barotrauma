@@ -2757,5 +2757,11 @@
   <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver the submarine.</MiniMapOutpostDockingInfo>
 
   <CargoSpawnNotification>The purchased supplies have been delivered to [roomname].</CargoSpawnNotification>
-  
+
+  <AimAssistToolTip>Affects how close the cursor has to be to an item to highlight it. If set to 0%, the cursor has to be exactly on the item.</AimAssistToolTip>
+
+  <EnableMouseLook>Enable mouse look</EnableMouseLook>
+  <EnableMouseLookToolTip>When enabled, the camera moves according to the direction you point the cursor to.</EnableMouseLookToolTip>
+
+
 </infotexts>

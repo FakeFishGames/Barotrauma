@@ -147,6 +147,8 @@ namespace Barotrauma
             set { aimAssistAmount = MathHelper.Clamp(value, 0.0f, 5.0f); }
         }
 
+        public bool EnableMouseLook { get; set; } = true;
+
         private bool unsavedSettings;
         public bool UnsavedSettings
         {
@@ -737,6 +739,7 @@ namespace Barotrauma
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
+            EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -920,7 +923,8 @@ namespace Barotrauma
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
-                new XAttribute("aimassistamount", aimAssistAmount));
+                new XAttribute("aimassistamount", aimAssistAmount),
+                new XAttribute("enablemouselook", EnableMouseLook));
 
             if (!ShowUserStatisticsPrompt)
             {
