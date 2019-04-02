@@ -3,7 +3,9 @@
   <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">
     
     <Segment id="Welcome" contenttype="textonly" istriggered="false">
+    <!--<Segment id="Welcome" contenttype="video" istriggered="false">-->
       <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
+      <!--<Video file="9_SwitchCharacter/BaroTutorial_SwitchCharacter.mp4" text="SwitchCharacterInstructions"/>-->
     </Segment>
     
     <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="video" istriggered="false">
@@ -53,7 +55,7 @@
     <Segment id="Approach2" contenttype="textonly" istriggered="false">
       <Text tag="Approach2Text" width="450" height="80" anchor="Center"/>
     </Segment>
-    
+
   </ContextualTutorial>
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/Human.xml">

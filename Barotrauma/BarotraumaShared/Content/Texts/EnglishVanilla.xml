@@ -2703,6 +2703,8 @@
   <Approach1Text>We are close to {0}! Carefully now, we should be slowing down so we don't ram them. Maneuver the sub close to their docking port and close the clamps when we're there.</Approach1Text>
   <Approach1Instructions>-Maneuver so that the docking ports are close to each other\n-When docking line is green, toggle docking clamps</Approach1Instructions>
   <Approach1Objective>Dock at {0}</Approach1Objective>
+
+  <SwitchCharacterInstructions>How to switch</SwitchCharacterInstructions>
   <!-- Tutorial END -->
 
   <MicrophoneVolume>Microphone volume</MicrophoneVolume>
