@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
@@ -314,7 +315,7 @@ namespace Barotrauma
 
                 //pull the character's mouth to the target character (again with a fluctuating force)
                 float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
-                mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
+                mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
                 character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
 
@@ -695,7 +696,7 @@ namespace Barotrauma
                     return;
                 }
 
-                limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength);
+                limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength, maxVelocity: 10.0f);
             }
         }
 
