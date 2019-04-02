@@ -1094,7 +1094,7 @@ namespace Barotrauma
 
             if (flowForce.LengthSquared() > 0.001f)
             {
-                Collider.ApplyForce(flowForce);
+                Collider.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
 
             if (currentHull == null ||
@@ -1132,7 +1132,7 @@ namespace Barotrauma
 
                         if (flowForce.LengthSquared() > 0.001f)
                         {
-                            limb.body.ApplyForce(flowForce);
+                            limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         }
 
                         surfaceY = limbHull.Surface;

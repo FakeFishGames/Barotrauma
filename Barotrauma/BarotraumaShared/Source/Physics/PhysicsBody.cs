@@ -584,14 +584,18 @@ namespace Barotrauma
         /// </summary>
         public void ApplyLinearImpulse(Vector2 impulse, float maxVelocity)
         {
-            if (!IsValidValue(impulse / body.Mass, "new velocity")) return;
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             if (!IsValidValue(maxVelocity, "max velocity")) return;
-
-            float currSpeed = body.LinearVelocity.Length();
+            
             Vector2 velocityAddition = impulse / Mass;
             Vector2 newVelocity = body.LinearVelocity + velocityAddition;
-            newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
+            float newSpeedSqr = newVelocity.LengthSquared();
+            if (newSpeedSqr > maxVelocity * maxVelocity)
+            {
+                newVelocity = newVelocity.ClampLength(maxVelocity);
+            }
+
+            if (!IsValidValue((newVelocity - body.LinearVelocity), "new velocity", -1000.0f, 1000.0f)) return;
 
             body.ApplyLinearImpulse((newVelocity - body.LinearVelocity) * Mass);
         }
@@ -600,8 +604,34 @@ namespace Barotrauma
         {
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             if (!IsValidValue(point, "point")) return;
-            if (!IsValidValue(impulse / body.Mass, "new velocity")) return;
+            if (!IsValidValue(impulse / body.Mass, "new velocity", -1000.0f, 1000.0f)) return;
             body.ApplyLinearImpulse(impulse, point);
+        }
+
+        /// <summary>
+        /// Apply an impulse to the body without increasing it's velocity above a specific limit.
+        /// </summary>
+        public void ApplyLinearImpulse(Vector2 impulse, Vector2 point, float maxVelocity)
+        {
+            if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
+            if (!IsValidValue(point, "point")) return;
+            if (!IsValidValue(maxVelocity, "max velocity")) return;
+
+            Vector2 velocityAddition = impulse / Mass;
+            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            float newSpeedSqr = newVelocity.LengthSquared();
+            if (newSpeedSqr > maxVelocity * maxVelocity)
+            {
+                newVelocity = newVelocity.ClampLength(maxVelocity);
+            }
+
+            if (!IsValidValue((newVelocity - body.LinearVelocity), "new velocity", -1000.0f, 1000.0f)) return;
+
+            body.ApplyLinearImpulse((newVelocity - body.LinearVelocity) * Mass, point);
+            body.AngularVelocity = MathHelper.Clamp(
+                body.AngularVelocity, 
+                -NetConfig.MaxPhysicsBodyAngularVelocity, 
+                NetConfig.MaxPhysicsBodyAngularVelocity);
         }
 
         public void ApplyForce(Vector2 force)
@@ -618,11 +648,14 @@ namespace Barotrauma
             if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
             if (!IsValidValue(maxVelocity, "max velocity")) return;
 
-            float currSpeed = body.LinearVelocity.Length();
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
             Vector2 newVelocity = body.LinearVelocity + velocityAddition;
-            newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
-
+            
+            float newSpeedSqr = newVelocity.LengthSquared();
+            if (newSpeedSqr > maxVelocity * maxVelocity)
+            {
+                newVelocity = newVelocity.ClampLength(maxVelocity);
+            }
             body.ApplyForce((newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step);
         }
 
@@ -725,17 +758,19 @@ namespace Barotrauma
 
             Vector2 dragForce = Vector2.Zero;
 
-            if (LinearVelocity.LengthSquared() > 0.00001f)
+            float speedSqr = LinearVelocity.LengthSquared();
+            if (speedSqr > 0.00001f)
             {
                 //drag
-                Vector2 velDir = Vector2.Normalize(LinearVelocity);
+                float speed = (float)Math.Sqrt(speedSqr);
+                Vector2 velDir = LinearVelocity / speed;
 
-                float vel = LinearVelocity.Length() * 2.0f;
+                float vel = speed * 2.0f;
                 float drag = vel * vel * Math.Max(height + radius * 2, height);
-                dragForce = Math.Min(drag, Mass * 500.0f) * -velDir;                
+                dragForce = Math.Min(drag, Mass * 500.0f) * -velDir;
             }
 
-            ApplyForce(dragForce + buoyancy);
+            ApplyForce(dragForce + buoyancy, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
         }
 
