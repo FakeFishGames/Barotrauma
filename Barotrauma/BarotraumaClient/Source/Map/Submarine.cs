@@ -301,7 +301,7 @@ namespace Barotrauma
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
 
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), descriptionBox.Content.RectTransform));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), descriptionBox.Content.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.05f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true };
 
@@ -318,10 +318,13 @@ namespace Barotrauma
                 font: GUI.Font, wrap: true);
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
-                $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
+                $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}",
                 font: GUI.Font, wrap: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("SaveSubDialogDescription") + ":", font: GUI.Font, wrap: true);
+            if (Description.Length != 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("SaveSubDialogDescription") + ":", font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
+            }
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform, Anchor.TopLeft), Description, font: GUI.Font, wrap: true)
             {
