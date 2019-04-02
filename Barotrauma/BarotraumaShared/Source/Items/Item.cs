@@ -1077,7 +1077,7 @@ namespace Barotrauma
             }
             ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
-            if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
@@ -1116,6 +1116,11 @@ namespace Barotrauma
         /// </summary>
         private void ApplyWaterForces()
         {
+            if (body.Mass <= 0.0f)
+            {
+                return;
+            }
+
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
