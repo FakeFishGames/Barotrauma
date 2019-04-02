@@ -472,11 +472,15 @@ namespace Barotrauma
             }
 
             if (isSevered)
-            {
+            {                
                 severedFadeOutTimer += deltaTime;
-                if (severedFadeOutTimer > SeveredFadeOutTime)
+                if (severedFadeOutTimer >= SeveredFadeOutTime)
                 {
                     body.Enabled = false;
+                }
+                else if (character.CurrentHull == null && Hull.FindHull(WorldPosition) != null)
+                {
+                    severedFadeOutTimer = SeveredFadeOutTime;
                 }
             }
 
