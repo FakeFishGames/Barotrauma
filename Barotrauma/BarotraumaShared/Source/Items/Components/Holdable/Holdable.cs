@@ -489,7 +489,8 @@ namespace Barotrauma.Items.Components
             {
                 scaledHandlePos[0] = handlePos[0] * item.Scale;
                 scaledHandlePos[1] = handlePos[1] * item.Scale;
-                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero, holdAngle);
+                bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
+                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, aim, holdAngle);
             }
             else
             {
