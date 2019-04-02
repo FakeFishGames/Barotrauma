@@ -453,7 +453,7 @@ namespace Barotrauma.Lights
             foreach (ConvexHull hull in hulls)
             {
                 hull.RefreshWorldPositions();
-                hull.GetVisibleSegments(drawPos, visibleSegments, ignoreEdges: false);                
+                hull.GetVisibleSegments(drawPos, visibleSegments);                
             }
 
             //Generate new points at the intersections between segments

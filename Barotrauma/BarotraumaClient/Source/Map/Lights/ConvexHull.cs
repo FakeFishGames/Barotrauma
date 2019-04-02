@@ -407,7 +407,7 @@ namespace Barotrauma.Lights
         /// <summary>
         /// Returns the segments that are facing towards viewPosition
         /// </summary>
-        public void GetVisibleSegments(Vector2 viewPosition, List<Segment> visibleSegments, bool ignoreEdges)
+        public void GetVisibleSegments(Vector2 viewPosition, List<Segment> visibleSegments)
         {            
             for (int i = 0; i < 4; i++)
             {

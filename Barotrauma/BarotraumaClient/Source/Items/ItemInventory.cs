@@ -11,16 +11,19 @@ namespace Barotrauma
         protected override void ControlInput(Camera cam)
         {
             base.ControlInput(cam);
-            cam.OffsetAmount = 0;
-            //if this is used, we need to implement syncing this inventory with the server
-            /*Character.DisableControls = true;
-            if (Character.Controlled != null)
+            if (BackgroundFrame.Contains(PlayerInput.MousePosition))
             {
-                if (PlayerInput.KeyHit(InputType.Select))
+                cam.OffsetAmount = 0;
+                //if this is used, we need to implement syncing this inventory with the server
+                /*Character.DisableControls = true;
+                if (Character.Controlled != null)
                 {
-                    Character.Controlled.SelectedConstruction = null;
-                }
-            }*/            
+                    if (PlayerInput.KeyHit(InputType.Select))
+                    {
+                        Character.Controlled.SelectedConstruction = null;
+                    }
+                }*/
+            }
         }
 
         protected override void CalculateBackgroundFrame()
