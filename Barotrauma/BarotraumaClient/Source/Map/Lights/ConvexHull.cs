@@ -407,11 +407,11 @@ namespace Barotrauma.Lights
         /// <summary>
         /// Returns the segments that are facing towards viewPosition
         /// </summary>
-        public void GetVisibleSegments(Vector2 viewPosition, List<Segment> visibleSegments)
+        public void GetVisibleSegments(Vector2 viewPosition, List<Segment> visibleSegments, bool ignoreEdges)
         {            
             for (int i = 0; i < 4; i++)
             {
-                if (ignoreEdge[i]) continue;
+                if (ignoreEdge[i] && ignoreEdges) continue;
 
                 Vector2 pos1 = vertices[i].WorldPos;
                 Vector2 pos2 = vertices[(i + 1) % 4].WorldPos;
