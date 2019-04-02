@@ -42,14 +42,14 @@
   <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_14.png"/>
   <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_15.png"/>
   <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_16.png"/>
-  <MapCircle texture="Content/Map/MapCircle.png" origin="0.5,0.5"/>
-  <DecorativeMapSprite texture="Content/Map/MapHUD.png" sourcerect="0,0,2048,640" columns="6" rows="5"/>
-  <DecorativeGraphSprite texture="Content/Map/MapHUD.png" sourcerect="0,636,1022,886" columns="5" rows="4"/>
-  <DecorativeLineTop texture="Content/Map/MapHUD.png" sourcerect="0,1523,1024,495" columns="2" rows="15" origin="0.5,0.5"/>
-  <DecorativeLineBottom texture="Content/Map/MapHUD.png" sourcerect="1024,635,1024,630" columns="2" rows="14" origin="0.5,0.5"/>
-  <DecorativeLineCorner texture="Content/Map/MapHUD.png" sourcerect="1025,1259,1024,732" columns="4" rows="10"/>
-  <ReticleLarge texture="Content/Map/Reticles.png" sourcerect="0,0,2043,1024" columns="9" rows="4" origin="0.5,0.5"/>
-  <ReticleMedium texture="Content/Map/Reticles.png" sourcerect="0,1024,2040,256" columns="12" rows="1" origin="0.5,0.5"/>
-  <ReticleSmall texture="Content/Map/Reticles.png" sourcerect="0,1280,2048,768" columns="10" rows="4" origin="0.5,0.65"/>
+  <MapCircle texture="Content/Map/MapCircle.png" origin="0.5,0.5" premultiplyalpha="false"/>
+  <DecorativeMapSprite texture="Content/Map/MapHUD.png" sourcerect="0,0,2048,640" columns="6" rows="5" premultiplyalpha="false"/>
+  <DecorativeGraphSprite texture="Content/Map/MapHUD.png" sourcerect="0,636,1022,886" columns="5" rows="4" premultiplyalpha="false"/>
+  <DecorativeLineTop texture="Content/Map/MapHUD.png" sourcerect="0,1523,1024,495" columns="2" rows="15" origin="0.5,0.5" premultiplyalpha="false"/>
+  <DecorativeLineBottom texture="Content/Map/MapHUD.png" sourcerect="1024,635,1024,630" columns="2" rows="14" origin="0.5,0.5" premultiplyalpha="false"/>
+  <DecorativeLineCorner texture="Content/Map/MapHUD.png" sourcerect="1025,1259,1024,732" columns="4" rows="10" premultiplyalpha="false"/>
+  <ReticleLarge texture="Content/Map/Reticles.png" sourcerect="0,0,2043,1024" columns="9" rows="4" origin="0.5,0.5" premultiplyalpha="false"/>
+  <ReticleMedium texture="Content/Map/Reticles.png" sourcerect="0,1024,2040,256" columns="12" rows="1" origin="0.5,0.5" premultiplyalpha="false"/>
+  <ReticleSmall texture="Content/Map/Reticles.png" sourcerect="0,1280,2048,768" columns="10" rows="4" origin="0.5,0.65" premultiplyalpha="false"/>
   <LocationIndicator texture="Content/UI/CampaignUIAtlas.png" sourcerect="436,738,165,198" origin="0.5,0.5"/>
 </MapGenerationParameters>

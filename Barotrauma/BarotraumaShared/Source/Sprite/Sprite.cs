@@ -99,7 +99,7 @@ namespace Barotrauma
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
 
-        public Sprite(XElement element, string path = "", string file = "")
+        public Sprite(XElement element, string path = "", string file = "", bool? preMultiplyAlpha = null)
         {
             SourceElement = element;
             if (file == "")
@@ -124,7 +124,7 @@ namespace Barotrauma
             Name = SourceElement.GetAttributeString("name", null);
             Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             bool shouldReturn = false;
-            LoadTexture(ref sourceVector, ref shouldReturn, SourceElement.GetAttributeBool("premultiplyalpha", true));
+            LoadTexture(ref sourceVector, ref shouldReturn, preMultiplyAlpha ?? SourceElement.GetAttributeBool("premultiplyalpha", true));
             if (shouldReturn) return;
             sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
             size = SourceElement.GetAttributeVector2("size", Vector2.One);
