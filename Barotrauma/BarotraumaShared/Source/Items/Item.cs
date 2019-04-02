@@ -235,6 +235,12 @@ namespace Barotrauma
             set { /*do nothing*/ }
         }
 
+        /// <summary>
+        /// Should the item's Use method be called with the "Use" or with the "Shoot" key?
+        /// </summary>
+        [Serialize(false, false)]
+        public bool IsShootable { get; set; }
+
         public Color Color
         {
             get { return spriteColor; }
@@ -1438,7 +1444,6 @@ namespace Barotrauma
 
             return true;         
         }
-
 
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {

@@ -2753,4 +2753,7 @@
   <HuskDormant>You feel feverish</HuskDormant>
 
   <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver the submarine.</MiniMapOutpostDockingInfo>
+
+  <InputType.Deselect>Deselect</InputType.Deselect>
+  <InputType.Shoot>Shoot</InputType.Shoot>
 </infotexts>

@@ -471,7 +471,7 @@ namespace Barotrauma.Items.Components
                 swingState %= 1.0f;
                 if (SwingWhenHolding ||
                     (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
-                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Use)))
+                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Shoot)))
                 {
                     swing = swingAmount * new Vector2(
                         PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f, swingState * SwingSpeed * 0.1f) - 0.5f,

@@ -1264,18 +1264,39 @@ namespace Barotrauma
             {
                 for (int i = 0; i < selectedItems.Length; i++ )
                 {
-                    if (selectedItems[i] == null) continue;
-                    if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
-
-                    if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
-                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
+                    if (selectedItems[i] == null) { continue; }
+                    if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
+                    var item = selectedItems[i];
+                    if (item == null) { continue; }
+                    if (IsKeyDown(InputType.Use) && !item.IsShootable)
+                    {
+                        item.Use(deltaTime, this);
+                    }
+                    if (IsKeyDown(InputType.Aim))
+                    {
+                        item.SecondaryUse(deltaTime, this);
+                        if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                        {
+                            item.Use(deltaTime, this);
+                        }
+                    }
                 }
             }
             
             if (SelectedConstruction != null)
             {
-                if (IsKeyDown(InputType.Use)) SelectedConstruction.Use(deltaTime, this);
-                if (SelectedConstruction != null && IsKeyDown(InputType.Aim)) SelectedConstruction.SecondaryUse(deltaTime, this);
+                if (IsKeyDown(InputType.Use) && !SelectedConstruction.IsShootable)
+                {
+                    SelectedConstruction.Use(deltaTime, this);
+                }
+                if (IsKeyDown(InputType.Aim))
+                {
+                    SelectedConstruction.SecondaryUse(deltaTime, this);
+                    if (IsKeyDown(InputType.Shoot) && SelectedConstruction.IsShootable)
+                    {
+                        SelectedConstruction.Use(deltaTime, this);
+                    }
+                }
             }
 
             if (SelectedCharacter != null)
@@ -1753,7 +1774,7 @@ namespace Barotrauma
                 }
 #endif
             }
-            else if (IsKeyHit(InputType.Select) && SelectedConstruction != null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedConstruction != null)
             {
                 SelectedConstruction = null;
 #if CLIENT

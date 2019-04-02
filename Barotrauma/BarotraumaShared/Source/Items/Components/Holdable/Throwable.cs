@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Use))
+            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Shoot))
                 throwing = true;
 
             if (!picker.IsKeyDown(InputType.Aim) && !throwing) throwPos = 0.0f;

@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-
+            item.IsShootable = true;
             InitProjSpecific(element);
         }
 

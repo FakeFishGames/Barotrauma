@@ -56,6 +56,7 @@ namespace Barotrauma.Items.Components
         public RangedWeapon(Item item, XElement element)
             : base(item, element)
         {
+            item.IsShootable = true;
         }
 
         public override void Update(float deltaTime, Camera cam)

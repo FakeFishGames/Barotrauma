@@ -63,6 +63,7 @@ namespace Barotrauma.Items.Components
                 if (subElement.Name.ToString().ToLowerInvariant() != "attack") continue;
                 attack = new Attack(subElement, item.Name + ", MeleeWeapon");
             }
+            item.IsShootable = true;
         }
 
         public override bool Use(float deltaTime, Character character = null)

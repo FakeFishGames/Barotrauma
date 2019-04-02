@@ -233,7 +233,8 @@ namespace Barotrauma
                     if (GameMain.Client != null)
                     {
                         //emulate a Select input to get the character to deselect the item server-side
-                        keys[(int)InputType.Select].Hit = true;
+                        //keys[(int)InputType.Select].Hit = true;
+                        keys[(int)InputType.Deselect].Hit = true;
                     }
                     //reset focus to prevent us from accidentally interacting with another entity
                     focusedItem = null;
