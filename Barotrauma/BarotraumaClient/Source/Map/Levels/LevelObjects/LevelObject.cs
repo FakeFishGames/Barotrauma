@@ -76,6 +76,9 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
+            Prefab.Sprite?.EnsureLazyLoaded();
+            Prefab.SpecularSprite?.EnsureLazyLoaded();
+
             CurrentSwingAmount = Prefab.SwingAmountRad;
             CurrentScaleOscillation = Prefab.ScaleOscillation;
 

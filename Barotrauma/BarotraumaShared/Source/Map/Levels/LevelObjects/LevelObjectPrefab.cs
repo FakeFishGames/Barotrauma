@@ -331,10 +331,10 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        Sprite = new Sprite(subElement);
+                        Sprite = new Sprite(subElement, lazyLoad: true);
                         break;
                     case "specularsprite":
-                        SpecularSprite = new Sprite(subElement);
+                        SpecularSprite = new Sprite(subElement, lazyLoad: true);
                         break;
                     case "deformablesprite":
                         DeformableSprite = new DeformableSprite(subElement);
