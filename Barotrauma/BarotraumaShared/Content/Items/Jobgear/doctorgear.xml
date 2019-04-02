@@ -9,6 +9,11 @@
       <Item identifier="fpgacircuit" />
       <Item identifier="plastic" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredSkill identifier="medical" level="50"/>
+      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64" />
     <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="193,0,96,96" depth="0.6" origin="0.5,0.5" />
     <Body width="18" height="6" density="30" />

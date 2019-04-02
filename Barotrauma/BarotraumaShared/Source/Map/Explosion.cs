@@ -236,8 +236,9 @@ namespace Barotrauma
                     {
                         Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
                         if (!MathUtils.IsValid(limbDiff)) limbDiff = Rand.Vector(1.0f);
+                        Vector2 impulse = limbDiff * distFactor * force;
                         Vector2 impulsePoint = limb.SimPosition - limbDiff * limbRadius;
-                        limb.body.ApplyLinearImpulse(limbDiff * distFactor * force, impulsePoint);
+                        limb.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     }
                 }     
                 

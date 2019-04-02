@@ -143,6 +143,10 @@
       <Item identifier="zinc" />
       <Item identifier="lithium" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="zinc"/>
+      <RequiredItem identifier="lithium"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" />
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
     <Body width="25" height="17" density="30" />
@@ -154,6 +158,10 @@
       <Item identifier="zinc" />
       <Item identifier="fulgurium" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="15">
+      <RequiredItem identifier="fulgurium"/>
+      <RequiredItem identifier="zinc"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" />
     <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
     <Body width="23" height="17" density="30" />

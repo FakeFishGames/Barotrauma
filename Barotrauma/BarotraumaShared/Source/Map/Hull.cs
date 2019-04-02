@@ -561,17 +561,14 @@ namespace Barotrauma
         {
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
-                //var pos = gap.Position - body.Position;
-                var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position)/1000, 1f);
-               
-                //pos.Normalize();
-                item.body.ApplyForce((gap.LerpedFlowForce/distance) * deltaTime);
+                var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position) / 1000, 1f);
+                item.body.ApplyForce((gap.LerpedFlowForce / distance) * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
         }
 
         public void Extinguish(float deltaTime, float amount, Vector2 position)
         {
-            for (int i = FireSources.Count - 1; i >= 0; i-- )
+            for (int i = FireSources.Count - 1; i >= 0; i--)
             {
                 FireSources[i].Extinguish(deltaTime, amount, position);
             }

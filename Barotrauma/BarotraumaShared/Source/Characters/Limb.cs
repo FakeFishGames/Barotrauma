@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -472,11 +473,15 @@ namespace Barotrauma
             }
 
             if (isSevered)
-            {
+            {                
                 severedFadeOutTimer += deltaTime;
-                if (severedFadeOutTimer > SeveredFadeOutTime)
+                if (severedFadeOutTimer >= SeveredFadeOutTime)
                 {
                     body.Enabled = false;
+                }
+                else if (character.CurrentHull == null && Hull.FindHull(WorldPosition) != null)
+                {
+                    severedFadeOutTimer = SeveredFadeOutTime;
                 }
             }
 
@@ -621,13 +626,17 @@ namespace Barotrauma
 
                         Limb limb = character.AnimController.Limbs[limbIndex];
                         Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
-                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos);
+                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos,
+                            maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     }
                 }
                 else
                 {
                     Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
-                    body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos);
+                    body.ApplyLinearImpulse(
+                        Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), 
+                        forcePos, 
+                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 }
             }
             return wasHit;

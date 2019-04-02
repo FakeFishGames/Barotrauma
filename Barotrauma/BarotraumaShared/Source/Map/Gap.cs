@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -310,7 +311,7 @@ namespace Barotrauma
                                 errorMsg);
                             continue;
                         }
-                        character.AnimController.Collider.ApplyForce(force * limb.body.Mass);
+                        character.AnimController.Collider.ApplyForce(force * limb.body.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     }
                 }
             }

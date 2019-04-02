@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             get
             {
-                return collider[colliderIndex];
+                return collider?[colliderIndex];
             }
         }
 
@@ -122,10 +122,10 @@ namespace Barotrauma
             }
             set
             {
-                if (value == colliderIndex) return;
+                if (value == colliderIndex || collider == null) return;
                 if (value >= collider.Count || value < 0) return;
 
-                if (collider[colliderIndex].height<collider[value].height)
+                if (collider[colliderIndex].height < collider[value].height)
                 {
                     Vector2 pos1 = collider[colliderIndex].SimPosition;
                     pos1.Y -= collider[colliderIndex].height * ColliderHeightFromFloor;
@@ -1094,7 +1094,7 @@ namespace Barotrauma
 
             if (flowForce.LengthSquared() > 0.001f)
             {
-                Collider.ApplyForce(flowForce);
+                Collider.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
 
             if (currentHull == null ||
@@ -1132,7 +1132,7 @@ namespace Barotrauma
 
                         if (flowForce.LengthSquared() > 0.001f)
                         {
-                            limb.body.ApplyForce(flowForce);
+                            limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         }
 
                         surfaceY = limbHull.Surface;
@@ -1524,7 +1524,8 @@ namespace Barotrauma
             float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;                        
             float resetDist = allowedDist * 5.0f;
 
-            float distSqrd = Vector2.DistanceSquared(Collider.SimPosition, MainLimb.SimPosition);
+            Vector2 diff = Collider.SimPosition - MainLimb.SimPosition;
+            float distSqrd = diff.LengthSquared();
 
             if (distSqrd > resetDist * resetDist)
             {
@@ -1535,10 +1536,13 @@ namespace Barotrauma
             {
                 //ragdoll too far from the collider, disable collisions until it's close enough
                 //(in case the ragdoll has gotten stuck somewhere)
+
+                Vector2 forceDir = diff / (float)Math.Sqrt(distSqrd);
                 foreach (Limb limb in Limbs)
                 {
                     if (limb.IsSevered) continue;
                     limb.body.CollidesWith = Physics.CollisionNone;
+                    limb.body.ApplyForce(forceDir * limb.Mass * 10.0f, maxVelocity: 10.0f);
                 }
 
                 collisionsDisabled = true;

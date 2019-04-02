@@ -2,6 +2,7 @@
 <Items>	
 	<Item
     name="Fabricator"
+    tags="fabricator"
     category="Legacy"
     linkable="true"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
@@ -27,6 +28,7 @@
 
   <Item
     name="Medical Fabricator"
+    tags="medicalfabricator"
     category="Legacy"
     linkable="true"
     description="A machine that can be used to manufacture various medicines.">

@@ -2755,4 +2755,7 @@
   <HuskDormant>You feel feverish</HuskDormant>
 
   <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver the submarine.</MiniMapOutpostDockingInfo>
+
+  <CargoSpawnNotification>The purchased supplies have been delivered to [roomname].</CargoSpawnNotification>
+  
 </infotexts>

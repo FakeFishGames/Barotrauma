@@ -168,8 +168,11 @@ namespace Barotrauma
                 // Too close -> steer away
                 character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - Item.SimPosition) / 2);
             }
-            if (character.IsClimbing || 
-                VectorExtensions.Angle(VectorExtensions.Forward(repairTool.Item.body.TransformedRotation), fromToolToTarget) < MathHelper.PiOver4)
+            else
+            {
+                character.AIController.SteeringManager.Reset();
+            }
+            if (VectorExtensions.Angle(VectorExtensions.Forward(repairTool.Item.body.TransformedRotation), fromToolToTarget) < MathHelper.PiOver4)
             {
                 repairTool.Use(deltaTime, character);
             }

@@ -23,6 +23,11 @@
       <Item identifier="steel" />
       <Item identifier="aluminium" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="25"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="aluminium"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,130,89" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
@@ -48,6 +53,12 @@
       <Item identifier="uranium" />
       <Item identifier="uex" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="30">
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="uranium"/>
+      <RequiredItem identifier="uex"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,1,129,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
@@ -61,7 +72,8 @@
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0">
           <Affliction identifier="burn" strength="500" />
-          <Affliction identifier="internaldamage" strength="500" />
+          <Affliction identifier="radiationsickness" strength="100"/>
+          <Affliction identifier="internaldamage" strength="400" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
       </StatusEffect>
@@ -85,6 +97,12 @@
       <Item identifier="steel" />
       <Item identifier="aluminium" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="25"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="sonarbeacon"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="0,0,128,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
@@ -111,6 +129,13 @@
       <Item identifier="uranium" />
       <Item identifier="uex" />
     </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="30">
+      <RequiredSkill identifier="mechanical" level="40"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="uranium"/>
+      <RequiredItem identifier="uex"/>
+      <RequiredItem identifier="sonarbeacon"/>
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,128,64,64" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="130,0,128,89" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />

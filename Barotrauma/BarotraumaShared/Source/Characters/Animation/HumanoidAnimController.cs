@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -1122,18 +1123,22 @@ namespace Barotrauma
             //prevent the hands from going above the top of the ladders
             handPos.Y = Math.Min(-0.5f, handPos.Y);
 
-            MoveLimb(leftHand,
-                new Vector2(handPos.X,
-                (slide ? handPos.Y : MathUtils.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight) + ladderSimPos.Y),
-                5.2f);
+            // TODO: lock only one hand when aiming?
+            if (!PlayerInput.KeyDown(InputType.Aim) || Math.Abs(movement.Y) > 0.01f)
+            {
+                MoveLimb(leftHand,
+                    new Vector2(handPos.X,
+                    (slide ? handPos.Y : MathUtils.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight) + ladderSimPos.Y),
+                    5.2f);
 
-            MoveLimb(rightHand,
-                new Vector2(handPos.X,
-                (slide ? handPos.Y : MathUtils.Round(handPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
-                5.2f);
+                MoveLimb(rightHand,
+                    new Vector2(handPos.X,
+                    (slide ? handPos.Y : MathUtils.Round(handPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
+                    5.2f);
 
-            leftHand.body.ApplyTorque(Dir * 2.0f);
-            rightHand.body.ApplyTorque(Dir * 2.0f);
+                leftHand.body.ApplyTorque(Dir * 2.0f);
+                rightHand.body.ApplyTorque(Dir * 2.0f);
+            }
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
@@ -1185,7 +1190,7 @@ namespace Barotrauma
             if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
 
             //apply forces to the collider to move the Character up/down
-            Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
+            Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             head.body.SmoothRotate(0.0f);
             
             if (!character.SelectedConstruction.Prefab.Triggers.Any())
@@ -1343,8 +1348,8 @@ namespace Barotrauma
 
                 if (cprPump >= 1)
                 {
-                    torso.body.ApplyForce(new Vector2(0, -1000f));
-                    targetTorso.body.ApplyForce(new Vector2(0, -1000f));
+                    torso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    targetTorso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     cprPump = 0;
 
                     if (skill < CPRSettings.DamageSkillThreshold)
@@ -1461,6 +1466,11 @@ namespace Barotrauma
                     targetRightHand.PullJointEnabled = true;
                     targetRightHand.PullJointWorldAnchorB = transformedTorsoPos + (new Vector2(1 * Dir, 1)) * 0.2f;
                     targetRightHand.PullJointMaxForce = 5000.0f;
+                }
+
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                {
+                    Collider.ResetDynamics();
                 }
 
                 target.AnimController.IgnorePlatforms = true;
@@ -1642,12 +1652,13 @@ namespace Barotrauma
             Vector2 itemPos = aim ? aimPos : holdPos;
 
             bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
+            bool isClimbing = character.IsClimbing && Math.Abs(character.AnimController.TargetMovement.Y) > 0.01f;
 
             float itemAngle;
 
             Holdable holdable = item.GetComponent<Holdable>();
 
-            if (!character.IsClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (!isClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
 
@@ -1677,7 +1688,7 @@ namespace Barotrauma
             }
 
             Vector2 transformedHoldPos = shoulder.WorldAnchorA;
-            if (itemPos == Vector2.Zero || character.IsClimbing || usingController)
+            if (itemPos == Vector2.Zero || isClimbing || usingController)
             {
                 if (character.SelectedItems[0] == item)
                 {
@@ -1766,16 +1777,17 @@ namespace Barotrauma
 
             item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir);
 
-            if (character.IsClimbing) return;
-
-            for (int i = 0; i < 2; i++)
+            if (!isClimbing)
             {
-                if (character.SelectedItems[i] != item) continue;
-                if (itemPos == Vector2.Zero) continue;
+                for (int i = 0; i < 2; i++)
+                {
+                    if (character.SelectedItems[i] != item) continue;
+                    if (itemPos == Vector2.Zero) continue;
 
-                Limb hand = (i == 0) ? rightHand : leftHand;
+                    Limb hand = (i == 0) ? rightHand : leftHand;
 
-                HandIK(hand, transformedHoldPos + transformedHandlePos[i]);
+                    HandIK(hand, transformedHoldPos + transformedHandlePos[i]);
+                }
             }
         }
 

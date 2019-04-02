@@ -491,6 +491,9 @@ namespace Barotrauma
                     case "levelcommonness":
                     case "suitabletreatment":
                     case "containedsprite":
+                    case "fabricate":
+                    case "fabricable":
+                    case "fabricableitem":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -1131,7 +1134,7 @@ namespace Barotrauma
 
             Vector2 drag = body.LinearVelocity * volume;
 
-            body.ApplyForce((uplift - drag) * 10.0f);
+            body.ApplyForce((uplift - drag) * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);                    

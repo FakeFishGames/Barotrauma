@@ -22,6 +22,7 @@ namespace Barotrauma
             "CrewExperienceHigh"
         };
 
+        private readonly Point defaultPreviewImageSize = new Point(512, 368);
 
         private Camera cam;
 
@@ -800,13 +801,8 @@ namespace Barotrauma
             }
 #endif
 
-            /*foreach (var contentPackage in GameMain.Config.SelectedContentPackages)
-            {
-                Submarine.MainSub.RequiredContentPackages.Add(contentPackage.Name);
-            }*/
-
             MemoryStream imgStream = new MemoryStream();
-            CreateImage(256, 128, imgStream);
+            CreateImage(defaultPreviewImageSize.X, defaultPreviewImageSize.Y, imgStream);
             
             Submarine.SaveCurrent(savePath, imgStream);
             Submarine.MainSub.CheckForErrors();
