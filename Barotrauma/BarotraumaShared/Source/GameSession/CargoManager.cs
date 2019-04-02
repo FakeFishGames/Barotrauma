@@ -90,8 +90,9 @@ namespace Barotrauma
 
         public static void CreateItems(List<PurchasedItem> itemsToSpawn)
         {
-            WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
+            if (itemsToSpawn.Count == 0) { return; }
 
+            WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
             if (wp == null)
             {
                 DebugConsole.ThrowError("The submarine must have a waypoint marked as Cargo for bought items to be placed correctly!");
@@ -105,6 +106,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("A waypoint marked as Cargo must be placed inside a room!");
                 return;
             }
+
+#if CLIENT
+            new GUIMessageBox("", TextManager.Get("CargoSpawnNotification").Replace("[roomname]", cargoRoom.RoomName));
+#endif
 
             Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();
             ItemPrefab containerPrefab = null;
