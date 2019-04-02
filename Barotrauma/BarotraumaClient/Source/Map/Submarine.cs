@@ -301,32 +301,37 @@ namespace Barotrauma
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
 
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), descriptionBox.Content.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.05f) });
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true };
-
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), 
                 $"{TextManager.Get("Dimensions")}: {dimensionsStr}",
-                font: GUI.Font, wrap: true);
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                 $"{TextManager.Get("RecommendedCrewSize")}: {(RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax)}",
-                font: GUI.Font, wrap: true);
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                 $"{TextManager.Get("RecommendedCrewExperience")}: {(string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : TextManager.Get(RecommendedCrewExperience))}",
-                font: GUI.Font, wrap: true);
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                 $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}",
-                font: GUI.Font, wrap: true);
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
+
+            //space
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), descriptionBox.Content.RectTransform), style: null);
 
             if (Description.Length != 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("SaveSubDialogDescription") + ":", font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform, Anchor.TopLeft), Description, font: GUI.Font, wrap: true)
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Description, font: GUI.Font, wrap: true)
             {
                 CanBeFocused = false
             };
