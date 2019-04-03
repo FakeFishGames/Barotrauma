@@ -123,8 +123,16 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
+            Prefab.sprite?.EnsureLazyLoaded();
+            Prefab.InventoryIcon?.EnsureLazyLoaded();
+            foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
+            {
+                brokenSprite.Sprite.EnsureLazyLoaded();
+            }
+            
             foreach (var decorativeSprite in ((ItemPrefab)prefab).DecorativeSprites)
             {
+                decorativeSprite.Sprite.EnsureLazyLoaded();
                 spriteAnimState.Add(decorativeSprite, new SpriteState());
             }
         }

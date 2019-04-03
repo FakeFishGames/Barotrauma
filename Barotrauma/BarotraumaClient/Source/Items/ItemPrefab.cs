@@ -28,12 +28,11 @@ namespace Barotrauma
         public readonly string[] AllowedContainerIdentifiers;
         public readonly string[] AllowedContainerTags;
 
-        public ContainedItemSprite(XElement element, string path = "")
+        public ContainedItemSprite(XElement element, string path = "", bool lazyLoad = false)
         {
-            Sprite = new Sprite(element, path);
+            Sprite = new Sprite(element, path, lazyLoad: lazyLoad);
             AllowedContainerIdentifiers = element.GetAttributeStringArray("allowedcontaineridentifiers", new string[0], convertToLowerInvariant: true);
             AllowedContainerTags = element.GetAttributeStringArray("allowedcontainertags", new string[0], convertToLowerInvariant: true);
-
         }
 
         public bool MatchesContainer(Item container)
@@ -101,9 +100,9 @@ namespace Barotrauma
             /// </summary>
             public List<PropertyConditional> AnimationConditionals { get; private set; } = new List<PropertyConditional>();
 
-            public DecorativeSprite(XElement element, string path = "")
+            public DecorativeSprite(XElement element, string path = "", bool lazyLoad = false)
             {
-                Sprite = new Sprite(element, path);
+                Sprite = new Sprite(element, path, lazyLoad: lazyLoad);
                 SerializableProperty.DeserializeProperties(this, element);
 
                 foreach (XElement subElement in element.Elements())

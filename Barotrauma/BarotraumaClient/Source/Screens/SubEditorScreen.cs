@@ -537,6 +537,15 @@ namespace Barotrauma
         {
             base.Select();
 
+            foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
+            {
+                prefab.sprite?.EnsureLazyLoaded();
+                if (prefab is ItemPrefab itemPrefab)
+                {
+                    itemPrefab.InventoryIcon?.EnsureLazyLoaded();
+                }
+            }
+
             editorSelectedTime = DateTime.Now;
 
             GUI.ForceMouseOn(null);
