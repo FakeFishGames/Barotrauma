@@ -2747,6 +2747,9 @@
   <InputType.Shoot>Shoot</InputType.Shoot>
 
   <Reset>Reset</Reset>
-  <LegacyBindings>Set Legacy Bindings</LegacyBindings>
+  <SetDefaultBindings>Set Default Bindings</SetDefaultBindings>
+  <SetDefaultBindingsToolTip>Set key bindings to the recommended default settings (left mouse button to select items, right mouse button or esc to deselect).</SetDefaultBindingsToolTip>
+  <SetLegacyBindings>Set Legacy Bindings</SetLegacyBindings>
+  <SetDefaultBindingsToolTip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</SetDefaultBindingsToolTip>
   
 </infotexts>

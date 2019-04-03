@@ -527,6 +527,14 @@ namespace Barotrauma
             }
         }
 
+        public void ResetSettingsFrame()
+        {
+            menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
+            GameMain.Config.ResetSettingsFrame();
+            GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
+            GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
+        }
+
         private bool ApplySettings(GUIButton button, object userData)
         {
             GameMain.Config.SaveNewPlayerConfig();
