@@ -1,178 +1,178 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="Large Diving Gear Cabinet" description="A cabinet loaded with diving masks, oxygen tanks, underwater scooters, handheld sonars and flares." hideinmenus="false">
-  <Item name="Large Steel Cabinet" identifier="steelcabinet" ID="72" rect="-80,96,182,186" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="73,75,77,78,79,80,82,84,85,86,87,89,91,92,93,94,96,98,99,100,101,102,103,105,107,109,110,111,113,115" />
+<ItemAssembly name="Large Diving Gear Cabinet" description="" hideinmenus="false">
+  <Item name="Large Steel Cabinet" identifier="steelcabinet" ID="2" rect="-96,96,182,186" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgInteractSelect" contained="3,5,7,8,9,10,12,14,15,16,17,19,21,22,23,24,26,28,29,30,31,32,33,35,37,39,40,41,43,45" />
   </Item>
-  <Item name="Handheld Sonar" identifier="handheldsonar" ID="115" rect="-235,-43,22,11" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Handheld Sonar" identifier="handheldsonar" ID="45" rect="181,-139,22,11" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <Sonar usetransducers="False" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="116" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="46" />
   </Item>
-  <Item name="Flare" identifier="flare" ID="110" rect="-237,-44,27,9" description="" hiddeningame="False" spritecolor="255,0,0,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Flare" identifier="flare" ID="40" rect="179,-140,27,9" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,light" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <LightComponent range="600" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,0,0,255" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
   </Item>
-  <Item name="Flare" identifier="flare" ID="109" rect="-237,-44,27,9" description="" hiddeningame="False" spritecolor="255,0,0,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Flare" identifier="flare" ID="39" rect="179,-140,27,9" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,light" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <LightComponent range="600" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,0,0,255" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
   </Item>
-  <Item name="Handheld Sonar" identifier="handheldsonar" ID="107" rect="-235,-43,22,11" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Handheld Sonar" identifier="handheldsonar" ID="37" rect="181,-139,22,11" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <Sonar usetransducers="False" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="108" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="38" />
   </Item>
-  <Item name="Flare" identifier="flare" ID="102" rect="-237,-44,27,9" description="" hiddeningame="False" spritecolor="255,0,0,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Flare" identifier="flare" ID="32" rect="179,-140,27,9" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,light" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <LightComponent range="600" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,0,0,255" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
   </Item>
-  <Item name="Flare" identifier="flare" ID="101" rect="-237,-44,27,9" description="" hiddeningame="False" spritecolor="255,0,0,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Flare" identifier="flare" ID="31" rect="179,-140,27,9" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,light" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
+    <Throwable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <LightComponent range="600" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,0,0,255" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
   </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="86" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Flashlight" identifier="flashlight" ID="43" rect="179,-139,27,11" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <LightComponent range="1000" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="127,127,127,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="44" />
   </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="85" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="84" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="83" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="81" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="79" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="78" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="77" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="76" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Oxygen Tank" identifier="oxygentank" ID="74" rect="-230,-32,12,33" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="1" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-  </Item>
-  <Item name="Diving Mask" identifier="divingmask" ID="82" rect="-242,-29,37,38" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <Wearable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="83" />
-  </Item>
-  <Item name="Diving Mask" identifier="divingmask" ID="80" rect="-242,-29,37,38" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <Wearable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="81" />
-  </Item>
-  <Item name="Diving Mask" identifier="divingmask" ID="75" rect="-242,-29,37,38" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <Wearable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="76" />
-  </Item>
-  <Item name="Diving Mask" identifier="divingmask" ID="73" rect="-242,-29,37,38" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <Wearable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="74" />
-  </Item>
-  <Item name="Flashlight" identifier="flashlight" ID="113" rect="-237,-43,27,11" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <LightComponent range="800" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="255,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="114" />
-  </Item>
-  <Item name="Sonar Beacon" identifier="sonarbeacon" ID="111" rect="-235,-43,22,11" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Sonar Beacon" identifier="sonarbeacon" ID="41" rect="181,-139,22,11" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <LightComponent range="50" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="2" lightcolor="0,255,0,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="112" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="42" />
   </Item>
-  <Item name="Flashlight" identifier="flashlight" ID="105" rect="-237,-43,27,11" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <LightComponent range="800" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="255,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="106" />
+  <Item name="Flashlight" identifier="flashlight" ID="35" rect="179,-139,27,11" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <LightComponent range="1000" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="127,127,127,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="36" />
   </Item>
-  <Item name="Sonar Beacon" identifier="sonarbeacon" ID="103" rect="-235,-43,22,11" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Sonar Beacon" identifier="sonarbeacon" ID="33" rect="181,-139,22,11" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,sonar" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="30" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
     <LightComponent range="50" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="2" lightcolor="0,255,0,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="104" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="34" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="116" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="16" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="114" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="15" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="112" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="14" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="108" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="13" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="106" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="11" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="104" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="9" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="100" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="8" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="99" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="7" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="98" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="6" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="97" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Oxygen Tank" identifier="oxygentank" ID="4" rect="186,-128,12,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="95" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Diving Mask" identifier="divingmask" ID="12" rect="174,-125,37,38" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="13" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="93" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Diving Mask" identifier="divingmask" ID="10" rect="174,-125,37,38" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="11" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="92" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Diving Mask" identifier="divingmask" ID="5" rect="174,-125,37,38" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="6" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="91" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Diving Mask" identifier="divingmask" ID="3" rect="174,-125,37,38" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,diving" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
+    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="4" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="90" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Battery Cell" identifier="batterycell" ID="46" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" ID="88" rect="-236,-40,25,17" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
-    <Pickable pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
+  <Item name="Battery Cell" identifier="batterycell" ID="44" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="96" rect="-256,-16,64,64" description="A battery-powered underwater propulsion device." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <LightComponent range="800" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+  <Item name="Battery Cell" identifier="batterycell" ID="42" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="38" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="36" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="34" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="30" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="29" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="28" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="27" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="25" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="23" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="22" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="21" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="20" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Battery Cell" identifier="batterycell" ID="18" rect="180,-136,25,17" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,loadable" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1" hideinassemblypreview="true">
+    <Pickable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="26" rect="160,-112,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,provocative" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <LightComponent range="1000" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <Propulsion force="150" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="batterycell,fulguriumbatterycell" type="Contained" msg="Battery cell required" />
     </Propulsion>
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="97" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="27" />
   </Item>
-  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="94" rect="-256,-16,64,64" description="A battery-powered underwater propulsion device." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <LightComponent range="800" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="24" rect="160,-112,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,provocative" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <LightComponent range="1000" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <Propulsion force="150" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="batterycell,fulguriumbatterycell" type="Contained" msg="Battery cell required" />
     </Propulsion>
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="95" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="25" />
   </Item>
-  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="89" rect="-256,-16,64,64" description="A battery-powered underwater propulsion device." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <LightComponent range="800" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="19" rect="160,-112,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,provocative" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <LightComponent range="1000" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <Propulsion force="150" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="batterycell,fulguriumbatterycell" type="Contained" msg="Battery cell required" />
     </Propulsion>
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="90" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="20" />
   </Item>
-  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="87" rect="-256,-16,64,64" description="A battery-powered underwater propulsion device." hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
-    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
-    <LightComponent range="800" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
+  <Item name="Underwater Scooter" identifier="underwaterscooter" ID="17" rect="160,-112,64,64" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,provocative" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.32" hideinassemblypreview="true">
+    <Holdable holdpos="0,0" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <LightComponent range="1000" castshadows="True" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,255,255,204" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <Propulsion force="150" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="batterycell,fulguriumbatterycell" type="Contained" msg="Battery cell required" />
     </Propulsion>
-    <ItemContainer pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="88" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="18" />
   </Item>
 </ItemAssembly>
