@@ -1,11 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 
-<!-- ! -->
-<!-- With the localization starting soon™, all additions to this document must be done at the bottom under the new additions -->
-<!-- If a text needs to be updated, add a note of it at the end -->
-<!-- ! -->
-
-
+<!-- 
+     With the localization starting soon™, all additions to this document must be done at the bottom under
+     1) the new additions if entirely new
+     2) under the changed values if updating an existing value
+ -->
 
 <!-- Notes to modders/translators:
   - The file must be encoded using UTF-8 for special symbols (e.g. non-english alphabets) to work.
@@ -310,6 +309,7 @@
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <VoiceChatVolume>Voice chat volume</VoiceChatVolume>
+  <MicrophoneVolume>Microphone volume</MicrophoneVolume>
   <MuteOnFocusLost>Mute on focus lost</MuteOnFocusLost>
   <MuteOnFocusLostToolTip>Mutes the game when its window is not in focus.</MuteOnFocusLostToolTip>
   <VoiceChat>Voice chat</VoiceChat>
@@ -329,6 +329,9 @@
   <!-- Controls tab -->
   <SettingsTab.Controls>Controls</SettingsTab.Controls>
   <AimAssist>Aim assist</AimAssist>
+  <AimAssistToolTip>Affects how close the cursor has to be to an item to highlight it. If set to 0%, the cursor has to be exactly on the item.</AimAssistToolTip>
+  <EnableMouseLook>Enable mouse look</EnableMouseLook>
+  <EnableMouseLookToolTip>When enabled, the camera moves according to the direction you point the cursor to.</EnableMouseLookToolTip>
   <InputType.Select>Select</InputType.Select>
   <InputType.Use>Use</InputType.Use>
   <InputType.Aim>Aim</InputType.Aim>
@@ -475,14 +478,13 @@
   <Next>Next</Next>
   <Name>Name</Name>
   <Unlimited>Unlimited</Unlimited>
-
   <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
   <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>
   <DeleteFileError>Could not delete file "[file]"!</DeleteFileError>
-
   <SteamDllNotFound>Initializing Steam client failed (steam_api64.dll not found). All Steam features have been disabled - you will not be able to use the Steam Workshop or join servers that use Steam.</SteamDllNotFound>
   <SteamClientInitFailed>Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account. All Steam features have been disabled - you will not be able to use the Steam Workshop or join servers that use Steam.</SteamClientInitFailed>
-
+  <Create>Create</Create>
+  
   <!-- Characters -->
   <Character.Carrier>Carrier</Character.Carrier>
   <Character.Charybdis>Charybdis</Character.Charybdis>
@@ -536,7 +538,8 @@
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
   <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
   <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content packages, because it requires the content packages [requiredcontentpackages]. Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
-
+  <CampaignStartFailedSubNotFound>Failed to start a campaign. Submarine [subname] not found.</CampaignStartFailedSubNotFound>
+  
   <!-- Campaign menu -->
   <Map>Map</Map>
   <Crew>Crew</Crew>
@@ -565,14 +568,18 @@
   <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
   <LeaveSubsBehind>Some of your vessels aren't at the exit yet. Do you want to leave them behind?</LeaveSubsBehind>
 
-  <!-- In-game UI -->
+  <!-- In-game messages -->
+  <EndRoundVotes>Votes to end the round [votes]/[max]</EndRoundVotes>
   <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
   <RespawningIn>Respawning players in [time]</RespawningIn>
   <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
   <CamFollowSubmarine>Follow submarine</CamFollowSubmarine>
-
   <InsufficientSkills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</InsufficientSkills>
   <SkillIncreased>[name]'s [skillname] skill increased to [newlevel]!</SkillIncreased>
+  <EndRoundSubNotAtLevelEnd>The submarine is not at either end of the level. Do you want to abort the mission and end the round now?</EndRoundSubNotAtLevelEnd>
+  <CrewDeadNoRespawns>No living players on the server and respawning is not enabled during this round. If no characters revive or rejoin, the server will end round in [time] seconds.</CrewDeadNoRespawns>
+  <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver the submarine.</MiniMapOutpostDockingInfo>
+  <CargoSpawnNotification>The purchased supplies have been delivered to [roomname].</CargoSpawnNotification>
 
   <!-- Server list -->
   <JoinServer>Join server</JoinServer>
@@ -755,6 +762,8 @@
   <ServerMessage.BannedFromServer>[client] has been banned from the server.</ServerMessage.BannedFromServer>
   <ServerMessage.HasDisconnected>[client] has disconnected.</ServerMessage.HasDisconnected>
   <ServerMessage.ExcessiveDesync>You have been disconnected because of excessive desync.</ServerMessage.ExcessiveDesync>
+  <ServerMessage.ExcessiveDesyncOldEvent>You have been disconnected because of excessive desync (expecting a very old event).</ServerMessage.ExcessiveDesyncOldEvent>
+  <ServerMessage.ExcessiveDesyncRemovedEvent>You have been disconnected because of excessive desync (expecting a removed event).</ServerMessage.ExcessiveDesyncRemovedEvent>
   <ServerMessage.SyncTimeout>You have been disconnected because syncing your client with the server took too long.</ServerMessage.SyncTimeout>
   <ServerMessage.ShuttleLeaving>The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.</ServerMessage.ShuttleLeaving>
   <ServerMessage.HowToCommunicate>Press [chatbutton] to chat. Use [radiobutton] to talk through the radio.</ServerMessage.HowToCommunicate>
@@ -845,10 +854,14 @@
   <Shuttle>Shuttle</Shuttle>
   <HideInMenus>Hide in menus</HideInMenus>
   <UnspecifiedSubFileName>Unnamed</UnspecifiedSubFileName>
+  <ResetToPrefab>Reset to prefab</ResetToPrefab>
+  <ReloadSprite>Reload Sprite</ReloadSprite>
   <MirrorEntityX>Mirror X</MirrorEntityX>
   <MirrorEntityXToolTip>Mirror the entity horizontally. You can also use the shortcut Ctrl + N.</MirrorEntityXToolTip>
   <MirrorEntityY>Mirror Y</MirrorEntityY>
   <MirrorEntityYToolTip>Mirror the entity horizontally. You can also use the shortcut Ctrl + M.</MirrorEntityYToolTip>
+  <NonLinkedGapsWarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</NonLinkedGapsWarning>
+  <CannotEditVanillaSubs>Cannot edit the submarines defined in the Vanilla content package!</CannotEditVanillaSubs>
 
   <!-- *** ENTITIES *** -->
   <!-- Entity categories -->
@@ -1339,8 +1352,8 @@
   <EntityDescription.detonator>A device that detonates any contained explosive when receiving a signal.</EntityDescription.detonator>
   <EntityName.spear>Harpoon</EntityName.spear>
   <EntityDescription.spear>A harpoon for the harpoon gun</EntityDescription.spear>
-  <EntityName.alienspear>Alien Harpoon</EntityName.alienspear>
-  <EntityDescription.alienspear>A harpoon for the harpoon gun</EntityDescription.alienspear>
+  <EntityName.alienspear>Physicorium Harpoon</EntityName.alienspear>
+  <EntityDescription.alienspear>A harpoon for the harpoon gun, made of alien material</EntityDescription.alienspear>
   <EntityName.explosivespear>Explosive Harpoon</EntityName.explosivespear>
   <EntityDescription.explosivespear>A harpoon for the harpoon gun</EntityDescription.explosivespear>
   <EntityName.harpoongun>Harpoon Gun</EntityName.harpoongun>
@@ -1720,7 +1733,9 @@
   <EntityName.fuelrod>Fuel Rod</EntityName.fuelrod>
   <EntityDescription.fuelrod>A rod of enriched uranium, for use within a reactor</EntityDescription.fuelrod>
   <EntityName.fulguriumfuelrod>Fulgurium Fuel Rod</EntityName.fulguriumfuelrod>
+  <EntityDescription.fulguriumfuelrod>A rod of enriched fulgurium, for use within a reactor. Generates significantly more heat and lasts longer than uranium fuel rods.</EntityDescription.fulguriumfuelrod>
   <EntityName.thoriumfuelrod>Thorium Fuel Rod</EntityName.thoriumfuelrod>
+  <EntityDescription.thoriumfuelrod>A thorium bar, for use within a reactor. Generates slightly more heat and lasts longer than uranium fuel rods.</EntityDescription.thoriumfuelrod>
   <EntityName.coilgunbolt>Coilgun Bolt</EntityName.coilgunbolt>
   <EntityDescription.coilgunbolt>For firing from a coilgun</EntityDescription.coilgunbolt>
   <EntityName.depthchargeshell>Depth Charge Shell</EntityName.depthchargeshell>
@@ -1735,7 +1750,7 @@
   <EntityDescription.railgunshell>For firing from a railgun</EntityDescription.railgunshell>
   <EntityName.nuclearshell>Nuclear Shell</EntityName.nuclearshell>
   <EntityDescription.nuclearshell>A nuclear shell for use with a railgun</EntityDescription.nuclearshell>
-  <EntityName.alienshell>Alien Shell</EntityName.alienshell>
+  <EntityName.alienshell>Physicorium Shell</EntityName.alienshell>
   <EntityDescription.alienshell>For firing from a railgun</EntityDescription.alienshell>
 
   <!-- Alien -->
@@ -2019,7 +2034,9 @@
   <CharacterEditor.DefineRagdoll>Define Ragdoll</CharacterEditor.DefineRagdoll>
   <CharacterEditor.LoadFromHTML>Load From HTML</CharacterEditor.LoadFromHTML>
   <CharacterEditor.Limbs>Limbs</CharacterEditor.Limbs>
+  <CharacterEditor.Limb>Limb</CharacterEditor.Limb>
   <CharacterEditor.Joints>Joints</CharacterEditor.Joints>
+  <CharacterEditor.Joint>Joint</CharacterEditor.Joint>
   <CharacterEditor.LoadHTML>Load HTML</CharacterEditor.LoadHTML>
   <CharacterEditor.HTMLPath>HTML Path</CharacterEditor.HTMLPath>
   <CharacterEditor.MultipleTorsosDefined>You need to define one and only one limb as Torso!</CharacterEditor.MultipleTorsosDefined>
@@ -2031,6 +2048,7 @@
   <CharacterEditor.LimbWithIndexAnchor>Limb [index] Anchor</CharacterEditor.LimbWithIndexAnchor>
   <CharacterEditor.FailedToReadHTML>Character Editor Screen: Failed to read HTML at [path]</CharacterEditor.FailedToReadHTML>
   <CharacterEditor.MultipleItemsWithSameHierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</CharacterEditor.MultipleItemsWithSameHierarchy>
+  <CharacterEditor.CannotEditVanillaCharacters>Cannot edit the characters defined in the Vanilla content package!</CharacterEditor.CannotEditVanillaCharacters>
 
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
@@ -2074,11 +2092,20 @@
   <Submarine.Description.Orca>With a relatively high top speed and fantastic ascent and descent characteristics due to her 3 large ballast tanks, Orca class subs are agile vessels, let down only by their small compliment of weapons, unreliable engine and reactors with a greater than average hunger for fuel.</Submarine.Description.Orca>
 
   <Submarine.Name.Remora>Remora</Submarine.Name.Remora>
-  <Submarine.Description.Remora>NYI</Submarine.Description.Remora>
+  <Submarine.Description.Remora>A range of customization options are available for Remora. In this model, some of the main hull space has been replaced by a detachable ballast and a remote-controlled drone. A large crew is needed to operate this submarine.</Submarine.Description.Remora>
 
   <Submarine.Name.Typhon>Typhon</Submarine.Name.Typhon>
   <Submarine.Description.Typhon>Typhon class subs are known for their brutish appearance, reasonable array of light and heavy firepower, and their general dependability. Any captain should be aware of their poor rate of descent and unimpressive top speed.</Submarine.Description.Typhon>
 
+  <Submarine.Name.Dugong>Dugong</Submarine.Name.Dugong>
+  <Submarine.Description.Dugong>Compared to larger vessels, the Dugong series is outshadowed by all aspects except one: their reliability for their price is world class. They're lacking in firepower and speed, so smart maneuvering is key.</Submarine.Description.Dugong>
+
+  <Submarine.Name.Selkie>Selkie</Submarine.Name.Selkie>
+  <Submarine.Description.Selkie>The workhorse of the colonies, these little shuttles have good speed and dive/ascent characteristics, but they are fragile and their low capacity batteries limit their range somewhat.</Submarine.Description.Selkie>
+
+  <Submarine.Name.Venture>Venture</Submarine.Name.Venture>
+  <Submarine.Description.Venture>Originally intended as research vessels, Venture shuttles have been co-opted as a more robust alternative for travel between outposts and submarines.</Submarine.Description.Venture>
+  
   <!-- Waypoints -->
   <Waypoint>Waypoint</Waypoint>
   <LinkWaypoint>Hold space to link to another waypoint</LinkWaypoint>
@@ -2270,6 +2297,9 @@
   <DialogAffirmative>Got it!</DialogAffirmative>
   <DialogAffirmative>Sure thing!</DialogAffirmative>
   <DialogAffirmative>Copy that.</DialogAffirmative>
+  <DialogNegative>Negative.</DialogNegative>
+  <DialogNegative>No way!</DialogNegative>
+  <DialogCannotReach>Can't reach the target.</DialogCannotReach>
   <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
   <DialogReactorTaken>Hey, I'm operating the reactor!</DialogReactorTaken>
   <DialogReactorTaken>Hands off please, I've got this!</DialogReactorTaken>
@@ -2449,6 +2479,7 @@
   
   <!-- Huskification -->
   <HuskDormant>Your throat feels sore</HuskDormant>
+  <HuskDormant>You feel feverish</HuskDormant>
   <HuskDormant>It feels as if something was stuck in your throat</HuskDormant>
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
@@ -2462,22 +2493,81 @@
   <SkillName.medical>Medical</SkillName.medical>  
 
   <!-- Item messages -->
+  <ItemMsgInteractSelect>[[select]] Interact</ItemMsgInteractSelect>
+  <ItemMsgEquipSelect>[[select]] Equip</ItemMsgEquipSelect>
+  <ItemMsgPickUpSelect>[[select]] Pick up</ItemMsgPickUpSelect>
+  <ItemMsgClimbSelect>[[select]] Climb</ItemMsgClimbSelect>
+  <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
+  <ItemMsgRewireScrewdriver>[Screwdriver] Rewire</ItemMsgRewireScrewdriver>
+  <ItemMsgDetachWrench>[Wrench] Detach</ItemMsgDetachWrench>
+  <ItemMsgForceOpenCrowbar>[Crowbar] Force open</ItemMsgForceOpenCrowbar>
+  <ItemMsgRepairScrewdriver>[Screwdriver] Repair</ItemMsgRepairScrewdriver>
+  <ItemMsgRepairWeldingTool>[Welding Tool] Repair</ItemMsgRepairWeldingTool>
+  <ItemMsgRepairWrench>[Wrench] Repair</ItemMsgRepairWrench>
+  <ItemMsgUsePlasmaCutter>[Plasma Cutter] Cut</ItemMsgUsePlasmaCutter>
   <ItemMsgUnauthorizedAccess>UNAUTHORIZED ACCESS</ItemMsgUnauthorizedAccess>
-
   <ItemMsgBatteryCellRequired>Battery cell required</ItemMsgBatteryCellRequired>
   <ItemMsgWeldingFuelRequired>Welding fuel required</ItemMsgWeldingFuelRequired>
   <ItemMsgOxygenTankRequired>Oxygen tank required</ItemMsgOxygenTankRequired>
   <ItemMsgSpearRequired>Out of spears</ItemMsgSpearRequired>
   <ItemMsgAmmoRequired>Out of ammo</ItemMsgAmmoRequired>
   <ItemMsgSyringeRequired>Out of syringes</ItemMsgSyringeRequired>
-
   <IDCardName>This belongs to [name].</IDCardName>
   <IDCardNameJob>This belongs to [name], the [job].</IDCardNameJob>
+  <DropItem>Drop</DropItem>
+  <PutItemIn>Put in [itemname]</PutItemIn>
   
   <!-- Contextual tutorial -->
   <TutorialActive>Tutorial active</TutorialActive>
   <Welcome>Welcome</Welcome>
   <WelcomeText>Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?</WelcomeText>
+
+  <NewObjective>New Objective</NewObjective>
+  <Objective>Objective</Objective>
+
+  <ReactorCommand>Giving commands</ReactorCommand>
+  <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your mechanic to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
+  <ReactorCommandInstructions>-Find a mechanic in the crew list\n-Click on "Operate reactor", then "Power up"\n\n(Review instructions by clicking on the objective list on the right)</ReactorCommandInstructions>
+  <ReactorCommandObjective>Give the order to power up the reactor</ReactorCommandObjective>
+
+  <NavConsole>Plotting the course</NavConsole>
+  <NavConsoleText>Now that we have power, let's get her moving. Go attend to the navigation console and activate the ship's sonar so we can see where we're going. After that, we can safely undock and set the course to {0}.</NavConsoleText>
+  <NavConsoleInstructions>-Use the Navigation Terminal\n-Set sonar to "active"\n-Press the button to undock\n-While on manual steering, click on sonar UI to set course</NavConsoleInstructions>
+  <NavConsoleObjective>Plot the course</NavConsoleObjective>
+
+  <DestinationObjective>We're underway</DestinationObjective>
+  <DestinationObjectiveText>Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up.</DestinationObjectiveText>
+
+  <Flood>Flooding</Flood>
+  <FloodText>We're taking water! Find somebody who knows what they're doing and start welding before we're completely screwed.</FloodText>
+  <FloodInstructions>-Click on crew list to switch control to mechanic\n-Equip welding torch\n-Right mouse button to aim, left click to fire</FloodInstructions>
+  <FloodObjective>Repair hull breach</FloodObjective>
+
+  <ReactorUse>Operating the reactor</ReactorUse>
+  <ReactorUseText>This is the reactor. You should leave operating this to a professional, like a mechanic. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
+  <ReactorUseInstructions>-Left gauge controls the amount of power generated\n-Right gauge controls the amount of it sent to rest of the submarine\n-Try to keep both gauges green for a balanced power output</ReactorUseInstructions>
+
+  <EnemyOnSonar>Monsters</EnemyOnSonar>
+  <EnemyOnSonarText>Captain, we have a bogey on our sonar. Knowing these waters, it can't be anything too friendly. Order somebody to man the turret, preferably someone with some weapons know-how. Failing that, do it yourself. It's kill or be killed down here.</EnemyOnSonarText>
+  <EnemyOnSonarInstructions>-Use the periscope\n-Right mouse button to aim, left click to fire</EnemyOnSonarInstructions>
+  <EnemyOnSonarObjective>Dispatch enemies</EnemyOnSonarObjective>
+
+  <Degrading>Degrading machinery</Degrading>
+  <DegradingText>This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this.</DegradingText>
+  <DegradingInstructions>-Select "repair devices", then "repair job-specific"</DegradingInstructions>
+  <DegradingObjective>Order the crew to perform maintenance</DegradingObjective>
+
+  <Medical>Medical assistance</Medical>
+  <MedicalText>Captain! {0} is hurt. We should have somebody tend to {1} injuries or we risk losing them.</MedicalText>
+  <MedicalInstructions>-Highlight a crewmember\n-Press H to enter health interface\n-Select injured limb\n-Drag medical supplies into highlighted area to treat</MedicalInstructions>
+  <MedicalObjective>Give medical assistance to {0}</MedicalObjective>
+
+  <Approach1>Docking</Approach1>
+  <Approach1Text>We are close to {0}! Carefully now, we should be slowing down so we don't ram them. Maneuver the sub close to their docking port and close the clamps when we're there.</Approach1Text>
+  <Approach1Instructions>-Maneuver so that the docking ports are close to each other\n-When docking line is green, toggle docking clamps</Approach1Instructions>
+  <Approach1Objective>Dock at {0}</Approach1Objective>
+
+  <Approach2>First of many</Approach2>
   <Approach2Text>Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance.</Approach2Text>
   
   <!-- Afflictions -->
@@ -2649,119 +2739,8 @@
   <LocationChange.Ruins.ChangeTo.Military>A military outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Military>
   <LocationChange.Ruins.ChangeTo.Research>A research outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Research>
   
+  <!-- Changed values -->
+  
   <!-- New Additions -->
-
-  <NonLinkedGapsWarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</NonLinkedGapsWarning>
-
-  <!-- Tutorial START -->
   
-  <!-- modified -->
-  <DestinationObjective>We're underway</DestinationObjective> <!-- new title -->
-  <DestinationObjectiveText>Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up.</DestinationObjectiveText> <!-- new tag -->
-  <Approach2>First of many</Approach2> <!-- new title -->
-  <!-- modified -->
-  
-  <NewObjective>New Objective</NewObjective>
-  <Objective>Objective</Objective>
-
-  <ReactorCommand>Giving commands</ReactorCommand>
-  <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your mechanic to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
-  <ReactorCommandInstructions>-Find a mechanic in the crew list\n-Click on "Operate reactor", then "Power up"\n\n(Review instructions by clicking on the objective list on the right)</ReactorCommandInstructions>
-  <ReactorCommandObjective>Give the order to power up the reactor</ReactorCommandObjective>
-
-  <NavConsole>Plotting the course</NavConsole>
-  <NavConsoleText>Now that we have power, let's get her moving. Go attend to the navigation console and activate the ship's sonar so we can see where we're going. After that, we can safely undock and set the course to {0}.</NavConsoleText> 
-  <NavConsoleInstructions>-Use the Navigation Terminal\n-Set sonar to "active"\n-Press the button to undock\n-While on manual steering, click on sonar UI to set course</NavConsoleInstructions>
-  <NavConsoleObjective>Plot the course</NavConsoleObjective>
-
-  <Flood>Flooding</Flood>
-  <FloodText>We're taking water! Find somebody who knows what they're doing and start welding before we're completely screwed.</FloodText>
-  <FloodInstructions>-Click on crew list to switch control to mechanic\n-Equip welding torch\n-Right mouse button to aim, left click to fire</FloodInstructions>
-  <FloodObjective>Repair hull breach</FloodObjective>
-
-  <ReactorUse>Operating the reactor</ReactorUse>
-  <ReactorUseText>This is the reactor. You should leave operating this to a professional, like a mechanic. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
-  <ReactorUseInstructions>-Left gauge controls the amount of power generated\n-Right gauge controls the amount of it sent to rest of the submarine\n-Try to keep both gauges green for a balanced power output</ReactorUseInstructions>
-  <ReactorUseObjective><!-- No objective --></ReactorUseObjective>
-  
-  <EnemyOnSonar>Monsters</EnemyOnSonar>
-  <EnemyOnSonarText>Captain, we have a bogey on our sonar. Knowing these waters, it can't be anything too friendly. Order somebody to man the turret, preferably someone with some weapons know-how. Failing that, do it yourself. It's kill or be killed down here.</EnemyOnSonarText>
-  <EnemyOnSonarInstructions>-Use the periscope\n-Right mouse button to aim, left click to fire</EnemyOnSonarInstructions>
-  <EnemyOnSonarObjective>Dispatch enemies</EnemyOnSonarObjective>
-
-  <Degrading>Degrading machinery</Degrading>
-  <DegradingText>This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this.</DegradingText>
-  <DegradingInstructions>-Select "repair devices", then "repair job-specific"</DegradingInstructions>
-  <DegradingObjective>Order the crew to perform maintenance</DegradingObjective>
-
-  <Medical>Medical assistance</Medical>
-  <MedicalText>Captain! {0} is hurt. We should have somebody tend to {1} injuries or we risk losing them.</MedicalText>
-  <MedicalInstructions>-Highlight a crewmember\n-Press H to enter health interface\n-Select injured limb\n-Drag medical supplies into highlighted area to treat</MedicalInstructions>
-  <MedicalObjective>Give medical assistance to {0}</MedicalObjective>
-
-  <Approach1>Docking</Approach1>
-  <Approach1Text>We are close to {0}! Carefully now, we should be slowing down so we don't ram them. Maneuver the sub close to their docking port and close the clamps when we're there.</Approach1Text>
-  <Approach1Instructions>-Maneuver so that the docking ports are close to each other\n-When docking line is green, toggle docking clamps</Approach1Instructions>
-  <Approach1Objective>Dock at {0}</Approach1Objective>
-
-  <SwitchCharacterInstructions>How to switch</SwitchCharacterInstructions>
-  <!-- Tutorial END -->
-
-  <MicrophoneVolume>Microphone volume</MicrophoneVolume>
-  <ServerMessage.ExcessiveDesyncOldEvent>You have been disconnected because of excessive desync (expecting a very old event).</ServerMessage.ExcessiveDesyncOldEvent>
-  <ServerMessage.ExcessiveDesyncRemovedEvent>You have been disconnected because of excessive desync (expecting a removed event).</ServerMessage.ExcessiveDesyncRemovedEvent>
-  <CampaignStartFailedSubNotFound>Failed to start a campaign. Submarine [subname] not found."</CampaignStartFailedSubNotFound>
-  
-  <ResetToPrefab>Reset to prefab</ResetToPrefab>
-  <ReloadSprite>Reload Sprite</ReloadSprite>
-  
-  <DialogNegative>Negative.</DialogNegative>
-  <DialogNegative>No way!</DialogNegative>
-  <DialogCannotReach>Can't reach the target.</DialogCannotReach>
-
-  <EndRoundSubNotAtLevelEnd>The submarine is not at either end of the level. Do you want to abort the mission and end the round now?</EndRoundSubNotAtLevelEnd>
-  
-  <EndRoundVotes>Votes to end the round [votes]/[max]</EndRoundVotes>
-  
-  <CrewDeadNoRespawns>No living players on the server and respawning is not enabled during this round. If no characters revive or rejoin, the server will end round in [time] seconds.</CrewDeadNoRespawns>
-  
-  <Create>Create</Create>
-
-  <CharacterEditor.Limb>Limb</CharacterEditor.Limb>
-  <CharacterEditor.Joint>Joint</CharacterEditor.Joint>
-
-  <ItemMsgInteractSelect>[[select]] Interact</ItemMsgInteractSelect>
-  <ItemMsgEquipSelect>[[select]] Equip</ItemMsgEquipSelect>
-  <ItemMsgPickUpSelect>[[select]] Pick up</ItemMsgPickUpSelect>
-  <ItemMsgClimbSelect>[[select]] Climb</ItemMsgClimbSelect>
-  <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
-  <ItemMsgRewireScrewdriver>[Screwdriver] Rewire</ItemMsgRewireScrewdriver>
-  <ItemMsgDetachWrench>[Wrench] Detach</ItemMsgDetachWrench>
-  <ItemMsgForceOpenCrowbar>[Crowbar] Force open</ItemMsgForceOpenCrowbar>
-  <ItemMsgRepairScrewdriver>[Screwdriver] Repair</ItemMsgRepairScrewdriver>
-  <ItemMsgRepairWeldingTool>[Welding Tool] Repair</ItemMsgRepairWeldingTool>
-  <ItemMsgRepairWrench>[Wrench] Repair</ItemMsgRepairWrench>
-  <ItemMsgUsePlasmaCutter>[Plasma Cutter] Cut</ItemMsgUsePlasmaCutter>
-  
-  <DropItem>Drop</DropItem>
-  <PutItemIn>Put in [itemname]</PutItemIn>
-
-  <CannotEditVanillaSubs>Cannot edit the submarines defined in the Vanilla content package!</CannotEditVanillaSubs>
-  <CharacterEditor.CannotEditVanillaCharacters>Cannot edit the characters defined in the Vanilla content package!</CharacterEditor.CannotEditVanillaCharacters>
-
-  <EntityDescription.fulguriumfuelrod>A rod of enriched fulgurium, for use within a reactor. Generates significantly more heat and lasts longer than uranium fuel rods.</EntityDescription.fulguriumfuelrod>
-  <EntityDescription.thoriumfuelrod>A thorium bar, for use within a reactor. Generates slightly more heat and lasts longer than uranium fuel rods.</EntityDescription.thoriumfuelrod>
-
-  <HuskDormant>You feel feverish</HuskDormant>
-
-  <MiniMapOutpostDockingInfo>Docked to [outpost].\nUndock before attempting to maneuver the submarine.</MiniMapOutpostDockingInfo>
-
-  <CargoSpawnNotification>The purchased supplies have been delivered to [roomname].</CargoSpawnNotification>
-
-  <AimAssistToolTip>Affects how close the cursor has to be to an item to highlight it. If set to 0%, the cursor has to be exactly on the item.</AimAssistToolTip>
-
-  <EnableMouseLook>Enable mouse look</EnableMouseLook>
-  <EnableMouseLookToolTip>When enabled, the camera moves according to the direction you point the cursor to.</EnableMouseLookToolTip>
-
-
 </infotexts>

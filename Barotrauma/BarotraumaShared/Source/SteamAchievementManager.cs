@@ -31,6 +31,8 @@ namespace Barotrauma
             public readonly HashSet<Character> ReactorMeltdown = new HashSet<Character>();
 
             public readonly HashSet<Character> Casualties = new HashSet<Character>();
+
+            public bool SubWasDamaged;
         }
 
         private static RoundData roundData;
@@ -110,7 +112,47 @@ namespace Barotrauma
                         UnlockAchievement("subdeep", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
                     }
                 }
-            }                 
+
+                if (!roundData.SubWasDamaged)
+                {
+                    roundData.SubWasDamaged = SubWallsDamaged(Submarine.MainSub);
+                }
+            }
+
+            if (GameMain.GameSession != null && Character.Controlled != null)
+            {
+                if (Character.Controlled.HasEquippedItem("clownmask") &&
+                    Character.Controlled.HasEquippedItem("clowncostume"))
+                {
+                    UnlockAchievement(Character.Controlled, "clowncostume");
+                }
+
+                if (Submarine.MainSub != null && Character.Controlled.Submarine == null)
+                {
+                    float dist = 500 / Physics.DisplayToRealWorldRatio;
+                    if (Vector2.DistanceSquared(Character.Controlled.WorldPosition, Submarine.MainSub.WorldPosition) >
+                        dist * dist)
+                    {
+                        UnlockAchievement(Character.Controlled, "crewaway");
+                    }
+                }                
+            }
+        }
+
+        private static bool SubWallsDamaged(Submarine sub)
+        {
+            foreach (Structure structure in Structure.WallList)
+            {
+                if (structure.Submarine != sub || structure.HasBody) { continue; }
+                for (int i = 0; i < structure.SectionCount; i++)
+                {
+                    if (structure.SectionIsLeaking(i))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public static void OnBiomeDiscovered(Biome biome)
@@ -274,14 +316,21 @@ namespace Barotrauma
             //made it to the destination
             if (gameSession.Submarine.AtEndPosition)
             {
+                bool noDamageRun = !roundData.SubWasDamaged && !roundData.Casualties.Any(c => !(c.AIController is EnemyAIController));
+
 #if SERVER
                 if (GameMain.Server != null)
                 {
                     //in MP all characters that were inside the sub during reactor meltdown and still alive at the end of the round get an achievement
                     UnlockAchievement("survivereactormeltdown", true, c => c != null && !c.IsDead && roundData.ReactorMeltdown.Contains(c));
+                    if (noDamageRun)
+                    {
+                        UnlockAchievement("nodamagerun", true, c => c != null && !c.IsDead);                    
+                    }
                 }
 #endif
 #if CLIENT
+                if (noDamageRun) { UnlockAchievement("nodamagerun"); }
                 if (roundData.ReactorMeltdown.Any()) //in SP getting to the destination after a meltdown is enough
                 {
                     UnlockAchievement("survivereactormeltdown");
@@ -301,6 +350,11 @@ namespace Barotrauma
                     {
                         UnlockAchievement(charactersInSub[0], "lonesailor");
                     }
+                }
+                foreach (Character character in charactersInSub)
+                {
+                    if (character.Info.Job == null) { continue; }
+                    UnlockAchievement(character, character.Info.Job.Prefab.Identifier + "round");
                 }
             }
         }
