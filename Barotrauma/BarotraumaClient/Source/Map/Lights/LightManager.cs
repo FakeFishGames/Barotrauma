@@ -291,11 +291,6 @@ namespace Barotrauma.Lights
                 spriteBatch.Draw(HighlightMap, Vector2.Zero, Color.White);
                 spriteBatch.End();
             }
-            GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
-            spriteBatch.End();
-
-            //draw a black rectangle on hulls to hide background lights behind subs
-            //---------------------------------------------------------------------------------------------------
 
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
