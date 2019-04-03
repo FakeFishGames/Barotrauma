@@ -65,6 +65,9 @@ namespace Barotrauma
 
         private readonly string containerDeleteTag = "containerdelete";
 
+        private Color primaryColor = new Color(12, 14, 15, 190);
+        private Color secondaryColor = new Color(12, 14, 15, 215);
+
         public override Camera Cam
         {
             get { return cam; }
@@ -189,7 +192,7 @@ namespace Barotrauma
                 return true;
             };
 
-            LeftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, style: null) { Color = Color.Black * 0.75f };
+            LeftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, style: null) { Color = primaryColor };
 
             GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Point((int)(LeftPanel.Rect.Width), (int)(GameMain.GraphicsHeight - TopPanel.Rect.Height * 0.95f)),
                 LeftPanel.RectTransform, Anchor.Center))
@@ -241,7 +244,7 @@ namespace Barotrauma
             //Entity menu
             //------------------------------------------------
 
-            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width, (int)(365 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight), style: null) { Color = Color.Black * 0.75f };
+            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width, (int)(359 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight), style: null) { Color = primaryColor };
 
             toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.1f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.05f) },
                 style: "GUIButtonVerticalArrow")
@@ -259,11 +262,11 @@ namespace Barotrauma
                 }
             };
 
-            var paddedTab = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), EntityMenu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.025f) }, style: null);
+            var paddedTab = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), EntityMenu.RectTransform, Anchor.Center), style: null);
 
             var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedTab.RectTransform), isHorizontal: true)
             {
-                Color = Color.DarkGray * 0.25f,
+                Color = secondaryColor,
                 Stretch = true,
                 UserData = "filterarea"
             };
@@ -310,7 +313,7 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
 
             var characterModeTickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.01f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 32) })
-            { Color = Color.DarkGray * 0.25f };
+            { Color = secondaryColor };
 
             characterModeTickBox = new GUITickBox(new RectTransform(new Point(32, 32), characterModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("CharacterModeButton"))
             {
@@ -323,7 +326,7 @@ namespace Barotrauma
             };
 
             var wiringModeTickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.01f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 32) })
-            { Color = Color.DarkGray * 0.25f };
+            { Color = secondaryColor };
 
             wiringModeTickBox = new GUITickBox(new RectTransform(new Point(32, 32), wiringModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("WiringModeButton"))
             {
@@ -348,7 +351,7 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
 
             var showEntitiesHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.3f), paddedLeftPanel.RectTransform))
-            { Color = Color.DarkGray * 0.25f, Stretch = true, RelativeSpacing = 0.05f };
+            { Color = secondaryColor, Stretch = true, RelativeSpacing = 0.05f };
 
             var tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLighting"))
             {
