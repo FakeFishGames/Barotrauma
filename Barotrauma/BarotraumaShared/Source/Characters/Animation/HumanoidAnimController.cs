@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -1123,6 +1122,9 @@ namespace Barotrauma
             //prevent the hands from going above the top of the ladders
             handPos.Y = Math.Min(-0.5f, handPos.Y);
 
+            //prevent the hands from going above the top of the ladders
+            handPos.Y = Math.Min(-0.5f, handPos.Y);
+
             // TODO: lock only one hand when aiming?
             if (!PlayerInput.KeyDown(InputType.Aim) || Math.Abs(movement.Y) > 0.01f)
             {
@@ -1658,7 +1660,7 @@ namespace Barotrauma
 
             Holdable holdable = item.GetComponent<Holdable>();
 
-            if (!isClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (!character.IsClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
 
@@ -1688,7 +1690,7 @@ namespace Barotrauma
             }
 
             Vector2 transformedHoldPos = shoulder.WorldAnchorA;
-            if (itemPos == Vector2.Zero || isClimbing || usingController)
+            if (itemPos == Vector2.Zero || character.IsClimbing || usingController)
             {
                 if (character.SelectedItems[0] == item)
                 {
@@ -1776,6 +1778,8 @@ namespace Barotrauma
             }
 
             item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir);
+
+            if (character.IsClimbing) return;
 
             if (!isClimbing)
             {

@@ -11,11 +11,136 @@ namespace Barotrauma.Items.Components
 
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
-        public const float SkillIncreaseMultiplier = 0.5f;
+        public class RequiredItem
+        {
+            public readonly ItemPrefab ItemPrefab;
+            public int Amount;
+            public readonly float MinCondition;
+            public readonly bool UseCondition;
 
-        private List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
+            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, bool useCondition)
+            {
+                ItemPrefab = itemPrefab;
+                Amount = amount;
+                MinCondition = minCondition;
+                UseCondition = useCondition;
+            }
+        }
+
+        public readonly ItemPrefab TargetItem;
+        
+        public readonly string DisplayName;
+        
+        public readonly List<RequiredItem> RequiredItems;
 
         private FabricationRecipe fabricatedItem;
+        private float timeUntilReady;
+        private float requiredTime;
+        
+        private Character user;
+
+        private ItemContainer inputContainer, outputContainer;
+
+        public readonly List<Skill> RequiredSkills;
+        
+        public FabricableItem(XElement element)
+        {
+            if (element.Attribute("name") != null)
+            {
+                string name = element.Attribute("name").Value;
+                DebugConsole.ThrowError("Error in fabricable item config (" + name + ") - use item identifiers instead of names");
+                TargetItem = MapEntityPrefab.Find(name) as ItemPrefab;
+                if (TargetItem == null)
+                {
+                    DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + name + "\" not found.");
+                    return;
+                }
+            }
+            else
+            {
+                string identifier = element.GetAttributeString("identifier", "");
+                TargetItem = MapEntityPrefab.Find(null, identifier) as ItemPrefab;
+                if (TargetItem == null)
+                {
+                    DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + identifier + "\" not found.");
+                    return;
+                }
+            }
+
+            string displayName = element.GetAttributeString("displayname", "");
+            DisplayName = string.IsNullOrEmpty(displayName) ? TargetItem.Name : TextManager.Get($"DisplayName.{displayName}");
+
+            RequiredSkills = new List<Skill>();
+            RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
+            OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            RequiredItems = new List<RequiredItem>();
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (!(me is ItemPrefab itemPrefab)) { continue; }
+
+                foreach (FabricationRecipe recipe in itemPrefab.FabricationRecipes)
+                {
+                    case "requiredskill":
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! Use skill identifiers instead of names.");
+                            continue;
+                        }
+
+                        RequiredSkills.Add(new Skill(
+                            subElement.GetAttributeString("identifier", ""), 
+                            subElement.GetAttributeInt("level", 0)));
+                        break;
+                    case "item":
+                    case "requireditem":
+                        string requiredItemIdentifier = subElement.GetAttributeString("identifier", "");
+                        if (string.IsNullOrWhiteSpace(requiredItemIdentifier))
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! One of the required items has no identifier.");
+                            continue;
+                        }
+
+                        float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
+                        //Substract mincondition from required item's condition or delete it regardless?
+                        bool useCondition = subElement.GetAttributeBool("usecondition", true);
+                        int count = subElement.GetAttributeInt("count", 1);
+
+
+                        ItemPrefab requiredItem = MapEntityPrefab.Find(null, requiredItemIdentifier.Trim()) as ItemPrefab;
+                        if (requiredItem == null)
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! Required item \"" + requiredItemIdentifier + "\" not found.");
+                            continue;
+                        }
+
+                        var existing = RequiredItems.Find(r => r.ItemPrefab == requiredItem);
+                        if (existing == null)
+                        {
+                            RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
+                        }
+                        else
+                        {
+
+                            RequiredItems.Remove(existing);
+                            RequiredItems.Add(new RequiredItem(requiredItem, existing.Amount + count, minCondition, useCondition));
+                        }
+
+                        break;
+                }
+            }
+
+            InitProjSpecific();
+        }
+    }
+
+    partial class Fabricator : Powered, IServerSerializable, IClientSerializable
+    {
+        public const float SkillIncreaseMultiplier = 0.5f;
+
+        private List<FabricableItem> fabricableItems;
+
+        private FabricableItem fabricatedItem;
         private float timeUntilReady;
         private float requiredTime;
         
@@ -27,37 +152,6 @@ namespace Barotrauma.Items.Components
 
         public Fabricator(Item item, XElement element) 
             : base(item, element)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() == "fabricableitem")
-                {
-                    DebugConsole.ThrowError("Error in item " + item.Name + "! Fabrication recipes should be defined in the craftable item's xml, not in the fabricator.");
-                    break;
-                }            
-            }
-
-            foreach (MapEntityPrefab me in MapEntityPrefab.List)
-            {
-                if (!(me is ItemPrefab itemPrefab)) { continue; }
-
-                foreach (FabricationRecipe recipe in itemPrefab.FabricationRecipes)
-                {
-                    if (recipe.SuitableFabricatorIdentifiers.Length > 0)
-                    {
-                        if (!recipe.SuitableFabricatorIdentifiers.Any(i => item.prefab.Identifier == i || item.HasTag(i)))
-                        {
-                            continue;
-                        }
-                    }
-                    fabricationRecipes.Add(recipe);
-                }
-            }
-
-            InitProjSpecific();
-        }
-
-        public override void OnItemLoaded()
         {
             var containers = item.GetComponents<ItemContainer>().ToList();
             if (containers.Count < 2)
@@ -75,6 +169,30 @@ namespace Barotrauma.Items.Components
                 if (ingredientCount > inputContainer.Capacity)
                 {
                     DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + recipe.TargetItem.Name + "\"!");
+                }
+            }
+
+            OnItemLoadedProjSpecific();
+        }
+
+        public override void OnItemLoaded()
+        {
+            var containers = item.GetComponents<ItemContainer>().ToList();
+            if (containers.Count < 2)
+            {
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\": Fabricators must have two ItemContainer components!");
+                return;
+            }
+
+            inputContainer = containers[0];
+            outputContainer = containers[1];
+
+            foreach (FabricableItem fabricableItem in fabricableItems)
+            {
+                int ingredientCount = fabricableItem.RequiredItems.Sum(it => it.Amount);
+                if (ingredientCount > inputContainer.Capacity)
+                {
+                    DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + fabricableItem.TargetItem.Name + "\"!");
                 }
             }
 
@@ -99,7 +217,7 @@ namespace Barotrauma.Items.Components
             return (picker != null);
         }
         
-        private void StartFabricating(FabricationRecipe selectedItem, Character user)
+        private void StartFabricating(FabricableItem selectedItem, Character user)
         {
             if (selectedItem == null) return;
             if (!outputContainer.Inventory.IsEmpty()) return;
@@ -184,7 +302,7 @@ namespace Barotrauma.Items.Components
             if (timeUntilReady > 0.0f) { return; }
 
             var availableIngredients = GetAvailableIngredients();
-            foreach (FabricationRecipe.RequiredItem ingredient in fabricatedItem.RequiredItems)
+            foreach (FabricableItem.RequiredItem ingredient in fabricatedItem.RequiredItems)
             {
                 for (int i = 0; i < ingredient.Amount; i++)
                 {
@@ -210,8 +328,13 @@ namespace Barotrauma.Items.Components
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
-            
-            if ((GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) && user != null && !user.Removed)
+
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (isNotClient && user != null)
             {
                 foreach (Skill skill in fabricatedItem.RequiredSkills)
                 {
@@ -222,17 +345,17 @@ namespace Barotrauma.Items.Components
             CancelFabricating(null);
         }
 
-        private bool CanBeFabricated(FabricationRecipe fabricableItem)
+        private bool CanBeFabricated(FabricableItem fabricableItem)
         {
             if (fabricableItem == null) { return false; }
             List<Item> availableIngredients = GetAvailableIngredients();
             return CanBeFabricated(fabricableItem, availableIngredients);
         }
 
-        private bool CanBeFabricated(FabricationRecipe fabricableItem, IEnumerable<Item> availableIngredients)
+        private bool CanBeFabricated(FabricableItem fabricableItem, IEnumerable<Item> availableIngredients)
         {
             if (fabricableItem == null) { return false; }            
-            foreach (FabricationRecipe.RequiredItem requiredItem in fabricableItem.RequiredItems)
+            foreach (FabricableItem.RequiredItem requiredItem in fabricableItem.RequiredItems)
             {
                 if (availableIngredients.Count(it => IsItemValidIngredient(it, requiredItem)) < requiredItem.Amount)
                 {
@@ -242,7 +365,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private float GetRequiredTime(FabricationRecipe fabricableItem, Character user)
+        private float GetRequiredTime(FabricableItem fabricableItem, Character user)
         {
             float degreeOfSuccess = DegreeOfSuccess(user, fabricableItem.RequiredSkills);
 
@@ -284,7 +407,7 @@ namespace Barotrauma.Items.Components
         /// Move the items required for fabrication into the input container.
         /// The method assumes that all the required ingredients are available either in the input container or linked containers.
         /// </summary>
-        private void MoveIngredientsToInputContainer(FabricationRecipe targetItem)
+        private void MoveIngredientsToInputContainer(FabricableItem targetItem)
         {
             //required ingredients that are already present in the input container
             List<Item> usedItems = new List<Item>();
@@ -315,7 +438,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool IsItemValidIngredient(Item item, FabricationRecipe.RequiredItem requiredItem)
+        private bool IsItemValidIngredient(Item item, FabricableItem.RequiredItem requiredItem)
         {
             return 
                 item != null && 

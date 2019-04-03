@@ -1147,7 +1147,7 @@ namespace Barotrauma
             {
                 //Limb head = AnimController.GetLimb(LimbType.Head);
                 // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
-                float followMargin = 40;
+                float followMargin = 30;
                 if (dontFollowCursor)
                 {
                     AnimController.TargetDir = Direction.Right;
@@ -2187,7 +2187,7 @@ namespace Barotrauma
 
             if (limbHit == null) return new AttackResult();
             
-            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
@@ -2273,8 +2273,7 @@ namespace Barotrauma
             {
                 Vector2 diff = dir;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
-                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff),
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
             }
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);

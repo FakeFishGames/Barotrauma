@@ -303,8 +303,10 @@ namespace Barotrauma.Items.Components
                     // Too close -> steer away
                     character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition) / 2);
                 }
-                else
+                else if (!character.IsClimbing)
                 {
+                    // Close enough -> stop if not in ladders.
+                    // In ladders, we most likely want to move back and forth, because we cannot aim -> if the leak is on the side, it should get fixed.
                     character.AIController.SteeringManager.Reset();
                 }
             }
@@ -315,7 +317,7 @@ namespace Barotrauma.Items.Components
 
             // Press the trigger only when the tool is approximately facing the target.
             // If the character is climbing, ignore the check, because we cannot aim while climbing.
-            if (VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
+            if (character.IsClimbing || VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
             {
                 Use(deltaTime, character);
             }

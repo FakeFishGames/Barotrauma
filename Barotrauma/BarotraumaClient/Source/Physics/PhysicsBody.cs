@@ -171,12 +171,9 @@ namespace Barotrauma
                 newVelocity = new Vector2(
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
-                newVelocity = NetConfig.Quantize(newVelocity, -MaxVel, MaxVel, 12);
-
                 if (!fixedRotation)
                 {
                     newAngularVelocity = msg.ReadRangedSingle(-MaxAngularVel, MaxAngularVel, 8);
-                    newAngularVelocity = NetConfig.Quantize(newAngularVelocity.Value, -MaxAngularVel, MaxAngularVel, 8);
                 }
             }
             msg.ReadPadBits();

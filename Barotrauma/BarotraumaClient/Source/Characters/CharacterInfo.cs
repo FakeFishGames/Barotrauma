@@ -241,12 +241,10 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(jobIdentifier))
             {
                 jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
-                byte skillCount = inc.ReadByte();
-                for (int i = 0; i < skillCount; i++)
+                for (int i = 0; i < jobPrefab.Skills.Count; i++)
                 {
-                    string skillIdentifier = inc.ReadString();
                     float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillIdentifier, skillLevel);
+                    skillLevels.Add(jobPrefab.Skills[i].Identifier, skillLevel);
                 }
             }
 
@@ -256,6 +254,7 @@ namespace Barotrauma
                 ID = infoID,
             };
             ch.RecreateHead(headSpriteID,(Race)race, (Gender)gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+            System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
             if (ch.Job != null)
             {
                 foreach (KeyValuePair<string, float> skill in skillLevels)
@@ -263,12 +262,11 @@ namespace Barotrauma
                     Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
                     if (matchingSkill == null)
                     {
-                        ch.Job.Skills.Add(new Skill(skill.Key, skill.Value));
+                        DebugConsole.ThrowError("Skill \"" + skill.Key + "\" not found in character \"" + newName + "\"");
                         continue;
                     }
                     matchingSkill.Level = skill.Value;
                 }
-                ch.Job.Skills.RemoveAll(s => !skillLevels.ContainsKey(s.Identifier));
             }
             return ch;
         }

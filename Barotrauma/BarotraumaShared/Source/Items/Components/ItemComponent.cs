@@ -538,6 +538,7 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
+            float average = skillSuccessSum / requiredSkills.Count;
 
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
@@ -734,13 +735,15 @@ namespace Barotrauma.Items.Components
         private void OverrideRequiredItems(XElement element)
         {
             var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
-            requiredItems.Clear();
-
+            bool overrideRequiredItems = false;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
+
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
                         if (newRequiredItem == null) continue;
 

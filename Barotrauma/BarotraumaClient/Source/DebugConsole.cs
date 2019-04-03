@@ -773,12 +773,20 @@ namespace Barotrauma
 
             commands.Add(new Command("checkcrafting", "checkcrafting: Checks item deconstruction & crafting recipes for inconsistencies.", (string[] args) =>
             {
-                List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
+                List<FabricableItem> fabricableItems = new List<FabricableItem>();
                 foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
                 {
                     if (mapEntityPrefab is ItemPrefab itemPrefab)
                     {
-                        fabricableItems.AddRange(itemPrefab.FabricationRecipes);
+                        var fabricatorElement = itemPrefab.ConfigElement.Element("Fabricator");
+                        if (fabricatorElement == null) { continue; }
+
+                        foreach (XElement element in fabricatorElement.Elements())
+                        {
+                            if (element.Name.ToString().ToLowerInvariant() != "fabricableitem") { continue; }
+                            fabricableItems.Add(new FabricableItem(element));
+                        }
+
                     }
                 }
                 foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
@@ -954,6 +962,8 @@ namespace Barotrauma
                             }
                         }
                     }
+                    element.Value = lines[i];
+                    i++;
                 }
             }, isCheat: false));
 #endif

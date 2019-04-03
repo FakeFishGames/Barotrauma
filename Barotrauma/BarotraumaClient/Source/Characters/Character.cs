@@ -200,13 +200,9 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = 0.0f;
                 }
-                else if (SelectedConstruction != null && ViewTarget == null && 
-                    SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
+                else if (SelectedConstruction != null && SelectedConstruction.Components.Any(ic => (ic.GuiFrame != null && GUI.IsMouseOn(ic.GuiFrame))))
                 {
                     cam.OffsetAmount = 0.0f;
-                    cursorPosition = 
-                        SelectedConstruction.Position + 
-                        new Vector2(cursorPosition.X % 10.0f, cursorPosition.Y % 10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
                 else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                 {
@@ -214,7 +210,7 @@ namespace Barotrauma
                     {
                         if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
                     }
-                    else
+                    else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                     {
                         Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
                         Structure structure = body == null ? null : body.UserData as Structure;

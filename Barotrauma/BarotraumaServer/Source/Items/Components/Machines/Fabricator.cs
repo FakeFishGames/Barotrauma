@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
-            int itemIndex = msg.ReadRangedInteger(-1, fabricationRecipes.Count - 1);
+            int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
 
             item.CreateServerEvent(this);
 
@@ -25,17 +25,17 @@ namespace Barotrauma.Items.Components
             else
             {
                 //if already fabricating the selected item, return
-                if (fabricatedItem != null && fabricationRecipes.IndexOf(fabricatedItem) == itemIndex) return;
-                if (itemIndex < 0 || itemIndex >= fabricationRecipes.Count) return;
+                if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
+                if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
 
-                StartFabricating(fabricationRecipes[itemIndex], c.Character);
+                StartFabricating(fabricableItems[itemIndex], c.Character);
             }
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
-            msg.WriteRangedInteger(-1, fabricationRecipes.Count - 1, itemIndex);
+            int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
+            msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
             UInt16 userID = fabricatedItem == null || user == null ? (UInt16)0 : user.ID;
             msg.Write(userID);
         }
