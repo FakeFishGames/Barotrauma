@@ -94,8 +94,14 @@
     <Sprite texture="dockingport.png" sourcerect="0,0,113,209" depth="0.94" origin="0.5,0.5" />
     <DockingPort IsHorizontal="true" DistanceTolerance="200,64" DockedDistance="64">
       <Sprite texture="dockingport.png" sourcerect="127,0,113,144" depth="0.05" origin="0.5,0.5" />
-      <sound file="Content/Items/Door/DockingPort1.ogg" type="OnUse" range="1000.0" />
-      <sound file="Content/Items/Door/DockingPort2.ogg" type="OnSecondaryUse" range="1000.0" />
+      <StatusEffect type="OnSecondaryUse" target="This">
+        <sound file="Content/Items/Door/DockingPort2.ogg" type="OnSecondaryUse" range="15000.0" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This">
+        <Explosion range="5000.0" camerashake="5"
+           stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <sound file="Content/Items/Door/DockingPort1.ogg" type="OnUse" range="15000.0" />
+      </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/DoorBreak2.ogg" range="3000" />
       </StatusEffect>
@@ -121,8 +127,14 @@
     <Sprite texture="dockingport2.png" sourcerect="0,0,128,112" depth="0.94" origin="0.5,0.5" />
     <DockingPort IsHorizontal="false" DistanceTolerance="64,200" DockedDistance="64">
       <Sprite texture="dockingport.png" sourcerect="127,144,50,112" depth="0.05" origin="0.5,0.5" />
-      <sound file="Content/Items/Door/DockingPort1.ogg" type="OnUse" range="1000.0" />
-      <sound file="Content/Items/Door/DockingPort2.ogg" type="OnSecondaryUse" range="1000.0" />
+      <StatusEffect type="OnSecondaryUse" target="This">
+        <sound file="Content/Items/Door/DockingPort2.ogg" type="OnSecondaryUse" range="15000.0" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This">
+        <Explosion range="5000.0" camerashake="5"
+           stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <sound file="Content/Items/Door/DockingPort1.ogg" type="OnUse" range="15000.0" />
+      </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/DoorBreak2.ogg" range="3000" />
       </StatusEffect>
