@@ -1339,8 +1339,8 @@
   <EntityDescription.detonator>A device that detonates any contained explosive when receiving a signal.</EntityDescription.detonator>
   <EntityName.spear>Harpoon</EntityName.spear>
   <EntityDescription.spear>A harpoon for the harpoon gun</EntityDescription.spear>
-  <EntityName.alienspear>Alien Harpoon</EntityName.alienspear>
-  <EntityDescription.alienspear>A harpoon for the harpoon gun</EntityDescription.alienspear>
+  <EntityName.alienspear>Physicorium Harpoon</EntityName.alienspear>
+  <EntityDescription.alienspear>A harpoon for the harpoon gun, made of alien material</EntityDescription.alienspear>
   <EntityName.explosivespear>Explosive Harpoon</EntityName.explosivespear>
   <EntityDescription.explosivespear>A harpoon for the harpoon gun</EntityDescription.explosivespear>
   <EntityName.harpoongun>Harpoon Gun</EntityName.harpoongun>
@@ -1735,7 +1735,7 @@
   <EntityDescription.railgunshell>For firing from a railgun</EntityDescription.railgunshell>
   <EntityName.nuclearshell>Nuclear Shell</EntityName.nuclearshell>
   <EntityDescription.nuclearshell>A nuclear shell for use with a railgun</EntityDescription.nuclearshell>
-  <EntityName.alienshell>Alien Shell</EntityName.alienshell>
+  <EntityName.alienshell>Physicorium Shell</EntityName.alienshell>
   <EntityDescription.alienshell>For firing from a railgun</EntityDescription.alienshell>
 
   <!-- Alien -->
