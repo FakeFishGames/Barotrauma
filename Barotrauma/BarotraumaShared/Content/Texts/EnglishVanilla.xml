@@ -2538,7 +2538,6 @@
   <ReactorUse>Operating the reactor</ReactorUse>
   <ReactorUseText>This is the reactor. You should leave operating this to a professional, like a mechanic. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
   <ReactorUseInstructions>-Left gauge controls the amount of power generated\n-Right gauge controls the amount of it sent to rest of the submarine\n-Try to keep both gauges green for a balanced power output</ReactorUseInstructions>
-  <ReactorUseObjective><!-- No objective --></ReactorUseObjective>
 
   <EnemyOnSonar>Monsters</EnemyOnSonar>
   <EnemyOnSonarText>Captain, we have a bogey on our sonar. Knowing these waters, it can't be anything too friendly. Order somebody to man the turret, preferably someone with some weapons know-how. Failing that, do it yourself. It's kill or be killed down here.</EnemyOnSonarText>
