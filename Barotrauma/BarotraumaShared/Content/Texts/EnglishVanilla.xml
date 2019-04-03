@@ -339,7 +339,6 @@
   <InputType.Down>Down</InputType.Down>
   <InputType.Left>Left</InputType.Left>
   <InputType.Right>Right</InputType.Right>
-  <InputType.Attack>Attack</InputType.Attack>
   <InputType.Run>Run</InputType.Run>
   <InputType.Crouch>Crouch</InputType.Crouch>
   <InputType.Chat>Chat</InputType.Chat>
@@ -2740,6 +2739,8 @@
   <LocationChange.Ruins.ChangeTo.Research>A research outpost has been established at [previousname].</LocationChange.Ruins.ChangeTo.Research>
   
   <!-- Changed values -->
+
+  <InputType.Attack>Creature Attack</InputType.Attack>
   
   <!-- New Additions -->
   

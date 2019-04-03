@@ -305,7 +305,7 @@ namespace Barotrauma
             keyMapping[(int)InputType.Left] = new KeyOrMouse(Keys.A);
             keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
-            keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.R);
+            keyMapping[(int)InputType.Attack] = new KeyOrMouse(2);
             keyMapping[(int)InputType.Crouch] = new KeyOrMouse(Keys.LeftControl);
             keyMapping[(int)InputType.Grab] = new KeyOrMouse(Keys.G);
             keyMapping[(int)InputType.Health] = new KeyOrMouse(Keys.H);
@@ -314,7 +314,7 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.InfoTab] = new KeyOrMouse(Keys.Tab);
             keyMapping[(int)InputType.Chat] = new KeyOrMouse(Keys.T);
-            keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.Y);
+            keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.R);
             keyMapping[(int)InputType.CrewOrders] = new KeyOrMouse(Keys.C);
 
             keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
