@@ -648,59 +648,6 @@ namespace Barotrauma
                 //spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), inputFrame.RectTransform), style: null);
             }
-            GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("AimAssist"));
-            GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform),
-                barSize: 0.05f)
-            {
-                UserData = aimAssistText,
-                BarScroll = MathUtils.InverseLerp(0.0f, 5.0f, AimAssistAmount),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    ChangeSliderText(scrollBar, scroll);
-                    AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
-                    return true;
-                },
-                Step = 0.1f
-            };
-            aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
-
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
-
-            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (x, y) =>
-                {
-                    if (UnsavedSettings)
-                    {
-                        LoadPlayerConfig();
-                    }
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
-                    return true;
-                }
-            };
-
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
-
-            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (x, y) =>
-                {
-                    if (UnsavedSettings)
-                    {
-                        LoadPlayerConfig();
-                    }
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
-                    return true;
-                }
-            };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);

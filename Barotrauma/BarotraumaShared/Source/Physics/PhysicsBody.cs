@@ -584,7 +584,6 @@ namespace Barotrauma
         /// </summary>
         public void ApplyLinearImpulse(Vector2 impulse, float maxVelocity)
         {
-            if (!IsValidValue(impulse / body.Mass, "new velocity")) return;
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             if (!IsValidValue(maxVelocity, "max velocity")) return;
             
