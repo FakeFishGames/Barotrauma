@@ -646,7 +646,6 @@ namespace Barotrauma
         /// </summary>
         public void ApplyForce(Vector2 force, float maxVelocity)
         {
-            if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
             if (!IsValidValue(maxVelocity, "max velocity")) return;
 
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
@@ -657,7 +656,10 @@ namespace Barotrauma
             {
                 newVelocity = newVelocity.ClampLength(maxVelocity);
             }
-            body.ApplyForce((newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step);
+
+            Vector2 clampedForce = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
+            if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
+            body.ApplyForce(force);
         }
 
         public void ApplyForce(Vector2 force, Vector2 point)
