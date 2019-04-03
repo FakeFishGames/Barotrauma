@@ -608,8 +608,8 @@ namespace Barotrauma
             {
                 disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
                 disallowedAreas.Add(new Rectangle(
-                    HUDLayoutSettings.ChatBoxArea.X - 150, HUDLayoutSettings.ChatBoxArea.Y, 
-                    HUDLayoutSettings.ChatBoxArea.Width + 150, HUDLayoutSettings.ChatBoxArea.Height));                
+                    HUDLayoutSettings.ChatBoxArea.X - 50, HUDLayoutSettings.ChatBoxArea.Y, 
+                    HUDLayoutSettings.ChatBoxArea.Width + 50, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
