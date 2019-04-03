@@ -26,6 +26,10 @@ namespace Barotrauma.Items.Components
 
         private float blinkTimer;
         
+        private bool itemLoaded;
+
+        private float blinkTimer;
+        
         public PhysicsBody ParentBody;
 
         [Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f), Serialize(100.0f, true)]
