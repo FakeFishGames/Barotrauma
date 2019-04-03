@@ -2756,4 +2756,7 @@
 
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
+
+  <Reset>Reset</Reset>
+  <LegacyBindings>Set Legacy Bindings</LegacyBindings>
 </infotexts>

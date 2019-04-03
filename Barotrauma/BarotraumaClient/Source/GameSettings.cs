@@ -627,11 +627,25 @@ namespace Barotrauma
                 Step = 0.1f
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.07f), controlsLayoutGroup.RectTransform), TextManager.Get("LegacyBindings"), style: "GUIButton")
+            {
+                OnClicked = (button, data) =>
+                {
+                    // TODO: add a prompt?
+                    SetDefaultBindings(legacy: true);
+                    CheckBindings(true);
+                    ApplySettings();
+                    // TODO: refresh the settings frame instead of closing it.
+                    GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
+                    GUI.SettingsMenuOpen = false;
+                    return true;
+                }
+            };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
-            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
@@ -647,7 +661,24 @@ namespace Barotrauma
                 }
             };
 
-            applyButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomCenter),
+                TextManager.Get("Reset"), style: "GUIButtonLarge")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (button, data) =>
+                {
+                    // TODO: add a prompt
+                    LoadDefaultConfig();
+                    CheckBindings(true);
+                    ApplySettings();
+                    // TODO: refresh the settings frame instead of closing it.
+                    GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
+                    GUI.SettingsMenuOpen = false;
+                    return true;
+                }
+            };
+
+            applyButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
                 TextManager.Get("ApplySettingsButton"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
@@ -820,11 +851,11 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private bool ApplyClicked(GUIButton button, object userData)
+        private void ApplySettings()
         {
             SaveNewPlayerConfig();
 
-            settingsFrame.Flash(Color.Green);
+            SettingsFrame.Flash(Color.Green);
 
             if (GameMain.WindowMode != GameMain.Config.WindowMode)
             {
@@ -837,12 +868,16 @@ namespace Barotrauma
                 if (GameMain.Config.WindowMode != WindowMode.BorderlessWindowed)
                 {
 #endif
-                    new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredResolution"));
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredResolution"));
 #if OSX
                 }
 #endif
             }
+        }
 
+        private bool ApplyClicked(GUIButton button, object userData)
+        {
+            ApplySettings();
             if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;
 
             return true;
