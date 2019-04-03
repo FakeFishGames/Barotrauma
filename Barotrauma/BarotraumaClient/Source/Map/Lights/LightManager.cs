@@ -78,9 +78,8 @@ namespace Barotrauma.Lights
 
             AmbientLight = new Color(20, 20, 20, 255);
 
-            visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
-
-            highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png");
+            visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png", preMultiplyAlpha: false);
+            highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png", preMultiplyAlpha: false);
 
             CreateRenderTargets(graphics);
             GameMain.Instance.OnResolutionChanged += () =>
@@ -292,6 +291,11 @@ namespace Barotrauma.Lights
                 spriteBatch.Draw(HighlightMap, Vector2.Zero, Color.White);
                 spriteBatch.End();
             }
+            GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
+            spriteBatch.End();
+
+            //draw a black rectangle on hulls to hide background lights behind subs
+            //---------------------------------------------------------------------------------------------------
 
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
