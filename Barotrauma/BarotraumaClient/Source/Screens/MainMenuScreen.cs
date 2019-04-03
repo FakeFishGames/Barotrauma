@@ -688,7 +688,7 @@ namespace Barotrauma
 
             if (backgroundSprite == null)
             {
-                backgroundSprite = (LocationType.List.Where(l => l.UseInMainMenu).GetRandom()).GetPortrait(0);
+                backgroundSprite = (LocationType.List.Where(l => l.UseInMainMenu).GetRandom())?.GetPortrait(0);
             }
 
             if (backgroundSprite != null)
