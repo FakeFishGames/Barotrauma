@@ -1590,6 +1590,8 @@ namespace Barotrauma
                     GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
                 {
                     parentInventory.CreateNetworkEvent();
+                    //send frequent updates after the item has been dropped
+                    PositionUpdateInterval = 0.0f;
                 }
             }
 
