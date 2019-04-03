@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
         private GUICustomComponent inputInventoryOverlay, outputInventoryOverlay;
 
-        private FabricableItem selectedItem;
+        private FabricationRecipe selectedItem;
 
         private GUIComponent inSufficientPowerWarning;
 
@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
             {
                 OnSelected = (GUIComponent component, object userdata) =>
                 {
-                    selectedItem = userdata as FabricableItem;
+                    selectedItem = userdata as FabricationRecipe;
                     if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
                     return true;
                 }
@@ -59,7 +59,7 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
             
-            foreach (FabricableItem fi in fabricableItems)
+            foreach (FabricationRecipe fi in fabricationRecipes)
             {
                 GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 50), itemList.Content.RectTransform), style: null)
                 {
@@ -115,13 +115,13 @@ namespace Barotrauma.Items.Components
 
         partial void SelectProjSpecific(Character character)
         {
-            var nonItems = itemList.Content.Children.Where(c => !(c.UserData is FabricableItem)).ToList();
+            var nonItems = itemList.Content.Children.Where(c => !(c.UserData is FabricationRecipe)).ToList();
             nonItems.ForEach(i => itemList.Content.RemoveChild(i));
 
             itemList.Content.RectTransform.SortChildren((c1, c2) =>
             {
-                var item1 = c1.GUIComponent.UserData as FabricableItem;
-                var item2 = c2.GUIComponent.UserData as FabricableItem;
+                var item1 = c1.GUIComponent.UserData as FabricationRecipe;
+                var item2 = c2.GUIComponent.UserData as FabricationRecipe;
 
                 bool hasSkills1 = DegreeOfSuccess(character, item1.RequiredSkills) >= 0.5f;
                 bool hasSkills2 = DegreeOfSuccess(character, item2.RequiredSkills) >= 0.5f;
@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
-            var firstinSufficient = itemList.Content.Children.FirstOrDefault(c => c.UserData is FabricableItem fabricableItem && DegreeOfSuccess(character, fabricableItem.RequiredSkills) < 0.5f);
+            var firstinSufficient = itemList.Content.Children.FirstOrDefault(c => c.UserData is FabricationRecipe fabricableItem && DegreeOfSuccess(character, fabricableItem.RequiredSkills) < 0.5f);
             if (firstinSufficient != null)
             {
                 insufficientSkillsText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstinSufficient.RectTransform));
@@ -155,13 +155,13 @@ namespace Barotrauma.Items.Components
         {
             overlayComponent.RectTransform.SetAsLastChild();
 
-            FabricableItem targetItem = fabricatedItem ?? selectedItem;
+            FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
             if (targetItem != null)
             {
                 int slotIndex = 0;
 
-                var missingItems = new List<FabricableItem.RequiredItem>();
-                foreach (FabricableItem.RequiredItem requiredItem in targetItem.RequiredItems)
+                var missingItems = new List<FabricationRecipe.RequiredItem>();
+                foreach (FabricationRecipe.RequiredItem requiredItem in targetItem.RequiredItems)
                 {
                     for (int i = 0; i < requiredItem.Amount; i++)
                     {
@@ -176,7 +176,7 @@ namespace Barotrauma.Items.Components
 
                 var availableIngredients = GetAvailableIngredients();
 
-                foreach (FabricableItem.RequiredItem requiredItem in missingItems)
+                foreach (FabricationRecipe.RequiredItem requiredItem in missingItems)
                 {
                     //highlight suitable ingredients in linked inventories
                     foreach (Item item in availableIngredients)
@@ -230,7 +230,7 @@ namespace Barotrauma.Items.Components
         {
             overlayComponent.RectTransform.SetAsLastChild();
             
-            FabricableItem targetItem = fabricatedItem ?? selectedItem;
+            FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
             if (targetItem != null)
             {
                 var itemIcon = targetItem.TargetItem.InventoryIcon ?? targetItem.TargetItem.sprite;
@@ -257,7 +257,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool SelectItem(Character user, FabricableItem selectedItem)
+        private bool SelectItem(Character user, FabricationRecipe selectedItem)
         {
             selectedItemFrame.ClearChildren();
             
@@ -354,7 +354,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (GUIComponent child in itemList.Content.Children)
                 {
-                    var itemPrefab = child.UserData as FabricableItem;
+                    var itemPrefab = child.UserData as FabricationRecipe;
                     if (itemPrefab == null) continue;
 
                     bool canBeFabricated = CanBeFabricated(itemPrefab, availableIngredients);
@@ -377,7 +377,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
+            int itemIndex = msg.ReadRangedInteger(-1, fabricationRecipes.Count - 1);
             UInt16 userID = msg.ReadUInt16();
             Character user = Entity.FindEntityByID(userID) as Character;
 
@@ -391,8 +391,8 @@ namespace Barotrauma.Items.Components
                 if (fabricatedItem != null && fabricationRecipes.IndexOf(fabricatedItem) == itemIndex) return;
                 if (itemIndex < 0 || itemIndex >= fabricationRecipes.Count) return;
 
-                SelectItem(user, fabricableItems[itemIndex]);
-                StartFabricating(fabricableItems[itemIndex], user);
+                SelectItem(user, fabricationRecipes[itemIndex]);
+                StartFabricating(fabricationRecipes[itemIndex], user);
             }
         }
     }

@@ -14,17 +14,17 @@ namespace Barotrauma
 
         public readonly AnimController.Animation Animation;
 
-        public CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, rotation, velocity, angularVelocity, 0, time, dir, interact, animation)
+        public CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, float time, Direction dir, Character selectedCharacter, Item selectedItem, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, rotation, velocity, angularVelocity, 0, time, dir, selectedCharacter, selectedItem, animation)
         {
         }
 
-        public CharacterStateInfo(Vector2 pos, float? rotation, UInt16 ID, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, rotation, Vector2.Zero, 0.0f, ID, 0.0f, dir, interact, animation)
+        public CharacterStateInfo(Vector2 pos, float? rotation, UInt16 ID, Direction dir, Character selectedCharacter, Item selectedItem, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, rotation, Vector2.Zero, 0.0f, ID, 0.0f, dir, selectedCharacter, selectedItem, animation)
         {
         }
 
-        protected CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+        protected CharacterStateInfo(Vector2 pos, float? rotation, Vector2 velocity, float? angularVelocity, UInt16 ID, float time, Direction dir, Character selectedCharacter, Item selectedItem, AnimController.Animation animation = AnimController.Animation.None)
             : base(pos, rotation, velocity, angularVelocity, ID, time)
         {
             Direction = dir;

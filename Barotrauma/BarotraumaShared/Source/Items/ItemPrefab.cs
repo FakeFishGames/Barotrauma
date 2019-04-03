@@ -31,6 +31,100 @@ namespace Barotrauma
         }
     }
 
+    class FabricationRecipe
+    {
+        public class RequiredItem
+        {
+            public readonly ItemPrefab ItemPrefab;
+            public int Amount;
+            public readonly float MinCondition;
+            public readonly bool UseCondition;
+
+            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, bool useCondition)
+            {
+                ItemPrefab = itemPrefab;
+                Amount = amount;
+                MinCondition = minCondition;
+                UseCondition = useCondition;
+            }
+        }
+
+        public readonly ItemPrefab TargetItem;
+        public readonly string DisplayName;
+        public readonly List<RequiredItem> RequiredItems;
+        public readonly string[] SuitableFabricatorIdentifiers;
+        public readonly float RequiredTime;
+        public readonly float OutCondition; //Percentage-based from 0 to 1
+        public readonly List<Skill> RequiredSkills;
+
+        public FabricationRecipe(XElement element, ItemPrefab itemPrefab)
+        {
+            TargetItem = itemPrefab;
+            string displayName = element.GetAttributeString("displayname", "");
+            DisplayName = string.IsNullOrEmpty(displayName) ? itemPrefab.Name : TextManager.Get($"DisplayName.{displayName}");
+
+            SuitableFabricatorIdentifiers = element.GetAttributeStringArray("suitablefabricators", new string[0]);
+
+            RequiredSkills = new List<Skill>();
+            RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
+            OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            RequiredItems = new List<RequiredItem>();
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "requiredskill":
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! Use skill identifiers instead of names.");
+                            continue;
+                        }
+
+                        RequiredSkills.Add(new Skill(
+                            subElement.GetAttributeString("identifier", ""),
+                            subElement.GetAttributeInt("level", 0)));
+                        break;
+                    case "item":
+                    case "requireditem":
+                        string requiredItemIdentifier = subElement.GetAttributeString("identifier", "");
+                        if (string.IsNullOrWhiteSpace(requiredItemIdentifier))
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! One of the required items has no identifier.");
+                            continue;
+                        }
+
+                        float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
+                        //Substract mincondition from required item's condition or delete it regardless?
+                        bool useCondition = subElement.GetAttributeBool("usecondition", true);
+                        int count = subElement.GetAttributeInt("count", 1);
+
+
+                        ItemPrefab requiredItem = MapEntityPrefab.Find(null, requiredItemIdentifier.Trim()) as ItemPrefab;
+                        if (requiredItem == null)
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! Required item \"" + requiredItemIdentifier + "\" not found.");
+                            continue;
+                        }
+
+                        var existing = RequiredItems.Find(r => r.ItemPrefab == requiredItem);
+                        if (existing == null)
+                        {
+                            RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
+                        }
+                        else
+                        {
+
+                            RequiredItems.Remove(existing);
+                            RequiredItems.Add(new RequiredItem(requiredItem, existing.Amount + count, minCondition, useCondition));
+                        }
+
+                        break;
+                }
+            }
+        }
+    }
+
     partial class ItemPrefab : MapEntityPrefab
     {
         private readonly string configFile;
@@ -47,6 +141,8 @@ namespace Barotrauma
         //an area next to the construction
         //the construction can be Activated() by a Character inside the area
         public List<Rectangle> Triggers;
+
+        private List<XElement> fabricationRecipeElements = new List<XElement>();
 
         public string ConfigFile
         {
@@ -313,6 +409,18 @@ namespace Barotrauma
                 else
                 {
                     new ItemPrefab(doc.Root, filePath);
+                }
+            }
+
+            //initialize item requirements for fabrication recipes
+            //(has to be done after all the item prefabs have been loaded, because the 
+            //recipe ingredients may not have been loaded yet when loading the prefab)
+            foreach (MapEntityPrefab me in List)
+            {
+                if (!(me is ItemPrefab itemPrefab)) { continue; }
+                foreach (XElement fabricationRecipe in itemPrefab.fabricationRecipeElements)
+                {
+                    itemPrefab.FabricationRecipes.Add(new FabricationRecipe(fabricationRecipe, itemPrefab));
                 }
             }
         }

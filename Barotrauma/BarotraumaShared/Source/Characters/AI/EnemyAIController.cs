@@ -631,8 +631,7 @@ namespace Barotrauma
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var previousLimb = AttackingLimb;
-                                    var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, AttackingLimb);
                                     if (newLimb != null)
                                     {
                                         // Attack with the new limb
@@ -680,8 +679,7 @@ namespace Barotrauma
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var previousLimb = AttackingLimb;
-                                    var newLimb = GetAttackLimb(attackWorldPos, previousLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, AttackingLimb);
                                     if (newLimb != null)
                                     {
                                         // Attack with the new limb
@@ -707,16 +705,15 @@ namespace Barotrauma
                     default:
                         UpdateFallBack(attackWorldPos, deltaTime);
                         return;
-
                 }
             }
 
-            if (AttackingLimb == null || _previousAiTarget != SelectedAiTarget)
-            {
-                AttackingLimb = GetAttackLimb(attackWorldPos);
-            }
             if (canAttack)
             {
+                if (AttackingLimb == null || _previousAiTarget != SelectedAiTarget)
+                {
+                    AttackingLimb = GetAttackLimb(attackWorldPos);
+                }
                 canAttack = AttackingLimb != null && AttackingLimb.attack.CoolDownTimer <= 0;
             }
             float distance = 0;
@@ -725,6 +722,12 @@ namespace Barotrauma
                 // Check that we can reach the target
                 distance = Vector2.Distance(AttackingLimb.WorldPosition, attackWorldPos);
                 canAttack = distance < AttackingLimb.attack.Range;
+                if (!canAttack && !IsCoolDownRunning)
+                {
+                    // If not, reset the attacking limb, if the cooldown is not running
+                    // Don't use the property, because we don't want cancel reversing, if we are reversing.
+                    _attackingLimb = null;
+                }
             }
 
             // If the attacking limb is a hand or claw, for example, using it as the steering limb can end in the result where the character circles around the target. For example the Hammerhead steering with the claws when it should use the torso.
@@ -794,7 +797,6 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
-            return false;
         }
 
         private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
@@ -1041,7 +1043,7 @@ namespace Barotrauma
             }
             else
             {
-                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition));
+                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
             }
         }
 
@@ -1165,15 +1167,15 @@ namespace Barotrauma
                     else if (target.Entity is Structure s)
                     {
                         targetingTag = "wall";
+                        if (!s.HasBody)
+                        {
+                            // Ignore structures that doesn't have a body (not walls)
+                            continue;
+                        }
+                        // Ignore walls when inside.
+                        valueModifier = character.CurrentHull == null ? 1 : 0;
                         if (aggressiveBoarding)
                         {
-                            // Ignore walls when inside.
-                            valueModifier = character.CurrentHull == null ? 2 : 0;
-                            if (valueModifier > 0)
-                            {
-                                // Ignore structures that doesn't have a body (not walls)
-                                valueModifier *= s.HasBody ? 1 : 0;
-                            }
                             for (int i = 0; i < s.Sections.Length; i++)
                             {
                                 var section = s.Sections[i];
@@ -1188,6 +1190,23 @@ namespace Barotrauma
                                     // up to 100% priority increase for every gap in the wall
                                     valueModifier *= 1 + section.gap.Open;
                                 }
+                            }
+                        }
+                        else
+                        {
+                            // Ignore disabled walls
+                            bool isDisabled = true;
+                            for (int i = 0; i < s.Sections.Length; i++)
+                            {
+                                if (!s.SectionBodyDisabled(i))
+                                {
+                                    isDisabled = false;
+                                    break;
+                                }
+                            }
+                            if (isDisabled)
+                            {
+                                valueModifier = 0;
                             }
                         }
                     }

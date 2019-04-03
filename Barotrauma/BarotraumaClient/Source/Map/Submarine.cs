@@ -278,19 +278,22 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) messageBox.Close(); return true; }
             };
             background.RectTransform.SetAsFirstChild();
+            CreatePreviewWindow(messageBox.Content);
+        }
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
-
-            var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), messageBox.Content.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
-            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.35f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter));
+        public void CreatePreviewWindow(GUIComponent parent)
+        {
+            var upperPart = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.4f), parent.RectTransform, Anchor.Center, Pivot.BottomCenter));
+            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.35f), parent.RectTransform, Anchor.Center, Pivot.TopCenter)) { ScrollBarVisible = true };
 
             if (PreviewImage == null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
             }
             else
             {
-                new GUIImage(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), PreviewImage);
+                var submarinePreviewBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), upperPart.RectTransform)) { Color = Color.Black };
+                new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f), submarinePreviewBackground.RectTransform), PreviewImage, scaleToFit: true);
             }
 
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
@@ -298,30 +301,42 @@ namespace Barotrauma
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
 
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform, Anchor.TopRight));
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), 
                 $"{TextManager.Get("Dimensions")}: {dimensionsStr}",
-                font: GUI.SmallFont, wrap: true);
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                 $"{TextManager.Get("RecommendedCrewSize")}: {(RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax)}",
-                font: GUI.SmallFont, wrap: true);
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                 $"{TextManager.Get("RecommendedCrewExperience")}: {(string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : TextManager.Get(RecommendedCrewExperience))}",
-                font: GUI.SmallFont, wrap: true);
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
-                $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
-                font: GUI.SmallFont, wrap: true);
-            
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
+                $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}",
+                font: GUI.Font, wrap: true)
+            { CanBeFocused = false };
+
+            //space
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), descriptionBox.Content.RectTransform), style: null);
+
+            if (Description.Length != 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("SaveSubDialogDescription") + ":", font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
+            }
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Description, font: GUI.Font, wrap: true)
             {
                 CanBeFocused = false
             };
         }
-
+        
         public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
         {
             Rectangle worldBorders = GetDockedBorders();

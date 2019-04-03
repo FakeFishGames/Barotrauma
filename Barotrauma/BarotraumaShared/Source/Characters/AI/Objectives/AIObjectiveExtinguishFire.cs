@@ -84,12 +84,9 @@ namespace Barotrauma
                     useExtinquisherTimer += deltaTime;
                     if (useExtinquisherTimer > 2.0f) useExtinquisherTimer = 0.0f;
 
+                    character.AIController.SteeringManager.Reset();
                     character.CursorPosition = fs.Position;
                     character.SetInput(InputType.Aim, false, true);
-                    if (!character.IsClimbing)
-                    {
-                        character.AIController.SteeringManager.Reset();
-                    }
                     extinguisher.Use(deltaTime, character);
 
                     if (!targetHull.FireSources.Contains(fs))
