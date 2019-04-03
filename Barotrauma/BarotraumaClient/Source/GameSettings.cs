@@ -634,7 +634,7 @@ namespace Barotrauma
             var inputNames = Enum.GetValues(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
-                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform)) { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = Color.DarkGray * 0.25f };
+                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform)) { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = Color.Black * 0.65f };
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
                     TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
                 var keyBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform),
@@ -646,7 +646,7 @@ namespace Barotrauma
                 keyBox.SelectedColor = Color.Gold * 0.3f;
 
                 //spacing
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.005f), inputFrame.RectTransform), style: null);
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), inputFrame.RectTransform), style: null);
             }
             GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("AimAssist"));
             GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform),
@@ -663,6 +663,25 @@ namespace Barotrauma
                 Step = 0.1f
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
+
+            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (x, y) =>
+                {
+                    if (UnsavedSettings)
+                    {
+                        LoadPlayerConfig();
+                    }
+                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
+                    GUI.SettingsMenuOpen = false;
+                    return true;
+                }
+            };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
