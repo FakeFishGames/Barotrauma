@@ -607,6 +607,9 @@ namespace Barotrauma
             if (GameMain.GameSession?.CrewManager != null)
             {
                 disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
+                disallowedAreas.Add(new Rectangle(
+                    HUDLayoutSettings.ChatBoxArea.X - 150, HUDLayoutSettings.ChatBoxArea.Y, 
+                    HUDLayoutSettings.ChatBoxArea.Width + 150, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
