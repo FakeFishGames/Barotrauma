@@ -283,7 +283,9 @@ namespace Barotrauma
             
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
 
-            if (Character.AnimController is HumanoidAnimController)
+            //clients get the facing direction from the server
+            if (Character.AnimController is HumanoidAnimController && 
+                (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer || Character.Controlled == Character))
             {
                 if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
                 {
@@ -528,7 +530,8 @@ namespace Barotrauma
                 }
             }
 
-            if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
+            if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater &&
+                (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer || Character.Controlled == Character))
             {
                 Character.AnimController.TargetDir = Character.WorldPosition.X < attackWorldPos.X ? Direction.Right : Direction.Left;
             }
