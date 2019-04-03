@@ -426,7 +426,7 @@ namespace Barotrauma
             muteOnFocusLostBox.OnSelected = (tickBox) =>
             {
                 MuteOnFocusLost = tickBox.Selected;
-
+                UnsavedSettings = true;
                 return true;
             };
             
@@ -593,7 +593,39 @@ namespace Barotrauma
 
             /// Controls tab -------------------------------------------------------------
             var controlsLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Controls].RectTransform, Anchor.Center))
-                { RelativeSpacing = 0.01f };
+                { RelativeSpacing = 0.03f, Stretch = true };
+
+            GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("AimAssist"))
+            {
+                ToolTip = TextManager.Get("AimAssistToolTip")
+            };
+            GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform),
+                barSize: 0.05f)
+            {
+                UserData = aimAssistText,
+                BarScroll = MathUtils.InverseLerp(0.0f, 5.0f, AimAssistAmount),
+                ToolTip = TextManager.Get("AimAssistToolTip"),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    ChangeSliderText(scrollBar, scroll);
+                    AimAssistAmount = MathHelper.Lerp(0.0f, 5.0f, scroll);
+                    return true;
+                },
+                Step = 0.1f
+            };
+            aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
+
+            new GUITickBox(new RectTransform(new Vector2(0.5f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("EnableMouseLook"))
+            {
+                ToolTip = TextManager.Get("EnableMouseLookToolTip"),
+                Selected = EnableMouseLook,
+                OnSelected = (tickBox) =>
+                {
+                    EnableMouseLook = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
 
             var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), controlsLayoutGroup.RectTransform))
                 { Stretch = true };
@@ -627,6 +659,9 @@ namespace Barotrauma
                 Step = 0.1f
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
