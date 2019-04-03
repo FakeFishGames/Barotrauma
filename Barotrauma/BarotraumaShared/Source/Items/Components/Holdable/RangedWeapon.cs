@@ -57,6 +57,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             item.IsShootable = true;
+            item.RequireAimToUse = true;
         }
 
         public override void Update(float deltaTime, Camera cam)

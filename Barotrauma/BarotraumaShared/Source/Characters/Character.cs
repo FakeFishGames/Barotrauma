@@ -1276,14 +1276,20 @@ namespace Barotrauma
                     if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
                     var item = selectedItems[i];
                     if (item == null) { continue; }
-                    if (IsKeyDown(InputType.Use) && !item.IsShootable)
-                    {
-                        item.Use(deltaTime, this);
-                    }
                     if (IsKeyDown(InputType.Aim))
                     {
                         item.SecondaryUse(deltaTime, this);
-                        if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                    }
+                    if (IsKeyDown(InputType.Use) && !item.IsShootable)
+                    {
+                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
+                        {
+                            item.Use(deltaTime, this);
+                        }
+                    }
+                    if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                    {
+                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
                         {
                             item.Use(deltaTime, this);
                         }
@@ -1293,14 +1299,20 @@ namespace Barotrauma
             
             if (SelectedConstruction != null)
             {
-                if (IsKeyDown(InputType.Use) && !SelectedConstruction.IsShootable)
-                {
-                    SelectedConstruction.Use(deltaTime, this);
-                }
                 if (IsKeyDown(InputType.Aim))
                 {
                     SelectedConstruction.SecondaryUse(deltaTime, this);
-                    if (IsKeyDown(InputType.Shoot) && SelectedConstruction.IsShootable)
+                }
+                if (IsKeyDown(InputType.Use) && !SelectedConstruction.IsShootable)
+                {
+                    if (!SelectedConstruction.RequireAimToUse || IsKeyDown(InputType.Aim))
+                    {
+                        SelectedConstruction.Use(deltaTime, this);
+                    }
+                }
+                if (IsKeyDown(InputType.Shoot) && SelectedConstruction.IsShootable)
+                {
+                    if (!SelectedConstruction.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
                         SelectedConstruction.Use(deltaTime, this);
                     }

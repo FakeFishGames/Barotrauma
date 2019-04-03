@@ -161,7 +161,10 @@ namespace Barotrauma
         private void OperateRepairTool(float deltaTime)
         {
             character.CursorPosition = Item.Position;
-            character.SetInput(InputType.Aim, false, true);
+            if (Item.RequireAimToUse)
+            {
+                character.SetInput(InputType.Aim, false, true);
+            }
             Vector2 fromToolToTarget = Item.Position - repairTool.Item.Position;
             if (fromToolToTarget.LengthSquared() < MathUtils.Pow(repairTool.Range / 2, 2))
             {

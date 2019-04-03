@@ -204,7 +204,10 @@ namespace Barotrauma
         private void Attack(float deltaTime)
         {
             character.CursorPosition = Enemy.Position;
-            character.SetInput(InputType.Aim, false, true);
+            if (Weapon.RequireAimToUse)
+            {
+                character.SetInput(InputType.Aim, false, true);
+            }
             if (WeaponComponent is MeleeWeapon meleeWeapon)
             {
                 if (Vector2.DistanceSquared(character.Position, Enemy.Position) <= meleeWeapon.Range * meleeWeapon.Range)

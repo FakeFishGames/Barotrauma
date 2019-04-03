@@ -43,12 +43,6 @@ namespace Barotrauma.Items.Components
             set { userPos = value; }
         }
 
-        [Serialize(false, true)]
-        public bool RequireAimToUse
-        {
-            get; set;
-        }
-
         public Controller(Item item, XElement element)
             : base(item, element)
         {
@@ -152,7 +146,12 @@ namespace Barotrauma.Items.Components
 
                 limb.PullJointEnabled = true;
                 limb.PullJointWorldAnchorB = limb.SimPosition + ConvertUnits.ToSimUnits(diff);
-            }            
+            }
+            
+            if (!item.RequireAimToUse)
+            {
+                Control(deltaTime, character);
+            }
         }
 
         public override bool Use(float deltaTime, Character activator = null)
@@ -169,8 +168,6 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            if (RequireAimToUse && !activator.IsKeyDown(InputType.Aim)) return false;
-
             item.SendSignal(0, "1", "trigger_out", character);
             
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
@@ -179,6 +176,15 @@ namespace Barotrauma.Items.Components
         }
         
         public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            if (item.RequireAimToUse)
+            {
+                return Control(deltaTime, character);
+            }
+            return false;
+        }
+
+        private bool Control(float deltaTime, Character character = null)
         {
             if (this.character != character)
             {
@@ -191,7 +197,7 @@ namespace Barotrauma.Items.Components
                 this.character = null;
                 return false;
             }
-            if (character == null) return false;     
+            if (character == null) return false;
 
             focusTarget = GetFocusTarget();
             if (focusTarget == null)
@@ -204,7 +210,7 @@ namespace Barotrauma.Items.Components
                 targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
                 return false;
             }
-            
+
             character.ViewTarget = focusTarget;
 #if CLIENT
             if (character == Character.Controlled && cam != null)
@@ -215,7 +221,7 @@ namespace Barotrauma.Items.Components
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime * 10.0f);
             }
 #endif
-            
+
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
                 Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
@@ -235,7 +241,6 @@ namespace Barotrauma.Items.Components
 
                 targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
             }
-
             return true;
         }
 

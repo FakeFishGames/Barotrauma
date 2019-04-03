@@ -241,6 +241,15 @@ namespace Barotrauma
         [Serialize(false, false)]
         public bool IsShootable { get; set; }
 
+        /// <summary>
+        /// If true, the user has to hold the "aim" key before use is registered.
+        /// </summary>
+        [Serialize(false, false)]
+        public bool RequireAimToUse
+        {
+            get; set;
+        }
+
         public Color Color
         {
             get { return spriteColor; }
@@ -1454,6 +1463,11 @@ namespace Barotrauma
 
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
+            if (RequireAimToUse && !character.IsKeyDown(InputType.Aim))
+            {
+                return;
+            }
+
             if (condition == 0.0f) return;
 
             bool remove = false;
