@@ -23,8 +23,6 @@ namespace Barotrauma
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
 
-        private float pressureParticleTimer;
-
         private float findFocusedTimer;
 
         protected float lastRecvPositionUpdateTime;
@@ -172,23 +170,13 @@ namespace Barotrauma
                 {
                     if (needsAir &&
                         pressureProtection < 80.0f &&
-                        (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
+                        (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
                     {
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
-                        if (pressure > 0.0f)
-                        {
-                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f, 0.1f, 1.0f);
-                            cam.Zoom = MathHelper.Lerp(cam.Zoom,
-                                cam.DefaultZoom + (Math.Max(pressure, 10) / 150.0f) * Rand.Range(0.9f, 1.1f),
-                                zoomInEffectStrength);
 
-                            pressureParticleTimer += pressure * deltaTime;
-                            if (pressureParticleTimer > 10.0f)
-                            {
-                                Particle p = GameMain.ParticleManager.CreateParticle("waterblood", WorldPosition + Rand.Vector(5.0f), Rand.Vector(10.0f));
-                                pressureParticleTimer = 0.0f;
-                            }
-                        }
+                        cam.Zoom = MathHelper.Lerp(cam.Zoom,
+                            (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
+                            (pressure - 50.0f) / 50.0f);
                     }
 
                     if (IsHumanoid)

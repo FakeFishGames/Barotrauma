@@ -1898,7 +1898,7 @@ namespace Barotrauma
                 //cannot be protected from pressure when below crush depth
                 protectedFromPressure = protectedFromPressure && WorldPosition.Y > CharacterHealth.CrushDepth;
                 //implode if not protected from pressure, and either outside or in a high-pressure hull
-                if (!protectedFromPressure &&
+                if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
                     if (CharacterHealth.PressureKillDelay <= 0.0f)
@@ -1913,7 +1913,7 @@ namespace Barotrauma
 
                     if (PressureTimer >= 100.0f)
                     {
-                        if (Controlled == this) { cam.Zoom = 5.0f; }
+                        if (Controlled == this) cam.Zoom = 5.0f;
                         if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
                             Implode();
