@@ -172,6 +172,11 @@ namespace Barotrauma
         {
             base.Select();
 
+            foreach (LevelObjectPrefab levelObjPrefab in LevelObjectPrefab.List)
+            {
+                levelObjPrefab.Sprite?.EnsureLazyLoaded();
+            }
+
             pointerLightSource = new LightSource(Vector2.Zero, 1000.0f, Color.White, submarine: null);
             GameMain.LightManager.AddLight(pointerLightSource);
             topPanel.ClearChildren();

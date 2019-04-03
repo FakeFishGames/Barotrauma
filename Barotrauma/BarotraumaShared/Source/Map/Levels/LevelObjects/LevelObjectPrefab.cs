@@ -337,7 +337,7 @@ namespace Barotrauma
                         SpecularSprite = new Sprite(subElement, lazyLoad: true);
                         break;
                     case "deformablesprite":
-                        DeformableSprite = new DeformableSprite(subElement);
+                        DeformableSprite = new DeformableSprite(subElement, lazyLoad: true);
                         break;
                     case "overridecommonness":
                         string levelType = subElement.GetAttributeString("leveltype", "");
