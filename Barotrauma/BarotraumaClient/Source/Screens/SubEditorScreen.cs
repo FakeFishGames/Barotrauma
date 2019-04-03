@@ -189,15 +189,16 @@ namespace Barotrauma
                 return true;
             };
 
-            LeftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, "GUIFrameLeft");
-            GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(
-                new Point((int)(LeftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - TopPanel.Rect.Height * 0.95f)),
-                LeftPanel.RectTransform, Anchor.Center)
-            { AbsoluteOffset = new Point(0, TopPanel.Rect.Height) })
+            LeftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, style: null) { Color = Color.Black * 0.75f };
+
+            GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Point((int)(LeftPanel.Rect.Width), (int)(GameMain.GraphicsHeight - TopPanel.Rect.Height * 0.95f)),
+                LeftPanel.RectTransform, Anchor.Center))
             {
-                RelativeSpacing = 0.01f,
                 Stretch = true
             };
+
+            //empty guiframe as a separator
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform) { AbsoluteOffset = new Point(0, TopPanel.Rect.Height) }, style: null);
 
             GUITextBlock itemCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), "ItemCount")
             {
@@ -240,10 +241,9 @@ namespace Barotrauma
             //Entity menu
             //------------------------------------------------
 
-            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width + 20, (int)(300 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight),
-                style: "GUIFrameBottom");
+            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width, (int)(320 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight), style: null) { Color = Color.Black * 0.75f };
 
-            toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.12f) },
+            toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.1f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.05f) },
                 style: "GUIButtonVerticalArrow")
             {
                 OnClicked = (btn, userdata) =>
@@ -259,7 +259,25 @@ namespace Barotrauma
                 }
             };
 
-            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.1f), EntityMenu.RectTransform, Anchor.TopRight, Pivot.BottomRight),
+            var paddedTab = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), EntityMenu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.025f) }, style: null);
+
+            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedTab.RectTransform), isHorizontal: true)
+            {
+                Color = Color.DarkGray * 0.25f,
+                Stretch = true,
+                UserData = "filterarea"
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.Font);
+            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
+            entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), filterArea.RectTransform), "x")
+            {
+                OnClicked = (btn, userdata) => { ClearFilter(); entityFilterBox.Flash(Color.White); return true; }
+            };
+
+            var entityListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), paddedTab.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) });
+
+            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.1f), entityListHolder.RectTransform, Anchor.TopRight, Pivot.BottomRight),
                 isHorizontal: true)
             {
                 RelativeSpacing = 0.01f,
@@ -280,21 +298,7 @@ namespace Barotrauma
                 });
             }
 
-            var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.8f), EntityMenu.RectTransform, Anchor.Center), style: null);
-            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedTab.RectTransform), isHorizontal: true)
-            {
-                AbsoluteSpacing = 5,
-                Stretch = true,
-                UserData = "filterarea"
-            };
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.SmallFont);
-            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont);
-            entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), "x")
-            {
-                OnClicked = (btn, userdata) => { ClearFilter(); entityFilterBox.Flash(Color.White); return true; }
-            };
-            entityList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), paddedTab.RectTransform, Anchor.BottomCenter))
+            entityList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), entityListHolder.RectTransform, Anchor.BottomCenter))
             {
                 OnSelected = SelectPrefab,
                 UseGridLayout = true,
@@ -305,7 +309,10 @@ namespace Barotrauma
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
 
-            characterModeTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("CharacterModeButton"))
+            var characterModeTickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.01f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 32) })
+            { Color = Color.DarkGray * 0.25f };
+
+            characterModeTickBox = new GUITickBox(new RectTransform(new Point(32, 32), characterModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("CharacterModeButton"))
             {
                 ToolTip = TextManager.Get("CharacterModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
@@ -314,7 +321,11 @@ namespace Barotrauma
                     return true;
                 }
             };
-            wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("WiringModeButton"))
+
+            var wiringModeTickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.01f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 32) })
+            { Color = Color.DarkGray * 0.25f };
+
+            wiringModeTickBox = new GUITickBox(new RectTransform(new Point(32, 32), wiringModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("WiringModeButton"))
             {
                 ToolTip = TextManager.Get("WiringModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
@@ -333,9 +344,13 @@ namespace Barotrauma
                 OnClicked = GenerateWaypoints
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowEntitiesLabel"));
+            // empty guiframe as a separator
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
 
-            var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
+            var showEntitiesHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.3f), paddedLeftPanel.RectTransform))
+            { Color = Color.DarkGray * 0.25f, Stretch = true, RelativeSpacing = 0.05f };
+
+            var tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLighting"))
             {
                 Selected = lightingEnabled,
                 OnSelected = (GUITickBox obj) => 
@@ -357,52 +372,49 @@ namespace Barotrauma
                     return true;
                 }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWalls"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowWalls"))
             {
                 Selected = Structure.ShowWalls,
                 OnSelected = (GUITickBox obj) => { Structure.ShowWalls = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowStructures"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowStructures"))
             {
                 Selected = Structure.ShowStructures,
                 OnSelected = (GUITickBox obj) => { Structure.ShowStructures = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowItems"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowItems"))
             {
                 Selected = Item.ShowItems,
                 OnSelected = (GUITickBox obj) => { Item.ShowItems = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWaypoints"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowWaypoints"))
             {
                 Selected = WayPoint.ShowWayPoints,
                 OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowSpawnpoints"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowSpawnpoints"))
             {
                 Selected = WayPoint.ShowSpawnPoints,
                 OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLinks"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLinks"))
             {
                 Selected = Item.ShowLinks,
                 OnSelected = (GUITickBox obj) => { Item.ShowLinks = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowHulls"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowHulls"))
             {
                 Selected = Hull.ShowHulls,
                 OnSelected = (GUITickBox obj) => { Hull.ShowHulls = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowGaps"))
+            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowGaps"))
             {
                 Selected = Gap.ShowGaps,
                 OnSelected = (GUITickBox obj) => { Gap.ShowGaps = obj.Selected; return true; },
             };
 
-            //empty guiframe as a separator
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), style: null);
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("PreviouslyUsedLabel"));
-            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedLeftPanel.RectTransform))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("PreviouslyUsedLabel"));
+            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) })
             {
                 OnSelected = SelectPrefab
             };
