@@ -241,7 +241,7 @@ namespace Barotrauma
             //Entity menu
             //------------------------------------------------
 
-            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width, (int)(320 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight), style: null) { Color = Color.Black * 0.75f };
+            EntityMenu = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - LeftPanel.Rect.Width, (int)(365 * GUI.Scale)), GUI.Canvas, Anchor.BottomRight), style: null) { Color = Color.Black * 0.75f };
 
             toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.1f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.05f) },
                 style: "GUIButtonVerticalArrow")
