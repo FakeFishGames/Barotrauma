@@ -1276,7 +1276,7 @@ namespace Barotrauma
                     if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
                     var item = selectedItems[i];
                     if (item == null) { continue; }
-                    if (IsKeyDown(InputType.Aim))
+                    if (IsKeyDown(InputType.Aim) || !item.RequireAimToSecondaryUse)
                     {
                         item.SecondaryUse(deltaTime, this);
                     }
@@ -1299,7 +1299,7 @@ namespace Barotrauma
             
             if (SelectedConstruction != null)
             {
-                if (IsKeyDown(InputType.Aim))
+                if (IsKeyDown(InputType.Aim) || !SelectedConstruction.RequireAimToSecondaryUse)
                 {
                     SelectedConstruction.SecondaryUse(deltaTime, this);
                 }

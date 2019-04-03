@@ -355,7 +355,7 @@ namespace Barotrauma.Items.Components
             return characterUsable || character == null;
         }
 
-        //called when the item is equipped and the "aim" key is pressed
+        //called when the item is equipped and the "aim" key is pressed or when the item is selected if it doesn't require aiming.
         public virtual bool SecondaryUse(float deltaTime, Character character = null)
         {
             return false;
