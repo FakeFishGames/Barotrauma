@@ -1208,9 +1208,9 @@ namespace Barotrauma
 
         public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
-            base.FlipY(relativeToSub);
+            List<T> connectedComponents = new List<T>();
 
-            if (Prefab.CanSpriteFlipY)
+            if (recursive)
             {
                 List<Item> alreadySearched = new List<Item>() { this };
                 GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
