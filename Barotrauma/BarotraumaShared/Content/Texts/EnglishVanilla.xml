@@ -2733,13 +2733,13 @@
   <ItemMsgPickUpSelect>[[select]] Pick up</ItemMsgPickUpSelect>
   <ItemMsgClimbSelect>[[select]] Climb</ItemMsgClimbSelect>
   <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
-  <ItemMsgRewireScrewdriver>[Screwdriver] Rewire</ItemMsgRewireScrewdriver>
-  <ItemMsgDetachWrench>[Wrench] Detach</ItemMsgDetachWrench>
-  <ItemMsgForceOpenCrowbar>[Crowbar] Force open</ItemMsgForceOpenCrowbar>
-  <ItemMsgRepairScrewdriver>[Screwdriver] Repair</ItemMsgRepairScrewdriver>
-  <ItemMsgRepairWeldingTool>[Welding Tool] Repair</ItemMsgRepairWeldingTool>
-  <ItemMsgRepairWrench>[Wrench] Repair</ItemMsgRepairWrench>
-  <ItemMsgUsePlasmaCutter>[Plasma Cutter] Cut</ItemMsgUsePlasmaCutter>
+  <ItemMsgRewireScrewdriver>[[use]] Rewire (Screwdriver)</ItemMsgRewireScrewdriver>
+  <ItemMsgDetachWrench>[[use]] Detach (Wrench)</ItemMsgDetachWrench>
+  <ItemMsgForceOpenCrowbar>[[use]] Force open (Crowbar)</ItemMsgForceOpenCrowbar>
+  <ItemMsgRepairScrewdriver>[[use]] Repair (Screwdriver)</ItemMsgRepairScrewdriver>
+  <ItemMsgRepairWeldingTool>[[shoot]] Repair (Welding Tool)</ItemMsgRepairWeldingTool>
+  <ItemMsgRepairWrench>[[use]] Repair (Wrench)</ItemMsgRepairWrench>
+  <ItemMsgUsePlasmaCutter>[[shoot]] Cut (Plasma Cutter)</ItemMsgUsePlasmaCutter>
   
   <DropItem>Drop</DropItem>
   <PutItemIn>Put in [itemname]</PutItemIn>
