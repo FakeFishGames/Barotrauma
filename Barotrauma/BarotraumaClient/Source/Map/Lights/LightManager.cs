@@ -78,9 +78,8 @@ namespace Barotrauma.Lights
 
             AmbientLight = new Color(20, 20, 20, 255);
 
-            visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
-
-            highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png");
+            visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png", preMultiplyAlpha: false);
+            highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png", preMultiplyAlpha: false);
 
             CreateRenderTargets(graphics);
             GameMain.Instance.OnResolutionChanged += () =>

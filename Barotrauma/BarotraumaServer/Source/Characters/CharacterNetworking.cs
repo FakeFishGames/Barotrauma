@@ -362,7 +362,7 @@ namespace Barotrauma
                     }
                     tempBuffer.Write(IsRagdolled);
 
-                    tempBuffer.Write(AnimController.TargetDir == Direction.Right);
+                    tempBuffer.Write(AnimController.Dir > 0.0f);
                 }
 
                 if (SelectedCharacter != null || SelectedConstruction != null)

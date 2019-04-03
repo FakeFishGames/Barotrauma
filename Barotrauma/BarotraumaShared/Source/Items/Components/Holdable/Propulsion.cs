@@ -1,5 +1,6 @@
 ﻿using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Networking;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Particles;
@@ -83,15 +84,20 @@ namespace Barotrauma.Items.Components
 
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                if (limb.WearingItems.Find(w => w.WearableComponent.Item == this.item)==null) continue;
-
-                limb.body.ApplyForce(propulsion);
+                if (limb.WearingItems.Find(w => w.WearableComponent.Item == this.item) == null) continue;
+                limb.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
 
-            character.AnimController.Collider.ApplyForce(propulsion);
+            character.AnimController.Collider.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
-            if (character.SelectedItems[0] == item) character.AnimController.GetLimb(LimbType.RightHand).body.ApplyForce(propulsion);
-            if (character.SelectedItems[1] == item) character.AnimController.GetLimb(LimbType.LeftHand).body.ApplyForce(propulsion);
+            if (character.SelectedItems[0] == item)
+            {
+                character.AnimController.GetLimb(LimbType.RightHand)?.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            }
+            if (character.SelectedItems[1] == item)
+            {
+                character.AnimController.GetLimb(LimbType.LeftHand)?.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            }
 
 #if CLIENT
             if (!string.IsNullOrWhiteSpace(particles))

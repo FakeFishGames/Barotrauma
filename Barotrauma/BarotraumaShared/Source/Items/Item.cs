@@ -1101,7 +1101,7 @@ namespace Barotrauma
             }
             ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
-            if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
@@ -1140,6 +1140,11 @@ namespace Barotrauma
         /// </summary>
         private void ApplyWaterForces()
         {
+            if (body.Mass <= 0.0f)
+            {
+                return;
+            }
+
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
@@ -1158,7 +1163,7 @@ namespace Barotrauma
 
             Vector2 drag = body.LinearVelocity * volume;
 
-            body.ApplyForce((uplift - drag) * 10.0f);
+            body.ApplyForce((uplift - drag) * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);                    
@@ -1620,6 +1625,8 @@ namespace Barotrauma
                     GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
                 {
                     parentInventory.CreateNetworkEvent();
+                    //send frequent updates after the item has been dropped
+                    PositionUpdateInterval = 0.0f;
                 }
             }
 

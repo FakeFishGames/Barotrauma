@@ -23,6 +23,8 @@ namespace Barotrauma
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
 
+        private float pressureParticleTimer;
+
         private float findFocusedTimer;
 
         protected float lastRecvPositionUpdateTime;
@@ -165,27 +167,38 @@ namespace Barotrauma
                     keys[i].SetState();
                 }
 
+                float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
                     if (needsAir &&
                         pressureProtection < 80.0f &&
-                        (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
+                        (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
+                        if (pressure > 0.0f)
+                        {
+                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f, 0.1f, 1.0f);
+                            cam.Zoom = MathHelper.Lerp(cam.Zoom,
+                                cam.DefaultZoom + (Math.Max(pressure, 10) / 150.0f) * Rand.Range(0.9f, 1.1f),
+                                zoomInEffectStrength);
 
-                        cam.Zoom = MathHelper.Lerp(cam.Zoom,
-                            (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
-                            (pressure - 50.0f) / 50.0f);
+                            pressureParticleTimer += pressure * deltaTime;
+                            if (pressureParticleTimer > 10.0f)
+                            {
+                                Particle p = GameMain.ParticleManager.CreateParticle("waterblood", WorldPosition + Rand.Vector(5.0f), Rand.Vector(10.0f));
+                                pressureParticleTimer = 0.0f;
+                            }
+                        }
                     }
 
                     if (IsHumanoid)
                     {
-                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
+                        cam.OffsetAmount = 250.0f;// MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
                     }
                     else
                     {
                         //increased visibility range when controlling large a non-humanoid
-                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
+                        cam.OffsetAmount = MathHelper.Clamp(Mass, 250.0f, 1500.0f);
                     }
                 }
 
@@ -198,35 +211,48 @@ namespace Barotrauma
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 if (GUI.PauseMenuOpen)
                 {
+                    targetOffsetAmount = 0.0f;
                     cam.OffsetAmount = 0.0f;
                 }
                 else if (SelectedConstruction != null && ViewTarget == null && 
                     SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
+                    targetOffsetAmount = 0.0f;
                     cam.OffsetAmount = 0.0f;
                     cursorPosition = 
                         SelectedConstruction.Position + 
                         new Vector2(cursorPosition.X % 10.0f, cursorPosition.Y % 10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
+                else if (!GameMain.Config.EnableMouseLook)
+                {
+                    targetOffsetAmount = 0.0f;
+                    cam.OffsetAmount = 0.0f;
+                }
                 else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                 {
                     if (GUI.PauseMenuOpen || IsUnconscious)
                     {
-                        if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
+                        if (deltaTime > 0.0f)
+                        {
+                            targetOffsetAmount = 0.0f;
+                            cam.OffsetAmount = 0.0f;
+                        }
                     }
                     else
                     {
                         Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
-                        Structure structure = body == null ? null : body.UserData as Structure;
+                        Structure structure = body?.UserData as Structure;
 
                         float sightDist = Submarine.LastPickedFraction;
                         if (body?.UserData is Structure && !((Structure)body.UserData).CastShadow)
                         {
                             sightDist = 1.0f;
                         }
-                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Math.Max(250.0f, sightDist * 500.0f), 0.05f);
+                        targetOffsetAmount = Math.Max(250.0f, sightDist * 500.0f);
                     }
                 }
+
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, targetOffsetAmount, 0.05f);
 
                 if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)))
                 {
@@ -700,7 +726,7 @@ namespace Barotrauma
             for (int i = 0; i < 10; i++)
             {
                 Particle p = GameMain.ParticleManager.CreateParticle("waterblood",
-                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(5.0f),
+                    WorldPosition + Rand.Vector(5.0f),
                     Rand.Vector(10.0f));
                 if (p != null) p.Size *= 2.0f;
 

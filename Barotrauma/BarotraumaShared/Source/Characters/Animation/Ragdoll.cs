@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             get
             {
-                return collider[colliderIndex];
+                return collider?[colliderIndex];
             }
         }
 
@@ -122,10 +122,10 @@ namespace Barotrauma
             }
             set
             {
-                if (value == colliderIndex) return;
+                if (value == colliderIndex || collider == null) return;
                 if (value >= collider.Count || value < 0) return;
 
-                if (collider[colliderIndex].height<collider[value].height)
+                if (collider[colliderIndex].height < collider[value].height)
                 {
                     Vector2 pos1 = collider[colliderIndex].SimPosition;
                     pos1.Y -= collider[colliderIndex].height * ColliderHeightFromFloor;
@@ -1094,7 +1094,7 @@ namespace Barotrauma
 
             if (flowForce.LengthSquared() > 0.001f)
             {
-                Collider.ApplyForce(flowForce);
+                Collider.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
 
             if (currentHull == null ||
@@ -1132,7 +1132,7 @@ namespace Barotrauma
 
                         if (flowForce.LengthSquared() > 0.001f)
                         {
-                            limb.body.ApplyForce(flowForce);
+                            limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         }
 
                         surfaceY = limbHull.Surface;

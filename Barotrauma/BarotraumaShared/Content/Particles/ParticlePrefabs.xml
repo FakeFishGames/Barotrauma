@@ -407,7 +407,7 @@
     blendstate="Additive"
     animduration="1.2"
     loopanim="True">
-    <animatedsprite texture="Content/Particles/FlameRoundParticleSheet.png" sourcerect="0,0,2048,2048" columns="10" rows="5" origin="0.5,0.8"/>
+    <animatedsprite texture="Content/Particles/FlameRoundParticleSheet.png" sourcerect="0,0,2048,2048" columns="10" rows="5" origin="0.5,0.8" premultiplyalpha="false"/>
   </flame>
 
   <steam
@@ -583,7 +583,7 @@
     blendstate="Additive"
     animduration="1"
     loopanim="False">
-    <animatedsprite texture="Content/Particles/FlameRoundParticleSheet.png" sourcerect="0,0,2048,2048" columns="10" rows="5" origin="0.5,0.8"/>
+    <animatedsprite texture="Content/Particles/FlameRoundParticleSheet.png" sourcerect="0,0,2048,2048" columns="10" rows="5" origin="0.5,0.8" premultiplyalpha="false"/>
   </explosionfire>
 
   <explosionsmoke
@@ -644,7 +644,7 @@
     blendstate="Additive"
     animduration="0.35"
     loopanim="False">
-    <animatedsprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="0,0,1024,384" columns="4" rows="3" origin="-0.1,0.5"/>
+    <animatedsprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="0,0,1024,384" columns="4" rows="3" origin="-0.1,0.5" premultiplyalpha="false"/>
   </muzzleflashcoilgun>
 
   <muzzleflashrailgun
@@ -676,7 +676,7 @@
     blendstate="Additive"
     animduration="0.5"
     loopanim="False">
-    <animatedsprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="0,512,1024,512" columns="4" rows="4" origin="-0.1,0.5"/>
+    <animatedsprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="0,512,1024,512" columns="4" rows="4" origin="-0.1,0.5" premultiplyalpha="false"/>
   </muzzleflashrailgun>
   
   <underwaterexplosion
@@ -707,7 +707,7 @@
     blendstate="Additive"
     animduration="3"
     loopanim="False">
-    <animatedsprite texture="Content/Particles/UnderwaterExplosionSheet.png" sourcerect="0,0,2040,2040" columns="10" rows="10" origin="0.5,0.5"/>
+    <animatedsprite texture="Content/Particles/UnderwaterExplosionSheet.png" sourcerect="0,0,2040,2040" columns="10" rows="10" origin="0.5,0.5" premultiplyalpha="false"/>
   </underwaterexplosion>
 
   <risingbubbles
@@ -738,7 +738,7 @@
     blendstate="Additive"
     animduration="4"
     loopanim="True">
-    <animatedsprite texture="Content/Particles/RisingBubbleSheet.png" sourcerect="0,0,1024,1024" columns="8" rows="8" origin="0.5,0.5"/>
+    <animatedsprite texture="Content/Particles/RisingBubbleSheet.png" sourcerect="0,0,1024,1024" columns="8" rows="8" origin="0.5,0.5" premultiplyalpha="false"/>
   </risingbubbles>
   
   <weld

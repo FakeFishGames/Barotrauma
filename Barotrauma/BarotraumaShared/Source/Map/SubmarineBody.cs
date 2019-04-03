@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
@@ -368,7 +369,7 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            Body.ApplyForce(force);
+            Body.ApplyForce(force, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
         }
 
         public void SetPosition(Vector2 position)

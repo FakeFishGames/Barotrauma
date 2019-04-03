@@ -65,6 +65,10 @@
           <Affliction identifier="internaldamage" strength="40" />
         </Explosion>
       </StatusEffect>
+      <!--Destroy this after exploding-->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true" >
+        <Remove />
+      </StatusEffect>
       <StatusEffect type="OnBroken">
         <Remove />
       </StatusEffect>
@@ -314,7 +318,7 @@
     </Throwable>
   </Item>
   <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
-    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="500" />
     <Deconstruct time="10">
@@ -323,7 +327,7 @@
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredSkill identifier="weapons" level="30"/>
-      <RequiredItem identifier="iron"/>
+      <RequiredItem identifier="steel"/>
       <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,0,58,64" />
@@ -360,7 +364,7 @@
     <!-- TODO: adjust prices -->
     <Price locationtype="City" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
-    <Price locationtype="Military" buyprice="15" />
+    <Price locationtype="Military" buyprice="10" />
     <Price locationtype="Outpost" buyprice="30" />
     <Deconstruct time="10">
       <Item identifier="iron" />

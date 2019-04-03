@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -1188,7 +1189,7 @@ namespace Barotrauma
             if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
 
             //apply forces to the collider to move the Character up/down
-            Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
+            Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             head.body.SmoothRotate(0.0f);
             
             if (!character.SelectedConstruction.Prefab.Triggers.Any())
@@ -1346,8 +1347,8 @@ namespace Barotrauma
 
                 if (cprPump >= 1)
                 {
-                    torso.body.ApplyForce(new Vector2(0, -1000f));
-                    targetTorso.body.ApplyForce(new Vector2(0, -1000f));
+                    torso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    targetTorso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     cprPump = 0;
 
                     if (skill < CPRSettings.DamageSkillThreshold)

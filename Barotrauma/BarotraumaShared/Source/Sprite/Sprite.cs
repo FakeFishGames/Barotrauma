@@ -28,6 +28,10 @@ namespace Barotrauma
         //the offset used when drawing the sprite
         protected Vector2 offset;
 
+        private bool preMultipliedAlpha;
+
+        private bool lazyLoad;
+
         protected Vector2 origin;
 
         //the size of the drawn sprite, if larger than the source,
@@ -99,8 +103,9 @@ namespace Barotrauma
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
 
-        public Sprite(XElement element, string path = "", string file = "")
+        public Sprite(XElement element, string path = "", string file = "", bool? preMultiplyAlpha = null, bool lazyLoad = false)
         {
+            this.lazyLoad = lazyLoad;
             SourceElement = element;
             if (file == "")
             {
@@ -123,8 +128,12 @@ namespace Barotrauma
 
             Name = SourceElement.GetAttributeString("name", null);
             Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
+            preMultipliedAlpha = preMultiplyAlpha ?? SourceElement.GetAttributeBool("premultiplyalpha", true);
             bool shouldReturn = false;
-            LoadTexture(ref sourceVector, ref shouldReturn, SourceElement.GetAttributeBool("premultiplyalpha", true));
+            if (!lazyLoad)
+            {
+                LoadTexture(ref sourceVector, ref shouldReturn, preMultipliedAlpha);
+            }
             if (shouldReturn) return;
             sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
             size = SourceElement.GetAttributeVector2("size", Vector2.One);

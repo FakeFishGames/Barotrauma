@@ -55,13 +55,13 @@
     <Background
       texture="Content/Map/iceBackgroundFade.png" />
     <BackgroundTop
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WallSpecular
-      texture="Content/Map/IceBackgroundSpecular.png" />
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
       texture="Content/Map/iceWallEdge.png" />
     <WallEdgeSpecular
@@ -99,13 +99,13 @@
     <Background
       texture="Content/Map/iceBackgroundFade.png" />
     <BackgroundTop
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WallSpecular
-      texture="Content/Map/IceBackgroundSpecular.png" />
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
       texture="Content/Map/iceWallEdge.png" />
     <WallEdgeSpecular
@@ -143,13 +143,13 @@
     <Background
       texture="Content/Map/iceBackgroundFade.png" />
     <BackgroundTop
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WaterParticles
       texture="Content/Map/BackgroundColorful.png" />
     <Wall
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WallSpecular
-      texture="Content/Map/IceBackgroundSpecular.png" />
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
       texture="Content/Map/iceWallEdge.png" />
     <WallEdgeSpecular
@@ -187,13 +187,13 @@
     <Background
       texture="Content/Map/iceBackgroundFade.png" />
     <BackgroundTop
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WallSpecular
-      texture="Content/Map/IceBackgroundSpecular.png" />
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
       texture="Content/Map/iceWallEdge.png" />
     <WallEdgeSpecular
@@ -231,13 +231,13 @@
     <Background
       texture="Content/Map/iceBackgroundFade.png" />
     <BackgroundTop
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WallSpecular
-      texture="Content/Map/IceBackgroundSpecular.png" />
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
       texture="Content/Map/iceWallEdge.png" />
     <WallEdgeSpecular
@@ -275,13 +275,13 @@
     <Background
       texture="Content/Map/iceBackgroundFade.png" />
     <BackgroundTop
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WaterParticles
       texture="Content/Map/BackgroundSmoke.png" />
     <Wall
-      texture="Content/Map/iceBackground.png" />
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
     <WallSpecular
-      texture="Content/Map/IceBackgroundSpecular.png" />
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
       texture="Content/Map/iceWallEdge.png" />
     <WallEdgeSpecular

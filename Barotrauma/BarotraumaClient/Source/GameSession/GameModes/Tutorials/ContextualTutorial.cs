@@ -624,9 +624,10 @@ namespace Barotrauma.Tutorials
 
         private Character CrewMemberWithJob(string job)
         {
+            job = job.ToLowerInvariant();
             for (int i = 0; i < crew.Count; i++)
             {
-                if (crew[i].Info.Job.Name == job) return crew[i];
+                if (crew[i].Info.Job.Prefab.Identifier.ToLowerInvariant() == job) return crew[i];
             }
 
             return null;

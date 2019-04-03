@@ -506,7 +506,7 @@ namespace Barotrauma
                 {
                     if (ScrollBar.IsHorizontal)
                     {
-                        if (pos + child.Rect.Height + spacing > Content.Rect.Height || child == children.Last())
+                        if (pos + child.Rect.Height + spacing > Content.Rect.Height)
                         {
                             pos = 0;
                             totalSize += child.Rect.Width + spacing;
@@ -515,10 +515,14 @@ namespace Barotrauma
                         {
                             pos += child.Rect.Height + spacing;
                         }
+                        if (child == children.Last())
+                        {
+                            totalSize += child.Rect.Width + spacing;
+                        }
                     }
                     else
                     {
-                        if (pos + child.Rect.Width + spacing > Content.Rect.Width || child == children.Last())
+                        if (pos + child.Rect.Width + spacing > Content.Rect.Width)
                         {
                             pos = 0;
                             totalSize += child.Rect.Height + spacing;
@@ -526,6 +530,11 @@ namespace Barotrauma
                         else
                         {
                             pos += child.Rect.Width + spacing;
+                        }
+
+                        if (child == children.Last())
+                        {
+                            totalSize += child.Rect.Height + spacing;
                         }
                     }
                 }
