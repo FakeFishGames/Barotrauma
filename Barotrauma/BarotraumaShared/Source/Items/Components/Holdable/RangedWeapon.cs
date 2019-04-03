@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -168,7 +169,8 @@ namespace Barotrauma.Items.Components
 
             //recoil
             item.body.ApplyLinearImpulse(
-                new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f);                
+                new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f, 
+                maxVelocity: NetConfig.MaxPhysicsBodyVelocity);                
 
             item.RemoveContained(projectile.Item);
                 
