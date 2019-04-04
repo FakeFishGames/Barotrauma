@@ -12,7 +12,7 @@ namespace Barotrauma
 {
     public partial class GameSettings
     {
-        private enum Tab
+        public enum Tab
         {
             Graphics,
             Audio,
@@ -70,7 +70,7 @@ namespace Barotrauma
             settingsFrame = null;
         }
 
-        private void CreateSettingsFrame()
+        public void CreateSettingsFrame(Tab selectedTab = Tab.Graphics)
         {
             settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
 
@@ -706,8 +706,15 @@ namespace Barotrauma
                     LoadDefaultConfig();
                     CheckBindings(true);
                     ApplySettings();
-                    ResetSettingsFrame();
-                    CreateSettingsFrame();
+                    if (Screen.Selected == GameMain.MainMenuScreen)
+                    {
+                        GameMain.MainMenuScreen.ResetSettingsFrame(currentTab);
+                    }
+                    else
+                    {
+                        ResetSettingsFrame();
+                        CreateSettingsFrame(currentTab);
+                    }
                     return true;
                 }
             };
@@ -721,9 +728,10 @@ namespace Barotrauma
             applyButton.OnClicked = ApplyClicked;
 
             UnsavedSettings = false; // Reset unsaved settings to false once the UI has been created
-            SelectTab(Tab.Graphics);
+            SelectTab(selectedTab);
         }
 
+        private Tab currentTab;
         private void SelectTab(Tab tab)
         {
             switch (tab)
@@ -749,6 +757,7 @@ namespace Barotrauma
                 tabs[i].Visible = (Tab)tabs[i].UserData == tab;
                 tabButtons[i].Selected = tabs[i].Visible;
             }
+            currentTab = tab;
         }
 
         private void KeyBoxSelected(GUITextBox textBox, Keys key)
@@ -765,14 +774,13 @@ namespace Barotrauma
             ApplySettings();
             if (Screen.Selected == GameMain.MainMenuScreen)
             {
-                GameMain.MainMenuScreen.ResetSettingsFrame();
+                GameMain.MainMenuScreen.ResetSettingsFrame(Tab.Controls);
             }
             else
             {
                 ResetSettingsFrame();
-                CreateSettingsFrame();
+                CreateSettingsFrame(Tab.Controls);
             }
-            SelectTab(Tab.Controls);
         }
 
         private bool SelectResolution(GUIComponent selected, object userData)
