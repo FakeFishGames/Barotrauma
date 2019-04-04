@@ -186,10 +186,11 @@
   <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
   
   <!-- Steam Workshop menu -->
+  <ModsTab>Mods</ModsTab>
   <BrowseTab>Browse</BrowseTab>
   <PublishTab>Publish</PublishTab>
   <DownloadButton>Download</DownloadButton>
-  <SubscribedMods>Mods</SubscribedMods>
+  <SubscribedMods>Subscribed mods</SubscribedMods>
   <NoSubscribedMods>You haven't subscribed to any mods on the Steam Workshop. Click the "Find more mods" button below to get started!</NoSubscribedMods>
   <PopularMods>Popular mods</PopularMods>
   <FindModsButton>Find more mods...</FindModsButton>
