@@ -612,7 +612,7 @@ namespace Barotrauma
             }
 
             List<Rectangle> disallowedAreas = new List<Rectangle>();
-            if (GameMain.GameSession?.CrewManager != null)
+            if (GameMain.GameSession?.CrewManager != null && Screen.Selected == GameMain.GameScreen)
             {
                 disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
                 disallowedAreas.Add(new Rectangle(
