@@ -527,10 +527,11 @@ namespace Barotrauma
             }
         }
 
-        public void ResetSettingsFrame()
+        public void ResetSettingsFrame(GameSettings.Tab selectedTab = GameSettings.Tab.Graphics)
         {
             menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
             GameMain.Config.ResetSettingsFrame();
+            GameMain.Config.CreateSettingsFrame(selectedTab);
             GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
             GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
         }
