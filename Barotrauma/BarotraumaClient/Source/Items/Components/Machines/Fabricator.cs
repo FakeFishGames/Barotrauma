@@ -361,11 +361,6 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Client != null)
             {
-                inadequateSkills = selectedItem.RequiredSkills.FindAll(skill => user.GetSkillLevel(skill.Identifier) < skill.Level);
-            }
-            
-            if (selectedItem.RequiredSkills.Any())
-            {
                 string text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
                 foreach (Skill skill in selectedItem.RequiredSkills)
                 {

@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             item.IsShootable = true;
+            item.RequireAimToUse = true;
             InitProjSpecific(element);
         }
 
@@ -311,7 +312,10 @@ namespace Barotrauma.Items.Components
 
             sinTime += deltaTime;
             character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
-            character.SetInput(InputType.Aim, false, true);
+            if (item.RequireAimToUse)
+            {
+                character.SetInput(InputType.Aim, false, true);
+            }
 
             // Press the trigger only when the tool is approximately facing the target.
             // If the character is climbing, ignore the check, because we cannot aim while climbing.

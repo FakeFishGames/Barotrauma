@@ -164,6 +164,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             item.IsShootable = true;
+            item.RequireAimToUse = false;
             InitProjSpecific(element);
         }
 
@@ -488,7 +489,10 @@ namespace Barotrauma.Items.Components
 
             character.CursorPosition = closestEnemy.WorldPosition;
             if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
-            character.SetInput(InputType.Aim, false, true);
+            if (item.RequireAimToUse)
+            {
+                character.SetInput(InputType.Aim, false, true);
+            }
 
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
