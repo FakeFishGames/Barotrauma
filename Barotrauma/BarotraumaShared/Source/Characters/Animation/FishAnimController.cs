@@ -696,7 +696,7 @@ namespace Barotrauma
                     return;
                 }
 
-                limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength, maxVelocity: 10.0f);
+                limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength);
             }
         }
 

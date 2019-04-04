@@ -70,7 +70,6 @@ namespace Barotrauma
         private GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect, bool scaleToFit, string style) : base(style, rectT)
         {
             this.scaleToFit = scaleToFit;
-            sprite?.EnsureLazyLoaded();
             Sprite = sprite;
             if (sourceRect.HasValue)
             {

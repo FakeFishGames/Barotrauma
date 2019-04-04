@@ -297,8 +297,60 @@ namespace Barotrauma
             LoadPlayerConfig();
         }
 
+        private void CheckBindings(bool useDefaults)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                var binding = keyMapping[(int)inputType];
+                if (binding == null)
+                {
+                    switch (inputType)
+                    {
+                        case InputType.Deselect:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(1);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var selectKey = keyMapping[(int)InputType.Select];
+                                if (selectKey != null && selectKey.Key != Keys.None)
+                                {
+                                    binding = new KeyOrMouse(selectKey.Key);
+                                }
+                            }
+                            break;
+                        case InputType.Shoot:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(0);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var useKey = keyMapping[(int)InputType.Use];
+                                if (useKey != null && useKey.MouseButton.HasValue)
+                                {
+                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (binding == null)
+                    {
+                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
+                        binding = new KeyOrMouse(Keys.D1);
+                    }
+                    keyMapping[(int)inputType] = binding;
+                }
+            }
+        }
+
         #region Load DefaultConfig
-        public void LoadDefaultConfig()
+        private void LoadDefaultConfig()
         {
             XDocument doc = XMLExtensions.TryLoadXml(savePath);
 
@@ -396,12 +448,9 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
-            keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
-            keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
+            keyMapping[(int)InputType.Use] = new KeyOrMouse(Keys.E);
 
-            keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
-
-            keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
+            keyMapping[(int)InputType.Select] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
 
             foreach (XElement subElement in doc.Root.Elements())
@@ -738,275 +787,6 @@ namespace Barotrauma
                     VoiceSetting = voiceSetting;
                 }
             }
-
-            List<string> missingPackagePaths = new List<string>();
-            List<ContentPackage> incompatiblePackages = new List<ContentPackage>();
-            foreach (XElement subElement in doc.Root.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "contentpackage":
-                        string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
-                        var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
-                        if (matchingContentPackage == null)
-                        {
-                            missingPackagePaths.Add(path);
-                        }
-                        else if (!matchingContentPackage.IsCompatible())
-                        {
-                            incompatiblePackages.Add(matchingContentPackage);
-                        }
-                        else
-                        {
-                            SelectedContentPackages.Add(matchingContentPackage);
-                        }
-                        break;
-                }
-            }
-
-            TextManager.LoadTextPacks(SelectedContentPackages);
-
-            //display error messages after all content packages have been loaded
-            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
-            foreach (string missingPackagePath in missingPackagePaths)
-            {
-                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                .Replace("[packagename]", incompatiblePackage.Name)
-                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
-                                .Replace("[gameversion]", GameMain.Version.ToString()));
-            }
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                foreach (ContentFile file in contentPackage.Files)
-                {
-                    if (!System.IO.File.Exists(file.Path))
-                    {
-                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
-                        continue;
-                    }
-                    ToolBox.IsProperFilenameCase(file.Path);
-                }
-            }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
-
-            //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
-        }
-        #endregion
-
-        #region Save DefaultConfig
-        private void SaveNewDefaultConfig()
-        {
-            XDocument doc = new XDocument();
-            UnsavedSettings = false;
-
-            if (doc.Root == null)
-            {
-                doc.Add(new XElement("config"));
-            }
-
-            doc.Root.Add(
-                new XAttribute("language", TextManager.Language),
-                new XAttribute("masterserverurl", MasterServerUrl),
-                new XAttribute("autocheckupdates", AutoCheckUpdates),
-                new XAttribute("musicvolume", musicVolume),
-                new XAttribute("soundvolume", soundVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
-                new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount));
-
-            if (!ShowUserStatisticsPrompt)
-            {
-                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
-
-            if (WasGameUpdated)
-            {
-                doc.Root.Add(new XAttribute("wasgameupdated", true));
-            }
-            
-            XElement gMode = doc.Root.Element("graphicsmode");
-            if (gMode == null)
-            {
-                gMode = new XElement("graphicsmode");
-                doc.Root.Add(gMode);
-            }
-            if (GraphicsWidth == 0 || GraphicsHeight == 0)
-            {
-                gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
-            }
-            else
-            {
-                gMode.ReplaceAttributes(
-                    new XAttribute("width", GraphicsWidth),
-                    new XAttribute("height", GraphicsHeight),
-                    new XAttribute("vsync", VSyncEnabled),
-                    new XAttribute("displaymode", windowMode));
-            }
-
-            XElement gSettings = doc.Root.Element("graphicssettings");
-            if (gSettings == null)
-            {
-                gSettings = new XElement("graphicssettings");
-                doc.Root.Add(gSettings);
-            }
-
-            gSettings.ReplaceAttributes(
-                new XAttribute("particlelimit", ParticleLimit),
-                new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("specularity", SpecularityEnabled),
-                new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
-                new XAttribute("losmode", LosMode),
-                new XAttribute("hudscale", HUDScale),
-                new XAttribute("inventoryscale", InventoryScale));
-
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                if (contentPackage.Path.Contains(vanillaContentPackagePath))
-                {
-                    doc.Root.Add(new XElement("contentpackage", new XAttribute("path", contentPackage.Path)));
-                    break;
-                }
-            }
-
-            var keyMappingElement = new XElement("keymapping");
-            doc.Root.Add(keyMappingElement);
-            for (int i = 0; i < keyMapping.Length; i++)
-            {
-                if (keyMapping[i].MouseButton == null)
-                {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
-                }
-                else
-                {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].MouseButton));
-                }
-            }
-
-            var gameplay = new XElement("gameplay");
-            var jobPreferences = new XElement("jobpreferences");
-            foreach (string jobName in JobPreferences)
-            {
-                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
-            }
-            gameplay.Add(jobPreferences);
-            doc.Root.Add(gameplay);
-
-            var playerElement = new XElement("player",
-                new XAttribute("name", defaultPlayerName ?? ""),
-                new XAttribute("headindex", CharacterHeadIndex),
-                new XAttribute("gender", CharacterGender),
-                new XAttribute("race", CharacterRace),
-                new XAttribute("hairindex", CharacterHairIndex),
-                new XAttribute("beardindex", CharacterBeardIndex),
-                new XAttribute("moustacheindex", CharacterMoustacheIndex),
-                new XAttribute("faceattachmentindex", CharacterFaceAttachmentIndex));
-            doc.Root.Add(playerElement);
-
-            XmlWriterSettings settings = new XmlWriterSettings
-            {
-                Indent = true,
-                OmitXmlDeclaration = true,
-                NewLineOnAttributes = true
-            };
-
-            try
-            {
-                using (var writer = XmlWriter.Create(savePath, settings))
-                {
-                    doc.WriteTo(writer);
-                    writer.Flush();
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving game settings failed.", e);
-                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace);
-            }
-        }
-        #endregion
-
-        #region Load PlayerConfig
-        // TODO: DRY
-        public void LoadPlayerConfig()
-        {
-            XDocument doc = XMLExtensions.LoadXml(playerSavePath);
-
-            if (doc == null || doc.Root == null)
-            {
-                ShowUserStatisticsPrompt = true;
-                SaveNewPlayerConfig();
-                return;
-            }
-
-            Language = doc.Root.GetAttributeString("language", Language);
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
-            sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
-
-            XElement graphicsMode = doc.Root.Element("graphicsmode");
-            GraphicsWidth = graphicsMode.GetAttributeInt("width", GraphicsWidth);
-            GraphicsHeight = graphicsMode.GetAttributeInt("height", GraphicsHeight);
-            VSyncEnabled = graphicsMode.GetAttributeBool("vsync", VSyncEnabled);
-
-            XElement graphicsSettings = doc.Root.Element("graphicssettings");
-            ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", ParticleLimit);
-            LightMapScale = MathHelper.Clamp(graphicsSettings.GetAttributeFloat("lightmapscale", LightMapScale), 0.1f, 1.0f);
-            SpecularityEnabled = graphicsSettings.GetAttributeBool("specularity", SpecularityEnabled);
-            ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", ChromaticAberrationEnabled);
-            HUDScale = graphicsSettings.GetAttributeFloat("hudscale", HUDScale);
-            InventoryScale = graphicsSettings.GetAttributeFloat("inventoryscale", InventoryScale);
-            var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
-            if (!Enum.TryParse(losModeStr, out losMode))
-            {
-                losMode = LosMode.Transparent;
-            }
-
-#if CLIENT
-            if (GraphicsWidth == 0 || GraphicsHeight == 0)
-            {
-                GraphicsWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-                GraphicsHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
-            }
-#endif
-
-            var windowModeStr = graphicsMode.GetAttributeString("displaymode", "Fullscreen");
-            if (!Enum.TryParse(windowModeStr, out windowMode))
-            {
-                windowMode = WindowMode.Fullscreen;
-            }
-
-            XElement audioSettings = doc.Root.Element("audio");
-            if (audioSettings != null)
-            {
-                SoundVolume = audioSettings.GetAttributeFloat("soundvolume", SoundVolume);
-                MusicVolume = audioSettings.GetAttributeFloat("musicvolume", MusicVolume);
-                VoiceChatVolume = audioSettings.GetAttributeFloat("voicechatvolume", VoiceChatVolume);
-                string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "Disabled");
-                VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", "");
-                NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", -45);
-                var voiceSetting = VoiceMode.Disabled;
-                if (Enum.TryParse(voiceSettingStr, out voiceSetting))
-                {
-                    VoiceSetting = voiceSetting;
-                }
-            }
             
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
@@ -1014,7 +794,6 @@ namespace Barotrauma
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
-            EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -1077,22 +856,24 @@ namespace Barotrauma
                 }
             }
 
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                if (keyMapping[(int)inputType] == null)
-                {
-                    DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
-                    keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
-                }
-            }
-
             UnsavedSettings = false;
 
             selectedContentPackagePaths = new HashSet<string>();
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
+            }
+            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
+            {
+                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                .Replace("[packagename]", incompatiblePackage.Name)
+                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
+                                .Replace("[gameversion]", GameMain.Version.ToString()));
+            }
+            foreach (ContentPackage contentPackage in SelectedContentPackages)
+            {
+                foreach (ContentFile file in contentPackage.Files)
                 {
                     case "contentpackage":
                         string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
@@ -1102,6 +883,7 @@ namespace Barotrauma
             }
 
             LoadContentPackages(selectedContentPackagePaths);
+            return true;
         }
 
         public void ReloadContentPackages()
@@ -1191,6 +973,7 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
@@ -1198,8 +981,7 @@ namespace Barotrauma
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
-                new XAttribute("aimassistamount", aimAssistAmount),
-                new XAttribute("enablemouselook", EnableMouseLook));
+                new XAttribute("aimassistamount", aimAssistAmount));
 
             if (!ShowUserStatisticsPrompt)
             {
@@ -1212,7 +994,6 @@ namespace Barotrauma
                 gMode = new XElement("graphicsmode");
                 doc.Root.Add(gMode);
             }
-
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
             {
                 gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
@@ -1341,6 +1122,7 @@ namespace Barotrauma
         public void ResetToDefault()
         {
             LoadDefaultConfig();
+            CheckBindings(true);
             SaveNewPlayerConfig();
         }
 

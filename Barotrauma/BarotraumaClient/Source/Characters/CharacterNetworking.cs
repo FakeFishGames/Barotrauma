@@ -48,10 +48,12 @@ namespace Barotrauma
                     if (IsKeyDown(InputType.Run)) newInput |= InputNetFlags.Run;
                     if (IsKeyDown(InputType.Crouch)) newInput |= InputNetFlags.Crouch;
                     if (IsKeyHit(InputType.Select)) newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
+                    if (IsKeyHit(InputType.Deselect)) newInput |= InputNetFlags.Deselect;
                     if (IsKeyHit(InputType.Health)) newInput |= InputNetFlags.Health;
                     if (IsKeyHit(InputType.Grab)) newInput |= InputNetFlags.Grab;
                     if (IsKeyDown(InputType.Use)) newInput |= InputNetFlags.Use;
                     if (IsKeyDown(InputType.Aim)) newInput |= InputNetFlags.Aim;
+                    if (IsKeyDown(InputType.Shoot)) newInput |= InputNetFlags.Shoot;
                     if (IsKeyDown(InputType.Attack)) newInput |= InputNetFlags.Attack;
                     if (IsKeyDown(InputType.Ragdoll)) newInput |= InputNetFlags.Ragdoll;
 
@@ -125,6 +127,7 @@ namespace Barotrauma
                     msg.WriteRangedInteger(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
                     msg.Write(memInput[i].intAim);
                     if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
+                        memInput[i].states.HasFlag(InputNetFlags.Deselect) ||
                         memInput[i].states.HasFlag(InputNetFlags.Use) || 
                         memInput[i].states.HasFlag(InputNetFlags.Health) ||
                         memInput[i].states.HasFlag(InputNetFlags.Grab))

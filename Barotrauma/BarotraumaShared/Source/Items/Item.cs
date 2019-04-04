@@ -235,6 +235,30 @@ namespace Barotrauma
             set { /*do nothing*/ }
         }
 
+        /// <summary>
+        /// Should the item's Use method be called with the "Use" or with the "Shoot" key?
+        /// </summary>
+        [Serialize(false, false)]
+        public bool IsShootable { get; set; }
+
+        /// <summary>
+        /// If true, the user has to hold the "aim" key before use is registered. False by default.
+        /// </summary>
+        [Serialize(false, false)]
+        public bool RequireAimToUse
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// If true, the user has to hold the "aim" key before secondary use is registered. True by default.
+        /// </summary>
+        [Serialize(true, false)]
+        public bool RequireAimToSecondaryUse
+        {
+            get; set;
+        }
+
         public Color Color
         {
             get { return spriteColor; }
@@ -1377,20 +1401,40 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (forceSelectKey)
+                    if (picker.IsKeyDown(InputType.Aim))
                     {
-                        if (ic.PickKey == InputType.Select) pickHit = true;
-                        if (ic.SelectKey == InputType.Select) selectHit = true;
-                    }
-                    else if (forceActionKey)
-                    {
-                        if (ic.PickKey == InputType.Use) pickHit = true;
-                        if (ic.SelectKey == InputType.Use) selectHit = true;
+                        pickHit = false;
+                        selectHit = false;
                     }
                     else
                     {
-                        pickHit = picker.IsKeyHit(ic.PickKey);
-                        selectHit = picker.IsKeyHit(ic.SelectKey);
+                        if (forceSelectKey)
+                        {
+                            if (ic.PickKey == InputType.Select) pickHit = true;
+                            if (ic.SelectKey == InputType.Select) selectHit = true;
+                        }
+                        else if (forceActionKey)
+                        {
+                            if (ic.PickKey == InputType.Use) pickHit = true;
+                            if (ic.SelectKey == InputType.Use) selectHit = true;
+                        }
+                        else
+                        {
+                            pickHit = picker.IsKeyHit(ic.PickKey);
+                            selectHit = picker.IsKeyHit(ic.SelectKey);
+
+#if CLIENT
+                        //if the cursor is on a UI component, disable interaction with the left mouse button
+                        //to prevent accidentally selecting items when clicking UI elements
+                        if (picker == Character.Controlled && GUI.MouseOn != null)
+                        {
+                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
+                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
+                        }
+#endif
+                        }
+                    }
+                }
 
 #if CLIENT
                         //if the cursor is on a UI component, disable interaction with the left mouse button
@@ -1403,9 +1447,6 @@ namespace Barotrauma
 #endif
                     }
                 }
-
-
-                if (!pickHit && !selectHit) continue;
 
                 if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
                 
@@ -1455,7 +1496,6 @@ namespace Barotrauma
 
             return true;         
         }
-
 
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
@@ -1607,8 +1647,6 @@ namespace Barotrauma
                     GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
                 {
                     parentInventory.CreateNetworkEvent();
-                    //send frequent updates after the item has been dropped
-                    PositionUpdateInterval = 0.0f;
                 }
             }
 

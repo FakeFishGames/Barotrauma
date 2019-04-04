@@ -103,7 +103,6 @@ namespace Barotrauma
         }
 
         public float CrushDepth { get; private set; }
-        public float PressureKillDelay { get; private set; } = 5.0f;
 
         public float Vitality { get; private set; }
 

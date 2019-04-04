@@ -23,8 +23,8 @@
   <contentpackage path="Data/ContentPackages/Vanilla 0.9.xml" />
   <player name=""/>
   <keymapping
-    Select="E"
-    Use="0"
+    Select="0"
+    Use="E"
     Aim="1"
     Up="W"
     Down="S"
