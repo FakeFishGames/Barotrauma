@@ -147,11 +147,6 @@ namespace Barotrauma.Items.Components
                 limb.PullJointEnabled = true;
                 limb.PullJointWorldAnchorB = limb.SimPosition + ConvertUnits.ToSimUnits(diff);
             }
-            
-            if (!item.RequireAimToUse)
-            {
-                Control(deltaTime, character);
-            }
         }
 
         public override bool Use(float deltaTime, Character activator = null)

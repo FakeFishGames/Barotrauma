@@ -242,10 +242,19 @@ namespace Barotrauma
         public bool IsShootable { get; set; }
 
         /// <summary>
-        /// If true, the user has to hold the "aim" key before use is registered.
+        /// If true, the user has to hold the "aim" key before use is registered. False by default.
         /// </summary>
         [Serialize(false, false)]
         public bool RequireAimToUse
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// If true, the user has to hold the "aim" key before secondary use is registered. True by default.
+        /// </summary>
+        [Serialize(true, false)]
+        public bool RequireAimToSecondaryUse
         {
             get; set;
         }
