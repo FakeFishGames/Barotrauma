@@ -69,8 +69,8 @@ namespace Barotrauma
                 GUI.Style.Apply(Text, "", this);
             }
 
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter),
-                isHorizontal: true, childAnchor: Anchor.BottomLeft)
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter, maxSize: new Point(1000, 50)),
+                isHorizontal: true, childAnchor: buttons.Length > 1 ? Anchor.BottomLeft : Anchor.Center)
             {
                 AbsoluteSpacing = 5,
                 IgnoreLayoutGroups = true
@@ -79,7 +79,7 @@ namespace Barotrauma
             Buttons = new List<GUIButton>(buttons.Length);
             for (int i = 0; i < buttons.Length; i++)
             {
-                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform, maxSize: new Point(300, 30)), buttons[i]);
+                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform, maxSize: new Point(300, 35)), buttons[i], style: "GUIButtonLarge");
                 Buttons.Add(button);
             }
 
