@@ -168,7 +168,11 @@ namespace Barotrauma.Items.Components
                 return;
             }
             
-            target.InitializeLinks();
+            target.InitializeLinks();            
+
+#if CLIENT
+            PlaySound(ActionType.OnUse, item.WorldPosition);
+#endif
 
             if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
             if (!target.item.linkedTo.Contains(item)) target.item.linkedTo.Add(item);
@@ -233,9 +237,9 @@ namespace Barotrauma.Items.Components
                     Math.Sign(DockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                     Math.Sign(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
                 DockingTarget.DockingDir = -DockingDir;
-
-                ApplyStatusEffects(ActionType.OnUse, 1.0f);
-
+#if CLIENT
+                PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+#endif
                 Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
                 if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
                     DockingTarget.item.Submarine.IsOutpost)

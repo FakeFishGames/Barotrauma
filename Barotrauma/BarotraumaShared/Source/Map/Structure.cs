@@ -276,10 +276,9 @@ namespace Barotrauma
             }
 
             StairDirection = Prefab.StairDirection;
+
             SerializableProperties = SerializableProperty.GetProperties(this);
-
-            InitProjSpecific();
-
+                      
             if (Prefab.Body)
             {
                 Bodies = new List<Body>();
@@ -307,8 +306,6 @@ namespace Barotrauma
 
             InsertToList();
         }
-
-        partial void InitProjSpecific();
 
         public override string ToString()
         {

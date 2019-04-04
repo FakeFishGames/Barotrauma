@@ -20,8 +20,6 @@ namespace Barotrauma
         public OnButtonDownHandler OnButtonDown;
 
         public bool CanBeSelected = true;
-
-        private Color? defaultTextColor;
         
         public override bool Enabled 
         { 
@@ -32,7 +30,7 @@ namespace Barotrauma
 
             set
             {
-                if (value == enabled) { return; }
+                if (value == enabled) return;
                 enabled = value;
                 if (color.A == 0)
                 {

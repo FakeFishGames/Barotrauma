@@ -5,25 +5,30 @@ namespace Barotrauma
 {
     partial class DeformableSprite
     {
+        private Sprite sprite;
+
         public Vector2 Size
         {
-            get { return Sprite.size; }
+            get { return sprite.size; }
         }
 
         public Vector2 Origin
         {
-            get { return Sprite.Origin; }
-            set { Sprite.Origin = value; }
+            get { return sprite.Origin; }
+            set { sprite.Origin = value; }
         }
 
-        public Sprite Sprite { get; private set; }
-
-        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null, string filePath = "", bool lazyLoad = false)
+        public Sprite Sprite
         {
-            Sprite = new Sprite(element, file: filePath, lazyLoad: lazyLoad);
-            InitProjSpecific(element, subdivisionsX, subdivisionsY, lazyLoad);
+            get { return sprite; }
         }
 
-        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad = false);
+        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null, string filePath = "")
+        {
+            sprite = new Sprite(element, file: filePath);
+            InitProjSpecific(element, subdivisionsX, subdivisionsY);
+        }
+
+        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY);
     }
 }

@@ -505,7 +505,7 @@ namespace Barotrauma
                         {
                             iconFolder = Path.GetDirectoryName(filePath);
                         }
-                        InventoryIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
+                        InventoryIcon = new Sprite(subElement, iconFolder);
                         break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
@@ -541,7 +541,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            decorativeSprite = new DecorativeSprite(subElement, decorativeSpriteFolder, lazyLoad: true);
+                            decorativeSprite = new DecorativeSprite(subElement, decorativeSpriteFolder);
                             DecorativeSprites.Add(decorativeSprite);
                             groupID = decorativeSprite.RandomGroupID;
                         }
@@ -558,7 +558,7 @@ namespace Barotrauma
                         {
                             containedSpriteFolder = Path.GetDirectoryName(filePath);
                         }
-                        var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder, lazyLoad: true);
+                        var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder);
                         if (containedSprite.Sprite != null)
                         {
                             ContainedSprites.Add(containedSprite);

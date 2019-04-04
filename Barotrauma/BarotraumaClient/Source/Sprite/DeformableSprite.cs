@@ -12,8 +12,6 @@ namespace Barotrauma
     {
         private static List<DeformableSprite> list = new List<DeformableSprite>();
 
-        private bool initialized = false;
-
         private int triangleCount;
 
         private VertexBuffer vertexBuffer, flippedVertexBuffer;
@@ -36,7 +34,7 @@ namespace Barotrauma
         private Point spritePos;
         private Point spriteSize;
 
-        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad)
+        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY)
         {
             if (effect == null)
             {
@@ -58,30 +56,11 @@ namespace Barotrauma
                 throw new ArgumentException("Deformable sprites must have one or more subdivisions on each axis.");
             }
 
-            if (!lazyLoad)
-            {
-                Init();
-            }
-            
-            list.Add(this);
-        }
-
-        public void EnsureLazyLoaded()
-        {
-            if (!initialized) { Init(); }
-        }
-
-        private void Init()
-        {
-            if (initialized) { return; }
-            initialized = true;
-
             foreach (DeformableSprite existing in list)
             {
-                if (!existing.initialized || existing == this) { continue; }
                 //share vertex and index buffers if there's already 
                 //an existing sprite with the same texture and subdivisions
-                if (existing.Sprite.Texture == Sprite.Texture && 
+                if (existing.sprite.Texture == sprite.Texture && 
                     existing.subDivX == subDivX && 
                     existing.subDivY == subDivY && 
                     existing.Sprite.SourceRect == Sprite.SourceRect)
@@ -104,18 +83,19 @@ namespace Barotrauma
                 }
             }
 
-            if (Sprite.Texture != null)
+            if (sprite.Texture != null)
             {
                 SetupVertexBuffers();
                 SetupIndexBuffer();
             }
+            list.Add(this);
         }
 
         private void SetupVertexBuffers()
         {
-            Vector2 textureSize = new Vector2(Sprite.Texture.Width, Sprite.Texture.Height);
-            var pos = Sprite.SourceRect.Location;
-            var size = Sprite.SourceRect.Size;
+            Vector2 textureSize = new Vector2(sprite.Texture.Width, sprite.Texture.Height);
+            var pos = sprite.SourceRect.Location;
+            var size = sprite.SourceRect.Size;
 
             uvTopLeft = Vector2.Divide(pos.ToVector2(), textureSize);
             uvBottomRight = Vector2.Divide((pos + size).ToVector2(), textureSize);
@@ -139,7 +119,7 @@ namespace Barotrauma
                             uvTopLeft + (uvBottomRight - uvTopLeft) * relativePos;
 
                         vertices[x + y * (subDivX + 1)] = new VertexPositionColorTexture(
-                            position: new Vector3(relativePos.X * Sprite.SourceRect.Width, relativePos.Y * Sprite.SourceRect.Height, 0.0f),
+                            position: new Vector3(relativePos.X * sprite.SourceRect.Width, relativePos.Y * sprite.SourceRect.Height, 0.0f),
                             color: Color.White,
                             textureCoordinate: uvCoord);
                     }
@@ -173,8 +153,8 @@ namespace Barotrauma
                 }
             }
             
-            spritePos = Sprite.SourceRect.Location;
-            spriteSize = Sprite.SourceRect.Size;
+            spritePos = sprite.SourceRect.Location;
+            spriteSize = sprite.SourceRect.Size;
         }
 
         private void SetupIndexBuffer()
@@ -215,8 +195,6 @@ namespace Barotrauma
         /// </summary>
         public void Deform(Func<Vector2, Vector2> deformFunction)
         {
-            if (!initialized) { Init(); }
-
             var deformAmount = new Vector2[subDivX + 1, subDivY + 1];
             for (int x = 0; x <= subDivX; x++)
             {
@@ -230,8 +208,6 @@ namespace Barotrauma
 
         public void Deform(Vector2[,] deform)
         {
-            if (!initialized) { Init(); }
-
             deformArrayWidth = deform.GetLength(0);
             deformArrayHeight = deform.GetLength(1);
             if (deformAmount == null || deformAmount.Length != deformArrayWidth * deformArrayHeight)
@@ -258,8 +234,6 @@ namespace Barotrauma
 
         public Matrix GetTransform(Vector3 pos, Vector2 origin, float rotate, Vector2 scale)
         {
-            if (!initialized) { Init(); }
-
             return  
                 Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
                 Matrix.CreateScale(scale.X, -scale.Y, 1.0f) *
@@ -269,19 +243,18 @@ namespace Barotrauma
 
         public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false)
         {
-            if (Sprite.Texture == null) { return; }
-            if (!initialized) { Init(); }
+            if (sprite.Texture == null) { return; }
 
             // If the source rect is modified, we should recalculate the vertex buffer.
-            if (Sprite.SourceRect.Location != spritePos || Sprite.SourceRect.Size != spriteSize)
+            if (sprite.SourceRect.Location != spritePos || sprite.SourceRect.Size != spriteSize)
             {
                 SetupVertexBuffers();
             }
 
 #if (LINUX || OSX)
-            effect.Parameters["TextureSampler+xTexture"].SetValue(Sprite.Texture);
+            effect.Parameters["TextureSampler+xTexture"].SetValue(sprite.Texture);
 #else
-            effect.Parameters["xTexture"].SetValue(Sprite.Texture);
+            effect.Parameters["xTexture"].SetValue(sprite.Texture);
 #endif
 
             Matrix matrix = GetTransform(pos, origin, rotate, scale);
@@ -301,8 +274,8 @@ namespace Barotrauma
 
         public void Remove()
         {
-            Sprite?.Remove();
-            Sprite = null;
+            sprite?.Remove();
+            sprite = null;
 
             list.Remove(this);
 

@@ -210,8 +210,13 @@ namespace Barotrauma.Items.Components
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
-            
-            if ((GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) && user != null && !user.Removed)
+
+            bool isNotClient = true;
+#if CLIENT
+            isNotClient = GameMain.Client == null;
+#endif
+
+            if (isNotClient && user != null)
             {
                 foreach (Skill skill in fabricatedItem.RequiredSkills)
                 {
