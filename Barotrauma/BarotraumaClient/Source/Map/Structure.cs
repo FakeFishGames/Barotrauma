@@ -55,7 +55,13 @@ namespace Barotrauma
             get { return textureOffset; }
             set { textureOffset = value; }
         }
-        
+
+        partial void InitProjSpecific()
+        {
+            Prefab.sprite?.EnsureLazyLoaded();
+            Prefab.BackgroundSprite?.EnsureLazyLoaded();
+        }
+
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation)
         {
             if (!CastShadow) { return; }

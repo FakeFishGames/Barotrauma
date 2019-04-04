@@ -172,7 +172,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString())
                 {
                     case "sprite":
-                        sp.sprite = new Sprite(subElement);
+                        sp.sprite = new Sprite(subElement, lazyLoad: true);
                         if (subElement.Attribute("sourcerect") == null)
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + sp.name + "\"!");
@@ -193,7 +193,7 @@ namespace Barotrauma
                         sp.sprite.EntityID = sp.identifier;
                         break;
                     case "backgroundsprite":
-                        sp.BackgroundSprite = new Sprite(subElement);
+                        sp.BackgroundSprite = new Sprite(subElement, lazyLoad: true);
 
                         if (subElement.GetAttributeBool("fliphorizontal", false)) 
                             sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally;
