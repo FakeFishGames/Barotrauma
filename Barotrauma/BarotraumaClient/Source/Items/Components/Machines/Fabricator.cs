@@ -290,14 +290,6 @@ namespace Barotrauma.Items.Components
             itemList.UpdateScrollBarSize();
             itemList.BarScroll = 0.0f;
 
-            float degreeOfSuccess = user == null ? 0.0f : DegreeOfSuccess(user, selectedItem.RequiredSkills);
-            if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
-
-            float requiredTime = user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user);
-            string requiredTimeText = TextManager.Get("FabricatorRequiredTime") + ": " + ToolBox.SecondsToReadableTime(requiredTime);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                requiredTimeText, textColor: ToolBox.GradientLerp(degreeOfSuccess, Color.Red, Color.Yellow, Color.LightGreen), font: GUI.SmallFont);
-                        
             return true;
         }
 

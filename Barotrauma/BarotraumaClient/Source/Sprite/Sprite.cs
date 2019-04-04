@@ -10,8 +10,6 @@ namespace Barotrauma
     {
         protected Texture2D texture;
 
-        private bool preMultipliedAlpha;
-
         public Texture2D Texture
         {
             get

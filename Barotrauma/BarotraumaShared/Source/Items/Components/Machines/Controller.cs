@@ -172,15 +172,6 @@ namespace Barotrauma.Items.Components
         
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (item.RequireAimToUse)
-            {
-                return Control(deltaTime, character);
-            }
-            return false;
-        }
-
-        private bool Control(float deltaTime, Character character = null)
-        {
             if (this.character != character)
             {
                 return false;
