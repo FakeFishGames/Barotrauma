@@ -705,6 +705,7 @@ namespace Barotrauma
                     // TODO: add a prompt
                     LoadDefaultConfig();
                     CheckBindings(true);
+                    RefreshItemMessages();
                     ApplySettings();
                     if (Screen.Selected == GameMain.MainMenuScreen)
                     {
@@ -771,6 +772,7 @@ namespace Barotrauma
             // TODO: add a prompt?
             SetDefaultBindings(legacy: legacy);
             CheckBindings(true);
+            RefreshItemMessages();
             ApplySettings();
             if (Screen.Selected == GameMain.MainMenuScreen)
             {
@@ -907,8 +909,20 @@ namespace Barotrauma
             }
 
             keyBox.Deselect();
+            RefreshItemMessages();
 
             yield return CoroutineStatus.Success;
+        }
+
+        private void RefreshItemMessages()
+        {
+            foreach (Item item in Item.ItemList)
+            {
+                foreach (Items.Components.ItemComponent ic in item.Components)
+                {
+                    ic.ParseMsg();
+                }
+            }
         }
 
         private void ApplySettings()
