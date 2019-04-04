@@ -179,7 +179,7 @@ namespace Barotrauma
                 if (takeMaskOff)
                 {
                     var mask = Character.Inventory.FindItemByIdentifier("divingmask");
-                    if (mask != null)
+                    if (mask != null && Character.Inventory.IsInLimbSlot(mask, InvSlotType.Head))
                     {
                         // Try to put the mask in an Any slot, and drop it if that fails
                         if (!mask.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(mask, Character, new List<InvSlotType>() { InvSlotType.Any }))
