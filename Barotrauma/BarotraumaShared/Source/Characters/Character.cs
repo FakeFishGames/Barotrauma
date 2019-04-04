@@ -892,12 +892,16 @@ namespace Barotrauma
                         return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
                     case InputType.Select:
                         return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
                     case InputType.Health:
                         return dequeuedInput.HasFlag(InputNetFlags.Health);
                     case InputType.Grab:
                         return dequeuedInput.HasFlag(InputNetFlags.Grab);
                     case InputType.Use:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Shoot:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
                     case InputType.Ragdoll:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
                     default:
@@ -930,10 +934,14 @@ namespace Barotrauma
                         return dequeuedInput.HasFlag(InputNetFlags.Crouch);
                     case InputType.Select:
                         return false; //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return false;
                     case InputType.Aim:
                         return dequeuedInput.HasFlag(InputNetFlags.Aim);
                     case InputType.Use:
                         return dequeuedInput.HasFlag(InputNetFlags.Use);
+                    case InputType.Shoot:
+                        return dequeuedInput.HasFlag(InputNetFlags.Shoot);
                     case InputType.Attack:
                         return dequeuedInput.HasFlag(InputNetFlags.Attack);
                     case InputType.Ragdoll:

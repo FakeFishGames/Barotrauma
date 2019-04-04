@@ -87,6 +87,7 @@ namespace Barotrauma
                     //reset focus when attempting to use/select something
                     if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
                         memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select) ||
+                        memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Deselect) ||
                         memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Health) ||
                         memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Grab))
                     {
@@ -180,6 +181,7 @@ namespace Barotrauma
                         
                         newAim = msg.ReadUInt16();                        
                         if (newInput.HasFlag(InputNetFlags.Select) ||
+                            newInput.HasFlag(InputNetFlags.Deselect) ||
                             newInput.HasFlag(InputNetFlags.Use) ||
                             newInput.HasFlag(InputNetFlags.Health) ||
                             newInput.HasFlag(InputNetFlags.Grab))
@@ -325,23 +327,27 @@ namespace Barotrauma
                     bool aiming = false;
                     bool use = false;
                     bool attack = false;
+                    bool shoot = false;
 
                     if (IsRemotePlayer)
                     {
                         aiming  = dequeuedInput.HasFlag(InputNetFlags.Aim);
                         use     = dequeuedInput.HasFlag(InputNetFlags.Use);
                         attack  = dequeuedInput.HasFlag(InputNetFlags.Attack);
+                        shoot   = dequeuedInput.HasFlag(InputNetFlags.Shoot);
                     }
                     else if (keys != null)
                     {
                         aiming  = keys[(int)InputType.Aim].GetHeldQueue;
                         use     = keys[(int)InputType.Use].GetHeldQueue;
                         attack  = keys[(int)InputType.Attack].GetHeldQueue;
+                        shoot   = keys[(int)InputType.Shoot].GetHeldQueue;
 
                         networkUpdateSent = true;
                     }
 
                     tempBuffer.Write(aiming);
+                    tempBuffer.Write(shoot);
                     tempBuffer.Write(use);
                     if (AnimController is HumanoidAnimController)
                     {

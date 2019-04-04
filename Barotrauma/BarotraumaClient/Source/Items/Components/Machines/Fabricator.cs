@@ -318,6 +318,22 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+                    itemIcon.Draw(
+                        spriteBatch,
+                        slotRect.Center.ToVector2(),
+                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
+                        scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
+                    
+                    if (slotRect.Contains(PlayerInput.MousePosition))
+                    {
+                        string toolTipText = requiredItem.ItemPrefab.Name;
+                        if (!string.IsNullOrEmpty(requiredItem.ItemPrefab.Description))
+                        {
+                            toolTipText += '\n' + requiredItem.ItemPrefab.Description;
+                        }
+                        tooltip = new Pair<Rectangle, string>(slotRect, toolTipText);
+                    }
+
                     slotIndex++;
                 }
             }
@@ -342,24 +358,6 @@ namespace Barotrauma.Items.Components
                 tooltip = null;
             }
         }
-
-        private bool SelectItem(Character user, FabricationRecipe selectedItem)
-        {
-            selectedItemFrame.ClearChildren();
-            
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f, Stretch = true };
-
-            /*var itemIcon = selectedItem.TargetItem.InventoryIcon ?? selectedItem.TargetItem.sprite;
-            if (itemIcon != null)
-            {
-                GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), paddedFrame.RectTransform),
-                    itemIcon, scaleToFit: true)
-                {
-                    Color = selectedItem.TargetItem.InventoryIconColor
-                };
-            }*/
-            var nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                selectedItem.TargetItem.Name, textAlignment: Alignment.CenterLeft);
 
             if (GameMain.Client != null)
             {
