@@ -437,6 +437,10 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
             }
+            deviceList.OnSelected = (GUIComponent selected, object obj) =>
+            {
+                string name = obj as string;
+                if (VoiceCaptureDevice == name) return true;
 
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
 #if (!OSX)
@@ -639,7 +643,7 @@ namespace Barotrauma
             var inputNames = Enum.GetValues(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
-                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2) ? inputColumnLeft : inputColumnRight).RectTransform))
+                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2.2f) ? inputColumnLeft : inputColumnRight).RectTransform))
                     { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
                     TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
@@ -680,6 +684,34 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            var resetControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.02f
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetDefaultBindings"))
+            {
+                ToolTip = TextManager.Get("SetDefaultBindingsToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    ResetControls(legacy: false);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetLegacyBindings"))
+            {
+                ToolTip = TextManager.Get("SetLegacyBindingsToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    ResetControls(legacy: true);
+                    return true;
+                }
+            };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
             var resetControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), isHorizontal: true)
             {
