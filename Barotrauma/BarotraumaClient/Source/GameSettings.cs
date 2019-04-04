@@ -773,6 +773,66 @@ namespace Barotrauma
                 }
             };
 
+            var resetControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.02f
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetDefaultBindings"))
+            {
+                ToolTip = TextManager.Get("SetDefaultBindingsToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    ResetControls(legacy: false);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetLegacyBindings"))
+            {
+                ToolTip = TextManager.Get("SetLegacyBindingsToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    ResetControls(legacy: true);
+                    return true;
+                }
+            };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (x, y) =>
+                {
+                    if (UnsavedSettings)
+                    {
+                        LoadPlayerConfig();
+                    }
+                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
+                    GUI.SettingsMenuOpen = false;
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomCenter),
+                TextManager.Get("Reset"), style: "GUIButtonLarge")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (button, data) =>
+                {
+                    // TODO: add a prompt
+                    LoadDefaultConfig();
+                    CheckBindings(true);
+                    ApplySettings();
+                    ResetSettingsFrame();
+                    CreateSettingsFrame();
+                    return true;
+                }
+            };
+
             applyButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
                 TextManager.Get("ApplySettingsButton"), style: "GUIButtonLarge")
             {
