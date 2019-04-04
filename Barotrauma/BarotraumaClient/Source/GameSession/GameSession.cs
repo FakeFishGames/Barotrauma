@@ -36,27 +36,36 @@ namespace Barotrauma
             int width = 600, height = 400;
 
             infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
-            
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width,height) });
 
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center), style:null);
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width, height) });
+
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform), isHorizontal: true)
             {
                 RelativeSpacing = 0.01f
             };
-            infoFrameContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.08f) }, style: "InnerFrame");
+            infoFrameContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.85f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.08f) }, style: "InnerFrame");
 
-            var crewButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Crew"))
+            var crewButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Crew"), style: "GUITabButton")
             {
                 UserData = InfoFrameTab.Crew,
                 OnClicked = SelectInfoFrameTab
             };
 
-            var missionButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Mission"))
+            var missionButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Mission"), style: "GUITabButton")
             {
                 UserData = InfoFrameTab.Mission,
                 OnClicked = SelectInfoFrameTab
             };
+
+            if (GameMain.NetworkMember != null)
+            {
+                var myCharacterButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("MyCharacter"), style: "GUITabButton")
+                {
+                    UserData = InfoFrameTab.MyCharacter,
+                    OnClicked = SelectInfoFrameTab
+                };
+            }
 
             /*TODO: fix
             if (GameMain.Server != null)
@@ -83,6 +92,10 @@ namespace Barotrauma
                     break;
                 case InfoFrameTab.Mission:
                     CreateMissionInfo(infoFrameContent);
+                    break;
+                case InfoFrameTab.MyCharacter:
+                    if (GameMain.NetworkMember == null) { return false; }
+                    GameMain.NetLobbyScreen.CreatePlayerFrame(infoFrameContent);
                     break;
                 case InfoFrameTab.ManagePlayers:
                     //TODO: fix
