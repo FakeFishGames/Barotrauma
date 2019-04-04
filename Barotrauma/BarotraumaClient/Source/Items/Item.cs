@@ -123,8 +123,16 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
+            Prefab.sprite?.EnsureLazyLoaded();
+            Prefab.InventoryIcon?.EnsureLazyLoaded();
+            foreach (BrokenItemSprite brokenSprite in Prefab.BrokenSprites)
+            {
+                brokenSprite.Sprite.EnsureLazyLoaded();
+            }
+            
             foreach (var decorativeSprite in ((ItemPrefab)prefab).DecorativeSprites)
             {
+                decorativeSprite.Sprite.EnsureLazyLoaded();
                 spriteAnimState.Add(decorativeSprite, new SpriteState());
             }
         }
@@ -607,6 +615,9 @@ namespace Barotrauma
             if (GameMain.GameSession?.CrewManager != null)
             {
                 disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
+                disallowedAreas.Add(new Rectangle(
+                    HUDLayoutSettings.ChatBoxArea.X - 50, HUDLayoutSettings.ChatBoxArea.Y, 
+                    HUDLayoutSettings.ChatBoxArea.Width + 50, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,

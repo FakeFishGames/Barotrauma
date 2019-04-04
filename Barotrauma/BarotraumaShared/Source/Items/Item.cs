@@ -1148,24 +1148,6 @@ namespace Barotrauma
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
-                return;
-            }
-
-            float forceFactor = 1.0f;
-            if (CurrentHull != null)
-            {
-                return;
-            }
-
-            float forceFactor = 1.0f;
-            if (CurrentHull != null)
-            {
-                return;
-            }
-
-            float forceFactor = 1.0f;
-            if (CurrentHull != null)
-            {
                 float floor = CurrentHull.Rect.Y - CurrentHull.Rect.Height;
                 float waterLevel = floor + CurrentHull.WaterVolume / CurrentHull.Rect.Width;
 
@@ -1442,17 +1424,7 @@ namespace Barotrauma
                     }
                 }
 
-#if CLIENT
-                        //if the cursor is on a UI component, disable interaction with the left mouse button
-                        //to prevent accidentally selecting items when clicking UI elements
-                        if (picker == Character.Controlled && GUI.MouseOn != null)
-                        {
-                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
-                        }
-#endif
-                    }
-                }
+                if (!pickHit && !selectHit) continue;
 
                 if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
                 
@@ -1653,6 +1625,8 @@ namespace Barotrauma
                     GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
                 {
                     parentInventory.CreateNetworkEvent();
+                    //send frequent updates after the item has been dropped
+                    PositionUpdateInterval = 0.0f;
                 }
             }
 

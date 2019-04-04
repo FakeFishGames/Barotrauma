@@ -377,23 +377,14 @@ namespace Barotrauma.Items.Components
                     target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
                     return true;
                 }
-                else if (target.Body.UserData is Limb limb)
-                {
-                    //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
-                    if (limb.IsSevered)
-                    {
-                        target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
-                        return true;
-                    }
 
-                    limb.character.LastDamageSource = item;
-                    attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
-                    if (limb.character != null) character = limb.character;
-                }
-                else if (target.Body.UserData is Structure structure)
-                {
-                    attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f);
-                }
+                limb.character.LastDamageSource = item;
+                if (attack != null) { attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f); }
+                if (limb.character != null) { character = limb.character; }
+            }
+            else if (target.Body.UserData is Structure structure)
+            {
+                if (attack != null) { attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f); }
             }
 
             if (character != null) character.LastDamageSource = item;

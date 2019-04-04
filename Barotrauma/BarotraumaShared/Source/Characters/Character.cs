@@ -1939,7 +1939,7 @@ namespace Barotrauma
                 //cannot be protected from pressure when below crush depth
                 protectedFromPressure = protectedFromPressure && WorldPosition.Y > CharacterHealth.CrushDepth;
                 //implode if not protected from pressure, and either outside or in a high-pressure hull
-                if (!protectedFromPressure && 
+                if (!protectedFromPressure &&
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
                     if (CharacterHealth.PressureKillDelay <= 0.0f)
@@ -1954,7 +1954,7 @@ namespace Barotrauma
 
                     if (PressureTimer >= 100.0f)
                     {
-                        if (Controlled == this) cam.Zoom = 5.0f;
+                        if (Controlled == this) { cam.Zoom = 5.0f; }
                         if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
                             Implode();
@@ -2235,7 +2235,7 @@ namespace Barotrauma
 
             if (limbHit == null) return new AttackResult();
             
-            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
+            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
@@ -2321,7 +2321,8 @@ namespace Barotrauma
             {
                 Vector2 diff = dir;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
-                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
+                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff),
+                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);

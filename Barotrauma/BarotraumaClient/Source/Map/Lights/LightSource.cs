@@ -91,7 +91,7 @@ namespace Barotrauma.Lights
                         }
                         break;
                     case "lighttexture":
-                        OverrideLightTexture = new Sprite(subElement);
+                        OverrideLightTexture = new Sprite(subElement, preMultiplyAlpha: false);
                         break;
                 }
             }
@@ -211,7 +211,7 @@ namespace Barotrauma.Lights
             {
                 if (lightTexture == null)
                 {
-                    lightTexture = TextureLoader.FromFile("Content/Lights/pointlight_bright.png");
+                    lightTexture = TextureLoader.FromFile("Content/Lights/pointlight_bright.png", preMultiplyAlpha: false);
                 }
 
                 return lightTexture;
