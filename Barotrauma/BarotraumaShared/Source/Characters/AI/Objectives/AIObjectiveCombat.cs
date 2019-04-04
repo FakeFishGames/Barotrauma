@@ -132,8 +132,7 @@ namespace Barotrauma
         {
             if (!character.SelectedItems.Contains(Weapon))
             {
-                var slots = Weapon.AllowedSlots.FindAll(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
-                if (character.Inventory.TryPutItem(Weapon, character, slots))
+                if (character.Inventory.TryPutItem(Weapon, 3, true, false, character))
                 {
                     Weapon.Equip(character);
                 }
