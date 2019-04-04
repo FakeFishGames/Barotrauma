@@ -25,6 +25,8 @@ namespace Barotrauma
         //listbox that shows the files included in the item being created
         private GUIListBox createItemFileList;
 
+        private List<GUIButton> tabButtons = new List<GUIButton>();
+
         private HashSet<string> pendingPreviewImageDownloads = new HashSet<string>();
         private Dictionary<string, Sprite> itemPreviewSprites = new Dictionary<string, Sprite>();
 
@@ -49,7 +51,7 @@ namespace Barotrauma
 
             menu = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.7f), GUI.Canvas, Anchor.Center) { MinSize = new Point(width, height) });
 
-            var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
 
             var tabContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.7f), container.RectTransform), style: "InnerFrame");
 
@@ -60,10 +62,9 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            int i = 0;
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
-                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), tabButtonHolder.RectTransform) { RelativeOffset = new Vector2(0.4f + 0.15f * i, 0.0f) },
+                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), tabButtonHolder.RectTransform),
                     TextManager.Get(tab.ToString() + "Tab"), style: "GUITabButton")
                 {
                     UserData = tab,
@@ -72,7 +73,7 @@ namespace Barotrauma
                         SelectTab((Tab)userData); return true;
                     }
                 };
-                i++;
+                tabButtons.Add(tabButton);
             }
 
             //-------------------------------------------------------------------------------
@@ -193,10 +194,10 @@ namespace Barotrauma
 
             createItemFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Publish].RectTransform, Anchor.TopRight), style: "InnerFrame");
 
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), container.RectTransform));
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform), childAnchor: Anchor.CenterLeft);
 
-            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.5f), buttonContainer.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.2f) },
-                TextManager.Get("Back"))
+            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("Back"), style: "GUIButtonLarge")
             {
                 OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
@@ -223,7 +224,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < tabs.Length; i++)
             {
-                tabs[i].Visible = i == (int)tab;
+                tabButtons[i].Selected = tabs[i].Visible = i == (int)tab;                
             }
 
             if (createItemFrame.CountChildren == 0)
@@ -624,10 +625,16 @@ namespace Barotrauma
             }
 
             var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform)) { ScrollBarVisible = true };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), item.Description, wrap: true)
             {
-                CanBeFocused = false,
+                CanBeFocused = false
             };
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
 
 
             //score -------------------------------------
@@ -1233,13 +1240,10 @@ namespace Barotrauma
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            GameMain.TitleScreen.DrawLoadingText = false;
-            GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
+            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
-            
             GUI.Draw(Cam, spriteBatch);
-
             spriteBatch.End();
         }
 
