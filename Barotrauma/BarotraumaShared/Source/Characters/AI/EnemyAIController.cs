@@ -568,29 +568,11 @@ namespace Barotrauma
                     //steer through the door manually if it's open or broken
                     if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
                     {
+                        LatchOntoAI?.DeattachFromBody();
+                        Character.AnimController.ReleaseStuckLimbs();
                         var velocity = Vector2.Normalize(door.LinkedGap.FlowTargetHull.WorldPosition - Character.WorldPosition);
-                        if (door.LinkedGap.IsHorizontal)
-                        {
-                            if (Character.WorldPosition.Y < door.Item.WorldRect.Y && Character.WorldPosition.Y > door.Item.WorldRect.Y - door.Item.Rect.Height)
-                            {
-                                velocity.Y = 0;
-                                LatchOntoAI?.DeattachFromBody();
-                                Character.AnimController.ReleaseStuckLimbs();
-                                steeringManager.SteeringManual(deltaTime, velocity);
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            if (Character.WorldPosition.X < door.Item.WorldRect.X && Character.WorldPosition.X > door.Item.WorldRect.Right)
-                            {
-                                velocity.X = 0;
-                                LatchOntoAI?.DeattachFromBody();
-                                Character.AnimController.ReleaseStuckLimbs();
-                                steeringManager.SteeringManual(deltaTime, velocity);
-                                return;
-                            }
-                        }
+                        steeringManager.SteeringManual(deltaTime, velocity);
+                        return;
                     }
                 }
             }
