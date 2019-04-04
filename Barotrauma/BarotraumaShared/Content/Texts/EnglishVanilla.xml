@@ -2491,19 +2491,7 @@
   <SkillName.electrical>Electrical Engineering</SkillName.electrical>
   <SkillName.medical>Medical</SkillName.medical>  
 
-  <!-- Item messages -->
-  <ItemMsgInteractSelect>[[select]] Interact</ItemMsgInteractSelect>
-  <ItemMsgEquipSelect>[[select]] Equip</ItemMsgEquipSelect>
-  <ItemMsgPickUpSelect>[[select]] Pick up</ItemMsgPickUpSelect>
-  <ItemMsgClimbSelect>[[select]] Climb</ItemMsgClimbSelect>
-  <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
-  <ItemMsgRewireScrewdriver>[Screwdriver] Rewire</ItemMsgRewireScrewdriver>
-  <ItemMsgDetachWrench>[Wrench] Detach</ItemMsgDetachWrench>
-  <ItemMsgForceOpenCrowbar>[Crowbar] Force open</ItemMsgForceOpenCrowbar>
-  <ItemMsgRepairScrewdriver>[Screwdriver] Repair</ItemMsgRepairScrewdriver>
-  <ItemMsgRepairWeldingTool>[Welding Tool] Repair</ItemMsgRepairWeldingTool>
-  <ItemMsgRepairWrench>[Wrench] Repair</ItemMsgRepairWrench>
-  <ItemMsgUsePlasmaCutter>[Plasma Cutter] Cut</ItemMsgUsePlasmaCutter>
+  <!-- Item messages --> 
   <ItemMsgUnauthorizedAccess>UNAUTHORIZED ACCESS</ItemMsgUnauthorizedAccess>
   <ItemMsgBatteryCellRequired>Battery cell required</ItemMsgBatteryCellRequired>
   <ItemMsgWeldingFuelRequired>Welding fuel required</ItemMsgWeldingFuelRequired>
@@ -2741,6 +2729,18 @@
   <!-- Changed values -->
 
   <InputType.Attack>Creature Attack</InputType.Attack>
+  <ItemMsgInteractSelect>[[select]] Interact</ItemMsgInteractSelect>
+  <ItemMsgEquipSelect>[[select]] Equip</ItemMsgEquipSelect>
+  <ItemMsgPickUpSelect>[[select]] Pick up</ItemMsgPickUpSelect>
+  <ItemMsgClimbSelect>[[select]] Climb</ItemMsgClimbSelect>
+  <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
+  <ItemMsgRewireScrewdriver>[[use]] Rewire (Screwdriver)</ItemMsgRewireScrewdriver>
+  <ItemMsgDetachWrench>[[use]] Detach (Wrench)</ItemMsgDetachWrench>
+  <ItemMsgForceOpenCrowbar>[[use]] Force open (Crowbar)</ItemMsgForceOpenCrowbar>
+  <ItemMsgRepairScrewdriver>[[use]] Repair (Screwdriver)</ItemMsgRepairScrewdriver>
+  <ItemMsgRepairWeldingTool>[[shoot]] Repair (Welding Tool)</ItemMsgRepairWeldingTool>
+  <ItemMsgRepairWrench>[[use]] Repair (Wrench)</ItemMsgRepairWrench>
+  <ItemMsgUsePlasmaCutter>[[shoot]] Cut (Plasma Cutter)</ItemMsgUsePlasmaCutter>
   
   <!-- New Additions -->
   
