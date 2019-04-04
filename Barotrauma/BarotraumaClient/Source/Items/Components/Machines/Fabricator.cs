@@ -349,6 +349,18 @@ namespace Barotrauma.Items.Components
             
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f, Stretch = true };
 
+            /*var itemIcon = selectedItem.TargetItem.InventoryIcon ?? selectedItem.TargetItem.sprite;
+            if (itemIcon != null)
+            {
+                GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), paddedFrame.RectTransform),
+                    itemIcon, scaleToFit: true)
+                {
+                    Color = selectedItem.TargetItem.InventoryIconColor
+                };
+            }*/
+            var nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+                selectedItem.TargetItem.Name, textAlignment: Alignment.CenterLeft);
+
             if (GameMain.Client != null)
             {
                 inadequateSkills = selectedItem.RequiredSkills.FindAll(skill => user.GetSkillLevel(skill.Identifier) < skill.Level);

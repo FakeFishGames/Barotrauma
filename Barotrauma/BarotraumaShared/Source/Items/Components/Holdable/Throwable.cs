@@ -79,7 +79,8 @@ namespace Barotrauma.Items.Components
 
             if (!throwing)
             {
-                if (picker.IsKeyDown(InputType.Aim))
+                bool aim = picker.IsKeyDown(InputType.Aim) && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
+                if (aim)
                 {
                     throwPos = MathUtils.WrapAnglePi(System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.PiOver2));
                     ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, throwPos);
