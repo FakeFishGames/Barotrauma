@@ -186,7 +186,6 @@
   <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
   
   <!-- Steam Workshop menu -->
-  <BrowseTab>Browse</BrowseTab>
   <PublishTab>Publish</PublishTab>
   <DownloadButton>Download</DownloadButton>
   <NoSubscribedMods>You haven't subscribed to any mods on the Steam Workshop. Click the "Find more mods" button below to get started!</NoSubscribedMods>
@@ -2742,13 +2741,15 @@
   <ItemMsgUsePlasmaCutter>[[shoot]] Cut (Plasma Cutter)</ItemMsgUsePlasmaCutter>
 
   <SubscribedMods>Subscribed mods</SubscribedMods>
+
+  <BrowseTab>Popular Mods</BrowseTab>
   
   <!-- New Additions -->
   
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
 
-  <ModsTab>Mods</ModsTab>
+  <ModsTab>Subscribed Mods</ModsTab>
   
   <Walls>Walls</Walls>
   
