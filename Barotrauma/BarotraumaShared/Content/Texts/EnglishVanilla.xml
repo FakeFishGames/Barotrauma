@@ -2747,6 +2747,8 @@
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
 
+  <MyCharacter>My character</MyCharacter>
+
   <Reset>Reset</Reset>
   <SetDefaultBindings>Set Default Bindings</SetDefaultBindings>
   <SetDefaultBindingsToolTip>Set key bindings to the recommended default settings (left mouse button to select items, right mouse button or esc to deselect).</SetDefaultBindingsToolTip>

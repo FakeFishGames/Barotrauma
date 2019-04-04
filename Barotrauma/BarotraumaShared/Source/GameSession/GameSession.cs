@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class GameSession
     {
-        public enum InfoFrameTab { Crew, Mission, ManagePlayers };
+        public enum InfoFrameTab { Crew, Mission, MyCharacter, ManagePlayers };
 
         public readonly EventManager EventManager;
 
