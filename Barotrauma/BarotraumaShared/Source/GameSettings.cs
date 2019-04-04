@@ -401,6 +401,11 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
+            keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
+            keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
+
+            keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
+
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
 
@@ -459,64 +464,12 @@ namespace Barotrauma
                 }
             }
 
-            List<string> missingPackagePaths = new List<string>();
-            List<ContentPackage> incompatiblePackages = new List<ContentPackage>();
-            foreach (XElement subElement in doc.Root.Elements())
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                if (keyMapping[(int)inputType] == null)
                 {
-                    case "contentpackage":
-                        string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
-                        var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
-                        if (matchingContentPackage == null)
-                        {
-                            missingPackagePaths.Add(path);
-                        }
-                        else if (!matchingContentPackage.IsCompatible())
-                        {
-                            incompatiblePackages.Add(matchingContentPackage);
-                        }
-                        else
-                        {
-                            SelectedContentPackages.Add(matchingContentPackage);
-                        }
-                        break;
-                }
-            }
-
-            TextManager.LoadTextPacks(SelectedContentPackages);
-
-            //display error messages after all content packages have been loaded
-            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
-            foreach (string missingPackagePath in missingPackagePaths)
-            {
-                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                .Replace("[packagename]", incompatiblePackage.Name)
-                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
-                                .Replace("[gameversion]", GameMain.Version.ToString()));
-            }
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                foreach (ContentFile file in contentPackage.Files)
-                {
-                    if (!System.IO.File.Exists(file.Path))
-                    {
-                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
-                        continue;
-                    }
-                    ToolBox.IsProperFilenameCase(file.Path);
-                }
-            }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
+                    DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
+                    keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
                 }
             }
 
@@ -525,82 +478,6 @@ namespace Barotrauma
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "keymapping":
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
-                            {
-                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
-                                {
-                                    keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
-                                }
-                                else
-                                {
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
-                                    {
-                                        keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    case "gameplay":
-                        jobPreferences = new List<string>();
-                        foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
-                        {
-                            string jobIdentifier = ele.GetAttributeString("identifier", "");
-                            if (string.IsNullOrEmpty(jobIdentifier)) continue;
-                            jobPreferences.Add(jobIdentifier);
-                        }
-                        break;
-                    case "player":
-                        defaultPlayerName = subElement.GetAttributeString("name", defaultPlayerName);
-                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
-                        {
-                            CharacterGender = g;
-                        }
-                        if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
-                        {
-                            CharacterRace = r;
-                        }
-                        else
-                        {
-                            CharacterRace = Race.White;
-                        }
-                        CharacterHairIndex = subElement.GetAttributeInt("hairindex", CharacterHairIndex);
-                        CharacterBeardIndex = subElement.GetAttributeInt("beardindex", CharacterBeardIndex);
-                        CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", CharacterMoustacheIndex);
-                        CharacterFaceAttachmentIndex = subElement.GetAttributeInt("faceattachmentindex", CharacterFaceAttachmentIndex);
-                        break;
-                    case "tutorials":
-                        foreach (XElement tutorialElement in subElement.Elements())
-                        {
-                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
-                        }
-                        break;
-                }
-            }
-
-            UnsavedSettings = false;
-
-            selectedContentPackagePaths = new HashSet<string>();
-
-            foreach (XElement subElement in doc.Root.Elements())
-            {
-                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                .Replace("[packagename]", incompatiblePackage.Name)
-                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
-                                .Replace("[gameversion]", GameMain.Version.ToString()));
-            }
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                foreach (ContentFile file in contentPackage.Files)
                 {
                     case "contentpackage":
                         string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));

@@ -38,6 +38,9 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, configElement);
 
+            name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? name;
+            Description = TextManager.Get("EntityDescription." + identifier, returnNull: true) ?? Description;
+
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
             DisplayEntities = new List<Pair<MapEntityPrefab, Rectangle>>();
