@@ -315,7 +315,7 @@ namespace Barotrauma.Items.Components
                         Vector2 diff = nodes[nodes.Count - 1] - newNodePos;
                         Vector2 pullBackDir = diff == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(diff);
 
-                        user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
+                        user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * 200.0f);
 
                         if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)

@@ -425,7 +425,7 @@ namespace Barotrauma.Items.Components
         {
             if (steerArea.Rect.Contains(PlayerInput.MousePosition))
             {
-                if (!PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
+                if (!PlayerInput.KeyDown(InputType.Select) && !PlayerInput.KeyHit(InputType.Select))
                 {
                     Character.DisableControls = true;
                 }

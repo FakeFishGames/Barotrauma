@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -1122,6 +1123,7 @@ namespace Barotrauma
             //prevent the hands from going above the top of the ladders
             handPos.Y = Math.Min(-0.5f, handPos.Y);
 
+            // TODO: lock only one hand when aiming?
             if (!PlayerInput.KeyDown(InputType.Aim) || Math.Abs(movement.Y) > 0.01f)
             {
                 MoveLimb(leftHand,

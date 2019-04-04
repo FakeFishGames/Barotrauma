@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -166,11 +167,12 @@ namespace Barotrauma.Items.Components
 
             //set the rotation of the projectile again because dropping the projectile resets the rotation
             projectile.Item.SetTransform(projectilePos,
-                rotation + ((item.body.Dir == 1.0f) ? projectile.LaunchRotationRadians : projectile.LaunchRotationRadians - MathHelper.Pi));
+                rotation + (projectile.Item.body.Dir * projectile.LaunchRotationRadians));
 
             //recoil
             item.body.ApplyLinearImpulse(
-                new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f);                
+                new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f, 
+                maxVelocity: NetConfig.MaxPhysicsBodyVelocity);                
 
             item.RemoveContained(projectile.Item);
                 
