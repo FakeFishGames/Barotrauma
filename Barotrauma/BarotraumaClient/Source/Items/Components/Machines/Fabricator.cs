@@ -391,6 +391,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+            return true;
+        }
+
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             activateButton.Enabled = false;
