@@ -8,14 +8,11 @@ namespace Barotrauma
     {
         public static bool FollowSub = true;
 
-        private float? defaultZoom;
+        private float defaultZoom = 1.3f;
         public float DefaultZoom
         {
-            get { return defaultZoom ?? (GameMain.Config == null || GameMain.Config.EnableMouseLook ? 1.3f : 1.0f); }
-            set
-            {
-                defaultZoom = MathHelper.Clamp(value, 0.5f, 2.0f);
-            }
+            get { return defaultZoom; }
+            set { defaultZoom = MathHelper.Clamp(value, 0.5f, 2.0f); }
         }
 
         private float zoomSmoothness = 8.0f;

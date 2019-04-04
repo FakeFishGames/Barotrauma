@@ -297,8 +297,60 @@ namespace Barotrauma
             LoadPlayerConfig();
         }
 
+        private void CheckBindings(bool useDefaults)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                var binding = keyMapping[(int)inputType];
+                if (binding == null)
+                {
+                    switch (inputType)
+                    {
+                        case InputType.Deselect:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(1);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var selectKey = keyMapping[(int)InputType.Select];
+                                if (selectKey != null && selectKey.Key != Keys.None)
+                                {
+                                    binding = new KeyOrMouse(selectKey.Key);
+                                }
+                            }
+                            break;
+                        case InputType.Shoot:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(0);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var useKey = keyMapping[(int)InputType.Use];
+                                if (useKey != null && useKey.MouseButton.HasValue)
+                                {
+                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (binding == null)
+                    {
+                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
+                        binding = new KeyOrMouse(Keys.D1);
+                    }
+                    keyMapping[(int)inputType] = binding;
+                }
+            }
+        }
+
         #region Load DefaultConfig
-        public void LoadDefaultConfig()
+        private void LoadDefaultConfig()
         {
             XDocument doc = XMLExtensions.TryLoadXml(savePath);
 
@@ -396,12 +448,9 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
-            keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
-            keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
+            keyMapping[(int)InputType.Use] = new KeyOrMouse(Keys.E);
 
-            keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
-
-            keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
+            keyMapping[(int)InputType.Select] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
 
             foreach (XElement subElement in doc.Root.Elements())
@@ -456,15 +505,6 @@ namespace Barotrauma
                         CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", -1);
                         CharacterFaceAttachmentIndex = subElement.GetAttributeInt("faceattachmentindex", -1);
                         break;
-                }
-            }
-
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                if (keyMapping[(int)inputType] == null)
-                {
-                    DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
-                    keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
                 }
             }
 
@@ -672,16 +712,28 @@ namespace Barotrauma
         #endregion
 
         #region Load PlayerConfig
-        // TODO: DRY
         public void LoadPlayerConfig()
+        {
+            bool fileFound = LoadPlayerConfigInternal();
+            CheckBindings(!fileFound);
+            if (!fileFound)
+            {
+                SaveNewPlayerConfig();
+            }
+        }
+
+        // TODO: DRY
+        /// <summary>
+        /// Returns false if no player config file was found, in which case a new file is created.
+        /// </summary>
+        private bool LoadPlayerConfigInternal()
         {
             XDocument doc = XMLExtensions.LoadXml(playerSavePath);
 
             if (doc == null || doc.Root == null)
             {
                 ShowUserStatisticsPrompt = true;
-                SaveNewPlayerConfig();
-                return;
+                return false;
             }
 
             Language = doc.Root.GetAttributeString("language", Language);
@@ -742,7 +794,6 @@ namespace Barotrauma
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
-            EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -805,15 +856,6 @@ namespace Barotrauma
                 }
             }
 
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                if (keyMapping[(int)inputType] == null)
-                {
-                    DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
-                    keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
-                }
-            }
-
             UnsavedSettings = false;
 
             selectedContentPackagePaths = new HashSet<string>();
@@ -830,6 +872,7 @@ namespace Barotrauma
             }
 
             LoadContentPackages(selectedContentPackagePaths);
+            return true;
         }
 
         public void ReloadContentPackages()
@@ -919,6 +962,7 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
@@ -926,8 +970,7 @@ namespace Barotrauma
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
-                new XAttribute("aimassistamount", aimAssistAmount),
-                new XAttribute("enablemouselook", EnableMouseLook));
+                new XAttribute("aimassistamount", aimAssistAmount));
 
             if (!ShowUserStatisticsPrompt)
             {
@@ -1069,6 +1112,7 @@ namespace Barotrauma
         public void ResetToDefault()
         {
             LoadDefaultConfig();
+            CheckBindings(true);
             SaveNewPlayerConfig();
         }
 

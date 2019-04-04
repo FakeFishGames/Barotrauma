@@ -126,7 +126,7 @@ namespace Barotrauma
                         CanChangeTo.Add(new LocationTypeChange(Identifier, subElement));
                         break;
                     case "portrait":
-                        var portrait = new Sprite(subElement, lazyLoad: true);
+                        var portrait = new Sprite(subElement);
                         if (portrait != null)
                         {
                             portraits.Add(portrait);

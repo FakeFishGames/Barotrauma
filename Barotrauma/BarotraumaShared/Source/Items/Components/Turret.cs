@@ -163,7 +163,8 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-            
+            item.IsShootable = true;
+            item.RequireAimToUse = false;
             InitProjSpecific(element);
         }
 
@@ -488,7 +489,10 @@ namespace Barotrauma.Items.Components
 
             character.CursorPosition = closestEnemy.WorldPosition;
             if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
-            character.SetInput(InputType.Aim, false, true);
+            if (item.RequireAimToUse)
+            {
+                character.SetInput(InputType.Aim, false, true);
+            }
 
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
@@ -501,7 +505,7 @@ namespace Barotrauma.Items.Components
             if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
                 character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
-                character.SetInput(InputType.Use, true, true);
+                character.SetInput(InputType.Shoot, true, true);
             }
 
             return false;

@@ -626,17 +626,13 @@ namespace Barotrauma
 
                         Limb limb = character.AnimController.Limbs[limbIndex];
                         Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
-                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos,
-                            maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos);
                     }
                 }
                 else
                 {
                     Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
-                    body.ApplyLinearImpulse(
-                        Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), 
-                        forcePos, 
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    body.ApplyLinearImpulse(Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos);
                 }
             }
             return wasHit;
