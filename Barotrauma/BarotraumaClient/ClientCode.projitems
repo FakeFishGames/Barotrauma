@@ -43,8 +43,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\SinglePlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\CaptainTutorial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\ContextualTutorial.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\DoctorTutorial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\EngineerTutorial.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\MechanicTutorial.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\OfficerTutorial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\ScenarioTutorial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\Tutorial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />

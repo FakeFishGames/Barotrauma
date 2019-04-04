@@ -59,7 +59,43 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-            
+
+            // === TRAINING
+            var trainingHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, isHorizontal: true);
+
+            new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), trainingHolder.RectTransform), "MainMenuCampaignIcon")
+            {
+                CanBeFocused = false
+            };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), trainingHolder.RectTransform), style: null);
+
+            var trainingNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: trainingHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), trainingNavigation.RectTransform),
+                TextManager.Get("TutorialButton"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock")
+            { ForceUpperCase = true };
+
+            var trainingButton = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: trainingNavigation.RectTransform), style: "MainMenuGUIFrame");
+
+            var trainingList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.2f), parent: trainingButton.RectTransform))
+            {
+                Stretch = false,
+                RelativeSpacing = 0.035f
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), trainingList.RectTransform), "Attend drill", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = true,
+                UserData = Tab.Tutorials,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
+            };
+
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
 
@@ -309,6 +345,7 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
+                if (tutorial is ContextualTutorial) continue;
                 var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
@@ -319,8 +356,6 @@ namespace Barotrauma
                 TutorialMode.StartTutorial(obj as Tutorial);
                 return true;
             };
-
-            UpdateTutorialList();
 
             this.game = game;
         }
@@ -338,8 +373,6 @@ namespace Barotrauma
             }
 
             Submarine.Unload();
-
-            UpdateTutorialList();
             
             ResetButtonStates(null);
 
@@ -404,6 +437,7 @@ namespace Barotrauma
                     case Tab.HostServer:
                         break;
                     case Tab.Tutorials:
+                        UpdateTutorialList();
                         break;
                     case Tab.CharacterEditor:
                         Submarine.MainSub = null;
