@@ -17,8 +17,6 @@ namespace Barotrauma.Items.Components
         
         private GUIButton activateButton;
 
-        private GUITextBox itemFilterBox;
-
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
         private GUICustomComponent inputInventoryOverlay, outputInventoryOverlay;
 
@@ -30,23 +28,10 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
-            };
-
-            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), paddedFrame.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                UserData = "filterarea"
-            };
-            new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.Font);
-            itemFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
-            itemFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterArea.RectTransform), "x")
-            {
-                OnClicked = (btn, userdata) => { ClearFilter(); itemFilterBox.Flash(Color.White); return true; }
             };
 
             itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
@@ -65,7 +50,7 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            var outputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), paddedFrame.RectTransform), isHorizontal: true);
+            var outputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), paddedFrame.RectTransform), isHorizontal: true);
 
             selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.0f), outputArea.RectTransform), style: "InnerFrame");
             outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), outputArea.RectTransform), style: null);
@@ -76,7 +61,7 @@ namespace Barotrauma.Items.Components
             
             foreach (FabricationRecipe fi in fabricationRecipes)
             {
-                GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 30), itemList.Content.RectTransform), style: null)
+                GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 50), itemList.Content.RectTransform), style: null)
                 {
                     UserData = fi,
                     HoverColor = Color.Gold * 0.2f,
@@ -93,7 +78,7 @@ namespace Barotrauma.Items.Components
                 var itemIcon = fi.TargetItem.InventoryIcon ?? fi.TargetItem.sprite;
                 if (itemIcon != null)
                 {
-                    GUIImage img = new GUIImage(new RectTransform(new Point(30, 30), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(3, 0) },
+                    GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(3, 0) },
                         itemIcon, scaleToFit: true)
                     {
                         Color = fi.TargetItem.InventoryIconColor,
@@ -103,7 +88,7 @@ namespace Barotrauma.Items.Components
             }
 
             activateButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.07f), paddedFrame.RectTransform),
-                TextManager.Get("FabricatorCreate"), style: "GUIButtonLarge")
+                TextManager.Get("FabricatorCreate"))
             {
                 OnClicked = StartButtonClicked,
                 UserData = selectedItem,
@@ -272,36 +257,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool FilterEntities(string filter)
-        {
-            if (string.IsNullOrWhiteSpace(filter))
-            {
-                itemList.Content.Children.ForEach(c => c.Visible = true);
-                return true;
-            }
-
-            filter = filter.ToLower();
-            foreach (GUIComponent child in itemList.Content.Children)
-            {
-                FabricationRecipe recipe = child.UserData as FabricationRecipe;
-                if (recipe?.DisplayName == null) { continue; }
-                child.Visible = recipe.DisplayName.ToLower().Contains(filter);
-            }
-            itemList.UpdateScrollBarSize();
-            itemList.BarScroll = 0.0f;
-
-            return true;
-        }
-
-        public bool ClearFilter()
-        {
-            FilterEntities("");
-            itemList.UpdateScrollBarSize();
-            itemList.BarScroll = 0.0f;
-            itemFilterBox.Text = "";
-            return true;
-        }
-
         private bool SelectItem(Character user, FabricationRecipe selectedItem)
         {
             selectedItemFrame.ClearChildren();
@@ -363,7 +318,29 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private bool StartButtonClicked(GUIButton button, object obj)
+                    Rectangle slotRect = inputContainer.Inventory.slots[slotIndex].Rect;
+
+                    itemIcon.Draw(
+                        spriteBatch,
+                        slotRect.Center.ToVector2(),
+                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
+                        scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
+                    
+                    if (slotRect.Contains(PlayerInput.MousePosition))
+                    {
+                        string toolTipText = requiredItem.ItemPrefab.Name;
+                        if (!string.IsNullOrEmpty(requiredItem.ItemPrefab.Description))
+                        {
+                            toolTipText += '\n' + requiredItem.ItemPrefab.Description;
+                        }
+                        tooltip = new Pair<Rectangle, string>(slotRect, toolTipText);
+                    }
+
+                    slotIndex++;
+                }
+            }
+        }
+        private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             if (selectedItem == null) { return false; }
             if (!outputContainer.Inventory.IsEmpty())
@@ -376,15 +353,22 @@ namespace Barotrauma.Items.Components
             {
                 StartFabricating(selectedItem, Character.Controlled);
             }
-            else
+            
+            if (tooltip != null)
             {
-                CancelFabricating(Character.Controlled);
+                GUIComponent.DrawToolTip(spriteBatch, tooltip.Second, tooltip.First);
+                tooltip = null;
             }
+        }
 
             if (GameMain.Client != null)
             {
-                item.CreateClientEvent(this);
+                FabricationRecipe recipe = child.UserData as FabricationRecipe;
+                if (recipe?.DisplayName == null) { continue; }
+                child.Visible = recipe.DisplayName.ToLower().Contains(filter);
             }
+            itemList.UpdateScrollBarSize();
+            itemList.BarScroll = 0.0f;
 
             return true;
         }

@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Use))
+            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Shoot))
                 throwing = true;
 
             if (!picker.IsKeyDown(InputType.Aim) && !throwing) throwPos = 0.0f;
@@ -106,10 +106,10 @@ namespace Barotrauma.Items.Components
 #endif
                     Character thrower = picker;
                     item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
-                    item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
 
-                    ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                    ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector*10.0f);
+                    ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f);
 
                     Limb rightHand = ac.GetLimb(LimbType.RightHand);
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;

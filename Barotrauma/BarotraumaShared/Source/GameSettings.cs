@@ -391,14 +391,16 @@ namespace Barotrauma
             keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.Y);
             keyMapping[(int)InputType.CrewOrders] = new KeyOrMouse(Keys.C);
 
-            keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
-
             keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Tab);
             keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.Q);
 
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
-            keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
+            keyMapping[(int)InputType.Use] = new KeyOrMouse(Keys.E);
+
+            keyMapping[(int)InputType.Select] = new KeyOrMouse(0);
+            keyMapping[(int)InputType.Deselect] = new KeyOrMouse(1);
+            keyMapping[(int)InputType.Shoot] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
 
             foreach (XElement subElement in doc.Root.Elements())
@@ -739,7 +741,6 @@ namespace Barotrauma
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
-            EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -923,8 +924,7 @@ namespace Barotrauma
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
-                new XAttribute("aimassistamount", aimAssistAmount),
-                new XAttribute("enablemouselook", EnableMouseLook));
+                new XAttribute("aimassistamount", aimAssistAmount));
 
             if (!ShowUserStatisticsPrompt)
             {

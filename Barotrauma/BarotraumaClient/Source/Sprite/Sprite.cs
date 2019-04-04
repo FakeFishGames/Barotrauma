@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         protected Texture2D texture;
 
+        private bool preMultipliedAlpha;
+
         public Texture2D Texture
         {
             get
@@ -53,28 +55,6 @@ namespace Barotrauma
             if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
         }
 
-        public void EnsureLazyLoaded()
-        {
-            if (!lazyLoad || texture != null) { return; }
-
-            Vector4 sourceVector = Vector4.Zero;
-            bool temp2 = false;
-            LoadTexture(ref sourceVector, ref temp2, preMultipliedAlpha);
-            if (sourceRect.Width == 0 && sourceRect.Height == 0)
-            {
-                sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
-                size = SourceElement.GetAttributeVector2("size", Vector2.One);
-                size.X *= sourceRect.Width;
-                size.Y *= sourceRect.Height;
-                RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
-            }
-            foreach (Sprite s in list)
-            {
-                if (s == this) { continue; }
-                if (s.FullPath == FullPath && s.texture != null) { s.texture = texture; }
-            }
-        }
-
         public void ReloadTexture()
         {
             var sprites = LoadedSprites.Where(s => s.Texture == texture).ToList();
@@ -96,12 +76,11 @@ namespace Barotrauma
 
         public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
-
             if (string.IsNullOrWhiteSpace(file)) { return new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1); }
             file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
-                if (s.FullPath == file && s.texture != null) { return s.texture; }
+                if (s.FullPath == file) return s.texture;
             }
 
             if (File.Exists(file))

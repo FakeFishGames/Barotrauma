@@ -568,7 +568,7 @@ namespace Barotrauma
 
         public void Extinguish(float deltaTime, float amount, Vector2 position)
         {
-            for (int i = FireSources.Count - 1; i >= 0; i--)
+            for (int i = FireSources.Count - 1; i >= 0; i-- )
             {
                 FireSources[i].Extinguish(deltaTime, amount, position);
             }

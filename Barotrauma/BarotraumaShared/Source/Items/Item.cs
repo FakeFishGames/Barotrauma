@@ -235,6 +235,12 @@ namespace Barotrauma
             set { /*do nothing*/ }
         }
 
+        /// <summary>
+        /// Should the item's Use method be called with the "Use" or with the "Shoot" key?
+        /// </summary>
+        [Serialize(false, false)]
+        public bool IsShootable { get; set; }
+
         public Color Color
         {
             get { return spriteColor; }
@@ -1444,7 +1450,6 @@ namespace Barotrauma
             return true;         
         }
 
-
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (condition == 0.0f) return;
@@ -1590,8 +1595,6 @@ namespace Barotrauma
                     GameMain.NetworkMember != null && (GameMain.NetworkMember.IsServer || Character.Controlled == dropper))
                 {
                     parentInventory.CreateNetworkEvent();
-                    //send frequent updates after the item has been dropped
-                    PositionUpdateInterval = 0.0f;
                 }
             }
 

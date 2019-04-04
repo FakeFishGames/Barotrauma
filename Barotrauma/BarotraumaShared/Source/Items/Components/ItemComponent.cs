@@ -348,14 +348,14 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        //called when the item is equipped and left mouse button is pressed
+        //called when the item is equipped and the "use" key is pressed
         //returns true if the item was used succesfully (not out of ammo, reloading, etc)
         public virtual bool Use(float deltaTime, Character character = null) 
         {
             return characterUsable || character == null;
         }
 
-        //called when the item is equipped and right mouse button is pressed
+        //called when the item is equipped and the "aim" key is pressed
         public virtual bool SecondaryUse(float deltaTime, Character character = null)
         {
             return false;
