@@ -840,10 +840,11 @@ namespace Barotrauma
             }
 #endif
 
-            MemoryStream imgStream = new MemoryStream();
-            CreateImage(defaultPreviewImageSize.X, defaultPreviewImageSize.Y, imgStream);
-            
-            Submarine.SaveCurrent(savePath, imgStream);
+            using (MemoryStream imgStream = new MemoryStream())
+            {
+                CreateImage(defaultPreviewImageSize.X, defaultPreviewImageSize.Y, imgStream);
+                Submarine.SaveCurrent(savePath, imgStream);
+            }            
             Submarine.MainSub.CheckForErrors();
             
             GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
