@@ -318,24 +318,6 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-                    Rectangle slotRect = inputContainer.Inventory.slots[slotIndex].Rect;
-
-                    itemIcon.Draw(
-                        spriteBatch,
-                        slotRect.Center.ToVector2(),
-                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
-                        scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
-                    
-                    if (slotRect.Contains(PlayerInput.MousePosition))
-                    {
-                        string toolTipText = requiredItem.ItemPrefab.Name;
-                        if (!string.IsNullOrEmpty(requiredItem.ItemPrefab.Description))
-                        {
-                            toolTipText += '\n' + requiredItem.ItemPrefab.Description;
-                        }
-                        tooltip = new Pair<Rectangle, string>(slotRect, toolTipText);
-                    }
-
                     slotIndex++;
                 }
             }
@@ -361,15 +343,37 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool SelectItem(Character user, FabricationRecipe selectedItem)
+        {
+            selectedItemFrame.ClearChildren();
+            
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f, Stretch = true };
+
             if (GameMain.Client != null)
             {
-                FabricationRecipe recipe = child.UserData as FabricationRecipe;
-                if (recipe?.DisplayName == null) { continue; }
-                child.Visible = recipe.DisplayName.ToLower().Contains(filter);
+                inadequateSkills = selectedItem.RequiredSkills.FindAll(skill => user.GetSkillLevel(skill.Identifier) < skill.Level);
             }
-            itemList.UpdateScrollBarSize();
-            itemList.BarScroll = 0.0f;
+            
+            if (selectedItem.RequiredSkills.Any())
+            {
+                string text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
+                foreach (Skill skill in selectedItem.RequiredSkills)
+                {
+                    text += "   - " + TextManager.Get("SkillName." + skill.Identifier) + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level;
+                    if (skill != selectedItem.RequiredSkills.Last()) { text += "\n"; }
+                }
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text,
+                    textColor: inadequateSkills.Any() ? Color.Red : Color.LightGreen, font: GUI.SmallFont);
+            }
 
+            float degreeOfSuccess = user == null ? 0.0f : DegreeOfSuccess(user, selectedItem.RequiredSkills);
+            if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
+
+            float requiredTime = user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user);
+            string requiredTimeText = TextManager.Get("FabricatorRequiredTime") + ": " + ToolBox.SecondsToReadableTime(requiredTime);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+                requiredTimeText, textColor: ToolBox.GradientLerp(degreeOfSuccess, Color.Red, Color.Yellow, Color.LightGreen), font: GUI.SmallFont);
+                        
             return true;
         }
 

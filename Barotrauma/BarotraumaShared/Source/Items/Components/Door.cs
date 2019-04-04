@@ -468,16 +468,9 @@ namespace Barotrauma.Items.Components
                     " Remoteplayer: " + c.IsRemotePlayer);
                 return false;
             }
-            
-            if (IsHorizontal)
+            else if (connection.Name == "set_state")
             {
-                if (body.SimPosition.X < doorRectSimPos.X || body.SimPosition.X > doorRectSimPos.X + doorRectSimSize.X) { return false; }
-                diff = body.SimPosition.Y - item.SimPosition.Y;
-            }
-            else
-            {
-                if (body.SimPosition.Y > doorRectSimPos.Y || body.SimPosition.Y < doorRectSimPos.Y - doorRectSimSize.Y) { return false; }
-                diff = body.SimPosition.X - item.SimPosition.X;
+                SetState(signal != "0", false, true);
             }
 
 #if SERVER
