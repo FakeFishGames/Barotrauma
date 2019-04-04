@@ -396,61 +396,73 @@ namespace Barotrauma.Items.Components
                 }
                 int dir = IsHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
 
-                List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
-                bodies.Add(c.AnimController.Collider);
-
                 bool soundPlayed = false;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    float diff = 0.0f;
-                    if (!MathUtils.IsValid(body.SimPosition))
-                    {
-                        DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
-                        GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + body.SimPosition + ")." +
-                            " Removed: " + c.Removed +
-                            " Remoteplayer: " + c.IsRemotePlayer);
-                        continue;
-                    }
-
-                    if (IsHorizontal)
-                    {
-                        if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
-                        diff = body.SimPosition.Y - item.SimPosition.Y;
-                    }
-                    else
-                    {
-                        if (body.SimPosition.Y > simPos.Y || body.SimPosition.Y < simPos.Y - simSize.Y) continue;
-                        diff = body.SimPosition.X - item.SimPosition.X;
-                    }
-                   
-                    if (Math.Sign(diff) != dir)
+                    if (PushBodyOutOfDoorway(c, limb.body, dir, simPos, simSize) && !soundPlayed)
                     {
 #if CLIENT
                         SoundPlayer.PlayDamageSound("LimbBlunt", 1.0f, limb.body);
 #endif
-
-                        if (IsHorizontal)
-                        {
-                            body.SetTransform(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 2.0f), body.Rotation);
-                            body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f));
-                        }
-                        else
-                        {
-                            body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X * 1.2f, body.SimPosition.Y), body.Rotation);
-                            body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
-                        }
-                    }
-
-                    if (IsHorizontal)
-                    {
-                        if (Math.Abs(body.SimPosition.Y - item.SimPosition.Y) > simSize.Y * 0.5f) continue;
-
-                        body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
+                        soundPlayed = true;
                     }
                 }
                 PushBodyOutOfDoorway(c, c.AnimController.Collider, dir, simPos, simSize);
             }
+        }
+
+        private bool PushBodyOutOfDoorway(Character c, PhysicsBody body, int dir, Vector2 doorRectSimPos, Vector2 doorRectSimSize)
+        {
+            float diff = 0.0f;
+            if (!MathUtils.IsValid(body.SimPosition))
+            {
+                DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
+                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + body.SimPosition + ")." +
+                    " Removed: " + c.Removed +
+                    " Remoteplayer: " + c.IsRemotePlayer);
+                return false;
+            }
+            
+            if (IsHorizontal)
+            {
+                if (body.SimPosition.X < doorRectSimPos.X || body.SimPosition.X > doorRectSimPos.X + doorRectSimSize.X) { return false; }
+                diff = body.SimPosition.Y - item.SimPosition.Y;
+            }
+            else
+            {
+                if (body.SimPosition.Y > doorRectSimPos.Y || body.SimPosition.Y < doorRectSimPos.Y - doorRectSimSize.Y) { return false; }
+                diff = body.SimPosition.X - item.SimPosition.X;
+            }
+
+            //if the limb is at a different side of the door than the character (collider), 
+            //immediately teleport it to the correct side
+            if (Math.Sign(diff) != dir)
+            {
+                if (IsHorizontal)
+                {
+                    body.SetTransform(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * doorRectSimSize.Y * 2.0f), body.Rotation);
+                }
+                else
+                {
+                    body.SetTransform(new Vector2(item.SimPosition.X + dir * doorRectSimSize.X * 1.2f, body.SimPosition.Y), body.Rotation);
+                }
+            }
+
+            //apply an impulse to push the limb further from the door
+            if (IsHorizontal)
+            {
+                if (Math.Abs(body.SimPosition.Y - item.SimPosition.Y) > doorRectSimSize.Y * 0.5f) { return false; }
+                body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            }
+            else
+            {
+                if (Math.Abs(body.SimPosition.X - item.SimPosition.X) > doorRectSimSize.X * 0.5f) { return false; }
+                body.ApplyLinearImpulse(new Vector2(dir * 2.0f, isOpen ? 0.0f : -1.0f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            }
+
+            c.SetStun(0.2f);
+            return true;
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
@@ -461,12 +473,7 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name == "toggle")
             {
-                DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
-                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + body.SimPosition + ")." +
-                    " Removed: " + c.Removed +
-                    " Remoteplayer: " + c.IsRemotePlayer);
-                return false;
+                SetState(!wasOpen, false, true);
             }
             else if (connection.Name == "set_state")
             {

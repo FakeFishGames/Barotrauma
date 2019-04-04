@@ -15,9 +15,7 @@ namespace Barotrauma
         Ragdoll, Health, Grab,
         SelectNextCharacter,
         SelectPreviousCharacter,
-        Voice,
-        Deselect,
-        Shoot
+        Voice
     }
 
     public class KeyOrMouse
