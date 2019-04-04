@@ -1062,6 +1062,8 @@ namespace Barotrauma
                 {
                     continue;
                 }
+                // Don't attack outposts.
+                if (target.Entity.Submarine != null && target.Entity.Submarine.IsOutpost) { continue; }
 
                 Character targetCharacter = target.Entity as Character;
 
