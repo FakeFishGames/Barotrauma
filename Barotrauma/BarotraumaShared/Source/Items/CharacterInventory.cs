@@ -176,13 +176,16 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] != null && Items[i] != item)
                     {
-                        free = false;
+                        if (!Items[i].AllowedSlots.Contains(InvSlotType.Any) || !TryPutItem(Items[i], character, new List<InvSlotType> { InvSlotType.Any }, true))
+                        {
+                            free = false;
 #if CLIENT
-                        for (int j = 0; j < capacity; j++)
-			            {
-                            if (slots != null && Items[j] == Items[i]) slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
-			            }
+                            for (int j = 0; j < capacity; j++)
+                            {
+                                if (slots != null && Items[j] == Items[i]) slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                            }
 #endif
+                        }
                     }
                 }
 
