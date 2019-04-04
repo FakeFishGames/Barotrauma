@@ -55,12 +55,8 @@ namespace Barotrauma
             Ragdoll = 0x800,
             Health = 0x1000,
             Grab = 0x2000,
-            Deselect = 0x4000, // 16384
-            Shoot = 0x8000, // 32768
 
-            MaxVal = 0xFFFF // 65535
-            //MaxVal = 0x7FFF   // 32767
-            //MaxVal = 0x3FFF // 16383
+            MaxVal = 0x3FFF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;

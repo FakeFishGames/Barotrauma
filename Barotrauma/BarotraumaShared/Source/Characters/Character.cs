@@ -892,8 +892,6 @@ namespace Barotrauma
                         return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
                     case InputType.Select:
                         return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
-                    case InputType.Deselect:
-                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
                     case InputType.Health:
                         return dequeuedInput.HasFlag(InputNetFlags.Health);
                     case InputType.Grab:
@@ -1272,51 +1270,18 @@ namespace Barotrauma
             {
                 for (int i = 0; i < selectedItems.Length; i++ )
                 {
-                    if (selectedItems[i] == null) { continue; }
-                    if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
-                    var item = selectedItems[i];
-                    if (item == null) { continue; }
-                    if (IsKeyDown(InputType.Aim) || !item.RequireAimToSecondaryUse)
-                    {
-                        item.SecondaryUse(deltaTime, this);
-                    }
-                    if (IsKeyDown(InputType.Use) && !item.IsShootable)
-                    {
-                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
-                        {
-                            item.Use(deltaTime, this);
-                        }
-                    }
-                    if (IsKeyDown(InputType.Shoot) && item.IsShootable)
-                    {
-                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
-                        {
-                            item.Use(deltaTime, this);
-                        }
-                    }
+                    if (selectedItems[i] == null) continue;
+                    if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
+
+                    if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
+                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
                 }
             }
             
             if (SelectedConstruction != null)
             {
-                if (IsKeyDown(InputType.Aim) || !SelectedConstruction.RequireAimToSecondaryUse)
-                {
-                    SelectedConstruction.SecondaryUse(deltaTime, this);
-                }
-                if (IsKeyDown(InputType.Use) && !SelectedConstruction.IsShootable)
-                {
-                    if (!SelectedConstruction.RequireAimToUse || IsKeyDown(InputType.Aim))
-                    {
-                        SelectedConstruction.Use(deltaTime, this);
-                    }
-                }
-                if (IsKeyDown(InputType.Shoot) && SelectedConstruction.IsShootable)
-                {
-                    if (!SelectedConstruction.RequireAimToUse || IsKeyDown(InputType.Aim))
-                    {
-                        SelectedConstruction.Use(deltaTime, this);
-                    }
-                }
+                if (IsKeyDown(InputType.Use)) SelectedConstruction.Use(deltaTime, this);
+                if (SelectedConstruction != null && IsKeyDown(InputType.Aim)) SelectedConstruction.SecondaryUse(deltaTime, this);
             }
 
             if (SelectedCharacter != null)
@@ -1794,7 +1759,7 @@ namespace Barotrauma
                 }
 #endif
             }
-            else if (IsKeyHit(InputType.Deselect) && SelectedConstruction != null)
+            else if (IsKeyHit(InputType.Select) && SelectedConstruction != null)
             {
                 SelectedConstruction = null;
 #if CLIENT
@@ -1939,7 +1904,7 @@ namespace Barotrauma
                 //cannot be protected from pressure when below crush depth
                 protectedFromPressure = protectedFromPressure && WorldPosition.Y > CharacterHealth.CrushDepth;
                 //implode if not protected from pressure, and either outside or in a high-pressure hull
-                if (!protectedFromPressure && 
+                if (!protectedFromPressure &&
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
                     if (CharacterHealth.PressureKillDelay <= 0.0f)
@@ -1954,7 +1919,7 @@ namespace Barotrauma
 
                     if (PressureTimer >= 100.0f)
                     {
-                        if (Controlled == this) cam.Zoom = 5.0f;
+                        if (Controlled == this) { cam.Zoom = 5.0f; }
                         if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
                             Implode();
@@ -2235,7 +2200,7 @@ namespace Barotrauma
 
             if (limbHit == null) return new AttackResult();
             
-            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime);
+            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
@@ -2321,7 +2286,8 @@ namespace Barotrauma
             {
                 Vector2 diff = dir;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
-                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
+                hitLimb.body.ApplyLinearImpulse(Vector2.Normalize(diff) * attackImpulse, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff),
+                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);

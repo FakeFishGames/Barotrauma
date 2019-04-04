@@ -605,7 +605,7 @@ namespace Barotrauma
         {
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             if (!IsValidValue(point, "point")) return;
-            if (!IsValidValue(impulse / body.Mass, "new velocity")) return;
+            if (!IsValidValue(impulse / body.Mass, "new velocity", -1000.0f, 1000.0f)) return;
             body.ApplyLinearImpulse(impulse, point);
         }
 
@@ -646,15 +646,20 @@ namespace Barotrauma
         /// </summary>
         public void ApplyForce(Vector2 force, float maxVelocity)
         {
-            if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
             if (!IsValidValue(maxVelocity, "max velocity")) return;
 
-            float currSpeed = body.LinearVelocity.Length();
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
             Vector2 newVelocity = body.LinearVelocity + velocityAddition;
-            newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
+            
+            float newSpeedSqr = newVelocity.LengthSquared();
+            if (newSpeedSqr > maxVelocity * maxVelocity)
+            {
+                newVelocity = newVelocity.ClampLength(maxVelocity);
+            }
 
-            body.ApplyForce((newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step);
+            Vector2 clampedForce = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
+            if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
+            body.ApplyForce(force);
         }
 
         public void ApplyForce(Vector2 force, Vector2 point)
