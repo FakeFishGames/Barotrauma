@@ -627,14 +627,20 @@ namespace Barotrauma
                     return true;
                 }
             };
+            
+            var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f), controlsLayoutGroup.RectTransform), isHorizontal: true)
+                { Stretch = true, RelativeSpacing = 0.03f };
 
-            var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), controlsLayoutGroup.RectTransform))
-                { Stretch = true };
+            var inputColumnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), inputFrame.RectTransform))
+                { Stretch = true, RelativeSpacing = 0.02f };
+            var inputColumnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), inputFrame.RectTransform))
+                { Stretch = true, RelativeSpacing = 0.02f };
 
             var inputNames = Enum.GetValues(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
-                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform)) { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
+                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2) ? inputColumnLeft : inputColumnRight).RectTransform))
+                    { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
                     TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
                 var keyBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform),
@@ -644,9 +650,6 @@ namespace Barotrauma
                 };
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
-
-                //spacing
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), inputFrame.RectTransform), style: null);
             }
             GUITextBlock aimAssistText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform), TextManager.Get("AimAssist"));
             GUIScrollBar aimAssistSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), controlsLayoutGroup.RectTransform),
@@ -678,18 +681,27 @@ namespace Barotrauma
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 0.07f), controlsLayoutGroup.RectTransform, Anchor.BottomRight), TextManager.Get("LegacyBindings"), style: "GUIButton")
+            var resetControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), isHorizontal: true)
             {
-                IgnoreLayoutGroups = true,
+                RelativeSpacing = 0.02f
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetDefaultBindings"))
+            {
+                ToolTip = TextManager.Get("SetDefaultBindingsToolTip"),
                 OnClicked = (button, data) =>
                 {
-                    // TODO: add a prompt?
-                    SetDefaultBindings(legacy: true);
-                    CheckBindings(true);
-                    ApplySettings();
-                    // TODO: refresh the settings frame instead of closing it.
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
+                    ResetControls(legacy: false);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetLegacyBindings"))
+            {
+                ToolTip = TextManager.Get("SetLegacyBindingsToolTip"),
+                OnClicked = (button, data) =>
+                {
+                    ResetControls(legacy: true);
                     return true;
                 }
             };
@@ -723,9 +735,8 @@ namespace Barotrauma
                     LoadDefaultConfig();
                     CheckBindings(true);
                     ApplySettings();
-                    // TODO: refresh the settings frame instead of closing it.
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
+                    ResetSettingsFrame();
+                    CreateSettingsFrame();
                     return true;
                 }
             };
@@ -773,6 +784,24 @@ namespace Barotrauma
         {
             textBox.Text = "";
             CoroutineManager.StartCoroutine(WaitForKeyPress(textBox));
+        }
+
+        private void ResetControls(bool legacy)
+        {
+            // TODO: add a prompt?
+            SetDefaultBindings(legacy: legacy);
+            CheckBindings(true);
+            ApplySettings();
+            if (Screen.Selected == GameMain.MainMenuScreen)
+            {
+                GameMain.MainMenuScreen.ResetSettingsFrame();
+            }
+            else
+            {
+                ResetSettingsFrame();
+                CreateSettingsFrame();
+            }
+            SelectTab(Tab.Controls);
         }
 
         private bool SelectResolution(GUIComponent selected, object userData)

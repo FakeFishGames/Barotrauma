@@ -393,8 +393,6 @@ namespace Barotrauma.Items.Components
             {
                 item.CreateClientEvent(this);
             }
-            itemList.UpdateScrollBarSize();
-            itemList.BarScroll = 0.0f;
 
             return true;
         }
