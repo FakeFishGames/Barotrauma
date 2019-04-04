@@ -187,7 +187,6 @@
   
   <!-- Steam Workshop menu -->
   <PublishTab>Publish</PublishTab>
-  <DownloadButton>Download</DownloadButton>
   <NoSubscribedMods>You haven't subscribed to any mods on the Steam Workshop. Click the "Find more mods" button below to get started!</NoSubscribedMods>
   <PopularMods>Popular mods</PopularMods>
   <FindModsButton>Find more mods...</FindModsButton>
@@ -197,14 +196,11 @@
   <CreateWorkshopItem>Create a new item</CreateWorkshopItem>
   <WorkshopLabelSubmarines>Submarines</WorkshopLabelSubmarines>
   <WorkshopLabelContentPackages>Content packages</WorkshopLabelContentPackages>
-  <WorkshopItemEnabled>Enabled</WorkshopItemEnabled>
   <WorkshopItemDownloading>Downloading...</WorkshopItemDownloading>
   <WorkshopShowItemInSteam>Show in Steam</WorkshopShowItemInSteam>
   <WorkshopItemScore>Score</WorkshopItemScore>
   <WorkshopItemVotes>[votecount] votes</WorkshopItemVotes>
   <WorkshopItemCreator>Creator</WorkshopItemCreator>
-  <WorkshopItemCreationDate>Created</WorkshopItemCreationDate>
-  <WorkshopItemModificationDate>Modified</WorkshopItemModificationDate>
   <WorkshopItemFileSize>File size</WorkshopItemFileSize>
   <WorkshopItemTitle>Title</WorkshopItemTitle>
   <WorkshopItemDescription>Description</WorkshopItemDescription>
@@ -2740,10 +2736,15 @@
   <ItemMsgRepairWrench>[[use]] Repair (Wrench)</ItemMsgRepairWrench>
   <ItemMsgUsePlasmaCutter>[[shoot]] Cut (Plasma Cutter)</ItemMsgUsePlasmaCutter>
 
-  <SubscribedMods>Subscribed mods</SubscribedMods>
-
   <BrowseTab>Popular Mods</BrowseTab>
   
+  <WorkshopItemModificationDate>Updated</WorkshopItemModificationDate>
+  <WorkshopItemCreationDate>Published</WorkshopItemCreationDate>
+
+  <WorkshopItemEnabled>Enable</WorkshopItemEnabled>
+
+  <DownloadButton>Subscribe</DownloadButton>
+
   <!-- New Additions -->
   
   <InputType.Deselect>Deselect</InputType.Deselect>
