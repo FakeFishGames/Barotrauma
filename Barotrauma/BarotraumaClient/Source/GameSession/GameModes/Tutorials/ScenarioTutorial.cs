@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
@@ -9,12 +11,20 @@ namespace Barotrauma.Tutorials
         private Character character;
         private SpawnType spawnPointType;
         private string submarinePath;
+        private string startOutpostPath;
+        private string endOutpostPath;
         private string levelSeed;
+        private string levelParams;
 
         public ScenarioTutorial(XElement element) : base(element)
         {
             submarinePath = element.GetAttributeString("submarinepath", "");
+            startOutpostPath = element.GetAttributeString("startoutpostpath", "");
+            endOutpostPath = element.GetAttributeString("endoutpostpath", "");
+
             levelSeed = element.GetAttributeString("levelseed", "tuto");
+            levelParams = element.GetAttributeString("levelparams", "");
+
             Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
         }
 
@@ -58,12 +68,40 @@ namespace Barotrauma.Tutorials
         private IEnumerable<object> Loading()
         {
             Submarine.MainSub = Submarine.Load(submarinePath, "", true);
+
+            LevelGenerationParams generationParams = LevelGenerationParams.LevelParams.Find(p => p.Name == levelParams);
+
             yield return CoroutineStatus.Running;
 
             GameMain.GameSession = new GameSession(Submarine.MainSub, "",
                 GameModePreset.List.Find(g => g.Identifier == "tutorial"));
             (GameMain.GameSession.GameMode as TutorialMode).tutorial = this;
-            GameMain.GameSession.StartRound(levelSeed);
+
+            if (generationParams != null)
+            {
+                Biome biome = LevelGenerationParams.GetBiomes().Find(b => generationParams.AllowedBiomes.Contains(b));
+
+                Submarine startOutpost = null;
+                if (startOutpostPath != string.Empty)
+                {
+                    startOutpost = Submarine.Load(startOutpostPath, "", false);
+                }
+
+                Submarine endOutpost = null;
+
+                if (endOutpostPath != string.Empty)
+                {
+                    endOutpost = Submarine.Load(endOutpostPath, "", false);
+                }
+
+                Level tutorialLevel = new Level(levelSeed, 0, 0, generationParams, biome, startOutpost, endOutpost);
+                GameMain.GameSession.StartRound(tutorialLevel);
+            }
+            else
+            {
+                GameMain.GameSession.StartRound(levelSeed);
+            }
+
             GameMain.GameSession.EventManager.Events.Clear();
             GameMain.GameScreen.Select();
 

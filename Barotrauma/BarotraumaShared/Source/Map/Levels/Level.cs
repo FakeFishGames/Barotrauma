@@ -138,6 +138,9 @@ namespace Barotrauma
         public Submarine StartOutpost { get; private set; }
         public Submarine EndOutpost { get; private set; }
 
+        private Submarine preSelectedStartOutpost;
+        private Submarine preSelectedEndOutpost;
+
         public string Seed
         {
             get { return seed; }
@@ -209,7 +212,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="difficulty">A scalar between 0-100</param>
         /// <param name="sizeFactor">A scalar between 0-1 (0 = the minimum width defined in the generation params is used, 1 = the max width is used)</param>
-        public Level(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome)
+        public Level(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome, Submarine startOutpost = null, Submarine endOutPost = null)
             : base(null)
         {
 
@@ -224,6 +227,9 @@ namespace Barotrauma
             borders = new Rectangle(0, 0,
                 (width / GridCellSize) * GridCellSize,
                 (generationParams.Height / GridCellSize) * GridCellSize);
+
+            preSelectedStartOutpost = startOutpost;
+            preSelectedEndOutpost = endOutPost;
 
             //remove from entity dictionary
             base.Remove();
@@ -1510,14 +1516,24 @@ namespace Barotrauma
                     continue;
                 }
 
-                //only create a starting outpost in campaign mode
-                if (GameMain.GameSession?.GameMode as CampaignMode == null && ((i == 0) == !Mirrored))
+                //only create a starting outpost in campaign and tutorial modes
+                if (!IsModeStartOutpostCompatible() && ((i == 0) == !Mirrored))
                 {
                     continue;
                 }
-                
-                string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
-                var outpost = new Submarine(outpostFile, tryLoad: false);
+
+                Submarine outpost = null;
+
+                if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
+                {
+                    string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
+                    outpost = new Submarine(outpostFile, tryLoad: false);
+                }
+                else
+                {
+                    outpost = (i == 0) ? preSelectedStartOutpost : preSelectedEndOutpost;
+                }
+
                 outpost.Load(unloadPrevious: false);
                 outpost.MakeOutpost();
 
@@ -1567,6 +1583,15 @@ namespace Barotrauma
                     if (GameMain.GameSession?.EndLocation != null) { outpost.Name = GameMain.GameSession.EndLocation.Name; }
                 }
             }            
+        }
+
+        private bool IsModeStartOutpostCompatible()
+        {
+#if CLIENT
+            return GameMain.GameSession?.GameMode as CampaignMode != null || GameMain.GameSession?.GameMode as TutorialMode != null;
+#else
+            return GameMain.GameSession?.GameMode as CampaignMode != null;
+#endif
         }
 
         public override void Remove()
