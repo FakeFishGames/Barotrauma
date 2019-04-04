@@ -203,16 +203,31 @@ namespace Barotrauma
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform) { AbsoluteOffset = new Point(0, TopPanel.Rect.Height) }, style: null);
 
-            GUITextBlock itemCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), "ItemCount")
+            var itemCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Items"));
+            var itemCount = new GUITextBlock(new RectTransform(Vector2.One, itemCountText.RectTransform), "", textAlignment: Alignment.TopRight);
+            itemCount.TextGetter = () =>
             {
-                TextGetter = GetItemCount
+                itemCount.TextColor = ToolBox.GradientLerp(Item.ItemList.Count / 5000.0f, Color.LightGreen, Color.Yellow, Color.Red);
+                return Item.ItemList.Count.ToString();
             };
 
-            GUITextBlock structureCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), "StructureCount")
+            var structureCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Structures"));
+            var structureCount = new GUITextBlock(new RectTransform(Vector2.One, structureCountText.RectTransform), "", textAlignment: Alignment.TopRight);
+            structureCount.TextGetter = () =>
             {
-                TextGetter = GetStructureCount
+                int count = (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
+                structureCount.TextColor = ToolBox.GradientLerp(count / 1000.0f, Color.LightGreen, Color.Yellow, Color.Red);
+                return count.ToString();
             };
-            
+
+            var wallCountText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("Walls"));
+            var wallCount = new GUITextBlock(new RectTransform(Vector2.One, wallCountText.RectTransform), "", textAlignment: Alignment.TopRight);
+            wallCount.TextGetter = () =>
+            {
+                wallCount.TextColor = ToolBox.GradientLerp(Structure.WallList.Count / 500.0f, Color.LightGreen, Color.Yellow, Color.Red);
+                return Structure.WallList.Count.ToString();
+            };
+
             hullVolumeFrame = new GUIFrame(new RectTransform(new Vector2(0.15f, 2.0f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft, minSize: new Point(300, 85)) { AbsoluteOffset = new Point(LeftPanel.Rect.Width, 0) }, "GUIToolTip")
             {
                 Visible = false

@@ -2747,6 +2747,8 @@
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
 
+  <Walls>Walls</Walls>
+  
   <MyCharacter>My character</MyCharacter>
 
   <Reset>Reset</Reset>
