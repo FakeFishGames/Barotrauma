@@ -45,11 +45,9 @@ namespace Barotrauma
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
             int height = Math.Min(GameMain.GraphicsHeight - 160, 700);
 
-            Rectangle panelRect = new Rectangle(0, 0, width, height);
-
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), GUI.Canvas, Anchor.Center));
+            menu = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), GUI.Canvas, Anchor.Center) { MinSize = new Point(width, height) });
 
             var container = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
 

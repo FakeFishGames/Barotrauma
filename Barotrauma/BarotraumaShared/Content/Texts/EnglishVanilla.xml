@@ -186,11 +186,9 @@
   <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
   
   <!-- Steam Workshop menu -->
-  <ModsTab>Mods</ModsTab>
   <BrowseTab>Browse</BrowseTab>
   <PublishTab>Publish</PublishTab>
   <DownloadButton>Download</DownloadButton>
-  <SubscribedMods>Subscribed mods</SubscribedMods>
   <NoSubscribedMods>You haven't subscribed to any mods on the Steam Workshop. Click the "Find more mods" button below to get started!</NoSubscribedMods>
   <PopularMods>Popular mods</PopularMods>
   <FindModsButton>Find more mods...</FindModsButton>
@@ -2742,12 +2740,16 @@
   <ItemMsgRepairWeldingTool>[[shoot]] Repair (Welding Tool)</ItemMsgRepairWeldingTool>
   <ItemMsgRepairWrench>[[use]] Repair (Wrench)</ItemMsgRepairWrench>
   <ItemMsgUsePlasmaCutter>[[shoot]] Cut (Plasma Cutter)</ItemMsgUsePlasmaCutter>
+
+  <SubscribedMods>Subscribed mods</SubscribedMods>
   
   <!-- New Additions -->
   
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
 
+  <ModsTab>Mods</ModsTab>
+  
   <Walls>Walls</Walls>
   
   <MyCharacter>My character</MyCharacter>
