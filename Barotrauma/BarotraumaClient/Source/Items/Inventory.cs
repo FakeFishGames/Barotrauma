@@ -600,6 +600,8 @@ namespace Barotrauma
         {
             if (draggingItem != null && PlayerInput.LeftButtonReleased())
             {
+                Character.Controlled.ClearInputs();
+
                 if (CharacterHealth.OpenHealthWindow != null && 
                     CharacterHealth.OpenHealthWindow.OnItemDropped(draggingItem, false))
                 {
