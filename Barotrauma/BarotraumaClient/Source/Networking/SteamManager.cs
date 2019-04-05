@@ -230,7 +230,7 @@ namespace Barotrauma.Steam
             if (instance == null || !instance.isInitialized) return;
 
             var query = instance.client.Workshop.CreateQuery();
-            query.Order = Workshop.Order.RankedByTrend;
+            query.Order = Workshop.Order.RankedByTotalUniqueSubscriptions;
             query.UserId = instance.client.SteamId;
             query.UserQueryType = Workshop.UserQueryType.Subscribed;
             query.UploaderAppId = AppID;
@@ -247,8 +247,7 @@ namespace Barotrauma.Steam
             if (instance == null || !instance.isInitialized) return;
 
             var query = instance.client.Workshop.CreateQuery();
-            query.Order = Workshop.Order.RankedByTrend;
-            query.RankedByTrendDays = 30;
+            query.Order = Workshop.Order.RankedByTotalUniqueSubscriptions;
             query.UploaderAppId = AppID;
             if (requireTags != null) query.RequireTags = requireTags;
             query.Run();

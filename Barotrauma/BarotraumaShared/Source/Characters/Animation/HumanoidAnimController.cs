@@ -599,7 +599,7 @@ namespace Barotrauma
                 waist.PullJointEnabled = true;
             }
             
-            float floorPos = GetFloorY(colliderPos + new Vector2(Math.Sign(movement.X) * 0.5f, 1.0f));
+            float floorPos = GetFloorY(colliderPos + new Vector2(Math.Sign(movement.X) * 0.5f, 1.0f), ignoreStairs: Stairs == null);
             bool onSlope = floorPos > GetColliderBottom().Y + 0.05f;
 
             if (Stairs != null || onSlope)

@@ -64,13 +64,14 @@ namespace Barotrauma.Items.Components
                 attack = new Attack(subElement, item.Name + ", MeleeWeapon");
             }
             item.IsShootable = true;
+            // TODO: should define this in xml if we have melee weapons that don't require aim to use
             item.RequireAimToUse = true;
         }
 
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || reloadTimer > 0.0f) return false;
-            if (!character.IsKeyDown(InputType.Aim) || hitting) return false;
+            if (Item.RequireAimToUse && !character.IsKeyDown(InputType.Aim) || hitting) return false;
 
             //don't allow hitting if the character is already hitting with another weapon
             for (int i = 0; i < 2; i++ )

@@ -1,4 +1,86 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.9
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- New control scheme: items are selected by left clicking, deselected with right click or esc, and held
+items are used on devices by pressing E (e.g. when rewiring with a screwdriver or repairing something 
+with a wrench). The new controls are somewhat experimental; the intention is to make them more intuitive
+to new players. You can still switch back to the legacy control scheme from the game settings.
+- Set default radio chat keybind to R and creature attack keybind to Mouse3.
+- MODDERS, PLEASE NOTE: Moved crafting recipes from the fabricator xml to the xmls of the items. Makes it 
+possible for modders to add new craftable items without having to modify the fabricators. 
+- Some menu layout improvements.
+- Camera movement is disabled completely when an item interface is open (not just when the cursor is on 
+the interface).
+- Option to disable the camera pan/zoom effects from the game settings.
+- Allow aiming on ladders when not moving.
+- Characters play Entrance of the Gladiators on the guitar when wearing a clown mask.
+- Display a warning on the status monitor when docked to an outpost ("Docked to X, undock before attempting 
+to maneuver the submarine").
+- Improvements to the line of sight effect. Prevents ugly-looking artifacts in spots where two wall pieces
+meet.
+- The server gives the "None" permissions to new clients, allowing server hosts to automatically give 
+specific permissions to all clients.
+- Increased submarine masses to make it less easy for characters to push them around.
+- Ping direction is shown on the sonar display when adjusting the direction slider even if directional ping 
+is not enabled.
+- Tweaked charybdis' AI, attacks and animations.
+- Nuclear explosions cause radiation sickness.
+- Reduced structure damage done by reactor explosions.
+- Higher-resolution submarine preview images.
+- Added a notification that tells where cargo spawns at the start of a round.
+- Let the camera zoom out further when controlling a large monster.
+- Added a longer delay to getting killed by pressure (5 seconds in max pressure).
+- Made the pressure-zoom-in effect appear as soon as the pressure in a room starts to rise.
+- Added blood particle effects when under high pressure.
+- Some optimization to reduce loading times.
+- Added a search bar to fabricators.
+- Increased the range of docking port sounds and added a subtle camera shake when locking the ports to make 
+it more noticeable when a sub docks.
+- Made all new medical items fabricable.
+- Automatically put the currently equipped item in the inventory (no matter if it's one or two handed) when 
+picking up items that require two hands. 
+- Job preferences can be edited mid-round in the info menu.
+- Slightly reduced the amount of oxygen characters consume from hulls.
+- Enemies don't attack outposts or targets inside it anymore.
+
+
+Multiplayer fixes:
+- Fixed characters retaining the last known inputs when a client disconnects, causing the character to
+keep welding, honking a bike horn or whatever else they were doing until the server kills the character.
+- More reliable throw StatusEffect (= grenade explosion) syncing. Fixes clients not seeing explosions
+at their end.
+- More reliable item wall attaching syncing. 
+- Servers don't attempt to send position updates for items that have no enabled physics body (e.g. attached 
+items). Fixes "received a position update for an item with no physics body" console errors when attaching
+items to walls.
+- Fixed spectate button staying visible when a round ends while a client is in the lobby.
+- Fixed remote characters sliding slowly to the left client-side when standing in place.
+- Fixed server creating "attempted to create a network event for an item that hasn't been fully initialized 
+yet" console errors when spawning LightComponents mid-round.
+- Fixes monsters flipping around way too often client-side (especially when inside the sub).
+
+Bugfixes:
+- Fixed wire connections that have been done mid-round not working properly. 
+- Fixed crashing when attempting to speak as a monster in single player.
+- Fixed linked subs not getting docked correctly when loading a saved game.
+- Fixed turrets not working if they're placed inside the submarine.
+- Fixed calyxanide not being usable in syringe guns.
+- Explosive harpoons disappear after exploding.
+- Emptying the "required items" field of an item in the sub editor now removes the item requirements (instead 
+of using the default ones).
+- Fixed crashing if a fabricator finishes creating an item after the user has been removed (e.g. eaten).
+- Fixed crashing if none of the selected content packages contain location portraits suitable for the main menu.
+- Fixed projectiles not applying status effects on impact if they have no attack defined.
+- Fixed thorium rods not being usable in the reactor.
+- Conditionals return a match when checking status tag inequality and the target has no status tags (e.g. 
+checking if a character doesn't have a StatusEffect with a "poison" tag returns true even if the character 
+has no active StatusEffects).
+- Fixed severed limbs occasionally noclipping into the submarine.
+- Fixed large engine emitting smoke before it becomes repairable.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.8
 ---------------------------------------------------------------------------------------------------------
 

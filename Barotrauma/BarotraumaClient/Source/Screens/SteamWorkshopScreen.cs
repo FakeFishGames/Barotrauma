@@ -18,18 +18,21 @@ namespace Barotrauma
         private GUIListBox publishedItemList, myItemList;
 
         //shows information of a selected workshop item
-        private GUIFrame itemPreviewFrame;
+        private GUIFrame modsPreviewFrame, browsePreviewFrame;
 
         //menu for creating new items
         private GUIFrame createItemFrame;
         //listbox that shows the files included in the item being created
         private GUIListBox createItemFileList;
 
+        private List<GUIButton> tabButtons = new List<GUIButton>();
+
         private HashSet<string> pendingPreviewImageDownloads = new HashSet<string>();
         private Dictionary<string, Sprite> itemPreviewSprites = new Dictionary<string, Sprite>();
 
         private enum Tab
         {
+            Mods,
             Browse,
             Publish
         }
@@ -38,75 +41,88 @@ namespace Barotrauma
 
         private ContentPackage itemContentPackage;
         private Facepunch.Steamworks.Workshop.Editor itemEditor;
-        
+
         public SteamWorkshopScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
             int height = Math.Min(GameMain.GraphicsHeight - 160, 700);
 
-            Rectangle panelRect = new Rectangle(0, 0, width, height);
-
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.9f), GUI.Canvas, Anchor.Center));
+            menu = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.7f), GUI.Canvas, Anchor.Center) { MinSize = new Point(width, height) });
 
-            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.05f), menu.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
-            var tabContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
-            
-            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform),
-                TextManager.Get("Back"))
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
+
+            var tabContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.7f), container.RectTransform), style: "InnerFrame");
+
+            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), tabContainer.RectTransform, Anchor.TopRight, Pivot.BottomRight),
+                isHorizontal: true)
             {
-                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+                RelativeSpacing = 0.01f,
+                Stretch = true
             };
-            backButton.SelectedColor = backButton.Color;
 
-            int i = 0;
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
-                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform) { RelativeOffset = new Vector2(0.4f + 0.15f * i, 0.0f) },
-                    TextManager.Get(tab.ToString() + "Tab"))
+                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), tabButtonHolder.RectTransform),
+                    TextManager.Get(tab.ToString() + "Tab"), style: "GUITabButton")
                 {
                     UserData = tab,
-                    OnClicked = (btn, userData) => { SelectTab((Tab)userData); return true; }
+                    OnClicked = (btn, userData) => 
+                    {
+                        SelectTab((Tab)userData); return true;
+                    }
                 };
-                i++;
+                tabButtons.Add(tabButton);
             }
 
-
             //-------------------------------------------------------------------------------
-            //Browse tab
+            //Subscribed Mods tab
             //-------------------------------------------------------------------------------
 
-            tabs[(int)Tab.Browse] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
+            tabs[(int)Tab.Mods] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
 
-            var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Browse].RectTransform))
+            var modsContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Mods].RectTransform))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-            
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), TextManager.Get("SubscribedMods"));
-            subscribedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), listContainer.RectTransform))
+
+            subscribedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), modsContainer.RectTransform))
             {
+                ScrollBarVisible = true,
                 OnSelected = (GUIComponent component, object userdata) =>
                 {
                     if (GUI.MouseOn is GUIButton || GUI.MouseOn?.Parent is GUIButton) { return false; }
-                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
+                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item, modsPreviewFrame);
                     return true;
                 }
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), TextManager.Get("PopularMods"));
+            modsPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Mods].RectTransform, Anchor.TopRight), style: "InnerFrame");
+
+            //-------------------------------------------------------------------------------
+            //Popular Mods tab
+            //-------------------------------------------------------------------------------
+
+            tabs[(int)Tab.Browse] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
+
+            var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Browse].RectTransform))
+            {
+                Stretch = true
+            };
+
             topItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), listContainer.RectTransform))
             {
+                ScrollBarVisible = true,
                 OnSelected = (GUIComponent component, object userdata) =>
                 {
-                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
+                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item, browsePreviewFrame);
                     return true;
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), listContainer.RectTransform), TextManager.Get("FindModsButton"))
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), listContainer.RectTransform), TextManager.Get("FindModsButton"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -115,7 +131,7 @@ namespace Barotrauma
                 }
             };
 
-            itemPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Browse].RectTransform, Anchor.TopRight), style: "InnerFrame");
+            browsePreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Browse].RectTransform, Anchor.TopRight), style: "InnerFrame");
 
             //-------------------------------------------------------------------------------
             //Publish tab
@@ -178,27 +194,37 @@ namespace Barotrauma
 
             createItemFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Publish].RectTransform, Anchor.TopRight), style: "InnerFrame");
 
-            SelectTab(Tab.Browse);
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform), childAnchor: Anchor.CenterLeft);
+
+            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("Back"), style: "GUIButtonLarge")
+            {
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+            };
+            backButton.SelectedColor = backButton.Color;
+
+            SelectTab(Tab.Mods);
         }
 
         public override void Select()
         {
             base.Select();
 
-            itemPreviewFrame.ClearChildren();
+            modsPreviewFrame.ClearChildren();
+            browsePreviewFrame.ClearChildren();
             createItemFrame.ClearChildren();
             itemContentPackage = null;
             itemEditor = null;
 
             RefreshItemLists();
-            SelectTab(Tab.Browse);
+            SelectTab(Tab.Mods);
         }
 
         private void SelectTab(Tab tab)
         {
             for (int i = 0; i < tabs.Length; i++)
             {
-                tabs[i].Visible = i == (int)tab;
+                tabButtons[i].Selected = tabs[i].Visible = i == (int)tab;                
             }
 
             if (createItemFrame.CountChildren == 0)
@@ -223,7 +249,7 @@ namespace Barotrauma
         private void RefreshItemLists()
         {
             SteamManager.GetSubscribedWorkshopItems((items) => { OnItemsReceived(items, subscribedItemList); });
-            SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 5);
+            SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 20);
             SteamManager.GetPublishedWorkshopItems((items) => { OnItemsReceived(items, publishedItemList); });
 
             myItemList.ClearChildren();
@@ -287,9 +313,8 @@ namespace Barotrauma
                 UserData = item
             };
 
-            var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), itemFrame.RectTransform, Anchor.Center), isHorizontal: true)
+            var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), itemFrame.RectTransform, Anchor.Center), isHorizontal: true)
             {
-                RelativeSpacing = 0.1f,
                 CanBeFocused = false,
                 Stretch = true
             };
@@ -344,14 +369,14 @@ namespace Barotrauma
                 }
             }
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Point(innerFrame.Rect.Width - iconSize, innerFrame.Rect.Height), innerFrame.RectTransform), childAnchor: Anchor.TopRight)
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Point(innerFrame.Rect.Width - iconSize, innerFrame.Rect.Height), innerFrame.RectTransform), childAnchor: Anchor.CenterLeft)
             {
+                IsHorizontal = true,
                 Stretch = true,
-                CanBeFocused = false,
-                RelativeSpacing = 0.05f
+                CanBeFocused = false
             };
 
-            var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), rightColumn.RectTransform), item.Title, textAlignment: Alignment.CenterLeft)
+            var titleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), rightColumn.RectTransform), item.Title, textAlignment: Alignment.CenterLeft, wrap: true)
             {
                 CanBeFocused = false
             };
@@ -398,8 +423,9 @@ namespace Barotrauma
                     }
                     else
                     {
-                        enabledTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform), TextManager.Get("WorkshopItemEnabled"))
+                        enabledTickBox = new GUITickBox(new RectTransform(new Point(32, 32), rightColumn.RectTransform), null)
                         {
+                            ToolTip = TextManager.Get("WorkshopItemEnabled"),
                             UserData = item,
                         };
                         enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(item);
@@ -435,9 +461,13 @@ namespace Barotrauma
             }
             else
             {
-                var downloadBtn = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), rightColumn.RectTransform),
-                    TextManager.Get("DownloadButton"))
+                var downloadBtn = new GUIButton(new RectTransform(new Point(32, 32), rightColumn.RectTransform), "+", style: null, color: new Color(107, 144, 166, 255))
                 {
+                    Font = GUI.LargeFont,
+                    HoverColor = new Color(42, 53, 62, 255),
+                    TextColor = Color.White,
+                    ToolTip = TextManager.Get("DownloadButton"),
+                    ForceUpperCase = true,
                     UserData = item,
                     OnClicked = DownloadItem
                 };
@@ -511,9 +541,13 @@ namespace Barotrauma
                 }
 
                 CreateWorkshopItemFrame(item, listBox);
-                if (itemPreviewFrame.FindChild(item) != null)
+                if (modsPreviewFrame.FindChild(item) != null)
                 {
-                    ShowItemPreview(item);
+                    ShowItemPreview(item, modsPreviewFrame);
+                }
+                if (browsePreviewFrame.FindChild(item) != null)
+                {
+                    ShowItemPreview(item, browsePreviewFrame);
                 }
             }
 
@@ -567,47 +601,49 @@ namespace Barotrauma
             return true;
         }
 
-        private void ShowItemPreview(Facepunch.Steamworks.Workshop.Item item)
+        private void ShowItemPreview(Facepunch.Steamworks.Workshop.Item item, GUIFrame itemPreviewFrame)
         {
             itemPreviewFrame.ClearChildren();
 
             if (item == null) return;
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), itemPreviewFrame.RectTransform, Anchor.Center))
-            {
-                UserData = item,
-                RelativeSpacing = 0.02f
-            };
-
-            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform, maxSize: new Point(int.MaxValue, 150)), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), itemPreviewFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                UserData = item,
+                RelativeSpacing = 0.015f
             };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.005f), content.RectTransform), style: null);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), item.Title, textAlignment: Alignment.TopLeft, font: GUI.LargeFont, wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + item.OwnerName, textAlignment: Alignment.BottomLeft, wrap: true);
+
+            var headerAreaBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.59f), content.RectTransform, maxSize: new Point(int.MaxValue, 235))) { Color = Color.Black };
+
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), headerAreaBackground.RectTransform), childAnchor: Anchor.Center);
             
             if (itemPreviewSprites.ContainsKey(item.PreviewImageUrl))
             {
-                new GUIImage(new RectTransform(new Point(headerArea.Rect.Height), headerArea.RectTransform), itemPreviewSprites[item.PreviewImageUrl], scaleToFit: true);
+                new GUIImage(new RectTransform(new Point(headerArea.Rect.Width, headerArea.Rect.Height), headerArea.RectTransform), itemPreviewSprites[item.PreviewImageUrl], scaleToFit: true);
             }
             else
             {
-                new GUIImage(new RectTransform(new Point(headerArea.Rect.Height), headerArea.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
+                new GUIImage(new RectTransform(new Point(headerArea.Rect.Width, headerArea.Rect.Height), headerArea.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
             }
 
-            var titleArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), headerArea.RectTransform))
-            {
-                RelativeSpacing = 0.05f
-            };
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform)) { ScrollBarVisible = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), titleArea.RectTransform), item.Title, textAlignment: Alignment.TopLeft, font: GUI.LargeFont);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), titleArea.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + item.OwnerName, textAlignment: Alignment.TopLeft);
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemDescription"));
-            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform));
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), item.Description, wrap: true)
             {
                 CanBeFocused = false
             };
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
 
 
             //score -------------------------------------
@@ -627,7 +663,7 @@ namespace Barotrauma
             //tags ------------------------------------
             var tagContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
-                RelativeSpacing = 0.02f
+                Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("WorkshopItemTags")+": ");
             if (!item.Tags.Any(t => !string.IsNullOrEmpty(t)))
@@ -640,19 +676,26 @@ namespace Barotrauma
                 string tag = TextManager.Get("Workshop.ContentTag." + item.Tags[i], true);
                 if (tag.Length == 0) tag = item.Tags[i].CapitaliseFirstInvariant();
 
-                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), tagContainer.RectTransform), tag, style: "ListBoxElement");
+                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), tagContainer.RectTransform, Anchor.Center), tag, style: "ListBoxElement");
             }
-            
-            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate") +": ");
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), creationDate.RectTransform, Anchor.TopRight), item.Created.ToString(), textAlignment: Alignment.TopRight);
 
-            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate") + ": ");
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modificationDate.RectTransform, Anchor.TopRight), item.Modified.ToString(), textAlignment: Alignment.TopRight);
-            
             var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize") + ": ");
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item.Installed ? (long)item.Size : item.DownloadSize), textAlignment: Alignment.TopRight);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item.Installed ? (long)item.Size : item.DownloadSize), textAlignment: Alignment.TopRight);
 
-            new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), content.RectTransform), TextManager.Get("WorkshopShowItemInSteam"))
+            var dateContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), isHorizontal: true);
+
+            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), dateContainer.RectTransform), TextManager.Get("WorkshopItemCreationDate") +": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), creationDate.RectTransform, Anchor.CenterRight), item.Created.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
+
+            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), dateContainer.RectTransform), TextManager.Get("WorkshopItemModificationDate") + ": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item.Modified.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(0.0f, 0.015f), content.RectTransform), style: null);
+
+            var steamButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform));
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), steamButtonHolder.RectTransform), TextManager.Get("WorkshopShowItemInSteam"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -1210,13 +1253,10 @@ namespace Barotrauma
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            GameMain.TitleScreen.DrawLoadingText = false;
-            GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
+            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
-            
             GUI.Draw(Cam, spriteBatch);
-
             spriteBatch.End();
         }
 

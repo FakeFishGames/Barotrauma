@@ -499,10 +499,10 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255" >
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="991, 846, 23, 23" slice="997, 852, 1006, 862"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="991, 846, 23, 23" slice="997, 852, 1006, 862"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="991, 813, 23, 23" slice="997, 818, 1006, 828"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="489, 943, 23, 23" slice="494, 947, 506, 960"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="978, 183, 43, 45" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="978, 183, 43, 45" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="978, 135, 43, 45" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="978, 231, 43, 45" tile="false"/>
     <GUITextBlock
       textcolor="127,140,153,255"
       hovercolor="76,76,76,127"
@@ -514,10 +514,10 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255" >
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="976, 431, 23, 24" tile="false"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="857, 88, 23, 24" tile="false"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="857, 88, 23, 24" tile="false"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="517, 943, 23, 24" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="925, 230, 45, 43" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="925, 182, 45, 43" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="925, 182, 45, 43" tile="false"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="925, 137, 45, 43" tile="false"/>
     <GUITextBlock
       textcolor="127,140,153,255"
       hovercolor="76,76,76,127"

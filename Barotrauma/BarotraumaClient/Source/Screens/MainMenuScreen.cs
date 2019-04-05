@@ -211,6 +211,17 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+                {
+                    ForceUpperCase = true,
+                    Enabled = false,
+                    UserData = Tab.SteamWorkshop,
+                    OnClicked = SelectTab
+                };
+            }
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -232,17 +243,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-                {
-                    ForceUpperCase = true,
-                    Enabled = false,
-                    UserData = Tab.SteamWorkshop,
-                    OnClicked = SelectTab
-                };
-            }
 
             // === OPTION
             var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);

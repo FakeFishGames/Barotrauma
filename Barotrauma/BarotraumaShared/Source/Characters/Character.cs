@@ -1782,6 +1782,9 @@ namespace Barotrauma
             }
             else if (focusedItem != null)
             {
+#if CLIENT
+                if (CharacterInventory.DraggingItemToWorld) { return; }
+#endif
                 bool canInteract = focusedItem.TryInteract(this);
 #if CLIENT
                 if (Controlled == this)

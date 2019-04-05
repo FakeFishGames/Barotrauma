@@ -68,7 +68,8 @@ namespace Barotrauma
                         states = newInput,
                         intAim = intAngle
                     };
-                    if (focusedItem != null && (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
+                    if (focusedItem != null && !CharacterInventory.DraggingItemToWorld && 
+                        (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
                     {
                         newMem.interact = focusedItem.ID;
                     }

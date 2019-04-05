@@ -58,6 +58,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             item.IsShootable = true;
+            // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
         }
 
@@ -75,7 +76,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) return false;
-            if (!character.IsKeyDown(InputType.Aim) || reloadTimer > 0.0f) return false;
+            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || reloadTimer > 0.0f) return false;
             IsActive = true;
             reloadTimer = reload;
 

@@ -155,7 +155,6 @@
   <PauseMenuSettings>Settings</PauseMenuSettings>
   <PauseMenuRetry>Retry</PauseMenuRetry>
   <PauseMenuSaveQuit>Save and Quit</PauseMenuSaveQuit>
-  <PauseMenuQuit>Quit</PauseMenuQuit>
   <PauseMenuQuitVerification>Are you sure you want to quit the game? All your unsaved progress will be lost.</PauseMenuQuitVerification>
   <PauseMenuRetryVerification>Are you sure you want to stop the mission and load the previous save file? All your unsaved progress will be lost.</PauseMenuRetryVerification>
 
@@ -186,10 +185,7 @@
   <GameMode.multiplayercampaign>Campaign</GameMode.multiplayercampaign>
   
   <!-- Steam Workshop menu -->
-  <BrowseTab>Browse</BrowseTab>
   <PublishTab>Publish</PublishTab>
-  <DownloadButton>Download</DownloadButton>
-  <SubscribedMods>Mods</SubscribedMods>
   <NoSubscribedMods>You haven't subscribed to any mods on the Steam Workshop. Click the "Find more mods" button below to get started!</NoSubscribedMods>
   <PopularMods>Popular mods</PopularMods>
   <FindModsButton>Find more mods...</FindModsButton>
@@ -199,14 +195,11 @@
   <CreateWorkshopItem>Create a new item</CreateWorkshopItem>
   <WorkshopLabelSubmarines>Submarines</WorkshopLabelSubmarines>
   <WorkshopLabelContentPackages>Content packages</WorkshopLabelContentPackages>
-  <WorkshopItemEnabled>Enabled</WorkshopItemEnabled>
   <WorkshopItemDownloading>Downloading...</WorkshopItemDownloading>
   <WorkshopShowItemInSteam>Show in Steam</WorkshopShowItemInSteam>
   <WorkshopItemScore>Score</WorkshopItemScore>
   <WorkshopItemVotes>[votecount] votes</WorkshopItemVotes>
   <WorkshopItemCreator>Creator</WorkshopItemCreator>
-  <WorkshopItemCreationDate>Created</WorkshopItemCreationDate>
-  <WorkshopItemModificationDate>Modified</WorkshopItemModificationDate>
   <WorkshopItemFileSize>File size</WorkshopItemFileSize>
   <WorkshopItemTitle>Title</WorkshopItemTitle>
   <WorkshopItemDescription>Description</WorkshopItemDescription>
@@ -2741,12 +2734,25 @@
   <ItemMsgRepairWeldingTool>[[shoot]] Repair (Welding Tool)</ItemMsgRepairWeldingTool>
   <ItemMsgRepairWrench>[[use]] Repair (Wrench)</ItemMsgRepairWrench>
   <ItemMsgUsePlasmaCutter>[[shoot]] Cut (Plasma Cutter)</ItemMsgUsePlasmaCutter>
+
+  <BrowseTab>Popular Mods</BrowseTab>
   
+  <WorkshopItemModificationDate>Updated</WorkshopItemModificationDate>
+  <WorkshopItemCreationDate>Published</WorkshopItemCreationDate>
+
+  <WorkshopItemEnabled>Enable</WorkshopItemEnabled>
+
+  <DownloadButton>Subscribe</DownloadButton>
+
+  <PauseMenuQuit>Main Menu</PauseMenuQuit>
+
   <!-- New Additions -->
   
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
 
+  <ModsTab>Subscribed Mods</ModsTab>
+  
   <Walls>Walls</Walls>
   
   <MyCharacter>My character</MyCharacter>
