@@ -856,7 +856,8 @@ namespace Barotrauma
             
             GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
 
-            Submarine.RefreshSavedSubs();
+            Submarine.RefreshSavedSub(savePath);
+
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
@@ -2204,14 +2205,10 @@ namespace Barotrauma
         {
             MapEntity.SelectedList.Clear();
 
-            RenderTarget2D rt = new RenderTarget2D(
-                GameMain.Instance.GraphicsDevice, 
-                width, height, false, SurfaceFormat.Color, DepthFormat.None);
-
             var prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
 
             Rectangle subDimensions = Submarine.MainSub.CalculateDimensions(false);
-            Vector2 viewPos = subDimensions.Center.ToVector2();            
+            Vector2 viewPos = subDimensions.Center.ToVector2();
             float scale = Math.Min(width / (float)subDimensions.Width, height / (float)subDimensions.Height);
 
             var viewMatrix = Matrix.CreateTranslation(new Vector3(width / 2.0f, height / 2.0f, 0));
@@ -2220,26 +2217,32 @@ namespace Barotrauma
                 Matrix.CreateScale(new Vector3(scale, scale, 1)) *
                 viewMatrix;
 
-            GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
-            SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice);
-
             Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
-            if (backgroundSprite != null)
-            {
-                spriteBatch.Begin();
-                backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
-                spriteBatch.End();
-            }
-            
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);            
-            Submarine.Draw(spriteBatch, false);
-            Submarine.DrawFront(spriteBatch);
-            Submarine.DrawDamageable(spriteBatch, null);            
-            spriteBatch.End();
 
-            GameMain.Instance.GraphicsDevice.SetRenderTarget(null);
-            rt.SaveAsPng(stream, width, height);            
-            rt.Dispose();
+            using (RenderTarget2D rt = new RenderTarget2D(
+                 GameMain.Instance.GraphicsDevice,
+                 width, height, false, SurfaceFormat.Color, DepthFormat.None))
+            using (SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice))
+            {
+                GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
+                                
+                if (backgroundSprite != null)
+                {
+                    spriteBatch.Begin();
+                    backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
+                    spriteBatch.End();
+                }
+
+                spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);
+                Submarine.Draw(spriteBatch, false);
+                Submarine.DrawFront(spriteBatch);
+                Submarine.DrawDamageable(spriteBatch, null);
+                spriteBatch.End();
+                
+
+                GameMain.Instance.GraphicsDevice.SetRenderTarget(null);
+                rt.SaveAsPng(stream, width, height);
+            }
 
             //for some reason setting the rendertarget changes the size of the viewport 
             //but it doesn't change back to default when setting it back to null
