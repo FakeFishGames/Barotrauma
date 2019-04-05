@@ -289,6 +289,8 @@ namespace Barotrauma
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
+            // Damage from falling etc.
+            if (Character.LastDamageSource == null) { return; }
             float damage = attackResult.Damage;
             if (damage <= 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
