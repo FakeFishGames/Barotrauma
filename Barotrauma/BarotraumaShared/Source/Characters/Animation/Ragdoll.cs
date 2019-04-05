@@ -1391,14 +1391,14 @@ namespace Barotrauma
 
         partial void Splash(Limb limb, Hull limbHull);
 
-        protected float GetFloorY(Limb refLimb = null)
+        protected float GetFloorY(Limb refLimb = null, bool ignoreStairs = false)
         {
             PhysicsBody refBody = refLimb == null ? Collider : refLimb.body;
 
-            return GetFloorY(refBody.SimPosition);            
+            return GetFloorY(refBody.SimPosition, ignoreStairs);            
         }
 
-        protected float GetFloorY(Vector2 simPosition)
+        protected float GetFloorY(Vector2 simPosition, bool ignoreStairs = false)
         {
             Vector2 rayStart = simPosition;
             float height = ColliderHeightFromFloor;
@@ -1415,6 +1415,7 @@ namespace Barotrauma
                 switch (fixture.CollisionCategories)
                 {
                     case Physics.CollisionStairs:
+                        if (ignoreStairs) return -1;
                         if (inWater && TargetMovement.Y < 0.5f) return -1;
                         break;
                     case Physics.CollisionPlatform:
