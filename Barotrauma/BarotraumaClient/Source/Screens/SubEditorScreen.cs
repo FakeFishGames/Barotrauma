@@ -2230,11 +2230,13 @@ namespace Barotrauma
             using (SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice))
             {
                 GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
-                                
+
+                GameMain.Instance.GraphicsDevice.Clear(Color.Black);
+
                 if (backgroundSprite != null)
                 {
                     spriteBatch.Begin();
-                    backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
+                    backgroundSprite.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(width, height), color: new Color(0.025f, 0.075f, 0.131f, 1.0f));
                     spriteBatch.End();
                 }
 
@@ -2260,5 +2262,7 @@ namespace Barotrauma
             CreateImage(width, height, stream);
             stream.Dispose();
         }
+
+
     }
 }
