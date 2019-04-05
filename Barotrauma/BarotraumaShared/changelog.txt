@@ -1,4 +1,50 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.9
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- New control scheme: items are selected by left clicking, deselected with right click or esc, and held
+items are used on devices by pressing E (e.g. when rewiring with a screwdriver or repairing something 
+with a wrench). The new controls are somewhat experimental; the intention is to make them more intuitive
+to new players. You can still switch back to the legacy control scheme from the game settings.
+- Characters play Entrance of the Gladiators on the guitar when wearing a clown mask.
+- Display a warning on the status monitor when docked to an outpost ("Docked to X, undock before attempting 
+to maneuver the submarine").
+- Improvements to the line of sight effect. Prevents ugly-looking artifacts in spots where two wall pieces
+meet.
+- The server gives the "None" permissions to new clients, allowing server hosts to automatically give 
+specific permissions to all clients.
+- Increased submarine masses to make it less easy for characters to push them around.
+- Ping direction is shown on the sonar display when adjusting the direction slider even if directional ping 
+is not enabled.
+- Tweaked charybdis' AI, attacks and animations.
+
+Multiplayer fixes:
+- Fixed characters retaining the last known inputs when a client disconnects, causing the character to
+keep welding, honking a bike horn or whatever else they were doing until the server kills the character.
+- More reliable throw StatusEffect (= grenade explosion) syncing. Fixes clients not seeing explosions
+at their end.
+- More reliable item wall attaching syncing. 
+- Servers don't attempt to send position updates for items that have no enabled physics body (e.g. attached 
+items). Fixes "received a position update for an item with no physics body" console errors when attaching
+items to walls.
+- Fixed spectate button staying visible when a round ends while a client is in the lobby.
+- Fixed remote characters sliding slowly to the left in multiplayer.
+
+Bugfixes:
+- Fixed wire connections that have been done mid-round not working properly. 
+- Fixed crashing when attempting to speak as a monster in single player.
+- Fixed linked subs not getting docked correctly when loading a saved game.
+- Fixed turrets not working if they're placed inside the submarine.
+- Fixed calyxanide not being usable in syringe guns.
+- Emptying the "required items" field of an item in the sub editor now removes the item requirements (instead 
+of using the default ones).
+- Fixed thorium rods not being usable in the reactor.
+- Conditionals return a match when checking status tag inequality and the target has no status tags (e.g. 
+checking if a character doesn't have a StatusEffect with a "poison" tag returns true even if the character 
+has no active StatusEffects).
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.8
 ---------------------------------------------------------------------------------------------------------
 

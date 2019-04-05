@@ -66,6 +66,33 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
+
+            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent)
+            {
+                CanBeFocused = false
+            };
+            toggleCrewButton = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform)
+            { AbsoluteOffset = HUDLayoutSettings.CrewArea.Location },
+                "", style: "UIToggleButton");
+            toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                toggleCrewAreaOpen = !toggleCrewAreaOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = toggleCrewAreaOpen ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                }
+                return true;
+            };
+
+            characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
+            {
+                //Spacing = (int)(3 * GUI.Scale),
+                ScrollBarEnabled = false,
+                ScrollBarVisible = false,
+                CanBeFocused = false
+            };
+
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -79,6 +106,16 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
+        }
+
+
+        #endregion
+
+        #region Character list management
+
+        public Rectangle GetCharacterListArea()
+        {
+            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
