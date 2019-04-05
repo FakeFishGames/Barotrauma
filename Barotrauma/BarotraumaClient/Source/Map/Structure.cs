@@ -1,4 +1,5 @@
-﻿using Barotrauma.Lights;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Lights;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
@@ -40,6 +41,14 @@ namespace Barotrauma
                     MathHelper.Clamp(value.X, 0.01f, 10),
                     MathHelper.Clamp(value.Y, 0.01f, 10));
             }
+        }
+
+        private string specialTag;
+        [Editable, Serialize("", true)]
+        public string SpecialTag
+        {
+            get { return specialTag; }
+            set { specialTag = value; }
         }
 
         // Only for testing in the debug build. Not saved.
