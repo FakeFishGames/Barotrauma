@@ -1,4 +1,5 @@
-﻿using Barotrauma.Lights;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Lights;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,6 +15,13 @@ namespace Barotrauma.Items.Components
         //openState when the vertices of the convex hull were last calculated
         private float lastConvexHullState;
 
+        [Serialize("1,1", false)]
+        public Vector2 ShadowScale
+        {
+            get;
+            set;
+        }
+
         public Vector2 DrawSize
         {
             //use the extents of the item as the draw size
@@ -22,11 +30,14 @@ namespace Barotrauma.Items.Components
 
         private Vector2[] GetConvexHullCorners(Rectangle rect)
         {
+            Point shadowSize = rect.Size.Multiply(ShadowScale);
+            Vector2 center = new Vector2(rect.Center.X, rect.Y - rect.Height / 2);
+
             Vector2[] corners = new Vector2[4];
-            corners[0] = new Vector2(rect.X - 1, rect.Y - rect.Height - 1);
-            corners[1] = new Vector2(rect.X - 1, rect.Y + 1);
-            corners[2] = new Vector2(rect.Right + 1, rect.Y + 1);
-            corners[3] = new Vector2(rect.Right + 1, rect.Y - rect.Height - 1);
+            corners[0] = center + new Vector2(-shadowSize.X, -shadowSize.Y) / 2;
+            corners[1] = center + new Vector2(-shadowSize.X, shadowSize.Y) / 2;
+            corners[2] = center + new Vector2(shadowSize.X, shadowSize.Y) / 2;
+            corners[3] = center + new Vector2(shadowSize.X, -shadowSize.Y) / 2;
 
             return corners;
         }
