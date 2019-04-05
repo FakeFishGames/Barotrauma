@@ -30,6 +30,7 @@ namespace Barotrauma
 
         private enum Tab
         {
+            Mods,
             Browse,
             Publish
         }
@@ -38,7 +39,7 @@ namespace Barotrauma
 
         private ContentPackage itemContentPackage;
         private Facepunch.Steamworks.Workshop.Editor itemEditor;
-        
+
         public SteamWorkshopScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -48,30 +49,58 @@ namespace Barotrauma
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.9f), GUI.Canvas, Anchor.Center));
+            menu = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), GUI.Canvas, Anchor.Center));
 
-            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.05f), menu.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
-            var tabContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
-            
-            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform),
-                TextManager.Get("Back"))
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
+
+            var tabContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.7f), container.RectTransform), style: "InnerFrame");
+
+            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), tabContainer.RectTransform, Anchor.TopRight, Pivot.BottomRight),
+                isHorizontal: true)
             {
-                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+                RelativeSpacing = 0.01f,
+                Stretch = true
             };
-            backButton.SelectedColor = backButton.Color;
 
             int i = 0;
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
-                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform) { RelativeOffset = new Vector2(0.4f + 0.15f * i, 0.0f) },
-                    TextManager.Get(tab.ToString() + "Tab"))
+                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), tabButtonHolder.RectTransform) { RelativeOffset = new Vector2(0.4f + 0.15f * i, 0.0f) },
+                    TextManager.Get(tab.ToString() + "Tab"), style: "GUITabButton")
                 {
                     UserData = tab,
-                    OnClicked = (btn, userData) => { SelectTab((Tab)userData); return true; }
+                    OnClicked = (btn, userData) => 
+                    {
+                        SelectTab((Tab)userData); return true;
+                    }
                 };
                 i++;
             }
 
+            //-------------------------------------------------------------------------------
+            //Install tab
+            //-------------------------------------------------------------------------------
+
+            tabs[(int)Tab.Mods] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
+
+            var modsContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Mods].RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modsContainer.RectTransform), TextManager.Get("SubscribedMods"));
+            subscribedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), modsContainer.RectTransform))
+            {
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    if (GUI.MouseOn is GUIButton || GUI.MouseOn?.Parent is GUIButton) { return false; }
+                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
+                    return true;
+                }
+            };
+
+            itemPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Mods].RectTransform, Anchor.TopRight), style: "InnerFrame");
 
             //-------------------------------------------------------------------------------
             //Browse tab
@@ -83,17 +112,6 @@ namespace Barotrauma
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
-            };
-            
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), TextManager.Get("SubscribedMods"));
-            subscribedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), listContainer.RectTransform))
-            {
-                OnSelected = (GUIComponent component, object userdata) =>
-                {
-                    if (GUI.MouseOn is GUIButton || GUI.MouseOn?.Parent is GUIButton) { return false; }
-                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
-                    return true;
-                }
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), TextManager.Get("PopularMods"));
@@ -178,7 +196,16 @@ namespace Barotrauma
 
             createItemFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Publish].RectTransform, Anchor.TopRight), style: "InnerFrame");
 
-            SelectTab(Tab.Browse);
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), container.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.2f) });
+
+            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform),
+                TextManager.Get("Back"))
+            {
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+            };
+            backButton.SelectedColor = backButton.Color;
+
+            SelectTab(Tab.Mods);
         }
 
         public override void Select()
@@ -191,7 +218,7 @@ namespace Barotrauma
             itemEditor = null;
 
             RefreshItemLists();
-            SelectTab(Tab.Browse);
+            SelectTab(Tab.Mods);
         }
 
         private void SelectTab(Tab tab)
