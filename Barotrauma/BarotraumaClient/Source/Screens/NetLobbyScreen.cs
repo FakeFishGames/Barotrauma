@@ -1216,7 +1216,7 @@ namespace Barotrauma
                 };
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
+                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 600));
                     return true;
                 };
             }
