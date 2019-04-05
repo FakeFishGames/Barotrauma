@@ -7,7 +7,7 @@
     <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="Sonar" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
-      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
+      <poweronsound file="Content/Items/PowerOnLight1.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
@@ -65,7 +65,7 @@
     <Steering minvoltage="0.5" canbeselected="true" powerconsumption="10" linkuitocomponent="Sonar" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
-      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
+      <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
@@ -109,7 +109,7 @@
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
       <StatusEffect type="InWater" target="This" condition="-0.5" />
-      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
+      <poweronsound file="Content/Items/PowerOnLight3.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap5.ogg" range="500" loop="false" />
@@ -138,7 +138,7 @@
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.5" anchor="Center" style="ItemUI" />
       <AlternativeLayout relativesize="0.4,0.4" />
-      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false" />
+      <poweronsound file="Content/Items/PowerOnLight3.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />

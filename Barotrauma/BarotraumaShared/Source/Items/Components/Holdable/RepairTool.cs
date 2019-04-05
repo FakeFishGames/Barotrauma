@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             item.IsShootable = true;
+            // TODO: should define this in xml if we have repair tools that don't require aim to use
             item.RequireAimToUse = true;
             InitProjSpecific(element);
         }
@@ -95,7 +96,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) return false;
-            if (!character.IsKeyDown(InputType.Aim)) return false;
+            if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) return false;
             
             float degreeOfSuccess = DegreeOfSuccess(character);
 

@@ -1913,6 +1913,18 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Misc\GuitarClown.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\PowerOnHeavy1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\PowerOnLight1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\PowerOnLight2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\PowerOnLight3.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\ElectricalDischarger.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -2468,9 +2480,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\DuctBreak.ogg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\powerOn.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\Zap1.ogg">
@@ -3081,9 +3090,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\DoorBreak2.ogg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\PAX.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Remora.sub">

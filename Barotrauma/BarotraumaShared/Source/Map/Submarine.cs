@@ -1102,6 +1102,20 @@ namespace Barotrauma
             savedSubmarines.Add(sub);
         }
 
+
+        public static void RefreshSavedSub(string filePath)
+        {
+            string fullPath = Path.GetFullPath(filePath);
+            for (int i = savedSubmarines.Count - 1; i >= 0; i--)
+            {
+                if (Path.GetFullPath(savedSubmarines[i].filePath) == fullPath)
+                {
+                    savedSubmarines[i].Dispose();
+                }
+            }
+            savedSubmarines.Add(new Submarine(filePath));
+        }
+
         public static void RefreshSavedSubs()
         {
             for (int i = savedSubmarines.Count - 1; i>= 0; i--)
