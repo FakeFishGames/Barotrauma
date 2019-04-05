@@ -144,15 +144,10 @@ namespace Barotrauma
         private void CreateUI()
         {
             TopPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
-
-            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), TopPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, style: null);
-
-            var button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft), TextManager.Get("Back"))
-            {
-                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
-            };
-
-            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.07f, 0.0f) }, TextManager.Get("OpenSubButton"))
+            GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), TopPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) },
+                style: null);
+            
+            var button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft), TextManager.Get("OpenSubButton"))
             {
                 OnClicked = (GUIButton btn, object data) =>
                 {
@@ -163,7 +158,7 @@ namespace Barotrauma
                 }
             };
 
-            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.14f, 0.0f) }, TextManager.Get("SaveSubButton"))
+            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.08f, 0.0f) }, TextManager.Get("SaveSubButton"))
             {
                 OnClicked = (GUIButton btn, object data) =>
                 {
@@ -174,13 +169,13 @@ namespace Barotrauma
                 }
             };
 
-            var nameLabel = new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.21f, 0.0f) },
+            var nameLabel = new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.15f, 0.0f) },
                 "", font: GUI.LargeFont, textAlignment: Alignment.CenterLeft)
             {
                 TextGetter = GetSubName
             };
 
-            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform) { RelativeOffset = new Vector2(0.385f, 0.0f) },
+            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform) { RelativeOffset = new Vector2(0.4f, 0.0f) },
                 TextManager.Get("AddSubButton"), elementCount: 20)
             {
                 ToolTip = TextManager.Get("AddSubToolTip")
@@ -284,7 +279,7 @@ namespace Barotrauma
 
             var paddedTab = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), EntityMenu.RectTransform, Anchor.Center), style: null);
 
-            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedTab.RectTransform) { AbsoluteOffset = new Point(0, 10) }, isHorizontal: true)
+            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedTab.RectTransform), isHorizontal: true)
             {
                 Color = secondaryColor,
                 Stretch = true,
@@ -299,7 +294,7 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { ClearFilter(); entityFilterBox.Flash(Color.White); return true; }
             };
 
-            var entityListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), paddedTab.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.06f) });
+            var entityListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), paddedTab.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) });
 
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.1f), entityListHolder.RectTransform, Anchor.TopRight, Pivot.BottomRight),
                 isHorizontal: true)
@@ -860,8 +855,6 @@ namespace Barotrauma
             Submarine.MainSub.CheckForErrors();
             
             GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
-
-            Submarine.RefreshSavedSub(savePath);
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -2224,19 +2217,19 @@ namespace Barotrauma
 
             Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
 
-            using (RenderTarget2D rt = new RenderTarget2D(
-                 GameMain.Instance.GraphicsDevice,
-                 width, height, false, SurfaceFormat.Color, DepthFormat.None))
-            using (SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice))
+            Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
+            if (backgroundSprite != null)
             {
-                GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
-                                
-                if (backgroundSprite != null)
-                {
-                    spriteBatch.Begin();
-                    backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
-                    spriteBatch.End();
-                }
+                spriteBatch.Begin();
+                backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
+                spriteBatch.End();
+            }
+            
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);            
+            Submarine.Draw(spriteBatch, false);
+            Submarine.DrawFront(spriteBatch);
+            Submarine.DrawDamageable(spriteBatch, null);            
+            spriteBatch.End();
 
                 spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);
                 Submarine.Draw(spriteBatch, false);

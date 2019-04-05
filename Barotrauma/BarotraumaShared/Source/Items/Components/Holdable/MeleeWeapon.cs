@@ -64,6 +64,7 @@ namespace Barotrauma.Items.Components
                 attack = new Attack(subElement, item.Name + ", MeleeWeapon");
             }
             item.IsShootable = true;
+            // TODO: should define this in xml if we have melee weapons that don't require aim to use
             item.RequireAimToUse = true;
         }
 
