@@ -2109,10 +2109,10 @@ namespace Barotrauma
                     //{
                     //    dummyCharacter.SelectedConstruction = null;
                     //}
-                    if (PlayerInput.KeyHit(InputType.Deselect))
+                    /*if (PlayerInput.KeyHit(InputType.Deselect))
                     {
                         dummyCharacter.SelectedConstruction = null;
-                    }
+                    }*/
                 }
                 else if (MapEntity.SelectedList.Count == 1)
                 {
