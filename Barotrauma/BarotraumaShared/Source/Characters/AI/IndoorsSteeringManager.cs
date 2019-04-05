@@ -43,11 +43,80 @@ namespace Barotrauma
             private set;
         }
 
-        public bool InLadders => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Ladders != null;
-        public bool IsNextNodeLadder => currentPath.NextNode != null && currentPath.CurrentNode.Ladders != null;
-        public bool IsNextLadderSameAsCurrent => IsNextNodeLadder && currentPath.CurrentNode.Ladders == currentPath.NextNode.Ladders;
+        /// <summary>
+        /// Returns true if the current or the next node is in ladders.
+        /// </summary>
+        public bool InLadders =>
+            currentPath != null &&
+            currentPath.CurrentNode != null && (currentPath.CurrentNode.Ladders != null ||
+            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null));
 
-        public bool InStairs => currentPath != null && currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null;
+        /// <summary>
+        /// Returns true if the current or the next node is in stairs.
+        /// </summary>
+        public bool InStairs =>
+            currentPath != null &&
+            currentPath.CurrentNode != null && (currentPath.CurrentNode.Stairs != null ||
+            (currentPath.NextNode != null && currentPath.NextNode.Stairs != null));
+
+        public bool IsNextNodeLadder
+        {
+            get
+            {
+                if (currentPath == null) { return false; }
+                if (currentPath.NextNode == null) { return false; }
+                if (currentPath.NextNode.Ladders != null)
+                {
+                    return true;
+                }
+                else
+                {
+                    // Check if the node after the next node is ladder.
+                    int index = currentPath.CurrentIndex + 2;
+                    if (currentPath.Nodes.Count > index)
+                    {
+                        var node = currentPath.Nodes[index];
+                        if (node == null) { return false; }
+                        // Only applied if the node is close enough to the current node.
+                        if (Vector2.DistanceSquared(currentPath.CurrentNode.WorldPosition, node.WorldPosition) > 100) { return false; }
+                        return node.Ladders != null;
+                    }
+                    return false;
+                }
+            }
+        }
+
+        public bool IsNextLadderSameAsCurrent
+        {
+            get
+            {
+                if (currentPath == null) { return false; }
+                if (currentPath.CurrentNode == null) { return false; }
+                if (currentPath.NextNode == null) { return false; }
+                var currentLadder = currentPath.CurrentNode.Ladders;
+                if (currentLadder == null) { return false; }
+                var nextLadder = currentPath.NextNode.Ladders;
+                if (nextLadder != null)
+                {
+                    return currentLadder == nextLadder;
+                }
+                else
+                {
+                    // Check if the node after the next node is in the same ladder as the current.
+                    int index = currentPath.CurrentIndex + 2;
+                    if (currentPath.Nodes.Count > index)
+                    {
+                        var node = currentPath.Nodes[index];
+                        if (node == null) { return false; }
+                        // Only applied if the node is close enough to the current node.
+                        if (Vector2.DistanceSquared(currentPath.CurrentNode.WorldPosition, node.WorldPosition) > 100) { return false; }
+                        nextLadder = node.Ladders;
+                        return nextLadder != null && nextLadder == currentLadder;
+                    }
+                    return false;
+                }
+            }
+        }
 
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors) : base(host)
         {
@@ -171,8 +240,9 @@ namespace Barotrauma
             if (character.IsClimbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
+                bool nextLadderSamesCurrent = IsNextLadderSameAsCurrent;
 
-                if (IsNextLadderSameAsCurrent)
+                if (nextLadderSamesCurrent)
                 {
                     //climbing ladders -> don't move horizontally
                     diff.X = 0.0f;
@@ -190,14 +260,14 @@ namespace Barotrauma
                     bool aboveFloor = heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f;
                     if (aboveFloor || IsNextNodeLadder)
                     {
-                        if (!IsNextLadderSameAsCurrent)
+                        if (!nextLadderSamesCurrent)
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
                         }
                         currentPath.SkipToNextNode();
                     }
                 }
-                else if (IsNextLadderSameAsCurrent)
+                else if (nextLadderSamesCurrent)
                 {
                     //if the current node is below the character and the next one is above (or vice versa)
                     //and both are on ladders, we can skip directly to the next one
