@@ -204,7 +204,6 @@ namespace Barotrauma
                 if (c.AnimController.Limbs.Any(l => l.DeformSprite != null)) continue;
                 c.Draw(spriteBatch, Cam);
             }
-            Submarine.DrawFront(spriteBatch, false, null);
             spriteBatch.End();
 
             //draw characters with deformable limbs last, because they can't be batched into SpriteBatch
@@ -251,7 +250,7 @@ namespace Barotrauma
             
             graphics.DepthStencilState = DepthStencilState.DepthRead;
             graphics.SetRenderTarget(renderTargetFinal);
-            
+                        
             WaterRenderer.Instance.ResetBuffers();
             Hull.UpdateVertices(graphics, cam, WaterRenderer.Instance);			
             WaterRenderer.Instance.RenderWater(spriteBatch, renderTargetWater, cam);
@@ -259,15 +258,19 @@ namespace Barotrauma
             graphics.DepthStencilState = DepthStencilState.None;
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
-				BlendState.NonPremultiplied, SamplerState.LinearWrap,
-				null, null,
-				damageEffect,
-				cam.Transform);
-			Submarine.DrawDamageable(spriteBatch, damageEffect, false);
-			spriteBatch.End();
+                BlendState.NonPremultiplied, SamplerState.LinearWrap,
+                null, null,
+                damageEffect,
+                cam.Transform);
+            Submarine.DrawDamageable(spriteBatch, damageEffect, false);
+            spriteBatch.End();
 
-			//draw additive particles that are inside a sub
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+            Submarine.DrawFront(spriteBatch, false, null);
+            spriteBatch.End();
+
+            //draw additive particles that are inside a sub
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
             foreach (var discharger in Items.Components.ElectricalDischarger.List)
             {
