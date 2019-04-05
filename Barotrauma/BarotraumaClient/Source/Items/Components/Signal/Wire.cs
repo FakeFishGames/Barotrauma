@@ -131,6 +131,12 @@ namespace Barotrauma.Items.Components
             //dragging a node of some wire
             if (draggingWire != null)
             {
+                if (Character.Controlled != null)
+                {
+                    Character.Controlled.FocusedItem = null;
+                    Character.Controlled.ResetInteract = true;
+                    Character.Controlled.ClearInputs();
+                }
                 //cancel dragging
                 if (!PlayerInput.LeftButtonHeld())
                 {
@@ -178,6 +184,11 @@ namespace Barotrauma.Items.Components
                     {
                         if (PlayerInput.LeftButtonClicked())
                         {
+                            if (Character.Controlled != null)
+                            {
+                                Character.Controlled.ResetInteract = true;
+                                Character.Controlled.ClearInputs();
+                            }
                             int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out _);
                             if (closestSectionIndex > -1)
                             {
@@ -196,6 +207,11 @@ namespace Barotrauma.Items.Components
                             //start dragging the node
                             if (PlayerInput.LeftButtonHeld())
                             {
+                                if (Character.Controlled != null)
+                                {
+                                    Character.Controlled.ResetInteract = true;
+                                    Character.Controlled.ClearInputs();
+                                }
                                 draggingWire = selectedWire;
                                 selectedNodeIndex = closestIndex;
                             }
@@ -248,6 +264,13 @@ namespace Barotrauma.Items.Components
             if (highlighted != null)
             {
                 highlighted.item.IsHighlighted = true;
+
+                if (Character.Controlled != null)
+                {
+                    Character.Controlled.FocusedItem = null;
+                    Character.Controlled.ResetInteract = true;
+                    Character.Controlled.ClearInputs();
+                }
 
                 if (PlayerInput.LeftButtonClicked())
                 {
