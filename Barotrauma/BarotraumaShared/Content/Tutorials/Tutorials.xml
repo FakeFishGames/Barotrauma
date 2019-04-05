@@ -58,9 +58,9 @@
 
   </ContextualTutorial>
 
-  <MechanicTutorial name="Mechanic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" startoutpostpath="Content/Tutorials/Outpost_Mechanic.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="cargo">
+  <MechanicTutorial name="Mechanic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" startoutpostpath="Submarines/Outpost_Mechanic.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
-      <Job name="Engineer">
+      <Job name="Mechanic">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>
         <Skill name="Helm" level="50"/>

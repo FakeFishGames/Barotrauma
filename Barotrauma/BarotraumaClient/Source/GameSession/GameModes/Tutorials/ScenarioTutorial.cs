@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,12 +10,16 @@ namespace Barotrauma.Tutorials
     class ScenarioTutorial : Tutorial
     {
         private Character character;
+        private string spawnSub;
         private SpawnType spawnPointType;
         private string submarinePath;
         private string startOutpostPath;
         private string endOutpostPath;
         private string levelSeed;
         private string levelParams;
+
+        private Submarine startOutpost = null;
+        private Submarine endOutpost = null;
 
         public ScenarioTutorial(XElement element) : base(element)
         {
@@ -25,6 +30,7 @@ namespace Barotrauma.Tutorials
             levelSeed = element.GetAttributeString("levelseed", "tuto");
             levelParams = element.GetAttributeString("levelparams", "");
 
+            spawnSub = element.GetAttributeString("spawnsub", "");
             Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
         }
 
@@ -32,37 +38,6 @@ namespace Barotrauma.Tutorials
         {
             base.Initialize();
             GameMain.Instance.ShowLoading(Loading());
-        }
-
-        public override void Start()
-        {
-            base.Start();
-
-            WayPoint wayPoint = WayPoint.GetRandom(spawnPointType, null);
-            if (wayPoint == null)
-            {
-                DebugConsole.ThrowError("A waypoint with the spawntype \"" + spawnPointType + "\" is required for the tutorial event");
-                return;
-            }
-
-            CharacterInfo charInfo = configElement.Element("Character") == null ?
-                new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
-                new CharacterInfo(configElement.Element("Character"));
-
-            character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
-            Character.Controlled = character;
-            character.GiveJobItems(null);
-
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            if (idCard == null)
-            {
-                DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
-                return;
-            }
-            idCard.AddTag("com");
-            idCard.AddTag("eng");
-
-            CoroutineManager.StartCoroutine(UpdateState());
         }
 
         private IEnumerable<object> Loading()
@@ -81,13 +56,10 @@ namespace Barotrauma.Tutorials
             {
                 Biome biome = LevelGenerationParams.GetBiomes().Find(b => generationParams.AllowedBiomes.Contains(b));
 
-                Submarine startOutpost = null;
                 if (startOutpostPath != string.Empty)
                 {
                     startOutpost = Submarine.Load(startOutpostPath, "", false);
                 }
-
-                Submarine endOutpost = null;
 
                 if (endOutpostPath != string.Empty)
                 {
@@ -106,6 +78,63 @@ namespace Barotrauma.Tutorials
             GameMain.GameScreen.Select();
 
             yield return CoroutineStatus.Success;
+        }
+
+        public override void Start()
+        {
+            base.Start();
+
+            CharacterInfo charInfo = configElement.Element("Character") == null ?
+                new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
+                new CharacterInfo(configElement.Element("Character"));
+
+            WayPoint wayPoint = GetSpawnPoint(charInfo);
+
+            if (wayPoint == null)
+            {
+                DebugConsole.ThrowError("A waypoint with the spawntype \"" + spawnPointType + "\" is required for the tutorial event");
+                return;
+            }
+
+            character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
+            Character.Controlled = character;
+            character.GiveJobItems(null);
+
+            var idCard = character.Inventory.FindItemByIdentifier("idcard");
+            if (idCard == null)
+            {
+                DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
+                return;
+            }
+            idCard.AddTag("com");
+            idCard.AddTag("eng");
+
+            CoroutineManager.StartCoroutine(UpdateState());
+        }
+
+        private WayPoint GetSpawnPoint(CharacterInfo charInfo)
+        {
+            Submarine spawnSub = null;
+
+            if (this.spawnSub != string.Empty)
+            {
+                switch (this.spawnSub)
+                {
+                    case "startoutpost":
+                        spawnSub = startOutpost;
+                        break;
+
+                    case "endoutpost":
+                        spawnSub = endOutpost;
+                        break;
+
+                    default:
+                        spawnSub = Submarine.MainSub;
+                        break;
+                }
+            }
+
+            return WayPoint.GetRandom(spawnPointType, charInfo.Job, spawnSub);
         }
 
         public override void Update(float deltaTime)
