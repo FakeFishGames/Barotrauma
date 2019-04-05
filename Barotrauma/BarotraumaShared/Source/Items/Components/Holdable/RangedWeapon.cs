@@ -58,7 +58,6 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             item.IsShootable = true;
-            // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
         }
 

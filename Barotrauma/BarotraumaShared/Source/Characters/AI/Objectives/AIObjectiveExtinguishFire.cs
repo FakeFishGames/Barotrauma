@@ -86,10 +86,7 @@ namespace Barotrauma
 
                     character.AIController.SteeringManager.Reset();
                     character.CursorPosition = fs.Position;
-                    if (extinguisher.Item.RequireAimToUse)
-                    {
-                        character.SetInput(InputType.Aim, false, true);
-                    }
+                    character.SetInput(InputType.Aim, false, true);
                     extinguisher.Use(deltaTime, character);
 
                     if (!targetHull.FireSources.Contains(fs))
