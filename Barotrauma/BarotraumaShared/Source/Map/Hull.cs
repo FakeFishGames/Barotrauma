@@ -20,7 +20,7 @@ namespace Barotrauma
         public static bool EditWater, EditFire;
         public const float OxygenDistributionSpeed = 500.0f;
         public const float OxygenDeteriorationSpeed = 0.3f;
-        public const float OxygenConsumptionSpeed = 700.0f;
+        public const float OxygenConsumptionSpeed = 1000.0f;
 
         public const int WaveWidth = 32;
         public static float WaveStiffness = 0.02f;

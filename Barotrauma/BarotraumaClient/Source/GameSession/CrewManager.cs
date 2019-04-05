@@ -590,16 +590,23 @@ namespace Barotrauma
             float step =
                 (characterListBox.Content.Children.First().Rect.Height + characterListBox.Spacing) /
                 (characterListBox.TotalSize - characterListBox.Rect.Height);
+            characterListBox.BarScroll -= characterListBox.BarScroll % step;
             characterListBox.BarScroll += dir * step;
-            
-            //round the scroll so that we're not displaying partial character frames
-            float roundedPos = MathUtils.RoundTowardsClosest(characterListBox.BarScroll, step);
-            if (Math.Abs(roundedPos - characterListBox.BarScroll) < step / 2)
-            {
-                characterListBox.BarScroll = roundedPos;
-            }
 
-            return false;
+        #region Dialog
+        /// <summary>
+        /// Adds the message to the single player chatbox.
+        /// </summary>
+        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
+        {
+            if (!isSinglePlayer)
+            {
+                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                return;
+            }
+            if (string.IsNullOrEmpty(text)) { return; }
+
+            chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -612,6 +619,12 @@ namespace Barotrauma
             {
                 comp.Color = Color.DarkRed;
             }
+            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
+                c.AIController is HumanAIController &&
+                !c.IsDead &&
+                c.SpeechImpediment <= 100.0f);
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+        }
 
             yield return new WaitForSeconds(1.0f);
 
