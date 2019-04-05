@@ -538,6 +538,7 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
+            float average = skillSuccessSum / requiredSkills.Count;
 
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
@@ -762,6 +763,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void ParseMsg();
+        public void ParseMsg()
+        {
+            string msg = TextManager.Get(Msg, true);
+            if (msg != null)
+            {
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
+                DisplayMsg = msg;
+            }
+            else
+            {
+                DisplayMsg = Msg;
+            }
+        }
     }
 }
