@@ -15,7 +15,7 @@
     </Repairable>
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
-      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
+      <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
