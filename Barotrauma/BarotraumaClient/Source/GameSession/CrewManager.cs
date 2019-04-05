@@ -590,8 +590,14 @@ namespace Barotrauma
             float step =
                 (characterListBox.Content.Children.First().Rect.Height + characterListBox.Spacing) /
                 (characterListBox.TotalSize - characterListBox.Rect.Height);
-            characterListBox.BarScroll -= characterListBox.BarScroll % step;
             characterListBox.BarScroll += dir * step;
+            
+            //round the scroll so that we're not displaying partial character frames
+            float roundedPos = MathUtils.RoundTowardsClosest(characterListBox.BarScroll, step);
+            if (Math.Abs(roundedPos - characterListBox.BarScroll) < step / 2)
+            {
+                characterListBox.BarScroll = roundedPos;
+            }
 
             return false;
         }
