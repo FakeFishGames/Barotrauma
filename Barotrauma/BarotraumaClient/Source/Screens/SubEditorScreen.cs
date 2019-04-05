@@ -143,7 +143,7 @@ namespace Barotrauma
 
         private void CreateUI()
         {
-            TopPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            TopPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), TopPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) },
                 style: null);
             
@@ -285,6 +285,7 @@ namespace Barotrauma
                 Stretch = true,
                 UserData = "filterarea"
             };
+
             new GUITextBlock(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.Font);
             entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
             entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
@@ -353,20 +354,23 @@ namespace Barotrauma
                 }
             };
 
-            //empty guiframe as a separator
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
-
-            button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("GenerateWaypointsButton"))
+            button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("GenerateWaypointsButton"), style: null, color: new Color(70, 100, 122, 255))
             {
+                ForceUpperCase = true,
+                HoverColor = new Color(33, 33, 33, 255),
+                TextColor = Color.White,
                 ToolTip = TextManager.Get("GenerateWaypointsToolTip"),
                 OnClicked = GenerateWaypoints
             };
 
-            // empty guiframe as a separator
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), paddedLeftPanel.RectTransform), style: null);
 
             var showEntitiesHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.3f), paddedLeftPanel.RectTransform))
             { Color = secondaryColor, Stretch = true, RelativeSpacing = 0.05f };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), showEntitiesHolder.RectTransform) { MinSize = new Point(0, 3) }, style: null);
 
             var tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLighting"))
             {
@@ -430,6 +434,9 @@ namespace Barotrauma
                 Selected = Gap.ShowGaps,
                 OnSelected = (GUITickBox obj) => { Gap.ShowGaps = obj.Selected; return true; },
             };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), showEntitiesHolder.RectTransform) { MinSize = new Point(0, 3) }, style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("PreviouslyUsedLabel"));
             previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) })
