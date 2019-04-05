@@ -22,7 +22,7 @@ namespace Barotrauma.Tutorials
         public override IEnumerable<object> UpdateState()
         {
             while (!mechanicDoorUse.MotionDetected) yield return null;
-            infoBox = CreateInfoFrame("How open door", true);
+            infoBox = CreateInfoFrame("mechanic_button", true);
         }
     }
 }
