@@ -887,20 +887,6 @@ namespace Barotrauma
 
         private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing = true)
         {
-            UpdatePlayerFrame(characterInfo, allowEditing, playerInfoContainer);
-        }
-
-
-        public void CreatePlayerFrame(GUIComponent parent)
-        {
-            UpdatePlayerFrame(
-                playerInfoContainer.Children?.First().UserData as CharacterInfo, 
-                allowEditing: campaignCharacterInfo == null,
-                parent: parent);
-        }
-
-        private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing, GUIComponent parent)
-        {
             if (characterInfo == null)
             {
                 characterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, null);
@@ -915,13 +901,12 @@ namespace Barotrauma
                 GameMain.Client.CharacterInfo = characterInfo;
             }
 
-            parent.ClearChildren();
-
-            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), parent.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
+            playerInfoContainer.ClearChildren();
+            
+            GUIComponent infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), playerInfoContainer.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
             {
                 RelativeSpacing = 0.02f,
-                Stretch = true,
-                UserData = characterInfo
+                Stretch = true
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
@@ -989,7 +974,7 @@ namespace Barotrauma
                     JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
                     if (job == null || job.MaxNumber <= 0) continue;
 
-                    var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform) { MinSize = new Point(0, 20) }, style: "ListBoxElement")
+                    var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform), style: "ListBoxElement")
                     {
                         UserData = job
                     };
@@ -1028,7 +1013,7 @@ namespace Barotrauma
                 }
 
                 GUITickBox randPrefTickBox = new GUITickBox(
-                       new RectTransform(new Vector2(0.5f, 0.08f), infoContainer.RectTransform)
+                       new RectTransform(new Vector2(0.5f, 0.05f), infoContainer.RectTransform)
                        { RelativeOffset = new Vector2(-0.0f, 0.0f) },
                        TextManager.Get("RandomPreferences"))
                 {
