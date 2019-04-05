@@ -339,13 +339,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (crosshairSprite != null)
-            {
-                crosshairSprite.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, (float)Math.Sqrt(cam.Zoom));
-            }
-            if (crosshairPointerSprite != null) crosshairPointerSprite.Draw(spriteBatch, crosshairPointerPos, 0, (float)Math.Sqrt(cam.Zoom));            
+            float zoom = cam == null ? 1.0f : (float)Math.Sqrt(cam.Zoom);
+
+            crosshairSprite?.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, zoom);
+            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
         }
-        
+
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
