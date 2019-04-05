@@ -279,7 +279,7 @@ namespace Barotrauma
 
             var paddedTab = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), EntityMenu.RectTransform, Anchor.Center), style: null);
 
-            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedTab.RectTransform), isHorizontal: true)
+            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedTab.RectTransform) { AbsoluteOffset = new Point(0, 10) }, isHorizontal: true)
             {
                 Color = secondaryColor,
                 Stretch = true,
@@ -294,7 +294,7 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { ClearFilter(); entityFilterBox.Flash(Color.White); return true; }
             };
 
-            var entityListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), paddedTab.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) });
+            var entityListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.85f), paddedTab.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.06f) });
 
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.1f), entityListHolder.RectTransform, Anchor.TopRight, Pivot.BottomRight),
                 isHorizontal: true)
