@@ -1111,7 +1111,6 @@ namespace Barotrauma
                 if (Path.GetFullPath(savedSubmarines[i].filePath) == fullPath)
                 {
                     savedSubmarines[i].Dispose();
-                    savedSubmarines.RemoveAt(i);
                 }
             }
             savedSubmarines.Add(new Submarine(filePath));
