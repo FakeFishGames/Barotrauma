@@ -61,10 +61,17 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
+            return characterListBox.Rect;
+        }
+
+        partial void InitProjectSpecific()
+        {
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
                 CanBeFocused = false
             };
+
+            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -123,16 +130,6 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
-        }
-
-
-        #endregion
-
-        #region Character list management
-
-        public Rectangle GetCharacterListArea()
-        {
-            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
