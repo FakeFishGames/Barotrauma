@@ -81,7 +81,10 @@ namespace Barotrauma
             try
             {
                 var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
-                PreMultiplyAlpha(ref texture);
+                if (preMultiplyAlpha)
+                {
+                    PreMultiplyAlpha(ref texture);
+                }
                 return texture;
             }
             catch (Exception e)
