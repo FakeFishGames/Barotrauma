@@ -1101,19 +1101,8 @@ namespace Barotrauma
             List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
             foreach (ContentPackage contentPack in ContentPackage.List)
             {
-                if (nameBox.Text.Contains(illegalChar))
-                {
-                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
-                    nameBox.Flash();
-                    return false;
-                }
+                if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
             }
-
-            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
-            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
-            
-            string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
 
             if (File.Exists(filePath))
             {
