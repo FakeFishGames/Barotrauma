@@ -109,10 +109,9 @@ namespace Barotrauma
 
         public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center) : base(style, rectT)
         {
-            int buttonHeight = Rect.Height / 2;
-            int margin = 2;
-            Point buttonSize = new Point(buttonHeight - margin, buttonHeight - margin);
-            TextBox = new GUITextBox(new RectTransform(new Point(Rect.Width, Rect.Height), rectT), textAlignment: textAlignment, style: style)
+            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), isHorizontal: true) { Stretch = true };
+
+            TextBox = new GUITextBox(new RectTransform(Vector2.One, layoutGroup.RectTransform), textAlignment: textAlignment, style: style)
             {
                 ClampText = false,
                 // For some reason the caret in the number inputs is dimmer than it should.
@@ -121,8 +120,8 @@ namespace Barotrauma
                 CaretColor = Color.White
             };
             TextBox.OnTextChanged += TextChanged;
-            var buttonArea = new GUIFrame(new RectTransform(new Point(buttonSize.X, buttonSize.Y * 2), rectT, Anchor.CenterRight), style: null);
-            PlusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform), "+");
+            var buttonArea = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), layoutGroup.RectTransform, Anchor.CenterRight) { MinSize = new Point(Rect.Height, 0) }, style: null);
+            PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+");
             PlusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -143,7 +142,7 @@ namespace Barotrauma
             };
             PlusButton.Visible = inputType == NumberType.Int;
 
-            MinusButton = new GUIButton(new RectTransform(buttonSize, buttonArea.RectTransform, Anchor.BottomRight), "-");
+            MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), "-");
             MinusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;

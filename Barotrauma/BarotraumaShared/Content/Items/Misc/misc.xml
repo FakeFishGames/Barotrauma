@@ -17,7 +17,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Harmonica" identifier="harmonica" category="Misc" Tags="smallitem" description="An old hand-made harmonica." price="300">
+  <Item name="Harmonica" identifier="harmonica" category="Misc" Tags="smallitem" description="An old hand-made harmonica." price="300" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,256,64,64" />
     <Sprite texture="Misc.png" sourcerect="54,1,27,9" depth="0.5" origin="0.5,0.5" />
     <Body width="23" height="7" />

@@ -12,7 +12,7 @@
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10" linkuitocomponent="Sonar">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" style="OuterGlow" color="0,0,0,0.8" absoluteoffset="30,0"/>
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
-      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
+      <poweronsound file="Content/Items/PowerOnLight1.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>
@@ -60,7 +60,7 @@
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0"/>
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="4000.0"/>
       <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="4000.0"/>
-      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
+      <poweronsound file="Content/Items/PowerOnLight2.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false"/>

@@ -94,7 +94,7 @@
       <Containable identifiers="oxygentank,weldingfueltank,oxygenitetank,incendiumfueltank" />
     </ItemContainer>
   </Item>
-  <Item name="Metal Crate" identifier="metalcrate" scale="0.5" linkable="true" pickdistance="150">
+  <Item name="Metal Crate" identifier="metalcrate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
@@ -108,7 +108,7 @@
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Secure Metal Crate" identifier="securemetalcrate" scale="0.5" linkable="true" pickdistance="150">
+  <Item name="Secure Metal Crate" identifier="securemetalcrate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
@@ -123,7 +123,7 @@
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Explosive Crate" identifier="explosivecrate" scale="0.5" linkable="true" pickdistance="150">
+  <Item name="Explosive Crate" identifier="explosivecrate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
@@ -136,7 +136,7 @@
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="Chemical Crate" identifier="chemicalcrate" scale="0.5" linkable="true" pickdistance="150">
+  <Item name="Chemical Crate" identifier="chemicalcrate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />

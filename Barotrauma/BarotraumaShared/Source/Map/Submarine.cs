@@ -365,8 +365,8 @@ namespace Barotrauma
                         {
                             using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
                             {
-                                PreviewImage = new Sprite(TextureLoader.FromStream(mem), null, null);
-                            }                    
+                                PreviewImage = new Sprite(TextureLoader.FromStream(mem, preMultiplyAlpha: false), null, null);
+                            }
                         }
                         catch (Exception e)
                         {
@@ -1111,7 +1111,6 @@ namespace Barotrauma
                 if (Path.GetFullPath(savedSubmarines[i].filePath) == fullPath)
                 {
                     savedSubmarines[i].Dispose();
-                    savedSubmarines.RemoveAt(i);
                 }
             }
             savedSubmarines.Add(new Submarine(filePath));

@@ -2506,8 +2506,6 @@
   <Objective>Objective</Objective>
 
   <ReactorCommand>Giving commands</ReactorCommand>
-  <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your mechanic to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
-  <ReactorCommandInstructions>-Find a mechanic in the crew list\n-Click on "Operate reactor", then "Power up"\n\n(Review instructions by clicking on the objective list on the right)</ReactorCommandInstructions>
   <ReactorCommandObjective>Give the order to power up the reactor</ReactorCommandObjective>
 
   <NavConsole>Plotting the course</NavConsole>
@@ -2524,7 +2522,6 @@
   <FloodObjective>Repair hull breach</FloodObjective>
 
   <ReactorUse>Operating the reactor</ReactorUse>
-  <ReactorUseText>This is the reactor. You should leave operating this to a professional, like a mechanic. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
   <ReactorUseInstructions>-Left gauge controls the amount of power generated\n-Right gauge controls the amount of it sent to rest of the submarine\n-Try to keep both gauges green for a balanced power output</ReactorUseInstructions>
 
   <EnemyOnSonar>Monsters</EnemyOnSonar>
@@ -2745,12 +2742,21 @@
   <DownloadButton>Subscribe</DownloadButton>
 
   <PauseMenuQuit>Main Menu</PauseMenuQuit>
+  
+  <ReactorCommandText>First things first. This sub's power comes from its nuclear reactor and without it, this tub isn't going anywhere. Get your electrical engineer to power on the reactor. He'll take care of the rest for now.</ReactorCommandText>
+  <ReactorCommandInstructions>-Find an electrical engineer in the crew list\n-Click on "Operate reactor", then "Power up"\n\n(Review instructions by clicking on the objective list on the right)</ReactorCommandInstructions>
+
+  <ReactorUseText>This is the reactor. You should leave operating this to a professional, like an engineer. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
 
   <!-- New Additions -->
   
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
 
+  <SubPreviewImage>Preview Image</SubPreviewImage>
+  <SubPreviewImageBrowse>Browse...</SubPreviewImageBrowse>
+  <SubPreviewImageGenerate>Create</SubPreviewImageGenerate>
+  
   <ModsTab>Subscribed Mods</ModsTab>
   
   <Walls>Walls</Walls>

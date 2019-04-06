@@ -191,6 +191,10 @@ namespace Barotrauma
             protected set;
         }
 
+
+        [Serialize("", false)]
+        public string ImpactSoundTag { get; private set; }
+
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);

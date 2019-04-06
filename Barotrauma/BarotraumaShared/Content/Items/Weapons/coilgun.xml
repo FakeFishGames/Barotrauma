@@ -57,7 +57,7 @@
     </ItemContainer>
   </Item>
   
-  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true">
+  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="200" />
@@ -109,7 +109,7 @@
     </Projectile>
   </Item>
   
-  <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true">
+  <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem identifier="steel"/>
