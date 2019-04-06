@@ -80,7 +80,6 @@ namespace Barotrauma.Items.Components
                 }
             }
             item.IsShootable = true;
-            // TODO: should define this in xml if we have repair tools that don't require aim to use
             item.RequireAimToUse = true;
             InitProjSpecific(element);
         }

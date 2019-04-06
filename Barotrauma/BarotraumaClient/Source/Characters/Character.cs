@@ -211,23 +211,22 @@ namespace Barotrauma
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 if (GUI.PauseMenuOpen)
                 {
-                    cam.OffsetAmount = targetOffsetAmount = 0.0f;
-                }
-                else if (Lights.LightManager.ViewTarget is Item item && item.Prefab.FocusOnSelected)
-                {
-                    cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected;
+                    targetOffsetAmount = 0.0f;
+                    cam.OffsetAmount = 0.0f;
                 }
                 else if (SelectedConstruction != null && ViewTarget == null && 
                     SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
-                    cam.OffsetAmount = targetOffsetAmount = 0.0f;
+                    targetOffsetAmount = 0.0f;
+                    cam.OffsetAmount = 0.0f;
                     cursorPosition = 
                         SelectedConstruction.Position + 
                         new Vector2(cursorPosition.X % 10.0f, cursorPosition.Y % 10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
                 else if (!GameMain.Config.EnableMouseLook)
                 {
-                    cam.OffsetAmount = targetOffsetAmount = 0.0f;
+                    targetOffsetAmount = 0.0f;
+                    cam.OffsetAmount = 0.0f;
                 }
                 else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                 {
@@ -235,7 +234,8 @@ namespace Barotrauma
                     {
                         if (deltaTime > 0.0f)
                         {
-                            cam.OffsetAmount = targetOffsetAmount = 0.0f;
+                            targetOffsetAmount = 0.0f;
+                            cam.OffsetAmount = 0.0f;
                         }
                     }
                     else

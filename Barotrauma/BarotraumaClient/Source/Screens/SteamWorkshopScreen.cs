@@ -44,9 +44,12 @@ namespace Barotrauma
 
         public SteamWorkshopScreen()
         {
+            int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
+            int height = Math.Min(GameMain.GraphicsHeight - 160, 700);
+
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
+            menu = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.7f), GUI.Canvas, Anchor.Center) { MinSize = new Point(width, height) });
 
             var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
 
@@ -119,8 +122,7 @@ namespace Barotrauma
                 }
             };
 
-            var findModsButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), listContainer.RectTransform), style: null);
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.8f), findModsButtonContainer.RectTransform, Anchor.Center), TextManager.Get("FindModsButton"), style: "GUIButtonLarge")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), listContainer.RectTransform), TextManager.Get("FindModsButton"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -618,7 +620,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), item.Title, textAlignment: Alignment.TopLeft, font: GUI.LargeFont, wrap: true);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + item.OwnerName, textAlignment: Alignment.BottomLeft, wrap: true);
 
-            var headerAreaBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, maxSize: new Point(int.MaxValue, 235))) { Color = Color.Black };
+            var headerAreaBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.59f), content.RectTransform, maxSize: new Point(int.MaxValue, 235))) { Color = Color.Black };
 
             var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), headerAreaBackground.RectTransform), childAnchor: Anchor.Center);
             
@@ -691,9 +693,9 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.0f, 0.015f), content.RectTransform), style: null);
 
-            var steamButtonHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
+            var steamButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform));
 
-            new GUIButton(new RectTransform(new Vector2(0.8f, 1.0f), steamButtonHolder.RectTransform, Anchor.Center), TextManager.Get("WorkshopShowItemInSteam"), style: "GUIButtonLarge")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), steamButtonHolder.RectTransform), TextManager.Get("WorkshopShowItemInSteam"))
             {
                 OnClicked = (btn, userdata) =>
                 {
