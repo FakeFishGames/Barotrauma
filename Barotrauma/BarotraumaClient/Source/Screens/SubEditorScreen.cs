@@ -1090,9 +1090,6 @@ namespace Barotrauma
                     }
                 };
             }
-            
-            var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), 
-                TextManager.Get("RequiredContentPackages"), font: GUI.SmallFont);
 
             var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), horizontalArea.RectTransform, Anchor.TopRight),
                 TextManager.Get("RequiredContentPackages"), font: GUI.SmallFont);
@@ -1104,10 +1101,21 @@ namespace Barotrauma
             List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
             foreach (ContentPackage contentPack in ContentPackage.List)
             {
-                if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
+                if (nameBox.Text.Contains(illegalChar))
+                {
+                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
+                    nameBox.Flash();
+                    return false;
+                }
             }
 
-            foreach (string contentPackageName in contentPacks)
+            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
+            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
+            
+            string saveFolder = Path.Combine("Content", "Items", "Assemblies");
+            string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
+
+            if (File.Exists(filePath))
             {
                 var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
                 {
@@ -1126,9 +1134,12 @@ namespace Barotrauma
                     }
                     return true;
                 };
+                msgBox.Buttons[1].OnClicked = msgBox.Close;
             }
-            
-            var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
+            else
+            {
+                Save();
+            }
 
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter, minSize: new Point(0, 30)), style: null);
@@ -1148,8 +1159,6 @@ namespace Barotrauma
             {
                 OnClicked = SaveSub
             };
-            
-            var crewExpArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
         }
 
@@ -1170,6 +1179,7 @@ namespace Barotrauma
                 AbsoluteSpacing = 5,
                 Stretch = true
             };
+#endif
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
@@ -1266,69 +1276,15 @@ namespace Barotrauma
             return false;
         }
 
-
-        private void CreateSaveAssemblyScreen()
+        private bool SaveAssembly(GUIButton button, object obj)
         {
             if (CharacterMode) SetCharacterMode(false);
             if (WiringMode) SetWiringMode(false);
 
-            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
             };
-
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.3f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 300) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center))
-            {
-                AbsoluteSpacing = 5,
-                Stretch = true
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
-                TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
-                TextManager.Get("SaveItemAssemblyDialogName"));
-            nameBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.1f), paddedSaveFrame.RectTransform));
-
-#if DEBUG
-            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform), TextManager.Get("SaveItemAssemblyHideInMenus"))
-            {
-                UserData = "hideinmenus"
-            };
-#endif
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
-                TextManager.Get("SaveItemAssemblyDialogDescription"));
-            descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedSaveFrame.RectTransform))
-            {
-                UserData = "description",
-                Wrap = true,
-                Text = ""
-            };
-            
-            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
-                isHorizontal: true, childAnchor: Anchor.BottomRight);
-            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
-                TextManager.Get("Cancel"))
-            {
-                OnClicked = (GUIButton btn, object userdata) =>
-                {
-                    saveFrame = null;
-                    return true;
-                }
-            };
-            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
-                TextManager.Get("SaveSubButton"))
-            {
-                OnClicked = SaveAssembly
-            };
-        }
-
-        private bool SaveAssembly(GUIButton button, object obj)
-        {
-            if (string.IsNullOrWhiteSpace(nameBox.Text))
-            {
-                GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red);
 
             loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
