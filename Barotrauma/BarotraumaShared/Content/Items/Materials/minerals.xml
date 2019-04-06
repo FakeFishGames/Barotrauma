@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   
-  <Item name="Titanite" identifier="titanite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing titanium and iron." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Titanite" identifier="titanite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing titanium and iron." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="titanium" />
       <Item identifier="titanium" />
@@ -19,7 +19,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Brockite" identifier="brockite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing titanium and phosphorus." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Brockite" identifier="brockite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing titanium and phosphorus." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="phosphorus" />
       <Item identifier="thorium" />
@@ -35,7 +35,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Thorianite" identifier="thorianite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A rare mineral containing thorium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Thorianite" identifier="thorianite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A rare mineral containing thorium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="thorium" />
       <Item identifier="thorium" />
@@ -51,7 +51,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Amblygonite" identifier="amblygonite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of lithium, aluminium and sodium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Amblygonite" identifier="amblygonite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of lithium, aluminium and sodium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="lithium" />
       <Item identifier="aluminium" />
@@ -68,7 +68,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Sphalerite" identifier="sphalerite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting largely of zinc in crystalline form." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Sphalerite" identifier="sphalerite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting largely of zinc in crystalline form." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="zinc" />
       <Item identifier="zinc" />
@@ -85,7 +85,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Pyromorphite" identifier="pyromorphite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of chlorine." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Pyromorphite" identifier="pyromorphite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of chlorine." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="chlorine" />
       <Item identifier="chlorine" />
@@ -101,7 +101,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Quartz" identifier="quartz" category="Material" Tags="smallitem,ore" canbepicked="true" description="A crystalline mineral composed of silicon." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Quartz" identifier="quartz" category="Material" Tags="smallitem,ore" canbepicked="true" description="A crystalline mineral composed of silicon." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="silicon" />
       <Item identifier="silicon" />
@@ -117,7 +117,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Diamond" identifier="diamond" category="Material" Tags="smallitem,ore" canbepicked="true" description="A crystal composed of solid carbon." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Diamond" identifier="diamond" category="Material" Tags="smallitem,ore" canbepicked="true" description="A crystal composed of solid carbon." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="carbon" />
       <Item identifier="carbon" />
@@ -134,7 +134,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Hydroxyapatite" identifier="hydroxyapatite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of calcium and phosphorus." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Hydroxyapatite" identifier="hydroxyapatite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of calcium and phosphorus." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="calcium" />
       <Item identifier="phosphorus" />
@@ -151,7 +151,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Uranium Ore" identifier="uraniumore" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing large concentrations of uranium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Uranium Ore" identifier="uraniumore" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing large concentrations of uranium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="uranium" />
       <Item identifier="uranium" />
@@ -168,7 +168,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   
-  <Item name="Ilmenite" identifier="ilmenite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing titanium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Ilmenite" identifier="ilmenite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing titanium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="titanium" />
     </Deconstruct>
@@ -182,7 +182,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Stannite" identifier="stannite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of copper, iron and tin." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Stannite" identifier="stannite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of copper, iron and tin." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="copper" />
       <Item identifier="iron" />
@@ -198,7 +198,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Chalcopyrite" identifier="chalcopyrite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing copper." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Chalcopyrite" identifier="chalcopyrite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing copper." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="copper" />
     </Deconstruct>
@@ -212,7 +212,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Esperite" identifier="esperite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of zinc and lead." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Esperite" identifier="esperite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral composed of zinc and lead." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="zinc" />
       <Item identifier="zinc" />
@@ -228,7 +228,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Galena" identifier="galena" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral mostly consisting of lead." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Galena" identifier="galena" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral mostly consisting of lead." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="lead" />
       <Item identifier="lead" />
@@ -244,7 +244,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Triphylite" identifier="triphylite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing lithium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Triphylite" identifier="triphylite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing lithium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="lithium" />
     </Deconstruct>
@@ -258,7 +258,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Langbeinite" identifier="langbeinite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of potassium and magnesium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Langbeinite" identifier="langbeinite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of potassium and magnesium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="potassium" />
       <Item identifier="magnesium" />
@@ -274,7 +274,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Chamosite" identifier="chamosite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of iron and aluminium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Chamosite" identifier="chamosite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of iron and aluminium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="iron" />
       <Item identifier="iron" />
@@ -291,7 +291,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Iron Ore" identifier="ironore" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing large amounts of iron." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Iron Ore" identifier="ironore" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing large amounts of iron." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="iron" />
       <Item identifier="iron" />
@@ -308,7 +308,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Polyhalite" identifier="polyhalite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of potassium and calcium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Polyhalite" identifier="polyhalite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of potassium and calcium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="potassium" />
       <Item identifier="calcium" />
@@ -323,7 +323,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Graphite" identifier="graphite" category="Material" Tags="smallitem,ore" canbepicked="true" description="Carbon in crystalline form." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Graphite" identifier="graphite" category="Material" Tags="smallitem,ore" canbepicked="true" description="Carbon in crystalline form." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="carbon" />
       <Item identifier="carbon" />
@@ -338,7 +338,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Sylvite" identifier="sylvite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing potassium and sodium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Sylvite" identifier="sylvite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing potassium and sodium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="sodium" />
       <Item identifier="potassium" />
@@ -354,7 +354,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Lazulite" identifier="lazulite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing phosphorus and iron." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Lazulite" identifier="lazulite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing phosphorus and iron." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="phosphorus" />
       <Item identifier="iron" />
@@ -369,7 +369,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Bornite" identifier="bornite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing copper." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Bornite" identifier="bornite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing copper." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="copper" />
     </Deconstruct>
@@ -383,7 +383,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Cassiterite" identifier="cassiterite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of tin." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Cassiterite" identifier="cassiterite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral consisting of tin." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="tin" />
       <Item identifier="tin" />
@@ -399,7 +399,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Cryolite" identifier="cryolite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing sodium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Cryolite" identifier="cryolite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing sodium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="sodium" />
       <Item identifier="sodium" />
@@ -414,7 +414,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Aragonite" identifier="aragonite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing calcium." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Aragonite" identifier="aragonite" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing calcium." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="calcium" />
     </Deconstruct>
@@ -428,7 +428,7 @@
     </LevelResource>
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
-  <Item name="Chrysoprase" identifier="chrysoprase" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing silicon." cargocontaineridentifier="metalcrate" scale="0.5">
+  <Item name="Chrysoprase" identifier="chrysoprase" category="Material" Tags="smallitem,ore" canbepicked="true" description="A mineral containing silicon." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
     <Deconstruct time="5">
       <Item identifier="silicon" />
     </Deconstruct>

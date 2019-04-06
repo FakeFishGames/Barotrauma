@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Headset" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate">
+  <Item name="Headset" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="100" />
@@ -39,7 +39,7 @@
       <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false"/>
     </Wearable>
   </Item>
-  <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother.">
+  <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother." impactsoundtag="impact_soft">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,448,64,64" />
     <Sprite texture="clownpants.png" sourcerect="0,62,53,18" depth="0.6" origin="0.5,0.5" />
     <Body width="53" height="18" density="30" />
@@ -66,7 +66,7 @@
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown" />
     </Wearable>
   </Item>
-  <Item name="Assistant Clothes" identifier="assistantclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="Even the assistant needs clothing." scale="0.5">
+  <Item name="Assistant Clothes" identifier="assistantclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="Even the assistant needs clothing." scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="20" />
@@ -89,7 +89,7 @@
       <sprite name="Assistant Left Shoe" texture="assistant_legs_[GENDER].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
   </Item>
-  <Item name="Watchman Clothes" identifier="watchmanclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5">
+  <Item name="Watchman Clothes" identifier="watchmanclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="20" />

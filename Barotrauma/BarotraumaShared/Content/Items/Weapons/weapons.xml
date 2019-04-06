@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
+  <Item name="Spear" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="75" />
@@ -20,7 +20,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Physicorium Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
+  <Item name="Physicorium Spear" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="physicorium" />
     </Deconstruct>
@@ -38,7 +38,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Explosive Spear" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35">
+  <Item name="Explosive Spear" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -74,7 +74,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon" Scale="0.32">
+  <Item name="Harpoon Gun" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="70" />
     <Price locationtype="City" buyprice="100" />
     <Deconstruct time="10">
@@ -104,7 +104,7 @@
       <Containable identifiers="spear,alienspear,explosivespear" />
     </ItemContainer>
   </Item>
-  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem" scale="0.32">
+  <Item name="Syringe Gun" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem" scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="120" />
     <Price locationtype="City" buyprice="120" />
@@ -133,7 +133,7 @@
       <Containable identifiers="syringe" />
     </ItemContainer>
   </Item>
-  <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem">
+  <Item name="Revolver Round" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
@@ -148,7 +148,7 @@
       </Attack>
     </Projectile>
   </Item>
-  <Item name="Revolver" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32">
+  <Item name="Revolver" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="75" />
     <Price locationtype="City" buyprice="150" />
     <Deconstruct time="10">
@@ -174,7 +174,7 @@
       <Containable identifiers="revolverround" />
     </ItemContainer>
   </Item>
-  <Item name="Stun Grenade" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
+  <Item name="Stun Grenade" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="250" />
@@ -210,7 +210,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="EMP Grenade" identifier="empgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.2">
+  <Item name="EMP Grenade" identifier="empgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.2" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="iron" />
       <Item identifier="copper" mincondition="0.9" />
@@ -245,7 +245,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Frag Grenade" identifier="fraggrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.15">
+  <Item name="Frag Grenade" identifier="fraggrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.15" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="10">
       <Item identifier="iron" />
       <Item identifier="uex" mincondition="0.9" />
@@ -282,7 +282,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Incendium Grenade" identifier="incendiumgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive">
+  <Item name="Incendium Grenade" identifier="incendiumgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="10">
       <Item identifier="iron" />
       <Item identifier="incendium" mincondition="0.9" />
@@ -317,7 +317,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
+  <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission." impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="500" />
@@ -360,7 +360,7 @@
       <Containable identifiers="batterycell,fulguriumcatterycell" />
     </ItemContainer>
   </Item>
-  <Item name="Diving Knife" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" scale="0.3">
+  <Item name="Diving Knife" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="City" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />

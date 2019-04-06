@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="UEX" identifier="uex" category="Equipment" description="A simple explosive compound made of sodium and phosphorus." Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+  <Item name="UEX" identifier="uex" category="Equipment" description="A simple explosive compound made of sodium and phosphorus." Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="125" />
@@ -26,7 +26,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+  <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -51,7 +51,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+  <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="60"/>
       <RequiredItem identifier="aluminium"/>
@@ -75,7 +75,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+  <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="40"/>
       <RequiredItem identifier="compoundn"/>
@@ -83,7 +83,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,108,23,17" />
-    <Body width="24" height="8" density="20" />
+    <Body width="24" height="18" density="20" />
     <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" type="OnUse" range="10000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" type="OnUse" range="10000" />
@@ -101,7 +101,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="IC-4 Block" identifier="ic4block" description="A compound made of C-4 and incendium." category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate">
+  <Item name="IC-4 Block" identifier="ic4block" description="A compound made of C-4 and incendium." category="Equipment" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="103,91,23,16" />
     <Body width="24" height="16" density="20" />
@@ -126,14 +126,14 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" cargocontaineridentifier="explosivecrate">
+  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,64,64,64" />
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,105,24,22" />
-    <Body width="14" height="12" density="20" />
+    <Body width="24" height="22" density="20" />
     <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
@@ -151,10 +151,10 @@
       </input>
     </ConnectionPanel>
   </Item>
-  <Item name="Nitroglycerin" identifier="nitroglycerin" category="Material" description="A highly unstable liquid that may explode when subjected to heat or physical shock." spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="4" useinhealthinterface="true" scale="0.2">
+  <Item name="Nitroglycerin" identifier="nitroglycerin" category="Material" description="A highly unstable liquid that may explode when subjected to heat or physical shock." spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="4" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="653,769,37,62" origin="0.5,0.5" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="171,0,77,152" depth="0.6" origin="0.5,0.5" />
-    <Body width="25" height="5" density="20" />
+    <Body width="35" height="60" density="20" />
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
       <StatusEffect type="OnFire" target="This" Condition="-50.0" />
