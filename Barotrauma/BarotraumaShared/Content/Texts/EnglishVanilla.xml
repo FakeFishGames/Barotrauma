@@ -2753,6 +2753,10 @@
   <InputType.Deselect>Deselect</InputType.Deselect>
   <InputType.Shoot>Shoot</InputType.Shoot>
 
+  <SubPreviewImage>Preview Image</SubPreviewImage>
+  <SubPreviewImageBrowse>Browse...</SubPreviewImageBrowse>
+  <SubPreviewImageGenerate>Create</SubPreviewImageGenerate>
+  
   <ModsTab>Subscribed Mods</ModsTab>
   
   <Walls>Walls</Walls>
