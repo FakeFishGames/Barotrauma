@@ -14,6 +14,7 @@ possible for modders to add new craftable items without having to modify the fab
 - Camera movement is disabled completely when an item interface is open (not just when the cursor is on 
 the interface).
 - Option to disable the camera pan/zoom effects from the game settings.
+- Option to set a custom preview image for subs.
 - Allow aiming on ladders when not moving.
 - Characters play Entrance of the Gladiators on the guitar when wearing a clown mask.
 - Display a warning on the status monitor when docked to an outpost ("Docked to X, undock before attempting 

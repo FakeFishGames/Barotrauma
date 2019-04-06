@@ -345,10 +345,6 @@ namespace Barotrauma.Items.Components
             crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
         }
 
-            crosshairSprite?.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, zoom);
-            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
-        }
-        
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();

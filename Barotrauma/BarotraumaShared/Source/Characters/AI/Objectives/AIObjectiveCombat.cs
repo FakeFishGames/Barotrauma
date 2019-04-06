@@ -136,21 +136,6 @@ namespace Barotrauma
                             }
                         }
                     }
-                    // When defensive, try to retreat to safety. TODO: in offsensive mode, engage the target
-                    Retreat(deltaTime);
-                    break;
-                case CombatMode.Retreat:
-                    Retreat(deltaTime);
-                    break;
-                case CombatMode.Offensive:
-                default:
-                    throw new System.NotImplementedException();
-            }
-            else if (Equip(deltaTime))
-            {
-                if (Reload(deltaTime))
-                {
-                    Attack(deltaTime);
                 }
             }
             return weapon;

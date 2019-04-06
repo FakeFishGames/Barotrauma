@@ -486,22 +486,5 @@ namespace Barotrauma.Items.Components
 
             yield return CoroutineStatus.Success;
         }
-
-        partial void ParseMsg()
-        {
-            string msg = TextManager.Get(Msg, true);
-            if (msg != null)
-            {
-                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-                {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
-                }
-                DisplayMsg = msg;
-            }
-            else
-            {
-                DisplayMsg = Msg;
-            }
-        }
     }
 }

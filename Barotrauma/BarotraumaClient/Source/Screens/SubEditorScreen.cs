@@ -1104,7 +1104,7 @@ namespace Barotrauma
                 if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
             }
 
-            if (File.Exists(filePath))
+            foreach (string contentPackageName in contentPacks)
             {
                 var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
                 {
@@ -1123,11 +1123,6 @@ namespace Barotrauma
                     }
                     return true;
                 };
-                msgBox.Buttons[1].OnClicked = msgBox.Close;
-            }
-            else
-            {
-                Save();
             }
 
 
@@ -1168,7 +1163,6 @@ namespace Barotrauma
                 AbsoluteSpacing = 5,
                 Stretch = true
             };
-#endif
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
@@ -1265,15 +1259,12 @@ namespace Barotrauma
             return false;
         }
 
-        private bool SaveAssembly(GUIButton button, object obj)
+        private bool CreateLoadScreen()
         {
             if (CharacterMode) SetCharacterMode(false);
             if (WiringMode) SetWiringMode(false);
 
-            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
-            {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
-            };
+            Submarine.RefreshSavedSubs();
 
             loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
