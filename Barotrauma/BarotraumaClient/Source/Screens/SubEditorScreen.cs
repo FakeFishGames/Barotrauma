@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -64,6 +65,8 @@ namespace Barotrauma
         private DateTime editorSelectedTime;
 
         private readonly string containerDeleteTag = "containerdelete";
+
+        private GUIImage previewImage;
 
         private Color primaryColor = new Color(12, 14, 15, 190);
         private Color secondaryColor = new Color(12, 14, 15, 215);
@@ -852,11 +855,18 @@ namespace Barotrauma
             }
 #endif
 
-            using (MemoryStream imgStream = new MemoryStream())
+            if (previewImage.Sprite?.Texture != null)
             {
-                CreateImage(defaultPreviewImageSize.X, defaultPreviewImageSize.Y, imgStream);
-                Submarine.SaveCurrent(savePath, imgStream);
-            }            
+                using (MemoryStream imgStream = new MemoryStream())
+                {
+                    previewImage.Sprite.Texture.SaveAsPng(imgStream, previewImage.Sprite.Texture.Width, previewImage.Sprite.Texture.Height);
+                    Submarine.SaveCurrent(savePath, imgStream);
+                }
+            }
+            else
+            {
+                Submarine.SaveCurrent(savePath);
+            }
             Submarine.MainSub.CheckForErrors();
             
             GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
@@ -884,23 +894,29 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 400) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.45f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(750, 400) });
+            var paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.02f };
 
-            var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogHeader"), font: GUI.LargeFont);
-            
-            var saveSubLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.05f), paddedSaveFrame.RectTransform),
+            //var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogHeader"), font: GUI.LargeFont);
+
+            var columnArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), paddedSaveFrame.RectTransform), isHorizontal: true) { Stretch = true };
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), columnArea.RectTransform)) { RelativeSpacing = 0.02f, Stretch = true };
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.42f, 1.0f), columnArea.RectTransform)) { RelativeSpacing = 0.02f, Stretch = true };
+
+            // left column ----------------------------------------------------------------------- 
+
+            var saveSubLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.03f), leftColumn.RectTransform),
                 TextManager.Get("SaveSubDialogName"));
 
-            nameBox = new GUITextBox(new RectTransform(new Vector2(0.65f, 0.05f), paddedSaveFrame.RectTransform))
+            nameBox = new GUITextBox(new RectTransform(new Vector2(0.65f, 0.05f), leftColumn.RectTransform))
             {
                 OnEnterPressed = ChangeSubName,
                 Text = GetSubName()
             };
-                        
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogDescription"));
-            
-            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform));
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.03f), leftColumn.RectTransform), TextManager.Get("SaveSubDialogDescription"));
+
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform));
             descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), font: GUI.SmallFont, wrap: true);
             descriptionBox.OnTextChanged += (textBox, text) =>
             {
@@ -913,81 +929,9 @@ namespace Barotrauma
             };
             descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
 
-            var horizontalArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedSaveFrame.RectTransform), style: null);
-            
-            var settingsLabel = new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), horizontalArea.RectTransform), 
-                TextManager.Get("SaveSubDialogSettings"), font: GUI.SmallFont);
-            
-            var tagContainer = new GUIListBox(new RectTransform(new Point(horizontalArea.Rect.Width / 2, horizontalArea.Rect.Height - settingsLabel.Rect.Height), horizontalArea.RectTransform)
-            { AbsoluteOffset = new Point(0, settingsLabel.Rect.Height) }, 
-                style: "InnerFrame");
-            
-            foreach (SubmarineTag tag in Enum.GetValues(typeof(SubmarineTag)))
-            {
-                string tagStr = TextManager.Get(tag.ToString());
-                var tagTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tagContainer.Content.RectTransform),
-                    tagStr, font: GUI.SmallFont)
-                {
-                    Selected = Submarine.MainSub == null ? false : Submarine.MainSub.HasTag(tag),
-                    UserData = tag,
+            var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
-                    OnSelected = (GUITickBox tickBox) =>
-                    {
-                        if (Submarine.MainSub == null) return false;
-                        if (tickBox.Selected)
-                        {
-                            Submarine.MainSub.AddTag((SubmarineTag)tickBox.UserData);
-                        }
-                        else
-                        {
-                            Submarine.MainSub.RemoveTag((SubmarineTag)tickBox.UserData);
-                        }
-                        return true;
-                    }
-                };
-            }
-            
-            var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), 
-                TextManager.Get("RequiredContentPackages"), font: GUI.SmallFont);
-
-            var contentPackList = new GUIListBox(new RectTransform(
-                new Point(horizontalArea.Rect.Width / 2, horizontalArea.Rect.Height - settingsLabel.Rect.Height), 
-                horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft)
-                {
-                    IsFixedSize = false,
-                    AbsoluteOffset = new Point(0, contentPackagesLabel.Rect.Height)
-                });
-
-            List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
-            foreach (ContentPackage contentPack in ContentPackage.List)
-            {
-                if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
-            }
-
-            foreach (string contentPackageName in contentPacks)
-            {
-                var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
-                {
-                    Selected = Submarine.MainSub.RequiredContentPackages.Contains(contentPackageName),
-                    UserData = contentPackageName
-                };
-                cpTickBox.OnSelected += (GUITickBox tickBox) =>
-                {
-                    if (tickBox.Selected)
-                    {
-                        Submarine.MainSub.RequiredContentPackages.Add((string)tickBox.UserData);
-                    }
-                    else
-                    {
-                        Submarine.MainSub.RequiredContentPackages.Remove((string)tickBox.UserData);
-                    }
-                    return true;
-                };
-            }
-            
-            var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
-
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), crewSizeArea.RectTransform), 
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), crewSizeArea.RectTransform),
                 TextManager.Get("RecommendedCrewSize"), font: GUI.SmallFont);
             var crewSizeMin = new GUINumberInput(new RectTransform(new Vector2(0.1f, 1.0f), crewSizeArea.RectTransform), GUINumberInput.NumberType.Int)
             {
@@ -1015,7 +959,7 @@ namespace Barotrauma
                 Submarine.MainSub.RecommendedCrewSizeMax = crewSizeMax.IntValue;
             };
             
-            var crewExpArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
+            var crewExpArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), crewExpArea.RectTransform), 
                 TextManager.Get("RecommendedCrewExperience"), font: GUI.SmallFont);
@@ -1057,12 +1001,140 @@ namespace Barotrauma
                     crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
                 experienceText.Text = TextManager.Get((string)experienceText.UserData);
             }
+            
+            // right column ---------------------------------------------------
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), rightColumn.RectTransform), TextManager.Get("SubPreviewImage"));
+            
+            var previewImageHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), rightColumn.RectTransform), style: null) { Color = Color.Black, CanBeFocused = false };
+            previewImage = new GUIImage(new RectTransform(Vector2.One, previewImageHolder.RectTransform), Submarine.MainSub?.PreviewImage, scaleToFit: true);
 
-            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
-                isHorizontal: true, childAnchor: Anchor.BottomRight) { AbsoluteSpacing = 5 };
+            var previewImageButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
 
-            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
-                TextManager.Get("Cancel"))
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageGenerate"))
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    using (MemoryStream imgStream = new MemoryStream())
+                    {
+                        CreateImage(defaultPreviewImageSize.X, defaultPreviewImageSize.Y, imgStream);
+                        previewImage.Sprite = new Sprite(TextureLoader.FromStream(imgStream, preMultiplyAlpha: false), null, null);
+                        if (Submarine.MainSub != null)
+                        {
+                            Submarine.MainSub.PreviewImage = previewImage.Sprite;
+                        }
+                    }
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageBrowse"))
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    OpenFileDialog ofd = new OpenFileDialog()
+                    {
+                        InitialDirectory = Path.GetFullPath(Submarine.SavePath),
+                        Filter = "PNG file|*.png",
+                        Title = TextManager.Get("SubPreviewImage")
+                    };
+                    if (ofd.ShowDialog() == DialogResult.OK)
+                    {
+                        if (new FileInfo(ofd.FileName).Length > 2048 * 2048)
+                        {
+                            new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                            return false;
+                        }
+
+                        previewImage.Sprite = new Sprite(ofd.FileName, sourceRectangle: null);
+                        if (Submarine.MainSub != null)
+                        {
+                            Submarine.MainSub.PreviewImage = previewImage.Sprite;
+                        }
+                    }
+                    return true;
+                }
+            };
+
+
+            var horizontalArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.35f), rightColumn.RectTransform), style: null);
+
+            var settingsLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), horizontalArea.RectTransform),
+                TextManager.Get("SaveSubDialogSettings"), font: GUI.SmallFont);
+
+            var tagContainer = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f - settingsLabel.RectTransform.RelativeSize.Y), 
+                horizontalArea.RectTransform, Anchor.BottomLeft),
+                style: "InnerFrame");
+
+            foreach (SubmarineTag tag in Enum.GetValues(typeof(SubmarineTag)))
+            {
+                string tagStr = TextManager.Get(tag.ToString());
+                var tagTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tagContainer.Content.RectTransform),
+                    tagStr, font: GUI.SmallFont)
+                {
+                    Selected = Submarine.MainSub == null ? false : Submarine.MainSub.HasTag(tag),
+                    UserData = tag,
+
+                    OnSelected = (GUITickBox tickBox) =>
+                    {
+                        if (Submarine.MainSub == null) return false;
+                        if (tickBox.Selected)
+                        {
+                            Submarine.MainSub.AddTag((SubmarineTag)tickBox.UserData);
+                        }
+                        else
+                        {
+                            Submarine.MainSub.RemoveTag((SubmarineTag)tickBox.UserData);
+                        }
+                        return true;
+                    }
+                };
+            }
+            
+            var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), 
+                TextManager.Get("RequiredContentPackages"), font: GUI.SmallFont);
+
+            var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), horizontalArea.RectTransform, Anchor.TopRight),
+                TextManager.Get("RequiredContentPackages"), font: GUI.SmallFont);
+
+            var contentPackList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f - contentPackagesLabel.RectTransform.RelativeSize.Y),
+                horizontalArea.RectTransform, Anchor.BottomRight));
+
+
+            List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
+            foreach (ContentPackage contentPack in ContentPackage.List)
+            {
+                if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
+            }
+
+            foreach (string contentPackageName in contentPacks)
+            {
+                var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
+                {
+                    Selected = Submarine.MainSub.RequiredContentPackages.Contains(contentPackageName),
+                    UserData = contentPackageName
+                };
+                cpTickBox.OnSelected += (GUITickBox tickBox) =>
+                {
+                    if (tickBox.Selected)
+                    {
+                        Submarine.MainSub.RequiredContentPackages.Add((string)tickBox.UserData);
+                    }
+                    else
+                    {
+                        Submarine.MainSub.RequiredContentPackages.Remove((string)tickBox.UserData);
+                    }
+                    return true;
+                };
+            }
+            
+            var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
+
+
+            var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter, minSize: new Point(0, 30)), style: null);
+
+            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Cancel"), style: "GUIButtonLarge")
             {
                 OnClicked = (GUIButton btn, object userdata) =>
                 {
@@ -1071,12 +1143,127 @@ namespace Barotrauma
                 }
             };
 
-            var saveButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
-                TextManager.Get("SaveSubButton"))
+            var saveButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
+                TextManager.Get("SaveSubButton"), style: "GUIButtonLarge")
             {
                 OnClicked = SaveSub
             };
+            
+            var crewExpArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
+        }
+
+
+        private void CreateSaveAssemblyScreen()
+        {
+            if (CharacterMode) SetCharacterMode(false);
+            if (WiringMode) SetWiringMode(false);
+
+            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
+            };
+
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.3f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 300) });
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center))
+            {
+                AbsoluteSpacing = 5,
+                Stretch = true
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
+                TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
+                TextManager.Get("SaveItemAssemblyDialogName"));
+            nameBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.1f), paddedSaveFrame.RectTransform));
+
+#if DEBUG
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform), TextManager.Get("SaveItemAssemblyHideInMenus"))
+            {
+                UserData = "hideinmenus"
+            };
+#endif
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
+                TextManager.Get("SaveItemAssemblyDialogDescription"));
+            descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedSaveFrame.RectTransform))
+            {
+                UserData = "description",
+                Wrap = true,
+                Text = ""
+            };
+            
+            var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform), style: null);
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Cancel"))
+            {
+                OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    saveFrame = null;
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
+                TextManager.Get("SaveSubButton"))
+            {
+                OnClicked = SaveAssembly
+            };
+        }
+
+        private bool SaveAssembly(GUIButton button, object obj)
+        {
+            if (string.IsNullOrWhiteSpace(nameBox.Text))
+            {
+                GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red);
+
+                nameBox.Flash();
+                return false;
+            }
+
+            foreach (char illegalChar in Path.GetInvalidFileNameChars())
+            {
+                if (nameBox.Text.Contains(illegalChar))
+                {
+                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
+                    nameBox.Flash();
+                    return false;
+                }
+            }
+
+            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
+            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
+            
+            string saveFolder = Path.Combine("Content", "Items", "Assemblies");
+            string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
+
+            if (File.Exists(filePath))
+            {
+                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("ItemAssemblyFileExistsWarning"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    msgBox.Close();
+                    ItemAssemblyPrefab.Remove(filePath);
+                    Save();
+                    return true;
+                };
+                msgBox.Buttons[1].OnClicked = msgBox.Close;
+            }
+            else
+            {
+                Save();
+            }
+
+            void Save()
+            {
+                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
+                doc.Save(filePath);
+
+                new ItemAssemblyPrefab(filePath);
+                UpdateEntityList();
+            }
+
+            saveFrame = null;
+            return false;
         }
 
 
@@ -1143,69 +1330,12 @@ namespace Barotrauma
             {
                 GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red);
 
-                nameBox.Flash();
-                return false;
-            }
-
-            foreach (char illegalChar in Path.GetInvalidFileNameChars())
-            {
-                if (nameBox.Text.Contains(illegalChar))
-                {
-                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
-                    nameBox.Flash();
-                    return false;
-                }
-            }
-
-            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
-            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
-            
-            string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
-
-            if (File.Exists(filePath))
-            {
-                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("ItemAssemblyFileExistsWarning"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
-                {
-                    msgBox.Close();
-                    ItemAssemblyPrefab.Remove(filePath);
-                    Save();
-                    return true;
-                };
-                msgBox.Buttons[1].OnClicked = msgBox.Close;
-            }
-            else
-            {
-                Save();
-            }
-
-            void Save()
-            {
-                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
-                doc.Save(filePath);
-
-                new ItemAssemblyPrefab(filePath);
-                UpdateEntityList();
-            }
-
-            saveFrame = null;
-            return false;
-        }
-
-        private bool CreateLoadScreen()
-        {
-            if (CharacterMode) SetCharacterMode(false);
-            if (WiringMode) SetWiringMode(false);
-
-            Submarine.RefreshSavedSubs();
-
             loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
             };
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(300, 400) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
             GUIFrame paddedLoadFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
             var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), paddedLoadFrame.RectTransform))
@@ -1237,8 +1367,18 @@ namespace Barotrauma
                 }
             }
 
-            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Delete"))
+            new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+            {
+                OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    loadFrame = null;
+                    return true;
+                }
+            };
+
+            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.31f, 0.0f) },
+                TextManager.Get("Delete"), style: "GUIButtonLarge")
             {
                 Enabled = false,
                 UserData = "delete"
@@ -1255,21 +1395,12 @@ namespace Barotrauma
                 return true;
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.26f, 0.0f) },
-                TextManager.Get("Load"))
+            new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight),
+                TextManager.Get("Load"), style: "GUIButtonLarge")
             {
                 OnClicked = LoadSub
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight),
-                TextManager.Get("Cancel"))
-            {
-                OnClicked = (GUIButton btn, object userdata) =>
-                {
-                    loadFrame = null;
-                    return true;
-                }
-            };
 
             return true;
         }
