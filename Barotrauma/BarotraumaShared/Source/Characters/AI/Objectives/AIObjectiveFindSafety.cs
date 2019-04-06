@@ -168,13 +168,14 @@ namespace Barotrauma
             }
         }
 
-        public Hull FindBestHull()
+        public Hull FindBestHull(IEnumerable<Hull> ignoredHulls = null)
         {
-            Hull bestHull = character.CurrentHull;
-            float bestValue = currenthullSafety;
+            Hull bestHull = null;
+            float bestValue = 0;
             foreach (Hull hull in Hull.hullList)
             {
                 if (hull.Submarine == null) { continue; }
+                if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
                 float hullSafety = 0;
                 if (character.Submarine != null && SteeringManager == PathSteering)
                 {

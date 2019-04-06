@@ -289,17 +289,15 @@ namespace Barotrauma
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
+            // Damage from falling etc.
+            if (Character.LastDamageSource == null) { return; }
             float damage = attackResult.Damage;
             if (damage <= 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
-                if (objectiveManager.CurrentOrder == null)
-                {
-                    objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
-                }
-                return;
+                AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
             }
-            if (IsFriendly(attacker))
+            else if (IsFriendly(attacker))
             {
                 if (attacker.AnimController.Anim == Barotrauma.AnimController.Animation.CPR && attacker.SelectedCharacter == Character)
                 {
@@ -309,51 +307,50 @@ namespace Barotrauma
                 }
                 if (!attacker.IsRemotePlayer && Character.Controlled != attacker && attacker.AIController != null && attacker.AIController.Enabled)
                 {
-                    // Don't react to damage done by friendly ai, because we know that it's accidental
-                    if (objectiveManager.CurrentOrder == null)
-                    {
-                        objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
-                    }
-                    return;
-                }
-                float currentVitality = Character.CharacterHealth.Vitality;
-                float dmgPercentage = damage / currentVitality * 100;
-                if (dmgPercentage < currentVitality / 10)
-                {
-                    // Don't react to a minor amount of (accidental) dmg done by friendly characters
-                    if (objectiveManager.CurrentOrder == null)
-                    {
-                        objectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
-                    }
-                }
-                if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
-                {
-                    if (combatObjective.Enemy != attacker)
-                    {
-                        // Replace the old objective with the new.
-                        ObjectiveManager.Objectives.Remove(combatObjective);
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
-                    }
+                    // Don't retaliate on damage done by friendly ai, because we know that it's accidental
+                    AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
                 }
                 else
                 {
-                    objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker), Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                    float currentVitality = Character.CharacterHealth.Vitality;
+                    float dmgPercentage = damage / currentVitality * 100;
+                    if (dmgPercentage < currentVitality / 10)
+                    {
+                        // Don't retaliate on minor (accidental) dmg done by friendly characters
+                        AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                    }
+                    else
+                    {
+                        AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                    }
                 }
             }
             else
             {
+                AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive);
+            }
+
+            void AddCombatObjective(AIObjectiveCombat.CombatMode mode, float delay = 0)
+            {
                 if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
                 {
-                    if (combatObjective.Enemy != attacker)
+                    if (combatObjective.Enemy != attacker || (combatObjective.Enemy == null && attacker == null))
                     {
                         // Replace the old objective with the new.
                         ObjectiveManager.Objectives.Remove(combatObjective);
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode));
                     }
                 }
                 else
                 {
-                    objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
+                    if (delay > 0)
+                    {
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode), delay);
+                    }
+                    else
+                    {
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode));
+                    }
                 }
             }
         }

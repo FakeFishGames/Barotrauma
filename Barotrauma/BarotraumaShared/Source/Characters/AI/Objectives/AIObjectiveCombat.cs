@@ -47,25 +47,32 @@ namespace Barotrauma
 
         private float coolDownTimer;
 
-        public AIObjectiveCombat(Character character, Character enemy) : base(character, "")
+        public enum CombatMode
+        {
+            Defensive,
+            Offensive, // Not implemented
+            Retreat
+        }
+
+        public CombatMode Mode { get; private set; }
+
+        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode) : base(character, "")
         {
             Enemy = enemy;
             coolDownTimer = CoolDown;
             HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 0;
+            Mode = mode;
+            if (Enemy == null)
+            {
+                Mode = CombatMode.Retreat;
+            }
         }
 
         protected override void Act(float deltaTime)
         {
             coolDownTimer -= deltaTime;
-            if (Weapon != null && character.Inventory.Items.Contains(_weapon))
-            {
-                Weapon = null;
-            }
-            if (Weapon == null)
-            {
-                Weapon = GetWeapon();
-            }
-            if (Weapon == null)
+            if (abandon) { return; }
+            switch (Mode)
             {
                 case CombatMode.Defensive:
                     if (Weapon != null && character.Inventory.Items.Contains(_weapon))
@@ -96,17 +103,6 @@ namespace Barotrauma
                 case CombatMode.Offensive:
                 default:
                     throw new System.NotImplementedException();
-            }
-            else if (Equip(deltaTime))
-            {
-                if (Reload(deltaTime))
-                {
-                    Attack(deltaTime);
-                }
-            }
-            if (!abandon)
-            {
-                Move(deltaTime);
             }
         }
 
@@ -140,6 +136,21 @@ namespace Barotrauma
                             }
                         }
                     }
+                    // When defensive, try to retreat to safety. TODO: in offsensive mode, engage the target
+                    Retreat(deltaTime);
+                    break;
+                case CombatMode.Retreat:
+                    Retreat(deltaTime);
+                    break;
+                case CombatMode.Offensive:
+                default:
+                    throw new System.NotImplementedException();
+            }
+            else if (Equip(deltaTime))
+            {
+                if (Reload(deltaTime))
+                {
+                    Attack(deltaTime);
                 }
             }
             return weapon;
@@ -168,20 +179,18 @@ namespace Barotrauma
                 else
                 {
                     //couldn't equip the item, escape
-                    Escape(deltaTime);
+                    //Abandon(deltaTime);
                     return false;
                 }
             }
             return true;
         }
 
-        private void Move(float deltaTime)
+        private void Retreat(float deltaTime)
         {
-            // Retreat to safety
-            // TODO: aggressive behaviour, chasing?
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
-                retreatTarget = HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull();
+                retreatTarget = HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(new List<Hull>() { character.CurrentHull });
             }
             if (retreatTarget != null)
             {
@@ -218,7 +227,7 @@ namespace Barotrauma
                 }
                 else if (!reloadWeaponObjective.CanBeCompleted)
                 {
-                    Escape(deltaTime);
+                    Mode = CombatMode.Retreat;
                 }
                 else
                 {
@@ -277,16 +286,16 @@ namespace Barotrauma
             }
         }
 
-        private void Escape(float deltaTime)
+        private void Abandon(float deltaTime)
         {
             abandon = true;
             SteeringManager.Reset();
-            HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
+            //HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
         }
 
         public override bool IsCompleted()
         {
-            bool completed = Enemy == null || Enemy.Removed || Enemy.IsDead || coolDownTimer <= 0;
+            bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || coolDownTimer <= 0;
             if (completed)
             {
                 if (Weapon != null)
@@ -298,7 +307,7 @@ namespace Barotrauma
         }
 
         public override bool CanBeCompleted => !abandon && (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && (retreatObjective == null || retreatObjective.CanBeCompleted);
-        public override float GetPriority(AIObjectiveManager objectiveManager) => Enemy == null || Enemy.Removed || Enemy.IsDead ? 0 : 100;
+        public override float GetPriority(AIObjectiveManager objectiveManager) => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : 100;
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
