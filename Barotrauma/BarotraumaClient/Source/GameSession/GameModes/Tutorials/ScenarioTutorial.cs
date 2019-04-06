@@ -50,7 +50,7 @@ namespace Barotrauma.Tutorials
 
             GameMain.GameSession = new GameSession(Submarine.MainSub, "",
                 GameModePreset.List.Find(g => g.Identifier == "tutorial"));
-            (GameMain.GameSession.GameMode as TutorialMode).tutorial = this;
+            (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
 
             if (generationParams != null)
             {

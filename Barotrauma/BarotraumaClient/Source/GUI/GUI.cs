@@ -1546,9 +1546,16 @@ namespace Barotrauma
             
             if (GameMain.GameSession != null)
             {
-                if (ContextualTutorial.Initialized && GameMain.GameSession.GameMode is SinglePlayerCampaign)
+                if (Tutorial.Initialized)
                 {
-                    ((SinglePlayerCampaign)GameMain.GameSession.GameMode).ContextualTutorial.Stop();
+                    if (GameMain.GameSession.GameMode is SinglePlayerCampaign)
+                    {
+                        ((SinglePlayerCampaign)GameMain.GameSession.GameMode).ContextualTutorial.Stop();
+                    }
+                    else
+                    {
+                        ((TutorialMode)GameMain.GameSession.GameMode).Tutorial.Stop();
+                    }
                 }
 
                 if (GameSettings.SendUserStatistics)

@@ -1,5 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
@@ -45,7 +44,7 @@ namespace Barotrauma.Tutorials
         public override IEnumerable<object> UpdateState()
         {
             yield return new WaitForSeconds(1f);
-            infoBox = CreateInfoFrame("mechanic_button", true);
+            infoBox = CreateInfoFrame("", "mechanic_button", hasButton: true);
         }
     }
 }
