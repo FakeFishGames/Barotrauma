@@ -19,10 +19,10 @@ namespace Barotrauma.Items.Components
         public float FlowPercentage
         {
             get { return flowPercentage; }
-            set 
+            set
             {
                 if (!MathUtils.IsValid(flowPercentage)) return;
-                flowPercentage = MathHelper.Clamp(value,-100.0f,100.0f);
+                flowPercentage = MathHelper.Clamp(value, -100.0f, 100.0f);
                 flowPercentage = MathUtils.Round(flowPercentage, 1.0f);
             }
         }
@@ -86,8 +86,8 @@ namespace Barotrauma.Items.Components
 
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
-            
-            voltage = 0.0f;
+
+            voltage -= deltaTime;
         }
 
         partial void UpdateProjSpecific(float deltaTime);
