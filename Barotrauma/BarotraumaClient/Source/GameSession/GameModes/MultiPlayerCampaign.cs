@@ -16,7 +16,7 @@ namespace Barotrauma
         {
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
-            GUIFrame setupBox = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.45f), background.RectTransform, Anchor.Center) { MinSize = new Point(500, 500) });
+            GUIFrame setupBox = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.45f), background.RectTransform, Anchor.Center) { MinSize = new Point(500, 550) });
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), setupBox.RectTransform, Anchor.Center))
             {
                 Stretch = true
@@ -30,7 +30,10 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), paddedFrame.RectTransform, Anchor.BottomLeft), style: null);
+            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), paddedFrame.RectTransform, Anchor.BottomLeft), style: "InnerFrame")
+            {
+                CanBeFocused = false
+            };
             
             var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
             var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
@@ -38,7 +41,7 @@ namespace Barotrauma
             var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer, submarines, saveFiles);
 
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
-                TextManager.Get("NewCampaign"))
+                TextManager.Get("NewCampaign"), style: "GUITabButton")
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -49,7 +52,7 @@ namespace Barotrauma
             };
 
             var loadCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.00f), buttonContainer.RectTransform),
-                TextManager.Get("LoadCampaign"))
+                TextManager.Get("LoadCampaign"), style: "GUITabButton")
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -64,8 +67,10 @@ namespace Barotrauma
             campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
             campaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;
 
-            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), paddedFrame.RectTransform, Anchor.BottomLeft), TextManager.Get("Cancel"))
+            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), paddedFrame.RectTransform, Anchor.BottomLeft), 
+                TextManager.Get("Cancel"), style: "GUIButtonLarge")
             {
+                IgnoreLayoutGroups = true,
                 OnClicked = (btn, obj) =>
                 {
                     background.Visible = false;
@@ -74,7 +79,22 @@ namespace Barotrauma
                 }
             };
 
-            return background;
+            if (GameMain.Client != null && interactor == Character.Controlled)
+            {
+                var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
+                    .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                {
+                    UserData = "watchmanprompt"
+                };
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    GameMain.Client.RequestRoundEnd();
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;            
+            }
         }
 
         public override void Update(float deltaTime)
