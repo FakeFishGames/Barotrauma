@@ -213,9 +213,13 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>  
+  <ItemGroup Condition="'$(DefineConstants)' == 'LINUX' ">
+    <None Include="Launch_BarotraumaServer">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
