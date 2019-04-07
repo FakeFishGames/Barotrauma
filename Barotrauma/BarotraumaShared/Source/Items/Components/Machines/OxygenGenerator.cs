@@ -73,6 +73,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             powerDownTimer += deltaTime;
+            CurrFlow = 0.0f;
         }
 
         private void GetVents()

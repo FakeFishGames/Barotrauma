@@ -81,7 +81,7 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
 
-            voltage = 0.0f;
+            voltage -= deltaTime;
         }
         
         public override bool Pick(Character picker)

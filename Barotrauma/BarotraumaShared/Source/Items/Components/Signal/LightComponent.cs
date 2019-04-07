@@ -254,7 +254,7 @@ namespace Barotrauma.Items.Components
                 UpdateAITarget(item.AiTarget);
             }
 
-            voltage = 0.0f;
+            voltage -= deltaTime;
         }
                 
 #if CLIENT
