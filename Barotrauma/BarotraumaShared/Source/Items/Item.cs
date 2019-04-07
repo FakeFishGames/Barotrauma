@@ -1147,12 +1147,6 @@ namespace Barotrauma
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
-                return;
-            }
-
-            float forceFactor = 1.0f;
-            if (CurrentHull != null)
-            {
                 float floor = CurrentHull.Rect.Y - CurrentHull.Rect.Height;
                 float waterLevel = floor + CurrentHull.WaterVolume / CurrentHull.Rect.Width;
 
