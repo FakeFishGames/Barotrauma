@@ -315,6 +315,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
             if (Config.EnableSplashScreen)
             {
                 (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, SoundManager, "Content/splashscreen.mp4", 1280, 720);
