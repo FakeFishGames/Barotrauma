@@ -579,13 +579,12 @@ namespace Barotrauma
                 }
             }
 
-            //containers need to handle collision events to notify items inside them about the impact
-            var itemContainer = GetComponent<ItemContainer>();
-            if (ImpactTolerance > 0.0f || itemContainer != null)
+            if (body != null)
             {
-                if (body != null) body.FarseerBody.OnCollision += OnCollision;
+                body.FarseerBody.OnCollision += OnCollision;
             }
 
+            var itemContainer = GetComponent<ItemContainer>();
             if (itemContainer != null)
             {
                 ownInventory = itemContainer.Inventory;
@@ -1148,6 +1147,12 @@ namespace Barotrauma
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
+                return;
+            }
+
+            float forceFactor = 1.0f;
+            if (CurrentHull != null)
+            {
                 float floor = CurrentHull.Rect.Y - CurrentHull.Rect.Height;
                 float waterLevel = floor + CurrentHull.WaterVolume / CurrentHull.Rect.Width;
 
@@ -1166,18 +1171,17 @@ namespace Barotrauma
             body.ApplyForce((uplift - drag) * 10.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
             //apply simple angular drag
-            body.ApplyTorque(body.AngularVelocity * volume * -0.05f);                    
+            body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
         }
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
-#if CLIENT
-            if (GameMain.Client != null) return true;
-#endif
-
             Vector2 normal = contact.Manifold.LocalNormal;
-            
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
+
+            OnCollisionProjSpecific(f1, f2, contact, impact);
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return true; }
 
             if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
             {
@@ -1199,6 +1203,8 @@ namespace Barotrauma
 
             return true;
         }
+
+        partial void OnCollisionProjSpecific(Fixture f1, Fixture f2, Contact contact, float impact);
 
         public override void FlipX(bool relativeToSub)
         {
