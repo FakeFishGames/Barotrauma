@@ -236,6 +236,52 @@ namespace Barotrauma.Tutorials
             return true;
         }
 
+        protected virtual void TriggerTutorialSegment(int index, params object[] args)
+        {
+            Inventory.draggingItem = null;
+            ContentRunning = true;
+            activeContentSegment = segments[index];
+
+            string tutorialText = TextManager.GetFormatted(activeContentSegment.TextContent.GetAttributeString("tag", ""), true, args);
+            string objectiveText = string.Empty;
+
+            if (!string.IsNullOrEmpty(activeContentSegment.Objective))
+            {
+                if (args.Length == 0)
+                {
+                    objectiveText = activeContentSegment.Objective;
+                }
+                else
+                {
+                    objectiveText = string.Format(activeContentSegment.Objective, args);
+                }
+
+                activeContentSegment.Objective = objectiveText;
+            }
+            else
+            {
+                activeContentSegment.IsTriggered = true; // Complete at this stage only if no related objective
+            }
+
+            switch (activeContentSegment.ContentType)
+            {
+                case ContentTypes.None:
+                    break;
+                case ContentTypes.Video:
+                    infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
+                          activeContentSegment.TextContent.GetAttributeInt("width", 300),
+                          activeContentSegment.TextContent.GetAttributeInt("height", 80),
+                          activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, () => LoadVideo(activeContentSegment));
+                    break;
+                case ContentTypes.TextOnly:
+                    infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
+                                              activeContentSegment.TextContent.GetAttributeInt("width", 300),
+                                              activeContentSegment.TextContent.GetAttributeInt("height", 80),
+                                              activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment);
+                    break;
+            }
+        }
+
         public virtual void Stop()
         {
             if (videoPlayer != null)
