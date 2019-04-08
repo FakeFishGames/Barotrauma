@@ -1630,21 +1630,25 @@ namespace Barotrauma
                 }
             }
 
-            foreach (ItemComponent ic in components) { ic.Drop(dropper); }
+            if (body != null)
+            {
+                body.Enabled = true;
+                body.ResetDynamics();
+                if (dropper != null)
+                {
+                    body.SetTransform(dropper.SimPosition, 0.0f);
+                }
+            }
 
+            foreach (ItemComponent ic in components) { ic.Drop(dropper); }
+            
             if (Container != null)
             {
-                if (body != null)
-                {
-                    body.Enabled = true;
-                    body.LinearVelocity = Vector2.Zero;
-                }
                 SetTransform(Container.SimPosition, 0.0f);
-
                 Container.RemoveContained(this);
                 Container = null;
             }
-
+            
             if (parentInventory != null)
             {
                 parentInventory.RemoveItem(this);
