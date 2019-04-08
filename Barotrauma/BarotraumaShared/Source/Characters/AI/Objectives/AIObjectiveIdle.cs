@@ -62,24 +62,9 @@ namespace Barotrauma
                 newTargetTimer = 0;
                 standStillTimer = 0;
             }
-            else if (character.IsClimbing)
+            if (character.AnimController.InWater || character.IsClimbing)
             {
-                if (currentTarget == null)
-                {
-                    newTargetTimer = 0;
-                }
-                else
-                {
-                    // Don't allow new targets when climbing.
-                    newTargetTimer = Math.Max(newTargetIntervalMin, newTargetTimer);
-                }
-            }
-            else if (character.AnimController.InWater)
-            {
-                if (currentTarget == null)
-                {
-                    newTargetTimer = 0;
-                }
+                standStillTimer = 0;
             }
             if (newTargetTimer <= 0.0f)
             {
@@ -137,28 +122,23 @@ namespace Barotrauma
             // - if reached the end of the path 
             // - if the target is unreachable
             // - if the path requires going outside
-            if (!character.IsClimbing)
+            if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
+                (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
             {
-                if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
-                    (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
+                standStillTimer -= deltaTime;
+                if (standStillTimer > 0.0f)
                 {
-                    if (!character.AnimController.InWater)
-                    {
-                        standStillTimer -= deltaTime;
-                        if (standStillTimer > 0.0f)
-                        {
-                            walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
-                            PathSteering.Reset();
-                            return;
-                        }
-                        if (standStillTimer < -walkDuration)
-                        {
-                            standStillTimer = Rand.Range(standStillMin, standStillMax);
-                        }
-                    }
-                    Wander(deltaTime);
+                    walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
+                    PathSteering.Reset();
                     return;
                 }
+                if (standStillTimer < -walkDuration)
+                {
+                    standStillTimer = Rand.Range(standStillMin, standStillMax);
+                }
+               
+                Wander(deltaTime);
+                return;
             }
 
             if (currentTarget != null)
@@ -169,54 +149,44 @@ namespace Barotrauma
 
         public void Wander(float deltaTime)
         {
-            if (character.IsClimbing) { return; }
             //steer away from edges of the hull
-            var currentHull = character.CurrentHull;
-            if (currentHull != null)
+            if (character.AnimController.CurrentHull != null && !character.IsClimbing)
             {
-                float roomWidth = currentHull.Rect.Width;
-                if (roomWidth < WallAvoidDistance * 4)
+                float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
+                float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
+                if (leftDist < WallAvoidDistance && rightDist < WallAvoidDistance)
                 {
-                    PathSteering.Reset();
+                    if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
+                    {
+                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
+                    }
+                    else
+                    {
+                        PathSteering.Reset();
+                    }
+                }
+                else if (leftDist < WallAvoidDistance)
+                {
+                    //PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance - leftDist) / WallAvoidDistance);
+                    PathSteering.SteeringManual(deltaTime, Vector2.UnitX);
+                    PathSteering.WanderAngle = 0.0f;
+                }
+                else if (rightDist < WallAvoidDistance)
+                {
+                    //PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance - rightDist) / WallAvoidDistance);
+                    PathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
+                    PathSteering.WanderAngle = MathHelper.Pi;
                 }
                 else
                 {
-                    float leftDist = character.Position.X - currentHull.Rect.X;
-                    float rightDist = currentHull.Rect.Right - character.Position.X;
-                    if (leftDist < WallAvoidDistance && rightDist < WallAvoidDistance)
-                    {
-                        if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
-                        {
-                            PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
-                        }
-                        else
-                        {
-                            PathSteering.Reset();
-                        }
-                    }
-                    else if (leftDist < WallAvoidDistance)
-                    {
-                        float speed = (WallAvoidDistance - leftDist) / WallAvoidDistance;
-                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
-                        PathSteering.WanderAngle = 0.0f;
-                    }
-                    else
-                    {
-                        float speed = (WallAvoidDistance - rightDist) / WallAvoidDistance;
-                        PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
-                        PathSteering.WanderAngle = MathHelper.Pi;
-                    }
-                    else
-                    {
-                        SteeringManager.SteeringWander();
-                    }
+                    SteeringManager.SteeringWander();
                 }
             }
             else
             {
                 SteeringManager.SteeringWander();
             }
-            if (!character.AnimController.InWater)
+            if (!character.IsClimbing && !character.AnimController.InWater)
             {
                 //reset vertical steering to prevent dropping down from platforms etc
                 character.AIController.SteeringManager.ResetY();
@@ -251,12 +221,7 @@ namespace Barotrauma
                 if (!targetHulls.Contains(hull))
                 {
                     targetHulls.Add(hull);
-                    float weight = hull.Volume;
-                    // Prefer rooms that are closer. Avoid rooms that are not in the same level.
-                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 5.0f;
-                    float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 2500, dist));
-                    weight *= distanceFactor;
-                    hullWeights.Add(weight);
+                    hullWeights.Add(hull.Volume);
                 }
             }
             
