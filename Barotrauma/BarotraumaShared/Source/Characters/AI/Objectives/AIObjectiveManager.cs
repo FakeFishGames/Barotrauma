@@ -34,9 +34,15 @@ namespace Barotrauma
 
         public void AddObjective(AIObjective objective)
         {
-            if (Objectives.Find(o => o.IsDuplicate(objective)) != null) return;
-
-            Objectives.Add(objective);
+            var duplicate = Objectives.Find(o => o.IsDuplicate(objective));
+            if (duplicate != null)
+            {
+                duplicate.Reset();
+            }
+            else
+            {
+                Objectives.Add(objective);
+            }
         }
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();

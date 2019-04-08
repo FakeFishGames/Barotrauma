@@ -131,7 +131,8 @@ namespace Barotrauma
                 goToObjective = new AIObjectiveGoTo(Item, character);
                 if (repairTool != null)
                 {
-                    goToObjective.CloseEnough = (HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range)) * 0.75f;
+                    //goToObjective.CloseEnough = (HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range)) * 0.75f;
+                    goToObjective.CloseEnough = ConvertUnits.ToSimUnits(repairTool.Range);
                 }
                 AddSubObjective(goToObjective);
             }

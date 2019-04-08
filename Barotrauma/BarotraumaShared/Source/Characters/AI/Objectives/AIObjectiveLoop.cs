@@ -10,15 +10,16 @@ namespace Barotrauma
         protected List<T> targets = new List<T>();
         protected Dictionary<T, AIObjective> objectives = new Dictionary<T, AIObjective>();
         protected HashSet<T> ignoreList = new HashSet<T>();
-        protected readonly float ignoreListClearInterval = 30;
         private float ignoreListTimer;
-        protected readonly float targetUpdateInterval = 2;
         private float targetUpdateTimer;
+
+        // By default, doesn't clear the list automatically
+        protected virtual float IgnoreListClearInterval => 0;
+        protected virtual float TargetUpdateInterval => 2;
 
         public AIObjectiveLoop(Character character, string option) : base(character, option)
         {
-            FindTargets();
-            CreateObjectives();
+            Reset();
         }
 
         protected override void Act(float deltaTime) { }
@@ -28,15 +29,18 @@ namespace Barotrauma
         public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
             base.Update(objectiveManager, deltaTime);
-            if (ignoreListTimer > ignoreListClearInterval)
+            if (IgnoreListClearInterval > 0)
             {
-                Reset();
+                if (ignoreListTimer > IgnoreListClearInterval)
+                {
+                    Reset();
+                }
+                else
+                {
+                    ignoreListTimer += deltaTime;
+                }
             }
-            else
-            {
-                ignoreListTimer += deltaTime;
-            }
-            if (targetUpdateTimer > targetUpdateInterval)
+            if (targetUpdateTimer >= TargetUpdateInterval)
             {
                 targetUpdateTimer = 0;
                 UpdateTargets();
@@ -52,6 +56,7 @@ namespace Barotrauma
                 if (!objective.Value.CanBeCompleted)
                 {
                     ignoreList.Add(target);
+                    targetUpdateTimer = TargetUpdateInterval;
                 }
                 if (!targets.Contains(target))
                 {
@@ -59,13 +64,13 @@ namespace Barotrauma
                 }
             }
             SyncRemovedObjectives(objectives, GetList());
-            if (objectives.None())
+            if (objectives.None() && targets.Any())
             {
                 CreateObjectives();
             }
         }
 
-        private void Reset()
+        public override void Reset()
         {
             ignoreList.Clear();
             ignoreListTimer = 0;
