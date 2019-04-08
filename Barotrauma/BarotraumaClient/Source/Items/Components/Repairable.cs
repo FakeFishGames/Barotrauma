@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Repairable : ItemComponent
+    partial class Repairable : ItemComponent, IDrawableComponent
     {
         private GUIButton repairButton;
         private GUIProgressBar progressBar;
@@ -25,7 +25,13 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
+        public Vector2 DrawSize
+        {
+            //use the extents of the item as the draw size
+            get { return Vector2.Zero; }
+        }
+
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
@@ -98,7 +104,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
+        
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             IsActive = true;
@@ -136,6 +142,29 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             //no need to write anything, just letting the server know we started repairing
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing)
+        {
+            if (GameMain.DebugDraw && Character.Controlled?.FocusedItem == item)
+            {
+                bool paused = !ShouldDeteriorate();
+                if (deteriorationTimer > 0.0f)
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(item.WorldPosition.X, -item.WorldPosition.Y), "Deterioration delay " + ((int)deteriorationTimer) + (paused ? " [PAUSED]" : ""),
+                        paused ? Color.Cyan : Color.Lime, Color.Black * 0.5f);
+                }
+                else
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(item.WorldPosition.X, -item.WorldPosition.Y), "Deteriorating at " + (int)(DeteriorationSpeed * 60.0f) + " units/min" + (paused ? " [PAUSED]" : ""),
+                        paused ? Color.Cyan : Color.Red, Color.Black * 0.5f);
+                }
+                GUI.DrawString(spriteBatch,
+                    new Vector2(item.WorldPosition.X, -item.WorldPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
+                    Color.Orange);
+            }
         }
     }
 }
