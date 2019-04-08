@@ -154,7 +154,6 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_firstButton, true);
             while (!mechanic_firstDoor.IsOpen) yield return null;
             SetHighlight(mechanic_firstButton, false);
-            while (true) yield return null;
 
             // Room 2
             while (!mechanic_equipmentObjectiveSensor.MotionDetected) yield return null;
