@@ -114,11 +114,10 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
-
-            if (!ShouldDeteriorate()) { return; }
-
+            
             if (CurrentFixer == null)
             {
+                if (!ShouldDeteriorate()) { return; }
                 if (item.Condition > 0.0f)
                 {
                     if (deteriorationTimer > 0.0f)
