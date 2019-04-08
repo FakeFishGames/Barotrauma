@@ -1201,23 +1201,27 @@ namespace Barotrauma
             Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.FirstOrDefault();
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
-            bool notClimbing = false;
-
-            bool isNotRemote = true;
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
-
-            if (isNotRemote)
+            bool isRemote = false;
+            bool isClimbing = true;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
-                notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
+                isRemote = character.IsRemotePlayer;
             }
-            else
+            if (isRemote)
             {
-                notClimbing = Math.Abs(targetMovement.X) > 0.05f ||
-                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) ||
-                (TargetMovement.Y > 0.0f && handPos.Y > 0.1f);
+                if (Math.Abs(targetMovement.X) > 0.05f ||
+                    (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) || 
+                    (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
+                {
+                    isClimbing = false;
+                }
+            }
+            else if (character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right))
+            {
+                isClimbing = false;
             }
 
-            if (notClimbing)
+            if (!isClimbing)
             {
                 Anim = Animation.None;
                 character.SelectedConstruction = null;
