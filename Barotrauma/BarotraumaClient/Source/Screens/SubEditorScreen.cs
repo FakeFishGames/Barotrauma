@@ -1272,17 +1272,17 @@ namespace Barotrauma
             };
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
+            GUIFrame paddedLoadFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
-            var paddedLoadFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.05f };
-
-            var deleteButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform, Anchor.Center));
-
-            var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLoadFrame.RectTransform))
+            var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), paddedLoadFrame.RectTransform))
             {
-                ScrollBarVisible = true,
                 OnSelected = (GUIComponent selected, object userData) =>
                 {
-                    if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
+                    Submarine sub = userData as Submarine;
+                    if (paddedLoadFrame.FindChild("delete") is GUIButton deleteBtn)
+                    {
+                        deleteBtn.Enabled = !sub.IsVanillaSubmarine();
+                    }
                     return true;
                 }
             };
@@ -1307,7 +1307,17 @@ namespace Barotrauma
                 }
             }
 
-            var deleteButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), deleteButtonHolder.RectTransform, Anchor.TopCenter),
+            new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+            {
+                OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    loadFrame = null;
+                    return true;
+                }
+            };
+
+            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.31f, 0.0f) },
                 TextManager.Get("Delete"), style: "GUIButtonLarge")
             {
                 Enabled = false,
@@ -1325,19 +1335,7 @@ namespace Barotrauma
                 return true;
             };
 
-            var controlBtnHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform), isHorizontal: true) { RelativeSpacing = 0.2f, Stretch = true };
-
-            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), controlBtnHolder.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
-            {
-                OnClicked = (GUIButton btn, object userdata) =>
-                {
-                    loadFrame = null;
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), controlBtnHolder.RectTransform, Anchor.BottomRight),
+            new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight),
                 TextManager.Get("Load"), style: "GUIButtonLarge")
             {
                 OnClicked = LoadSub

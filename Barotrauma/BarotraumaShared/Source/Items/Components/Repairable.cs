@@ -66,14 +66,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        //if enabled, the deterioration timer will always run regardless if the item is being used or not
-        [Serialize(false, false)]
-        public bool DeteriorateAlways
-        {
-            get;
-            set;
-        }
-
         private Character currentFixer;
         public Character CurrentFixer
         {
@@ -198,43 +190,38 @@ namespace Barotrauma.Items.Components
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)
             {
-                if (ic is Fabricator || ic is Deconstructor)
-                {
-                    //fabricators and deconstructors rely on LastActiveTime
-                    return false;
-                }
-                else if (ic is PowerTransfer pt)
+                if (ic is PowerTransfer pt)
                 {
                     //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power 
-                    if (Math.Abs(pt.CurrPowerConsumption) > 0.1f) { return true; }
+                    if (Math.Abs(pt.CurrPowerConsumption) < 0.1f) { return false; }
                 }
                 else if (ic is Engine engine)
                 {
                     //engines don't deteriorate if they're not running
-                    if (Math.Abs(engine.Force) > 1.0f) { return true; }
+                    if (Math.Abs(engine.Force) < 1.0f) { return false; }
                 }
                 else if (ic is Pump pump)
                 {
                     //pumps don't deteriorate if they're not running
-                    if (Math.Abs(pump.FlowPercentage) > 1.0f) { return true; }
+                    if (Math.Abs(pump.FlowPercentage) < 1.0f) { return false; }
                 }
                 else if (ic is Reactor reactor)
                 {
                     //reactors don't deteriorate if they're not powered up
-                    if (reactor.Temperature > 0.1f) { return true; }
+                    if (reactor.Temperature < 0.1f) { return false; }
                 }
                 else if (ic is OxygenGenerator oxyGenerator)
                 {
                     //oxygen generators don't deteriorate if they're not running
-                    if (oxyGenerator.CurrFlow > 0.1f) { return true; }
+                    if (oxyGenerator.CurrFlow < 0.1f) { return false; }
                 }
                 else if (ic is Powered powered)
                 {
-                    if (powered.Voltage >= powered.MinVoltage) { return true; }
+                    if (powered.Voltage < powered.MinVoltage) { return false; }
                 }
             }
 
-            return DeteriorateAlways;
+            return true;
         }
 
         private void UpdateFixAnimation(Character character)

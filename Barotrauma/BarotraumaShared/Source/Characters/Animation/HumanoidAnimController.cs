@@ -800,7 +800,40 @@ namespace Barotrauma
                         Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);                
             }
         }
-        
+
+        private void ClimbOverObstacles()
+        {
+            if (Collider.FarseerBody.ContactList == null || Math.Abs(movement.X) < 0.01f) return;
+
+            //check if the collider is touching a suitable obstacle to climb over
+            Vector2? handle = null;
+            FarseerPhysics.Dynamics.Contacts.ContactEdge ce = Collider.FarseerBody.ContactList;
+            while (ce != null && ce.Contact != null)
+            {
+                if (ce.Contact.Enabled && ce.Contact.IsTouching && ce.Contact.FixtureA.CollisionCategories.HasFlag(Physics.CollisionWall))
+                {
+                    Vector2 contactNormal;
+                    FarseerPhysics.Common.FixedArray2<Vector2> contactPos;
+                    ce.Contact.GetWorldManifold(out contactNormal, out contactPos);
+
+                    //only climb if moving towards the obstacle
+                    if (Math.Sign(contactPos[0].X - Collider.SimPosition.X) == Math.Sign(movement.X) &&
+                        (handle == null || contactPos[0].Y > ((Vector2)handle).Y))
+                    {
+                        handle = contactPos[0];
+                    }
+                }
+
+                ce = ce.Next;
+            }
+            else if (onGround && (!character.IsRemotePlayer || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)))
+            {
+                Collider.LinearVelocity = new Vector2(
+                        movement.X,
+                        Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);                
+            }
+        }
+
         private float handCyclePos;
         private float legCyclePos;
         void UpdateSwimming()
@@ -1155,23 +1188,27 @@ namespace Barotrauma
             Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.FirstOrDefault();
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
-            bool notClimbing = false;
-
-            bool isNotRemote = true;
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
-
-            if (isNotRemote)
+            bool isRemote = false;
+            bool isClimbing = true;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
-                notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
+                isRemote = character.IsRemotePlayer;
             }
-            else
+            if (isRemote)
             {
-                notClimbing = Math.Abs(targetMovement.X) > 0.05f ||
-                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) ||
-                (TargetMovement.Y > 0.0f && handPos.Y > 0.1f);
+                if (Math.Abs(targetMovement.X) > 0.05f ||
+                    (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) || 
+                    (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
+                {
+                    isClimbing = false;
+                }
+            }
+            else if (character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right))
+            {
+                isClimbing = false;
             }
 
-            if (notClimbing)
+            if (!isClimbing)
             {
                 Anim = Animation.None;
                 character.SelectedConstruction = null;

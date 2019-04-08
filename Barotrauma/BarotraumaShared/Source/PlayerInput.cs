@@ -87,25 +87,6 @@ namespace Barotrauma
 
         public override bool Equals(object obj)
         {
-            if (obj is KeyOrMouse keyOrMouse )
-            {
-                if (MouseButton.HasValue)
-                {
-                    return keyOrMouse.MouseButton.HasValue && keyOrMouse.MouseButton.Value == MouseButton.Value;
-                }
-                else
-                {
-                    return keyOrMouse.Key.Equals(Key);
-                }
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public override string ToString()
-        {
             switch (MouseButton)
             {
                 case null:
@@ -152,6 +133,7 @@ namespace Barotrauma
         {
             get { return binding; }
         }
+#endif
 
         public void SetState()
         {
