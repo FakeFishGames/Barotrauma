@@ -736,6 +736,11 @@ namespace Barotrauma
                     sub.PreviewImage.Texture.SaveAsPng(s, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
                     itemEditor.PreviewImage = previewImagePath;
                 }
+                if (new FileInfo(previewImagePath).Length > 1024 * 1024)
+                {
+                    new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                    itemEditor.PreviewImage = SteamManager.DefaultPreviewImagePath;
+                }
             }
             catch (Exception e)
             {
