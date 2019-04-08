@@ -271,10 +271,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
                 return;
             }
-        }
-
-            characterInfos.Add(characterInfo);
-        }
 
             characterInfos.Add(characterInfo);
         }
@@ -602,7 +598,7 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-            return radioItem.GetComponent<WifiComponent>();
+            return false;
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -615,12 +611,6 @@ namespace Barotrauma
             {
                 comp.Color = Color.DarkRed;
             }
-            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
-                c.AIController is HumanAIController &&
-                !c.IsDead &&
-                c.SpeechImpediment <= 100.0f);
-            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
-        }
 
             yield return new WaitForSeconds(1.0f);
 

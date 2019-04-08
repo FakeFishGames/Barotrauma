@@ -136,7 +136,6 @@ namespace Barotrauma
                         break;
                 }
             }
-        }
 
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
         }

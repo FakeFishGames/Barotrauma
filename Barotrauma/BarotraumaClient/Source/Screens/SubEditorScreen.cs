@@ -1403,23 +1403,7 @@ namespace Barotrauma
 
         private void TryDeleteSub(Submarine sub)
         {
-            if (sub == null) { return; }
-
-            if (sub.IsVanillaSubmarine())
-            {
-                GUI.AddMessage(TextManager.Get("CannotEditVanillaSubs"), Color.Red, font: GUI.LargeFont);
-                return;
-            }
-
-            string pathToCompare = sub.FilePath.Replace(@"\", @"/").ToLowerInvariant();
-            foreach (ContentPackage cp in ContentPackage.List)
-            {
-                if (cp.Files.Any(f => f.Path.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
-                {
-                    new GUIMessageBox("", TextManager.Get("CannotRemoveContentPackageSub").Replace("[contentpackage]", cp.Name));
-                    return;
-                }
-            }
+            if (sub == null) return;
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),

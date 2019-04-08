@@ -207,7 +207,7 @@ namespace Barotrauma
                         PathSteering.SteeringManual(deltaTime, Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
                         PathSteering.WanderAngle = 0.0f;
                     }
-                    else
+                    else if (rightDist < WallAvoidDistance)
                     {
                         float speed = (WallAvoidDistance - rightDist) / WallAvoidDistance;
                         PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
