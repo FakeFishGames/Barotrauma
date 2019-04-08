@@ -768,13 +768,19 @@ namespace Barotrauma.Networking
                                 readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
 
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
-                                readyToStartMsg.Write(
+                                bool readyToStart = 
                                     GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
-                                    GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox));
+                                    GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                                readyToStartMsg.Write(readyToStart);
 
                                 WriteCharacterInfo(readyToStartMsg);
 
                                 client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
+
+                                if (readyToStart && !CoroutineManager.IsCoroutineRunning("WaitForStartRound"))
+                                {
+                                    CoroutineManager.StartCoroutine(GameMain.NetLobbyScreen.WaitForStartRound(startButton: null, allowCancel: false), "WaitForStartRound");
+                                }
                                 break;
                             case ServerPacketHeader.STARTGAME:
                                 startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
