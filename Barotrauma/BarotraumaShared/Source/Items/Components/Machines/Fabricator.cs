@@ -18,14 +18,14 @@ namespace Barotrauma.Items.Components
         private FabricationRecipe fabricatedItem;
         private float timeUntilReady;
         private float requiredTime;
-        
+
         private Character user;
 
         private ItemContainer inputContainer, outputContainer;
 
         private float progressState;
 
-        public Fabricator(Item item, XElement element) 
+        public Fabricator(Item item, XElement element)
             : base(item, element)
         {
             foreach (XElement subElement in element.Elements())
@@ -173,6 +173,12 @@ namespace Barotrauma.Items.Components
             progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
             if (voltage < minVoltage) { return; }
+
+            var repairable = item.GetComponent<Repairable>();
+            if (repairable != null)
+            {
+                repairable.LastActiveTime = (float)Timing.TotalTime + 10.0f;
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 

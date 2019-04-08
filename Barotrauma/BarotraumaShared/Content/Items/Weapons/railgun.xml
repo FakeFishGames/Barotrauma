@@ -86,7 +86,7 @@
     </ItemContainer>
   </Item>
   
-  <Item name="Railgun Shell" identifier="railgunshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+  <Item name="Railgun Shell" identifier="railgunshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -119,7 +119,7 @@
     </ItemContainer>
   </Item>
   
-  <Item name="Nuclear Shell" identifier="nuclearshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+  <Item name="Nuclear Shell" identifier="nuclearshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="200" />
     <Deconstruct time="10">
       <Item identifier="steel" />
@@ -167,7 +167,7 @@
     </ItemContainer>
   </Item>
   
-  <Item name="Physicorium Railgun Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5">
+  <Item name="Physicorium Railgun Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="400" />
     <Deconstruct time="20">
       <Item identifier="physicorium" />

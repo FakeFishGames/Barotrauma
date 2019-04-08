@@ -1386,7 +1386,7 @@ namespace Barotrauma.Networking
                         {
                             MultiPlayerCampaign.ClientRead(inc);
                         }
-                        else if (GameMain.NetLobbyScreen.SelectedMode.Identifier != "multiplayercampaign")
+                        else if (GameMain.NetLobbyScreen.SelectedMode?.Identifier != "multiplayercampaign")
                         {
                             GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
                         }

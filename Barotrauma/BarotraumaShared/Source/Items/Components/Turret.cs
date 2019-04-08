@@ -282,10 +282,17 @@ namespace Barotrauma.Items.Components
             {
                 //use linked projectile containers in case they have to react to the turret being launched somehow
                 //(play a sound, spawn more projectiles)
-                Item linkedItem = e as Item;
-                if (linkedItem == null) continue;
+                if (!(e is Item linkedItem)) continue;
                 ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
-                if (projectileContainer != null) linkedItem.Use(deltaTime, null);
+                if (projectileContainer != null)
+                {
+                    linkedItem.Use(deltaTime, null);
+                    var repairable = linkedItem.GetComponent<Repairable>();
+                    if (repairable != null)
+                    {
+                        repairable.LastActiveTime = (float)Timing.TotalTime + 1.0f;
+                    }
+                }
             }
 
             var projectiles = GetLoadedProjectiles(true);
@@ -417,9 +424,8 @@ namespace Barotrauma.Items.Components
             int maxProjectileCount = 0;
             foreach (MapEntity e in item.linkedTo)
             {
-                var projectileContainer = e as Item;
-                if (projectileContainer == null) continue;
-                
+                if (!(e is Item projectileContainer)) continue;
+
                 var containedItems = projectileContainer.ContainedItems;
                 if (containedItems != null)
                 {

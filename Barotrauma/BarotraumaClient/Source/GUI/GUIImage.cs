@@ -125,7 +125,7 @@ namespace Barotrauma
 
         private void RecalculateScale()
         {
-            Scale = sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
+            Scale = sprite == null || sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
                 1.0f :
                 Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
         }

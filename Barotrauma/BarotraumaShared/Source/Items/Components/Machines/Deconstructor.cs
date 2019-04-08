@@ -17,8 +17,8 @@ namespace Barotrauma.Items.Components
         {
             get { return outputContainer; }
         }
-        
-        public Deconstructor(Item item, XElement element) 
+
+        public Deconstructor(Item item, XElement element)
             : base(item, element)
         {
             InitProjSpecific(element);
@@ -53,7 +53,13 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage) { return; }
+
+            var repairable = item.GetComponent<Repairable>();
+            if (repairable != null)
+            {
+                repairable.LastActiveTime = (float)Timing.TotalTime + 10.0f;
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
@@ -73,8 +79,7 @@ namespace Barotrauma.Items.Components
                     float percentageHealth = targetItem.Condition / targetItem.Prefab.Health;
                     if (percentageHealth <= deconstructProduct.MinCondition || percentageHealth > deconstructProduct.MaxCondition) continue;
 
-                    var itemPrefab = MapEntityPrefab.Find(null, deconstructProduct.ItemIdentifier) as ItemPrefab;
-                    if (itemPrefab == null)
+                    if (!(MapEntityPrefab.Find(null, deconstructProduct.ItemIdentifier) is ItemPrefab itemPrefab))
                     {
                         DebugConsole.ThrowError("Tried to deconstruct item \"" + targetItem.Name + "\" but couldn't find item prefab \"" + deconstructProduct.ItemIdentifier + "\"!");
                         continue;

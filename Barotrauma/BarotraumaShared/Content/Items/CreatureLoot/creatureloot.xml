@@ -44,7 +44,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="Swim Bladder" identifier="swimbladder" description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline." Tags="smallitem,chem,medical" category="Misc" scale="0.2">
+  <Item name="Swim Bladder" identifier="swimbladder" description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline." Tags="smallitem,chem,medical" category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="349,285,110,130" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="stabilozine" />
@@ -56,7 +56,7 @@
     <Body width="110" height="120" />
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
   </Item>
-  <Item name="Adrenaline Gland" identifier="adrenalinegland" Tags="smallitem,chem,medical" description="Contains large amounts of adrenaline, which can be extracted using a deconstructor." category="Misc" scale="0.2">
+  <Item name="Adrenaline Gland" identifier="adrenalinegland" Tags="smallitem,chem,medical" description="Contains large amounts of adrenaline, which can be extracted using a deconstructor." category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="345,148,116,133" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="adrenaline" />

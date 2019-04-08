@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32">
+  <Item name="Welding Tool" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -56,7 +56,7 @@
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank,incendiumfueltank" />
     </ItemContainer>
   </Item>
-  <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32">
+  <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -103,7 +103,7 @@
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank" />
     </ItemContainer>
   </Item>
-  <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate" scale="0.3">
+  <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -132,7 +132,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Incendium Fuel Tank" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate" scale="0.3">
+  <Item name="Incendium Fuel Tank" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfueltank" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="aluminium" />
     </Deconstruct>
@@ -154,7 +154,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Fire Extinguisher" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" description="A handheld carbon dioxide extinguisher.">
+  <Item name="Fire Extinguisher" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" description="A handheld carbon dioxide extinguisher." impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -178,7 +178,7 @@
     </RepairTool>
     <Propulsion force="-20" usablein="water" particles="bubbles" />
   </Item>
-  <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -194,7 +194,7 @@
     <Body width="31" height="6" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" msg="ItemMsgPickUpSelect"/>
   </Item>
-  <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="Wrench" identifier="wrench" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -215,7 +215,7 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="Crowbar" identifier="crowbar" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -237,7 +237,7 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="Handheld Sonar" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate">
+  <Item name="Handheld Sonar" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -272,7 +272,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.32">
+  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -300,7 +300,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" Scale="0.32">
+  <Item name="Flashlight" identifier="flashlight" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="120" />
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
@@ -331,7 +331,7 @@
     </ItemContainer>
     <AiTarget/>
   </Item>
-  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light">
+  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -362,7 +362,7 @@
     </LightComponent>
     <AiTarget/>
   </Item>
-  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light">
+  <Item name="Alien Flare" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft">
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />

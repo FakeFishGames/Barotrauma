@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 
 namespace Barotrauma
 {
@@ -21,6 +23,9 @@ namespace Barotrauma
         private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
         public IEnumerable<ItemComponent> ActiveHUDs => activeHUDs;
+
+        public float LastImpactSoundTime;
+        public const float ImpactSoundInterval = 0.2f;
 
         class SpriteState
         {
@@ -357,6 +362,17 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
                 GUI.DrawLine(spriteBatch, from, to, lineColor, width: 1);
                 //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
+            }
+        }
+
+        partial void OnCollisionProjSpecific(Fixture f1, Fixture f2, Contact contact, float impact)
+        {
+            if (impact > 1.0f &&
+                !string.IsNullOrEmpty(Prefab.ImpactSoundTag) &&
+                Timing.TotalTime > LastImpactSoundTime + ImpactSoundInterval)
+            {
+                LastImpactSoundTime = (float)Timing.TotalTime;
+                SoundPlayer.PlaySound(Prefab.ImpactSoundTag, 1.0f, 500.0f, WorldPosition, CurrentHull);
             }
         }
 

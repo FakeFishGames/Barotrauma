@@ -210,7 +210,7 @@ namespace Barotrauma.Steam
         public const string WorkshopItemPreviewImageFolder = "Workshop";
         public const string PreviewImageName = "PreviewImage.png";
         private const string MetadataFileName = "filelist.xml";
-        private const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
+        public const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
 
         private Sprite defaultPreviewImage;
         public Sprite DefaultPreviewImage
