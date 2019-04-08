@@ -67,9 +67,45 @@
         <Skill name="Weapons" level="50"/>
       </Job>
     </Character>
-  
-    <Segment id="Welcome" contenttype="textonly" istriggered="false">  
-      <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
     </Segment>
 
     <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
