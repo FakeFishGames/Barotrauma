@@ -128,11 +128,14 @@ namespace Barotrauma
                 {
                     if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
                     {
-                        ignorePlatforms = true;
+                        // Don't allow to jump from too high. The formula might require tweaking.
+                        float allowedJumpHeight = Character.AnimController.ImpactTolerance / 2;
+                        float height = Math.Abs(currPath.CurrentNode.SimPosition.Y - Character.SimPosition.Y);
+                        ignorePlatforms = height < allowedJumpHeight;
                     }
                 }
 
-                if (Character.IsClimbing && PathSteering.InLadders && PathSteering.IsNextLadderSameAsCurrent)
+                if (Character.IsClimbing && PathSteering.IsNextLadderSameAsCurrent)
                 {
                     Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
                 }
