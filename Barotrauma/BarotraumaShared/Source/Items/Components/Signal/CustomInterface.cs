@@ -14,11 +14,21 @@ namespace Barotrauma.Items.Components
             public bool State;
             public string Label, Connection, Signal;
 
+            public List<StatusEffect> StatusEffects = new List<StatusEffect>();
+
             public CustomInterfaceElement(XElement element)
             {
                 Label = element.GetAttributeString("text", "");
                 Connection = element.GetAttributeString("connection", "");
                 Signal = element.GetAttributeString("signal", "1");
+
+                foreach (XElement subElement in element.Elements())
+                {
+                    if (subElement.Name.ToString().ToLowerInvariant() == "statuseffect")
+                    {
+                        StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName: "custom interface element (label " + Label + ")"));
+                    }
+                }
             }
         }
 
@@ -119,7 +129,14 @@ namespace Barotrauma.Items.Components
         private void ButtonClicked(CustomInterfaceElement btnElement)
         {
             if (btnElement == null) return;
-            item.SendSignal(0, btnElement.Signal, btnElement.Connection, sender: null, source: item);
+            if (!string.IsNullOrEmpty(btnElement.Connection))
+            {
+                item.SendSignal(0, btnElement.Signal, btnElement.Connection, sender: null, source: item);
+            }
+            foreach (StatusEffect effect in btnElement.StatusEffects)
+            {
+                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+            }
         }
 
         private void TickBoxToggled(CustomInterfaceElement tickBoxElement, bool state)
@@ -134,7 +151,15 @@ namespace Barotrauma.Items.Components
             {
                 if (!ciElement.ContinuousSignal) { continue; }
                 //TODO: allow changing output when a tickbox is not selected
-                item.SendSignal(0, ciElement.State ? ciElement.Signal : "0", ciElement.Connection, sender: null, source: item);
+                if (!string.IsNullOrEmpty(ciElement.Signal))
+                {
+                    item.SendSignal(0, ciElement.State ? ciElement.Signal : "0", ciElement.Connection, sender: null, source: item);
+                }
+
+                foreach (StatusEffect effect in ciElement.StatusEffects)
+                {
+                    item.ApplyStatusEffect(effect, ciElement.State ? ActionType.OnUse : ActionType.OnSecondaryUse, 1.0f, null, null, true, false);
+                }
             }
         }
     }

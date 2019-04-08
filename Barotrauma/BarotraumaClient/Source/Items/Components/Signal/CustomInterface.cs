@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -15,14 +16,16 @@ namespace Barotrauma.Items.Components
         {
             uiElements.Clear();
 
-            GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center))
-            { RelativeSpacing = 0.05f, Stretch = true };
+            GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center),
+                childAnchor: customInterfaceElementList.Count > 1 ? Anchor.TopCenter : Anchor.Center)
+                { RelativeSpacing = 0.05f };
 
+            float elementSize = Math.Min(1.0f / customInterfaceElementList.Count, 0.5f);
             foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
             {
                 if (ciElement.ContinuousSignal)
                 {
-                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.Label)
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform), ciElement.Label)
                     {
                         UserData = ciElement
                     };
@@ -42,7 +45,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), ciElement.Label)
+                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform), ciElement.Label, style: "GUIButtonLarge")
                     {
                         UserData = ciElement
                     };
