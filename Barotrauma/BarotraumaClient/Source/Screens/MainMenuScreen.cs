@@ -387,6 +387,7 @@ namespace Barotrauma
                 {
                     case Tab.NewGame:
                         campaignSetupUI.CreateDefaultSaveName();
+                        campaignSetupUI.RandomizeSeed();
                         campaignSetupUI.UpdateTutorialSelection();
                         campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
                         break;
