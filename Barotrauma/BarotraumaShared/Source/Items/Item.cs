@@ -235,6 +235,26 @@ namespace Barotrauma
             set { /*do nothing*/ }
         }
 
+        [Serialize(0.0f, false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to modify the sound range
+        /// </summary>
+        public float SoundRange
+        {
+            get { return aiTarget == null ? 0.0f : aiTarget.SoundRange; }
+            set { if (aiTarget != null) { aiTarget.SoundRange = Math.Max(0.0f, value); } }
+        }
+
+        [Serialize(0.0f, false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to modify the sound range
+        /// </summary>
+        public float SightRange
+        {
+            get { return aiTarget == null ? 0.0f : aiTarget.SightRange; }
+            set { if (aiTarget != null) { aiTarget.SightRange = Math.Max(0.0f, value); } }
+        }
+
         /// <summary>
         /// Should the item's Use method be called with the "Use" or with the "Shoot" key?
         /// </summary>
