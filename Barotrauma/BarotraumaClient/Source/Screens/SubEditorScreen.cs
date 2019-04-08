@@ -1278,7 +1278,11 @@ namespace Barotrauma
             {
                 OnSelected = (GUIComponent selected, object userData) =>
                 {
-                    if (paddedLoadFrame.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
+                    Submarine sub = userData as Submarine;
+                    if (paddedLoadFrame.FindChild("delete") is GUIButton deleteBtn)
+                    {
+                        deleteBtn.Enabled = !sub.IsVanillaSubmarine();
+                    }
                     return true;
                 }
             };
@@ -1397,7 +1401,23 @@ namespace Barotrauma
 
         private void TryDeleteSub(Submarine sub)
         {
-            if (sub == null) return;
+            if (sub == null) { return; }
+
+            if (sub.IsVanillaSubmarine())
+            {
+                GUI.AddMessage(TextManager.Get("CannotEditVanillaSubs"), Color.Red, font: GUI.LargeFont);
+                return;
+            }
+
+            string pathToCompare = sub.FilePath.Replace(@"\", @"/").ToLowerInvariant();
+            foreach (ContentPackage cp in ContentPackage.List)
+            {
+                if (cp.Files.Any(f => f.Path.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
+                {
+                    new GUIMessageBox("", TextManager.Get("CannotRemoveContentPackageSub").Replace("[contentpackage]", cp.Name));
+                    return;
+                }
+            }
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),
