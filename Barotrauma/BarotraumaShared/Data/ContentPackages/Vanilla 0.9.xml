@@ -70,6 +70,7 @@
   <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Submarine file="Submarines/Orca.sub" />
+  <Submarine file="Submarines/Berilia.sub" />
   <Submarine file="Submarines/Typhon.sub" />
   <Submarine file="Submarines/Selkie.sub" />
   <Submarine file="Submarines/Bunyip.sub" />
