@@ -121,9 +121,13 @@ namespace Barotrauma
                 }
             };
 
-            var findModsButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), listContainer.RectTransform), style: null);
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.8f), findModsButtonContainer.RectTransform, Anchor.Center), TextManager.Get("FindModsButton"), style: "GUIButtonLarge")
+            var findModsButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), listContainer.RectTransform), style: null);
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), findModsButtonContainer.RectTransform, Anchor.Center), TextManager.Get("FindModsButton"), style: null)
             {
+                Color = new Color(38, 86, 38, 75),
+                HoverColor = new Color(85, 203, 99, 50),
+                TextColor = Color.White,
+                OutlineColor = new Color(72, 124, 77, 255),
                 OnClicked = (btn, userdata) =>
                 {
                     System.Diagnostics.Process.Start("steam://url/SteamWorkshopPage/" + SteamManager.AppID);
@@ -461,11 +465,13 @@ namespace Barotrauma
             }
             else
             {
-                var downloadBtn = new GUIButton(new RectTransform(new Point(32, 32), rightColumn.RectTransform), "+", style: null, color: new Color(107, 144, 166, 255))
+                var downloadBtn = new GUIButton(new RectTransform(new Point(32, 32), rightColumn.RectTransform), "+", style: null)
                 {
                     Font = GUI.LargeFont,
-                    HoverColor = new Color(42, 53, 62, 255),
+                    Color = new Color(38, 65, 86, 255),
+                    HoverColor = new Color(85, 160, 203, 255),
                     TextColor = Color.White,
+                    OutlineColor = new Color(72, 103, 124, 255),
                     ToolTip = TextManager.Get("DownloadButton"),
                     ForceUpperCase = true,
                     UserData = item,
@@ -618,7 +624,23 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.005f), content.RectTransform), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), item.Title, textAlignment: Alignment.TopLeft, font: GUI.LargeFont, wrap: true);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + item.OwnerName, textAlignment: Alignment.BottomLeft, wrap: true);
+
+            var creatorHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform)) { IsHorizontal = true, Stretch = true };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), creatorHolder.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + item.OwnerName, textAlignment: Alignment.BottomLeft, wrap: true);
+
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), creatorHolder.RectTransform, Anchor.BottomRight), TextManager.Get("WorkshopShowItemInSteam"), style: null)
+            {
+                Color = new Color(38, 86, 38, 75),
+                HoverColor = new Color(85, 203, 99, 50),
+                TextColor = Color.White,
+                OutlineColor = new Color(72, 124, 77, 255),
+                OnClicked = (btn, userdata) =>
+                {
+                    System.Diagnostics.Process.Start("steam://url/CommunityFilePage/" + item.Id);
+                    return true;
+                }
+            };
 
             var headerAreaBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, maxSize: new Point(int.MaxValue, 235))) { Color = Color.Black };
 
@@ -682,27 +704,13 @@ namespace Barotrauma
             var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize") + ": ");
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item.Installed ? (long)item.Size : item.DownloadSize), textAlignment: Alignment.TopRight);
 
-            var dateContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), isHorizontal: true);
+            //var dateContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), isHorizontal: true);
 
-            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), dateContainer.RectTransform), TextManager.Get("WorkshopItemCreationDate") +": ");
+            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate") +": ");
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), creationDate.RectTransform, Anchor.CenterRight), item.Created.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
 
-            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), dateContainer.RectTransform), TextManager.Get("WorkshopItemModificationDate") + ": ");
+            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate") + ": ");
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item.Modified.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
-
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(0.0f, 0.015f), content.RectTransform), style: null);
-
-            var steamButtonHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
-
-            new GUIButton(new RectTransform(new Vector2(0.8f, 1.0f), steamButtonHolder.RectTransform, Anchor.Center), TextManager.Get("WorkshopShowItemInSteam"), style: "GUIButtonLarge")
-            {
-                OnClicked = (btn, userdata) =>
-                {
-                    System.Diagnostics.Process.Start("steam://url/CommunityFilePage/" + item.Id);
-                    return true;
-                }
-            };
         }
 
         private void CreateWorkshopItem()
