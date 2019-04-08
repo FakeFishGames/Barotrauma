@@ -1,4 +1,35 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.9.10
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Added collision sounds to items (e.g. when dropping or throwing items on the floor).
+- Devices that are not currently being used never deteriorate spontaneously.
+- Added a new submarine, "Berilia".
+- Minor improvements to menu layouts.
+- Randomize map seed when opening the "new game" tab.
+- Show the "starting a round" popup to all clients when the server initiates a new round.
+
+Bugfixes:
+- Fixed submarines not being able to move horizontally in multiplayer if not accelerating fast enough.
+- Fixed idling AI characters causing lag spikes if they can't find a path out of the room they're inside or
+if the submarine has no waypoints.
+- Fixes to AI characters getting stuck if they fail to reach a leak they're trying to repair.
+- Fixed characters "selecting" equipped railgun shells and depth charges, causing the characters to face
+towards the item.
+- Fixed highlighted items being selected when letting go of the Shoot button.
+- Fixed inputs still working in multiplayer when the pause menu or the settings menu is open.
+- Fixed some Steam achievements being impossible to unlock in single player.
+- Fixed "Poisoner" Steam achievement being impossible to unlock.
+- Fixed crashing when enabling game mode voting in multiplayer.
+- Fixed voice chat volume not being applied on startup (i.e. the default volume was always used until you
+went back to the settings menu to change it).
+- Fixed power not working correctly in some grids with chained relays and junction boxes.
+- Fixed crashing when attempting to publish a sub with a preview image larger than 1MB on the Steam Workshop.
+- Don't allow overwriting vanilla submarines/characters even if the vanilla content package is not selected.
+- Don't allow deleting vanilla subs or subs that are a part of some content package through the sub editor.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.9
 ---------------------------------------------------------------------------------------------------------
 
@@ -45,7 +76,6 @@ picking up items that require two hands.
 - Job preferences can be edited mid-round in the info menu.
 - Slightly reduced the amount of oxygen characters consume from hulls.
 - Enemies don't attack outposts or targets inside it anymore.
-
 
 Multiplayer fixes:
 - Fixed characters retaining the last known inputs when a client disconnects, causing the character to
