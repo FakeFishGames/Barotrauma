@@ -17,10 +17,9 @@ namespace Barotrauma
         const float ChatMessageFadeTime = 10.0f;
 
         /// <summary>
-        /// How long the previously selected character waits doing nothing when switching to another character
+        /// How long the previously selected character waits doing nothing when switching to another character. Only affects idling.
         /// </summary>
-        const float CharacterWaitOnSwitch = 20.0f;
-
+        const float CharacterWaitOnSwitch = 10.0f;
 
         private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
         private List<Character> characters = new List<Character>();
@@ -272,6 +271,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
                 return;
             }
+        }
 
             characterInfos.Add(characterInfo);
         }
@@ -599,7 +599,20 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-            return false;
+        #region Dialog
+        /// <summary>
+        /// Adds the message to the single player chatbox.
+        /// </summary>
+        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
+        {
+            if (!isSinglePlayer)
+            {
+                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                return;
+            }
+            if (string.IsNullOrEmpty(text)) { return; }
+
+            chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -612,6 +625,12 @@ namespace Barotrauma
             {
                 comp.Color = Color.DarkRed;
             }
+            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
+                c.AIController is HumanAIController &&
+                !c.IsDead &&
+                c.SpeechImpediment <= 100.0f);
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+        }
 
             yield return new WaitForSeconds(1.0f);
 
