@@ -148,6 +148,8 @@ namespace Barotrauma
             }
         }
 
+        private bool wasFiring;
+
         /// <summary>
         /// Control the Character according to player input
         /// </summary>
@@ -163,9 +165,24 @@ namespace Barotrauma
             }
             else
             {
+                wasFiring |= keys[(int)InputType.Aim].Held && keys[(int)InputType.Shoot].Held;
                 for (int i = 0; i < keys.Length; i++)
                 {
                     keys[i].SetState();
+                }
+                //if we were firing (= pressing the aim and shoot keys at the same time)
+                //and the fire key is the same as Select or Use, reset the key to prevent accidentally selecting/using items
+                if (wasFiring && !keys[(int)InputType.Shoot].Held)
+                {
+                    if (GameMain.Config.KeyBind(InputType.Shoot).Equals(GameMain.Config.KeyBind(InputType.Select)))
+                    {
+                        keys[(int)InputType.Select].Reset();
+                    }
+                    if (GameMain.Config.KeyBind(InputType.Shoot).Equals(GameMain.Config.KeyBind(InputType.Use)))
+                    {
+                        keys[(int)InputType.Use].Reset();
+                    }
+                    wasFiring = false;
                 }
 
                 float targetOffsetAmount = 0.0f;
