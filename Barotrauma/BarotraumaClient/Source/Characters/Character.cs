@@ -50,6 +50,7 @@ namespace Barotrauma
         }
         
         private Dictionary<object, HUDProgressBar> hudProgressBars;
+        private List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
 
         public Dictionary<object, HUDProgressBar> HUDProgressBars
         {
@@ -275,7 +276,6 @@ namespace Barotrauma
             DisableControls = false;
         }
 
-        private List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
         partial void UpdateControlled(float deltaTime, Camera cam)
         {
             if (controlled != this) return;
