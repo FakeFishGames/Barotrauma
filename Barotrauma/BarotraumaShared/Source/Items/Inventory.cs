@@ -170,6 +170,13 @@ namespace Barotrauma
 
             Inventory prevInventory = item.ParentInventory;
 
+            if (createNetworkEvent)
+            {
+                CreateNetworkEvent();
+                //also delay syncing the inventory the item was inside
+                if (prevInventory != null && prevInventory != this) prevInventory.syncItemsDelay = 1.0f;
+            }
+
             if (removeItem)
             {
                 item.Drop(user);
@@ -186,13 +193,6 @@ namespace Barotrauma
             if (item.body != null)
             {
                 item.body.Enabled = false;
-            }
-
-            if (createNetworkEvent)
-            {
-                CreateNetworkEvent();
-                //also delay syncing the inventory the item was inside
-                if (prevInventory != null && prevInventory != this) prevInventory.syncItemsDelay = 1.0f;
             }
         }
 
