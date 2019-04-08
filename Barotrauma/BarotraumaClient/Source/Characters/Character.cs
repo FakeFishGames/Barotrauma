@@ -155,7 +155,7 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            if (DisableControls)
+            if (DisableControls || GUI.PauseMenuOpen || GUI.SettingsMenuOpen)
             {
                 foreach (Key key in keys)
                 {
