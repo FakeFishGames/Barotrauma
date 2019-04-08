@@ -153,6 +153,7 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(0); // Open door objective
             SetHighlight(mechanic_firstButton, true);
             while (!mechanic_firstDoor.IsOpen) yield return null;
+            RemoveCompletedObjective(segments[0]);
             SetHighlight(mechanic_firstButton, false);
 
             // Room 2
@@ -162,6 +163,7 @@ namespace Barotrauma.Tutorials
             while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
             SetHighlight(mechanic_equipmentCabinet.Item, false);
             while (!Character.Controlled.HasEquippedItem("divingmask") || !Character.Controlled.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
+            RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember explaining", "that the player needs to repair the walls along the way", ChatMessageType.Default, null);
             SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
 
@@ -170,53 +172,33 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(2); // Welding objective
             SetHighlight(mechanic_brokenWall_1, true);
             while (WallHasDamagedSections(mechanic_brokenWall_1)) yield return null; // Highlight until repaired
+            RemoveCompletedObjective(segments[2]);
             SetHighlight(mechanic_brokenWall_1, false);
+            yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(3); // Pump objective
             SetHighlight(mechanic_workingPump.Item, true);
             while (mechanic_workingPump.CurrFlow >= 0) yield return null; // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
             while (mechanic_brokenhull_1.WaterPercentage > 0) yield return null; // Unlock door once drained
+            RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
 
             // Room 4
             SetHighlight(mechanic_deconstructor.Item, true);
             SetHighlight(mechanic_fabricator.Item, true);
-            while (!deconstructorInteractedWith && !fabricatorInteractedWith) // Wait until interacted with both
-            {
-                if (!deconstructorInteractedWith)
-                {
-                    if (IsSelectedItem(mechanic_deconstructor.Item))
-                    {
-                        deconstructorInteractedWith = true;
-                        SetHighlight(mechanic_deconstructor.Item, false);
-                        TriggerTutorialSegment(4); // Deconstructor objective
-                    }
-                }
-
-                if (!fabricatorInteractedWith)
-                {
-                    if (IsSelectedItem(mechanic_fabricator.Item))
-                    {
-                        fabricatorInteractedWith = true;
-                        SetHighlight(mechanic_fabricator.Item, false);
-                        TriggerTutorialSegment(5); // Fabricator objective
-                    }
-                }
-
-                yield return null;
-            }
-
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember explaining", "you must fabricate a fire extinguisher using sodium and aluminum from a deconstructed oxygen tank", ChatMessageType.Default, null);
-            while (!Character.Controlled.HasEquippedItem("extinguisher")) yield return null; // Wait until equipped
+            while (!IsExtinguisherCreationComplete()) yield return null; // Wait until extinguisher is created
+            TriggerTutorialSegment(6); // Equip extinguisher
+            while (!Character.Controlled.HasEquippedItem("extinguisher")) yield return null;
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, false);
 
             // Room 5
             while (!mechanic_fourthDoor.IsOpen) yield return null;
-            TriggerTutorialSegment(6); // Using the extinguisher
+            TriggerTutorialSegment(7); // Using the extinguisher
             while (mechanic_fire != null) yield return null; // Wait until extinguished
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember warning", "of high pressure in next room", ChatMessageType.Default, null);
             while (!mechanic_divingSuitObjectiveSensor.MotionDetected) yield return null;
-            TriggerTutorialSegment(7); // Dangers of pressure, equip diving suit objective
+            TriggerTutorialSegment(8); // Dangers of pressure, equip diving suit objective
             SetHighlight(mechanic_divingSuitContainer.Item, true);
             while (!IsSelectedItem(mechanic_divingSuitContainer.Item)) yield return null;
             SetHighlight(mechanic_divingSuitContainer.Item, false);
@@ -227,7 +209,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_brokenWall_2, true);
             while (WallHasDamagedSections(mechanic_brokenWall_2)) yield return null;
             SetHighlight(mechanic_brokenWall_2, false);
-            TriggerTutorialSegment(8); // Repairing machinery (pump)
+            TriggerTutorialSegment(9); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
             while (!mechanic_brokenPump.Item.IsFullCondition && !mechanic_brokenPump.IsActive) yield return null;
             SetHighlight(mechanic_brokenPump.Item, false);
@@ -237,7 +219,7 @@ namespace Barotrauma.Tutorials
             // Submarine
             while (!mechanic_enteredSubmarineSensor.MotionDetected) yield return null;
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember prompts", "player to repair ballast pumps and engine", ChatMessageType.Default, null);
-            TriggerTutorialSegment(9); // Repairing ballast pumps, engine
+            TriggerTutorialSegment(10); // Repairing ballast pumps, engine
             SetHighlight(mechanic_ballastPump_1.Item, true);
             SetHighlight(mechanic_ballastPump_2.Item, true);
             SetHighlight(mechanic_submarineEngine.Item, true);
@@ -282,6 +264,53 @@ namespace Barotrauma.Tutorials
             for (int i = 0; i < wall.SectionCount; i++)
             {
                 if (wall.Sections[i].damage > 0) return true;
+            }
+
+            return false;
+        }
+
+        private bool IsExtinguisherCreationComplete()
+        {
+            if (deconstructorInteractedWith && fabricatorInteractedWith && !HasObjective(segments[4]) && !HasObjective(segments[5])) return true;
+
+            if (!deconstructorInteractedWith)
+            {
+                if (IsSelectedItem(mechanic_deconstructor.Item))
+                {
+                    deconstructorInteractedWith = true;
+                    SetHighlight(mechanic_deconstructor.Item, false);
+                    TriggerTutorialSegment(4); // Deconstructor objective
+                }
+            }
+            else
+            {
+                if (HasObjective(segments[4]))
+                {
+                    if (Character.Controlled.Inventory.FindItemByIdentifier("sodium") != null && Character.Controlled.Inventory.FindItemByIdentifier("aluminium") != null)
+                    {
+                        RemoveCompletedObjective(segments[4]);
+                    }
+                }
+            }
+
+            if (!fabricatorInteractedWith)
+            {
+                if (IsSelectedItem(mechanic_fabricator.Item))
+                {
+                    fabricatorInteractedWith = true;
+                    SetHighlight(mechanic_fabricator.Item, false);
+                    TriggerTutorialSegment(5); // Fabricator objective
+                }
+            }
+            else
+            {
+                if (HasObjective(segments[5]))
+                {
+                    if (Character.Controlled.Inventory.FindItemByIdentifier("extinguisher") != null)
+                    {
+                        RemoveCompletedObjective(segments[5]);
+                    }
+                }
             }
 
             return false;
