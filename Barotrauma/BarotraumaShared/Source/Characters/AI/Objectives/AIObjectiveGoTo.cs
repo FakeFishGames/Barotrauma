@@ -66,9 +66,12 @@ namespace Barotrauma
                 if (!canComplete)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target.");
+                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {(Target != null ? Target.ToString() : TargetPos.ToString())}", Color.Yellow);
 #endif
-                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                    if (HumanAIController.ObjectiveManager.CurrentOrder != null)
+                    {
+                        character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                    }
                     character.AIController.SteeringManager.Reset();
                 }
                 return canComplete;
@@ -89,6 +92,7 @@ namespace Barotrauma
 
             waitUntilPathUnreachable = 1.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
+            CalculateCloseEnough();
         }
 
 
@@ -100,6 +104,7 @@ namespace Barotrauma
 
             waitUntilPathUnreachable = 5.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
+            CalculateCloseEnough();
         }
 
         protected override void Act(float deltaTime)
@@ -149,9 +154,10 @@ namespace Barotrauma
             }
             else
             {
-                bool targetIsOutside = (Target != null && Target.Submarine == null) || 
-                    (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.HasOutdoorsNodes);
-                if (targetIsOutside && character.CurrentHull != null && !AllowGoingOutside)
+                bool isInside = character.CurrentHull != null;
+                bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null;
+                bool targetIsOutside = (Target != null && Target.Submarine == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
+                if (isInside && targetIsOutside && !AllowGoingOutside)
                 {
                     cannotReach = true;
                 }
@@ -186,11 +192,8 @@ namespace Barotrauma
 
             bool completed = false;
 
-            float allowedDistance = CloseEnough;
-
             if (Target is Item item)
             {
-                allowedDistance = Math.Max(ConvertUnits.ToSimUnits(item.InteractDistance), CloseEnough);
                 if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
             }
             else if (Target is Character targetCharacter)
@@ -198,7 +201,7 @@ namespace Barotrauma
                 if (character.CanInteractWith(targetCharacter)) completed = true;
             }
 
-            completed = completed || Vector2.DistanceSquared(Target != null ? Target.SimPosition : targetPos, character.SimPosition) < allowedDistance * allowedDistance;
+            completed = completed || Vector2.DistanceSquared(Target != null ? Target.SimPosition : targetPos, character.SimPosition) < CloseEnough * CloseEnough;
 
             if (completed) character.AIController.SteeringManager.Reset();
 
@@ -213,6 +216,12 @@ namespace Barotrauma
             if (objective.Target == Target) return true;
 
             return (objective.targetPos == targetPos);
+        }
+
+        private void CalculateCloseEnough()
+        {
+            float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance) : 0;
+            CloseEnough = Math.Max(interactionDistance, CloseEnough);
         }
     }
 }

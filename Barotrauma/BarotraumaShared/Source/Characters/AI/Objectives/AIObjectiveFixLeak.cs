@@ -101,7 +101,8 @@ namespace Barotrauma
                 HumanAIController.AnimController.Crouching = true;
             }
 
-            float reach = HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range);
+            //float reach = HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range);
+            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
             bool cannotReach = ConvertUnits.ToSimUnits(gapDiff.Length()) > reach;
             if (cannotReach)
             {
@@ -110,14 +111,19 @@ namespace Barotrauma
                     // Check if the objective is already removed -> completed/impossible
                     if (!subObjectives.Contains(gotoObjective))
                     {
+                        if (!gotoObjective.CanBeCompleted)
+                        {
+                            abandon = true;
+                        }
                         gotoObjective = null;
+                        return;
                     }
                 }
                 else
                 {
                     gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character)
                     {
-                        CloseEnough = reach * 0.75f
+                        CloseEnough = reach
                     };
                     if (!subObjectives.Contains(gotoObjective))
                     {
