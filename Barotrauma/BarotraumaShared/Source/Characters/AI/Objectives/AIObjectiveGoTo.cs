@@ -66,9 +66,12 @@ namespace Barotrauma
                 if (!canComplete)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target.");
+                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {(Target != null ? Target.ToString() : TargetPos.ToString())}", Color.Yellow);
 #endif
-                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                    if (HumanAIController.ObjectiveManager.CurrentOrder != null)
+                    {
+                        character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                    }
                     character.AIController.SteeringManager.Reset();
                 }
                 return canComplete;
