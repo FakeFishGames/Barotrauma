@@ -54,10 +54,17 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
+            bool currentHullForbidden = IsForbidden(character.CurrentHull);
+            if (!currentHullForbidden && !character.AnimController.InWater && !character.IsClimbing && HumanAIController.ObjectiveManager.WaitTimer > 0)
+            {
+                SteeringManager.Reset();
+                return;
+            }
+
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-            if (currentTargetIsInvalid || (currentTarget == null && IsForbidden(character.CurrentHull)))
+            if (currentTargetIsInvalid || (currentTarget == null && currentHullForbidden))
             {
                 newTargetTimer = 0;
                 standStillTimer = 0;

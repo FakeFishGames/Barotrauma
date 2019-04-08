@@ -17,10 +17,9 @@ namespace Barotrauma
         const float ChatMessageFadeTime = 10.0f;
 
         /// <summary>
-        /// How long the previously selected character waits doing nothing when switching to another character
+        /// How long the previously selected character waits doing nothing when switching to another character. Only affects idling.
         /// </summary>
-        const float CharacterWaitOnSwitch = 20.0f;
-
+        const float CharacterWaitOnSwitch = 10.0f;
 
         private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
         private List<Character> characters = new List<Character>();

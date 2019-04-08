@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -18,7 +17,7 @@ namespace Barotrauma
         private Character character;
 
         /// <summary>
-        /// When set above zero, the character will stand still doing nothing until the timer runs out (assuming they don't a high priority order active)
+        /// When set above zero, the character will stand still doing nothing until the timer runs out. Only affects idling.
         /// </summary>
         public float WaitTimer;
 
@@ -134,12 +133,7 @@ namespace Barotrauma
         
         public void DoCurrentObjective(float deltaTime)
         {
-            if (CurrentObjective == null || (CurrentObjective.GetPriority(this) < OrderPriority && WaitTimer > 0.0f))
-            {
-                WaitTimer -= deltaTime;
-                character.AIController.SteeringManager.Reset();
-                return;
-            }
+            if (WaitTimer > 0.0f) { WaitTimer -= deltaTime; }
             CurrentObjective?.TryComplete(deltaTime);
         }
         
