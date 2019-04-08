@@ -443,6 +443,9 @@ namespace Barotrauma
                 case "IsDead":
                     { if (parentObject is Character character) { return character.IsDead; } }
                     break;
+                case "IsOn":
+                    { if (parentObject is LightComponent lightComponent) { return lightComponent.IsOn; } }
+                    break;
             }
 
             return null;
@@ -487,6 +490,9 @@ namespace Barotrauma
                     break;
                 case "SpeedMultiplier":
                     { if (parentObject is Character character && value is float) { character.SpeedMultiplier = (float)value; return true; } }
+                    break;
+                case "IsOn":
+                    { if (parentObject is LightComponent lightComponent && value is bool) { lightComponent.IsOn = (bool)value; return true; } }
                     break;
             }
 
