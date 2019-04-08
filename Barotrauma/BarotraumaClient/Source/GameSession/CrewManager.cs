@@ -276,6 +276,9 @@ namespace Barotrauma
             characterInfos.Add(characterInfo);
         }
 
+            characterInfos.Add(characterInfo);
+        }
+
         /// <summary>
         /// Remove the character from the crew (and crew menus).
         /// </summary>

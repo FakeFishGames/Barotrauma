@@ -201,31 +201,31 @@ namespace Barotrauma.Items.Components
                 if (ic is PowerTransfer pt)
                 {
                     //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power 
-                    if (Math.Abs(pt.CurrPowerConsumption) < 0.1f) { return false; }
+                    if (Math.Abs(pt.CurrPowerConsumption) > 0.1f) { return true; }
                 }
                 else if (ic is Engine engine)
                 {
                     //engines don't deteriorate if they're not running
-                    if (Math.Abs(engine.Force) < 1.0f) { return false; }
+                    if (Math.Abs(engine.Force) > 1.0f) { return true; }
                 }
                 else if (ic is Pump pump)
                 {
                     //pumps don't deteriorate if they're not running
-                    if (Math.Abs(pump.FlowPercentage) < 1.0f) { return false; }
+                    if (Math.Abs(pump.FlowPercentage) > 1.0f) { return true; }
                 }
                 else if (ic is Reactor reactor)
                 {
                     //reactors don't deteriorate if they're not powered up
-                    if (reactor.Temperature < 0.1f) { return false; }
+                    if (reactor.Temperature > 0.1f) { return true; }
                 }
                 else if (ic is OxygenGenerator oxyGenerator)
                 {
                     //oxygen generators don't deteriorate if they're not running
-                    if (oxyGenerator.CurrFlow < 0.1f) { return false; }
+                    if (oxyGenerator.CurrFlow > 0.1f) { return true; }
                 }
                 else if (ic is Powered powered)
                 {
-                    if (powered.Voltage < powered.MinVoltage) { return false; }
+                    if (powered.Voltage >= powered.MinVoltage) { return true; }
                 }
             }
 
