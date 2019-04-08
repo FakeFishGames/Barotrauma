@@ -9,14 +9,23 @@ Additions and changes:
 - Minor improvements to menu layouts.
 - Randomize map seed when opening the "new game" tab.
 - Show the "starting a round" popup to all clients when the server initiates a new round.
+- The CustomInterface ItemComponent can be used to trigger StatusEffects. Buttons apply OnUse effects when
+pressed, tickboxes apply OnUse when checked and OnSecondaryUse when not.
+- StatusEffects can modify item sound and sight ranges (requires an AITarget).
+- Sonar beacons can be toggled on/off.
 
 Bugfixes:
 - Fixed submarines not being able to move horizontally in multiplayer if not accelerating fast enough.
+- Fixed an inventory syncing issue that occasionally caused items to be dropped when moving them from the
+inventory to a container or vice versa.
+- Fixed items occasionally dropping from the inventory at a very high speed, sometimes causing them to
+clip through floors.
 - Fixed idling AI characters causing lag spikes if they can't find a path out of the room they're inside or
 if the submarine has no waypoints.
 - Fixes to AI characters getting stuck if they fail to reach a leak they're trying to repair.
 - Fixed characters "selecting" equipped railgun shells and depth charges, causing the characters to face
 towards the item.
+- Prevent AI characters from jumping down from high places.
 - Fixed highlighted items being selected when letting go of the Shoot button.
 - Fixed inputs still working in multiplayer when the pause menu or the settings menu is open.
 - Fixed some Steam achievements being impossible to unlock in single player.
