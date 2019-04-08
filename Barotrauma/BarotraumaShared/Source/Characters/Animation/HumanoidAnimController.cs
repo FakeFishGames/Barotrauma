@@ -800,40 +800,7 @@ namespace Barotrauma
                         Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);                
             }
         }
-
-        private void ClimbOverObstacles()
-        {
-            if (Collider.FarseerBody.ContactList == null || Math.Abs(movement.X) < 0.01f) return;
-
-            //check if the collider is touching a suitable obstacle to climb over
-            Vector2? handle = null;
-            FarseerPhysics.Dynamics.Contacts.ContactEdge ce = Collider.FarseerBody.ContactList;
-            while (ce != null && ce.Contact != null)
-            {
-                if (ce.Contact.Enabled && ce.Contact.IsTouching && ce.Contact.FixtureA.CollisionCategories.HasFlag(Physics.CollisionWall))
-                {
-                    Vector2 contactNormal;
-                    FarseerPhysics.Common.FixedArray2<Vector2> contactPos;
-                    ce.Contact.GetWorldManifold(out contactNormal, out contactPos);
-
-                    //only climb if moving towards the obstacle
-                    if (Math.Sign(contactPos[0].X - Collider.SimPosition.X) == Math.Sign(movement.X) &&
-                        (handle == null || contactPos[0].Y > ((Vector2)handle).Y))
-                    {
-                        handle = contactPos[0];
-                    }
-                }
-
-                ce = ce.Next;
-            }
-            else if (onGround && (!character.IsRemotePlayer || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)))
-            {
-                Collider.LinearVelocity = new Vector2(
-                        movement.X,
-                        Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);                
-            }
-        }
-
+        
         private float handCyclePos;
         private float legCyclePos;
         void UpdateSwimming()
