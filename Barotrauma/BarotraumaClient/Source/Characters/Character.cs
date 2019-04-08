@@ -275,6 +275,7 @@ namespace Barotrauma
             DisableControls = false;
         }
 
+        private List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
         partial void UpdateControlled(float deltaTime, Camera cam)
         {
             if (controlled != this) return;
@@ -283,25 +284,22 @@ namespace Barotrauma
 
             Lights.LightManager.ViewTarget = this;
             CharacterHUD.Update(deltaTime, this, cam);
-
-            bool removeProgressBars = false;
-
-            foreach (HUDProgressBar progressBar in hudProgressBars.Values)
+            
+            if (hudProgressBars.Any())
             {
-                if (progressBar.FadeTimer <= 0.0f)
+                foreach (var progressBar in hudProgressBars)
                 {
-                    removeProgressBars = true;
-                    continue;
+                    if (progressBar.Value.FadeTimer <= 0.0f)
+                    {
+                        progressBarRemovals.Add(progressBar);
+                        continue;
+                    }
+                    progressBar.Value.Update(deltaTime);
                 }
-                progressBar.Update(deltaTime);
-            }
-
-            if (removeProgressBars)
-            {
-                // TODO: this generates garbage, can we fix anything here?
-                foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
+                if (progressBarRemovals.Any())
                 {
-                    hudProgressBars.Remove(pb.Key);
+                    progressBarRemovals.ForEach(pb => hudProgressBars.Remove(pb.Key));
+                    progressBarRemovals.Clear();
                 }
             }
         }
