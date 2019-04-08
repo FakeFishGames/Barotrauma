@@ -60,45 +60,9 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            // === TRAINING
-            var trainingHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, isHorizontal: true);
-
-            new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), trainingHolder.RectTransform), "MainMenuCampaignIcon")
-            {
-                CanBeFocused = false
-            };
-
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(0.02f, 0.0f), trainingHolder.RectTransform), style: null);
-
-            var trainingNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: trainingHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), trainingNavigation.RectTransform),
-                TextManager.Get("TutorialButton"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock")
-            { ForceUpperCase = true };
-
-            var trainingButton = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: trainingNavigation.RectTransform), style: "MainMenuGUIFrame");
-
-            var trainingList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.2f), parent: trainingButton.RectTransform))
-            {
-                Stretch = false,
-                RelativeSpacing = 0.035f
-            };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), trainingList.RectTransform), "Attend drill", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-            {
-                ForceUpperCase = true,
-                UserData = Tab.Tutorials,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
-            };
-
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
-
+       
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
             {
                 CanBeFocused = false
@@ -118,6 +82,17 @@ namespace Barotrauma
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), "Tutorial", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = true,
+                UserData = Tab.Tutorials,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")

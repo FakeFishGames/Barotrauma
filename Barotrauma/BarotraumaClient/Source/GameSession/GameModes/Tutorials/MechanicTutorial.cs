@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Tutorials
@@ -8,8 +9,12 @@ namespace Barotrauma.Tutorials
     class MechanicTutorial : ScenarioTutorial
     {
         // Room 1
+        private float shakeTimer = 3.0f;
+        private float shakeAmount = 20f;
         private Item mechanic_firstButton;
-        
+        private Door mechanic_firstDoor;
+        private LightComponent mechanic_light_1;
+
         // Room 2
         private MotionSensor mechanic_equipmentObjectiveSensor;
         private Item mechanic_doorButtonBeforeEquipmentOn;
@@ -46,8 +51,9 @@ namespace Barotrauma.Tutorials
         private Pump mechanic_ballastPump_2;
 
         // Colors
-        private Color inaccessibleButtonColor = Color.Red;
-        private Color accessibleButtonColor = Color.Green;
+        private Color highlightColor = Color.OrangeRed;
+        private Color inaccessibleColor = Color.Red;
+        private Color accessibleColor = Color.Green;
 
         public MechanicTutorial(XElement element) : base(element)
         {
@@ -59,18 +65,23 @@ namespace Barotrauma.Tutorials
             base.Start();
 
             // Room 1
-            mechanic_firstButton = Item.ItemList.Find(i => i.HasTag("mechanic_firstButton"));
-            mechanic_firstButton.SpriteColor = accessibleButtonColor;
+            mechanic_firstButton = Item.ItemList.Find(i => i.HasTag("mechanic_firstbutton"));
+            mechanic_firstButton.SpriteColor = accessibleColor;
+            mechanic_firstButton.ExternalHighlight = true;
+            mechanic_firstDoor = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoor")).GetComponent<Door>();
+            mechanic_light_1 = Item.ItemList.Find(i => i.HasTag("mechanic_light_1")).GetComponent<LightComponent>();
+            SetAccessState(mechanic_light_1, true);
+            return;
 
             // Room 2
             mechanic_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_equipmentObjectiveSensor"))?.GetComponent<MotionSensor>();
             mechanic_doorButtonBeforeEquipmentOn = Item.ItemList.Find(i => i.HasTag("mechanic_doorButtonBeforeEquipmentOn"));
-            mechanic_doorButtonBeforeEquipmentOn.SpriteColor = inaccessibleButtonColor;
+            mechanic_doorButtonBeforeEquipmentOn.SpriteColor = inaccessibleColor;
 
             // Room 3
             mechanic_brokenWall_1 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenWall_1");
             mechanic_brokenWall_2 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenWall_2");
-            mechanic_doorButtonBeforeWaterDrained.SpriteColor = inaccessibleButtonColor;
+            mechanic_doorButtonBeforeWaterDrained.SpriteColor = inaccessibleColor;
 
             mechanic_brokenWall_1.Indestructible = false;
             for (int i = 0; i < mechanic_brokenWall_1.SectionCount; i++)
@@ -83,11 +94,11 @@ namespace Barotrauma.Tutorials
             // Room 4
             mechanic_deconstructor = Item.ItemList.Find(i => i.HasTag("deconstructor"))?.GetComponent<Deconstructor>();
             mechanic_fabricator = Item.ItemList.Find(i => i.HasTag("fabricator"))?.GetComponent<Fabricator>();
-            mechanic_doorButtonBeforeFire.SpriteColor = inaccessibleButtonColor;
+            mechanic_doorButtonBeforeFire.SpriteColor = inaccessibleColor;
 
             // Room 5
             mechanic_fire = new DummyFireSource(new Vector2(10f, 5f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
-            mechanic_doorButtonBeforePressure.SpriteColor = inaccessibleButtonColor;
+            mechanic_doorButtonBeforePressure.SpriteColor = inaccessibleColor;
 
             // Room 6
             mechanic_brokenWall_2.Indestructible = false;
@@ -104,9 +115,19 @@ namespace Barotrauma.Tutorials
         {
             // Room 1
             // Wake up, shake
-            // RADIO: Concerned crewmember telling player to get moving and get to the sub, a Moloch 
-            // Open door objective
+            while (shakeTimer > 0.0f)
+            {
+                shakeTimer -= 0.1f;
+                GameMain.GameScreen.Cam.Shake = shakeAmount;
+                yield return new WaitForSeconds(0.1f);
+            }
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage("Concerned crewmember", "telling player to get moving and get to the sub, a Moloch is attacking", ChatMessageType.Default, null);
+            TriggerTutorialSegment(1); // Open door objective
+            while (!mechanic_firstDoor.IsOpen) yield return null;
             // Remove first button highlight after interaction
+            mechanic_firstButton.ExternalHighlight = false;
+            mechanic_firstButton.SpriteColor = Color.White;
+            while (true) yield return null;
 
             // Room 2
             while (!mechanic_equipmentObjectiveSensor.MotionDetected) yield return null;
@@ -115,7 +136,7 @@ namespace Barotrauma.Tutorials
             // Remove cabinet highlight after interact
             while (!Character.Controlled.HasEquippedItem("divingmask") || !Character.Controlled.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
             // RADIO: crewmember explaining that the player needs to repair the walls along the way
-            mechanic_doorButtonBeforeEquipmentOn.SpriteColor = accessibleButtonColor; // Unlock door
+            mechanic_doorButtonBeforeEquipmentOn.SpriteColor = accessibleColor; // Unlock door
             // Remove button highlight after interact
 
             // Room 3
@@ -127,10 +148,9 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(3); // Pump objective
             // Highlight pump until draining
             while (mechanic_brokenhull_1.WaterPercentage > 0) yield return null;
-            mechanic_doorButtonBeforeWaterDrained.SpriteColor = accessibleButtonColor;
+            mechanic_doorButtonBeforeWaterDrained.SpriteColor = accessibleColor;
 
             // Room 4
-
             while (!deconstructorInteractedWith && !fabricatorInteractedWith) // Wait until interacted with both
             {
                 if (!deconstructorInteractedWith)
@@ -156,7 +176,7 @@ namespace Barotrauma.Tutorials
 
             // RADIO: crewmember explains you must fabricate a fire extinguisher using sodium and aluminum from a deconstructed oxygen tank
             while (!Character.Controlled.HasEquippedItem("extinguisher")) yield return null; // Wait until equipped
-            mechanic_doorButtonBeforeFire.SpriteColor = accessibleButtonColor;
+            mechanic_doorButtonBeforeFire.SpriteColor = accessibleColor;
 
             // Room 5
             while (!mechanic_doorToFire.IsOpen) yield return null;
@@ -166,7 +186,7 @@ namespace Barotrauma.Tutorials
             while (!mechanic_divingSuitObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(7); // Danges of pressure, equip diving suit objective
             while (!Character.Controlled.HasEquippedItem("divingsuit")) yield return null;
-            mechanic_doorButtonBeforePressure.SpriteColor = accessibleButtonColor;
+            mechanic_doorButtonBeforePressure.SpriteColor = accessibleColor;
 
             // Room 6
             // Higlight damaged hull
@@ -188,6 +208,17 @@ namespace Barotrauma.Tutorials
             }            
 
             // END TUTORIAL
+        }
+
+        private void SetHighlight(Item item, bool state)
+        {
+            item.SpriteColor = (state) ? highlightColor : Color.White;
+            item.ExternalHighlight = state;
+        }
+
+        private void SetAccessState(LightComponent light, bool state)
+        {
+            light.LightColor = (state) ? accessibleColor : inaccessibleColor;
         }
 
         private bool IsSelectedItem(Item item)

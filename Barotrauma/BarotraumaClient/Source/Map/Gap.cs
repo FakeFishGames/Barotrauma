@@ -33,7 +33,7 @@ namespace Barotrauma
             if (!editing || !ShowGaps) return;
 
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
-            if (isHighlighted) clr = Color.Gold;
+            if (IsHighlighted) clr = Color.Gold;
 
             float depth = (ID % 255) * 0.000001f;
 

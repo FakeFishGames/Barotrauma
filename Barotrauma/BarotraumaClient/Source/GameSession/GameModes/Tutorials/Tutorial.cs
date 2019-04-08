@@ -23,7 +23,7 @@ namespace Barotrauma.Tutorials
         private TutorialType tutorialType = TutorialType.None;
 
         protected VideoPlayer videoPlayer;
-        protected enum ContentTypes { None = 0, Video = 1, TextOnly = 2 };
+        protected enum ContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
         protected string playableContentPath;
         protected Point screenResolution;
         protected float prevUIScale;
@@ -58,6 +58,7 @@ namespace Barotrauma.Tutorials
                     case ContentTypes.None:
                         break;
                     case ContentTypes.Video:
+                    case ContentTypes.ManualVideo:
                         VideoContent = config.Element("Video");
                         TextContent = config.Element("Text");
                         break;
@@ -272,6 +273,12 @@ namespace Barotrauma.Tutorials
                           activeContentSegment.TextContent.GetAttributeInt("width", 300),
                           activeContentSegment.TextContent.GetAttributeInt("height", 80),
                           activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, () => LoadVideo(activeContentSegment));
+                    break;
+                case ContentTypes.ManualVideo:
+                    infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
+                        activeContentSegment.TextContent.GetAttributeInt("width", 300),
+                        activeContentSegment.TextContent.GetAttributeInt("height", 80),
+                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment);
                     break;
                 case ContentTypes.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,

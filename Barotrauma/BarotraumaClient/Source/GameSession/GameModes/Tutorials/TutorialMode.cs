@@ -19,11 +19,13 @@ namespace Barotrauma
         public override void Start()
         {
             base.Start();
+            GameMain.GameSession.CrewManager = new CrewManager(true);
             Tutorial.Start();
         }
 
         public override void AddToGUIUpdateList()
         {
+            base.AddToGUIUpdateList();
             Tutorial.AddToGUIUpdateList();
         }
 

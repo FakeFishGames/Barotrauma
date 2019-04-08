@@ -58,7 +58,7 @@
 
   </ContextualTutorial>
 
-  <MechanicTutorial name="Mechanic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" startoutpostpath="Submarines/Outpost_Mechanic.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" startoutpostpath="Submarines/Outpost_Mechanic.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Mechanic">
         <Skill name="Electrical Engineering" level="60"/>
@@ -71,8 +71,8 @@
     <Segment id="Welcome" contenttype="textonly" istriggered="false">  
       <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
     </Segment>
-  
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="video" istriggered="false">
+
+    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="ReactorCommandText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
     </Segment>
