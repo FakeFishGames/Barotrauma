@@ -198,7 +198,12 @@ namespace Barotrauma.Items.Components
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)
             {
-                if (ic is PowerTransfer pt)
+                if (ic is Fabricator || ic is Deconstructor)
+                {
+                    //fabricators and deconstructors rely on LastActiveTime
+                    return false;
+                }
+                else if (ic is PowerTransfer pt)
                 {
                     //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power 
                     if (Math.Abs(pt.CurrPowerConsumption) > 0.1f) { return true; }
