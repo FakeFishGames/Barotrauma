@@ -85,6 +85,25 @@ namespace Barotrauma
             return false;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj is KeyOrMouse keyOrMouse )
+            {
+                if (MouseButton.HasValue)
+                {
+                    return keyOrMouse.MouseButton.HasValue && keyOrMouse.MouseButton.Value == MouseButton.Value;
+                }
+                else
+                {
+                    return keyOrMouse.Key.Equals(Key);
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public override string ToString()
         {
             switch (MouseButton)
@@ -133,6 +152,16 @@ namespace Barotrauma
         {
             get { return binding; }
         }
+
+        public void SetState()
+        {
+            hit = binding.IsHit();
+            if (hit) hitQueue = true;
+
+            held = binding.IsDown();
+            if (held) heldQueue = true;
+        }
+#endif
 
         public void SetState()
         {
