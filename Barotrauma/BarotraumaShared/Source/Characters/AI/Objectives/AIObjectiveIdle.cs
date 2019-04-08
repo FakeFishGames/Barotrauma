@@ -198,6 +198,7 @@ namespace Barotrauma
 
         private void FindTargetHulls()
         {
+            var idCard = character.Inventory.FindItemByIdentifier("idcard");
             bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
 
             targetHulls.Clear();
