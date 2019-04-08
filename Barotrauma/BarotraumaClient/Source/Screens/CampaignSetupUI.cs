@@ -181,6 +181,11 @@ namespace Barotrauma
             UpdateLoadMenu(saveFiles);
         }
 
+        public void RandomizeSeed()
+        {
+            seedBox.Text = ToolBox.RandomSeed(8);
+        }
+
         private bool OnSubSelected(GUIComponent component, object obj)
         {
             if (subPreviewContainer == null) { return false; }
