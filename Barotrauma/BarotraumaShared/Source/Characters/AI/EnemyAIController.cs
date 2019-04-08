@@ -1062,6 +1062,7 @@ namespace Barotrauma
                 {
                     continue;
                 }
+                if (target.Type == AITarget.TargetType.HumanOnly) { continue; }
                 // Don't attack outposts.
                 if (target.Entity.Submarine != null && target.Entity.Submarine.IsOutpost) { continue; }
 

@@ -66,6 +66,22 @@ namespace Barotrauma
         public float MinSoundRange, MinSightRange;
         public float MaxSoundRange = float.MaxValue, MaxSightRange = float.MaxValue;
 
+        public TargetType Type { get; private set; }
+
+        public enum TargetType
+        {
+            Any,
+            HumanOnly,
+            EnemyOnly
+        }
+
+        public string SonarLabel;
+
+        public bool Enabled = true;
+
+        public float MinSoundRange, MinSightRange;
+        public float MaxSoundRange = float.MaxValue, MaxSightRange = float.MaxValue;
+
         public Vector2 WorldPosition
         {
             get
@@ -113,6 +129,11 @@ namespace Barotrauma
             MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
             MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
             SonarLabel = element.GetAttributeString("sonarlabel", "");
+            string typeString = element.GetAttributeString("type", "Any");
+            if (Enum.TryParse(typeString, out TargetType t))
+            {
+                Type = t;
+            }
         }
 
         public AITarget(Entity e, float sightRange = -1, float soundRange = 0)
