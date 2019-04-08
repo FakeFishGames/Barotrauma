@@ -225,11 +225,22 @@ namespace Barotrauma
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
                     {
-                        // TODO: for some reason fails to find the path when the sub is flooding. Disabling this check helps fixes it, but we can't disable it
-                        var body = Submarine.CheckVisibility(end, node.Waypoint.SimPosition);
-                        if (body != null && body.UserData is Structure)
+                        // Doesn't seem to work
+                        //var body = Submarine.CheckVisibility(end, node.Waypoint.SimPosition);
+                        //if (body != null && body.UserData is Structure)
+                        //{
+                        //    continue;
+                        //}
+
+                        var body = Submarine.PickBody(end, node.Waypoint.SimPosition, null,
+                            Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs | Physics.CollisionPlatform);
+
+                        if (body != null)
                         {
-                            continue;
+                            if (body.UserData is Submarine) continue;
+                            if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
+                            if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
+
                         }
                     }
 
