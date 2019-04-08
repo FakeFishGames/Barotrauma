@@ -66,6 +66,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        //if enabled, the deterioration timer will always run regardless if the item is being used or not
+        [Serialize(false, false)]
+        public bool DeteriorateAlways
+        {
+            get;
+            set;
+        }
+
         private Character currentFixer;
         public Character CurrentFixer
         {
@@ -221,7 +229,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            return true;
+            return DeteriorateAlways;
         }
 
         private void UpdateFixAnimation(Character character)

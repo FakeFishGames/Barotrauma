@@ -271,7 +271,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
                 return;
             }
-        }
 
             characterInfos.Add(characterInfo);
         }
