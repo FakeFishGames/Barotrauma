@@ -70,6 +70,7 @@ namespace Barotrauma
 
                 if (currentTarget != null)
                 {
+                    character.AIController.SelectTarget(currentTarget.AiTarget);
                     string errorMsg = null;
 #if DEBUG
                     bool isRoomNameFound = currentTarget.RoomName != null;
