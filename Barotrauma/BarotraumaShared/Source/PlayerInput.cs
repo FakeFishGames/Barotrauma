@@ -145,16 +145,6 @@ namespace Barotrauma
         }
 #endif
 
-        public void SetState()
-        {
-            hit = binding.IsHit();
-            if (hit) hitQueue = true;
-
-            held = binding.IsDown();
-            if (held) heldQueue = true;
-        }
-#endif
-
         public bool Hit
         {
             get

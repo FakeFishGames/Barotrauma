@@ -77,8 +77,6 @@ namespace Barotrauma
                     {
                         var node = currentPath.Nodes[index];
                         if (node == null) { return false; }
-                        // Only applied if the node is close enough to the current node.
-                        if (Vector2.DistanceSquared(currentPath.CurrentNode.WorldPosition, node.WorldPosition) > 100) { return false; }
                         return node.Ladders != null;
                     }
                     return false;
@@ -108,10 +106,9 @@ namespace Barotrauma
                     {
                         var node = currentPath.Nodes[index];
                         if (node == null) { return false; }
-                        // Only applied if the node is close enough to the current node.
-                        if (Vector2.DistanceSquared(currentPath.CurrentNode.WorldPosition, node.WorldPosition) > 100) { return false; }
                         nextLadder = node.Ladders;
-                        return nextLadder != null && nextLadder == currentLadder;
+                        bool isSame = nextLadder != null && nextLadder == currentLadder;
+                        return isSame;
                     }
                     return false;
                 }
@@ -227,7 +224,7 @@ namespace Barotrauma
             }
 
             //only humanoids can climb ladders
-            if (character.AnimController is HumanoidAnimController && InLadders && IsNextLadderSameAsCurrent)
+            if (character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
                     currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
@@ -240,9 +237,9 @@ namespace Barotrauma
             if (character.IsClimbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
-                bool nextLadderSamesCurrent = IsNextLadderSameAsCurrent;
+                bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
 
-                if (nextLadderSamesCurrent)
+                if (nextLadderSameAsCurrent)
                 {
                     //climbing ladders -> don't move horizontally
                     diff.X = 0.0f;
@@ -257,17 +254,17 @@ namespace Barotrauma
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
 
-                    bool aboveFloor = heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f;
+                    bool aboveFloor = heightFromFloor > 0 && heightFromFloor < collider.height * 1.5f;
                     if (aboveFloor || IsNextNodeLadder)
                     {
-                        if (!nextLadderSamesCurrent)
+                        if (!nextLadderSameAsCurrent)
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
                         }
                         currentPath.SkipToNextNode();
                     }
                 }
-                else if (nextLadderSamesCurrent)
+                else if (nextLadderSameAsCurrent)
                 {
                     //if the current node is below the character and the next one is above (or vice versa)
                     //and both are on ladders, we can skip directly to the next one
@@ -277,8 +274,6 @@ namespace Barotrauma
                         currentPath.SkipToNextNode();
                     }
                 }
-
-                character.AnimController.IgnorePlatforms = false;
                 return diff;
             }
             else if (character.AnimController.InWater)
