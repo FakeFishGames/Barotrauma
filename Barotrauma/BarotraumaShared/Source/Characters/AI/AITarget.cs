@@ -75,13 +75,6 @@ namespace Barotrauma
             EnemyOnly
         }
 
-        public string SonarLabel;
-
-        public bool Enabled = true;
-
-        public float MinSoundRange, MinSightRange;
-        public float MaxSoundRange = float.MaxValue, MaxSightRange = float.MaxValue;
-
         public Vector2 WorldPosition
         {
             get

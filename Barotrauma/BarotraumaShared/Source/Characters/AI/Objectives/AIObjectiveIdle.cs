@@ -21,6 +21,8 @@ namespace Barotrauma
         private Hull currentTarget;
         private float newTargetTimer;
 
+        private bool searchingNewHull;
+
         private float standStillTimer;
         private float walkDuration;
 
@@ -66,7 +68,38 @@ namespace Barotrauma
             }
             if (newTargetTimer <= 0.0f)
             {
-                currentTarget = FindRandomHull();
+                if (!searchingNewHull)
+                {
+                    //find all available hulls first
+                    FindTargetHulls();
+                    searchingNewHull = true;
+                    return;
+                }
+                else if (targetHulls.Count > 0)
+                {
+                    //choose a random available hull
+                    var randomHull = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
+
+                    bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
+                    if (isCurrentHullOK)
+                    {
+                        // Check that there is no unsafe or forbidden hulls on the way to the target
+                        // Only do this when the current hull is ok, because otherwise the would block all paths from the current hull to the target hull.
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, randomHull.SimPosition);
+                        if (path.Unreachable ||
+                            path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull)))
+                        {
+                            //can't go to this room, remove it from the list and try another room next frame
+                            int index = targetHulls.IndexOf(randomHull);
+                            targetHulls.RemoveAt(index);
+                            hullWeights.RemoveAt(index);
+                            PathSteering.Reset();
+                            return;
+                        }
+                    }
+                    currentTarget = randomHull;
+                    searchingNewHull = false;
+                }
 
                 if (currentTarget != null)
                 {
@@ -163,24 +196,27 @@ namespace Barotrauma
         private readonly List<Hull> targetHulls = new List<Hull>(20);
         private readonly List<float> hullWeights = new List<float>(20);
 
-        private Hull FindRandomHull()
+        private void FindTargetHulls()
         {
             var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            Hull targetHull = null;
             bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
-            //random chance of navigating back to the room where the character spawned
-            if (Rand.Int(5) == 1 && idCard != null)
-            {
-                foreach (WayPoint wp in WayPoint.WayPointList)
-                {
-                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) { continue; }
 
-                    foreach (string tag in wp.IdCardTags)
+            targetHulls.Clear();
+            hullWeights.Clear();
+            foreach (var hull in Hull.hullList)
+            {
+                if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
+                if (hull.Submarine == null) { continue; }
+                if (hull.Submarine.TeamID != character.TeamID) { continue; }
+                // If the character is inside, only take connected hulls into account.
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                if (IsForbidden(hull)) { continue; }
+                // Ignore hulls that are too low to stand inside
+                if (character.AnimController is HumanoidAnimController animController)
+                {
+                    if (hull.CeilingHeight < ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value))
                     {
-                        if (idCard.HasTag(tag))
-                        {
-                            targetHull = wp.CurrentHull;
-                        }
+                        continue;
                     }
                 }
                 if (!targetHulls.Contains(hull))
@@ -189,47 +225,7 @@ namespace Barotrauma
                     hullWeights.Add(hull.Volume);
                 }
             }
-            if (targetHull == null)
-            {
-                targetHulls.Clear();
-                hullWeights.Clear();
-                foreach (var hull in Hull.hullList)
-                {
-                    if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
-                    if (hull.Submarine == null) { continue; }
-                    if (hull.Submarine.TeamID != character.TeamID) { continue; }
-                    // If the character is inside, only take connected hulls into account.
-                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                    if (IsForbidden(hull)) { continue; }
-                    // Ignore hulls that are too low to stand inside
-                    if (character.AnimController is HumanoidAnimController animController)
-                    {
-                        if (hull.CeilingHeight < ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value))
-                        {
-                            continue;
-                        }
-                    }
-                    if (isCurrentHullOK)
-                    {
-                        // Check that there is no unsafe or forbidden hulls on the way to the target
-                        // Only do this when the current hull is ok, because otherwise the would block all paths from the current hull to the target hull.
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                        if (path.Unreachable) { continue; }
-                        if (path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull))) { continue; }
-                    }
-
-                    // If we want to do a steering check, we should do it here, before setting the path
-                    //if (path.Cost > 1000.0f) { continue; }
-
-                    if (!targetHulls.Contains(hull))
-                    {
-                        targetHulls.Add(hull);
-                        hullWeights.Add(hull.Volume);
-                    }
-                }
-                return ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-            }
-            return targetHull;
+            
         }
 
         private bool IsForbidden(Hull hull)
