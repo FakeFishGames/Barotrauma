@@ -438,6 +438,17 @@ namespace Barotrauma
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
             }
 
+            GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(new Point(32, 32), audioSliders.RectTransform), TextManager.Get("DirectionalVoiceChat"));
+            directionalVoiceChat.Selected = UseDirectionalVoiceChat;
+            directionalVoiceChat.ToolTip = TextManager.Get("DirectionalVoiceChatToolTip");
+            directionalVoiceChat.OnSelected = (tickBox) =>
+            {
+                UseDirectionalVoiceChat = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
+            };
+
+
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
 #if (!OSX)
             var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), VoiceCaptureDevice, deviceNames.Count);

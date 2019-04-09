@@ -2783,4 +2783,8 @@
   <EntityName.hatchwbuttons>Hatch</EntityName.hatchwbuttons>
   <EntityDescription.hatchwbuttons>A door, but on the horizontal axis. Two integrated buttons.</EntityDescription.hatchwbuttons>
 
+
+  <DirectionalVoiceChat>Directional voice chat</DirectionalVoiceChat>
+  <DirectionalVoiceChatToolTip>When enabled, voice chat messages are panned according to the direction of the speaker relative to your position.</DirectionalVoiceChatToolTip>
+
 </infotexts>
