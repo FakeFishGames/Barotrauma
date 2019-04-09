@@ -252,7 +252,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,0,64,64" />
     <Sprite texture="tools.png" sourcerect="41,6,24,12" depth="0.55" origin="0.5,0.5" />
-    <Body width="31" height="6" density="40" />
+    <Body width="24" height="12" density="40" />
     <AiTarget />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect"/>    
     <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="-0.1">
@@ -272,7 +272,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Sonar Beacon" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -287,7 +287,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,320,64,64" />
     <Sprite texture="tools_new.png" sourcerect="485,29,27,63" depth="0.55" origin="0.5,0.5" />
-    <Body width="31" height="6" density="12" />
+    <Body width="27" height="60" density="12" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect"/>
     <AiTarget soundrange="10000" sonarlabel="Sonar Beacon" />
     <LightComponent LightColor="0.0,1.0,0.0,1.0" range="50" powerconsumption="10" blinkfrequency="2" IsOn="false" canbeselected="false">
@@ -324,7 +324,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,320,64,64" />
     <Sprite texture="tools_new.png" sourcerect="435,0,77,28" depth="0.55" origin="0.5,0.5" />
-    <Body width="27" height="10" density="15" />
+    <Body width="75" height="25" density="15" />
     <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-26,0" handle2="-26,0" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2" />
       <!-- the child LightComponent is only active when the Holdable is active, i.e. when the item is being held -->
