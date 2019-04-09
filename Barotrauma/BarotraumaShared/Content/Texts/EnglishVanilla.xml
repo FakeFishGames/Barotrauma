@@ -2769,4 +2769,65 @@
   <SetLegacyBindings>Set Legacy Bindings</SetLegacyBindings>
   <SetLegacyBindingsToolTip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</SetLegacyBindingsToolTip>
   
+  
+  <!-- Tutorial -->
+  <!-- Mechanic -->
+  <Mechanic.Radio.One>Are you okay? You need to get up and moving. Get to the sub ASAP!</Mechanic.Radio.One>
+  <Mechanic.Radio.Two>Remember to get your gear from the locker. Grab everything you can carry. We’re in for some rough shit.</Mechanic.Radio.Two>
+  <Mechanic.Radio.Three>All right, can you hear me? I got bad news and good news.</Mechanic.Radio.Three>
+  <Mechanic.Radio.Four>The bad news is there’s a fire ahead. The good news is there’s probably enough scrap nearby for you to fabricate a fire extinguisher.</Mechanic.Radio.Four>
+  <Mechanic.Radio.Five>You’re almost there. Just be careful, this next leak is large enough for the whole room to be pressurized. Find a diving suit. It should protect your organs against this kind of pressure.</Mechanic.Radio.Five>
+  <Mechanic.Radio.Six>Welcome aboard. First thing you need to do is to check the engine and ballast pumps, see if they’re in need of maintenance.</Mechanic.Radio.Six>
+  <Mechanic.Radio.Seven>Well done. Let’s wait for the others to make their way here. Can’t very well operate the sub with just the two of us.</Mechanic.Radio.Seven>
+
+  <Mechanic.OpenDoor>Open Door</Mechanic.OpenDoor>
+  <Mechanic.OpenDoorObjective>Open Door</Mechanic.OpenDoorObjective>
+  <Mechanic.OpenDoorText>Open Door</Mechanic.OpenDoorText>
+  <Mechanic.OpenDoorInstructions>Open Door</Mechanic.OpenDoorInstructions>
+
+  <Mechanic.Equipment>Equip</Mechanic.Equipment>
+  <Mechanic.EquipmentObjective>Equip</Mechanic.EquipmentObjective>
+  <Mechanic.EquipmentText>Equip</Mechanic.EquipmentText>
+  <Mechanic.EquipmentInstructions>Equip</Mechanic.EquipmentInstructions>
+
+  <Mechanic.Welding>Welding</Mechanic.Welding>
+  <Mechanic.WeldingObjective>Welding</Mechanic.WeldingObjective>
+  <Mechanic.WeldingText>Welding</Mechanic.WeldingText>
+  <Mechanic.WeldingInstructions>Welding</Mechanic.WeldingInstructions>
+
+  <Mechanic.Drain>Drain</Mechanic.Drain>
+  <Mechanic.DrainObjective>Drain</Mechanic.DrainObjective>
+  <Mechanic.DrainText>Drain</Mechanic.DrainText>
+  <Mechanic.DrainInstructions>Drain</Mechanic.DrainInstructions>
+
+  <Mechanic.Deconstruct>Deconstruct</Mechanic.Deconstruct>
+  <Mechanic.DeconstructObjective>Deconstruct</Mechanic.DeconstructObjective>
+  <Mechanic.DeconstructText>Deconstruct</Mechanic.DeconstructText>
+  <Mechanic.DeconstructInstructions>Deconstruct</Mechanic.DeconstructInstructions>
+
+  <Mechanic.Fabricate>Fabricate</Mechanic.Fabricate>
+  <Mechanic.FabricateObjective>Fabricate</Mechanic.FabricateObjective>
+  <Mechanic.FabricateText>Fabricate</Mechanic.FabricateText>
+  <Mechanic.FabricateInstructions>Fabricate</Mechanic.FabricateInstructions>
+
+  <Mechanic.Extinguisher>Extinguish</Mechanic.Extinguisher>
+  <Mechanic.ExtinguisherObjective>Extinguish</Mechanic.ExtinguisherObjective>
+  <Mechanic.ExtinguisherText>Extinguish</Mechanic.ExtinguisherText>
+  <Mechanic.ExtinguisherInstructions>Extinguish</Mechanic.ExtinguisherInstructions>
+
+  <Mechanic.Diving>Diving</Mechanic.Diving>
+  <Mechanic.DivingObjective>Diving</Mechanic.DivingObjective>
+  <Mechanic.DivingText>Diving</Mechanic.DivingText>
+  <Mechanic.DivingInstructions>Diving</Mechanic.DivingInstructions>
+
+  <Mechanic.RepairPump>Repair Pump</Mechanic.RepairPump>
+  <Mechanic.RepairPumpObjective>Repair Pump</Mechanic.RepairPumpObjective>
+  <Mechanic.RepairPumpText>Repair Pump</Mechanic.RepairPumpText>
+  <Mechanic.RepairPumpInstructions>Repair Pump</Mechanic.RepairPumpInstructions>
+
+  <Mechanic.RepairSubmarine>Repair Submarine</Mechanic.RepairSubmarine>
+  <Mechanic.RepairSubmarineObjective>Repair Submarine</Mechanic.RepairSubmarineObjective>
+  <Mechanic.RepairSubmarineText>Repair Submarine</Mechanic.RepairSubmarineText>
+  <Mechanic.RepairSubmarineInstructions>Repair Submarine</Mechanic.RepairSubmarineInstructions>
+
 </infotexts>

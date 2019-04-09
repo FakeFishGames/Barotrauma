@@ -13,6 +13,7 @@ namespace Barotrauma.Tutorials
         private float shakeAmount = 20f;
         private Item mechanic_firstButton;
         private Door mechanic_firstDoor;
+        private LightComponent mechanic_firstDoorLight;
 
         // Room 2
         private MotionSensor mechanic_equipmentObjectiveSensor;
@@ -76,6 +77,9 @@ namespace Barotrauma.Tutorials
             mechanic_firstButton.SpriteColor = accessibleColor;
             mechanic_firstButton.ExternalHighlight = true;
             mechanic_firstDoor = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoor")).GetComponent<Door>();
+            mechanic_firstDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoorlight")).GetComponent<LightComponent>();
+
+            SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, false);
 
             // Room 2
             mechanic_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_equipmentobjectivesensor")).GetComponent<MotionSensor>();
@@ -91,7 +95,6 @@ namespace Barotrauma.Tutorials
             mechanic_thirdDoor = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoor")).GetComponent<Door>();
             mechanic_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoorlight")).GetComponent<LightComponent>();
             mechanic_brokenWall_1 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenwall_1");
-            mechanic_brokenhull_1 = mechanic_brokenWall_1.Sections[0].gap.FlowTargetHull;
 
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, false);
             mechanic_brokenWall_1.Indestructible = false;
@@ -99,6 +102,7 @@ namespace Barotrauma.Tutorials
             {
                 mechanic_brokenWall_1.AddDamage(i, 100);
             }
+            mechanic_brokenhull_1 = mechanic_brokenWall_1.Sections[0].gap.FlowTargetHull;
 
             // Room 4
             mechanic_deconstructor = Item.ItemList.Find(i => i.HasTag("deconstructor")).GetComponent<Deconstructor>();
@@ -120,7 +124,6 @@ namespace Barotrauma.Tutorials
             // Room 6
             mechanic_brokenPump = Item.ItemList.Find(i => i.HasTag("mechanic_brokenpump")).GetComponent<Pump>();
             mechanic_brokenWall_2 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenwall_2");
-            mechanic_brokenhull_2 = mechanic_brokenWall_2.Sections[0].gap.FlowTargetHull;
             mechanic_sixthDoor = Item.ItemList.Find(i => i.HasTag("mechanic_sixthdoor")).GetComponent<Door>();
             mechanic_sixthDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_sixthdoorlight")).GetComponent<LightComponent>();
 
@@ -129,8 +132,10 @@ namespace Barotrauma.Tutorials
             {
                 mechanic_brokenWall_2.AddDamage(i, 100);
             }
+            mechanic_brokenhull_2 = mechanic_brokenWall_2.Sections[0].gap.FlowTargetHull;
             SetDoorAccess(mechanic_sixthDoor, mechanic_sixthDoorLight, false);
 
+            return;
             // Submarine
             mechanic_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("mechanic_enteredsubmarinesensor")).GetComponent<MotionSensor>();
             mechanic_submarineEngine = Item.ItemList.Find(i => i.HasTag("mechanic_submarineengine")).GetComponent<Engine>();
@@ -148,9 +153,12 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(0.1f);
             }
 
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("Concerned crewmember", "telling player to get moving and get to the sub, a Moloch is attacking", ChatMessageType.Default, null);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Tutorial.Mechanic.Radio.One"), ChatMessageType.Default, null);
+
+            yield return new WaitForSeconds(5.0f);
 
             TriggerTutorialSegment(0); // Open door objective
+            SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
             SetHighlight(mechanic_firstButton, true);
             while (!mechanic_firstDoor.IsOpen) yield return null;
             RemoveCompletedObjective(segments[0]);
@@ -164,7 +172,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_equipmentCabinet.Item, false);
             while (!Character.Controlled.HasEquippedItem("divingmask") || !Character.Controlled.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
             RemoveCompletedObjective(segments[1]);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember explaining", "that the player needs to repair the walls along the way", ChatMessageType.Default, null);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Tutorial.Mechanic.Radio.Two"), ChatMessageType.Default, null);
             SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
 
             // Room 3
@@ -184,9 +192,12 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
 
             // Room 4
+            while (!mechanic_thirdDoor.IsOpen) yield return null;
             SetHighlight(mechanic_deconstructor.Item, true);
             SetHighlight(mechanic_fabricator.Item, true);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember explaining", "you must fabricate a fire extinguisher using sodium and aluminum from a deconstructed oxygen tank", ChatMessageType.Default, null);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Tutorial.Mechanic.Radio.Three"), ChatMessageType.Default, null);
+            yield return new WaitForSeconds(2f);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Tutorial.Mechanic.Radio.Four"), ChatMessageType.Default, null);
             while (!IsExtinguisherCreationComplete()) yield return null; // Wait until extinguisher is created
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, false);
 
@@ -194,7 +205,7 @@ namespace Barotrauma.Tutorials
             while (!mechanic_fourthDoor.IsOpen) yield return null;
             TriggerTutorialSegment(6); // Using the extinguisher
             while (mechanic_fire != null) yield return null; // Wait until extinguished
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember warning", "of high pressure in next room", ChatMessageType.Default, null);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Tutorial.Mechanic.Radio.Five"), ChatMessageType.Default, null);
             while (!mechanic_divingSuitObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(7); // Dangers of pressure, equip diving suit objective
             SetHighlight(mechanic_divingSuitContainer.Item, true);
@@ -214,9 +225,10 @@ namespace Barotrauma.Tutorials
             while (mechanic_brokenhull_2.WaterPercentage > 0) yield return null;
             SetDoorAccess(mechanic_sixthDoor, mechanic_sixthDoorLight, true);
 
+            while (true) yield return null;
             // Submarine
             while (!mechanic_enteredSubmarineSensor.MotionDetected) yield return null;
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember prompts", "player to repair ballast pumps and engine", ChatMessageType.Default, null);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Tutorial.Mechanic.Radio.Six"), ChatMessageType.Default, null);
             TriggerTutorialSegment(9); // Repairing ballast pumps, engine
             SetHighlight(mechanic_ballastPump_1.Item, true);
             SetHighlight(mechanic_ballastPump_2.Item, true);
@@ -229,9 +241,12 @@ namespace Barotrauma.Tutorials
                 if (mechanic_ballastPump_2.Item.IsFullCondition && mechanic_ballastPump_2.Item.ExternalHighlight) SetHighlight(mechanic_ballastPump_2.Item, false);
                 if (mechanic_submarineEngine.Item.IsFullCondition && mechanic_submarineEngine.Item.ExternalHighlight) SetHighlight(mechanic_submarineEngine.Item, false);
                 yield return null;
-            }            
+            }
+
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Tutorial.Mechanic.Radio.Seven"), ChatMessageType.Default, null);
 
             // END TUTORIAL
+            Completed = true;
         }
 
         private void SetHighlight(Item item, bool state)
@@ -248,7 +263,7 @@ namespace Barotrauma.Tutorials
 
         private void SetDoorAccess(Door door, LightComponent light, bool state)
         {
-            door.Stuck = (state) ? 100f : 0f;
+            door.Stuck = (state) ? 0f : 100f;
             light.LightColor = (state) ? accessibleColor : inaccessibleColor;
         }
 

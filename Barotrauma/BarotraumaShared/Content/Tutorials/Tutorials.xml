@@ -58,7 +58,7 @@
 
   </ContextualTutorial>
 
-  <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" startoutpostpath="Submarines/Outpost_Mechanic.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Mechanic">
         <Skill name="Electrical Engineering" level="60"/>
@@ -68,54 +68,54 @@
       </Job>
     </Character>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.OpenDoor" objective="Mechanic.OpenDoorObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.OpenDoorText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.OpenDoorInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.Equipment" objective="Mechanic.EquipmentObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.EquipmentText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.EquipmentInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.Welding" objective="Mechanic.WeldingObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.WeldingText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.WeldingInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.Drain" objective="Mechanic.DrainObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.DrainText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.DrainInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.Deconstruct" objective="Mechanic.DeconstructObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.DeconstructText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.DeconstructInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.Fabricate" objective="Mechanic.FabricateObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.FabricateText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.FabricateInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.Extinguisher" objective="Mechanic.ExtinguisherObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.ExtinguisherText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.ExtinguisherInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.Diving" objective="Mechanic.DivingObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.DivingText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.DivingInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.RepairPump" objective="Mechanic.RepairPumpObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.RepairPumpText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.RepairPumpInstructions" width="450"/>
     </Segment>
 
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
+    <Segment id="Mechanic.RepairSubmarine" objective="Mechanic.RepairSubmarineObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.RepairSubmarineText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.RepairSubmarineInstructions" width="450"/>
     </Segment>
   </MechanicTutorial>
   
