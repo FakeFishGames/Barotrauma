@@ -428,6 +428,12 @@ namespace Barotrauma
                         else if (ic is Pickable pickable)
                         {
                             //prevent picking up (or deattaching) items
+#if CLIENT
+                            if (GameMain.GameSession.GameMode is TutorialMode)
+                            {
+                                continue;
+                            }
+#endif
                             pickable.CanBePicked = false;
                             pickable.CanBeSelected = false;
                         }
