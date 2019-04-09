@@ -2774,7 +2774,7 @@
   <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
 
   <ItemMsgOpen>[[select]] Open</ItemMsgOpen>
-  <DoorMsgCannotOpen>The door requires special equipment to open. It's probably wired to a button or a remote controller.</DoorMsgCannotOpen>
+  <AccessDenied>UNAUTHORIZED ACCESS</AccessDenied>
 
   <EntityName.doorwbuttons>Door</EntityName.doorwbuttons>
   <EntityDescription.doorwbuttons>A sliding door with two integrated buttons.</EntityDescription.doorwbuttons>
