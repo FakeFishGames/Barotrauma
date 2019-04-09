@@ -1706,10 +1706,6 @@
   <EntityDescription.extinguisherbracket>Holds a fire extinguisher to the wall</EntityDescription.extinguisherbracket>
   <EntityName.weaponholder>Weapon Holder</EntityName.weaponholder>
   <EntityDescription.weaponholder>A place to stow your weapons neatly</EntityDescription.weaponholder>
-  <EntityName.windoweddoor>Windowed Door</EntityName.windoweddoor>
-  <EntityDescription.windoweddoor>A sliding door with integrated window</EntityDescription.windoweddoor>
-  <EntityName.hatch>Hatch</EntityName.hatch>
-  <EntityDescription.hatch>A door, but on the horizontal axis</EntityDescription.hatch>
   <EntityName.dockingport>Docking Port</EntityName.dockingport>
   <EntityDescription.dockingport>A vertically aligned docking interface. Locks to another Docking port to form a water tight seal and allow passage between subs, shuttles and locations</EntityDescription.dockingport>
   <EntityName.dockinghatch>Docking Hatch</EntityName.dockinghatch>
@@ -1832,7 +1828,7 @@
   <EntityDescription.automatichatch>A hatch that closes automatically in 5 seconds if there's no-one in the way.</EntityDescription.automatichatch>
   <EntityName.automaticwindoweddoor>Automatic Windowed Door</EntityName.automaticwindoweddoor>
   <EntityDescription.automaticwindoweddoor>A door that closes automatically after 5 seconds if there's no-one in the doorway.</EntityDescription.automaticwindoweddoor>
-  <EntityName.door>Door</EntityName.door>
+  
   <EntityName.largedivinggearcabinet>Large Diving Gear Cabinet</EntityName.largedivinggearcabinet>
   <EntityDescription.largedivinggearcabinet>A cabinet loaded with diving masks, oxygen tanks, underwater scooters, handheld sonars and flares.</EntityDescription.largedivinggearcabinet>
   <EntityName.largedivingsuitcabinet>Large Diving Suit Cabinet</EntityName.largedivingsuitcabinet>
@@ -2747,7 +2743,12 @@
 
   <ReactorUseText>This is the reactor. You should leave operating this to a professional, like an engineer. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
 
-  <EntityDescription.door>A door that can be manually operated.</EntityDescription.door>
+  <EntityName.door>Custom Door</EntityName.door>
+  <EntityDescription.door>A sliding door with no integrated buttons - has to be wired manually.</EntityDescription.door>
+  <EntityName.windoweddoor>Custom Windowed Door</EntityName.windoweddoor>
+  <EntityDescription.windoweddoor>A sliding door with a window. No integrated buttons - has to be wired manually.</EntityDescription.windoweddoor>
+  <EntityName.hatch>Custom Hatch</EntityName.hatch>
+  <EntityDescription.hatch>A door, but on the horizontal axis. No integrated buttons - has to be wired manually.</EntityDescription.hatch>
 
   <!-- New Additions -->
   
@@ -2774,5 +2775,12 @@
 
   <ItemMsgOpen>[[select]] Open</ItemMsgOpen>
   <DoorMsgCannotOpen>The door requires special equipment to open. It's probably wired to a button or a remote controller.</DoorMsgCannotOpen>
-  
+
+  <EntityName.doorwbuttons>Door</EntityName.doorwbuttons>
+  <EntityDescription.doorwbuttons>A sliding door with two integrated buttons.</EntityDescription.doorwbuttons>
+  <EntityName.windoweddoorwbuttons>Windowed Door</EntityName.windoweddoorwbuttons>
+  <EntityDescription.windoweddoorwbuttons>A sliding door with a window and two integrated buttons.</EntityDescription.windoweddoorwbuttons>
+  <EntityName.hatchwbuttons>Hatch</EntityName.hatchwbuttons>
+  <EntityDescription.hatchwbuttons>A door, but on the horizontal axis. Two integrated buttons.</EntityDescription.hatchwbuttons>
+
 </infotexts>
