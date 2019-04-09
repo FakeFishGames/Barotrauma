@@ -2234,7 +2234,7 @@
   <TraitorStartMessage>You are the Traitor! Your secret task is to assassinate [targetname]! Discretion is an utmost concern; sinking the submarine and killing the entire crew will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.</TraitorStartMessage>
   <TraitorMoreAgentsMessage>It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.\n\nThe code words are: [codewords].\nThe code response is: [coderesponse].</TraitorMoreAgentsMessage>
   <TraitorStartMessageServer>[traitorname] is the traitor and the target is [targetname].</TraitorStartMessageServer>
-
+ 
   <TraitorEndMessageSuccess>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
   <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
   <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
@@ -2783,8 +2783,27 @@
   <EntityName.hatchwbuttons>Hatch</EntityName.hatchwbuttons>
   <EntityDescription.hatchwbuttons>A door, but on the horizontal axis. Two integrated buttons.</EntityDescription.hatchwbuttons>
 
-
   <DirectionalVoiceChat>Directional voice chat</DirectionalVoiceChat>
   <DirectionalVoiceChatToolTip>When enabled, voice chat messages are panned according to the direction of the speaker relative to your position.</DirectionalVoiceChatToolTip>
+
+  <TraitorRespawnMessage>Your traitor objective was unsuccessful. You are no longer a traitor, so play nice!</TraitorRespawnMessage>
+  <TraitorTargetMessage>[traitorname] had a secret objective to assassinate you - and the task was successful.</TraitorTargetMessage>
+
+  <RepairAllWalls>Repair all walls</RepairAllWalls>
+  <RepairAllItems>Repair all items</RepairAllItems>
+
+  <Karma>Karma</Karma>
+  <KarmaExplanation>Karma reflects the helpful and harmful actions you've done while playing. Actions such as repairing the submarine, operating devices and killing monsters increase Karma, while actions such as attacking members of your crew or damaging the submarine decrease it. If your Karma drops too low, you may not get assigned to certain jobs anymore, or in more extreme cases, you may be banned from the server.</KarmaExplanation>
+  <ResetKarma>Reset Karma</ResetKarma>
+  <KarmaDecreased>Your Karma decreased by [karmadecrease].</KarmaDecreased>
+  <KarmaIncreased>Your Karma increased by [karmaincrease].</KarmaIncreased>
+  <KarmaBanWarning>Warning: you will be banned from the server if your Karma decreases below [banthreshold].</KarmaBanWarning>
+  <KarmaBanned>You have been banned from the server because your Karma decreased below [banthreshold].</KarmaBanned>
+  <KarmaJobDisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</KarmaJobDisallowed>
+
+  <EntityName.alienarmor>Physicorium Body Armor</EntityName.alienarmor>
+  <EntityDescription.alienarmor>A body armor fabricated from an alien metamaterial.</EntityDescription.alienarmor>  
+  <EntityName.alienhelmet>Physicorium Helmet</EntityName.alienhelmet>
+  <EntityDescription.alienhelmet>A helmet fabricated from an alien metamaterial.</EntityDescription.alienhelmet>
 
 </infotexts>
