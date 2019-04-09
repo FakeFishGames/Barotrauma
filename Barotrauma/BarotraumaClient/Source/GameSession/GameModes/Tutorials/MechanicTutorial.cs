@@ -73,6 +73,9 @@ namespace Barotrauma.Tutorials
         private Color inaccessibleColor = Color.Red;
         private Color accessibleColor = Color.Green;
 
+        // Variables
+        private const float waterVolumeBeforeOpening = 5f;
+
         public MechanicTutorial(XElement element) : base(element)
         {
 
@@ -133,7 +136,6 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, false);
 
             // Room 5
-            mechanic_fire = new DummyFireSource(new Vector2(20f, 2f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
             mechanic_fifthDoor = Item.ItemList.Find(i => i.HasTag("mechanic_fifthdoor")).GetComponent<Door>();
             mechanic_fifthDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_fifthdoorlight")).GetComponent<LightComponent>();
 
@@ -191,8 +193,8 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Default, null);
 
             yield return new WaitForSeconds(2.5f);
-
             TriggerTutorialSegment(0); // Open door objective
+            yield return new WaitForSeconds(1.5f);
             SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
             SetHighlight(mechanic_firstButton, true);
             while (!mechanic_firstDoor.IsOpen) yield return null;
@@ -200,6 +202,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_firstButton, false);
 
             // Room 2
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Default, null);
             while (!mechanic_equipmentObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(1); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
@@ -207,8 +210,8 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_equipmentCabinet.Item, false);
             while (!Character.Controlled.HasEquippedItem("divingmask") || !Character.Controlled.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
             RemoveCompletedObjective(segments[1]);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Default, null);
             SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Default, null);
 
             // Room 3
             while (!mechanic_weldingObjectiveSensor.MotionDetected) yield return null;
@@ -222,12 +225,13 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_workingPump.Item, true);
             while (mechanic_workingPump.FlowPercentage >= 0) yield return null; // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
-            while (mechanic_brokenhull_1.WaterPercentage > 0) yield return null; // Unlock door once drained
+            while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening) yield return null; // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
 
             // Room 4
             while (!mechanic_thirdDoor.IsOpen) yield return null;
+            mechanic_fire = new DummyFireSource(new Vector2(20f, 2f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Default, null);
             yield return new WaitForSeconds(1f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("", TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Default, null);
@@ -249,6 +253,7 @@ namespace Barotrauma.Tutorials
             while (!mechanic_fourthDoor.IsOpen) yield return null;
             TriggerTutorialSegment(6); // Using the extinguisher
             while (!mechanic_fire.Removed) yield return null; // Wait until extinguished
+            yield return new WaitForSeconds(2f);
             RemoveCompletedObjective(segments[6]);
             SetDoorAccess(mechanic_fifthDoor, mechanic_fifthDoorLight, true);
 
@@ -272,7 +277,7 @@ namespace Barotrauma.Tutorials
             while (!mechanic_brokenPump.Item.IsFullCondition && mechanic_brokenPump.FlowPercentage >= 0) yield return null;
             RemoveCompletedObjective(segments[8]);
             SetHighlight(mechanic_brokenPump.Item, false);
-            while (mechanic_brokenhull_2.WaterPercentage > 0) yield return null;
+            while (mechanic_brokenhull_2.WaterPercentage > waterVolumeBeforeOpening) yield return null;
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
 
 

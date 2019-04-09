@@ -2774,6 +2774,7 @@
   <!-- Mechanic -->
   <Mechanic.Radio.WakeUp>Are you okay? You need to get up and moving. Get to the sub ASAP!</Mechanic.Radio.WakeUp>
   <Mechanic.Radio.Equipment>Remember to get your gear from the locker. Grab everything you can carry. We’re in for some rough shit.</Mechanic.Radio.Equipment>
+  <Mechanic.Radio.Breach>Hey, I’m reading some hull breaches along your way. Better plug those real quick so others stand a chance, too.</Mechanic.Radio.Breach>
   <Mechanic.Radio.News>All right, can you hear me? I got bad news and good news.</Mechanic.Radio.News>
   <Mechanic.Radio.Fire>The bad news is there’s a fire ahead. The good news is there’s probably enough scrap nearby for you to fabricate a fire extinguisher.</Mechanic.Radio.Fire>
   <Mechanic.Radio.Diving>You’re almost there. Just be careful, this next leak is large enough for the whole room to be pressurized. Find a diving suit. It should protect your organs against this kind of pressure.</Mechanic.Radio.Diving>
