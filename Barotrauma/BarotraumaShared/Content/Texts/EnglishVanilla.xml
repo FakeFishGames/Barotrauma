@@ -2771,6 +2771,9 @@
   
   
   <!-- Tutorial -->
+  <Tutorial.TryAgainHeader>You have died</Tutorial.TryAgainHeader>
+  <Tutorial.TryAgain>Do you want to try again?</Tutorial.TryAgain>
+  
   <!-- Mechanic -->
   <Mechanic.Radio.Speaker>Captain Huskinson</Mechanic.Radio.Speaker>
   <Mechanic.Radio.WakeUp>Are you okay? You need to get up and moving. Get to the sub ASAP!</Mechanic.Radio.WakeUp>

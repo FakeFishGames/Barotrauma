@@ -142,17 +142,17 @@ namespace Barotrauma.Tutorials
             base.Update(deltaTime);
             if (character != null)
             {
-                if (Character.Controlled == null)
+                if (character.IsDead)
+                {
+                    CoroutineManager.StartCoroutine(Dead());
+                }
+                else if (Character.Controlled == null)
                 {
                     CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
                     infoBox = null;
                 }
                 else if (Character.Controlled.IsDead)
                 {
-                    Character.Controlled = null;
-
-                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
-                    infoBox = null;
                     CoroutineManager.StartCoroutine(Dead());
                 }
             }
@@ -160,9 +160,13 @@ namespace Barotrauma.Tutorials
 
         private IEnumerable<object> Dead()
         {
+            Character.Controlled = character = null;
+            CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
+            infoBox = null;
+
             yield return new WaitForSeconds(3.0f);
 
-            var messageBox = new GUIMessageBox("You have died", "Do you want to try again?", new string[] { "Yes", "No" });
+            var messageBox = new GUIMessageBox(TextManager.Get("Tutorial.TryAgainHeader"), TextManager.Get("Tutorial.TryAgain"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
             messageBox.Buttons[0].OnClicked += Restart;
             messageBox.Buttons[0].OnClicked += messageBox.Close;
