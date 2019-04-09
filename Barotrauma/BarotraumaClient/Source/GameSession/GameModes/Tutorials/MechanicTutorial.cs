@@ -188,17 +188,15 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_fabricator.Item, true);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember explaining", "you must fabricate a fire extinguisher using sodium and aluminum from a deconstructed oxygen tank", ChatMessageType.Default, null);
             while (!IsExtinguisherCreationComplete()) yield return null; // Wait until extinguisher is created
-            TriggerTutorialSegment(6); // Equip extinguisher
-            while (!Character.Controlled.HasEquippedItem("extinguisher")) yield return null;
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, false);
 
             // Room 5
             while (!mechanic_fourthDoor.IsOpen) yield return null;
-            TriggerTutorialSegment(7); // Using the extinguisher
+            TriggerTutorialSegment(6); // Using the extinguisher
             while (mechanic_fire != null) yield return null; // Wait until extinguished
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember warning", "of high pressure in next room", ChatMessageType.Default, null);
             while (!mechanic_divingSuitObjectiveSensor.MotionDetected) yield return null;
-            TriggerTutorialSegment(8); // Dangers of pressure, equip diving suit objective
+            TriggerTutorialSegment(7); // Dangers of pressure, equip diving suit objective
             SetHighlight(mechanic_divingSuitContainer.Item, true);
             while (!IsSelectedItem(mechanic_divingSuitContainer.Item)) yield return null;
             SetHighlight(mechanic_divingSuitContainer.Item, false);
@@ -209,7 +207,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_brokenWall_2, true);
             while (WallHasDamagedSections(mechanic_brokenWall_2)) yield return null;
             SetHighlight(mechanic_brokenWall_2, false);
-            TriggerTutorialSegment(9); // Repairing machinery (pump)
+            TriggerTutorialSegment(8); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
             while (!mechanic_brokenPump.Item.IsFullCondition && !mechanic_brokenPump.IsActive) yield return null;
             SetHighlight(mechanic_brokenPump.Item, false);
@@ -219,7 +217,7 @@ namespace Barotrauma.Tutorials
             // Submarine
             while (!mechanic_enteredSubmarineSensor.MotionDetected) yield return null;
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage("crewmember prompts", "player to repair ballast pumps and engine", ChatMessageType.Default, null);
-            TriggerTutorialSegment(10); // Repairing ballast pumps, engine
+            TriggerTutorialSegment(9); // Repairing ballast pumps, engine
             SetHighlight(mechanic_ballastPump_1.Item, true);
             SetHighlight(mechanic_ballastPump_2.Item, true);
             SetHighlight(mechanic_submarineEngine.Item, true);
