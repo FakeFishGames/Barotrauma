@@ -372,6 +372,7 @@ namespace Barotrauma.Tutorials
 
         protected void RemoveCompletedObjective(TutorialSegment objective)
         {
+            if (!HasObjective(objective)) return;
             objective.IsTriggered = true;
 
             int checkMarkHeight = (int)(objective.ReplayButton.Rect.Height * 1.2f);

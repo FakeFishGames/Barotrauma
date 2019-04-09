@@ -22,7 +22,7 @@ namespace Barotrauma
 
         private Entity Submarine;
 
-        private bool removed;
+        protected bool removed;
 
 #if CLIENT
         private List<Decal> burnDecals = new List<Decal>();
@@ -160,7 +160,7 @@ namespace Barotrauma
                 if (removed) { return; }
             }
 
-            hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
+            ReduceOxygen(deltaTime);
 
             AdjustXPos(growModifier, deltaTime);
 
@@ -180,6 +180,11 @@ namespace Barotrauma
             {
                 Remove();
             }
+        }
+
+        protected virtual void ReduceOxygen(float deltaTime)
+        {
+            hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
         }
 
         protected virtual void AdjustXPos(float growModifier, float deltaTime)

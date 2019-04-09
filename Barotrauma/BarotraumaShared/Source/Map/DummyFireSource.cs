@@ -7,6 +7,11 @@ namespace Barotrauma
     {
         private Vector2 maxSize;
 
+        public bool Removed
+        {
+            get { return removed; }
+        }
+
         public DummyFireSource(Vector2 maxSize, Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false) : base(worldPosition, spawningHull, isNetworkMessage)
         {
             this.maxSize = maxSize;
@@ -14,7 +19,7 @@ namespace Barotrauma
 
         public override float DamageRange
         {
-            get { return 0f; }
+            get { return 5f; }
         }
 
         protected override void LimitSize()
@@ -29,6 +34,11 @@ namespace Barotrauma
         }
 
         protected override void AdjustXPos(float growModifier, float deltaTime)
+        {
+            
+        }
+
+        protected override void ReduceOxygen(float deltaTime)
         {
             
         }
