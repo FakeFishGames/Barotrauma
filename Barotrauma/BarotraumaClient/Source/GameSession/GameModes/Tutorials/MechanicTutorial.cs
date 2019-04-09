@@ -41,9 +41,6 @@ namespace Barotrauma.Tutorials
         private Door mechanic_fourthDoor;
         private LightComponent mechanic_fourthDoorLight;
 
-        private bool fabricatorInteractedWith = false;
-        private bool deconstructorInteractedWith = false;
-
         // Room 5
         private DummyFireSource mechanic_fire;
         private Door mechanic_fifthDoor;
@@ -106,8 +103,6 @@ namespace Barotrauma.Tutorials
 
             // Room 1
             mechanic_firstButton = Item.ItemList.Find(i => i.HasTag("mechanic_firstbutton"));
-            mechanic_firstButton.SpriteColor = accessibleColor;
-            mechanic_firstButton.ExternalHighlight = true;
             mechanic_firstDoor = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoor")).GetComponent<Door>();
             mechanic_firstDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoorlight")).GetComponent<LightComponent>();
 

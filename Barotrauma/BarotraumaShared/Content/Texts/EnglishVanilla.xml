@@ -2770,11 +2770,13 @@
   <SetLegacyBindingsToolTip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</SetLegacyBindingsToolTip>
   
   
-  <!-- Tutorial -->
+  <!-- Generic Tutorial -->
   <Tutorial.TryAgainHeader>You have died</Tutorial.TryAgainHeader>
   <Tutorial.TryAgain>Do you want to try again?</Tutorial.TryAgain>
   
-  <!-- Mechanic -->
+  <!-- Mechanic Tutorial -->
+  
+  <!-- Radio -->
   <Mechanic.Radio.Speaker>Captain Huskinson</Mechanic.Radio.Speaker>
   <Mechanic.Radio.WakeUp>Are you okay? You need to get up and moving. Get to the sub ASAP!</Mechanic.Radio.WakeUp>
   <Mechanic.Radio.Equipment>Remember to get your gear from the locker. Grab everything you can carry. We’re in for some rough shit.</Mechanic.Radio.Equipment>
@@ -2785,54 +2787,61 @@
   <Mechanic.Radio.Submarine>Welcome aboard. First thing you need to do is to check the engine and ballast pumps, see if they’re in need of maintenance.</Mechanic.Radio.Submarine>
   <Mechanic.Radio.Complete>Well done. Let’s wait for the others to make their way here. Can’t very well operate the sub with just the two of us.</Mechanic.Radio.Complete>
 
-  <Mechanic.OpenDoor>Open Door</Mechanic.OpenDoor>
-  <Mechanic.OpenDoorObjective>Open Door</Mechanic.OpenDoorObjective>
-  <Mechanic.OpenDoorText>Open Door</Mechanic.OpenDoorText>
-  <Mechanic.OpenDoorInstructions>Open Door</Mechanic.OpenDoorInstructions>
+  <!-- Room 1 -->
+  <Mechanic.OpenDoor>Doors</Mechanic.OpenDoor>
+  <Mechanic.OpenDoorObjective>Open door by pushing the adjacent button</Mechanic.OpenDoorObjective>
+  <Mechanic.OpenDoorText>Doors are often wired to be opened via nearby buttons. Interact with buttons by pressing [INTERACTBUTTON] when the cursor is over them.</Mechanic.OpenDoorText>
+  <Mechanic.OpenDoorInstructions>Doors are often wired to be opened via nearby buttons. Interact with buttons by pressing [INTERACTBUTTON] when the cursor is over them.</Mechanic.OpenDoorInstructions>
 
-  <Mechanic.Equipment>Equip</Mechanic.Equipment>
-  <Mechanic.EquipmentObjective>Equip</Mechanic.EquipmentObjective>
-  <Mechanic.EquipmentText>Equip</Mechanic.EquipmentText>
-  <Mechanic.EquipmentInstructions>Equip</Mechanic.EquipmentInstructions>
+  <!-- Room 2 -->
+  <Mechanic.Equipment>Inventory</Mechanic.Equipment>
+  <Mechanic.EquipmentObjective>Get your equipment from the locker</Mechanic.EquipmentObjective>
+  <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Mechanic.EquipmentText>
+  <Mechanic.EquipmentInstructions>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Mechanic.EquipmentInstructions>
 
-  <Mechanic.Welding>Welding</Mechanic.Welding>
-  <Mechanic.WeldingObjective>Welding</Mechanic.WeldingObjective>
-  <Mechanic.WeldingText>Welding</Mechanic.WeldingText>
-  <Mechanic.WeldingInstructions>Welding</Mechanic.WeldingInstructions>
+  <!-- Room 3 -->
+  <Mechanic.Welding>Fixing leaks</Mechanic.Welding>
+  <Mechanic.WeldingObjective>Repair leak</Mechanic.WeldingObjective>
+  <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [AIMBUTTON] to aim. While aiming, hold [FIREBUTTON] to weld.</Mechanic.WeldingText>
+  <Mechanic.WeldingInstructions>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use. \n\nWhen welding tool is equipped, hold [AIMBUTTON] to aim. While aiming, hold [FIREBUTTON] to weld.</Mechanic.WeldingInstructions>
 
-  <Mechanic.Drain>Drain</Mechanic.Drain>
-  <Mechanic.DrainObjective>Drain</Mechanic.DrainObjective>
-  <Mechanic.DrainText>Drain</Mechanic.DrainText>
-  <Mechanic.DrainInstructions>Drain</Mechanic.DrainInstructions>
+  <Mechanic.Drain>Draining water</Mechanic.Drain>
+  <Mechanic.DrainObjective>Turn on nearby pump to drain excess water</Mechanic.DrainObjective>
+  <Mechanic.DrainText>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it and flip the switch to “on” position.</Mechanic.DrainText>
+  <Mechanic.DrainInstructions>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it and flip the switch to “on” position.</Mechanic.DrainInstructions>
 
-  <Mechanic.Deconstruct>Deconstruct</Mechanic.Deconstruct>
-  <Mechanic.DeconstructObjective>Deconstruct</Mechanic.DeconstructObjective>
-  <Mechanic.DeconstructText>Deconstruct</Mechanic.DeconstructText>
-  <Mechanic.DeconstructInstructions>Deconstruct</Mechanic.DeconstructInstructions>
+  <!-- Room 4 -->
+  <Mechanic.Deconstruct>Deconstructor</Mechanic.Deconstruct>
+  <Mechanic.DeconstructObjective>Deconstruct an extra oxygen tank</Mechanic.DeconstructObjective>
+  <Mechanic.DeconstructText>The fabricator is a machine that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructText>
+  <Mechanic.DeconstructInstructions>The fabricator is a machine that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructInstructions>
 
-  <Mechanic.Fabricate>Fabricate</Mechanic.Fabricate>
-  <Mechanic.FabricateObjective>Fabricate</Mechanic.FabricateObjective>
-  <Mechanic.FabricateText>Fabricate</Mechanic.FabricateText>
-  <Mechanic.FabricateInstructions>Fabricate</Mechanic.FabricateInstructions>
+  <Mechanic.Fabricate>Fabricator</Mechanic.Fabricate>
+  <Mechanic.FabricateObjective>Fabricate a fire extinguisher</Mechanic.FabricateObjective>
+  <Mechanic.FabricateText>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the machine with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s bottom inventory.</Mechanic.FabricateText>
+  <Mechanic.FabricateInstructions>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the machine with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s bottom inventory.</Mechanic.FabricateInstructions>
 
-  <Mechanic.Extinguisher>Extinguish</Mechanic.Extinguisher>
-  <Mechanic.ExtinguisherObjective>Extinguish</Mechanic.ExtinguisherObjective>
-  <Mechanic.ExtinguisherText>Extinguish</Mechanic.ExtinguisherText>
-  <Mechanic.ExtinguisherInstructions>Extinguish</Mechanic.ExtinguisherInstructions>
+  <!-- Room 5 -->
+  <Mechanic.Extinguisher>Fires</Mechanic.Extinguisher>
+  <Mechanic.ExtinguisherObjective>Put out the fire</Mechanic.ExtinguisherObjective>
+  <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [AIMBUTTON] and dispense by holding down [FIREBUTTON].</Mechanic.ExtinguisherText>
+  <Mechanic.ExtinguisherInstructions>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [AIMBUTTON] and dispense by holding down [FIREBUTTON].</Mechanic.ExtinguisherInstructions>
 
-  <Mechanic.Diving>Diving</Mechanic.Diving>
-  <Mechanic.DivingObjective>Diving</Mechanic.DivingObjective>
-  <Mechanic.DivingText>Diving</Mechanic.DivingText>
-  <Mechanic.DivingInstructions>Diving</Mechanic.DivingInstructions>
+  <!-- Room 6 -->
+  <Mechanic.Diving>Diving suit</Mechanic.Diving>
+  <Mechanic.DivingObjective>Equip a diving suit</Mechanic.DivingObjective>
+  <Mechanic.DivingText>Diving suit protects the wearer from high pressure. Equip one to be able to swim outside the submarine. Make sure the suit has a full oxygen tank attached, otherwise wearer will suffocate.</Mechanic.DivingText>
+  <Mechanic.DivingInstructions>Diving suit protects the wearer from high pressure. Equip one to be able to swim outside the submarine. Make sure the suit has a full oxygen tank attached, otherwise wearer will suffocate.</Mechanic.DivingInstructions>
 
-  <Mechanic.RepairPump>Repair Pump</Mechanic.RepairPump>
-  <Mechanic.RepairPumpObjective>Repair Pump</Mechanic.RepairPumpObjective>
-  <Mechanic.RepairPumpText>Repair Pump</Mechanic.RepairPumpText>
-  <Mechanic.RepairPumpInstructions>Repair Pump</Mechanic.RepairPumpInstructions>
+  <!-- Room 7 -->
+  <Mechanic.RepairPump>Repairing machinery</Mechanic.RepairPump>
+  <Mechanic.RepairPumpObjective>Repair pump</Mechanic.RepairPumpObjective>
+  <Mechanic.RepairPumpText>Machines and junction boxes require maintenance. Without it, they will break and stop working. Repair mechanical machines by equipping a wrench and interacting with the broken machine.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpText>
+  <Mechanic.RepairPumpInstructions>Machines and junction boxes require maintenance. Without it, they will break and stop working. Repair mechanical machines by equipping a wrench and interacting with the broken machine.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpInstructions>
 
-  <Mechanic.RepairSubmarine>Repair Submarine</Mechanic.RepairSubmarine>
-  <Mechanic.RepairSubmarineObjective>Repair Submarine</Mechanic.RepairSubmarineObjective>
+  <!-- Submarine -->
+  <Mechanic.RepairSubmarine>Submarine maintenance</Mechanic.RepairSubmarine>
+  <Mechanic.RepairSubmarineObjective>Repair the engine and the ballast pumps</Mechanic.RepairSubmarineObjective>
   <Mechanic.RepairSubmarineText>Repair Submarine</Mechanic.RepairSubmarineText>
   <Mechanic.RepairSubmarineInstructions>Repair Submarine</Mechanic.RepairSubmarineInstructions>
-
 </infotexts>

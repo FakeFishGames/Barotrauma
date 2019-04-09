@@ -31,7 +31,7 @@ namespace Barotrauma
 
         private bool useTextOnRightSide = false;
 
-        public struct TextSettings
+        public class TextSettings
         {
             public string Text;
             public int Width;
@@ -43,7 +43,7 @@ namespace Barotrauma
             }
         }
 
-        public struct VideoSettings
+        public class VideoSettings
         {
             public string File;
 
@@ -148,7 +148,7 @@ namespace Barotrauma
 
             currentVideo = CreateVideo(scaledVideoResolution);
             title.Text = TextManager.Get(contentId);
-            textContent.Text = textSettings.Text;
+            textContent.Text = textSettings != null ? textSettings.Text : string.Empty;
             objectiveText.Text = objective;
 
             AdjustFrames(videoSettings, textSettings);
@@ -174,7 +174,8 @@ namespace Barotrauma
             title.TextScale = textContent.TextScale = objectiveText.TextScale = objectiveTitle.TextScale = GUI.Scale;
 
             int scaledBorderSize = (int)(borderSize * GUI.Scale);
-            int scaledTextWidth = useTextOnRightSide ? (int)(textSettings.Width * GUI.Scale) : scaledVideoResolution.X / 2;
+            int scaledTextWidth = 0;
+            if (textSettings != null) scaledTextWidth = useTextOnRightSide ? (int)(textSettings.Width * GUI.Scale) : scaledVideoResolution.X / 2;
             int scaledTitleHeight = (int)(titleHeight * GUI.Scale);
             int scaledTextHeight = (int)(textHeight * GUI.Scale);
             int scaledObjectiveFrameHeight = (int)(objectiveFrameHeight * GUI.Scale);
@@ -189,7 +190,7 @@ namespace Barotrauma
             title.RectTransform.NonScaledSize += new Point(scaledTextWidth, scaledTitleHeight);
             title.RectTransform.AbsoluteOffset = new Point((int)(5 * GUI.Scale), (int)(10 * GUI.Scale));
 
-            if (!string.IsNullOrEmpty(textSettings.Text))
+            if (textSettings != null && !string.IsNullOrEmpty(textSettings.Text))
             {
                 textSettings.Text = ToolBox.WrapText(textSettings.Text, scaledTextWidth, GUI.Font);
                 int wrappedHeight = textSettings.Text.Split('\n').Length * scaledTextHeight;
@@ -226,17 +227,26 @@ namespace Barotrauma
                 objectiveTitle.Visible = objectiveText.Visible = false;
             }
 
-            if (useTextOnRightSide)
+            if (textSettings != null)
             {
-                int totalFrameWidth = videoFrame.Rect.Width + textFrame.Rect.Width + scaledBorderSize * 2;
-                int xOffset = videoFrame.Rect.Width / 2 + scaledBorderSize - (videoFrame.Rect.Width / 2 - textFrame.Rect.Width / 2);
-                videoFrame.RectTransform.AbsoluteOffset = new Point(-xOffset, (int)(50 * GUI.Scale));
+                if (useTextOnRightSide)
+                {
+                    int totalFrameWidth = videoFrame.Rect.Width + textFrame.Rect.Width + scaledBorderSize * 2;
+                    int xOffset = videoFrame.Rect.Width / 2 + scaledBorderSize - (videoFrame.Rect.Width / 2 - textFrame.Rect.Width / 2);
+                    videoFrame.RectTransform.AbsoluteOffset = new Point(-xOffset, (int)(50 * GUI.Scale));
+                }
+                else
+                {
+                    int totalFrameHeight = videoFrame.Rect.Height + textFrame.Rect.Height + scaledBorderSize * 2;
+                    int yOffset = videoFrame.Rect.Height / 2 + scaledBorderSize - (videoFrame.Rect.Height / 2 - textFrame.Rect.Height / 2);
+                    videoFrame.RectTransform.AbsoluteOffset = new Point(0, -yOffset);
+                }
             }
             else
             {
-                int totalFrameHeight = videoFrame.Rect.Height + textFrame.Rect.Height + scaledBorderSize * 2;
-                int yOffset = videoFrame.Rect.Height / 2 + scaledBorderSize - (videoFrame.Rect.Height / 2 - textFrame.Rect.Height / 2);
-                videoFrame.RectTransform.AbsoluteOffset = new Point(0, -yOffset);
+                int totalFrameWidth = videoFrame.Rect.Width;
+                int xOffset = videoFrame.Rect.Width / 2;
+                videoFrame.RectTransform.AbsoluteOffset = new Point(-xOffset, (int)(50 * GUI.Scale));
             }
 
             if (okButton != null)

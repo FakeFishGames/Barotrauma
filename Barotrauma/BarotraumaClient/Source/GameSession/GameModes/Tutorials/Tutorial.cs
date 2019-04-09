@@ -23,7 +23,7 @@ namespace Barotrauma.Tutorials
         private TutorialType tutorialType = TutorialType.None;
 
         protected VideoPlayer videoPlayer;
-        protected enum ContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
+        protected enum TutorialContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
         protected string playableContentPath;
         protected Point screenResolution;
         protected float prevUIScale;
@@ -39,12 +39,13 @@ namespace Barotrauma.Tutorials
         {
             public string Id;
             public string Objective;
-            public ContentTypes ContentType;
+            public TutorialContentTypes ContentType;
             public XElement TextContent;
             public XElement VideoContent;
             public bool IsTriggered;
             public GUIButton ReplayButton;
             public GUITextBlock LinkedTitle, LinkedText;
+            public object[] Args;
 
             public TutorialSegment(XElement config)
             {
@@ -55,14 +56,14 @@ namespace Barotrauma.Tutorials
 
                 switch (ContentType)
                 {
-                    case ContentTypes.None:
+                    case TutorialContentTypes.None:
                         break;
-                    case ContentTypes.Video:
-                    case ContentTypes.ManualVideo:
+                    case TutorialContentTypes.Video:
+                    case TutorialContentTypes.ManualVideo:
                         VideoContent = config.Element("Video");
                         TextContent = config.Element("Text");
                         break;
-                    case ContentTypes.TextOnly:
+                    case TutorialContentTypes.TextOnly:
                         TextContent = config.Element("Text");
                         break;
                 }
@@ -242,6 +243,7 @@ namespace Barotrauma.Tutorials
             Inventory.draggingItem = null;
             ContentRunning = true;
             activeContentSegment = segments[index];
+            segments[index].Args = args;
 
             string tutorialText = TextManager.GetFormatted(activeContentSegment.TextContent.GetAttributeString("tag", ""), true, args);
             string objectiveText = string.Empty;
@@ -266,25 +268,25 @@ namespace Barotrauma.Tutorials
 
             switch (activeContentSegment.ContentType)
             {
-                case ContentTypes.None:
+                case TutorialContentTypes.None:
                     break;
-                case ContentTypes.Video:
+                case TutorialContentTypes.Video:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                          activeContentSegment.TextContent.GetAttributeInt("width", 300),
-                          activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                          activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, () => LoadVideo(activeContentSegment));
+                              activeContentSegment.TextContent.GetAttributeInt("width", 300),
+                              activeContentSegment.TextContent.GetAttributeInt("height", 80),
+                              activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, () => LoadVideo(activeContentSegment));
                     break;
-                case ContentTypes.ManualVideo:
+                case TutorialContentTypes.ManualVideo:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                        activeContentSegment.TextContent.GetAttributeInt("width", 300),
-                        activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment);
+                            activeContentSegment.TextContent.GetAttributeInt("width", 300),
+                            activeContentSegment.TextContent.GetAttributeInt("height", 80),
+                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, () => ContentRunning = false, () => LoadVideo(activeContentSegment, false));
                     break;
-                case ContentTypes.TextOnly:
+                case TutorialContentTypes.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                                              activeContentSegment.TextContent.GetAttributeInt("width", 300),
-                                              activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                                              activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment);
+                            activeContentSegment.TextContent.GetAttributeInt("width", 300),
+                            activeContentSegment.TextContent.GetAttributeInt("height", 80),
+                            activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment);
                     break;
             }
         }
@@ -307,7 +309,7 @@ namespace Barotrauma.Tutorials
 
             for (int i = 0; i < activeObjectives.Count; i++)
             {
-                CreateObjectiveGUI(activeObjectives[i], i);
+                CreateObjectiveGUI(activeObjectives[i], i, activeObjectives[i].ContentType);
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
@@ -318,7 +320,7 @@ namespace Barotrauma.Tutorials
         {
             if (!string.IsNullOrEmpty(activeContentSegment.Objective))
             {
-                AddNewObjective(activeContentSegment);
+                AddNewObjective(activeContentSegment, activeContentSegment.ContentType);
             }
 
             activeContentSegment = null;
@@ -335,20 +337,27 @@ namespace Barotrauma.Tutorials
             return activeObjectives.Contains(segment);
         }
 
-        protected void AddNewObjective(TutorialSegment segment)
+        protected void AddNewObjective(TutorialSegment segment, TutorialContentTypes type)
         {
             activeObjectives.Add(segment);
-            CreateObjectiveGUI(segment, activeObjectives.Count - 1);
+            CreateObjectiveGUI(segment, activeObjectives.Count - 1, type);
         }
 
-        private void CreateObjectiveGUI(TutorialSegment segment, int index)
+        private void CreateObjectiveGUI(TutorialSegment segment, int index, TutorialContentTypes type)
         {
             Point replayButtonSize = new Point((int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).X * GUI.Scale), (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f * GUI.Scale));
 
             segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
             {
-                ReplaySegmentVideo(segment);
+                if (type != TutorialContentTypes.ManualVideo)
+                {
+                    ReplaySegmentVideo(segment);
+                }
+                else
+                {
+                    ShowSegmentText(segment);
+                }
                 return true;
             };
 
@@ -368,6 +377,18 @@ namespace Barotrauma.Tutorials
             if (ContentRunning) return;
             ContentRunning = true;
             videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
+        }
+
+        private void ShowSegmentText(TutorialSegment segment)
+        {
+            Inventory.draggingItem = null;
+            ContentRunning = true;
+
+            string tutorialText = TextManager.GetFormatted(segment.TextContent.GetAttributeString("tag", ""), true, segment.Args);
+            infoBox = CreateInfoFrame(TextManager.Get(segment.Id), tutorialText,
+            segment.TextContent.GetAttributeInt("width", 300),
+            segment.TextContent.GetAttributeInt("height", 80),
+            segment.TextContent.GetAttributeString("anchor", "Center"), true, () => ContentRunning = false, () => LoadVideo(segment, false));
         }
 
         protected void RemoveCompletedObjective(TutorialSegment objective)
@@ -412,7 +433,7 @@ namespace Barotrauma.Tutorials
             return true;
         }
 
-        protected GUIComponent CreateInfoFrame(string title, string text, int width = 300, int height = 80, string anchorStr = "", bool hasButton = false, Action callback = null)
+        protected GUIComponent CreateInfoFrame(string title, string text, int width = 300, int height = 80, string anchorStr = "", bool hasButton = false, Action callback = null, Action showVideo = null)
         {
             if (hasButton) height += 30;
 
@@ -455,6 +476,19 @@ namespace Barotrauma.Tutorials
                 {
                     OnClicked = CloseInfoFrame
                 };
+
+                if (showVideo != null)
+                {
+                    var videoButton = new GUIButton(new RectTransform(new Point(160, 50), infoBlock.RectTransform, Anchor.BottomLeft, Pivot.TopCenter) { AbsoluteOffset = new Point(0, -10) },
+                    "Video")
+                    {
+                        OnClicked = (GUIButton button, object obj) =>
+                        {
+                            showVideo();
+                            return true;
+                        }
+                    };
+                }
             }
 
             GUI.PlayUISound(GUISoundType.UIMessage);
@@ -464,9 +498,16 @@ namespace Barotrauma.Tutorials
         #endregion
 
         #region Video
-        protected void LoadVideo(TutorialSegment segment)
+        protected void LoadVideo(TutorialSegment segment, bool showText = true)
         {
-            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, segment.Objective, StopCurrentContentSegment);
+            if (showText)
+            {
+                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, segment.Objective, StopCurrentContentSegment);
+            }
+            else
+            {
+                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), null, segment.Id, true, segment.Objective, null);
+            }
         }
         #endregion
     }
