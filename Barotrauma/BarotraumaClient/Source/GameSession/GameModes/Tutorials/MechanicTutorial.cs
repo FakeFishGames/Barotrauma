@@ -76,6 +76,7 @@ namespace Barotrauma.Tutorials
         // Variables
         private const float waterVolumeBeforeOpening = 5f;
         private string radioSpeakerName;
+        private Character mechanic;
 
         public MechanicTutorial(XElement element) : base(element)
         {
@@ -87,6 +88,13 @@ namespace Barotrauma.Tutorials
             base.Start();
 
             radioSpeakerName = TextManager.Get("Mechanic.Radio.Speaker");
+            mechanic = Character.Controlled;
+
+            var toolbox = mechanic.Inventory.FindItemByIdentifier("toolbox");
+            mechanic.Inventory.RemoveItem(toolbox);
+
+            var crowbar = mechanic.Inventory.FindItemByIdentifier("crowbar");
+            mechanic.Inventory.RemoveItem(crowbar);
 
             // Other tutorial items
             tutorial_securityFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoor")).GetComponent<Door>();
@@ -125,7 +133,7 @@ namespace Barotrauma.Tutorials
             mechanic_brokenWall_1.SpriteColor = Color.White;
             for (int i = 0; i < mechanic_brokenWall_1.SectionCount; i++)
             {
-                mechanic_brokenWall_1.AddDamage(i, 50);
+                mechanic_brokenWall_1.AddDamage(i, 99);
             }
             mechanic_brokenhull_1 = mechanic_brokenWall_1.Sections[0].gap.FlowTargetHull;
 
@@ -164,7 +172,7 @@ namespace Barotrauma.Tutorials
             mechanic_brokenWall_2.SpriteColor = Color.White;
             for (int i = 0; i < mechanic_brokenWall_2.SectionCount; i++)
             {
-                mechanic_brokenWall_2.AddDamage(i, 500);
+                mechanic_brokenWall_2.AddDamage(i, 250);
             }
             mechanic_brokenhull_2 = mechanic_brokenWall_2.Sections[0].gap.FlowTargetHull;
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
@@ -211,7 +219,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
             SetHighlight(mechanic_equipmentCabinet.Item, false);
-            while (!Character.Controlled.HasEquippedItem("divingmask") || !Character.Controlled.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
+            while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
             RemoveCompletedObjective(segments[1]);
             SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
@@ -226,7 +234,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(3); // Pump objective
             SetHighlight(mechanic_workingPump.Item, true);
-            while (mechanic_workingPump.FlowPercentage >= 0) yield return null; // Highlight until draining
+            while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive) yield return null; // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
             while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening) yield return null; // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
@@ -241,13 +249,13 @@ namespace Barotrauma.Tutorials
             while (!mechanic_craftingObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(4); // Deconstruct
             SetHighlight(mechanic_deconstructor.Item, true);
-            while (Character.Controlled.Inventory.FindItemByIdentifier("aluminium") == null) yield return null; // Wait until deconstructed
+            while (mechanic.Inventory.FindItemByIdentifier("aluminium") == null) yield return null; // Wait until deconstructed
             SetHighlight(mechanic_deconstructor.Item, false);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(5); // Fabricate
             SetHighlight(mechanic_fabricator.Item, true);
-            while (Character.Controlled.Inventory.FindItemByIdentifier("extinguisher") == null) yield return null; // Wait until extinguisher is created
+            while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null) yield return null; // Wait until extinguisher is created
             RemoveCompletedObjective(segments[5]);
             SetHighlight(mechanic_deconstructor.Item, false);
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, true);
@@ -267,7 +275,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_divingSuitContainer.Item, true);
             while (!IsSelectedItem(mechanic_divingSuitContainer.Item)) yield return null;
             SetHighlight(mechanic_divingSuitContainer.Item, false);
-            while (!Character.Controlled.HasEquippedItem("divingsuit")) yield return null;
+            while (!mechanic.HasEquippedItem("divingsuit")) yield return null;
             RemoveCompletedObjective(segments[7]);
             SetDoorAccess(mechanic_sixthDoor, mechanic_sixthDoorLight, true);
 
@@ -277,7 +285,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_brokenWall_2, false);
             TriggerTutorialSegment(8); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
-            while (!mechanic_brokenPump.Item.IsFullCondition && mechanic_brokenPump.FlowPercentage >= 0) yield return null;
+            while (!mechanic_brokenPump.Item.IsFullCondition || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive) yield return null;
             RemoveCompletedObjective(segments[8]);
             SetHighlight(mechanic_brokenPump.Item, false);
             while (mechanic_brokenhull_2.WaterPercentage > waterVolumeBeforeOpening) yield return null;
@@ -329,7 +337,7 @@ namespace Barotrauma.Tutorials
 
         private bool IsSelectedItem(Item item)
         {
-            return Character.Controlled?.SelectedConstruction == item;
+            return mechanic?.SelectedConstruction == item;
         }
 
         private bool WallHasDamagedSections(Structure wall)
