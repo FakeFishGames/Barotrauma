@@ -554,7 +554,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool HasRequiredContainedItems(bool addMessage)
+        public bool HasRequiredContainedItems(bool addMessage, string msg = null)
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
@@ -564,7 +564,11 @@ namespace Barotrauma.Items.Components
                 if (!item.OwnInventory.Items.Any(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)))
                 {
 #if CLIENT
-                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+                    msg = msg ?? ri.Msg;
+                    if (addMessage && !string.IsNullOrEmpty(msg))
+                    {
+                        GUI.AddMessage(msg, Color.Red);
+                    }
 #endif
                     return false;
                 }
@@ -573,7 +577,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public virtual bool HasRequiredItems(Character character, bool addMessage)
+        public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (!requiredItems.Any()) return true;
             if (character.Inventory == null) return false;
@@ -585,7 +589,11 @@ namespace Barotrauma.Items.Components
                     if (character.SelectedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
                     {
 #if CLIENT
-                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+                        msg = msg ?? ri.Msg;
+                        if (addMessage && !string.IsNullOrEmpty(msg))
+                        {
+                            GUI.AddMessage(msg, Color.Red);
+                        }
 #endif
                         return false;
                     }
@@ -598,7 +606,11 @@ namespace Barotrauma.Items.Components
                     if (character.Inventory.Items.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
                     {
 #if CLIENT
-                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+                        msg = msg ?? ri.Msg;
+                        if (addMessage && !string.IsNullOrEmpty(msg))
+                        {
+                            GUI.AddMessage(msg, Color.Red);
+                        }
 #endif
                         return false;
                     }

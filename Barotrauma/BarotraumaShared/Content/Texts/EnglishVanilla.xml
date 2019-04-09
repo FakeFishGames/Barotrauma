@@ -1833,7 +1833,6 @@
   <EntityName.automaticwindoweddoor>Automatic Windowed Door</EntityName.automaticwindoweddoor>
   <EntityDescription.automaticwindoweddoor>A door that closes automatically after 5 seconds if there's no-one in the doorway.</EntityDescription.automaticwindoweddoor>
   <EntityName.door>Door</EntityName.door>
-  <EntityDescription.door>A pre-wired door with two buttons.</EntityDescription.door>
   <EntityName.largedivinggearcabinet>Large Diving Gear Cabinet</EntityName.largedivinggearcabinet>
   <EntityDescription.largedivinggearcabinet>A cabinet loaded with diving masks, oxygen tanks, underwater scooters, handheld sonars and flares.</EntityDescription.largedivinggearcabinet>
   <EntityName.largedivingsuitcabinet>Large Diving Suit Cabinet</EntityName.largedivingsuitcabinet>
@@ -2726,7 +2725,7 @@
   <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
   <ItemMsgRewireScrewdriver>[[use]] Rewire (Screwdriver)</ItemMsgRewireScrewdriver>
   <ItemMsgDetachWrench>[[use]] Detach (Wrench)</ItemMsgDetachWrench>
-  <ItemMsgForceOpenCrowbar>[[use]] Force open (Crowbar)</ItemMsgForceOpenCrowbar>
+  <ItemMsgForceOpenCrowbar>[[use]] Force open (Crowbar)</ItemMsgForceOpenCrowbar> 
   <ItemMsgRepairScrewdriver>[[use]] Repair (Screwdriver)</ItemMsgRepairScrewdriver>
   <ItemMsgRepairWeldingTool>[[shoot]] Repair (Welding Tool)</ItemMsgRepairWeldingTool>
   <ItemMsgRepairWrench>[[use]] Repair (Wrench)</ItemMsgRepairWrench>
@@ -2747,6 +2746,8 @@
   <ReactorCommandInstructions>-Find an electrical engineer in the crew list\n-Click on "Operate reactor", then "Power up"\n\n(Review instructions by clicking on the objective list on the right)</ReactorCommandInstructions>
 
   <ReactorUseText>This is the reactor. You should leave operating this to a professional, like an engineer. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
+
+  <EntityDescription.door>A door that can be manually operated.</EntityDescription.door>
 
   <!-- New Additions -->
   
@@ -2770,5 +2771,8 @@
   <SetLegacyBindingsToolTip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</SetLegacyBindingsToolTip>
 
   <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
+
+  <ItemMsgOpen>[[select]] Open</ItemMsgOpen>
+  <DoorMsgCannotOpen>The door requires special equipment to open. It's probably wired to a button or a remote controller.</DoorMsgCannotOpen>
   
 </infotexts>
