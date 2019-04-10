@@ -50,6 +50,7 @@ namespace Barotrauma.Tutorials
         // Room 6
         private MotionSensor mechanic_divingSuitObjectiveSensor;
         private ItemContainer mechanic_divingSuitContainer;
+        private ItemContainer mechanic_oxygenContainer;
         private Door mechanic_sixthDoor;
         private LightComponent mechanic_sixthDoorLight;
 
@@ -152,6 +153,21 @@ namespace Barotrauma.Tutorials
             // Room 6
             mechanic_divingSuitObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_divingsuitobjectivesensor")).GetComponent<MotionSensor>();
             mechanic_divingSuitContainer = Item.ItemList.Find(i => i.HasTag("mechanic_divingsuitcontainer")).GetComponent<ItemContainer>();
+            for (int i = 0; i < mechanic_divingSuitContainer.Inventory.Items.Length; i++)
+            {
+                foreach (ItemComponent ic in mechanic_divingSuitContainer.Inventory.Items[i].Components)
+                {
+                    ic.CanBePicked = true;
+                }                    
+            }
+            mechanic_oxygenContainer = Item.ItemList.Find(i => i.HasTag("mechanic_oxygencontainer")).GetComponent<ItemContainer>();
+            for (int i = 0; i < mechanic_oxygenContainer.Inventory.Items.Length; i++)
+            {
+                foreach (ItemComponent ic in mechanic_oxygenContainer.Inventory.Items[i].Components)
+                {
+                    ic.CanBePicked = true;
+                }
+            }
             mechanic_sixthDoor = Item.ItemList.Find(i => i.HasTag("mechanic_sixthdoor")).GetComponent<Door>();
             mechanic_sixthDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_sixthdoorlight")).GetComponent<LightComponent>();
 
