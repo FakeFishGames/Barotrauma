@@ -211,32 +211,24 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        private string accessDeniedTxt = TextManager.Get("AccessDenied");
-        private bool hasIdCard;
+        private string text = TextManager.Get("DoorMsgCannotOpen");
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (item.Condition <= RepairThreshold) return true; //For repairing
 
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            hasIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
-            Msg = hasIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
-            ParseMsg();
-
             //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
-            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg ?? accessDeniedTxt) : canBePicked;
+            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg ?? text) : canBePicked;
         }
 
         public override bool Pick(Character picker)
         {
-            if (item.Condition <= RepairThreshold) { return true; }
-            if (HasRequiredItems(picker, false) && hasIdCard) { return false; }
-            return base.Pick(picker);
+            return item.Condition <= RepairThreshold ? true : base.Pick(picker);
         }
 
         public override bool OnPicked(Character picker)
         {
             if (item.Condition <= RepairThreshold) return true; //repairs
-            if (requiredItems.Any() && !hasIdCard)
+            if (requiredItems.Any())
             {
                 ForceOpen(ActionType.OnPicked);
             }
@@ -255,19 +247,9 @@ namespace Barotrauma.Items.Components
         {
             //can only be selected if the item is broken
             if (item.Condition <= RepairThreshold) return true; //repairs
-            bool hasRequiredItems = HasRequiredItems(character, false);
-            if (requiredItems.None() || hasRequiredItems && hasIdCard)
+            if (requiredItems.None())
             {
-                float originalPickingTime = PickingTime;
-                PickingTime = 0;
                 ForceOpen(ActionType.OnUse);
-                PickingTime = originalPickingTime;
-            }
-            else if (hasRequiredItems)
-            {
-#if CLIENT
-                GUI.AddMessage(accessDeniedTxt, Color.Red);
-#endif
             }
             return false;
         }
