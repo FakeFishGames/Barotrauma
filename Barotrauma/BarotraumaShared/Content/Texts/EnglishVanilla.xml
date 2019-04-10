@@ -2811,12 +2811,12 @@
   <Mechanic.DrainInstructions>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it and flip the switch to “on” position.</Mechanic.DrainInstructions>
 
   <!-- Room 4 -->
-  <Mechanic.Deconstruct>Deconstructor</Mechanic.Deconstruct>
+  <Mechanic.Deconstruct>Crafting, part 1</Mechanic.Deconstruct>
   <Mechanic.DeconstructObjective>Deconstruct an extra oxygen tank</Mechanic.DeconstructObjective>
   <Mechanic.DeconstructText>The fabricator is a machine that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructText>
   <Mechanic.DeconstructInstructions>The fabricator is a machine that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructInstructions>
 
-  <Mechanic.Fabricate>Fabricator</Mechanic.Fabricate>
+  <Mechanic.Fabricate>Crafting, part 2</Mechanic.Fabricate>
   <Mechanic.FabricateObjective>Fabricate a fire extinguisher</Mechanic.FabricateObjective>
   <Mechanic.FabricateText>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the machine with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s bottom inventory.</Mechanic.FabricateText>
   <Mechanic.FabricateInstructions>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the machine with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s bottom inventory.</Mechanic.FabricateInstructions>
