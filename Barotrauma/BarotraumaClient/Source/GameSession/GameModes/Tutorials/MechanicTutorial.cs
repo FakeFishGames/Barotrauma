@@ -222,9 +222,10 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
             SetHighlight(mechanic_firstButton, true);
             while (!mechanic_firstDoor.IsOpen) yield return null;
-            RemoveCompletedObjective(segments[0]);
             SetHighlight(mechanic_firstButton, false);
-
+            yield return new WaitForSeconds(1.5f);
+            RemoveCompletedObjective(segments[0]);
+            
             // Room 2
             yield return new WaitForSeconds(2.5f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
@@ -234,6 +235,7 @@ namespace Barotrauma.Tutorials
             while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
             SetHighlight(mechanic_equipmentCabinet.Item, false);
             while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null) yield return null; // Wait until looted
+            yield return new WaitForSeconds(1.5f);
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
 
@@ -254,13 +256,14 @@ namespace Barotrauma.Tutorials
             while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening) yield return null; // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
+            yield return new WaitForSeconds(2f);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
+            yield return new WaitForSeconds(1f);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
 
             // Room 4
             while (!mechanic_thirdDoor.IsOpen) yield return null;
             mechanic_fire = new DummyFireSource(new Vector2(20f, 2f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(1f);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
             while (!mechanic_craftingObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(4); // Deconstruct
             SetHighlight(mechanic_deconstructor.Item, true);
