@@ -244,6 +244,7 @@ namespace Barotrauma
         {
             if (waitingForRefresh) return false;
             serverList.ClearChildren();
+            serverPreview.ClearChildren();
 
             ipBox.Text = null;
             joinButton.Enabled = false;
