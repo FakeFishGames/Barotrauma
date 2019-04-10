@@ -232,9 +232,8 @@ namespace Barotrauma.Tutorials
             while (!mechanic_equipmentObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(1); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
-            while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
-            SetHighlight(mechanic_equipmentCabinet.Item, false);
             while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null) yield return null; // Wait until looted
+            SetHighlight(mechanic_equipmentCabinet.Item, false);
             yield return new WaitForSeconds(1.5f);
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);

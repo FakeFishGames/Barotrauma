@@ -2847,6 +2847,7 @@
   <!-- Engineer Tutorial -->
   <!-- Radio -->
   <Engineer.Radio.WakeUp>Get your ass up! We need power!</Engineer.Radio.WakeUp>
+  <Engineer.Radio.Equipment>That last impact cut power to half of the outpost. I want you to grab what you need to get us online again.</Engineer.Radio.Equipment>
   <Engineer.Radio.ReactorStable>We seem to be stable now. Some junction boxes blew their fuses and pumps aren’t working, you should go see what you can do about it.</Engineer.Radio.ReactorStable>
   <Engineer.Radio.FaultyWiring>Some of the wiring seems to be faulty. Find some wire and do some quick fixing, otherwise we’re without power.</Engineer.Radio.FaultyWiring>
   <Engineer.Radio.ChangeOfPlans>Change of plans. Come to the sub. We’re gonna blow this joint.</Engineer.Radio.ChangeOfPlans>
