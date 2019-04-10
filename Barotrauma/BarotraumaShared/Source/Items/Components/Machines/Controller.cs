@@ -205,8 +205,8 @@ namespace Barotrauma.Items.Components
                 cam.TargetPos = focusTarget.WorldPosition;
 
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime * 10.0f);
+                HideHUDs(true);
             }
-            HideHUDs(true);
 #endif
 
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
@@ -274,7 +274,10 @@ namespace Barotrauma.Items.Components
             if (character.SelectedConstruction == this.item) character.SelectedConstruction = null;
 
             character.AnimController.Anim = AnimController.Animation.None;
-            HideHUDs(false);
+            if (character == Character.Controlled)
+            {
+                HideHUDs(false);
+            }
         }
 
         public override bool Select(Character activator)
