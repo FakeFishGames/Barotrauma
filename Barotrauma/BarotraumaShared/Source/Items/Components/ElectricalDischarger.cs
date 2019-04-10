@@ -34,6 +34,20 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override bool IsActive
+        {
+            get { return base.IsActive; }
+            set
+            {
+                base.IsActive = value;
+                if (!value)
+                {
+                    nodes.Clear();
+                    charactersInRange.Clear();
+                }
+            }
+        }
+
         [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float Range
         {
@@ -126,12 +140,17 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                nodes.Clear();
-                charactersInRange.Clear();
                 IsActive = false;
             }
 
             voltage = 0.0f;
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            base.UpdateBroken(deltaTime, cam);
+            nodes.Clear();
+            charactersInRange.Clear();
         }
 
         private void Discharge()
