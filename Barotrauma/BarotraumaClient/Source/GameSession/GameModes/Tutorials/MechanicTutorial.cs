@@ -71,7 +71,7 @@ namespace Barotrauma.Tutorials
         private Color accessibleColor = Color.Green;
 
         // Variables
-        private const float waterVolumeBeforeOpening = 5f;
+        private const float waterVolumeBeforeOpening = 15f;
         private string radioSpeakerName;
         private Character mechanic;
 
@@ -215,15 +215,16 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
             SetHighlight(mechanic_equipmentCabinet.Item, false);
-            while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
+            while (mechanic.Inventory.FindItemByTag("divingmask") == null || mechanic.Inventory.FindItemByTag("weldingtool") == null || mechanic.Inventory.FindItemByTag("wrench") == null) yield return null; // Wait until looted
             yield return new WaitForSeconds(2.5f);
             RemoveCompletedObjective(segments[1]);
-            SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
 
             // Room 3
             while (!mechanic_weldingObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(2); // Welding objective
+            while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
+            SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
             SetHighlight(mechanic_brokenWall_1, true);
             while (WallHasDamagedSections(mechanic_brokenWall_1)) yield return null; // Highlight until repaired
             RemoveCompletedObjective(segments[2]);
