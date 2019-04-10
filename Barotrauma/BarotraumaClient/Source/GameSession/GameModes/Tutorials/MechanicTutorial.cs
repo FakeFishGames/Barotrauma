@@ -185,7 +185,6 @@ namespace Barotrauma.Tutorials
             mechanic_brokenhull_2 = mechanic_brokenWall_2.Sections[0].gap.FlowTargetHull;
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
 
-            return;
             // Submarine
             tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
             mechanic_submarineEngine = Item.ItemList.Find(i => i.HasTag("mechanic_submarineengine")).GetComponent<Engine>();
@@ -311,7 +310,6 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
 
 
-            while (true) yield return null;
             // Submarine
             while (!tutorial_enteredSubmarineSensor.MotionDetected) yield return null;
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Submarine"), ChatMessageType.Radio, null);
