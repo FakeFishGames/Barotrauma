@@ -1619,7 +1619,12 @@ namespace Barotrauma
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
                
                 Color color = Color.Red;
-                if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
+                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
+                if (hasRequiredSkillsAndItems)
+                {
+                    color = Color.Orange;
+                }
+                // TODO: Blue color if the item is selected
 
                 texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }

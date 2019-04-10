@@ -10,6 +10,7 @@ using System.Xml.Linq;
 #if CLIENT
 using Barotrauma.Lights;
 #endif
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -210,12 +211,13 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override bool HasRequiredItems(Character character, bool addMessage)
+        private string text = TextManager.Get("DoorMsgCannotOpen");
+        public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (item.Condition <= RepairThreshold) return true; //For repairing
 
             //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
-            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage) : canBePicked;
+            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg ?? text) : canBePicked;
         }
 
         public override bool Pick(Character picker)
@@ -226,18 +228,27 @@ namespace Barotrauma.Items.Components
         public override bool OnPicked(Character picker)
         {
             if (item.Condition <= RepairThreshold) return true; //repairs
+            if (requiredItems.Any())
+            {
+                ForceOpen(ActionType.OnPicked);
+            }
+            return false;
+        }
 
+        private void ForceOpen(ActionType actionType)
+        {
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true); //crowbar function
 #if CLIENT
-            PlaySound(ActionType.OnPicked, item.WorldPosition, picker);
+            PlaySound(actionType, item.WorldPosition, picker);
 #endif
-            return false;
         }
 
         public override bool Select(Character character)
         {
             //can only be selected if the item is broken
-            return item.Condition <= RepairThreshold;
+            if (item.Condition <= RepairThreshold) return true; //repairs
+            ForceOpen(ActionType.OnUse);
+            return false;
         }
 
         public override void Update(float deltaTime, Camera cam)
