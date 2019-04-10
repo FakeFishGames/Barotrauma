@@ -109,6 +109,62 @@ namespace Barotrauma.Networking
 
             // right column -----------------------------------------------------------------------------
 
+            /*var playerCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListPlayers"));
+            new GUITextBlock(new RectTransform(Vector2.One, playerCount.RectTransform), PlayerCount + "/" + MaxPlayers, textAlignment: Alignment.Right);
+
+
+            new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Round running")
+            {
+                Selected = GameStarted,
+                CanBeFocused = false
+            };*/
+
+            var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("GameMode"));
+            new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform), string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode, textAlignment: Alignment.Right);
+
+           var traitors = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("Traitors"));
+            new GUITextBlock(new RectTransform(Vector2.One, traitors.RectTransform), !TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString(), textAlignment: Alignment.Right);
+
+
+            var subSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListSubSelection"));
+            new GUITextBlock(new RectTransform(Vector2.One, subSelection.RectTransform), !SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString(), textAlignment: Alignment.Right);
+
+            var modeSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListModeSelection"));
+            new GUITextBlock(new RectTransform(Vector2.One, modeSelection.RectTransform), (!ModeSelectionMode.HasValue ? "Unknown" : ModeSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
+
+            var allowSpectating = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListAllowSpectating"))
+            {
+                CanBeFocused = false
+            };
+            if (!AllowSpectating.HasValue)
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), allowSpectating.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
+            else
+                allowSpectating.Selected = AllowSpectating.Value;
+
+            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Allow respawn")
+            {
+                CanBeFocused = false
+            };
+            if (!AllowRespawn.HasValue)
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), allowRespawn.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
+            else
+                allowRespawn.Selected = AllowRespawn.Value;
+
+            /*new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListHasPassword"))
+            {
+                Selected = HasPassword,
+                CanBeFocused = false
+            };*/
+
+            var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
+            {
+                CanBeFocused = false
+            };
+            if (!UsingWhiteList.HasValue)
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), usingWhiteList.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
+            else
+                usingWhiteList.Selected = UsingWhiteList.Value;
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnRight.RectTransform),
                 TextManager.Get("ServerListContentPackages"));
 
@@ -178,62 +234,6 @@ namespace Barotrauma.Networking
                     workshopBtn.TextBlock.AutoScale = true;
                 }
             }
-
-            /*var playerCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListPlayers"));
-            new GUITextBlock(new RectTransform(Vector2.One, playerCount.RectTransform), PlayerCount + "/" + MaxPlayers, textAlignment: Alignment.Right);
-
-
-            new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Round running")
-            {
-                Selected = GameStarted,
-                CanBeFocused = false
-            };*/
-
-            var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("GameMode"));
-            new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform), string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode, textAlignment: Alignment.Right);
-
-           var traitors = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("Traitors"));
-            new GUITextBlock(new RectTransform(Vector2.One, traitors.RectTransform), !TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString(), textAlignment: Alignment.Right);
-
-
-            var subSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListSubSelection"));
-            new GUITextBlock(new RectTransform(Vector2.One, subSelection.RectTransform), !SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString(), textAlignment: Alignment.Right);
-
-            var modeSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListModeSelection"));
-            new GUITextBlock(new RectTransform(Vector2.One, modeSelection.RectTransform), (!ModeSelectionMode.HasValue ? "Unknown" : ModeSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
-
-            var allowSpectating = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListAllowSpectating"))
-            {
-                CanBeFocused = false
-            };
-            if (!AllowSpectating.HasValue)
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), allowSpectating.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
-            else
-                allowSpectating.Selected = AllowSpectating.Value;
-
-            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Allow respawn")
-            {
-                CanBeFocused = false
-            };
-            if (!AllowRespawn.HasValue)
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), allowRespawn.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
-            else
-                allowRespawn.Selected = AllowRespawn.Value;
-
-            /*new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListHasPassword"))
-            {
-                Selected = HasPassword,
-                CanBeFocused = false
-            };*/
-
-            var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
-            {
-                CanBeFocused = false
-            };
-            if (!UsingWhiteList.HasValue)
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), usingWhiteList.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
-            else
-                usingWhiteList.Selected = UsingWhiteList.Value;
 
             // -----------------------------------------------------------------------------
 
