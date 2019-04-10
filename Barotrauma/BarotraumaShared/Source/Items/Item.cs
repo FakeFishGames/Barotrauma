@@ -2062,8 +2062,6 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
-            Sprite.ReloadXML();
-            SpriteDepth = Sprite.Depth;
             components.ForEach(c => c.Reset());
         }
 

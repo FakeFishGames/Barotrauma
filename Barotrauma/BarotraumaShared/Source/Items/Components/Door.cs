@@ -212,36 +212,31 @@ namespace Barotrauma.Items.Components
         }
 
         private string accessDeniedTxt = TextManager.Get("AccessDenied");
-        private string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
-        private bool hasValidIdCard;
+        private bool hasIdCard;
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (item.Condition <= RepairThreshold) return true; //For repairing
 
             var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            hasValidIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
-            Msg = hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
+            hasIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
+            Msg = hasIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
             ParseMsg();
-            if (addMessage)
-            {
-                msg = msg ?? (requiredItems.Any(ri => ri.Value.Any(r => r.Identifiers.Contains("idcard"))) ? accessDeniedTxt : cannotOpenText);
-            }
 
             //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
-            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg) : canBePicked;
+            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg ?? accessDeniedTxt) : canBePicked;
         }
 
         public override bool Pick(Character picker)
         {
             if (item.Condition <= RepairThreshold) { return true; }
-            if (HasRequiredItems(picker, false) && hasValidIdCard) { return false; }
+            if (HasRequiredItems(picker, false) && hasIdCard) { return false; }
             return base.Pick(picker);
         }
 
         public override bool OnPicked(Character picker)
         {
             if (item.Condition <= RepairThreshold) return true; //repairs
-            if (requiredItems.Any() && !hasValidIdCard)
+            if (requiredItems.Any() && !hasIdCard)
             {
                 ForceOpen(ActionType.OnPicked);
             }
@@ -261,7 +256,7 @@ namespace Barotrauma.Items.Components
             //can only be selected if the item is broken
             if (item.Condition <= RepairThreshold) return true; //repairs
             bool hasRequiredItems = HasRequiredItems(character, false);
-            if (requiredItems.None() || hasRequiredItems && hasValidIdCard)
+            if (requiredItems.None() || hasRequiredItems && hasIdCard)
             {
                 float originalPickingTime = PickingTime;
                 PickingTime = 0;

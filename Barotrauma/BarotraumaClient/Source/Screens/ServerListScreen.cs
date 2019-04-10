@@ -84,13 +84,6 @@ namespace Barotrauma
 
             var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
 
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), filterHolder.RectTransform), "");
-
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), filterHolder.RectTransform), "");
 
@@ -106,6 +99,58 @@ namespace Barotrauma
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
             filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
+
+            //-------------------------------------------------------------------------------------
+            //right column
+            //-------------------------------------------------------------------------------------
+
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.017f, 1.0f),
+                paddedFrame.RectTransform, Anchor.CenterRight))
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
+
+            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform)) { Stretch = true, RelativeSpacing = 0.02f };
+
+            serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center))
+            {
+                OnSelected = (btn, obj) => {
+                    ServerInfo serverInfo = (ServerInfo)obj;
+
+                    serverInfo.CreatePreviewWindow(serverPreview);
+
+                    return true;
+                }
+            };
+
+            serverList.OnSelected += SelectServer;
+
+            serverPreview = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center));
+
+            columnRelativeWidth = new float[] { 0.04f, 0.02f, 0.044f, 0.77f, 0.02f, 0.075f, 0.06f };
+
+            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), rightColumn.RectTransform), style: null);
+
+            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
+                TextManager.Get("Back"), style: "GUIButtonLarge")
+            {
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+            };
+
+			var refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
+				"", style: "GUIButtonRefresh") {
+
+				ToolTip = TextManager.Get("ServerListRefresh"),
+				OnClicked = RefreshServers
+			};
+
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopRight),
+                TextManager.Get("ServerListJoin"), style: "GUIButtonLarge")
+            {
+                OnClicked = JoinServer,
+                Enabled = false
+            };
 
             //-------------------------------------------------------------------------------------
             //right column
