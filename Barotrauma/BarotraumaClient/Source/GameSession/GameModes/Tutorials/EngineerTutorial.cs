@@ -10,9 +10,7 @@ namespace Barotrauma.Tutorials
     class EngineerTutorial : ScenarioTutorial
     {
         // Other tutorial items
-        private Door tutorial_securityFinalDoor;
         private LightComponent tutorial_securityFinalDoorLight;
-        private Door tutorial_mechanicFinalDoor;
         private LightComponent tutorial_mechanicFinalDoorLight;
 
         // Room 1
@@ -22,19 +20,19 @@ namespace Barotrauma.Tutorials
         // Room 2
         private MotionSensor engineer_equipmentObjectiveSensor;
         private ItemContainer engineer_equipmentCabinet;
-        private Door engineer_firstDoor;
+        private Item engineer_firstDoorButton;
         private LightComponent engineer_firstDoorLight;
 
         // Room 3
         private MotionSensor engineer_reactorObjectiveSensor;
         private Reactor engineer_reactor;
-        private Door engineer_secondDoor;
+        private Item engineer_secondDoorButton;
         private LightComponent engineer_secondDoorLight;
 
         // Room 4
         private MotionSensor engineer_repairJunctionBoxObjectiveSensor;
         private Item engineer_brokenJunctionBox;
-        private Door engineer_thirdDoor;
+        private Item engineer_thirdDoorButton;
         private LightComponent engineer_thirdDoorLight;
 
         // Room 5
@@ -43,13 +41,14 @@ namespace Barotrauma.Tutorials
         private PowerTransfer engineer_disconnectedJunctionBox_2;
         private PowerTransfer engineer_disconnectedJunctionBox_3;
         private PowerTransfer engineer_disconnectedJunctionBox_4;
-        private Door engineer_fourthDoor;
+        private Item engineer_fourthDoorButton;
         private LightComponent engineer_fourthDoorLight;
 
         // Room 6
         private Pump engineer_workingPump;
 
         // Submarine
+        private Item tutorial_submarineDoorButton;
         private LightComponent tutorial_submarineDoorLight;
         private MotionSensor tutorial_enteredSubmarineSensor;
         private Item engineer_submarineJunctionBox_1;
@@ -78,40 +77,38 @@ namespace Barotrauma.Tutorials
             engineer.Inventory.RemoveItem(toolbox);
 
             // Other tutorial items
-            tutorial_securityFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoor")).GetComponent<Door>();
             tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
-            tutorial_mechanicFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoor")).GetComponent<Door>();
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, false);
-            SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, false);
+            SetDoorAccess(null, tutorial_securityFinalDoorLight, false);
+            SetDoorAccess(null, tutorial_mechanicFinalDoorLight, false);
 
             // Room 2
             engineer_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_equipmentobjectivesensor")).GetComponent<MotionSensor>();
             engineer_equipmentCabinet = Item.ItemList.Find(i => i.HasTag("engineer_equipmentcabinet")).GetComponent<ItemContainer>();
-            engineer_firstDoor = Item.ItemList.Find(i => i.HasTag("engineer_firstdoor")).GetComponent<Door>();
+            engineer_firstDoorButton = Item.ItemList.Find(i => i.HasTag("engineer_firstdoorbutton"));
             engineer_firstDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_firstdoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, false);
+            SetDoorAccess(engineer_firstDoorButton, engineer_firstDoorLight, false);
 
             // Room 3
             engineer_reactorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_reactorobjectivesensor")).GetComponent<MotionSensor>();
             engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
-            engineer_secondDoor = Item.ItemList.Find(i => i.HasTag("engineer_seconddoor")).GetComponent<Door>();
+            engineer_secondDoorButton = Item.ItemList.Find(i => i.HasTag("engineer_seconddoorbutton"));
             engineer_secondDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_seconddoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, false);
+            SetDoorAccess(engineer_secondDoorButton, engineer_secondDoorLight, false);
 
             // Room 4
             engineer_repairJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_repairjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
             engineer_brokenJunctionBox = Item.ItemList.Find(i => i.HasTag("engineer_brokenjunctionbox"));
-            engineer_thirdDoor = Item.ItemList.Find(i => i.HasTag("engineer_thirddoor")).GetComponent<Door>();
+            engineer_thirdDoorButton = Item.ItemList.Find(i => i.HasTag("engineer_thirddoorbutton"));
             engineer_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_thirddoorlight")).GetComponent<LightComponent>();
 
             engineer_brokenJunctionBox.Indestructible = false;
             engineer_brokenJunctionBox.Condition = 0f;
 
-            SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, false);
+            SetDoorAccess(engineer_thirdDoorButton, engineer_thirdDoorLight, false);
 
             // Room 5
             engineer_disconnectedJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
@@ -123,9 +120,9 @@ namespace Barotrauma.Tutorials
             engineer_disconnectedJunctionBox_3.Item.GetComponent<ConnectionPanel>().Locked = false;
             engineer_disconnectedJunctionBox_4 = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionbox_4")).GetComponent<PowerTransfer>();
             engineer_disconnectedJunctionBox_4.Item.GetComponent<ConnectionPanel>().Locked = false;
-            engineer_fourthDoor = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoor")).GetComponent<Door>();
+            engineer_fourthDoorButton = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoorbutton"));
             engineer_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoorlight")).GetComponent<LightComponent>();
-            SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, false);
+            SetDoorAccess(engineer_fourthDoorButton, engineer_fourthDoorLight, false);
 
             // Room 6
             engineer_workingPump = Item.ItemList.Find(i => i.HasTag("engineer_workingpump")).GetComponent<Pump>();
@@ -133,8 +130,9 @@ namespace Barotrauma.Tutorials
             engineer_workingPump.IsActive = true;
 
             // Submarine
+            tutorial_submarineDoorButton = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorbutton"));
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
-            SetDoorAccess(null, tutorial_submarineDoorLight, true);
+            SetDoorAccess(tutorial_submarineDoorButton, tutorial_submarineDoorLight, true);
 
             tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
             engineer_submarineJunctionBox_1 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_1"));
@@ -170,7 +168,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null); // Wait until looted
             RemoveCompletedObjective(segments[0]);
             SetHighlight(engineer_equipmentCabinet.Item, false);
-            SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, true);
+            SetDoorAccess(engineer_firstDoorButton, engineer_firstDoorLight, true);
 
             // Room 3
             do { yield return null; } while (!engineer_reactorObjectiveSensor.MotionDetected);
@@ -180,7 +178,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ReactorStable"), ChatMessageType.Radio, null);
             do { yield return null; } while (!engineer_reactor.AutoTemp);
-            SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, true);
+            SetDoorAccess(engineer_secondDoorButton, engineer_secondDoorLight, true);
 
             // Room 4
             TriggerTutorialSegment(2); // Repair the junction box
@@ -188,7 +186,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
-            SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
+            SetDoorAccess(engineer_thirdDoorButton, engineer_thirdDoorLight, true);
 
             // Room 5
             do { yield return null; } while (!engineer_disconnectedJunctionBoxObjectiveSensor.MotionDetected);
@@ -206,7 +204,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(engineer_disconnectedJunctionBox_4.Item, false);
             RemoveCompletedObjective(segments[3]);
             do { yield return null; } while (engineer_workingPump.Item.CurrentHull.WaterPercentage > waterVolumeBeforeOpening); // Wait until drained
-            SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, true);
+            SetDoorAccess(engineer_fourthDoorButton, engineer_fourthDoorLight, true);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ChangeOfPlans"), ChatMessageType.Radio, null);
 
             // Submarine

@@ -9,27 +9,27 @@ namespace Barotrauma.Tutorials
     class MechanicTutorial : ScenarioTutorial
     {
         // Other tutorial items
-        private Door tutorial_securityFinalDoor;
         private LightComponent tutorial_securityFinalDoorLight;
-        private Door tutorial_upperFinalDoor;
+        private Item tutorial_upperFinalDoorButton;
 
         // Room 1
         private float shakeTimer = 3.0f;
         private float shakeAmount = 20f;
-        private Item mechanic_firstButton;
+        private Item mechanic_firstDoorButton;
         private Door mechanic_firstDoor;
         private LightComponent mechanic_firstDoorLight;
 
         // Room 2
         private MotionSensor mechanic_equipmentObjectiveSensor;
         private ItemContainer mechanic_equipmentCabinet;
-        private Door mechanic_secondDoor;
+        private Item mechanic_secondDoorButton;
         private LightComponent mechanic_secondDoorLight;
 
         // Room 3
         private MotionSensor mechanic_weldingObjectiveSensor;
         private Pump mechanic_workingPump;
         private Door mechanic_thirdDoor;
+        private Item mechanic_thirdDoorButton;
         private LightComponent mechanic_thirdDoorLight;
         private Structure mechanic_brokenWall_1;
         private Hull mechanic_brokenhull_1;
@@ -38,27 +38,27 @@ namespace Barotrauma.Tutorials
         private MotionSensor mechanic_craftingObjectiveSensor;
         private Deconstructor mechanic_deconstructor;
         private Fabricator mechanic_fabricator;
-        private Door mechanic_fourthDoor;
+        private Item mechanic_fourthDoorButton;
         private LightComponent mechanic_fourthDoorLight;
 
         // Room 5
         private MotionSensor mechanic_fireSensor;
         private DummyFireSource mechanic_fire;
-        private Door mechanic_fifthDoor;
+        private Item mechanic_fifthDoorButton;
         private LightComponent mechanic_fifthDoorLight;
 
         // Room 6
         private MotionSensor mechanic_divingSuitObjectiveSensor;
         private ItemContainer mechanic_divingSuitContainer;
         private ItemContainer mechanic_oxygenContainer;
-        private Door tutorial_mechanicFinalDoor;
+        private Item tutorial_mechanicFinalDoorButton;
         private LightComponent tutorial_mechanicFinalDoorLight;
 
         // Room 7
         private Pump mechanic_brokenPump;
         private Structure mechanic_brokenWall_2;
         private Hull mechanic_brokenhull_2;
-        private Door tutorial_submarineDoor;
+        private Item tutorial_submarineDoorButton;
         private LightComponent tutorial_submarineDoorLight;
 
         // Submarine
@@ -91,36 +91,36 @@ namespace Barotrauma.Tutorials
             mechanic.Inventory.RemoveItem(crowbar);
 
             // Other tutorial items
-            tutorial_securityFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoor")).GetComponent<Door>();
             tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
-            tutorial_upperFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_upperfinaldoor")).GetComponent<Door>();          
+            tutorial_upperFinalDoorButton = Item.ItemList.Find(i => i.HasTag("tutorial_upperfinaldoorbutton"));     
 
-            SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, false);
-            SetDoorAccess(tutorial_upperFinalDoor, null, false);
+            SetDoorAccess(null, tutorial_securityFinalDoorLight, false);
+            SetDoorAccess(tutorial_upperFinalDoorButton, null, false);
 
             // Room 1
-            mechanic_firstButton = Item.ItemList.Find(i => i.HasTag("mechanic_firstbutton"));
+            mechanic_firstDoorButton = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoorbutton"));
             mechanic_firstDoor = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoor")).GetComponent<Door>();
             mechanic_firstDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_firstdoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, false);
+            SetDoorAccess(mechanic_firstDoorButton, mechanic_firstDoorLight, false);
 
             // Room 2
             mechanic_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_equipmentobjectivesensor")).GetComponent<MotionSensor>();
             mechanic_equipmentCabinet = Item.ItemList.Find(i => i.HasTag("mechanic_equipmentcabinet")).GetComponent<ItemContainer>();
-            mechanic_secondDoor = Item.ItemList.Find(i => i.HasTag("mechanic_seconddoor")).GetComponent<Door>();
+            mechanic_secondDoorButton = Item.ItemList.Find(i => i.HasTag("mechanic_seconddoorbutton"));
             mechanic_secondDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_seconddoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, false);
+            SetDoorAccess(mechanic_secondDoorButton, mechanic_secondDoorLight, false);
 
             // Room 3
             mechanic_weldingObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_weldingobjectivesensor")).GetComponent<MotionSensor>();
             mechanic_workingPump = Item.ItemList.Find(i => i.HasTag("mechanic_workingpump")).GetComponent<Pump>();
             mechanic_thirdDoor = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoor")).GetComponent<Door>();
+            mechanic_thirdDoorButton = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoorbutton"));
             mechanic_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoorlight")).GetComponent<LightComponent>();
             mechanic_brokenWall_1 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenwall_1");
 
-            SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, false);
+            SetDoorAccess(mechanic_thirdDoorButton, mechanic_thirdDoorLight, false);
             mechanic_brokenWall_1.Indestructible = false;
             mechanic_brokenWall_1.SpriteColor = Color.White;
             for (int i = 0; i < mechanic_brokenWall_1.SectionCount; i++)
@@ -133,17 +133,17 @@ namespace Barotrauma.Tutorials
             mechanic_craftingObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_craftingobjectivesensor")).GetComponent<MotionSensor>();
             mechanic_deconstructor = Item.ItemList.Find(i => i.HasTag("deconstructor")).GetComponent<Deconstructor>();
             mechanic_fabricator = Item.ItemList.Find(i => i.HasTag("fabricator")).GetComponent<Fabricator>();
-            mechanic_fourthDoor = Item.ItemList.Find(i => i.HasTag("mechanic_fourthdoor")).GetComponent<Door>();
+            mechanic_fourthDoorButton = Item.ItemList.Find(i => i.HasTag("mechanic_fourthdoorbutton"));
             mechanic_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_fourthdoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, false);
+            SetDoorAccess(mechanic_fourthDoorButton, mechanic_fourthDoorLight, false);
 
             // Room 5
-            mechanic_fifthDoor = Item.ItemList.Find(i => i.HasTag("mechanic_fifthdoor")).GetComponent<Door>();
+            mechanic_fifthDoorButton = Item.ItemList.Find(i => i.HasTag("mechanic_fifthdoorbutton"));
             mechanic_fifthDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_fifthdoorlight")).GetComponent<LightComponent>();
             mechanic_fireSensor = Item.ItemList.Find(i => i.HasTag("mechanic_firesensor")).GetComponent<MotionSensor>();
 
-            SetDoorAccess(mechanic_fifthDoor, mechanic_fifthDoorLight, false);
+            SetDoorAccess(mechanic_fifthDoorButton, mechanic_fifthDoorLight, false);
 
             // Room 6
             mechanic_divingSuitObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_divingsuitobjectivesensor")).GetComponent<MotionSensor>();
@@ -163,17 +163,17 @@ namespace Barotrauma.Tutorials
                     ic.CanBePicked = true;
                 }
             }
-            tutorial_mechanicFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoor")).GetComponent<Door>();
+            tutorial_mechanicFinalDoorButton = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorbutton"));
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, false);
+            SetDoorAccess(tutorial_mechanicFinalDoorButton, tutorial_mechanicFinalDoorLight, false);
 
             // Room 7
             mechanic_brokenPump = Item.ItemList.Find(i => i.HasTag("mechanic_brokenpump")).GetComponent<Pump>();
             mechanic_brokenPump.Item.Indestructible = false;
             mechanic_brokenPump.Item.Condition = 0;
             mechanic_brokenWall_2 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenwall_2");
-            tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
+            tutorial_submarineDoorButton = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorbutton"));
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
 
             mechanic_brokenWall_2.Indestructible = false;
@@ -183,7 +183,7 @@ namespace Barotrauma.Tutorials
                 mechanic_brokenWall_2.AddDamage(i, 250);
             }
             mechanic_brokenhull_2 = mechanic_brokenWall_2.Sections[0].gap.FlowTargetHull;
-            SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
+            SetDoorAccess(tutorial_submarineDoorButton, tutorial_submarineDoorLight, false);
 
             // Submarine
             tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
@@ -219,10 +219,10 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2.5f);
             TriggerTutorialSegment(0); // Open door objective
             yield return new WaitForSeconds(1.5f);
-            SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
-            SetHighlight(mechanic_firstButton, true);
+            SetDoorAccess(mechanic_firstDoorButton, mechanic_firstDoorLight, true);
+            SetHighlight(mechanic_firstDoorButton, true);
             do { yield return null; } while (!mechanic_firstDoor.IsOpen);
-            SetHighlight(mechanic_firstButton, false);
+            SetHighlight(mechanic_firstDoorButton, false);
             yield return new WaitForSeconds(1.5f);
             RemoveCompletedObjective(segments[0]);
             
@@ -242,7 +242,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(2); // Welding objective
             do { yield return null; } while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")); // Wait until equipped
-            SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
+            SetDoorAccess(mechanic_secondDoorButton, mechanic_secondDoorLight, true);
             SetHighlight(mechanic_brokenWall_1, true);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_1)); // Highlight until repaired
             RemoveCompletedObjective(segments[2]);
@@ -254,7 +254,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_workingPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
-            SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
+            SetDoorAccess(mechanic_thirdDoorButton, mechanic_thirdDoorLight, true);
             yield return new WaitForSeconds(2f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(1f);
@@ -275,7 +275,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null); // Wait until extinguisher is created
             RemoveCompletedObjective(segments[5]);
             SetHighlight(mechanic_fabricator.Item, false);
-            SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, true);
+            SetDoorAccess(mechanic_fourthDoorButton, mechanic_fourthDoorLight, true);
 
             // Room 5
             do { yield return null; } while (!mechanic_fireSensor.MotionDetected);
@@ -283,7 +283,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!mechanic_fire.Removed); // Wait until extinguished
             yield return new WaitForSeconds(3f);
             RemoveCompletedObjective(segments[6]);
-            SetDoorAccess(mechanic_fifthDoor, mechanic_fifthDoorLight, true);
+            SetDoorAccess(mechanic_fifthDoorButton, mechanic_fifthDoorLight, true);
 
             // Room 6
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Diving"), ChatMessageType.Radio, null);
@@ -294,7 +294,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_divingSuitContainer.Item, false);
             do { yield return null; } while (!mechanic.HasEquippedItem("divingsuit"));
             RemoveCompletedObjective(segments[7]);
-            SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, true);
+            SetDoorAccess(tutorial_mechanicFinalDoorButton, tutorial_mechanicFinalDoorLight, true);
 
             // Room 7
             SetHighlight(mechanic_brokenWall_2, true);
@@ -306,7 +306,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[8]);
             SetHighlight(mechanic_brokenPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_2.WaterPercentage > waterVolumeBeforeOpening);
-            SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
+            SetDoorAccess(tutorial_submarineDoorButton, tutorial_submarineDoorLight, true);
 
             // Submarine
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
