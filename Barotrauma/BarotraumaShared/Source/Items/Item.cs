@@ -1432,13 +1432,13 @@ namespace Barotrauma
                             selectHit = picker.IsKeyHit(ic.SelectKey);
 
 #if CLIENT
-                            //if the cursor is on a UI component, disable interaction with the left mouse button
-                            //to prevent accidentally selecting items when clicking UI elements
-                            if (picker == Character.Controlled && GUI.MouseOn != null)
-                            {
-                                if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                                if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
-                            }
+                        //if the cursor is on a UI component, disable interaction with the left mouse button
+                        //to prevent accidentally selecting items when clicking UI elements
+                        if (picker == Character.Controlled && GUI.MouseOn != null)
+                        {
+                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
+                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
+                        }
 #endif
                         }
                     }
@@ -1608,7 +1608,6 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
-        List<ColoredText> texts = new List<ColoredText>();
         public List<ColoredText> GetHUDTexts(Character character)
         {
             texts.Clear();
@@ -1617,13 +1616,14 @@ namespace Barotrauma
                 if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
-
-                Color color = Color.Gray;
+               
+                Color color = Color.Red;
                 bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
                 if (hasRequiredSkillsAndItems)
                 {
-                    color = Color.Cyan;
+                    color = Color.Orange;
                 }
+                // TODO: Blue color if the item is selected
 
                 texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }

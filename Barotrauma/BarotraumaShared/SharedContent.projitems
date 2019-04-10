@@ -357,6 +357,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Effects\waterbump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\door2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\ContextualTutorial\1_CommandReactor\BaroTutorial_CommandReactor.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
