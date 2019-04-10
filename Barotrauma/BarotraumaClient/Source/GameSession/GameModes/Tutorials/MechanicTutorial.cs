@@ -42,6 +42,7 @@ namespace Barotrauma.Tutorials
         private LightComponent mechanic_fourthDoorLight;
 
         // Room 5
+        private MotionSensor mechanic_fireSensor;
         private DummyFireSource mechanic_fire;
         private Door mechanic_fifthDoor;
         private LightComponent mechanic_fifthDoorLight;
@@ -144,6 +145,7 @@ namespace Barotrauma.Tutorials
             // Room 5
             mechanic_fifthDoor = Item.ItemList.Find(i => i.HasTag("mechanic_fifthdoor")).GetComponent<Door>();
             mechanic_fifthDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_fifthdoorlight")).GetComponent<LightComponent>();
+            mechanic_fireSensor = Item.ItemList.Find(i => i.HasTag("mechanic_firesensor")).GetComponent<MotionSensor>();
 
             SetDoorAccess(mechanic_fifthDoor, mechanic_fifthDoorLight, false);
 
@@ -215,14 +217,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
             SetHighlight(mechanic_equipmentCabinet.Item, false);
-            while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null)
-            {
-                DebugConsole.NewMessage("Diving mask: " + mechanic.Inventory.FindItemByIdentifier("divingmask"));
-                DebugConsole.NewMessage("weldingtool: " + mechanic.Inventory.FindItemByIdentifier("weldingtool"));
-                DebugConsole.NewMessage("wrench: " + mechanic.Inventory.FindItemByIdentifier("wrench"));
-                yield return null; // Wait until looted
-            }
-            yield return new WaitForSeconds(2.5f);
+            while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null) yield return null; // Wait until looted
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
 
@@ -260,16 +255,15 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(5); // Fabricate
             SetHighlight(mechanic_fabricator.Item, true);
             while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null) yield return null; // Wait until extinguisher is created
-
             RemoveCompletedObjective(segments[5]);
             SetHighlight(mechanic_deconstructor.Item, false);
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, true);
 
             // Room 5
-            while (!mechanic_fourthDoor.IsOpen) yield return null;
+            while (!mechanic_fireSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(6); // Using the extinguisher
             while (!mechanic_fire.Removed) yield return null; // Wait until extinguished
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(3f);
             RemoveCompletedObjective(segments[6]);
             SetDoorAccess(mechanic_fifthDoor, mechanic_fifthDoorLight, true);
 

@@ -405,11 +405,12 @@ namespace Barotrauma.Tutorials
             RectTransform rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
             rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5, 0);
             GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
-            checkmark.Color = color;
+            checkmark.Color = checkmark.SelectedColor = checkmark.HoverColor = checkmark.PressedColor = color;
+  
 
             RectTransform rectTB = new RectTransform(new Vector2(1.1f, .8f), segment.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
             GUIImage stroke = new GUIImage(rectTB, "Stroke");
-            stroke.Color = color;
+            stroke.Color = stroke.SelectedColor = stroke.HoverColor = stroke.PressedColor = color;
 
             CoroutineManager.StartCoroutine(WaitForObjectiveEnd(segment));
         }

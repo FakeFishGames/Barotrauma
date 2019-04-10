@@ -158,6 +158,12 @@ namespace Barotrauma.Tutorials
             }
         }
 
+        public override void Stop()
+        {
+            CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
+            base.Stop();
+        }
+
         private IEnumerable<object> Dead()
         {
             Character.Controlled = character = null;
