@@ -318,8 +318,16 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
             if (Config.EnableSplashScreen)
             {
-                (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, SoundManager, "Content/splashscreen.mp4", 1280, 720);
-            }
+                try
+                {
+                    (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, SoundManager, "Content/splashscreen.mp4", 1280, 720);
+                }
+                catch (Exception e)
+                {
+                    Config.EnableSplashScreen = false;
+                    DebugConsole.ThrowError("Playing the splash screen failed.", e);
+                }
+             }
 
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
