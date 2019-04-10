@@ -2775,6 +2775,7 @@
 
   <ItemMsgOpen>[[select]] Open</ItemMsgOpen>
   <AccessDenied>UNAUTHORIZED ACCESS</AccessDenied>
+  <DoorMsgCannotOpen>This door is controlled with buttons or remote controllers wired to it.</DoorMsgCannotOpen>
 
   <EntityName.doorwbuttons>Door</EntityName.doorwbuttons>
   <EntityDescription.doorwbuttons>A sliding door with two integrated buttons.</EntityDescription.doorwbuttons>
