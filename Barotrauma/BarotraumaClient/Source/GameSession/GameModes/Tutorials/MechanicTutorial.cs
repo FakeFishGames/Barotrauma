@@ -276,7 +276,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_fabricator.Item, true);
             while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null) yield return null; // Wait until extinguisher is created
             RemoveCompletedObjective(segments[5]);
-            SetHighlight(mechanic_deconstructor.Item, false);
+            SetHighlight(mechanic_fabricator.Item, false);
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, true);
 
             // Room 5
