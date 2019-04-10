@@ -62,15 +62,10 @@ namespace Barotrauma.Tutorials
         private LightComponent tutorial_submarineDoorLight;
 
         // Submarine
-        private MotionSensor mechanic_enteredSubmarineSensor;
+        private MotionSensor tutorial_enteredSubmarineSensor;
         private Engine mechanic_submarineEngine;
         private Pump mechanic_ballastPump_1;
         private Pump mechanic_ballastPump_2;
-
-        // Colors
-        private Color highlightColor = Color.OrangeRed;
-        private Color inaccessibleColor = Color.Red;
-        private Color accessibleColor = Color.Green;
 
         // Variables
         private const float waterVolumeBeforeOpening = 15f;
@@ -86,7 +81,7 @@ namespace Barotrauma.Tutorials
         {
             base.Start();
 
-            radioSpeakerName = TextManager.Get("Mechanic.Radio.Speaker");
+            radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             mechanic = Character.Controlled;
 
             var toolbox = mechanic.Inventory.FindItemByIdentifier("toolbox");
@@ -192,7 +187,7 @@ namespace Barotrauma.Tutorials
 
             return;
             // Submarine
-            mechanic_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("mechanic_enteredsubmarinesensor")).GetComponent<MotionSensor>();
+            tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
             mechanic_submarineEngine = Item.ItemList.Find(i => i.HasTag("mechanic_submarineengine")).GetComponent<Engine>();
             mechanic_submarineEngine.Item.Indestructible = false;
             mechanic_submarineEngine.Item.Condition = 0f;
@@ -202,6 +197,12 @@ namespace Barotrauma.Tutorials
             mechanic_ballastPump_2 = Item.ItemList.Find(i => i.HasTag("mechanic_ballastpump_2")).GetComponent<Pump>();
             mechanic_ballastPump_2.Item.Indestructible = false;
             mechanic_ballastPump_2.Item.Condition = 0f;
+        }
+
+        public override void Update(float deltaTime)
+        {
+            mechanic_brokenhull_1.WaterVolume = MathHelper.Clamp(mechanic_brokenhull_1.WaterVolume, 0, mechanic_brokenhull_1.Volume * 0.9f);
+            base.Update(deltaTime);
         }
 
         public override IEnumerable<object> UpdateState()
@@ -309,7 +310,7 @@ namespace Barotrauma.Tutorials
 
             while (true) yield return null;
             // Submarine
-            while (!mechanic_enteredSubmarineSensor.MotionDetected) yield return null;
+            while (!tutorial_enteredSubmarineSensor.MotionDetected) yield return null;
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Submarine"), ChatMessageType.Radio, null);
             TriggerTutorialSegment(9); // Repairing ballast pumps, engine
             SetHighlight(mechanic_ballastPump_1.Item, true);
@@ -330,24 +331,6 @@ namespace Barotrauma.Tutorials
 
             // END TUTORIAL
             Completed = true;
-        }
-
-        private void SetHighlight(Item item, bool state)
-        {
-            item.SpriteColor = (state) ? highlightColor : Color.White;
-            item.ExternalHighlight = state;
-        }
-
-        private void SetHighlight(Structure structure, bool state)
-        {
-            structure.SpriteColor = (state) ? highlightColor : Color.White;
-            structure.ExternalHighlight = state;
-        }
-
-        private void SetDoorAccess(Door door, LightComponent light, bool state)
-        {
-            if (door != null) door.Stuck = (state) ? 0f : 100f;
-            if (light != null) light.LightColor = (state) ? accessibleColor : inaccessibleColor;
         }
 
         private bool IsSelectedItem(Item item)

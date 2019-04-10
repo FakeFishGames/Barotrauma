@@ -58,7 +58,7 @@
 
   </ContextualTutorial>
 
-  <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Mechanic">
         <Skill name="Electrical Engineering" level="60"/>
@@ -118,6 +118,47 @@
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.RepairSubmarineInstructions" width="450"/>
     </Segment>
   </MechanicTutorial>
+
+  <EngineerTutorial name="Engineer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+    <Character file="Content/Characters/Human/Human.xml">
+      <Job name="Engineer">
+        <Skill name="Electrical Engineering" level="60"/>
+        <Skill name="Mechanical Engineering" level="50"/>
+        <Skill name="Helm" level="50"/>
+        <Skill name="Weapons" level="50"/>
+      </Job>
+    </Character>
+
+    <Segment id="Engineer.Equipment" objective="Engineer.EquipmentObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Engineer.EquipmentText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.EquipmentInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="Engineer.Reactor" objective="Engineer.ReactorObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Engineer.ReactorText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.ReactorInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="Engineer.RepairJunctionBox" objective="Engineer.RepairJunctionBoxObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Engineer.RepairJunctionBoxText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.RepairJunctionBoxInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="Engineer.WireJunctionBoxes" objective="Engineer.WireJunctionBoxesObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Engineer.WireJunctionBoxesText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.WireJunctionBoxesInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="Engineer.RepairElectricalRoom" objective="Engineer.RepairElectricalRoomObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Engineer.RepairElectricalRoomText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.RepairElectricalRoomInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="Engineer.PowerUpReactor" objective="Engineer.PowerUpReactorObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Engineer.PowerUpReactorText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.PowerUpReactorInstructions" width="450"/>
+    </Segment>
+  </EngineerTutorial>
   
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/Human.xml">

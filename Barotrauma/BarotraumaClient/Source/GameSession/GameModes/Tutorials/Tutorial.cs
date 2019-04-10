@@ -293,6 +293,7 @@ namespace Barotrauma.Tutorials
         public virtual void Stop()
         {
             started = ContentRunning = Initialized = false;
+            infoBox = null;
             if (videoPlayer != null)
             {
                 videoPlayer.Remove();

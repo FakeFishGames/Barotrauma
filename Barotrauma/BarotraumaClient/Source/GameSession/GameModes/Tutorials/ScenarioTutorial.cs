@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +21,11 @@ namespace Barotrauma.Tutorials
 
         private Submarine startOutpost = null;
         private Submarine endOutpost = null;
+        
+        // Colors
+        private Color highlightColor = Color.OrangeRed;
+        private Color inaccessibleColor = Color.Red;
+        private Color accessibleColor = Color.Green;
 
         public ScenarioTutorial(XElement element) : base(element)
         {
@@ -137,6 +143,24 @@ namespace Barotrauma.Tutorials
             return WayPoint.GetRandom(spawnPointType, charInfo.Job, spawnSub);
         }
 
+        protected void SetHighlight(Item item, bool state)
+        {
+            item.SpriteColor = (state) ? highlightColor : Color.White;
+            item.ExternalHighlight = state;
+        }
+
+        protected void SetHighlight(Structure structure, bool state)
+        {
+            structure.SpriteColor = (state) ? highlightColor : Color.White;
+            structure.ExternalHighlight = state;
+        }
+
+        protected void SetDoorAccess(Door door, LightComponent light, bool state)
+        {
+            if (door != null) door.Stuck = (state) ? 0f : 100f;
+            if (light != null) light.LightColor = (state) ? accessibleColor : inaccessibleColor;
+        }
+
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
@@ -167,8 +191,7 @@ namespace Barotrauma.Tutorials
         private IEnumerable<object> Dead()
         {
             Character.Controlled = character = null;
-            CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
-            infoBox = null;
+            Stop();
 
             yield return new WaitForSeconds(3.0f);
 

@@ -2773,11 +2773,10 @@
   <!-- Generic Tutorial -->
   <Tutorial.TryAgainHeader>You have died</Tutorial.TryAgainHeader>
   <Tutorial.TryAgain>Do you want to try again?</Tutorial.TryAgain>
+  <Tutorial.Radio.Speaker>Captain Huskinson</Tutorial.Radio.Speaker>
   
-  <!-- Mechanic Tutorial -->
-  
+  <!-- Mechanic Tutorial -->  
   <!-- Radio -->
-  <Mechanic.Radio.Speaker>Captain Huskinson</Mechanic.Radio.Speaker>
   <Mechanic.Radio.WakeUp>Are you okay? You need to get up and moving. Get to the sub ASAP!</Mechanic.Radio.WakeUp>
   <Mechanic.Radio.Equipment>Remember to get your gear from the locker. Grab everything you can carry. We’re in for some rough shit.</Mechanic.Radio.Equipment>
   <Mechanic.Radio.Breach>Hey, I’m reading some hull breaches along your way. Better plug those real quick so others stand a chance, too.</Mechanic.Radio.Breach>
@@ -2844,4 +2843,49 @@
   <Mechanic.RepairSubmarineObjective>Repair the engine and the ballast pumps</Mechanic.RepairSubmarineObjective>
   <Mechanic.RepairSubmarineText>Repair Submarine</Mechanic.RepairSubmarineText>
   <Mechanic.RepairSubmarineInstructions>Repair Submarine</Mechanic.RepairSubmarineInstructions>
+
+  <!-- Engineer Tutorial -->
+  <!-- Radio -->
+  <Engineer.Radio.WakeUp>Get your ass up! We need power!</Engineer.Radio.WakeUp>
+  <Engineer.Radio.ReactorStable>We seem to be stable now. Some junction boxes blew their fuses and pumps aren’t working, you should go see what you can do about it.</Engineer.Radio.ReactorStable>
+  <Engineer.Radio.FaultyWiring>Some of the wiring seems to be faulty. Find some wire and do some quick fixing, otherwise we’re without power.</Engineer.Radio.FaultyWiring>
+  <Engineer.Radio.ChangeOfPlans>Change of plans. Come to the sub. We’re gonna blow this joint.</Engineer.Radio.ChangeOfPlans>
+  <Engineer.Radio.Submarine>Looks like the electrical room’s seen better days. See if you can get it online, then start up the reactor.</Engineer.Radio.Submarine>
+  <Engineer.Radio.Complete>Good work. We may yet make it out of this alive.</Engineer.Radio.Complete>
+  
+  <!-- Room 2 -->
+  <Engineer.Equipment>Inventory</Engineer.Equipment>
+  <Engineer.EquipmentObjective>Retrieve equipment from the cabinet</Engineer.EquipmentObjective>
+  <Engineer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentText>
+  <Engineer.EquipmentInstructions>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentInstructions>
+
+  <!-- Room 3 -->
+  <Engineer.Reactor>Reactor</Engineer.Reactor>
+  <Engineer.ReactorObjective>Power up the reactor</Engineer.ReactorObjective>
+  <Engineer.ReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.ReactorText>
+  <Engineer.ReactorInstructions>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.ReactorInstructions>
+
+  <!-- Room 4 -->
+  <Engineer.RepairJunctionBox>Maintenance</Engineer.RepairJunctionBox>
+  <Engineer.RepairJunctionBoxObjective>Repair junction box</Engineer.RepairJunctionBoxObjective>
+  <Engineer.RepairJunctionBoxText>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact with the machine to see the repair interface.</Engineer.RepairJunctionBoxText>
+  <Engineer.RepairJunctionBoxInstructions>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact with the machine to see the repair interface.</Engineer.RepairJunctionBoxInstructions>
+
+  <!-- Room 5 -->
+  <Engineer.WireJunctionBoxes>Wiring</Engineer.WireJunctionBoxes>
+  <Engineer.WireJunctionBoxesObjective>Connect the junction boxes</Engineer.WireJunctionBoxesObjective>
+  <Engineer.WireJunctionBoxesText>Junction boxes serve as the main way to connect the sub’s machines to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then click on the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press esc to close the panel. Repeat the step at the next item.</Engineer.WireJunctionBoxesText>
+  <Engineer.WireJunctionBoxesInstructions>Junction boxes serve as the main way to connect the sub’s machines to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then click on the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press esc to close the panel. Repeat the step at the next item.</Engineer.WireJunctionBoxesInstructions>
+
+  <!-- Submarine -->
+  <Engineer.RepairElectricalRoom>Electrical room</Engineer.RepairElectricalRoom>
+  <Engineer.RepairElectricalRoomObjective>Repair the electrical room</Engineer.RepairElectricalRoomObjective>
+  <Engineer.RepairElectricalRoomText>Find the sub’s electrical room and repair the junction boxes by interacting with them while holding a screwdriver.</Engineer.RepairElectricalRoomText>
+  <Engineer.RepairElectricalRoomInstructions>Find the sub’s electrical room and repair the junction boxes by interacting with them while holding a screwdriver.</Engineer.RepairElectricalRoomInstructions>
+
+  <Engineer.PowerUpReactor>Reactor room</Engineer.PowerUpReactor>
+  <Engineer.PowerUpReactorObjective>Power up submarine’s reactor</Engineer.PowerUpReactorObjective>
+  <Engineer.PowerUpReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorText>
+  <Engineer.PowerUpReactorInstructions>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorInstructions>
+
 </infotexts>
