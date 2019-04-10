@@ -247,7 +247,10 @@ namespace Barotrauma.Items.Components
         {
             //can only be selected if the item is broken
             if (item.Condition <= RepairThreshold) return true; //repairs
-            ForceOpen(ActionType.OnUse);
+            if (requiredItems.None())
+            {
+                ForceOpen(ActionType.OnUse);
+            }
             return false;
         }
 
