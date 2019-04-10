@@ -374,14 +374,14 @@ namespace Barotrauma.Tutorials
 
         private void ReplaySegmentVideo(TutorialSegment segment)
         {
-            if (ContentRunning || segment.IsTriggered) return;
+            if (ContentRunning) return;
             ContentRunning = true;
             videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
         }
 
         private void ShowSegmentText(TutorialSegment segment)
         {
-            if (ContentRunning || segment.IsTriggered) return;
+            if (ContentRunning) return;
             Inventory.draggingItem = null;
             ContentRunning = true;
 
@@ -396,6 +396,7 @@ namespace Barotrauma.Tutorials
         {
             if (!HasObjective(segment)) return;
             segment.IsTriggered = true;
+            segment.ReplayButton.OnClicked = null;
 
             int checkMarkHeight = (int)(segment.ReplayButton.Rect.Height * 1.2f);
             int checkMarkWidth = (int)(checkMarkHeight * 0.93f);

@@ -215,7 +215,13 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
             SetHighlight(mechanic_equipmentCabinet.Item, false);
-            while (mechanic.Inventory.FindItemByTag("divingmask") == null || mechanic.Inventory.FindItemByTag("weldingtool") == null || mechanic.Inventory.FindItemByTag("wrench") == null) yield return null; // Wait until looted
+            while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null)
+            {
+                DebugConsole.NewMessage("Diving mask: " + mechanic.Inventory.FindItemByIdentifier("divingmask"));
+                DebugConsole.NewMessage("weldingtool: " + mechanic.Inventory.FindItemByIdentifier("weldingtool"));
+                DebugConsole.NewMessage("wrench: " + mechanic.Inventory.FindItemByIdentifier("wrench"));
+                yield return null; // Wait until looted
+            }
             yield return new WaitForSeconds(2.5f);
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
@@ -254,6 +260,7 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(5); // Fabricate
             SetHighlight(mechanic_fabricator.Item, true);
             while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null) yield return null; // Wait until extinguisher is created
+
             RemoveCompletedObjective(segments[5]);
             SetHighlight(mechanic_deconstructor.Item, false);
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, true);
