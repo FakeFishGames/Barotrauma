@@ -1608,23 +1608,22 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
+        List<ColoredText> texts = new List<ColoredText>();
         public List<ColoredText> GetHUDTexts(Character character)
         {
-            List<ColoredText> texts = new List<ColoredText>();
-            
+            texts.Clear();
             foreach (ItemComponent ic in components)
             {
                 if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
-               
-                Color color = Color.Red;
+
+                Color color = Color.Gray;
                 bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
                 if (hasRequiredSkillsAndItems)
                 {
-                    color = Color.Orange;
+                    color = Color.Cyan;
                 }
-                // TODO: Blue color if the item is selected
 
                 texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }
