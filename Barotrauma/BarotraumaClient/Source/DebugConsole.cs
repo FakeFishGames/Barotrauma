@@ -564,12 +564,21 @@ namespace Barotrauma
                         if (entity is Item item)
                         {
                             item.Reset();
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            structure.Reset();
+                        }
+                    }
+                    foreach (MapEntity entity in MapEntity.SelectedList)
+                    {
+                        if (entity is Item item)
+                        {
                             item.CreateEditingHUD();
                             break;
                         }
                         else if (entity is Structure structure)
                         {
-                            structure.Reset();
                             structure.CreateEditingHUD();
                             break;
                         }
