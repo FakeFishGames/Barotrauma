@@ -9,6 +9,12 @@ namespace Barotrauma.Tutorials
 {
     class EngineerTutorial : ScenarioTutorial
     {
+        // Other tutorial items
+        private Door tutorial_securityFinalDoor;
+        private LightComponent tutorial_securityFinalDoorLight;
+        private Door tutorial_mechanicFinalDoor;
+        private LightComponent tutorial_mechanicFinalDoorLight;
+
         // Room 1
         private float shakeTimer = 3f;
         private float shakeAmount = 20f;
@@ -44,6 +50,7 @@ namespace Barotrauma.Tutorials
         private Pump engineer_workingPump;
 
         // Submarine
+        private LightComponent tutorial_submarineDoorLight;
         private MotionSensor tutorial_enteredSubmarineSensor;
         private Item engineer_submarineJunctionBox_1;
         private Item engineer_submarineJunctionBox_2;
@@ -69,6 +76,15 @@ namespace Barotrauma.Tutorials
 
             var toolbox = engineer.Inventory.FindItemByIdentifier("toolbox");
             engineer.Inventory.RemoveItem(toolbox);
+
+            // Other tutorial items
+            tutorial_securityFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoor")).GetComponent<Door>();
+            tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
+            tutorial_mechanicFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoor")).GetComponent<Door>();
+            tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
+
+            SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, false);
+            SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, false);
 
             // Room 2
             engineer_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_equipmentobjectivesensor")).GetComponent<MotionSensor>();
@@ -117,6 +133,9 @@ namespace Barotrauma.Tutorials
             engineer_workingPump.IsActive = true;
 
             // Submarine
+            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
+            SetDoorAccess(null, tutorial_submarineDoorLight, true);
+
             tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
             engineer_submarineJunctionBox_1 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_1"));
             engineer_submarineJunctionBox_2 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_2"));
@@ -143,36 +162,36 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.WakeUp"), ChatMessageType.Radio, null);
 
             // Room 2
-            while (!engineer_equipmentObjectiveSensor.MotionDetected) yield return null;
+            do { yield return null; } while (!engineer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(0); // Retrieve equipment
             SetHighlight(engineer_equipmentCabinet.Item, true);
-            while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null) yield return null; // Wait until looted
+            do { yield return null; } while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null); // Wait until looted
             RemoveCompletedObjective(segments[0]);
             SetHighlight(engineer_equipmentCabinet.Item, false);
             SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, true);
 
             // Room 3
-            while (!engineer_reactorObjectiveSensor.MotionDetected) yield return null;
+            do { yield return null; } while (!engineer_reactorObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(1);
-            while (!ReactorOperatedProperly()) yield return null; // TODO
+            do { yield return null; } while (!ReactorOperatedProperly()); // TODO
             yield return new WaitForSeconds(2f);
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ReactorStable"), ChatMessageType.Radio, null);
-            while (!engineer_reactor.AutoTemp) yield return null;
+            do { yield return null; } while (!engineer_reactor.AutoTemp);
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, true);
 
             // Room 4
             TriggerTutorialSegment(2); // Repair the junction box
             SetHighlight(engineer_brokenJunctionBox, true);
-            while (!engineer_brokenJunctionBox.IsFullCondition) yield return null; // Wait until repaired
+            do { yield return null; } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
 
             // Room 5
-            while (!engineer_disconnectedJunctionBoxObjectiveSensor.MotionDetected) yield return null;
+            do { yield return null; } while (!engineer_disconnectedJunctionBoxObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(3); // Connect the junction boxes
@@ -180,36 +199,33 @@ namespace Barotrauma.Tutorials
             SetHighlight(engineer_disconnectedJunctionBox_2.Item, true);
             SetHighlight(engineer_disconnectedJunctionBox_3.Item, true);
             SetHighlight(engineer_disconnectedJunctionBox_4.Item, true);
-            while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage) yield return null; // Wait until connected all the way to the pump
+            do { yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             SetHighlight(engineer_disconnectedJunctionBox_1.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_2.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_3.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_4.Item, false);
             RemoveCompletedObjective(segments[3]);
-            while (engineer_workingPump.Item.CurrentHull.WaterPercentage > waterVolumeBeforeOpening) yield return null; // Wait until drained
+            do { yield return null; } while (engineer_workingPump.Item.CurrentHull.WaterPercentage > waterVolumeBeforeOpening); // Wait until drained
             SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, true);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ChangeOfPlans"), ChatMessageType.Radio, null);
 
             // Submarine
-            while (!tutorial_enteredSubmarineSensor.MotionDetected) yield return null;
+            do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Submarine"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(4); // Repair junction box
             SetHighlight(engineer_submarineJunctionBox_1, true);
             SetHighlight(engineer_submarineJunctionBox_2, true);
             SetHighlight(engineer_submarineJunctionBox_3, true);
-            while (!engineer_submarineJunctionBox_1.IsFullCondition || !engineer_submarineJunctionBox_2.IsFullCondition || !engineer_submarineJunctionBox_3.IsFullCondition)
-            {
-                // Remove highlights when each individual machine is repaired
-                if (engineer_submarineJunctionBox_1.IsFullCondition && engineer_submarineJunctionBox_1.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_1, false);
-                if (engineer_submarineJunctionBox_2.IsFullCondition && engineer_submarineJunctionBox_2.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_2, false);
-                if (engineer_submarineJunctionBox_3.IsFullCondition && engineer_submarineJunctionBox_3.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_3, false);
-                yield return null;
-            }
+            // Remove highlights when each individual machine is repaired
+            do { CheckJunctionBoxHighlights(); yield return null; } while (!engineer_submarineJunctionBox_1.IsFullCondition || !engineer_submarineJunctionBox_2.IsFullCondition || !engineer_submarineJunctionBox_3.IsFullCondition);
+            CheckJunctionBoxHighlights();
+            RemoveCompletedObjective(segments[4]);
             TriggerTutorialSegment(5); // Powerup reactor
             SetHighlight(engineer_reactor.Item, true);
-            while (!IsReactorPoweredUp()) yield return null; // Wait until ~matches load
+            do { yield return null; } while (!IsReactorPoweredUp()); // Wait until ~matches load
             SetHighlight(engineer_reactor.Item, false);
+            RemoveCompletedObjective(segments[5]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
 
             Completed = true;
@@ -218,6 +234,13 @@ namespace Barotrauma.Tutorials
         private bool ReactorOperatedProperly()
         {
             return true;
+        }
+
+        private void CheckJunctionBoxHighlights()
+        {
+            if (engineer_submarineJunctionBox_1.IsFullCondition && engineer_submarineJunctionBox_1.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_1, false);
+            if (engineer_submarineJunctionBox_2.IsFullCondition && engineer_submarineJunctionBox_2.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_2, false);
+            if (engineer_submarineJunctionBox_3.IsFullCondition && engineer_submarineJunctionBox_3.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_3, false);
         }
 
         private bool IsReactorPoweredUp()
