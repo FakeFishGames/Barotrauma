@@ -184,7 +184,7 @@ namespace Barotrauma
 
             if (slots == null) CreateSlots();
 
-            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.Head;
+            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.Head | InvSlotType.OuterClothes;
 
             switch (layout)
             {
