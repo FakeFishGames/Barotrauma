@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tutorials>
-  <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">
-    
+  <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">    
     <Segment id="Welcome" contenttype="textonly" istriggered="false">
     <!--<Segment id="Welcome" contenttype="video" istriggered="false">-->
       <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
@@ -55,7 +54,6 @@
     <Segment id="Approach2" contenttype="textonly" istriggered="false">
       <Text tag="Approach2Text" width="450" height="80" anchor="Center"/>
     </Segment>
-
   </ContextualTutorial>
 
   <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
@@ -160,6 +158,7 @@
     </Segment>
   </EngineerTutorial>
   
+  <!--
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
@@ -190,4 +189,5 @@
       </Job>
     </Character>
   </BasicTutorial>
+  -->
 </Tutorials>
