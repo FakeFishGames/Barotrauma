@@ -1432,13 +1432,13 @@ namespace Barotrauma
                             selectHit = picker.IsKeyHit(ic.SelectKey);
 
 #if CLIENT
-                        //if the cursor is on a UI component, disable interaction with the left mouse button
-                        //to prevent accidentally selecting items when clicking UI elements
-                        if (picker == Character.Controlled && GUI.MouseOn != null)
-                        {
-                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
-                        }
+                            //if the cursor is on a UI component, disable interaction with the left mouse button
+                            //to prevent accidentally selecting items when clicking UI elements
+                            if (picker == Character.Controlled && GUI.MouseOn != null)
+                            {
+                                if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
+                                if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
+                            }
 #endif
                         }
                     }
