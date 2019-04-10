@@ -251,31 +251,6 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        // TODO: use separate door variants and remove this?
-        private bool isWired = true;
-        private void SetWired(bool value)
-        {
-            if (isWired == value) { return; }
-            isWired = value;
-            if (isWired)
-            {
-                requiredItems.Clear();
-                RelatedItem ri = new RelatedItem(new string[] { "crowbar" }, new string[] { });
-                requiredItems.Add(RelatedItem.RelationType.Equipped, new List<RelatedItem>());
-                requiredItems[RelatedItem.RelationType.Equipped].Add(ri);
-                Msg = "ItemMsgForceOpenCrowbar";
-                ParseMsg();
-                PickingTime = 10;
-            }
-            else
-            {
-                requiredItems.Clear();
-                Msg = "ItemMsgOpen";
-                ParseMsg();
-                PickingTime = 0;
-            }
-        }
-
         public override void Update(float deltaTime, Camera cam)
         {
             if (isBroken)
