@@ -2940,4 +2940,6 @@
   <MissionTeam2.pvpmission>Renegade</MissionTeam2.pvpmission>
   <MissionSuccess.pvpmission>The antidote has been successfully delivered.</MissionSuccess.pvpmission>
   <MissionFailure.pvpmission>Both crews have perished.</MissionFailure.pvpmission>
+
+  <MapEntityCategory.All>All</MapEntityCategory.All>
 </infotexts>
