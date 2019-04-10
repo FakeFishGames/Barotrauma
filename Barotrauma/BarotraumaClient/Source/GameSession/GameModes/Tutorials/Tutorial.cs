@@ -176,7 +176,6 @@ namespace Barotrauma.Tutorials
         {
             if (Initialized) return;
             Initialized = true;
-
             videoPlayer = new VideoPlayer();
         }
 
@@ -501,6 +500,7 @@ namespace Barotrauma.Tutorials
         #region Video
         protected void LoadVideo(TutorialSegment segment, bool showText = true)
         {
+            if (videoPlayer == null) videoPlayer = new VideoPlayer();
             if (showText)
             {
                 videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, segment.Objective, StopCurrentContentSegment);
