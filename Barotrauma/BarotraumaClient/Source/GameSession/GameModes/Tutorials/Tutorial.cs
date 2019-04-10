@@ -280,7 +280,7 @@ namespace Barotrauma.Tutorials
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
                             activeContentSegment.TextContent.GetAttributeInt("width", 300),
                             activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, () => ContentRunning = false, () => LoadVideo(activeContentSegment, false));
+                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment, false));
                     break;
                 case TutorialContentTypes.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
@@ -374,13 +374,14 @@ namespace Barotrauma.Tutorials
 
         private void ReplaySegmentVideo(TutorialSegment segment)
         {
-            if (ContentRunning) return;
+            if (ContentRunning || segment.IsTriggered) return;
             ContentRunning = true;
             videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
         }
 
         private void ShowSegmentText(TutorialSegment segment)
         {
+            if (ContentRunning || segment.IsTriggered) return;
             Inventory.draggingItem = null;
             ContentRunning = true;
 
@@ -391,25 +392,25 @@ namespace Barotrauma.Tutorials
             segment.TextContent.GetAttributeString("anchor", "Center"), true, () => ContentRunning = false, () => LoadVideo(segment, false));
         }
 
-        protected void RemoveCompletedObjective(TutorialSegment objective)
+        protected void RemoveCompletedObjective(TutorialSegment segment)
         {
-            if (!HasObjective(objective)) return;
-            objective.IsTriggered = true;
+            if (!HasObjective(segment)) return;
+            segment.IsTriggered = true;
 
-            int checkMarkHeight = (int)(objective.ReplayButton.Rect.Height * 1.2f);
+            int checkMarkHeight = (int)(segment.ReplayButton.Rect.Height * 1.2f);
             int checkMarkWidth = (int)(checkMarkHeight * 0.93f);
 
             Color color = new Color(4, 180, 108);
-            RectTransform rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), objective.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
+            RectTransform rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
             rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5, 0);
             GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
             checkmark.Color = color;
 
-            RectTransform rectTB = new RectTransform(new Vector2(1.1f, .8f), objective.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
+            RectTransform rectTB = new RectTransform(new Vector2(1.1f, .8f), segment.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
             GUIImage stroke = new GUIImage(rectTB, "Stroke");
             stroke.Color = color;
 
-            CoroutineManager.StartCoroutine(WaitForObjectiveEnd(objective));
+            CoroutineManager.StartCoroutine(WaitForObjectiveEnd(segment));
         }
 
         private IEnumerable<object> WaitForObjectiveEnd(TutorialSegment objective)
@@ -435,7 +436,7 @@ namespace Barotrauma.Tutorials
 
         protected GUIComponent CreateInfoFrame(string title, string text, int width = 300, int height = 80, string anchorStr = "", bool hasButton = false, Action callback = null, Action showVideo = null)
         {
-            if (hasButton) height += 30;
+            if (hasButton) height += 60;
 
             string wrappedText = ToolBox.WrapText(text, width, GUI.Font);          
 
@@ -471,15 +472,9 @@ namespace Barotrauma.Tutorials
 
             if (hasButton)
             {
-                var okButton = new GUIButton(new RectTransform(new Point(160, 50), infoBlock.RectTransform, Anchor.BottomCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, -10) },
-                    TextManager.Get("OK"))
-                {
-                    OnClicked = CloseInfoFrame
-                };
-
                 if (showVideo != null)
                 {
-                    var videoButton = new GUIButton(new RectTransform(new Point(160, 50), infoBlock.RectTransform, Anchor.BottomLeft, Pivot.TopCenter) { AbsoluteOffset = new Point(0, -10) },
+                    var videoButton = new GUIButton(new RectTransform(new Point(50, 50), infoBlock.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft) { AbsoluteOffset = new Point(40, 25) },
                     "Video")
                     {
                         OnClicked = (GUIButton button, object obj) =>
@@ -489,6 +484,12 @@ namespace Barotrauma.Tutorials
                         }
                     };
                 }
+
+                var okButton = new GUIButton(new RectTransform(new Point(160, 50), infoBlock.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, 25) },
+                TextManager.Get("OK"))
+                {
+                    OnClicked = CloseInfoFrame
+                };
             }
 
             GUI.PlayUISound(GUISoundType.UIMessage);

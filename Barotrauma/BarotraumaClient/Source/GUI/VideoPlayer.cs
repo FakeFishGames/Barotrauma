@@ -227,6 +227,12 @@ namespace Barotrauma
                 objectiveTitle.Visible = objectiveText.Visible = false;
             }
 
+            if (okButton != null)
+            {
+                textFrame.RemoveChild(okButton);
+                okButton = null;
+            }
+
             if (textSettings != null)
             {
                 if (useTextOnRightSide)
@@ -241,24 +247,21 @@ namespace Barotrauma
                     int yOffset = videoFrame.Rect.Height / 2 + scaledBorderSize - (videoFrame.Rect.Height / 2 - textFrame.Rect.Height / 2);
                     videoFrame.RectTransform.AbsoluteOffset = new Point(0, -yOffset);
                 }
+                
+                okButton = new GUIButton(new RectTransform(scaledButtonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(scaledBorderSize, scaledBorderSize) }, TextManager.Get("OK"))
+                {
+                    OnClicked = DisposeVideo
+                };
             }
             else
             {
-                int totalFrameWidth = videoFrame.Rect.Width;
-                int xOffset = videoFrame.Rect.Width / 2;
-                videoFrame.RectTransform.AbsoluteOffset = new Point(-xOffset, (int)(50 * GUI.Scale));
-            }
+                videoFrame.RectTransform.AbsoluteOffset = new Point(0, (int)(100 * GUI.Scale));
 
-            if (okButton != null)
-            {
-                textFrame.RemoveChild(okButton);
-                okButton = null;
+                okButton = new GUIButton(new RectTransform(scaledButtonSize, videoFrame.RectTransform, Anchor.TopLeft, Pivot.Center), TextManager.Get("Back"))
+                {
+                    OnClicked = DisposeVideo
+                };
             }
-
-            okButton = new GUIButton(new RectTransform(scaledButtonSize, textFrame.RectTransform, Anchor.BottomRight, Pivot.BottomRight) { AbsoluteOffset = new Point(scaledBorderSize, scaledBorderSize) }, TextManager.Get("OK"))
-            {
-                OnClicked = DisposeVideo
-            };
         }
 
         private Video CreateVideo(Point resolution)
