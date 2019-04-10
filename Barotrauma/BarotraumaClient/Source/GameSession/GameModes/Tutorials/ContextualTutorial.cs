@@ -158,7 +158,6 @@ namespace Barotrauma.Tutorials
         public override void Stop()
         {
             base.Stop();
-            started = ContentRunning = Initialized = false;
             characterTimeOnSonar = null;
         }
 
