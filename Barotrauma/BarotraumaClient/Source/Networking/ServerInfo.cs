@@ -59,17 +59,32 @@ namespace Barotrauma.Networking
             return contentPackageHashes.SetEquals(myContentPackageHashes);
         }
 
-        public void CreatePreviewWindow(GUIMessageBox messageBox)
+        public void CreatePreviewWindow(GUIListBox listBox)
         {
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), messageBox.Content.RectTransform), ServerName, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
+            listBox.ClearChildren();
 
-            var serverMsg = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), messageBox.Content.RectTransform));
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, wrap: true);
+            if (listBox == null) return;
 
-            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), messageBox.Content.RectTransform), isHorizontal: true)
+            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), listBox.Content.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            var titleHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.07f), previewContainer.RectTransform))
+            {
+                IsHorizontal = true,
+                Stretch = true
+            };
+
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), titleHolder.RectTransform), ServerName, font: GUI.LargeFont, wrap: true);
+
+            new GUITextBlock(new RectTransform(Vector2.One, title.RectTransform), 
+                TextManager.Get("ServerListVersion") + ": " + (string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion), textAlignment: Alignment.Right);
+
+            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), previewContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.005f
             };
 
             var columnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), columnContainer.RectTransform))
@@ -88,12 +103,16 @@ namespace Barotrauma.Networking
             // left column -----------------------------------------------------------------------------
 
             //new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform), IP + ":" + Port);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform),
-                TextManager.Get("ServerListVersion") + ": " + (string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnLeft.RectTransform),
+
+            var serverMsg = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), columnLeft.RectTransform)) { ScrollBarVisible = true };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, wrap: true) { CanBeFocused = false };
+
+            // right column -----------------------------------------------------------------------------
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnRight.RectTransform),
                 TextManager.Get("ServerListContentPackages"));
 
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), columnLeft.RectTransform));
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), columnRight.RectTransform));
             if (ContentPackageNames.Count == 0)
             {
                 new GUITextBlock(new RectTransform(Vector2.One, contentPackageList.Content.RectTransform), TextManager.Get("Unknown"), textAlignment: Alignment.Center)
@@ -143,7 +162,7 @@ namespace Barotrauma.Networking
                         }
                     }
                 }
-                if (availableWorkshopUrls.Count > 0 )
+                if (availableWorkshopUrls.Count > 0)
                 {
                     var workshopBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.15f), columnLeft.RectTransform), TextManager.Get("ServerListSubscribeMissingPackages"))
                     {
@@ -159,10 +178,8 @@ namespace Barotrauma.Networking
                     workshopBtn.TextBlock.AutoScale = true;
                 }
             }
-            
-            // right column -----------------------------------------------------------------------------
 
-            var playerCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListPlayers"));
+            /*var playerCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListPlayers"));
             new GUITextBlock(new RectTransform(Vector2.One, playerCount.RectTransform), PlayerCount + "/" + MaxPlayers, textAlignment: Alignment.Right);
 
 
@@ -170,7 +187,7 @@ namespace Barotrauma.Networking
             {
                 Selected = GameStarted,
                 CanBeFocused = false
-            };
+            };*/
 
             var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("GameMode"));
             new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform), string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode, textAlignment: Alignment.Right);
@@ -203,11 +220,11 @@ namespace Barotrauma.Networking
             else
                 allowRespawn.Selected = AllowRespawn.Value;
 
-            new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListHasPassword"))
+            /*new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListHasPassword"))
             {
                 Selected = HasPassword,
                 CanBeFocused = false
-            };
+            };*/
 
             var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
             {
