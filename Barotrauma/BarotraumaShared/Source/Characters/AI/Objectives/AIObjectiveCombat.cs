@@ -235,6 +235,7 @@ namespace Barotrauma
             {
                 if (Vector2.DistanceSquared(character.Position, Enemy.Position) <= meleeWeapon.Range * meleeWeapon.Range)
                 {
+                    character.SetInput(InputType.Shoot, false, true);
                     Weapon.Use(deltaTime, character);
                 }
             }
@@ -264,6 +265,7 @@ namespace Barotrauma
                         }
                         if (target != null && target == Enemy)
                         {
+                            character.SetInput(InputType.Shoot, false, true);
                             Weapon.Use(deltaTime, character);
                         }
                     }

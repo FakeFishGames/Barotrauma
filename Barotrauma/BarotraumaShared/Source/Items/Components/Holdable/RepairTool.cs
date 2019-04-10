@@ -322,6 +322,7 @@ namespace Barotrauma.Items.Components
             // If the character is climbing, ignore the check, because we cannot aim while climbing.
             if (VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
             {
+                character.SetInput(InputType.Shoot, false, true);
                 Use(deltaTime, character);
             }
             else
