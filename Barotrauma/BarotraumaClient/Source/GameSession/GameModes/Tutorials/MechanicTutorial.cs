@@ -195,7 +195,7 @@ namespace Barotrauma.Tutorials
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
                 yield return new WaitForSeconds(0.1f);
             }
-
+            yield return new WaitForSeconds(2.5f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(2.5f);
@@ -208,6 +208,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_firstButton, false);
 
             // Room 2
+            yield return new WaitForSeconds(2.5f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             while (!mechanic_equipmentObjectiveSensor.MotionDetected) yield return null;
             TriggerTutorialSegment(1); // Equipment & inventory objective
@@ -215,6 +216,7 @@ namespace Barotrauma.Tutorials
             while (!IsSelectedItem(mechanic_equipmentCabinet.Item)) yield return null;
             SetHighlight(mechanic_equipmentCabinet.Item, false);
             while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")) yield return null; // Wait until equipped
+            yield return new WaitForSeconds(2.5f);
             RemoveCompletedObjective(segments[1]);
             SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
