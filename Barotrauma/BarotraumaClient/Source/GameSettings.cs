@@ -81,7 +81,8 @@ namespace Barotrauma
             var leftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), settingsFramePadding.RectTransform, Anchor.TopLeft));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform),
-                TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont);
+                TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont)
+            { ForceUpperCase = true };
 
             var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), leftPanel.RectTransform, Anchor.TopLeft));
 
