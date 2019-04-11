@@ -12,6 +12,8 @@ namespace Barotrauma
 {
     partial class EnemyAIController : AIController
     {
+        public static bool DisableEnemyAI;
+
         class WallTarget
         {
             public Vector2 Position;
@@ -249,7 +251,7 @@ namespace Barotrauma
             }
         }
         
-        public TargetingPriority GetTargetingPriority(string targetTag)
+        private TargetingPriority GetTargetingPriority(string targetTag)
         {
             if (targetingPriorities.TryGetValue(targetTag, out TargetingPriority priority))
             {
@@ -267,6 +269,7 @@ namespace Barotrauma
         
         public override void Update(float deltaTime)
         {
+            if (DisableEnemyAI) { return; }
             bool ignorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
             if (steeringManager is IndoorsSteeringManager)
