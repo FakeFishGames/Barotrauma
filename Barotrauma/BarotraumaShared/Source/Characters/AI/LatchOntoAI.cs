@@ -54,6 +54,8 @@ namespace Barotrauma
             get { return attachJoints.Count > 0; }
         }
 
+        public bool IsAttachedToSub => IsAttached && attachTargetBody?.UserData is Entity entity && (entity is Submarine sub || entity?.Submarine != null);
+
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
         {
             attachToWalls = element.GetAttributeBool("attachtowalls", false);
