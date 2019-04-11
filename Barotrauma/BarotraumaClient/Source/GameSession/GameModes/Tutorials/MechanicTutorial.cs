@@ -255,6 +255,11 @@ namespace Barotrauma.Tutorials
                     if (mechanic_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
                 }
 
+                for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                {
+                    if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                }
+
                 yield return null;
             } while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null); // Wait until looted
             SetHighlight(mechanic_equipmentCabinet.Item, false);
@@ -265,7 +270,19 @@ namespace Barotrauma.Tutorials
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(2); // Welding objective
-            do { yield return null; } while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")); // Wait until equipped
+            do
+            {
+                if (!mechanic.HasEquippedItem("divingmask"))
+                {
+                    HighlightInventorySlot(mechanic.Inventory, "divingmask", highlightColor, .5f, .5f, 0f);
+                }
+
+                if (!mechanic.HasEquippedItem("weldingtool"))
+                {
+                    HighlightInventorySlot(mechanic.Inventory, "weldingtool", highlightColor, .5f, .5f, 0f);
+                }
+                yield return null;
+            } while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")); // Wait until equipped
             SetDoorAccess(mechanic_secondDoorButton, mechanic_secondDoorLight, true);
             SetHighlight(mechanic_brokenWall_1, true);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_1)); // Highlight until repaired
@@ -274,9 +291,14 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(3); // Pump objective
             SetHighlight(mechanic_workingPump.Item, true);
-
-            
-            do { yield return null; } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
+            do
+            {
+                if (mechanic_workingPump.IsActiveSlider.FlashTimer <= 0)
+                {
+                    mechanic_workingPump.IsActiveSlider.Flash(uiHighlightColor, 1.5f, true);
+                }
+                yield return null;
+            } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
@@ -292,13 +314,81 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!mechanic_craftingObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(4); // Deconstruct
             SetHighlight(mechanic_deconstructor.Item, true);
-            do { yield return null; } while (mechanic.Inventory.FindItemByIdentifier("aluminium") == null); // Wait until deconstructed
+
+            do
+            {
+                if (IsSelectedItem(mechanic_deconstructor.Item))
+                {
+                    if (mechanic.Inventory.FindItemByIdentifier("oxygentank") != null)
+                    {
+                        HighlightInventorySlot(mechanic.Inventory, "oxygentank", highlightColor, .5f, .5f, 0f);
+                        HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                    }
+
+                    if (mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null && !mechanic_deconstructor.IsActive)
+                    {
+                        if (mechanic_deconstructor.ActivateButton.Frame.FlashTimer <= 0)
+                        {
+                            mechanic_deconstructor.ActivateButton.Frame.Flash(highlightColor, 1.5f, false);
+                        }
+                    }
+
+                    if (mechanic_deconstructor.OutputContainer.Inventory.FindItemByIdentifier("aluminium") != null)
+                    {
+                        HighlightInventorySlot(mechanic_deconstructor.OutputContainer.Inventory, "aluminium", highlightColor, .5f, .5f, 0f);
+
+                        for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                        {
+                            if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        }
+                    }
+                }
+                yield return null;
+            } while (mechanic.Inventory.FindItemByIdentifier("aluminium") == null); // Wait until deconstructed
+
             SetHighlight(mechanic_deconstructor.Item, false);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(5); // Fabricate
             SetHighlight(mechanic_fabricator.Item, true);
-            do { yield return null; } while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null); // Wait until extinguisher is created
+            do
+            {
+                if (IsSelectedItem(mechanic_fabricator.Item))
+                {
+                    if (mechanic_fabricator.OutputContainer.Inventory.FindItemByIdentifier("extinguisher") != null)
+                    {
+                        HighlightInventorySlot(mechanic_fabricator.OutputContainer.Inventory, "extinguisher", highlightColor, .5f, .5f, 0f);
+
+                        for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                        {
+                            if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        }
+                    }
+                    else if (mechanic.Inventory.FindItemByIdentifier("aluminium") != null || mechanic.Inventory.FindItemByIdentifier("sodium") != null)
+                    {
+                        HighlightInventorySlot(mechanic.Inventory, "aluminium", highlightColor, .5f, .5f, 0f);
+                        HighlightInventorySlot(mechanic.Inventory, "sodium", highlightColor, .5f, .5f, 0f);
+
+                        if (mechanic_fabricator.InputContainer.Inventory.Items[0] == null)
+                        {
+                            HighlightInventorySlot(mechanic_fabricator.InputContainer.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                        }
+
+                        if (mechanic_fabricator.InputContainer.Inventory.Items[1] == null)
+                        {
+                            HighlightInventorySlot(mechanic_fabricator.InputContainer.Inventory, 1, highlightColor, .5f, .5f, 0f);
+                        }
+                    }
+                    else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") != null || mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium") != null && !mechanic_fabricator.IsActive)
+                    {
+                        if (mechanic_fabricator.ActivateButton.Frame.FlashTimer <= 0)
+                        {
+                            mechanic_fabricator.ActivateButton.Frame.Flash(highlightColor, 1.5f, false);
+                        }
+                    }
+                }
+                yield return null;
+            } while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null); // Wait until extinguisher is created
             RemoveCompletedObjective(segments[5]);
             SetHighlight(mechanic_fabricator.Item, false);
             SetDoorAccess(mechanic_fourthDoorButton, mechanic_fourthDoorLight, true);
@@ -316,9 +406,18 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!mechanic_divingSuitObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(7); // Dangers of pressure, equip diving suit objective
             SetHighlight(mechanic_divingSuitContainer.Item, true);
-            do { yield return null; } while (!IsSelectedItem(mechanic_divingSuitContainer.Item));
+            do
+            {
+                if (IsSelectedItem(mechanic_divingSuitContainer.Item))
+                {
+                    for (int i = 0; i < mechanic_divingSuitContainer.Inventory.slots.Length; i++)
+                    {
+                        HighlightInventorySlot(mechanic_divingSuitContainer.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
+                    }
+                }
+                yield return null;
+            } while (!mechanic.HasEquippedItem("divingsuit"));
             SetHighlight(mechanic_divingSuitContainer.Item, false);
-            do { yield return null; } while (!mechanic.HasEquippedItem("divingsuit"));
             RemoveCompletedObjective(segments[7]);
             SetDoorAccess(tutorial_mechanicFinalDoorButton, tutorial_mechanicFinalDoorLight, true);
 
