@@ -801,7 +801,12 @@ namespace Barotrauma
             if (findNewHull) FindHull();
         }
 
-        partial void SetActiveSprite();
+        public void SetActiveSprite()
+        {
+            SetActiveSpriteProjSpecific();
+        }
+
+        partial void SetActiveSpriteProjSpecific();
 
         public override void Move(Vector2 amount)
         {
