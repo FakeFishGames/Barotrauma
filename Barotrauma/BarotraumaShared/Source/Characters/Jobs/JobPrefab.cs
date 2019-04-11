@@ -1,17 +1,32 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    public class AutomaticOrder
+    {
+        public string aiTag;
+        public string option;
+        public float priority;
+
+        public AutomaticOrder(XElement element)
+        {
+            aiTag = element.GetAttributeString("aitag", null);
+            option = element.GetAttributeString("option", null);
+            priority = element.GetAttributeFloat("priority", 0);
+        }
+    }
+
     partial class JobPrefab
     {
         public static List<JobPrefab> List;
-                
-        public readonly XElement Items;
-        public readonly List<string> ItemNames;
 
-        public List<SkillPrefab> Skills;
+        public readonly XElement Items;
+        public readonly List<string> ItemNames = new List<string>();
+        public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
+        public readonly List<AutomaticOrder> AutomaticOrders = new List<AutomaticOrder>();
         
         [Serialize("1,1,1,1", false)]
         public Color UIColor
@@ -111,10 +126,6 @@ namespace Barotrauma
             Name = TextManager.Get("JobName." + Identifier);
             Description = TextManager.Get("JobDescription." + Identifier);
 
-            ItemNames = new List<string>();
-
-            Skills = new List<SkillPrefab>();
-
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -155,7 +166,10 @@ namespace Barotrauma
                         foreach (XElement skillElement in subElement.Elements())
                         {
                             Skills.Add(new SkillPrefab(skillElement));
-                        } 
+                        }
+                        break;
+                    case "automaticorders":
+                        subElement.Elements().ForEach(order => AutomaticOrders.Add(new AutomaticOrder(order)));
                         break;
                 }
             }
