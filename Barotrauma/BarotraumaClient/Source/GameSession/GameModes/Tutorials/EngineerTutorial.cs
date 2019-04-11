@@ -41,6 +41,10 @@ namespace Barotrauma.Tutorials
         private PowerTransfer engineer_disconnectedJunctionBox_2;
         private PowerTransfer engineer_disconnectedJunctionBox_3;
         private PowerTransfer engineer_disconnectedJunctionBox_4;
+        private Item engineer_wire_1;
+        private Powered engineer_lamp_1;
+        private Item engineer_wire_2;
+        private Powered engineer_lamp_2;
         private Item engineer_fourthDoorButton;
         private LightComponent engineer_fourthDoorLight;
 
@@ -94,6 +98,8 @@ namespace Barotrauma.Tutorials
             // Room 3
             engineer_reactorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_reactorobjectivesensor")).GetComponent<MotionSensor>();
             engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
+            engineer_reactor.FireDelay = float.PositiveInfinity;
+
             engineer_secondDoorButton = Item.ItemList.Find(i => i.HasTag("engineer_seconddoorbutton"));
             engineer_secondDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_seconddoorlight")).GetComponent<LightComponent>();
 
@@ -120,6 +126,10 @@ namespace Barotrauma.Tutorials
             engineer_disconnectedJunctionBox_3.Item.GetComponent<ConnectionPanel>().Locked = false;
             engineer_disconnectedJunctionBox_4 = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionbox_4")).GetComponent<PowerTransfer>();
             engineer_disconnectedJunctionBox_4.Item.GetComponent<ConnectionPanel>().Locked = false;
+            engineer_wire_1 = Item.ItemList.Find(i => i.HasTag("engineer_wire_1"));
+            engineer_wire_2 = Item.ItemList.Find(i => i.HasTag("engineer_wire_2"));
+            engineer_lamp_1 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_1")).GetComponent<Powered>();
+            engineer_lamp_2 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_2")).GetComponent<Powered>();
             engineer_fourthDoorButton = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoorbutton"));
             engineer_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoorlight")).GetComponent<LightComponent>();
             SetDoorAccess(engineer_fourthDoorButton, engineer_fourthDoorLight, false);
@@ -157,6 +167,7 @@ namespace Barotrauma.Tutorials
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
                 yield return new WaitForSeconds(0.1f);
             }
+
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.WakeUp"), ChatMessageType.Radio, null);
 
             // Room 2
@@ -197,7 +208,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(engineer_disconnectedJunctionBox_2.Item, true);
             SetHighlight(engineer_disconnectedJunctionBox_3.Item, true);
             SetHighlight(engineer_disconnectedJunctionBox_4.Item, true);
-            do { yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
+            do { CheckGhostWires(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             SetHighlight(engineer_disconnectedJunctionBox_1.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_2.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_3.Item, false);
@@ -232,6 +243,21 @@ namespace Barotrauma.Tutorials
         private bool ReactorOperatedProperly()
         {
             return true;
+        }
+
+        private void CheckGhostWires()
+        {
+            if (engineer_wire_1 != null && engineer_lamp_1.Voltage > engineer_lamp_1.MinVoltage)
+            {
+                engineer_wire_1.Remove();
+                engineer_wire_1 = null;
+            }
+
+            if (engineer_wire_2 != null && engineer_lamp_2.Voltage > engineer_lamp_2.MinVoltage)
+            {
+                engineer_wire_2.Remove();
+                engineer_wire_2 = null;
+            }
         }
 
         private void CheckJunctionBoxHighlights()
