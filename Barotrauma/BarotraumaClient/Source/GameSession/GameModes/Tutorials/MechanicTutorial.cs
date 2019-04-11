@@ -379,7 +379,7 @@ namespace Barotrauma.Tutorials
                             HighlightInventorySlot(mechanic_fabricator.InputContainer.Inventory, 1, highlightColor, .5f, .5f, 0f);
                         }
                     }
-                    else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") != null || mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium") != null && !mechanic_fabricator.IsActive)
+                    else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") != null && mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium") != null && !mechanic_fabricator.IsActive)
                     {
                         if (mechanic_fabricator.ActivateButton.Frame.FlashTimer <= 0)
                         {
@@ -410,9 +410,12 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(mechanic_divingSuitContainer.Item))
                 {
-                    for (int i = 0; i < mechanic_divingSuitContainer.Inventory.slots.Length; i++)
+                    if (mechanic_divingSuitContainer.Inventory.slots != null)
                     {
-                        HighlightInventorySlot(mechanic_divingSuitContainer.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
+                        for (int i = 0; i < mechanic_divingSuitContainer.Inventory.slots.Length; i++)
+                        {
+                            HighlightInventorySlot(mechanic_divingSuitContainer.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
+                        }
                     }
                 }
                 yield return null;
@@ -427,7 +430,25 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_brokenWall_2, false);
             TriggerTutorialSegment(8); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
-            do { yield return null; } while (!mechanic_brokenPump.Item.IsFullCondition || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive);
+            Repairable repairablePumpComponent = mechanic_brokenPump.Item.GetComponent<Repairable>();
+            do
+            {
+                if (!mechanic_brokenPump.Item.IsFullCondition)
+                {
+                    if (!mechanic.HasEquippedItem("wrench"))
+                    {
+                        HighlightInventorySlot(mechanic.Inventory, "wrench", highlightColor, 0.5f, 0.5f, 0f);
+                    }
+                    else if (IsSelectedItem(mechanic_brokenPump.Item) && repairablePumpComponent.CurrentFixer == null)
+                    {
+                        if (repairablePumpComponent.RepairButton.Frame.FlashTimer <= 0)
+                        {
+                            repairablePumpComponent.RepairButton.Frame.Flash();
+                        }
+                    }
+                }
+                yield return null;
+            } while (!mechanic_brokenPump.Item.IsFullCondition || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive);
             RemoveCompletedObjective(segments[8]);
             SetHighlight(mechanic_brokenPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_2.WaterPercentage > waterVolumeBeforeOpening);
