@@ -44,6 +44,7 @@ namespace Barotrauma
             base.Deselect();
 
 #if CLIENT
+            GameMain.Config.SaveNewPlayerConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();
 #endif

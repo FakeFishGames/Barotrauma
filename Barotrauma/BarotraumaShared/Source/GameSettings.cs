@@ -150,6 +150,9 @@ namespace Barotrauma
 
         public bool EnableMouseLook { get; set; } = true;
 
+        public bool CrewMenuOpen { get; set; } = true;
+        public bool ChatOpen { get; set; } = true;
+
         private bool unsavedSettings;
         public bool UnsavedSettings
         {
@@ -847,6 +850,9 @@ namespace Barotrauma
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
             EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
+            CrewMenuOpen = doc.Root.GetAttributeBool("crewmenuopen", CrewMenuOpen);
+            ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -1022,7 +1028,9 @@ namespace Barotrauma
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
                 new XAttribute("aimassistamount", aimAssistAmount),
-                new XAttribute("enablemouselook", EnableMouseLook));
+                new XAttribute("enablemouselook", EnableMouseLook),
+                new XAttribute("chatopen", ChatOpen),
+                new XAttribute("crewmenuopen", CrewMenuOpen));
 
             if (!ShowUserStatisticsPrompt)
             {
