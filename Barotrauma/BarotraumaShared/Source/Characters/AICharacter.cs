@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         //characters that are further than this from the camera (and all clients)
         //have all their limb physics bodies disabled
-        const float EnableSimplePhysicsDist = 10000.0f;        
+        const float EnableSimplePhysicsDist = 6000.0f;        
         const float DisableSimplePhysicsDist = EnableSimplePhysicsDist * 0.9f;
 
         const float EnableSimplePhysicsDistSqr = EnableSimplePhysicsDist * EnableSimplePhysicsDist;
