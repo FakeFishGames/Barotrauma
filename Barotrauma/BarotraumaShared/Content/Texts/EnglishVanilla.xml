@@ -2790,6 +2790,7 @@
   <TraitorRespawnMessage>Your traitor objective was unsuccessful. You are no longer a traitor, so play nice!</TraitorRespawnMessage>
   <TraitorTargetMessage>[traitorname] had a secret objective to assassinate you - and the task was successful.</TraitorTargetMessage>
 
+  <Repair>Repair</Repair>
   <RepairAllWalls>Repair all walls</RepairAllWalls>
   <RepairAllItems>Repair all items</RepairAllItems>
 
