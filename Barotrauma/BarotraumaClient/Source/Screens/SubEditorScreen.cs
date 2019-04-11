@@ -310,6 +310,12 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f,
                 Stretch = true
             };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
+            {
+                OnClicked = (btn, userdata) => { ClearFilter(); return true; }
+            };
+
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
                 entityCategoryButtons.Add(new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform),
