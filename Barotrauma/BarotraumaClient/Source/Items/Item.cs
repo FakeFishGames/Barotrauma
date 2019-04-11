@@ -795,7 +795,7 @@ namespace Barotrauma
             {
                 if (!ic.CanBeSelected) { continue; }
 
-                bool useAlternativeLayout = ic.Item != this;
+                bool useAlternativeLayout = activeHUDs.Count > 1;
                 bool wasUsingAlternativeLayout = ic.UseAlternativeLayout;
                 ic.UseAlternativeLayout = useAlternativeLayout;
                 needsLayoutUpdate |= ic.UseAlternativeLayout != wasUsingAlternativeLayout;
