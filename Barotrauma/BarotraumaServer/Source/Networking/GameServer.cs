@@ -1767,6 +1767,12 @@ namespace Barotrauma.Networking
             {
                 var teamID = n == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
 
+                Submarine.MainSubs[n].TeamID = teamID;
+                foreach (Submarine sub in Submarine.MainSubs[n].DockedTo)
+                {
+                    sub.TeamID = teamID;
+                }
+
                 //find the clients in this team
                 List<Client> teamClients = teamCount == 1 ? 
                     new List<Client>(connectedClients) : 
