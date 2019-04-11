@@ -25,6 +25,7 @@ namespace Barotrauma.Tutorials
 
         // Room 3
         private MotionSensor engineer_reactorObjectiveSensor;
+        private Powered tutorial_oxygenGenerator;
         private Reactor engineer_reactor;
         private Item engineer_secondDoorButton;
         private LightComponent engineer_secondDoorLight;
@@ -63,6 +64,10 @@ namespace Barotrauma.Tutorials
         // Variables
         private string radioSpeakerName;
         private Character engineer;
+        private int[] reactorLoads = new int[5] { 1500, 3000, 2000, 5000, 3500 };
+        private float reactorLoadChangeTime = 1f;
+        private float reactorLoadError = 100f;
+        private bool reactorOperatedProperly;
         private const float waterVolumeBeforeOpening = 15f;
 
         public EngineerTutorial(XElement element) : base(element)
@@ -97,8 +102,11 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             engineer_reactorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_reactorobjectivesensor")).GetComponent<MotionSensor>();
+            tutorial_oxygenGenerator = Item.ItemList.Find(i => i.HasTag("tutorial_oxygengenerator")).GetComponent<Powered>();
             engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
-            engineer_reactor.FireDelay = float.PositiveInfinity;
+            engineer_reactor.FireDelay = engineer_reactor.MeltdownDelay = float.PositiveInfinity;
+            engineer_reactor.FuelConsumptionRate = 0.0f;
+            reactorOperatedProperly = false;
 
             engineer_secondDoorButton = Item.ItemList.Find(i => i.HasTag("engineer_seconddoorbutton"));
             engineer_secondDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_seconddoorlight")).GetComponent<LightComponent>();
@@ -184,7 +192,8 @@ namespace Barotrauma.Tutorials
             // Room 3
             do { yield return null; } while (!engineer_reactorObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(1);
-            do { yield return null; } while (!ReactorOperatedProperly()); // TODO
+            CoroutineManager.StartCoroutine(ReactorOperatedProperly());
+            while (!reactorOperatedProperly) yield return null;
             yield return new WaitForSeconds(2f);
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ReactorStable"), ChatMessageType.Radio, null);
@@ -240,9 +249,25 @@ namespace Barotrauma.Tutorials
             Completed = true;
         }
 
-        private bool ReactorOperatedProperly()
+        private IEnumerable<object> ReactorOperatedProperly()
         {
-            return true;
+            float timer;
+
+            for (int i = 0; i < reactorLoads.Length; i++)
+            {
+                timer = reactorLoadChangeTime;
+                tutorial_oxygenGenerator.PowerConsumption = reactorLoads[i];
+                while (timer > 0)
+                {
+                    yield return new WaitForSeconds(0.1f);
+                    if (IsReactorPoweredUp())
+                    {
+                        timer -= 0.1f;
+                    }                   
+                }
+            }
+
+            reactorOperatedProperly = true;
         }
 
         private void CheckGhostWires()
@@ -288,7 +313,7 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            return Math.Abs(load + engineer_reactor.CurrPowerConsumption) < 10;
+            return Math.Abs(load + engineer_reactor.CurrPowerConsumption) < reactorLoadError;
         }
     }
 }
