@@ -144,6 +144,20 @@ namespace Barotrauma
             get { return spriteColor; }
             set { spriteColor = value; }
         }
+        
+        [Editable, Serialize(false, true)]
+        public bool UseDropShadow
+        {
+            get;
+            private set;
+        }
+
+        [Serialize("0,0", true), Editable(ToolTip = "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
+        public Vector2 DropShadowOffset
+        {
+            get;
+            private set;
+        }
 
         public override Rectangle Rect
         {
@@ -1139,6 +1153,13 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
             SerializableProperty.DeserializeProperties(s, element);
+
+            //structures with a body drop a shadow by default
+            if (element.Attribute("usedropshadow") == null)
+            {
+                s.UseDropShadow = prefab.Body;
+            }
+
             return s;
         }
 
