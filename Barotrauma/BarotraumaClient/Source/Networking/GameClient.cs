@@ -1114,7 +1114,9 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
+                GameMain.GameSession = missionIndex < 0 ?
+                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
+                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);
                 GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else
