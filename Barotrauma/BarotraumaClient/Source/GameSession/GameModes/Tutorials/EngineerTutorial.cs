@@ -192,6 +192,7 @@ namespace Barotrauma.Tutorials
             // Room 3
             do { yield return null; } while (!engineer_reactorObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(1);
+            while (!engineer_reactor.IsActive) yield return null;
             CoroutineManager.StartCoroutine(ReactorOperatedProperly());
             while (!reactorOperatedProperly) yield return null;
             yield return new WaitForSeconds(2f);

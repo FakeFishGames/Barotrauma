@@ -23,9 +23,9 @@ namespace Barotrauma.Tutorials
         private Submarine endOutpost = null;
         
         // Colors
-        private Color highlightColor = Color.OrangeRed;
-        private Color inaccessibleColor = Color.Red;
-        private Color accessibleColor = Color.Green;
+        protected Color highlightColor = Color.OrangeRed;
+        protected Color inaccessibleColor = Color.Red;
+        protected Color accessibleColor = Color.Green;
 
         public ScenarioTutorial(XElement element) : base(element)
         {

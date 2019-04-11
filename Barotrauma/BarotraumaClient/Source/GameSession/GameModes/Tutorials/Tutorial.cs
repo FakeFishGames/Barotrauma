@@ -515,5 +515,19 @@ namespace Barotrauma.Tutorials
             }
         }
         #endregion
+
+        #region Highlights
+        protected void HighlightInventorySlot(Inventory inventory, string identifier, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
+        {
+            if (inventory.slots == null) return;
+            HighlightInventorySlot(inventory, inventory.FindIndex(inventory.FindItemByIdentifier(identifier)), color, fadeInDuration, fadeOutDuration, scaleUpAmount);
+        }
+
+        protected void HighlightInventorySlot(Inventory inventory, int index, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
+        {
+            if (inventory.slots == null || index < 0 || inventory.slots[index].HighlightTimer > 0) return;
+            inventory.slots[index].ShowBorderHighlight(color, fadeInDuration, fadeOutDuration, scaleUpAmount);
+        }
+        #endregion
     }
 }

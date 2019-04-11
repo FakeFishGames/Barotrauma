@@ -214,7 +214,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(0.1f);
             }
             yield return new WaitForSeconds(2.5f);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(2.5f);
             TriggerTutorialSegment(0); // Open door objective
@@ -228,15 +228,39 @@ namespace Barotrauma.Tutorials
             
             // Room 2
             yield return new WaitForSeconds(0.0f);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(1); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
-            do { yield return null; } while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null); // Wait until looted
+            bool firstSlotRemoved = false;
+            bool secondSlotRemoved = false;
+            bool thirdSlotRemoved = false;
+            do
+            {
+                if (!firstSlotRemoved)
+                {
+                    HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                    if (mechanic_equipmentCabinet.Inventory.Items[0] == null) firstSlotRemoved = true;
+                }
+
+                if (!secondSlotRemoved)
+                {
+                    HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 1, highlightColor, .5f, .5f, 0f);
+                    if (mechanic_equipmentCabinet.Inventory.Items[1] == null) secondSlotRemoved = true;
+                }
+
+                if (!thirdSlotRemoved)
+                {
+                    HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 2, highlightColor, .5f, .5f, 0f);
+                    if (mechanic_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
+                }
+
+                yield return null;
+            } while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null); // Wait until looted
             SetHighlight(mechanic_equipmentCabinet.Item, false);
             yield return new WaitForSeconds(1.5f);
             RemoveCompletedObjective(segments[1]);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
@@ -250,15 +274,17 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(3); // Pump objective
             SetHighlight(mechanic_workingPump.Item, true);
+
+            
             do { yield return null; } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoorButton, mechanic_thirdDoorLight, true);
             yield return new WaitForSeconds(2f);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(1f);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
 
             // Room 4
             do { yield return null; } while (!mechanic_thirdDoor.IsOpen);
@@ -286,7 +312,7 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(mechanic_fifthDoorButton, mechanic_fifthDoorLight, true);
 
             // Room 6
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Diving"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Diving"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_divingSuitObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(7); // Dangers of pressure, equip diving suit objective
             SetHighlight(mechanic_divingSuitContainer.Item, true);
@@ -310,7 +336,7 @@ namespace Barotrauma.Tutorials
 
             // Submarine
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Submarine"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Submarine"), ChatMessageType.Radio, null);
             TriggerTutorialSegment(9); // Repairing ballast pumps, engine
             SetHighlight(mechanic_ballastPump_1.Item, true);
             SetHighlight(mechanic_ballastPump_2.Item, true);
@@ -319,7 +345,7 @@ namespace Barotrauma.Tutorials
             do { CheckHighlights(); yield return null; } while (!mechanic_ballastPump_1.Item.IsFullCondition || !mechanic_ballastPump_2.Item.IsFullCondition || !mechanic_submarineEngine.Item.IsFullCondition);
             CheckHighlights();
             RemoveCompletedObjective(segments[9]);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Complete"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Complete"), ChatMessageType.Radio, null);
 
             // END TUTORIAL
             Completed = true;

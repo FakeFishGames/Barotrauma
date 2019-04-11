@@ -26,6 +26,7 @@ namespace Barotrauma
         public Color Color;
 
         public Color HighlightColor;
+        public float HighlightScaleUpAmount;
         private CoroutineHandle highlightCoroutine;
         public float HighlightTimer;
         
@@ -80,7 +81,7 @@ namespace Barotrauma
             return rect.Contains(PlayerInput.MousePosition);
         }
 
-        public void ShowBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration)
+        public void ShowBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount = 0.5f)
         {
             if (highlightCoroutine != null)
             {
@@ -88,6 +89,7 @@ namespace Barotrauma
                 highlightCoroutine = null;
             }
 
+            HighlightScaleUpAmount = scaleUpAmount;
             highlightCoroutine = CoroutineManager.StartCoroutine(UpdateBorderHighlight(color, fadeInDuration, fadeOutDuration));
         }
 
@@ -799,8 +801,7 @@ namespace Barotrauma
             
             if (slot.HighlightColor.A > 0)
             {
-                float scaleUpAmount = 0.5f;
-                float inflateAmount = (slot.HighlightColor.A / 255.0f) * scaleUpAmount * 0.5f;
+                float inflateAmount = (slot.HighlightColor.A / 255.0f) * slot.HighlightScaleUpAmount * 0.5f;
                 rect.Inflate(rect.Width * inflateAmount, rect.Height * inflateAmount);
             }
 
