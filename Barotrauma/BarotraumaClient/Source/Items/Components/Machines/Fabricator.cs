@@ -15,6 +15,10 @@ namespace Barotrauma.Items.Components
 
         private GUIFrame selectedItemFrame;
         
+        public GUIButton ActivateButton
+        {
+            get { return activateButton; }
+        }
         private GUIButton activateButton;
 
         private GUITextBox itemFilterBox;

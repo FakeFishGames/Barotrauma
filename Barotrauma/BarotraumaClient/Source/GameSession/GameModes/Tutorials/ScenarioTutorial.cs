@@ -24,6 +24,8 @@ namespace Barotrauma.Tutorials
         
         // Colors
         protected Color highlightColor = Color.OrangeRed;
+        protected Color uiHighlightColor = new Color(150, 50, 0);
+        protected Color buttonHighlightColor = new Color(255, 100, 0);
         protected Color inaccessibleColor = Color.Red;
         protected Color accessibleColor = Color.Green;
 

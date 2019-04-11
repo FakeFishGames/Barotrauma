@@ -23,6 +23,16 @@ namespace Barotrauma.Items.Components
 
         private ItemContainer inputContainer, outputContainer;
 
+        public ItemContainer InputContainer
+        {
+            get { return inputContainer; }
+        }
+
+        public ItemContainer OutputContainer
+        {
+            get { return outputContainer; }
+        }
+
         private float progressState;
 
         public Fabricator(Item item, XElement element) 
