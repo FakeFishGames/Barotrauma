@@ -227,7 +227,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[0]);
             
             // Room 2
-            yield return new WaitForSeconds(2.5f);
+            yield return new WaitForSeconds(0.0f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(1); // Equipment & inventory objective
