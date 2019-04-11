@@ -217,7 +217,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
-                SamplerState.LinearClamp, DepthStencilState.Default, null, null,
+                SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
             if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: true);
             spriteBatch.End();
