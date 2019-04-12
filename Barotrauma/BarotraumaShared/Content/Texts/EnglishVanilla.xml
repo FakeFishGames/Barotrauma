@@ -2943,4 +2943,8 @@
   <MissionFailure.pvpmission>Both crews have perished.</MissionFailure.pvpmission>
 
   <MapEntityCategory.All>All</MapEntityCategory.All>
+  
+  <!-- new -->
+
+  <SettingResetVerification>Are you sure you want to reset the settings?</SettingResetVerification>
 </infotexts>
