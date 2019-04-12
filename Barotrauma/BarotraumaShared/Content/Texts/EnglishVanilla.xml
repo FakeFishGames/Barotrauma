@@ -3146,4 +3146,6 @@
   <CharacterEditor.ExistingCharacterFound>An existing character with the same name was found.</CharacterEditor.ExistingCharacterFound>
   <GenericReplaceVerification>Do you want to replace it?</GenericReplaceVerification>
 
+  <DontShowNotificationAgain>Don't show this again</DontShowNotificationAgain>
+
 </infotexts>

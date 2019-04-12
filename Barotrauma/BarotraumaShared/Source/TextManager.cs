@@ -118,6 +118,16 @@ namespace Barotrauma
             }
         }
 
+        public static string ParseInputTypes(string text)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
+            }
+            return text;
+        }
+
         public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)
         {
             string text = Get(textTag, returnNull);

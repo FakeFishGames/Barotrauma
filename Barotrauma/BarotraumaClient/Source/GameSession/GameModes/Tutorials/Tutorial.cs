@@ -245,6 +245,7 @@ namespace Barotrauma.Tutorials
             segments[index].Args = args;
 
             string tutorialText = TextManager.GetFormatted(activeContentSegment.TextContent.GetAttributeString("tag", ""), true, args);
+            tutorialText = TextManager.ParseInputTypes(tutorialText);
             string objectiveText = string.Empty;
 
             if (!string.IsNullOrEmpty(activeContentSegment.Objective))
@@ -257,13 +258,14 @@ namespace Barotrauma.Tutorials
                 {
                     objectiveText = string.Format(activeContentSegment.Objective, args);
                 }
-
+                objectiveText = TextManager.ParseInputTypes(objectiveText);
                 activeContentSegment.Objective = objectiveText;
             }
             else
             {
                 activeContentSegment.IsTriggered = true; // Complete at this stage only if no related objective
             }
+
 
             switch (activeContentSegment.ContentType)
             {
@@ -362,9 +364,12 @@ namespace Barotrauma.Tutorials
                 return true;
             };
 
-            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveTranslated).Y / 2f + 5) * GUI.Scale);
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.BottomCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, objectiveTranslated, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, segment.Objective, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+            string objectiveText = TextManager.ParseInputTypes(objectiveTranslated);
+            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveText).Y / 2f + 5) * GUI.Scale);
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.BottomCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) },
+                objectiveText, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, 
+                TextManager.ParseInputTypes(segment.Objective), textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
 
             segment.LinkedTitle.TextScale = segment.LinkedText.TextScale = GUI.Scale;
 
