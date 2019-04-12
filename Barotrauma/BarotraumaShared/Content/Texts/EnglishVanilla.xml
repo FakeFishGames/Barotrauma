@@ -2873,6 +2873,24 @@
   <Engineer.PowerUpReactor>Reactor room</Engineer.PowerUpReactor>
   <Engineer.PowerUpReactorObjective>Power up submarine’s reactor</Engineer.PowerUpReactorObjective>
   <Engineer.PowerUpReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorText>
+
+  <!-- Doctor Tutorial -->  
+  <!-- Radio -->
+  <Doctor.Radio.WakeUp>We need a medic here!</Doctor.Radio.WakeUp>
+  <Doctor.Radio.KnockedDown>That was a big one. Are you ok? Get yourself patched up.</Doctor.Radio.KnockedDown>
+  
+  <!-- Room 3 -->
+  <Doctor.Supplies>Medical supplies</Doctor.Supplies>
+  <Doctor.SuppliesObjective>Find medical supplies</Doctor.SuppliesObjective>
+  <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
+  <Doctor.SuppliesInstructions>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesInstructions>
+
+  <!-- Room 4 -->
+  <Doctor.FirstAidSelf>First aid</Doctor.FirstAidSelf>
+  <Doctor.FirstAidSelfObjective>Perform first aid on yourself</Doctor.FirstAidSelfObjective>
+  <Doctor.FirstAidSelfText>Press [MEDINTERFACEBUTTON] or click your healthbar to enter the medical interface. Afflictions affecting the character are shown to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfText>
+  <Doctor.FirstAidSelfInstructions>Press [MEDINTERFACEBUTTON] or click your healthbar to enter the medical interface. Afflictions affecting the character are shown to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfInstructions>
+
   <!-- Tutorial END -->
 
   <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
