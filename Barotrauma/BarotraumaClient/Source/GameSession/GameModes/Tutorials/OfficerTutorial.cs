@@ -44,6 +44,8 @@ namespace Barotrauma.Tutorials
         // Room 5
         private MotionSensor officer_rangedWeaponSensor;
         private ItemContainer officer_rangedWeaponCabinet;
+        private ItemContainer officer_rangedWeaponHolder_1;
+        private ItemContainer officer_rangedWeaponHolder_2;
         private Door officer_fourthDoor;
         private LightComponent officer_fourthDoorLight;
 
@@ -153,6 +155,8 @@ namespace Barotrauma.Tutorials
             // Room 5
             officer_rangedWeaponSensor = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponobjectivesensor")).GetComponent<MotionSensor>();
             officer_rangedWeaponCabinet = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponcabinet")).GetComponent<ItemContainer>();
+            officer_rangedWeaponHolder_1 = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponholder_1")).GetComponent<ItemContainer>();
+            officer_rangedWeaponHolder_2 = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponholder_2")).GetComponent<ItemContainer>();
             officer_fourthDoor = Item.ItemList.Find(i => i.HasTag("officer_fourthdoor")).GetComponent<Door>();
             officer_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("officer_fourthdoorlight")).GetComponent<LightComponent>();
 
@@ -230,7 +234,7 @@ namespace Barotrauma.Tutorials
                 }
 
                 yield return null;
-            } while (officer.Inventory.FindItemByIdentifier("") == null || officer.Inventory.FindItemByIdentifier("") == null || officer.Inventory.FindItemByIdentifier("") == null); // Wait until looted
+            } while (!officer_equipmentCabinet.Inventory.IsEmpty()); // Wait until looted
             RemoveCompletedObjective(segments[0]);
             SetHighlight(officer_equipmentCabinet.Item, false);
             do { yield return null; } while (IsSelectedItem(officer_equipmentCabinet.Item));
@@ -281,16 +285,83 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(officer_thirdDoor, officer_thirdDoorLight, true);
 
             // Room 5
-            do { yield return null; } while (!officer_mudraptorObjectiveSensor.MotionDetected);
+            do { yield return null; } while (!officer_rangedWeaponSensor.MotionDetected);
             TriggerTutorialSegment(5);
+            SetHighlight(officer_rangedWeaponCabinet.Item, true);
+            SetHighlight(officer_rangedWeaponHolder_1.Item, true);
+            SetHighlight(officer_rangedWeaponHolder_2.Item, true);
+            bool[] slotRemoved = new bool[officer_rangedWeaponCabinet.Capacity];
+
+            for (int i = 0; i < slotRemoved.Length; i++)
+            {
+                slotRemoved[i] = officer_rangedWeaponCabinet.Inventory.Items[i] == null;
+            }
+
+            do
+            {
+                if (IsSelectedItem(officer_rangedWeaponCabinet.Item) || IsSelectedItem(officer_rangedWeaponHolder_1.Item) || IsSelectedItem(officer_rangedWeaponHolder_2.Item))
+                {
+                    for (int i = 0; i < officer.Inventory.slots.Length; i++)
+                    {
+                        if (officer.Inventory.Items[i] == null) HighlightInventorySlot(officer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+
+                if (IsSelectedItem(officer_rangedWeaponCabinet.Item))
+                {
+                    for (int i = 0; i < slotRemoved.Length; i++)
+                    {
+                        if (slotRemoved[i]) continue;
+                        if (officer_rangedWeaponCabinet.Inventory.Items[i] == null)
+                        {
+                            slotRemoved[i] = true;
+                        }
+                        else
+                        {
+                            HighlightInventorySlot(officer_rangedWeaponCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        }
+                    }
+                }
+
+                if (IsSelectedItem(officer_rangedWeaponHolder_1.Item))
+                {
+                    if (officer_rangedWeaponHolder_1.Inventory.Items[0] != null)
+                    {
+                        HighlightInventorySlot(officer_rangedWeaponHolder_1.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+
+                if (IsSelectedItem(officer_rangedWeaponHolder_2.Item))
+                {
+                    if (officer_rangedWeaponHolder_2.Inventory.Items[0] != null)
+                    {
+                        HighlightInventorySlot(officer_rangedWeaponHolder_2.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+
+                SetHighlight(officer_rangedWeaponCabinet.Item, !officer_rangedWeaponCabinet.Inventory.IsEmpty());
+                SetHighlight(officer_rangedWeaponHolder_1.Item, !officer_rangedWeaponHolder_1.Inventory.IsEmpty());
+                SetHighlight(officer_rangedWeaponHolder_2.Item, !officer_rangedWeaponHolder_2.Inventory.IsEmpty());
+                yield return null;
+            } while (!officer_rangedWeaponCabinet.Inventory.IsEmpty() || !officer_rangedWeaponHolder_1.Inventory.IsEmpty() || !officer_rangedWeaponHolder_2.Inventory.IsEmpty()); // Wait until looted
+
+            RemoveCompletedObjective(segments[5]);
+            SetHighlight(officer_rangedWeaponCabinet.Item, false);
+            SetHighlight(officer_rangedWeaponHolder_1.Item, false);
+            SetHighlight(officer_rangedWeaponHolder_2.Item, false);
+            SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, true);
+
+            // Room 6
+            do { yield return null; } while (!officer_mudraptorObjectiveSensor.MotionDetected);
+            TriggerTutorialSegment(6);
             officer_mudraptor = Character.Create(mudraptorCharacterFile, officer_mudraptorSpawnPos, ToolBox.RandomSeed(8));
             do { yield return null; } while (!officer_mudraptor.IsDead);
-            RemoveCompletedObjective(segments[5]);
+            RemoveCompletedObjective(segments[6]);
             SetDoorAccess(officer_fifthDoor, officer_fifthDoorLight, true);
 
             // Submarine
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
-            TriggerTutorialSegment(6);
+            TriggerTutorialSegment(7);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Submarine"), ChatMessageType.Radio, null);
             do
             {
@@ -308,7 +379,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_subSuperCapacitor_2.Item, false);
             SetHighlight(officer_subAmmoBox_1, false);
             SetHighlight(officer_subAmmoBox_2, false);
-            RemoveCompletedObjective(segments[6]);
+            RemoveCompletedObjective(segments[7]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Complete"), ChatMessageType.Radio, null);
             // END TUTORIAL
         }
