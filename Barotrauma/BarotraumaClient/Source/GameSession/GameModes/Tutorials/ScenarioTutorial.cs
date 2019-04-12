@@ -157,9 +157,9 @@ namespace Barotrauma.Tutorials
             structure.ExternalHighlight = state;
         }
 
-        protected void SetDoorAccess(Item button, LightComponent light, bool state)
+        protected void SetDoorAccess(Door door, LightComponent light, bool state)
         {
-            if (state && button != null) button.GetComponent<Controller>().requiredItems.Clear();
+            if (state && door != null) door.requiredItems.Clear();
             if (light != null) light.LightColor = (state) ? accessibleColor : inaccessibleColor;
         }
 
