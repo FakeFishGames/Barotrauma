@@ -961,7 +961,7 @@ namespace Barotrauma
             var order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
             if (order == null)
             {
-                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\".\n" + Environment.StackTrace);
                 return;
             }
             var characterElement = characterListBox.FindChild(character);
