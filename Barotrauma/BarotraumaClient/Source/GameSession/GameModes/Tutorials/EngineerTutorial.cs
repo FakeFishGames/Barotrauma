@@ -91,6 +91,12 @@ namespace Barotrauma.Tutorials
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
             tutorial_submarineSteering = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
 
+            tutorial_submarineSteering.CanBeSelected = false;
+            foreach (ItemComponent ic in tutorial_submarineSteering.Item.Components)
+            {
+                ic.CanBeSelected = false;
+            }
+
             SetDoorAccess(null, tutorial_securityFinalDoorLight, false);
             SetDoorAccess(null, tutorial_mechanicFinalDoorLight, false);
 
@@ -286,9 +292,9 @@ namespace Barotrauma.Tutorials
             CheckJunctionBoxHighlights();
             RemoveCompletedObjective(segments[4]);
             TriggerTutorialSegment(5); // Powerup reactor
-            SetHighlight(engineer_reactor.Item, true);
-            do { yield return null; } while (!IsReactorPoweredUp()); // Wait until ~matches load
-            SetHighlight(engineer_reactor.Item, false);
+            SetHighlight(engineer_submarineReactor.Item, true);
+            do { yield return null; } while (!IsReactorPoweredUp(engineer_submarineReactor)); // Wait until ~matches load
+            SetHighlight(engineer_submarineReactor.Item, false);
             RemoveCompletedObjective(segments[5]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
 
@@ -312,7 +318,7 @@ namespace Barotrauma.Tutorials
                 while (timer > 0)
                 {
                     yield return new WaitForSeconds(0.1f);
-                    if (IsReactorPoweredUp())
+                    if (IsReactorPoweredUp(engineer_reactor))
                     {
                         timer -= 0.1f;
                     }                   
@@ -344,10 +350,10 @@ namespace Barotrauma.Tutorials
             if (engineer_submarineJunctionBox_3.IsFullCondition && engineer_submarineJunctionBox_3.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_3, false);
         }
 
-        private bool IsReactorPoweredUp()
+        private bool IsReactorPoweredUp(Reactor reactor)
         {
             float load = 0.0f;
-            List<Connection> connections = engineer_reactor.Item.Connections;
+            List<Connection> connections = reactor.Item.Connections;
             if (connections != null && connections.Count > 0)
             {
                 foreach (Connection connection in connections)
@@ -365,7 +371,7 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            return Math.Abs(load + engineer_reactor.CurrPowerConsumption) < reactorLoadError;
+            return Math.Abs(load + reactor.CurrPowerConsumption) < reactorLoadError;
         }
     }
 }
