@@ -44,8 +44,7 @@ namespace Barotrauma.Tutorials
         // Room 5
         private MotionSensor officer_rangedWeaponSensor;
         private ItemContainer officer_rangedWeaponCabinet;
-        private ItemContainer officer_rangedWeaponHolder_1;
-        private ItemContainer officer_rangedWeaponHolder_2;
+        private ItemContainer officer_rangedWeaponHolder;
         private Door officer_fourthDoor;
         private LightComponent officer_fourthDoorLight;
 
@@ -169,8 +168,7 @@ namespace Barotrauma.Tutorials
             // Room 5
             officer_rangedWeaponSensor = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponobjectivesensor")).GetComponent<MotionSensor>();
             officer_rangedWeaponCabinet = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponcabinet")).GetComponent<ItemContainer>();
-            officer_rangedWeaponHolder_1 = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponholder_1")).GetComponent<ItemContainer>();
-            officer_rangedWeaponHolder_2 = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponholder_2")).GetComponent<ItemContainer>();
+            officer_rangedWeaponHolder = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponholder")).GetComponent<ItemContainer>();
             officer_fourthDoor = Item.ItemList.Find(i => i.HasTag("officer_fourthdoor")).GetComponent<Door>();
             officer_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("officer_fourthdoorlight")).GetComponent<LightComponent>();
 
@@ -294,7 +292,7 @@ namespace Barotrauma.Tutorials
             } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.ChargePercentage < superCapacitorPercentage);
             SetHighlight(officer_coilgunLoader.Item, false);
             SetHighlight(officer_superCapacitor.Item, false);
-            RemoveCompletedObjective(segments[4]);
+            RemoveCompletedObjective(segments[3]);
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(4);
             officer_hammerhead = Character.Create(hammerheadCharacterFile, officer_hammerheadSpawnPos, ToolBox.RandomSeed(8));
@@ -309,52 +307,50 @@ namespace Barotrauma.Tutorials
             // Room 5
             do { yield return null; } while (!officer_rangedWeaponSensor.MotionDetected);
             TriggerTutorialSegment(5);
-            SetHighlight(officer_rangedWeaponHolder_1.Item, true);
-            SetHighlight(officer_rangedWeaponHolder_2.Item, true);
-
+            SetHighlight(officer_rangedWeaponHolder.Item, true);
+            do { yield return null; } while (!officer_rangedWeaponHolder.Inventory.IsEmpty()); // Wait until looted
+            SetHighlight(officer_rangedWeaponHolder.Item, false);
             do
             {
-                //if (IsSelectedItem(officer_rangedWeaponHolder_1.Item) || IsSelectedItem(officer_rangedWeaponHolder_2.Item))
-                //{
-                //    for (int i = 0; i < officer.Inventory.slots.Length; i++)
-                //    {
-                //        if (officer.Inventory.Items[i] == null) HighlightInventorySlot(officer.Inventory, i, highlightColor, .5f, .5f, 0f);
-                //    }
-                //}
-
-                //if (IsSelectedItem(officer_rangedWeaponHolder_1.Item))
-                //{
-                //    if (officer_rangedWeaponHolder_1.Inventory.Items[0] != null)
-                //    {
-                //        HighlightInventorySlot(officer_rangedWeaponHolder_1.Inventory, 0, highlightColor, .5f, .5f, 0f);
-                //    }
-                //}
-
-                //if (IsSelectedItem(officer_rangedWeaponHolder_2.Item))
-                //{
-                //    if (officer_rangedWeaponHolder_2.Inventory.Items[0] != null)
-                //    {
-                //        HighlightInventorySlot(officer_rangedWeaponHolder_2.Inventory, 0, highlightColor, .5f, .5f, 0f);
-                //    }
-                //}
-
-                //SetHighlight(officer_rangedWeaponHolder_1.Item, !officer_rangedWeaponHolder_1.Inventory.IsEmpty());
-                //SetHighlight(officer_rangedWeaponHolder_2.Item, !officer_rangedWeaponHolder_2.Inventory.IsEmpty());
-                yield return null;
-            } while (!officer_rangedWeaponHolder_1.Inventory.IsEmpty() || !officer_rangedWeaponHolder_2.Inventory.IsEmpty()); // Wait until looted
-            SetHighlight(officer_rangedWeaponHolder_1.Item, false);
-            SetHighlight(officer_rangedWeaponHolder_2.Item, false);
-            do
-            {
-                HighlightInventorySlot(officer.Inventory, "revolver", highlightColor, 0.5f, 0.5f, 0f);
                 HighlightInventorySlot(officer.Inventory, "harpoongun", highlightColor, 0.5f, 0.5f, 0f);
                 yield return null;
-            } while (!officer.HasEquippedItem("revolver") || !officer.HasEquippedItem("harpoongun")); // Wait until equipped
+            } while (!officer.HasEquippedItem("harpoongun")); // Wait until equipped
+            ItemContainer harpoonGunChamber = officer.Inventory.FindItemByIdentifier("harpoongun").GetComponent<ItemContainer>();
+            SetHighlight(officer_rangedWeaponCabinet.Item, true);
+            do
+            {
+                if (IsSelectedItem(officer_rangedWeaponCabinet.Item))
+                {
+                    if (officer_rangedWeaponCabinet.Inventory.slots != null)
+                    {
+                        for (int i = 0; i < officer_rangedWeaponCabinet.Inventory.Items.Length; i++)
+                        {
+                            if (officer_rangedWeaponCabinet.Inventory.Items[i] == null) continue;
+                            if (officer_rangedWeaponCabinet.Inventory.Items[i].Prefab.Identifier == "spear")
+                            {
+                                HighlightInventorySlot(officer_rangedWeaponCabinet.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
+                            }
+                        }
+                    }
+                }
 
+                for (int i = 0; i < officer.Inventory.Items.Length; i++)
+                {
+                    if (officer.Inventory.Items[i] == null) continue;
+                    if (officer.Inventory.Items[i].Prefab.Identifier == "spear")
+                    {
+                        HighlightInventorySlot(officer.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
+                    }
+                }
+
+                if (officer.Inventory.FindItemByIdentifier("spear") != null || (IsSelectedItem(officer_rangedWeaponCabinet.Item) && officer_rangedWeaponCabinet.Inventory.FindItemByIdentifier("spear") != null))
+                {
+                    HighlightInventorySlot(officer.Inventory, "harpoongun", highlightColor, 0.5f, 0.5f, 0f);
+                }
+                yield return null;
+            } while (!harpoonGunChamber.Inventory.IsFull()); // Wait until all five harpons loaded
             RemoveCompletedObjective(segments[5]);
             SetHighlight(officer_rangedWeaponCabinet.Item, false);
-            SetHighlight(officer_rangedWeaponHolder_1.Item, false);
-            SetHighlight(officer_rangedWeaponHolder_2.Item, false);
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, true);
 
             // Room 6

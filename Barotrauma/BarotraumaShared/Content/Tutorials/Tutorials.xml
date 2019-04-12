@@ -215,7 +215,7 @@
     </Segment>
   </DoctorTutorial>
 
-  <OfficerTutorial name="Officer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <OfficerTutorial name="Security Officer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job identifier="securityofficer">
         <Skill identifier="medical" level="20"/>

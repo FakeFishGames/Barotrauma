@@ -93,6 +93,8 @@ namespace Barotrauma.Tutorials
         {
             base.Start();
 
+            Submarine.MainSub.GodMode = true;
+
             CharacterInfo charInfo = configElement.Element("Character") == null ?
                 new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer")) :
                 new CharacterInfo(configElement.Element("Character"));
