@@ -1296,27 +1296,33 @@ namespace Barotrauma
             string speciesName = name;
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
-            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
+            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).Any(path => path.Contains(speciesName)))
             {
-                // Create the config file
-                XElement mainElement = new XElement("Character",
-                    new XAttribute("name", speciesName),
-                    new XAttribute("humanoid", isHumanoid),
-                    new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
-                    new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
-                    new XElement("health"),
-                    new XElement("ai"));
-                XDocument doc = new XDocument(mainElement);
-                if (!Directory.Exists(mainFolder))
-                {
-                    Directory.CreateDirectory(mainFolder);
-                }
-                doc.Save(configFilePath);
-                // Add to the selected content package
-                contentPackage.AddFile(configFilePath, ContentType.Character);
-                contentPackage.Save(contentPackage.Path);
-                DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
+                GUI.AddMessage(GetCharacterEditorTranslation("ExistingCharacterFound"), Color.Red, font: GUI.LargeFont);
+                // TODO: add a prompt: "Do you want to replace it?" + functionality
+                return false;
             }
+
+            // Create the config file
+            XElement mainElement = new XElement("Character",
+                new XAttribute("name", speciesName),
+                new XAttribute("humanoid", isHumanoid),
+                new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
+                new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
+                new XElement("health"),
+                new XElement("ai"));
+
+            XDocument doc = new XDocument(mainElement);
+            if (!Directory.Exists(mainFolder))
+            {
+                Directory.CreateDirectory(mainFolder);
+            }
+            doc.Save(configFilePath);
+            // Add to the selected content package
+            contentPackage.AddFile(configFilePath, ContentType.Character);
+            contentPackage.Save(contentPackage.Path);
+            DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
+
             // Ragdoll
             string ragdollFolder = RagdollParams.GetFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
