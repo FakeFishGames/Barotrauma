@@ -2791,59 +2791,49 @@
   <Mechanic.OpenDoor>Doors</Mechanic.OpenDoor>
   <Mechanic.OpenDoorObjective>Open door by pushing the adjacent button</Mechanic.OpenDoorObjective>
   <Mechanic.OpenDoorText>Doors are often wired to be opened via nearby buttons. Interact with buttons by pressing [INTERACTBUTTON] when the cursor is over them.</Mechanic.OpenDoorText>
-  <Mechanic.OpenDoorInstructions>Doors are often wired to be opened via nearby buttons. Interact with buttons by pressing [INTERACTBUTTON] when the cursor is over them.</Mechanic.OpenDoorInstructions>
 
   <!-- Room 2 -->
   <Mechanic.Equipment>Inventory</Mechanic.Equipment>
   <Mechanic.EquipmentObjective>Get your equipment from the locker</Mechanic.EquipmentObjective>
   <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Mechanic.EquipmentText>
-  <Mechanic.EquipmentInstructions>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Mechanic.EquipmentInstructions>
 
   <!-- Room 3 -->
   <Mechanic.Welding>Fixing leaks</Mechanic.Welding>
   <Mechanic.WeldingObjective>Repair leak</Mechanic.WeldingObjective>
   <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [AIMBUTTON] to aim. While aiming, hold [FIREBUTTON] to weld.</Mechanic.WeldingText>
-  <Mechanic.WeldingInstructions>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use. \n\nWhen welding tool is equipped, hold [AIMBUTTON] to aim. While aiming, hold [FIREBUTTON] to weld.</Mechanic.WeldingInstructions>
 
   <Mechanic.Drain>Draining water</Mechanic.Drain>
   <Mechanic.DrainObjective>Turn on nearby pump to drain excess water</Mechanic.DrainObjective>
   <Mechanic.DrainText>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it and flip the switch to “on” position.</Mechanic.DrainText>
-  <Mechanic.DrainInstructions>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it and flip the switch to “on” position.</Mechanic.DrainInstructions>
 
   <!-- Room 4 -->
   <Mechanic.Deconstruct>Crafting, part 1</Mechanic.Deconstruct>
   <Mechanic.DeconstructObjective>Deconstruct an extra oxygen tank</Mechanic.DeconstructObjective>
   <Mechanic.DeconstructText>The fabricator is a machine that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructText>
-  <Mechanic.DeconstructInstructions>The fabricator is a machine that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructInstructions>
 
   <Mechanic.Fabricate>Crafting, part 2</Mechanic.Fabricate>
   <Mechanic.FabricateObjective>Fabricate a fire extinguisher</Mechanic.FabricateObjective>
   <Mechanic.FabricateText>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the machine with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s bottom inventory.</Mechanic.FabricateText>
-  <Mechanic.FabricateInstructions>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the machine with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s bottom inventory.</Mechanic.FabricateInstructions>
 
   <!-- Room 5 -->
   <Mechanic.Extinguisher>Fires</Mechanic.Extinguisher>
   <Mechanic.ExtinguisherObjective>Put out the fire</Mechanic.ExtinguisherObjective>
   <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [AIMBUTTON] and dispense by holding down [FIREBUTTON].</Mechanic.ExtinguisherText>
-  <Mechanic.ExtinguisherInstructions>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [AIMBUTTON] and dispense by holding down [FIREBUTTON].</Mechanic.ExtinguisherInstructions>
 
   <!-- Room 6 -->
   <Mechanic.Diving>Diving suit</Mechanic.Diving>
   <Mechanic.DivingObjective>Equip a diving suit</Mechanic.DivingObjective>
   <Mechanic.DivingText>Diving suit protects the wearer from high pressure. Equip one to be able to swim outside the submarine. Make sure the suit has a full oxygen tank attached, otherwise wearer will suffocate.</Mechanic.DivingText>
-  <Mechanic.DivingInstructions>Diving suit protects the wearer from high pressure. Equip one to be able to swim outside the submarine. Make sure the suit has a full oxygen tank attached, otherwise wearer will suffocate.</Mechanic.DivingInstructions>
-
+  
   <!-- Room 7 -->
   <Mechanic.RepairPump>Repairing machinery</Mechanic.RepairPump>
   <Mechanic.RepairPumpObjective>Repair pump</Mechanic.RepairPumpObjective>
   <Mechanic.RepairPumpText>Machines and junction boxes require maintenance. Without it, they will break and stop working. Repair mechanical machines by equipping a wrench and interacting with the broken machine.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpText>
-  <Mechanic.RepairPumpInstructions>Machines and junction boxes require maintenance. Without it, they will break and stop working. Repair mechanical machines by equipping a wrench and interacting with the broken machine.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpInstructions>
 
   <!-- Submarine -->
   <Mechanic.RepairSubmarine>Submarine maintenance</Mechanic.RepairSubmarine>
   <Mechanic.RepairSubmarineObjective>Repair the engine and the ballast pumps</Mechanic.RepairSubmarineObjective>
   <Mechanic.RepairSubmarineText>Repair Submarine</Mechanic.RepairSubmarineText>
-  <Mechanic.RepairSubmarineInstructions>Repair Submarine</Mechanic.RepairSubmarineInstructions>
 
   <!-- Engineer Tutorial -->
   <!-- Radio -->
@@ -2859,37 +2849,30 @@
   <Engineer.Equipment>Inventory</Engineer.Equipment>
   <Engineer.EquipmentObjective>Retrieve equipment from the cabinet</Engineer.EquipmentObjective>
   <Engineer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentText>
-  <Engineer.EquipmentInstructions>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentInstructions>
 
   <!-- Room 3 -->
   <Engineer.Reactor>Reactor</Engineer.Reactor>
   <Engineer.ReactorObjective>Power up the reactor</Engineer.ReactorObjective>
   <Engineer.ReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.ReactorText>
-  <Engineer.ReactorInstructions>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.ReactorInstructions>
 
   <!-- Room 4 -->
   <Engineer.RepairJunctionBox>Maintenance</Engineer.RepairJunctionBox>
   <Engineer.RepairJunctionBoxObjective>Repair junction box</Engineer.RepairJunctionBoxObjective>
   <Engineer.RepairJunctionBoxText>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact with the machine to see the repair interface.</Engineer.RepairJunctionBoxText>
-  <Engineer.RepairJunctionBoxInstructions>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact with the machine to see the repair interface.</Engineer.RepairJunctionBoxInstructions>
 
   <!-- Room 5 -->
   <Engineer.WireJunctionBoxes>Wiring</Engineer.WireJunctionBoxes>
   <Engineer.WireJunctionBoxesObjective>Connect the junction boxes</Engineer.WireJunctionBoxesObjective>
   <Engineer.WireJunctionBoxesText>Junction boxes serve as the main way to connect the sub’s machines to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then click on the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press esc to close the panel. Repeat the step at the next item.</Engineer.WireJunctionBoxesText>
-  <Engineer.WireJunctionBoxesInstructions>Junction boxes serve as the main way to connect the sub’s machines to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then click on the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press esc to close the panel. Repeat the step at the next item.</Engineer.WireJunctionBoxesInstructions>
 
   <!-- Submarine -->
   <Engineer.RepairElectricalRoom>Electrical room</Engineer.RepairElectricalRoom>
   <Engineer.RepairElectricalRoomObjective>Repair the electrical room</Engineer.RepairElectricalRoomObjective>
   <Engineer.RepairElectricalRoomText>Find the sub’s electrical room and repair the junction boxes by interacting with them while holding a screwdriver.</Engineer.RepairElectricalRoomText>
-  <Engineer.RepairElectricalRoomInstructions>Find the sub’s electrical room and repair the junction boxes by interacting with them while holding a screwdriver.</Engineer.RepairElectricalRoomInstructions>
-
+  
   <Engineer.PowerUpReactor>Reactor room</Engineer.PowerUpReactor>
   <Engineer.PowerUpReactorObjective>Power up submarine’s reactor</Engineer.PowerUpReactorObjective>
   <Engineer.PowerUpReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorText>
-  <Engineer.PowerUpReactorInstructions>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorInstructions>
-
   <!-- Tutorial END -->
 
   <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
