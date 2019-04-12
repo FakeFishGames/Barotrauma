@@ -426,7 +426,7 @@ namespace Barotrauma
             }
         }
 
-        private bool canSpeak;
+        public bool CanSpeak;
 
         private bool speechImpedimentSet;
 
@@ -436,7 +436,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!canSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
+                if (!CanSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
                 return speechImpediment;
             }
             set
@@ -710,7 +710,7 @@ namespace Barotrauma
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            canSpeak = doc.Root.GetAttributeBool("canspeak", false);
+            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
             Noise = doc.Root.GetAttributeFloat("noise", 100f);
 

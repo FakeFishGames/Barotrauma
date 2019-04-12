@@ -2879,6 +2879,7 @@
   <Doctor.Radio.WakeUp>We need a medic here!</Doctor.Radio.WakeUp>
   <Doctor.Radio.KnockedDown>That was a big one. Are you ok? Get yourself patched up.</Doctor.Radio.KnockedDown>
   <Doctor.Radio.AssistantBurns>They’ve got a nasty burn. You don’t have any bandages with you, do you? Get them to follow you while you go find some.</Doctor.Radio.AssistantBurns>
+  <Doctor.Radio.AssistantBurnsHealed>I guess that’ll do. Make your way to the sub, it’s too dangerous to stay here.</Doctor.Radio.AssistantBurnsHealed>
   
   <!-- Room 3 -->
   <Doctor.Supplies>Medical supplies</Doctor.Supplies>

@@ -186,7 +186,7 @@
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.FirstAidSelfText" width="450"/>
     </Segment>
     
-    <Segment id="Doctor.Doctor.Medbay" objective="Doctor.MedbayObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Doctor.Medbay" objective="Doctor.MedbayObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.MedbayText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.MedbayText" width="450"/>
     </Segment>
