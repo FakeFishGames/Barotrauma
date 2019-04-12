@@ -86,6 +86,8 @@ namespace Barotrauma.Tutorials
         {
             base.Start();
 
+            return;
+
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             officer = Character.Controlled;
 
@@ -145,6 +147,7 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
+            while (true) yield return null;
             // Room 1
             while (shakeTimer > 0.0f) // Wake up, shake
             {
