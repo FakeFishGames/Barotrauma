@@ -2884,6 +2884,7 @@
   <Doctor.Radio.KnockedDown>That was a big one. Are you ok? Get yourself patched up.</Doctor.Radio.KnockedDown>
   <Doctor.Radio.AssistantBurns>They’ve got a nasty burn. You don’t have any bandages with you, do you? Get them to follow you while you go find some.</Doctor.Radio.AssistantBurns>
   <Doctor.Radio.AssistantBurnsHealed>I guess that’ll do. Make your way to the sub, it’s too dangerous to stay here.</Doctor.Radio.AssistantBurnsHealed>
+  <Doctor.Radio.EnteredSub>Good. Everyone’s here. Check up on everybody while we get the vessel ready for transit.</Doctor.Radio.EnteredSub>
   
   <!-- Room 3 -->
   <Doctor.Supplies>Medical supplies</Doctor.Supplies>
@@ -2899,10 +2900,17 @@
   <Doctor.MedbayObjective>Take the crew member to the med bay.</Doctor.MedbayObjective>
   <Doctor.MedbayText>Sometimes you will encounter afflictions that you don’t have supplies to treat on the spot. In these situations it’s handy to get the patient to follow you to the med bay, where there are more supplies to treat them.\n\nFind the character in question in the crew list to the left. Then find the “Follow” button and click on it. The character will now follow you until dismissed by clicking on the button again.</Doctor.MedbayText>
 
+  <!-- Room 5 -->
   <Doctor.TreatBurns>Treat burns</Doctor.TreatBurns>
   <Doctor.TreatBurnsObjective>Treat crew member’s injuries.</Doctor.TreatBurnsObjective>
   <Doctor.TreatBurnsText>First aid can be administered to other characters, too. Treat them by highlighting the target character and pressing [MEDINTERFACEBUTTON]. The interface will show their status on the left side of the screen.\n\nDrag the correct item into the medical interface to treat the affliction. Remember to select the correct limb before administering treatment. Bandages heal burns quickly.</Doctor.TreatBurnsText>
 
+  <!-- Room 6 -->
+  <Doctor.CPR>CPR</Doctor.CPR>
+  <Doctor.CPRObjective>Perform CPR</Doctor.CPRObjective>
+  <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([MEDINTERFACEBUTTON]) and clicking the “resuscitate“ button. The process may take a while.</Doctor.CPRText>
+  
+  
   <!-- Officer Tutorial -->
   <!-- Radio -->
   <Officer.Radio.WakeUp>Is there any security still alive? We have a hull breach and some unwanted visitors!</Officer.Radio.WakeUp>

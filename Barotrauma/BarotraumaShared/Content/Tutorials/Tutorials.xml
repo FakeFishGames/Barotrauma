@@ -200,6 +200,11 @@
       <Text tag="Doctor.TreatBurnsText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.TreatBurnsText" width="450"/>
     </Segment>
+
+    <Segment id="Doctor.CPR" objective="Doctor.CPRObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Doctor.CPRText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.CPRText" width="450"/>
+    </Segment>
   </DoctorTutorial>
 
   <!--

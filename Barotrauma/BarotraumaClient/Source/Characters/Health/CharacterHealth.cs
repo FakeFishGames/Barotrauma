@@ -131,6 +131,11 @@ namespace Barotrauma
             }
         }
 
+        public GUIButton CPRButton
+        {
+            get { return cprButton; }
+        }
+
         public float HealthBarPulsateTimer
         {
             get { return healthBarPulsateTimer; }
