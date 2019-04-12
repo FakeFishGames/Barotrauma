@@ -2891,9 +2891,13 @@
   <Doctor.SuppliesObjective>Find medical supplies</Doctor.SuppliesObjective>
   <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
 
+  <Doctor.OpenMedicalInterface>Medical interface</Doctor.OpenMedicalInterface>
+  <Doctor.OpenMedicalInterfaceObjective>Open the medical interface</Doctor.OpenMedicalInterfaceObjective>
+  <Doctor.OpenMedicalInterfaceText>Press [MEDINTERFACEBUTTON] or click your healthbar to open the medical interface. </Doctor.OpenMedicalInterfaceText>
+
   <Doctor.FirstAidSelf>First aid</Doctor.FirstAidSelf>
   <Doctor.FirstAidSelfObjective>Perform first aid on yourself</Doctor.FirstAidSelfObjective>
-  <Doctor.FirstAidSelfText>Press [MEDINTERFACEBUTTON] or click your healthbar to enter the medical interface. Afflictions affecting the character are shown to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfText>
+  <Doctor.FirstAidSelfText>Afflictions affecting the character are shown to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfText>
 
   <!-- Room 4 -->
   <Doctor.Medbay>Med bay</Doctor.Medbay>
@@ -2909,6 +2913,11 @@
   <Doctor.CPR>CPR</Doctor.CPR>
   <Doctor.CPRObjective>Perform CPR</Doctor.CPRObjective>
   <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([MEDINTERFACEBUTTON]) and clicking the “resuscitate“ button. The process may take a while.</Doctor.CPRText>
+  
+  <!-- Sub -->
+  <Doctor.Submarine>Medical assistance</Doctor.Submarine>
+  <Doctor.SubmarineObjective>Give medical assistance to everyone that needs it.</Doctor.SubmarineObjective>
+  <Doctor.SubmarineText>Inspect patient by pressing [MEDINTERFACEBUTTON], then administer the correct treatment. You can check each medical item’s description to see what they treat.</Doctor.SubmarineText>
   
   
   <!-- Officer Tutorial -->

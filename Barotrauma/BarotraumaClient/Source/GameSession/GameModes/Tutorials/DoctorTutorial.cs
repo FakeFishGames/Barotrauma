@@ -74,6 +74,9 @@ namespace Barotrauma.Tutorials
                 patient.AIController.Enabled = false;
                 patient.GiveJobItems();
             }
+
+            Item reactorItem = Item.ItemList.Find(i => i.Submarine == Submarine.MainSub && i.GetComponent<Reactor>() != null);
+            reactorItem.GetComponent<Reactor>().AutoTemp = true;
         }
 
         public override IEnumerable<object> UpdateState()
@@ -158,8 +161,14 @@ namespace Barotrauma.Tutorials
 
             // 2nd tutorial segment, treat self -------------------------------------------------------------------------
 
-            TriggerTutorialSegment(1); // Treat self objective
+            TriggerTutorialSegment(1); // Open health interface
+            while (CharacterHealth.OpenHealthWindow == null)
+            {
+                yield return new WaitForSeconds(1.0f);
+            }
+            RemoveCompletedObjective(segments[1]);
 
+            TriggerTutorialSegment(2); //Treat self
             while (doctor.CharacterHealth.GetAfflictionStrength("damage") > 0.01f)
             {
                 if (CharacterHealth.OpenHealthWindow == null)
@@ -174,7 +183,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             }
 
-            RemoveCompletedObjective(segments[1]);
+            RemoveCompletedObjective(segments[2]);
 
             while (CharacterHealth.OpenHealthWindow != null)
             {
@@ -203,7 +212,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
 
             yield return new WaitForSeconds(3.0f);
-            TriggerTutorialSegment(2); // Get the patient to medbay
+            TriggerTutorialSegment(3); // Get the patient to medbay
 
             while (patient1.CurrentOrder == null || patient1.CurrentOrder.AITag != "follow")
             {
@@ -215,18 +224,18 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(1.0f);
             }
-            RemoveCompletedObjective(segments[2]);
+            RemoveCompletedObjective(segments[3]);
 
             yield return new WaitForSeconds(2.0f);
 
-            TriggerTutorialSegment(3); // treat burns
+            TriggerTutorialSegment(4); // treat burns
 
             while (patient1.CharacterHealth.GetAfflictionStrength("burn") > 0.01f)
             {
                 //TODO: highlight patient
                 yield return null;
             }
-            RemoveCompletedObjective(segments[3]);
+            RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(1.0f);
 
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.AssistantBurnsHealed"), ChatMessageType.Radio, null);
@@ -248,7 +257,7 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(3.0f);
 
-            TriggerTutorialSegment(4); // perform CPR
+            TriggerTutorialSegment(5); // perform CPR
 
             while (patient2.IsUnconscious)
             {
@@ -259,7 +268,7 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             }
-            RemoveCompletedObjective(segments[4]);
+            RemoveCompletedObjective(segments[5]);
             CoroutineManager.StopCoroutines("KeepPatient2Alive");
 
             while (doctor.Submarine != Submarine.MainSub)
@@ -268,6 +277,9 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(5.0f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.EnteredSub"), ChatMessageType.Radio, null);
+
+            yield return new WaitForSeconds(3.0f);
+            TriggerTutorialSegment(6); // give treatment to anyone in need
 
             foreach (var patient in subPatients)
             {
@@ -300,10 +312,12 @@ namespace Barotrauma.Tutorials
                         {
                             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, message, ChatMessageType.Radio, null);
                         }
+                        patientCalledHelp[i] = true;
                     }
                 }
                 yield return new WaitForSeconds(1.0f);
             }
+            RemoveCompletedObjective(segments[6]);
 
             // END TUTORIAL
             Completed = true;

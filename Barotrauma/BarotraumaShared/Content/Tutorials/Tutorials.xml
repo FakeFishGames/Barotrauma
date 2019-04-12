@@ -186,6 +186,11 @@
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.SuppliesText" width="450"/>
     </Segment>
 
+    <Segment id="Doctor.OpenMedicalInterface" objective="Doctor.OpenMedicalInterfaceObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Doctor.OpenMedicalInterfaceText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.OpenMedicalInterfaceText" width="450"/>
+    </Segment>
+    
     <Segment id="Doctor.FirstAidSelf" objective="Doctor.FirstAidSelfObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.FirstAidSelfText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.FirstAidSelfText" width="450"/>
@@ -204,6 +209,11 @@
     <Segment id="Doctor.CPR" objective="Doctor.CPRObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.CPRText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.CPRText" width="450"/>
+    </Segment>
+
+    <Segment id="Doctor.Submarine" objective="Doctor.SubmarineObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Doctor.SubmarineText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.SubmarineText" width="450"/>
     </Segment>
   </DoctorTutorial>
 
