@@ -202,6 +202,55 @@
     </Segment>
   </DoctorTutorial>
 
+  <OfficerTutorial name="Officer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+
+    <!-- TODO: use identifiers instead of names -->
+    <Character file="Content/Characters/Human/Human.xml">
+      <Job identifier="Security Officer">
+        <Skill identifier="medical" level="20"/>
+        <Skill identifier="weapons" level="70"/>
+        <Skill identifier="mechanical" level="20"/>
+        <Skill identifier="electrical" level="20"/>
+        <Skill identifier="helm" level="20"/>
+      </Job>
+    </Character>
+
+    <Segment id="Officer.Equipment" objective="Officer.EquipmentObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.EquipmentText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.EquipmentText" width="450"/>
+    </Segment>
+
+    <Segment id="Officer.MeleeWeapon" objective="Officer.MeleeWeaponObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.MeleeWeaponText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.MeleeWeaponText" width="450"/>
+    </Segment>
+
+    <Segment id="Officer.Crawler" objective="Officer.CrawlerObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.CrawlerText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.CrawlerText" width="450"/>
+    </Segment>
+
+    <Segment id="Officer.SomethingBig" objective="Officer.SomethingBigObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.SomethingBigText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.SomethingBigText" width="450"/>
+    </Segment>
+    
+    <Segment id="Officer.Hammerhead" objective="Officer.HammerheadObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.HammerheadText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.HammerheadText" width="450"/>
+    </Segment>
+
+    <Segment id="Officer.Mudraptor" objective="Officer.MudraptorObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.MudraptorText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.MudraptorText" width="450"/>
+    </Segment>
+
+    <Segment id="Officer.ArmSubmarine" objective="Officer.ArmSubmarineObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.ArmSubmarineText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.ArmSubmarineText" width="450"/>
+    </Segment>
+  </OfficerTutorial>
+
   <!--
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/Human.xml">

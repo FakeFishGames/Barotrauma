@@ -17,9 +17,9 @@ namespace Barotrauma.Tutorials
         // Room 1
         private float shakeTimer = 3f;
         private float shakeAmount = 20f;
-        private MotionSensor officer_equipmentObjectiveSensor;
 
         // Room 2
+        private MotionSensor officer_equipmentObjectiveSensor;
         private ItemContainer officer_equipmentCabinet;
         private Door officer_firstDoor;
         private LightComponent officer_firstDoorLight;
@@ -48,17 +48,30 @@ namespace Barotrauma.Tutorials
         private LightComponent officer_fourthDoorLight;
 
         // Room 6
+        private MotionSensor officer_mudraptorObjectiveSensor;
+        private Vector2 officer_mudraptorSpawnPos;
+        private Character officer_mudraptor;
+        private Door officer_fifthDoor;
+        private LightComponent officer_fifthDoorLight;
 
         // Submarine
         private Door tutorial_submarineDoor;
         private LightComponent tutorial_submarineDoorLight;
         private MotionSensor tutorial_enteredSubmarineSensor;
+        private Item officer_subAmmoBox_1;
+        private Item officer_subAmmoBox_2;
+        private ItemContainer officer_subLoader_1;
+        private ItemContainer officer_subLoader_2;
+        private PowerContainer officer_subSuperCapacitor_1;
+        private PowerContainer officer_subSuperCapacitor_2;
 
         // Variables
         private string radioSpeakerName;
         private Character officer;
         private string crawlerCharacterFile;
         private string hammerheadCharacterFile;
+        private string mudraptorCharacterFile;
+        private float superCapacitorPercentage = 50;
 
         public OfficerTutorial(XElement element) : base(element)
         {
@@ -80,13 +93,20 @@ namespace Barotrauma.Tutorials
                     break;
                 }
             }
+
+            foreach (string characterFile in characterFiles)
+            {
+                if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == "mudraptor")
+                {
+                    mudraptorCharacterFile = characterFile;
+                    break;
+                }
+            }
         }
 
         public override void Start()
         {
             base.Start();
-
-            return;
 
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             officer = Character.Controlled;
@@ -112,6 +132,7 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(officer_firstDoor, officer_firstDoorLight, false);
 
             // Room 3
+            officer_crawlerSensor = Item.ItemList.Find(i => i.HasTag("officer_crawlerobjectivesensor")).GetComponent<MotionSensor>();
             officer_crawlerSpawnPos = Item.ItemList.Find(i => i.HasTag("officer_crawlerspawn")).WorldPosition;
             officer_secondDoor = Item.ItemList.Find(i => i.HasTag("officer_seconddoor")).GetComponent<Door>();
             officer_secondDoorLight = Item.ItemList.Find(i => i.HasTag("officer_seconddoorlight")).GetComponent<LightComponent>();
@@ -119,7 +140,7 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(officer_secondDoor, officer_secondDoorLight, false);
 
             // Room 4
-            officer_somethingBigSensor = Item.ItemList.Find(i => i.HasTag("officer_somethingbigsensor")).GetComponent<MotionSensor>();
+            officer_somethingBigSensor = Item.ItemList.Find(i => i.HasTag("officer_somethingbigobjectivesensor")).GetComponent<MotionSensor>();
             officer_coilgunLoader = Item.ItemList.Find(i => i.HasTag("officer_coilgunloader")).GetComponent<ItemContainer>();
             officer_superCapacitor = Item.ItemList.Find(i => i.HasTag("officer_supercapacitor")).GetComponent<PowerContainer>();
             officer_coilgunPeriscope = Item.ItemList.Find(i => i.HasTag("officer_coilgunperiscope"));
@@ -130,24 +151,37 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(officer_thirdDoor, officer_thirdDoorLight, false);
 
             // Room 5
-            officer_rangedWeaponSensor = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponsensor")).GetComponent<MotionSensor>();
+            officer_rangedWeaponSensor = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponobjectivesensor")).GetComponent<MotionSensor>();
             officer_rangedWeaponCabinet = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponcabinet")).GetComponent<ItemContainer>();
             officer_fourthDoor = Item.ItemList.Find(i => i.HasTag("officer_fourthdoor")).GetComponent<Door>();
             officer_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("officer_fourthdoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, false);
 
+            // Room 6
+            officer_mudraptorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("officer_mudraptorobjectivesensor")).GetComponent<MotionSensor>();
+            officer_mudraptorSpawnPos = Item.ItemList.Find(i => i.HasTag("officer_mudraptorspawn")).WorldPosition;
+            officer_fifthDoor = Item.ItemList.Find(i => i.HasTag("officer_fifthdoor")).GetComponent<Door>();
+            officer_fifthDoorLight = Item.ItemList.Find(i => i.HasTag("officer_fifthdoorlight")).GetComponent<LightComponent>();
+
+            SetDoorAccess(officer_fifthDoor, officer_fifthDoorLight, false);
+
             // Submarine
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
             tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
+            officer_subAmmoBox_1 = Item.ItemList.Find(i => i.HasTag("officer_subammobox_1"));
+            officer_subAmmoBox_2 = Item.ItemList.Find(i => i.HasTag("officer_subammobox_2"));
+            officer_subLoader_1 = Item.ItemList.Find(i => i.HasTag("officer_subloader_1")).GetComponent<ItemContainer>();
+            officer_subLoader_2 = Item.ItemList.Find(i => i.HasTag("officer_subloader_2")).GetComponent<ItemContainer>();
+            officer_subSuperCapacitor_1 = Item.ItemList.Find(i => i.HasTag("officer_subsupercapacitor_1")).GetComponent<PowerContainer>();
+            officer_subSuperCapacitor_2 = Item.ItemList.Find(i => i.HasTag("officer_subsupercapacitor_2")).GetComponent<PowerContainer>();
 
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
         }
 
         public override IEnumerable<object> UpdateState()
         {
-            while (true) yield return null;
             // Room 1
             while (shakeTimer > 0.0f) // Wake up, shake
             {
@@ -198,6 +232,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (officer.Inventory.FindItemByIdentifier("") == null || officer.Inventory.FindItemByIdentifier("") == null || officer.Inventory.FindItemByIdentifier("") == null); // Wait until looted
             RemoveCompletedObjective(segments[0]);
+            SetHighlight(officer_equipmentCabinet.Item, false);
             do { yield return null; } while (IsSelectedItem(officer_equipmentCabinet.Item));
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(1);
@@ -228,9 +263,11 @@ namespace Barotrauma.Tutorials
             do
             {
                 SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.Items[0] == null);
-                SetHighlight(officer_superCapacitor.Item, officer_superCapacitor.ChargePercentage < 50);
+                SetHighlight(officer_superCapacitor.Item, officer_superCapacitor.ChargePercentage < superCapacitorPercentage);
                 yield return null;
-            } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.ChargePercentage < 50);
+            } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.ChargePercentage < superCapacitorPercentage);
+            SetHighlight(officer_coilgunLoader.Item, false);
+            SetHighlight(officer_superCapacitor.Item, false);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(4);
@@ -244,6 +281,36 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(officer_thirdDoor, officer_thirdDoorLight, true);
 
             // Room 5
+            do { yield return null; } while (!officer_mudraptorObjectiveSensor.MotionDetected);
+            TriggerTutorialSegment(5);
+            officer_mudraptor = Character.Create(mudraptorCharacterFile, officer_mudraptorSpawnPos, ToolBox.RandomSeed(8));
+            do { yield return null; } while (!officer_mudraptor.IsDead);
+            RemoveCompletedObjective(segments[5]);
+            SetDoorAccess(officer_fifthDoor, officer_fifthDoorLight, true);
+
+            // Submarine
+            do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
+            TriggerTutorialSegment(6);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Submarine"), ChatMessageType.Radio, null);
+            do
+            {
+                SetHighlight(officer_subLoader_1.Item, officer_subLoader_1.Inventory.Items[0] == null || officer_subLoader_1.Inventory.Items[0].Condition == 0);
+                SetHighlight(officer_subLoader_2.Item, officer_subLoader_2.Inventory.Items[0] == null || officer_subLoader_2.Inventory.Items[0].Condition == 0);
+                SetHighlight(officer_subSuperCapacitor_1.Item, officer_subSuperCapacitor_1.ChargePercentage < superCapacitorPercentage);
+                SetHighlight(officer_subSuperCapacitor_2.Item, officer_subSuperCapacitor_2.ChargePercentage < superCapacitorPercentage);
+                SetHighlight(officer_subAmmoBox_1, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
+                SetHighlight(officer_subAmmoBox_2, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
+                yield return null;
+            } while (officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight || officer_subSuperCapacitor_1.Item.ExternalHighlight || officer_subSuperCapacitor_2.Item.ExternalHighlight);
+            SetHighlight(officer_subLoader_1.Item, false);
+            SetHighlight(officer_subLoader_2.Item, false);
+            SetHighlight(officer_subSuperCapacitor_1.Item, false);
+            SetHighlight(officer_subSuperCapacitor_2.Item, false);
+            SetHighlight(officer_subAmmoBox_1, false);
+            SetHighlight(officer_subAmmoBox_2, false);
+            RemoveCompletedObjective(segments[6]);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Complete"), ChatMessageType.Radio, null);
+            // END TUTORIAL
         }
 
         private bool IsSelectedItem(Item item)
