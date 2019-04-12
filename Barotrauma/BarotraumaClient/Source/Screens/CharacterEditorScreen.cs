@@ -42,16 +42,16 @@ namespace Barotrauma
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool isFreezed;
-        private bool autoFreeze = true;
-        private bool limbPairEditing = true;
-        private bool uniformScaling = true;
-        private bool lockSpriteOrigin = true;
+        private bool autoFreeze;
+        private bool limbPairEditing;
+        private bool uniformScaling;
+        private bool lockSpriteOrigin;
         private bool lockSpritePosition;
         private bool lockSpriteSize;
         private bool recalculateCollider;
         private bool copyJointSettings;
         private bool displayColliders;
-        private bool displayWearables = true;
+        private bool displayWearables;
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
         private bool animationResetRequiresForceLoading;
@@ -93,6 +93,7 @@ namespace Barotrauma
             CalculateSpritesheetPosition();
             if (Submarine.MainSub == null)
             {
+                ResetVariables();
                 Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
                 Submarine.MainSub.Load(unloadPrevious: false, showWarningMessages: false);
                 originalWall = new WallGroup(new List<Structure>(Structure.WallList));
@@ -100,6 +101,10 @@ namespace Barotrauma
                 CalculateMovementLimits();
                 isEndlessRunner = true;
                 GameMain.LightManager.LightingEnabled = false;
+            }
+            else if (instance == null)
+            {
+                ResetVariables();
             }
             Submarine.MainSub.GodMode = true;
             if (Character.Controlled == null)
@@ -118,17 +123,49 @@ namespace Barotrauma
             instance = this;
         }
 
+        private void ResetVariables()
+        {
+            editAnimations = false;
+            editLimbs = false;
+            editJoints = false;
+            editIK = false;
+            showRagdoll = false;
+            showParamsEditor = false;
+            showSpritesheet = false;
+            isFreezed = false;
+            autoFreeze = true;
+            limbPairEditing = true;
+            uniformScaling = true;
+            lockSpriteOrigin = false;
+            lockSpritePosition = false;
+            lockSpriteSize = false;
+            recalculateCollider = false;
+            copyJointSettings = false;
+            displayColliders = false;
+            displayWearables = true;
+            displayBackgroundColor = false;
+            ragdollResetRequiresForceLoading = false;
+            animationResetRequiresForceLoading = false;
+            isExtrudingJoint = false;
+            isDrawingJoint = false;
+            Wizard.Instance = null;
+        }
+
         private void Reset()
         {
-            AnimParams.ForEach(a => a.Reset(true));
-            RagdollParams.Reset(true);
-            RagdollParams.ClearHistory();
-            CurrentAnimation.ClearHistory();
-            if (!character.Removed)
+            ResetVariables();
+            if (character != null)
             {
-                character.Remove();
+                AnimParams.ForEach(a => a.Reset(true));
+                RagdollParams.Reset(true);
+                RagdollParams.ClearHistory();
+                CurrentAnimation.ClearHistory();
+                if (!character.Removed)
+                {
+                    character.Remove();
+                }
+                character = null;
             }
-            character = null;
         }
 
         public override void Deselect()
@@ -139,10 +176,7 @@ namespace Barotrauma
             {
                 Submarine.MainSub.Remove();
                 isEndlessRunner = false;
-                if (character != null)
-                {
-                    Reset();
-                }
+                Reset();
                 GameMain.World.ProcessChanges();
             }
             else
@@ -1131,7 +1165,22 @@ namespace Barotrauma
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
                 selectedJob = null;
             }
-            character.dontFollowCursor = dontFollowCursor;
+            if (character != null)
+            {
+                character.dontFollowCursor = dontFollowCursor;
+            }
+            if (character == null)
+            {
+                if (currentCharacterConfig == configFile)
+                {
+                    return null;
+                }
+                else
+                {
+                    // Respawn the current character;
+                    SpawnCharacter(currentCharacterConfig);
+                }
+            }
             OnPostSpawn();
             return character;
         }
@@ -4302,6 +4351,10 @@ namespace Barotrauma
                     }
                     return instance;
                 }
+                set
+                {
+                    instance = value;
+                }
             }
 
             public enum Tab { None, Character, Ragdoll }
@@ -4322,7 +4375,6 @@ namespace Barotrauma
                         break;
                     case Tab.None:
                     default:
-                        //activeView = null;
                         instance = null;
                         break;
                 }
