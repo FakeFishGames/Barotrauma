@@ -57,6 +57,7 @@
   </ContextualTutorial>
 
   <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+    <!-- TODO: use identifiers instead of names -->
     <Character file="Content/Characters/Human/Human.xml">
       <Job identifier="mechanic">
         <Skill identifier="electrical" level="20"/>
@@ -119,6 +120,7 @@
   </MechanicTutorial>
 
   <EngineerTutorial name="Engineer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+    <!-- TODO: use identifiers instead of names -->
     <Character file="Content/Characters/Human/Human.xml">
       <Job identifier="engineer">
         <Skill identifier="electrical" level="50"/>
@@ -159,7 +161,32 @@
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.PowerUpReactorText" width="450"/>
     </Segment>
   </EngineerTutorial>
-  
+
+
+  <DoctorTutorial name="Medical training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+    
+    <!-- TODO: use identifiers instead of names -->
+    <Character file="Content/Characters/Human/Human.xml">
+      <Job name="Medical Doctor">
+        <Skill identifier="medical" level="70"/>
+        <Skill identifier="weapons" level="20"/>
+        <Skill identifier="mechanical" level="20"/>
+        <Skill identifier="electrical" level="20"/>
+        <Skill identifier="helm" level="20"/>
+      </Job>
+    </Character>
+
+    <Segment id="Doctor.Supplies" objective="Doctor.SuppliesObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Doctor.SuppliesText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.SuppliesInstructions" width="450"/>
+    </Segment>
+
+    <Segment id="Doctor.FirstAidSelf" objective="Doctor.FirstAidSelfObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Doctor.FirstAidSelfText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.FirstAidSelfInstructions" width="450"/>
+    </Segment>
+  </DoctorTutorial>
+
   <!--
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/Human.xml">
