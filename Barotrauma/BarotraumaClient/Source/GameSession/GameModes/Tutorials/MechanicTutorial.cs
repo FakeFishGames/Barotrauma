@@ -11,6 +11,7 @@ namespace Barotrauma.Tutorials
         // Other tutorial items
         private LightComponent tutorial_securityFinalDoorLight;
         private Door tutorial_upperFinalDoor;
+        private Steering tutorial_submarineSteering;
 
         // Room 1
         private float shakeTimer = 3.0f;
@@ -90,7 +91,14 @@ namespace Barotrauma.Tutorials
 
             // Other tutorial items
             tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
-            tutorial_upperFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_upperfinaldoor")).GetComponent<Door>();     
+            tutorial_upperFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_upperfinaldoor")).GetComponent<Door>();
+            tutorial_submarineSteering = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
+
+            tutorial_submarineSteering.CanBeSelected = false;
+            foreach (ItemComponent ic in tutorial_submarineSteering.Item.Components)
+            {
+                ic.CanBeSelected = false;
+            }
 
             SetDoorAccess(null, tutorial_securityFinalDoorLight, false);
             SetDoorAccess(tutorial_upperFinalDoor, null, false);
