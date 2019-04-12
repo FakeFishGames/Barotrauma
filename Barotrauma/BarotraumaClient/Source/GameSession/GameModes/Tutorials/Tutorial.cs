@@ -446,10 +446,10 @@ namespace Barotrauma.Tutorials
         {
             if (hasButton) height += 60;
 
-            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);          
+            float textScale = GUI.Scale;
+            string wrappedText = ToolBox.WrapText(text, width, GUI.Font, textScale);          
 
-            height += wrappedText.Split('\n').Length * 25;
-
+            height += (int)(GUI.Font.MeasureString(wrappedText).Y * textScale + 50);
             if (title.Length > 0)
             {
                 height += 35;
@@ -465,25 +465,37 @@ namespace Barotrauma.Tutorials
             var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
             infoBlock.Flash(Color.Green);
 
+            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), infoBlock.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
             if (title.Length > 0)
             {
-                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1f, .35f), infoBlock.RectTransform, Anchor.TopCenter,
-                Pivot.TopCenter), title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
-                titleBlock.TextScale = GUI.Scale;
+                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
+                    title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
+                titleBlock.TextScale = textScale;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1f), infoBlock.RectTransform, Anchor.BottomCenter),
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform),
                 text, wrap: true);
-            textBlock.TextScale = GUI.Scale;
+            textBlock.TextScale = textScale;
 
             infoBoxClosedCallback = callback;
 
             if (hasButton)
             {
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), infoContent.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.1f
+                };
+
                 if (showVideo != null)
                 {
-                    var videoButton = new GUIButton(new RectTransform(new Point(50, 50), infoBlock.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft) { AbsoluteOffset = new Point(40, 25) },
-                    "Video")
+                    var videoButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonContainer.RectTransform),
+                        TextManager.Get("Video"), style: "GUIButtonLarge")
                     {
                         OnClicked = (GUIButton button, object obj) =>
                         {
@@ -493,8 +505,8 @@ namespace Barotrauma.Tutorials
                     };
                 }
 
-                var okButton = new GUIButton(new RectTransform(new Point(160, 50), infoBlock.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, 25) },
-                TextManager.Get("OK"))
+                var okButton = new GUIButton(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform),
+                    TextManager.Get("OK"), style: "GUIButtonLarge")
                 {
                     OnClicked = CloseInfoFrame
                 };
