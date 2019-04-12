@@ -330,9 +330,12 @@ namespace Barotrauma.Tutorials
                     {
                         HighlightInventorySlot(mechanic.Inventory, "oxygentank", highlightColor, .5f, .5f, 0f);
 
-                        for (int i = 0; i < mechanic_deconstructor.InputContainer.Inventory.slots.Length; i++)
+                        if (mechanic_deconstructor.InputContainer.Inventory.slots != null)
                         {
-                            HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                            for (int i = 0; i < mechanic_deconstructor.InputContainer.Inventory.slots.Length; i++)
+                            {
+                                HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                            }
                         }
                     }
 

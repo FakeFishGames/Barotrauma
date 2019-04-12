@@ -53,8 +53,8 @@ namespace Barotrauma.Tutorials
         private MotionSensor officer_mudraptorObjectiveSensor;
         private Vector2 officer_mudraptorSpawnPos;
         private Character officer_mudraptor;
-        private Door officer_fifthDoor;
-        private LightComponent officer_fifthDoorLight;
+        private Door tutorial_securityFinalDoor;
+        private LightComponent tutorial_securityFinalDoorLight;
 
         // Submarine
         private Door tutorial_submarineDoor;
@@ -113,6 +113,20 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             officer = Character.Controlled;
 
+            var handcuffs = officer.Inventory.FindItemByIdentifier("handcuffs");
+            officer.Inventory.RemoveItem(handcuffs);
+
+            var stunbaton = officer.Inventory.FindItemByIdentifier("stunbaton");
+            officer.Inventory.RemoveItem(stunbaton);
+
+            var ballistichelmet = officer.Inventory.FindItemByIdentifier("ballistichelmet");
+            ballistichelmet.Unequip(officer);
+            officer.Inventory.RemoveItem(ballistichelmet);
+
+            var bodyarmor = officer.Inventory.FindItemByIdentifier("bodyarmor");
+            bodyarmor.Unequip(officer);
+            officer.Inventory.RemoveItem(bodyarmor);
+
             // Other tutorial items
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
             tutorial_submarineSteering = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
@@ -165,10 +179,10 @@ namespace Barotrauma.Tutorials
             // Room 6
             officer_mudraptorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("officer_mudraptorobjectivesensor")).GetComponent<MotionSensor>();
             officer_mudraptorSpawnPos = Item.ItemList.Find(i => i.HasTag("officer_mudraptorspawn")).WorldPosition;
-            officer_fifthDoor = Item.ItemList.Find(i => i.HasTag("officer_fifthdoor")).GetComponent<Door>();
-            officer_fifthDoorLight = Item.ItemList.Find(i => i.HasTag("officer_fifthdoorlight")).GetComponent<LightComponent>();
+            tutorial_securityFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoor")).GetComponent<Door>();
+            tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(officer_fifthDoor, officer_fifthDoorLight, false);
+            SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, false);
 
             // Submarine
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
@@ -246,8 +260,16 @@ namespace Barotrauma.Tutorials
                 {
                     HighlightInventorySlot(officer.Inventory, "stunbaton", highlightColor, .5f, .5f, 0f);
                 }
+                if (!officer.HasEquippedItem("bodyarmor"))
+                {
+                    HighlightInventorySlot(officer.Inventory, "bodyarmor", highlightColor, .5f, .5f, 0f);
+                }
+                if (!officer.HasEquippedItem("ballistichelmet"))
+                {
+                    HighlightInventorySlot(officer.Inventory, "ballistichelmet", highlightColor, .5f, .5f, 0f);
+                }
                 yield return null;
-            } while (!officer.HasEquippedItem("stunbaton"));
+            } while (!officer.HasEquippedItem("stunbaton") || !officer.HasEquippedItem("bodyarmor") || !officer.HasEquippedItem("ballistichelmet"));
             RemoveCompletedObjective(segments[1]);
             SetDoorAccess(officer_firstDoor, officer_firstDoorLight, true);
 
@@ -345,6 +367,13 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (!officer_rangedWeaponCabinet.Inventory.IsEmpty() || !officer_rangedWeaponHolder_1.Inventory.IsEmpty() || !officer_rangedWeaponHolder_2.Inventory.IsEmpty()); // Wait until looted
 
+            do
+            {
+                HighlightInventorySlot(officer.Inventory, "revolver", highlightColor, 0.5f, 0.5f, 0f);
+                HighlightInventorySlot(officer.Inventory, "harpoongun", highlightColor, 0.5f, 0.5f, 0f);
+                yield return null;
+            } while (!officer.HasEquippedItem("revolver") || !officer.HasEquippedItem("harpoongun")); // Wait until equipped
+
             RemoveCompletedObjective(segments[5]);
             SetHighlight(officer_rangedWeaponCabinet.Item, false);
             SetHighlight(officer_rangedWeaponHolder_1.Item, false);
@@ -357,7 +386,7 @@ namespace Barotrauma.Tutorials
             officer_mudraptor = Character.Create(mudraptorCharacterFile, officer_mudraptorSpawnPos, ToolBox.RandomSeed(8));
             do { yield return null; } while (!officer_mudraptor.IsDead);
             RemoveCompletedObjective(segments[6]);
-            SetDoorAccess(officer_fifthDoor, officer_fifthDoorLight, true);
+            SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, true);
 
             // Submarine
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
