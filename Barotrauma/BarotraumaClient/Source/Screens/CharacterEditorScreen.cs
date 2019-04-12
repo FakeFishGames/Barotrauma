@@ -148,7 +148,7 @@ namespace Barotrauma
             animationResetRequiresForceLoading = false;
             isExtrudingJoint = false;
             isDrawingJoint = false;
-            Wizard.Instance = null;
+            Wizard.instance = null;
         }
 
         private void Reset()
@@ -209,7 +209,7 @@ namespace Barotrauma
         {
             //base.AddToGUIUpdateList();
             rightPanel.AddToGUIUpdateList();
-            Wizard.Instance.AddToGUIUpdateList();
+            Wizard.instance?.AddToGUIUpdateList();
             if (displayBackgroundColor)
             {
                 backgroundColorPanel.AddToGUIUpdateList();
@@ -241,7 +241,7 @@ namespace Barotrauma
             base.Update(deltaTime);
             spriteSheetRect = CalculateSpritesheetRectangle();
             // Handle shortcut keys
-            if (GUI.KeyboardDispatcher.Subscriber == null)
+            if (GUI.KeyboardDispatcher.Subscriber == null && Wizard.instance == null)
             {
                 if (PlayerInput.KeyDown(Keys.LeftControl))
                 {
@@ -430,7 +430,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (!isFreezed)
+            if (!isFreezed && Wizard.instance == null)
             {
                 if (character.AnimController.Invalid)
                 {
@@ -4340,7 +4340,7 @@ namespace Barotrauma
             private List<XElement> jointXElements = new List<XElement>();
             private List<GUIComponent> jointGUIElements = new List<GUIComponent>();
 
-            private static Wizard instance;
+            public static Wizard instance;
             public static Wizard Instance
             {
                 get
@@ -4350,10 +4350,6 @@ namespace Barotrauma
                         instance = new Wizard();
                     }
                     return instance;
-                }
-                set
-                {
-                    instance = value;
                 }
             }
 
@@ -4482,7 +4478,7 @@ namespace Barotrauma
                     // Cancel
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
-                        Instance.SelectTab(Tab.None);
+                        Wizard.Instance.SelectTab(Tab.None);
                         return true;
                     };
                     // Next
@@ -4494,7 +4490,7 @@ namespace Barotrauma
                             texturePathElement.Flash(Color.Red);
                             return false;
                         }
-                        Instance.SelectTab(Tab.Ragdoll);
+                        Wizard.Instance.SelectTab(Tab.Ragdoll);
                         return true;
                     };
                     return box;
@@ -4635,7 +4631,7 @@ namespace Barotrauma
                     // Previous
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
-                        Instance.SelectTab(Tab.Character);
+                        Wizard.Instance.SelectTab(Tab.Character);
                         return true;
                     };
                     // Parse and create
@@ -4726,7 +4722,7 @@ namespace Barotrauma
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                         }
-                        Instance.SelectTab(Tab.None);
+                        Wizard.Instance.SelectTab(Tab.None);
                         return true;
                     };
                     return box;
