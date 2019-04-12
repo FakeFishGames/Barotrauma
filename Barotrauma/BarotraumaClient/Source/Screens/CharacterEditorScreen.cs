@@ -1278,12 +1278,20 @@ namespace Barotrauma
             string animFolder = AnimationParams.GetFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
             {
-                if (animType != AnimationType.NotDefined)
+                switch (animType)
                 {
-                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
-                    string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
-                    AnimationParams.Create(fullPath, speciesName, animType, type);
+                    case AnimationType.Walk:
+                    case AnimationType.Run:
+                        if (!ragdollParams.CanEnterSubmarine) { continue; }
+                        break;
+                    case AnimationType.SwimSlow:
+                    case AnimationType.SwimFast:
+                        break;
+                    default: continue;
                 }
+                Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
+                string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
+                AnimationParams.Create(fullPath, speciesName, animType, type);
             }
             if (!AllFiles.Contains(configFilePath))
             {
