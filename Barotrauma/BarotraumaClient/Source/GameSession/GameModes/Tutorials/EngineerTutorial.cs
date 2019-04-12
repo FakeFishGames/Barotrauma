@@ -186,13 +186,53 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(0); // Retrieve equipment
             SetHighlight(engineer_equipmentCabinet.Item, true);
-            do { yield return null; } while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null); // Wait until looted
+            bool firstSlotRemoved = false;
+            bool secondSlotRemoved = false;
+            bool thirdSlotRemoved = false;
+            bool fourthSlotRemoved = false;
+            do
+            {
+                if (IsSelectedItem(engineer_equipmentCabinet.Item))
+                {
+                    if (!firstSlotRemoved)
+                    {
+                        HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                        if (engineer_equipmentCabinet.Inventory.Items[0] == null) firstSlotRemoved = true;
+                    }
+
+                    if (!secondSlotRemoved)
+                    {
+                        HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 1, highlightColor, .5f, .5f, 0f);
+                        if (engineer_equipmentCabinet.Inventory.Items[1] == null) secondSlotRemoved = true;
+                    }
+
+                    if (!thirdSlotRemoved)
+                    {
+                        HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 2, highlightColor, .5f, .5f, 0f);
+                        if (engineer_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
+                    }
+
+                    if (!fourthSlotRemoved)
+                    {
+                        HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 3, highlightColor, .5f, .5f, 0f);
+                        if (engineer_equipmentCabinet.Inventory.Items[2] == null) fourthSlotRemoved = true;
+                    }
+
+                    for (int i = 0; i < engineer.Inventory.slots.Length; i++)
+                    {
+                        if (engineer.Inventory.Items[i] == null) HighlightInventorySlot(engineer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+
+                yield return null; } while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null); // Wait until looted
             RemoveCompletedObjective(segments[0]);
             SetHighlight(engineer_equipmentCabinet.Item, false);
+            SetHighlight(engineer_reactor.Item, true);
             SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, true);
 
             // Room 3
-            do { yield return null; } while (!engineer_reactorObjectiveSensor.MotionDetected);
+            do { yield return null; } while (!IsSelectedItem(engineer_reactor.Item));
+            yield return new WaitForSeconds(0.5f);
             TriggerTutorialSegment(1);
             while (!engineer_reactor.IsActive) yield return null;
             CoroutineManager.StartCoroutine(ReactorOperatedProperly());
@@ -201,25 +241,28 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ReactorStable"), ChatMessageType.Radio, null);
             do { yield return null; } while (!engineer_reactor.AutoTemp);
+            SetHighlight(engineer_reactor.Item, false);
+            SetHighlight(engineer_brokenJunctionBox, true);
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, true);
 
             // Room 4
+            do { yield return null; } while (!engineer_secondDoor.IsOpen);
+            yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(2); // Repair the junction box
-            SetHighlight(engineer_brokenJunctionBox, true);
             do { yield return null; } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
-
-            // Room 5
-            do { yield return null; } while (!engineer_disconnectedJunctionBoxObjectiveSensor.MotionDetected);
-            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(2f);
-            TriggerTutorialSegment(3); // Connect the junction boxes
             SetHighlight(engineer_disconnectedJunctionBox_1.Item, true);
             SetHighlight(engineer_disconnectedJunctionBox_2.Item, true);
             SetHighlight(engineer_disconnectedJunctionBox_3.Item, true);
             SetHighlight(engineer_disconnectedJunctionBox_4.Item, true);
+
+            // Room 5
+            do { yield return null; } while (!engineer_thirdDoor.IsOpen);
+            GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
+            yield return new WaitForSeconds(2f);
+            TriggerTutorialSegment(3); // Connect the junction boxes
             do { CheckGhostWires(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             SetHighlight(engineer_disconnectedJunctionBox_1.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_2.Item, false);
@@ -251,6 +294,12 @@ namespace Barotrauma.Tutorials
 
             Completed = true;
         }
+
+        private bool IsSelectedItem(Item item)
+        {
+            return engineer?.SelectedConstruction == item;
+        }
+
 
         private IEnumerable<object> ReactorOperatedProperly()
         {
