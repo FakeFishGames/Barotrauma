@@ -274,13 +274,13 @@
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
         <ReduceAffliction identifier="bleeding" amount="20" />
-        <ReduceAffliction identifier="burn" amount="15" />
+        <ReduceAffliction identifier="burn" amount="45" />
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="1">
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
         <ReduceAffliction identifier="bleeding" amount="10" />
-        <ReduceAffliction identifier="burn" amount="7.5" />
+        <ReduceAffliction identifier="burn" amount="30" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
