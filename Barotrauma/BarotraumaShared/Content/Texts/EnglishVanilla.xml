@@ -2962,4 +2962,13 @@
   <MissionFailure.pvpmission>Both crews have perished.</MissionFailure.pvpmission>
 
   <MapEntityCategory.All>All</MapEntityCategory.All>
+  
+  <!-- new -->
+
+  <SettingResetVerification>Are you sure you want to reset the settings?</SettingResetVerification>
+
+  <CharacterEditor.ExistingCharacterFoundReplaceVerification>An existing character with the same name was found. Do you want to replace it?</CharacterEditor.ExistingCharacterFoundReplaceVerification>
+  <CharacterEditor.ExistingCharacterFound>An existing character with the same name was found.</CharacterEditor.ExistingCharacterFound>
+  <GenericReplaceVerification>Do you want to replace it?</GenericReplaceVerification>
+
 </infotexts>
