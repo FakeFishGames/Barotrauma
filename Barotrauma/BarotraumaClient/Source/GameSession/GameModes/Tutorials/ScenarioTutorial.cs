@@ -39,7 +39,7 @@ namespace Barotrauma.Tutorials
             levelParams = element.GetAttributeString("levelparams", "");
 
             spawnSub = element.GetAttributeString("spawnsub", "");
-            Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
+            Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);        
         }
 
         public override void Initialize()
@@ -83,6 +83,7 @@ namespace Barotrauma.Tutorials
             }
 
             GameMain.GameSession.EventManager.Events.Clear();
+            GameMain.GameSession.EventManager.Enabled = false;
             GameMain.GameScreen.Select();
 
             yield return CoroutineStatus.Success;
