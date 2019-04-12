@@ -176,12 +176,22 @@
 
     <Segment id="Doctor.Supplies" objective="Doctor.SuppliesObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.SuppliesText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.SuppliesInstructions" width="450"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.SuppliesText" width="450"/>
     </Segment>
 
     <Segment id="Doctor.FirstAidSelf" objective="Doctor.FirstAidSelfObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.FirstAidSelfText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.FirstAidSelfInstructions" width="450"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.FirstAidSelfText" width="450"/>
+    </Segment>
+    
+    <Segment id="Doctor.Doctor.Medbay" objective="Doctor.MedbayObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Doctor.MedbayText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.MedbayText" width="450"/>
+    </Segment>
+    
+    <Segment id="Doctor.TreatBurns" objective="Doctor.TreatBurnsObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Doctor.TreatBurnsText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.TreatBurnsText" width="450"/>
     </Segment>
   </DoctorTutorial>
 

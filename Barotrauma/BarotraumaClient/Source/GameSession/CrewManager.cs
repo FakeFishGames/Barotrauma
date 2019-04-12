@@ -473,7 +473,10 @@ namespace Barotrauma
                     orderButtonFrame.RectTransform;
 
                 var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), btnParent, Anchor.CenterLeft),
-                    style: null);
+                    style: null)
+                {
+                    UserData = order
+                };
 
                 new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
                 {
@@ -951,6 +954,19 @@ namespace Barotrauma
                 { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) },
                 style: "OuterGlow",
                 color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
+        }
+
+        public void HighlightOrderButton(Character character, string orderAiTag, Color color)
+        {
+            var order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            if (order == null)
+            {
+                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\.\n" + Environment.StackTrace);
+                return;
+            }
+            var characterElement = characterListBox.FindChild(character);
+            var orderBtn = characterElement.FindChild(order, recursive: true);
+            orderBtn.Flash(color);
         }
 
 #region Updating and drawing the UI

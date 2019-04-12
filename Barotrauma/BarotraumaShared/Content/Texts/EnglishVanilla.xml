@@ -2878,19 +2878,28 @@
   <!-- Radio -->
   <Doctor.Radio.WakeUp>We need a medic here!</Doctor.Radio.WakeUp>
   <Doctor.Radio.KnockedDown>That was a big one. Are you ok? Get yourself patched up.</Doctor.Radio.KnockedDown>
+  <Doctor.Radio.AssistantBurns>They’ve got a nasty burn. You don’t have any bandages with you, do you? Get them to follow you while you go find some.</Doctor.Radio.AssistantBurns>
   
   <!-- Room 3 -->
   <Doctor.Supplies>Medical supplies</Doctor.Supplies>
   <Doctor.SuppliesObjective>Find medical supplies</Doctor.SuppliesObjective>
   <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
-  <Doctor.SuppliesInstructions>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesInstructions>
 
-  <!-- Room 4 -->
   <Doctor.FirstAidSelf>First aid</Doctor.FirstAidSelf>
   <Doctor.FirstAidSelfObjective>Perform first aid on yourself</Doctor.FirstAidSelfObjective>
   <Doctor.FirstAidSelfText>Press [MEDINTERFACEBUTTON] or click your healthbar to enter the medical interface. Afflictions affecting the character are shown to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfText>
-  <Doctor.FirstAidSelfInstructions>Press [MEDINTERFACEBUTTON] or click your healthbar to enter the medical interface. Afflictions affecting the character are shown to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfInstructions>
 
+  <!-- Room 4 -->
+  <Doctor.Medbay>Med bay</Doctor.Medbay>
+  <Doctor.MedbayObjective>Take the crew member to the med bay.</Doctor.MedbayObjective>
+  <Doctor.MedbayText>Sometimes you will encounter afflictions that you don’t have supplies to treat on the spot. In these situations it’s handy to get the patient to follow you to the med bay, where there are more supplies to treat them.\n\nFind the character in question in the crew list to the left. Then find the “Follow” button and click on it. The character will now follow you until dismissed by clicking on the button again.</Doctor.MedbayText>
+
+  <Doctor.TreatBurns>Treat burns</Doctor.TreatBurns>
+  <Doctor.TreatBurnsObjective>Treat crew member’s injuries.</Doctor.TreatBurnsObjective>
+  <Doctor.TreatBurnsText>First aid can be administered to other characters, too. Treat them by highlighting the target character and pressing [MEDINTERFACEBUTTON]. The interface will show their status on the left side of the screen.\n\nDrag the correct item into the medical interface to treat the affliction. Remember to select the correct limb before administering treatment. Bandages heal burns quickly.</Doctor.TreatBurnsText>
+
+  
+  
   <!-- Tutorial END -->
 
   <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
