@@ -251,6 +251,11 @@
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.HammerheadText" width="450"/>
     </Segment>
 
+    <Segment id="Officer.RangedWeapon" objective="Officer.RangedWeaponObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Officer.RangedWeaponText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.RangedWeaponText" width="450"/>
+    </Segment>
+
     <Segment id="Officer.Mudraptor" objective="Officer.MudraptorObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Officer.MudraptorText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.MudraptorText" width="450"/>

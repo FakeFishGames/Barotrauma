@@ -2953,7 +2953,12 @@
   <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
   <Officer.HammerheadText>To use the coilgun, interact with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
 
-  <!--  Room 5 -->
+  <!-- Room 5 -->
+  <Officer.RangedWeapon>Ranged weapons</Officer.RangedWeapon>
+  <Officer.RangedWeaponObjective>Grab some ranged weapons</Officer.RangedWeaponObjective>
+  <Officer.RangedWeaponText>Ranged weapons work the same way as melee weapons, except they need to be loaded with ammunition and they are more dependent on the character’s weapons skill. Aim with [AIMBUTTON] and fire with [SELECTBUTTON].</Officer.RangedWeaponText>
+  
+  <!-- Room 6 -->
   <Officer.Mudraptor>Mudraptors</Officer.Mudraptor>
   <Officer.MudraptorObjective>Kill the mudraptor</Officer.MudraptorObjective>
   <Officer.MudraptorText>Mudraptors are bigger, meaner and more armored than crawlers. Taking them down requires more firepower. Try to keep your distance.</Officer.MudraptorText>
