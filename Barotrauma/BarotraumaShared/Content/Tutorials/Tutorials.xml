@@ -57,7 +57,7 @@
   </ContextualTutorial>
 
   <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
-    <Character file="Content/Characters/Human/Human.xml">
+    <Character name="Mechanic" file="Content/Characters/Human/Human.xml">
       <Job name="Mechanic">
         <Skill name="Electrical Engineering" level="60"/>
         <Skill name="Mechanical Engineering" level="50"/>
