@@ -103,6 +103,11 @@
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.ExtinguisherText" width="450"/>
     </Segment>
 
+    <Segment id="Mechanic.DropExtinguisher" objective="Mechanic.DropExtinguisherObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Mechanic.DropExtinguisherText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.DropExtinguisherText" width="450"/>
+    </Segment>
+
     <Segment id="Mechanic.Diving" objective="Mechanic.DivingObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Mechanic.DivingText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.DivingText" width="450"/>

@@ -148,6 +148,7 @@ namespace Barotrauma.Tutorials
 
         protected void SetHighlight(Item item, bool state)
         {
+            if (item.ExternalHighlight == state) return;
             item.SpriteColor = (state) ? highlightColor : Color.White;
             item.ExternalHighlight = state;
         }
