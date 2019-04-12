@@ -33,6 +33,8 @@ namespace Barotrauma
 
         private List<CharacterSound> sounds;
 
+        public bool ExternalHighlight;
+
         //the Character that the player is currently controlling
         private static Character controlled;
 
