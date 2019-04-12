@@ -49,6 +49,8 @@ namespace Barotrauma
 
         private GUIComponent orderTargetFrame, orderTargetFrameShadow;
 
+        public bool AllowCharacterSwitch = true;
+
         public bool ToggleCrewAreaOpen
         {
             get { return toggleCrewAreaOpen; }
@@ -568,6 +570,7 @@ namespace Barotrauma
         /// </summary>
         public bool CharacterClicked(GUIComponent component, object selection)
         {
+            if (!AllowCharacterSwitch) { return false; }
             Character character = selection as Character;
             if (character == null || character.IsDead || character.IsUnconscious) return false;
             SelectCharacter(character);
@@ -964,7 +967,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\".\n" + Environment.StackTrace);
                 return;
             }
-            var characterElement = characterListBox.FindChild(character);
+            var characterElement = characterListBox.Content.FindChild(character);
             var orderBtn = characterElement.FindChild(order, recursive: true);
             orderBtn.Flash(color);
         }
@@ -1026,6 +1029,7 @@ namespace Barotrauma
 
         public void SelectNextCharacter()
         {
+            if (!AllowCharacterSwitch) { return; }
             if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
             SelectCharacter(characters[TryAdjustIndex(1)]);
@@ -1033,6 +1037,7 @@ namespace Barotrauma
 
         public void SelectPreviousCharacter()
         {
+            if (!AllowCharacterSwitch) { return; }
             if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
             SelectCharacter(characters[TryAdjustIndex(-1)]);
@@ -1040,6 +1045,7 @@ namespace Barotrauma
 
         private void SelectCharacter(Character character)
         {
+            if (!AllowCharacterSwitch) { return; }
             //make the previously selected character wait in place for some time
             //(so they don't immediately start idling and walking away from their station)
             if (Character.Controlled?.AIController?.ObjectiveManager != null)
