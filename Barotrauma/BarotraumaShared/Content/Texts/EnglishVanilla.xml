@@ -2790,17 +2790,17 @@
   <!-- Room 1 -->
   <Mechanic.OpenDoor>Doors</Mechanic.OpenDoor>
   <Mechanic.OpenDoorObjective>Open door by pushing the adjacent button</Mechanic.OpenDoorObjective>
-  <Mechanic.OpenDoorText>Doors are often wired to be opened via nearby buttons. Interact with buttons by pressing [INTERACTBUTTON] when the cursor is over them.</Mechanic.OpenDoorText>
+  <Mechanic.OpenDoorText>Doors are often wired to be opened via nearby buttons. Interact with buttons by pressing [InputType.Select] when the cursor is over them.</Mechanic.OpenDoorText>
 
   <!-- Room 2 -->
   <Mechanic.Equipment>Inventory</Mechanic.Equipment>
   <Mechanic.EquipmentObjective>Get your equipment from the locker</Mechanic.EquipmentObjective>
-  <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Mechanic.EquipmentText>
+  <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Mechanic.EquipmentText>
 
   <!-- Room 3 -->
   <Mechanic.Welding>Fixing leaks</Mechanic.Welding>
   <Mechanic.WeldingObjective>Repair leak</Mechanic.WeldingObjective>
-  <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [AIMBUTTON] to aim. While aiming, hold [FIREBUTTON] to weld.</Mechanic.WeldingText>
+  <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [InputType.Aim] to aim. While aiming, hold [InputType.Shoot] to weld.</Mechanic.WeldingText>
 
   <Mechanic.Drain>Draining water</Mechanic.Drain>
   <Mechanic.DrainObjective>Turn on nearby pump to drain excess water</Mechanic.DrainObjective>
@@ -2818,7 +2818,7 @@
   <!-- Room 5 -->
   <Mechanic.Extinguisher>Fires</Mechanic.Extinguisher>
   <Mechanic.ExtinguisherObjective>Put out the fire</Mechanic.ExtinguisherObjective>
-  <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [AIMBUTTON] and dispense by holding down [FIREBUTTON].</Mechanic.ExtinguisherText>
+  <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [InputType.Aim] and dispense by holding down [InputType.Shoot].</Mechanic.ExtinguisherText>
 
   <Mechanic.DropExtinguisher>Unequipping</Mechanic.DropExtinguisher>
   <Mechanic.DropExtinguisherObjective>Drop the fire extinguisher</Mechanic.DropExtinguisherObjective>
@@ -2852,7 +2852,7 @@
   <!-- Room 2 -->
   <Engineer.Equipment>Inventory</Engineer.Equipment>
   <Engineer.EquipmentObjective>Retrieve equipment from the cabinet</Engineer.EquipmentObjective>
-  <Engineer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentText>
+  <Engineer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentText>
 
   <!-- Room 3 -->
   <Engineer.Reactor>Reactor</Engineer.Reactor>
@@ -2889,11 +2889,11 @@
   <!-- Room 3 -->
   <Doctor.Supplies>Medical supplies</Doctor.Supplies>
   <Doctor.SuppliesObjective>Find medical supplies</Doctor.SuppliesObjective>
-  <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
+  <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
 
   <Doctor.OpenMedicalInterface>Medical interface</Doctor.OpenMedicalInterface>
   <Doctor.OpenMedicalInterfaceObjective>Open the medical interface</Doctor.OpenMedicalInterfaceObjective>
-  <Doctor.OpenMedicalInterfaceText>Press [MEDINTERFACEBUTTON] or click your healthbar to open the medical interface. </Doctor.OpenMedicalInterfaceText>
+  <Doctor.OpenMedicalInterfaceText>Press [InputType.Health] or click your healthbar to open the medical interface. </Doctor.OpenMedicalInterfaceText>
 
   <Doctor.FirstAidSelf>First aid</Doctor.FirstAidSelf>
   <Doctor.FirstAidSelfObjective>Perform first aid on yourself</Doctor.FirstAidSelfObjective>
@@ -2907,17 +2907,17 @@
   <!-- Room 5 -->
   <Doctor.TreatBurns>Treat burns</Doctor.TreatBurns>
   <Doctor.TreatBurnsObjective>Treat crew member’s injuries.</Doctor.TreatBurnsObjective>
-  <Doctor.TreatBurnsText>First aid can be administered to other characters, too. Treat them by highlighting the target character and pressing [MEDINTERFACEBUTTON]. The interface will show their status on the left side of the screen.\n\nDrag the correct item into the medical interface to treat the affliction. Remember to select the correct limb before administering treatment. Bandages heal burns quickly.</Doctor.TreatBurnsText>
+  <Doctor.TreatBurnsText>First aid can be administered to other characters, too. Treat them by highlighting the target character and pressing [InputType.Health]. The interface will show their status on the left side of the screen.\n\nDrag the correct item into the medical interface to treat the affliction. Remember to select the correct limb before administering treatment. Bandages heal burns quickly.</Doctor.TreatBurnsText>
 
   <!-- Room 6 -->
   <Doctor.CPR>CPR</Doctor.CPR>
   <Doctor.CPRObjective>Perform CPR</Doctor.CPRObjective>
-  <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([MEDINTERFACEBUTTON]) and clicking the “resuscitate“ button. The process may take a while.</Doctor.CPRText>
+  <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([InputType.Health]) and clicking the “resuscitate“ button. The process may take a while.</Doctor.CPRText>
   
   <!-- Sub -->
   <Doctor.Submarine>Medical assistance</Doctor.Submarine>
   <Doctor.SubmarineObjective>Give medical assistance to everyone that needs it.</Doctor.SubmarineObjective>
-  <Doctor.SubmarineText>Inspect patient by pressing [MEDINTERFACEBUTTON], then administer the correct treatment. You can check each medical item’s description to see what they treat.</Doctor.SubmarineText>
+  <Doctor.SubmarineText>Inspect patient by pressing [InputType.Health], then administer the correct treatment. You can check each medical item’s description to see what they treat.</Doctor.SubmarineText>
   
   
   <!-- Officer Tutorial -->
@@ -2933,11 +2933,11 @@
   <!--  Room 2 -->
   <Officer.Equipment>Inventory</Officer.Equipment>
   <Officer.EquipmentObjective>Retrieve equipment from the cabinet</Officer.EquipmentObjective>
-  <Officer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([INTERACTBUTTON]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Officer.EquipmentText>
+  <Officer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Officer.EquipmentText>
 
   <Officer.MeleeWeapon>Equipping a weapon</Officer.MeleeWeapon>
   <Officer.MeleeWeaponObjective>Equip a melee weapon</Officer.MeleeWeaponObjective>
-  <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand.\n\nReady the weapon by holding [AIMBUTTON] and swing it by clicking [FIREBUTTON].</Officer.MeleeWeaponText>
+  <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand.\n\nReady the weapon by holding [InputType.Aim] and swing it by clicking [InputType.Shoot].</Officer.MeleeWeaponText>
 
   <!--  Room 3 -->
   <Officer.Crawler>Crawlers</Officer.Crawler>
@@ -2951,7 +2951,7 @@
 
   <Officer.Hammerhead>Hammerheads</Officer.Hammerhead>
   <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
-  <Officer.HammerheadText>To use the coilgun, interact with the periscope. While on the periscope, aim with the mouse and fire by pressing [FIREBUTTON].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
+  <Officer.HammerheadText>To use the coilgun, interact with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
 
   <!--  Room 5 -->
   <Officer.Mudraptor>Mudraptors</Officer.Mudraptor>
@@ -3145,5 +3145,7 @@
   <CharacterEditor.ExistingCharacterFoundReplaceVerification>An existing character with the same name was found. Do you want to replace it?</CharacterEditor.ExistingCharacterFoundReplaceVerification>
   <CharacterEditor.ExistingCharacterFound>An existing character with the same name was found.</CharacterEditor.ExistingCharacterFound>
   <GenericReplaceVerification>Do you want to replace it?</GenericReplaceVerification>
+
+  <DontShowNotificationAgain>Don't show this again</DontShowNotificationAgain>
 
 </infotexts>
