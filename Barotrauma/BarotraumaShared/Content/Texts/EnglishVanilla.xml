@@ -2794,6 +2794,9 @@
   <RepairAllWalls>Repair all walls</RepairAllWalls>
   <RepairAllItems>Repair all items</RepairAllItems>
 
+  <EntityName.beacon>Beacon</EntityName.beacon>
+  <EntityDescription.beacon>When deployed and activated in the correct location, it will signal colonists to come and set up an outpost.</EntityDescription.beacon>
+  
   <Karma>Karma</Karma>
   <KarmaExplanation>Karma reflects the helpful and harmful actions you've done while playing. Actions such as repairing the submarine, operating devices and killing monsters increase Karma, while actions such as attacking members of your crew or damaging the submarine decrease it. If your Karma drops too low, you may not get assigned to certain jobs anymore, or in more extreme cases, you may be banned from the server.</KarmaExplanation>
   <ResetKarma>Reset Karma</ResetKarma>
@@ -2861,12 +2864,19 @@
   <MissionHeader0.killhammerhead>Target terminated</MissionHeader0.killhammerhead>
   <MissionMessage0.killhammerhead>The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killhammerhead>
 
-  <MissionName.killcrawlerswarm>Terminate a Swarm</MissionName.killcrawlerswarm>
-  <MissionDescription.killcrawlerswarm>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature.</MissionDescription.killcrawlerswarm>
-  <MissionSonarLabel.killcrawlerswarm>Swarm</MissionSonarLabel.killcrawlerswarm>
-  <MissionSuccess.killcrawlerswarm>The swarm has been terminated.</MissionSuccess.killcrawlerswarm>
-  <MissionHeader0.killcrawlerswarm>Target terminated</MissionHeader0.killcrawlerswarm>
-  <MissionMessage0.killcrawlerswarm>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killcrawlerswarm>
+  <MissionName.killcrawlerswarm1>Terminate a Swarm</MissionName.killcrawlerswarm1>
+  <MissionDescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize the it.</MissionDescription.killcrawlerswarm1>
+  <MissionSonarLabel.killcrawlerswarm1>Swarm</MissionSonarLabel.killcrawlerswarm1>
+  <MissionSuccess.killcrawlerswarm1>The swarm has been terminated.</MissionSuccess.killcrawlerswarm1>
+  <MissionHeader0.killcrawlerswarm1>Target terminated</MissionHeader0.killcrawlerswarm1>
+  <MissionMessage0.killcrawlerswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killcrawlerswarm1>
+  
+  <MissionName.killcrawlerswarm2>Terminate a Swarm</MissionName.killcrawlerswarm2>
+  <MissionDescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize the it.</MissionDescription.killcrawlerswarm2>
+  <MissionSonarLabel.killcrawlerswarm2>Swarm</MissionSonarLabel.killcrawlerswarm2>
+  <MissionSuccess.killcrawlerswarm2>The swarm has been terminated.</MissionSuccess.killcrawlerswarm2>
+  <MissionHeader0.killcrawlerswarm2>Target terminated</MissionHeader0.killcrawlerswarm2>
+  <MissionMessage0.killcrawlerswarm2>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killcrawlerswarm2>
 
   <MissionName.killendworm>Beast from the Abyss</MissionName.killendworm>
   <MissionDescription.killendworm>Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of [reward] has been promised to those who get rid of whatever is causing the seismic activity.</MissionDescription.killendworm>
@@ -2906,7 +2916,7 @@
   <MissionSuccess.cargohuskeggs>The husk eggs have been successfully delivered.</MissionSuccess.cargohuskeggs>
 
   <MissionName.cargonitroglycerin>Handle with care</MissionName.cargonitroglycerin>
-  <MissionDescription.cargonitroglycerin>Local researchers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2].</MissionDescription.cargonitroglycerin>
+  <MissionDescription.cargonitroglycerin>Local researchers are offering [reward] credits for delivering a large amount of nitroglycerin to [location2].</MissionDescription.cargonitroglycerin>
   <MissionSuccess.cargonitroglycerin>The chemicals have been successfully delivered.</MissionSuccess.cargonitroglycerin>
 
   <MissionName.cargoclowngear>Praise the Honkmother</MissionName.cargoclowngear>
@@ -2925,13 +2935,22 @@
   <MissionDescription.cargomeditems>A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there.</MissionDescription.cargomeditems>
   <MissionSuccess.cargomeditems>The materials have been successfully delivered.</MissionSuccess.cargomeditems>
 
-  <MissionName.cargomeditems>Medical item transport</MissionName.cargomeditems>
-  <MissionDescription.cargomeditems>A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there.</MissionDescription.cargomeditems>
-  <MissionSuccess.cargomeditems>The materials have been successfully delivered.</MissionSuccess.cargomeditems>
+  <MissionName.personneltransport>Personnel transport</MissionName.personneltransport>
+  <MissionDescription.personneltransport>We have a crewmember here who needs to get to [location2] in a hurry. The payment is [reward] credits if you get them there in once piece.</MissionDescription.personneltransport>
+  <MissionSuccess.personneltransport>The personnel have been successfully delivered.</MissionSuccess.personneltransport>
+  
+  <MissionName.prospect>Prospecting</MissionName.prospect>
+  <MissionDescription.prospect>The mining crews want to start extracting [resourcename] if you can prove there's enough deposits of it in the area between [location1] and the mining outpost at [location2]. If you can find [quantity] units, you'll be paid a reward of [reward] credits, and you can keep whatever you find.</MissionDescription.prospect>
+  <MissionSuccess.prospect>Resource has been prospected succesfully, navigate the submarine out of the cavern to claim the reward..</MissionSuccess.prospect>
 
   <MissionName.cargomedemergency>Medical item transport</MissionName.cargomedemergency>
   <MissionDescription.cargomedemergency>A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid [reward] credits on delivery.</MissionDescription.cargomedemergency>
   <MissionSuccess.cargomedemergency>The antidote has been successfully delivered.</MissionSuccess.cargomedemergency>
+  
+  <MissionName.beacon>Beacon deployment</MissionName.beacon>
+  <MissionDescription.beacon>Head over to [location2] and drop a beacon to begin the process of colonizing the area. Payment is [reward] credits when it starts transmitting.</MissionDescription.beacon>
+  <MissionSonarLabel.beacon>Beacon deployment location</MissionSonarLabel.beacon>
+  <MissionSuccess.beacon>Beacon successfully deployed.</MissionSuccess.beacon>
 
   <MissionName.pvpmission>Search and Destroy</MissionName.pvpmission>
   <MissionDescriptionNeutral.pvpmission>A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2].</MissionDescriptionNeutral.pvpmission>
