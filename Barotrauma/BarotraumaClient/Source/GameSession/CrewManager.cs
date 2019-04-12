@@ -970,6 +970,7 @@ namespace Barotrauma
             var characterElement = characterListBox.Content.FindChild(character);
             var orderBtn = characterElement.FindChild(order, recursive: true);
             orderBtn.Flash(color);
+            orderBtn.Pulsate(Vector2.One, Vector2.One * 2.0f, 1.0f);
         }
 
 #region Updating and drawing the UI

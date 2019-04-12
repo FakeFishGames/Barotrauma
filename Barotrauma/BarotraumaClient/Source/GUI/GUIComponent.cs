@@ -121,6 +121,8 @@ namespace Barotrauma
         protected Color selectedColor;
         protected Color pressedColor;
 
+        private CoroutineHandle pulsateCoroutine;
+
         protected ComponentState state;
 
         protected Color flashColor;
@@ -522,9 +524,7 @@ namespace Barotrauma
             while (t < duration)
             {
                 t += CoroutineManager.DeltaTime;
-
                 SetAlpha(MathHelper.Lerp(startA, to, t / duration));
-
                 yield return CoroutineStatus.Running;
             }
 
@@ -535,6 +535,28 @@ namespace Barotrauma
                 Parent.RemoveChild(this);
             }
 
+            yield return CoroutineStatus.Success;
+        }
+
+        public void Pulsate(Vector2 startScale, Vector2 endScale, float duration)
+        {
+            if (CoroutineManager.IsCoroutineRunning(pulsateCoroutine))
+            {
+                return;
+            }
+            pulsateCoroutine = CoroutineManager.StartCoroutine(DoPulsate(startScale, endScale, duration), "Pulsate" + ToString());
+        }
+
+        private IEnumerable<object> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
+        {
+            float t = 0.0f;
+            while (t < duration)
+            {
+                t += CoroutineManager.DeltaTime;
+                RectTransform.LocalScale = Vector2.Lerp(startScale, endScale, (float)Math.Sin(t / duration * MathHelper.Pi));
+                yield return CoroutineStatus.Running;
+            }
+            RectTransform.LocalScale = startScale;
             yield return CoroutineStatus.Success;
         }
 

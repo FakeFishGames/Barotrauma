@@ -156,7 +156,7 @@
   </Item>
   <Item name="Hatch" identifier="hatchwbuttons" allowedlinks="gap, hull" tags="door" scale="0.5" health="100">
     <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.51" origin="0.5,0.5" />
-    <DecorativeSprite texture="hatch.png" sourcerect="0,239,256,180" depth="0.89" origin="0.5,0.5"/>
+    <DecorativeSprite texture="hatch.png" sourcerect="0,234,256,193" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="10.0" shadowscale="1,0.8">
       <RequiredItem identifier="crowbar" type="Equipped" optional="true"/>
       <Requireditem identifiers="idcard" type="Picked" optional="true"/>
