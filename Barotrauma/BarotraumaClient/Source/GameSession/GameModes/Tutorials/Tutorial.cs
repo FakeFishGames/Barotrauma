@@ -519,8 +519,14 @@ namespace Barotrauma.Tutorials
         #region Highlights
         protected void HighlightInventorySlot(Inventory inventory, string identifier, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
         {
-            if (inventory.slots == null) return;
-            HighlightInventorySlot(inventory, inventory.FindIndex(inventory.FindItemByIdentifier(identifier)), color, fadeInDuration, fadeOutDuration, scaleUpAmount);
+            if (inventory.slots == null) { return; }
+            for (int i = 0; i < inventory.Items.Length; i++)
+            {
+                if (inventory.Items[i] != null && inventory.Items[i].Prefab.Identifier == identifier)
+                {
+                    HighlightInventorySlot(inventory, i, color, fadeInDuration, fadeOutDuration, scaleUpAmount);
+                }
+            }
         }
 
         protected void HighlightInventorySlot(Inventory inventory, int index, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
