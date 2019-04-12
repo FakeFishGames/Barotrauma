@@ -249,9 +249,9 @@ namespace Barotrauma.Tutorials
             CheckJunctionBoxHighlights();
             RemoveCompletedObjective(segments[4]);
             TriggerTutorialSegment(5); // Powerup reactor
-            SetHighlight(engineer_reactor.Item, true);
+            SetHighlight(engineer_submarineReactor.Item, true);
             do { yield return null; } while (!IsReactorPoweredUp(engineer_submarineReactor)); // Wait until ~matches load
-            SetHighlight(engineer_reactor.Item, false);
+            SetHighlight(engineer_submarineReactor.Item, false);
             RemoveCompletedObjective(segments[5]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
 
