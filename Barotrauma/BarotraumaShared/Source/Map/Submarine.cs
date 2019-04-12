@@ -417,7 +417,10 @@ namespace Barotrauma
                 if (me.Submarine != this) { continue; }
                 if (me is Item item)
                 {
-                    item.Indestructible = true;
+                    if (item.GetComponent<Repairable>() != null)
+                    {
+                        item.Indestructible = true;
+                    }
                     foreach (ItemComponent ic in item.Components)
                     {
                         if (ic is ConnectionPanel connectionPanel)

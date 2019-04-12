@@ -1566,6 +1566,8 @@ namespace Barotrauma
                 }
                 GameMain.GameSession = null;
             }
+
+            GUIMessageBox.CloseAll();
             
             GameMain.MainMenuScreen.Select();
 
@@ -1573,7 +1575,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
+        /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages. TODO: Allow to show messages at the middle of the screen (instead of the top center).
         /// </summary>
         public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, ScalableFont font = null)
         {
