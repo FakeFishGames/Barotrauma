@@ -233,27 +233,30 @@ namespace Barotrauma.Tutorials
             bool thirdSlotRemoved = false;
             do
             {
-                if (!firstSlotRemoved)
+                if (IsSelectedItem(mechanic_equipmentCabinet.Item))
                 {
-                    HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 0, highlightColor, .5f, .5f, 0f);
-                    if (mechanic_equipmentCabinet.Inventory.Items[0] == null) firstSlotRemoved = true;
-                }
+                    if (!firstSlotRemoved)
+                    {
+                        HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                        if (mechanic_equipmentCabinet.Inventory.Items[0] == null) firstSlotRemoved = true;
+                    }
 
-                if (!secondSlotRemoved)
-                {
-                    HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 1, highlightColor, .5f, .5f, 0f);
-                    if (mechanic_equipmentCabinet.Inventory.Items[1] == null) secondSlotRemoved = true;
-                }
+                    if (!secondSlotRemoved)
+                    {
+                        HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 1, highlightColor, .5f, .5f, 0f);
+                        if (mechanic_equipmentCabinet.Inventory.Items[1] == null) secondSlotRemoved = true;
+                    }
 
-                if (!thirdSlotRemoved)
-                {
-                    HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 2, highlightColor, .5f, .5f, 0f);
-                    if (mechanic_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
-                }
+                    if (!thirdSlotRemoved)
+                    {
+                        HighlightInventorySlot(mechanic_equipmentCabinet.Inventory, 2, highlightColor, .5f, .5f, 0f);
+                        if (mechanic_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
+                    }
 
-                for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
-                {
-                    if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                    {
+                        if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    }
                 }
 
                 yield return null;

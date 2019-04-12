@@ -2833,7 +2833,7 @@
   <!-- Submarine -->
   <Mechanic.RepairSubmarine>Submarine maintenance</Mechanic.RepairSubmarine>
   <Mechanic.RepairSubmarineObjective>Repair the engine and the ballast pumps</Mechanic.RepairSubmarineObjective>
-  <Mechanic.RepairSubmarineText>Repair Submarine</Mechanic.RepairSubmarineText>
+  <Mechanic.RepairSubmarineText>Find the engine (usually located in the rear compartment of a submarine) and ballast pumps (in the bottom, some submarines have multiple ballast tanks).</Mechanic.RepairSubmarineText>
 
   <!-- Engineer Tutorial -->
   <!-- Radio -->
