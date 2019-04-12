@@ -4906,23 +4906,27 @@ namespace Barotrauma
                         int width = rectInputs[2].IntValue;
                         int height = rectInputs[3].IntValue;
                         var colliderAttributes = new List<XAttribute>();
-                        if (width == height)
-                        {
-                            colliderAttributes.Add(new XAttribute("radius", width / 2));
-                        }
-                        else
-                        {
-                            if (height > width)
-                            {
-                                colliderAttributes.Add(new XAttribute("radius", width / 2));
-                                colliderAttributes.Add(new XAttribute("height", height - width));
-                            }
-                            else
-                            {
-                                colliderAttributes.Add(new XAttribute("radius", height / 2));
-                                colliderAttributes.Add(new XAttribute("width", width - height));
-                            }
-                        }
+                        // Capsules/Circles
+                        //if (width == height)
+                        //{
+                        //    colliderAttributes.Add(new XAttribute("radius", width / 2 * 0.85f));
+                        //}
+                        //else
+                        //{
+                        //    if (height > width)
+                        //    {
+                        //        colliderAttributes.Add(new XAttribute("radius", width / 2 * 0.85f));
+                        //        colliderAttributes.Add(new XAttribute("height", height - width * 0.85f));
+                        //    }
+                        //    else
+                        //    {
+                        //        colliderAttributes.Add(new XAttribute("radius", height / 2 * 0.85f));
+                        //        colliderAttributes.Add(new XAttribute("width", width - height * 0.85f));
+                        //    }
+                        //}
+                        // Rectangles
+                        colliderAttributes.Add(new XAttribute("height", height * 0.85f));
+                        colliderAttributes.Add(new XAttribute("width", width * 0.85f));
                         idToCodeName.TryGetValue(id, out string notes);
                         LimbXElements.Add(id.ToString(), new XElement("limb",
                             new XAttribute("id", id),
