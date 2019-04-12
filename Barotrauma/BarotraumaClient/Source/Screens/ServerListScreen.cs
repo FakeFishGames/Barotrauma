@@ -22,6 +22,7 @@ namespace Barotrauma
         private GUIFrame menu;
 
         private GUIListBox serverList;
+        private GUIListBox serverPreview;
 
         private GUIButton joinButton;
 
@@ -45,37 +46,31 @@ namespace Barotrauma
                 
         public ServerListScreen()
         {
-            int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
-            int height = Math.Min(GameMain.GraphicsHeight - 160, 700);
+            menu = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
-            Rectangle panelRect = new Rectangle(0, 0, width, height);
-
-            menu = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, Anchor.Center));
-
-            new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.133f), menu.RectTransform, Anchor.TopCenter),
-                TextManager.Get("JoinServer"), textAlignment: Alignment.Left, font: GUI.LargeFont) { ForceUpperCase = true };
-
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.03f) }, style: null);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center), isHorizontal: true)
+            { Stretch = true, RelativeSpacing = 0.02f };
 
             //-------------------------------------------------------------------------------------
             //left column
             //-------------------------------------------------------------------------------------
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 0.92f), paddedFrame.RectTransform, Anchor.TopLeft));
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), paddedFrame.RectTransform, Anchor.CenterLeft)) { Stretch = true, RelativeSpacing = 0.5f };
 
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), style: null);
+            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("YourName"));
-            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoHolder.RectTransform, Anchor.Center), TextManager.Get("JoinServer"), font: GUI.LargeFont)
+            { ForceUpperCase = true };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
+            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")
             {
                 Text = GameMain.Config.DefaultPlayerName
             };
             clientNameBox.OnTextChanged += RefreshJoinButtonState;
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
-            // TODO: Show IP on server info window
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.045f), leftColumn.RectTransform), "");
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("ServerIP"));
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "");
             ipBox.OnTextChanged += RefreshJoinButtonState;
             ipBox.OnSelected += (sender, key) => 
             {
@@ -85,42 +80,52 @@ namespace Barotrauma
                     sender.UserData = null;
                 }
             };
-            
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), leftColumn.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterServers"));
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "");
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
 
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), style: null);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), filterHolder.RectTransform), "");
+
+            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), filterHolder.RectTransform));
 
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterPassword"));
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
             filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterIncompatibleServers"));
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
             filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
 
-            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterFullServers"));
+            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterEmptyServers"));
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
 
             //-------------------------------------------------------------------------------------
             //right column
             //-------------------------------------------------------------------------------------
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.017f, 0.97f),
-                paddedFrame.RectTransform, Anchor.TopRight))
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.017f, 1.0f),
+                paddedFrame.RectTransform, Anchor.CenterRight))
             {
                 RelativeSpacing = 0.02f,
                 Stretch = true
             };
 
-			serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), rightColumn.RectTransform, Anchor.Center))
+            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform)) { Stretch = true, RelativeSpacing = 0.02f };
+
+            serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center))
             {
-                OnSelected = SelectServer
+                OnSelected = (btn, obj) => {
+                    ServerInfo serverInfo = (ServerInfo)obj;
+
+                    serverInfo.CreatePreviewWindow(serverPreview);
+
+                    return true;
+                }
             };
+
+            serverList.OnSelected += SelectServer;
+
+            serverPreview = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center));
 
             columnRelativeWidth = new float[] { 0.04f, 0.02f, 0.044f, 0.77f, 0.02f, 0.075f, 0.06f };
 
@@ -239,6 +244,7 @@ namespace Barotrauma
         {
             if (waitingForRefresh) return false;
             serverList.ClearChildren();
+            serverPreview.ClearChildren();
 
             ipBox.Text = null;
             joinButton.Enabled = false;
@@ -352,7 +358,7 @@ namespace Barotrauma
 
         private void AddToServerList(ServerInfo serverInfo)
         {
-            var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 20) },
+            var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 35) },
                 style: "InnerFrame", color: Color.White * 0.5f)
             {
                 UserData = serverInfo
@@ -389,19 +395,6 @@ namespace Barotrauma
                 Enabled = false,
                 UserData = "password"
             };
-
-			new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[2], 0.8f), serverContent.RectTransform, Anchor.Center), style: "GUIButtonServerListInfo") {
-				ToolTip = TextManager.Get("ServerListInfo"),
-				OnClicked = (btn, obj) => {
-					SelectServer(null, serverInfo);
-					var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel"), TextManager.Get("ServerListJoin") }, 550, 400);
-					msgBox.Buttons[0].OnClicked += msgBox.Close;
-					msgBox.Buttons[1].OnClicked += JoinServer;
-					msgBox.Buttons[1].OnClicked += msgBox.Close;
-					serverInfo.CreatePreviewWindow(msgBox);
-					return true;
-				}
-			};
 
 			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
 

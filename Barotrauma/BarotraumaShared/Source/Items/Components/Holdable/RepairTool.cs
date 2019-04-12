@@ -322,6 +322,7 @@ namespace Barotrauma.Items.Components
             // If the character is climbing, ignore the check, because we cannot aim while climbing.
             if (VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
             {
+                character.SetInput(InputType.Shoot, false, true);
                 Use(deltaTime, character);
             }
             else
@@ -360,6 +361,27 @@ namespace Barotrauma.Items.Components
                 {
                     effect.Apply(actionType, deltaTime, item, targets);
                 }
+#if CLIENT
+                // Hard-coded progress bars for welding doors stuck.
+                // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
+                foreach (ISerializableEntity target in targets)
+                {
+                    if (target is Door door)
+                    {
+                        for (int i = 0; i < effect.propertyNames.Length; i++)
+                        {
+                            string propertyName = effect.propertyNames[i];
+                            if (propertyName != "stuck") { continue; }
+                            if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
+                            object value = property.GetValue(target);
+                            if (value.GetType() == typeof(float))
+                            {
+                                user.UpdateHUDProgressBar(door, door.Item.WorldPosition, (float)value / 100, Color.DarkGray * 0.5f, Color.White);
+                            }
+                        }
+                    }
+                }
+#endif    
             }
         }
     }

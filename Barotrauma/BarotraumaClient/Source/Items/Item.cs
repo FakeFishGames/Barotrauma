@@ -101,9 +101,22 @@ namespace Barotrauma
             return color;
         }
 
-        partial void SetActiveSprite()
+        partial void SetActiveSpriteProjSpecific()
         {
             activeSprite = prefab.sprite;
+            Holdable holdable = GetComponent<Holdable>();
+            if (holdable != null && holdable.Attached)
+            {
+                foreach (ContainedItemSprite containedSprite in Prefab.ContainedSprites)
+                {
+                    if (containedSprite.UseWhenAttached)
+                    {
+                        activeSprite = containedSprite.Sprite;
+                        return;
+                    }
+                }
+            }
+
             if (Container != null)
             {
                 foreach (ContainedItemSprite containedSprite in Prefab.ContainedSprites)
@@ -173,8 +186,7 @@ namespace Barotrauma
             
             Color color = IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? Color.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
-
-            Sprite activeSprite = prefab.sprite;
+            
             BrokenItemSprite fadeInBrokenSprite = null;
             float fadeInBrokenSpriteAlpha = 0.0f;
             if (condition < Prefab.Health)
@@ -783,7 +795,7 @@ namespace Barotrauma
             {
                 if (!ic.CanBeSelected) { continue; }
 
-                bool useAlternativeLayout = ic.Item != this;
+                bool useAlternativeLayout = activeHUDs.Count > 1;
                 bool wasUsingAlternativeLayout = ic.UseAlternativeLayout;
                 ic.UseAlternativeLayout = useAlternativeLayout;
                 needsLayoutUpdate |= ic.UseAlternativeLayout != wasUsingAlternativeLayout;

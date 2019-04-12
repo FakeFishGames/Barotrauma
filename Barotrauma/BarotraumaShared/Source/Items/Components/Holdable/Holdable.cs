@@ -44,7 +44,11 @@ namespace Barotrauma.Items.Components
         public bool Attached
         {
             get { return attached && item.ParentInventory == null; }
-            set { attached = value; }
+            set
+            {
+                attached = value;
+                item.SetActiveSprite();
+            }
         }
 
         [Serialize(true, true)]
@@ -167,7 +171,7 @@ namespace Barotrauma.Items.Components
                     if (item.Submarine.Loading)
                     {
                         AttachToWall();
-                        attached = false;
+                        Attached = false;
                     }
                     else //the submarine is not being loaded, which means we're either in the sub editor or the item has been spawned mid-round
                     {
@@ -409,14 +413,14 @@ namespace Barotrauma.Items.Components
             PickKey = prevPickKey;
             requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(prevRequiredItems);
 
-            attached = true;
+            Attached = true;
         }
 
         public void DeattachFromWall()
         {
             if (!attachable) return;
 
-            attached = false;
+            Attached = false;
 
             //make the item pickable with the default pick key and with no specific tools/items when it's deattached
             requiredItems.Clear();
@@ -529,6 +533,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Submarine != null && item.Submarine.Loading) return;
             OnMapLoaded();
+            item.SetActiveSprite();
         }
 
         public override void OnMapLoaded()

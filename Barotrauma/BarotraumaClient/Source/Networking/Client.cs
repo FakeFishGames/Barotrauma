@@ -39,25 +39,33 @@ namespace Barotrauma.Networking
 
         public void UpdateSoundPosition()
         {
-            if (VoipSound != null)
+            if (VoipSound == null) { return; }
+            
+            if (!VoipSound.IsPlaying)
             {
-                if (!VoipSound.IsPlaying)
-                {
-                    DebugConsole.Log("Destroying voipsound");
-                    VoipSound.Dispose();
-                    VoipSound = null;
-                    return;
-                }
+                DebugConsole.Log("Destroying voipsound");
+                VoipSound.Dispose();
+                VoipSound = null;
+                return;
+            }
 
-                if (character != null)
+            if (character != null)
+            {
+                if (GameMain.Config.UseDirectionalVoiceChat)
                 {
                     VoipSound.SetPosition(new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
                 }
                 else
                 {
                     VoipSound.SetPosition(null);
+                    float dist = Vector3.Distance(new Vector3(character.WorldPosition, 0.0f), GameMain.SoundManager.ListenerPosition);
+                    VoipSound.Gain = 1.0f - MathUtils.InverseLerp(VoipSound.Near, VoipSound.Far, dist);
                 }
             }
+            else
+            {
+                VoipSound.SetPosition(null);
+            }            
         }
 
         partial void InitProjSpecific()

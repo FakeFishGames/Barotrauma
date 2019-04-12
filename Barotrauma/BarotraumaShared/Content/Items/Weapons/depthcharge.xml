@@ -40,7 +40,8 @@
         <Use />
       </StatusEffect>
     </Projectile>
-    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+    <ItemContainer hideitems="true" capacity="1" canbeselected="false">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>
@@ -85,7 +86,8 @@
         <Remove />
       </StatusEffect>
     </Projectile>
-    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+    <ItemContainer hideitems="true" capacity="1" canbeselected="false">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>
@@ -116,7 +118,8 @@
         <Use />
       </StatusEffect>
     </Projectile>
-    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+    <ItemContainer hideitems="true" capacity="1" canbeselected="false">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>
@@ -162,7 +165,8 @@
         <Remove />
       </StatusEffect>
     </Projectile>
-    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+    <ItemContainer hideitems="true" capacity="1" canbeselected="false">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,explosive" />
     </ItemContainer>
   </Item>

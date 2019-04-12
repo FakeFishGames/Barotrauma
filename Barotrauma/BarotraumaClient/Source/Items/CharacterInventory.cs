@@ -184,7 +184,7 @@ namespace Barotrauma
 
             if (slots == null) CreateSlots();
 
-            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.Head;
+            var upperSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.Head | InvSlotType.OuterClothes;
 
             switch (layout)
             {
@@ -539,7 +539,11 @@ namespace Barotrauma
             if (item.ParentInventory != this)
             {
                 //in another inventory -> attempt to place in the character's inventory
-                if (allowInventorySwap)
+                if (item.ParentInventory.Locked)
+                {
+                    return QuickUseAction.None;
+                }
+                else if (allowInventorySwap)
                 {
                     return item.ParentInventory is CharacterInventory ?
                         QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
@@ -548,18 +552,24 @@ namespace Barotrauma
             else
             {
                 var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
-                if (selectedContainer != null && selectedContainer.Inventory != null && allowInventorySwap)
+                if (selectedContainer != null && 
+                    selectedContainer.Inventory != null && 
+                    !selectedContainer.Inventory.Locked && 
+                    allowInventorySwap)
                 {
                     //player has selected the inventory of another item -> attempt to move the item there
                     return QuickUseAction.PutToContainer;
                 }
-                else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null && allowInventorySwap)
+                else if (character.SelectedCharacter != null && 
+                    character.SelectedCharacter.Inventory != null && 
+                    !character.SelectedCharacter.Inventory.Locked && 
+                    allowInventorySwap)
                 {
                     //player has selected the inventory of another character -> attempt to move the item there
                     return QuickUseAction.PutToCharacter;
                 }
                 else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy &&
-                    character.SelectedBy.Inventory != null && allowInventorySwap)
+                    character.SelectedBy.Inventory != null && !character.SelectedBy.Inventory.Locked && allowInventorySwap)
                 {
                     return QuickUseAction.TakeFromCharacter;
                 }

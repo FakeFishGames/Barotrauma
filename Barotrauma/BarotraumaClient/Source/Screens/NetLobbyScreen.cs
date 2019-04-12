@@ -261,7 +261,7 @@ namespace Barotrauma
 
         public NetLobbyScreen()
         {
-            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center), style: null);
+            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center) { MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 100) }, style: null);
             campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.75f), Frame.RectTransform, Anchor.TopCenter), style: null)
             {
                 Visible = false
@@ -646,7 +646,7 @@ namespace Barotrauma
                 OnClicked = (btn, obj) => 
                 {
                     GameMain.Client.RequestStartRound();
-                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton), "WaitForStartRound");
+                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton, allowCancel: true), "WaitForStartRound");
                     return true;
                 }
             };
@@ -656,31 +656,41 @@ namespace Barotrauma
                 TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
         }
         
-        private IEnumerable<object> WaitForStartRound(GUIButton startButton)
+        public IEnumerable<object> WaitForStartRound(GUIButton startButton, bool allowCancel)
         {
             string headerText = TextManager.Get("RoundStartingPleaseWait");
-            var msgBox = new GUIMessageBox(headerText, TextManager.Get("RoundStarting"), new string[] { TextManager.Get("Cancel") });
+            var msgBox = new GUIMessageBox(headerText, TextManager.Get("RoundStarting"),
+                allowCancel ? new string[] { TextManager.Get("Cancel") } : new string[0]);
 
-            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            if (allowCancel)
             {
-                startButton.Enabled = true;
-                GameMain.Client.RequestRoundEnd();
-                CoroutineManager.StopCoroutines("WaitForStartRound");
-                return true;
-            };
-            msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+                {
+                    startButton.Enabled = true;
+                    GameMain.Client.RequestRoundEnd();
+                    CoroutineManager.StopCoroutines("WaitForStartRound");
+                    return true;
+                };
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+            }
 
-            startButton.Enabled = false;
+            if (startButton != null)
+            {
+                startButton.Enabled = false;
+            }
 
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-            while (Selected != GameMain.GameScreen && DateTime.Now < timeOut)
+            while (Selected == GameMain.NetLobbyScreen && DateTime.Now < timeOut)
             {
                 msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
                 yield return CoroutineStatus.Running;
             }
 
             msgBox.Close();
-            startButton.Enabled = true;
+            if (startButton != null)
+            {
+                startButton.Enabled = true;
+            }
 
             yield return CoroutineStatus.Success;
         }
@@ -727,11 +737,15 @@ namespace Barotrauma
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
-                if (campaignUI?.StartButton != null)
+                if (campaignUI != null)
                 {
-                    campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
-                        (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
-                        GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                    //SelectTab(Tab.Map);
+                    if (campaignUI.StartButton != null)
+                    {
+                        campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
+                            (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
+                            GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                    }
                 }
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }
@@ -1845,7 +1859,7 @@ namespace Barotrauma
                         StartRound = () => 
                         {
                             GameMain.Client.RequestStartRound();
-                            CoroutineManager.StartCoroutine(WaitForStartRound(campaignUI.StartButton), "WaitForStartRound");
+                            CoroutineManager.StartCoroutine(WaitForStartRound(campaignUI.StartButton, allowCancel: true), "WaitForStartRound");
                         }
                     };
                     campaignUI.MapContainer.RectTransform.NonScaledSize = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);

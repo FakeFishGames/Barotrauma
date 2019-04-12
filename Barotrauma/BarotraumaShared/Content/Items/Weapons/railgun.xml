@@ -60,7 +60,7 @@
       <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="railgunammo" />
     </ItemContainer>
-    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="0.2" mindeteriorationdelay="120" maxdeteriorationdelay="840" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" deteriorationspeed="20" mindeteriorationdelay="5" maxdeteriorationdelay="15" MinDeteriorationCondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="Equipped" />
@@ -105,7 +105,7 @@
       <Attack structuredamage="75" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="100" />
         <Affliction identifier="bleeding" strength="10" />
-		<Affliction identifier="stun" strength="10" />
+		    <Affliction identifier="stun" strength="10" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3" />
@@ -114,7 +114,8 @@
         <Use />
       </StatusEffect>
     </Projectile>
-    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+    <ItemContainer hideitems="true" capacity="1" canbeselected="false">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
@@ -162,7 +163,8 @@
         <Remove />
       </StatusEffect>
     </Projectile>
-    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+    <ItemContainer hideitems="true" capacity="1" canbeselected="false">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
@@ -201,7 +203,8 @@
         <Use />
       </StatusEffect>
     </Projectile>
-    <ItemContainer hideitems="true" capacity="1" canbeselected="true">
+    <ItemContainer hideitems="true" capacity="1" canbeselected="false">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>

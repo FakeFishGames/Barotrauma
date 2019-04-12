@@ -55,6 +55,11 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public override string ToString()
+        {
+            return "Connection (" + item.Name + ", " + Name + ")";
+        }
+
         public Connection(XElement element, ConnectionPanel connectionPanel)
         {
 

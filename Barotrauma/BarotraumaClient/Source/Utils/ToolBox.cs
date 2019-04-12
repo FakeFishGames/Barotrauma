@@ -108,12 +108,19 @@ namespace Barotrauma
 
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;
-            float spaceWidth = font.MeasureString(" ").X * textScale;
+            Vector2 spaceSize = font.MeasureString(" ") * textScale;
             for (int i = 0; i < words.Length; ++i)
             {
-                if (string.IsNullOrWhiteSpace(words[i]) && words[i] != "\n") continue;
+                if (words[i].Length == 0)
+                {
+                    //space
+                }
+                else if (string.IsNullOrWhiteSpace(words[i]) && words[i] != "\n")
+                {
+                    continue;
+                }
 
-                Vector2 size = font.MeasureString(words[i]) * textScale;
+                Vector2 size = words[i].Length == 0 ? spaceSize : font.MeasureString(words[i]) * textScale;
                 if (size.X > lineLength)
                 {
                     if (linePos == 0.0f)
@@ -149,8 +156,7 @@ namespace Barotrauma
                     }
                     else
                     {
-
-                        linePos += size.X + spaceWidth;
+                        linePos += size.X + spaceSize.X;
                     }
                 }
                 else
@@ -158,7 +164,7 @@ namespace Barotrauma
                     wrappedText.Append("\n");
                     wrappedText.Append(words[i]);
 
-                    linePos = size.X + spaceWidth;
+                    linePos = size.X + spaceSize.X;
                 }
 
                 if (i < words.Length - 1) wrappedText.Append(" ");

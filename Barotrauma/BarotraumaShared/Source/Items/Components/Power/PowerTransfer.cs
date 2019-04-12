@@ -354,11 +354,12 @@ namespace Barotrauma.Items.Components
                             else
                             {
                                 if (!powerTransfer.CanTransfer) continue;
-                                powerTransfer.CheckJunctions(
-                                    deltaTime, 
-                                    false, 
-                                    (thisRelayComponent != null && c.IsOutput) ? 0.0f : clampPower,
-                                    (thisRelayComponent != null && !c.IsOutput) ? 0.0f : clampLoad);
+                                float maxPowerIn = (thisRelayComponent != null && c.IsOutput) ? 0.0f : clampPower;
+                                float maxPowerOut = (thisRelayComponent != null && !c.IsOutput) ? 0.0f : clampLoad;
+                                if (maxPowerIn > 0.0f || maxPowerOut > 0.0f)
+                                {
+                                    powerTransfer.CheckJunctions(deltaTime, false,  maxPowerIn, maxPowerOut);
+                                }
                             }
 
                             continue;

@@ -695,6 +695,7 @@ namespace Barotrauma
                     if (existingAffliction == null)
                     {
                         var newAffliction = affliction.Prefab.Instantiate(affliction.Strength);
+                        if (affliction.Source != null) { newAffliction.Source = affliction.Source; }
                         newAffliction.DamagePerSecond = affliction.DamagePerSecond;
                         newAffliction.DamagePerSecondTimer = affliction.DamagePerSecondTimer;
                         mergedAfflictions.Add(newAffliction);

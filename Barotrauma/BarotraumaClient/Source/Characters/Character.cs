@@ -50,6 +50,7 @@ namespace Barotrauma
         }
         
         private Dictionary<object, HUDProgressBar> hudProgressBars;
+        private List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
 
         public Dictionary<object, HUDProgressBar> HUDProgressBars
         {
@@ -147,12 +148,14 @@ namespace Barotrauma
             }
         }
 
+        private bool wasFiring;
+
         /// <summary>
         /// Control the Character according to player input
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            if (DisableControls)
+            if (DisableControls || GUI.PauseMenuOpen || GUI.SettingsMenuOpen)
             {
                 foreach (Key key in keys)
                 {
@@ -162,9 +165,24 @@ namespace Barotrauma
             }
             else
             {
+                wasFiring |= keys[(int)InputType.Aim].Held && keys[(int)InputType.Shoot].Held;
                 for (int i = 0; i < keys.Length; i++)
                 {
                     keys[i].SetState();
+                }
+                //if we were firing (= pressing the aim and shoot keys at the same time)
+                //and the fire key is the same as Select or Use, reset the key to prevent accidentally selecting/using items
+                if (wasFiring && !keys[(int)InputType.Shoot].Held)
+                {
+                    if (GameMain.Config.KeyBind(InputType.Shoot).Equals(GameMain.Config.KeyBind(InputType.Select)))
+                    {
+                        keys[(int)InputType.Select].Reset();
+                    }
+                    if (GameMain.Config.KeyBind(InputType.Shoot).Equals(GameMain.Config.KeyBind(InputType.Use)))
+                    {
+                        keys[(int)InputType.Use].Reset();
+                    }
+                    wasFiring = false;
                 }
 
                 float targetOffsetAmount = 0.0f;
@@ -283,25 +301,22 @@ namespace Barotrauma
 
             Lights.LightManager.ViewTarget = this;
             CharacterHUD.Update(deltaTime, this, cam);
-
-            bool removeProgressBars = false;
-
-            foreach (HUDProgressBar progressBar in hudProgressBars.Values)
+            
+            if (hudProgressBars.Any())
             {
-                if (progressBar.FadeTimer <= 0.0f)
+                foreach (var progressBar in hudProgressBars)
                 {
-                    removeProgressBars = true;
-                    continue;
+                    if (progressBar.Value.FadeTimer <= 0.0f)
+                    {
+                        progressBarRemovals.Add(progressBar);
+                        continue;
+                    }
+                    progressBar.Value.Update(deltaTime);
                 }
-                progressBar.Update(deltaTime);
-            }
-
-            if (removeProgressBars)
-            {
-                // TODO: this generates garbage, can we fix anything here?
-                foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
+                if (progressBarRemovals.Any())
                 {
-                    hudProgressBars.Remove(pb.Key);
+                    progressBarRemovals.ForEach(pb => hudProgressBars.Remove(pb.Key));
+                    progressBarRemovals.Clear();
                 }
             }
         }

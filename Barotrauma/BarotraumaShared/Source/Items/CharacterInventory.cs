@@ -56,7 +56,7 @@ namespace Barotrauma
                 switch (SlotTypes[i])
                 {
                     //case InvSlotType.Head:
-                    case InvSlotType.OuterClothes:
+                    //case InvSlotType.OuterClothes:
                     case InvSlotType.LeftHand:
                     case InvSlotType.RightHand:
                         hideEmptySlot[i] = true;

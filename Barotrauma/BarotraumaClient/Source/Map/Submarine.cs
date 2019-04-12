@@ -416,6 +416,21 @@ namespace Barotrauma
             }
         }
 
+        public bool IsVanillaSubmarine()
+        {
+            var vanilla = GameMain.VanillaContent;
+            if (vanilla != null)
+            {
+                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
+                string pathToCompare = filePath.Replace(@"\", @"/").ToLowerInvariant();
+                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void CheckForErrors()
         {
             List<string> errorMsgs = new List<string>();

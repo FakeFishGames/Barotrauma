@@ -1706,10 +1706,6 @@
   <EntityDescription.extinguisherbracket>Holds a fire extinguisher to the wall</EntityDescription.extinguisherbracket>
   <EntityName.weaponholder>Weapon Holder</EntityName.weaponholder>
   <EntityDescription.weaponholder>A place to stow your weapons neatly</EntityDescription.weaponholder>
-  <EntityName.windoweddoor>Windowed Door</EntityName.windoweddoor>
-  <EntityDescription.windoweddoor>A sliding door with integrated window</EntityDescription.windoweddoor>
-  <EntityName.hatch>Hatch</EntityName.hatch>
-  <EntityDescription.hatch>A door, but on the horizontal axis</EntityDescription.hatch>
   <EntityName.dockingport>Docking Port</EntityName.dockingport>
   <EntityDescription.dockingport>A vertically aligned docking interface. Locks to another Docking port to form a water tight seal and allow passage between subs, shuttles and locations</EntityDescription.dockingport>
   <EntityName.dockinghatch>Docking Hatch</EntityName.dockinghatch>
@@ -1832,8 +1828,7 @@
   <EntityDescription.automatichatch>A hatch that closes automatically in 5 seconds if there's no-one in the way.</EntityDescription.automatichatch>
   <EntityName.automaticwindoweddoor>Automatic Windowed Door</EntityName.automaticwindoweddoor>
   <EntityDescription.automaticwindoweddoor>A door that closes automatically after 5 seconds if there's no-one in the doorway.</EntityDescription.automaticwindoweddoor>
-  <EntityName.door>Door</EntityName.door>
-  <EntityDescription.door>A pre-wired door with two buttons.</EntityDescription.door>
+  
   <EntityName.largedivinggearcabinet>Large Diving Gear Cabinet</EntityName.largedivinggearcabinet>
   <EntityDescription.largedivinggearcabinet>A cabinet loaded with diving masks, oxygen tanks, underwater scooters, handheld sonars and flares.</EntityDescription.largedivinggearcabinet>
   <EntityName.largedivingsuitcabinet>Large Diving Suit Cabinet</EntityName.largedivingsuitcabinet>
@@ -2239,7 +2234,7 @@
   <TraitorStartMessage>You are the Traitor! Your secret task is to assassinate [targetname]! Discretion is an utmost concern; sinking the submarine and killing the entire crew will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.</TraitorStartMessage>
   <TraitorMoreAgentsMessage>It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.\n\nThe code words are: [codewords].\nThe code response is: [coderesponse].</TraitorMoreAgentsMessage>
   <TraitorStartMessageServer>[traitorname] is the traitor and the target is [targetname].</TraitorStartMessageServer>
-
+ 
   <TraitorEndMessageSuccess>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
   <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
   <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
@@ -2726,7 +2721,7 @@
   <ItemMsgPressSelect>[[select]] Press</ItemMsgPressSelect>
   <ItemMsgRewireScrewdriver>[[use]] Rewire (Screwdriver)</ItemMsgRewireScrewdriver>
   <ItemMsgDetachWrench>[[use]] Detach (Wrench)</ItemMsgDetachWrench>
-  <ItemMsgForceOpenCrowbar>[[use]] Force open (Crowbar)</ItemMsgForceOpenCrowbar>
+  <ItemMsgForceOpenCrowbar>[[use]] Force open (Crowbar)</ItemMsgForceOpenCrowbar> 
   <ItemMsgRepairScrewdriver>[[use]] Repair (Screwdriver)</ItemMsgRepairScrewdriver>
   <ItemMsgRepairWeldingTool>[[shoot]] Repair (Welding Tool)</ItemMsgRepairWeldingTool>
   <ItemMsgRepairWrench>[[use]] Repair (Wrench)</ItemMsgRepairWrench>
@@ -2748,6 +2743,13 @@
 
   <ReactorUseText>This is the reactor. You should leave operating this to a professional, like an engineer. If you want to proceed, there are a couple things you need to know. Keep the fission rate and turbine output balanced, otherwise there will be power shortages or fires. Switch to automatic control if you have to leave the reactor interface.</ReactorUseText>
 
+  <EntityName.door>Custom Door</EntityName.door>
+  <EntityDescription.door>A sliding door with no integrated buttons - has to be wired manually.</EntityDescription.door>
+  <EntityName.windoweddoor>Custom Windowed Door</EntityName.windoweddoor>
+  <EntityDescription.windoweddoor>A sliding door with a window. No integrated buttons - has to be wired manually.</EntityDescription.windoweddoor>
+  <EntityName.hatch>Custom Hatch</EntityName.hatch>
+  <EntityDescription.hatch>A door, but on the horizontal axis. No integrated buttons - has to be wired manually.</EntityDescription.hatch>
+
   <!-- New Additions -->
   
   <InputType.Deselect>Deselect</InputType.Deselect>
@@ -2767,8 +2769,7 @@
   <SetDefaultBindings>Set Default Bindings</SetDefaultBindings>
   <SetDefaultBindingsToolTip>Set key bindings to the recommended default settings (left mouse button to select items, right mouse button or esc to deselect).</SetDefaultBindingsToolTip>
   <SetLegacyBindings>Set Legacy Bindings</SetLegacyBindings>
-  <SetLegacyBindingsToolTip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</SetLegacyBindingsToolTip>
-  
+  <SetLegacyBindingsToolTip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</SetLegacyBindingsToolTip>  
   
   <!-- Generic Tutorial -->
   <Tutorial.TryAgainHeader>You have died</Tutorial.TryAgainHeader>
@@ -2889,4 +2890,178 @@
   <Engineer.PowerUpReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorText>
   <Engineer.PowerUpReactorInstructions>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorInstructions>
 
+  <!-- Tutorial END -->
+
+  <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
+
+  <ItemMsgOpen>[[select]] Open</ItemMsgOpen>
+  <AccessDenied>UNAUTHORIZED ACCESS</AccessDenied>
+  <DoorMsgCannotOpen>This door is controlled with buttons or remote controllers wired to it.</DoorMsgCannotOpen>
+
+  <EntityName.doorwbuttons>Door</EntityName.doorwbuttons>
+  <EntityDescription.doorwbuttons>A sliding door with two integrated buttons.</EntityDescription.doorwbuttons>
+  <EntityName.windoweddoorwbuttons>Windowed Door</EntityName.windoweddoorwbuttons>
+  <EntityDescription.windoweddoorwbuttons>A sliding door with a window and two integrated buttons.</EntityDescription.windoweddoorwbuttons>
+  <EntityName.hatchwbuttons>Hatch</EntityName.hatchwbuttons>
+  <EntityDescription.hatchwbuttons>A door, but on the horizontal axis. Two integrated buttons.</EntityDescription.hatchwbuttons>
+
+  <DirectionalVoiceChat>Directional voice chat</DirectionalVoiceChat>
+  <DirectionalVoiceChatToolTip>When enabled, voice chat messages are panned according to the direction of the speaker relative to your position.</DirectionalVoiceChatToolTip>
+
+  <TraitorRespawnMessage>Your traitor objective was unsuccessful. You are no longer a traitor, so play nice!</TraitorRespawnMessage>
+  <TraitorTargetMessage>[traitorname] had a secret objective to assassinate you - and the task was successful.</TraitorTargetMessage>
+
+  <Repair>Repair</Repair>
+  <RepairAllWalls>Repair all walls</RepairAllWalls>
+  <RepairAllItems>Repair all items</RepairAllItems>
+
+  <Karma>Karma</Karma>
+  <KarmaExplanation>Karma reflects the helpful and harmful actions you've done while playing. Actions such as repairing the submarine, operating devices and killing monsters increase Karma, while actions such as attacking members of your crew or damaging the submarine decrease it. If your Karma drops too low, you may not get assigned to certain jobs anymore, or in more extreme cases, you may be banned from the server.</KarmaExplanation>
+  <ResetKarma>Reset Karma</ResetKarma>
+  <KarmaDecreased>Your Karma decreased by [karmadecrease].</KarmaDecreased>
+  <KarmaIncreased>Your Karma increased by [karmaincrease].</KarmaIncreased>
+  <KarmaBanWarning>Warning: you will be banned from the server if your Karma decreases below [banthreshold].</KarmaBanWarning>
+  <KarmaBanned>You have been banned from the server because your Karma decreased below [banthreshold].</KarmaBanned>
+  <KarmaJobDisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</KarmaJobDisallowed>
+
+  <EntityName.alienarmor>Physicorium Body Armor</EntityName.alienarmor>
+  <EntityDescription.alienarmor>A body armor fabricated from an alien metamaterial.</EntityDescription.alienarmor>  
+  <EntityName.alienhelmet>Physicorium Helmet</EntityName.alienhelmet>
+  <EntityDescription.alienhelmet>A helmet fabricated from an alien metamaterial.</EntityDescription.alienhelmet>
+
+  <MissionName.salvageskyholderartifactruins>Salvaging an artifact</MissionName.salvageskyholderartifactruins>
+  <MissionDescription.salvageskyholderartifactruins>Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact.</MissionDescription.salvageskyholderartifactruins>
+  <MissionSonarLabel.salvageskyholderartifactruins>Infrasonic signal</MissionSonarLabel.salvageskyholderartifactruins>
+  <MissionSuccess.salvageskyholderartifactruins>The artifact has been successfully retrieved.</MissionSuccess.salvageskyholderartifactruins>
+  <MissionFailure.salvageskyholderartifactruins>Retrieving the artifact failed.</MissionFailure.salvageskyholderartifactruins>
+  <MissionHeader0.salvageskyholderartifactruins>Artifact collected</MissionHeader0.salvageskyholderartifactruins>
+  <MissionMessage0.salvageskyholderartifactruins>The artifact is now on board. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.salvageskyholderartifactruins>
+
+  <MissionName.salvagethermalartifactruins>Salvaging an artifact</MissionName.salvagethermalartifactruins>
+  <MissionDescription.salvagethermalartifactruins>Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact.</MissionDescription.salvagethermalartifactruins>
+  <MissionSonarLabel.salvagethermalartifactruins>Infrasonic signal</MissionSonarLabel.salvagethermalartifactruins>
+  <MissionSuccess.salvagethermalartifactruins>The artifact has been successfully retrieved.</MissionSuccess.salvagethermalartifactruins>
+  <MissionFailure.salvagethermalartifactruins>Retrieving the artifact failed.</MissionFailure.salvagethermalartifactruins>
+  <MissionHeader0.salvagethermalartifactruins>Artifact collected</MissionHeader0.salvagethermalartifactruins>
+  <MissionMessage0.salvagethermalartifactruins>The artifact is now on board. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.salvagethermalartifactruins>
+
+  <MissionName.salvagethermalartifactcave>Salvaging an artifact</MissionName.salvagethermalartifactcave>
+  <MissionDescription.salvagethermalartifactcave>Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact.</MissionDescription.salvagethermalartifactcave>
+  <MissionSonarLabel.salvagethermalartifactcave>Infrasonic signal</MissionSonarLabel.salvagethermalartifactcave>
+  <MissionSuccess.salvagethermalartifactcave>The artifact has been successfully retrieved.</MissionSuccess.salvagethermalartifactcave>
+  <MissionFailure.salvagethermalartifactcave>Retrieving the artifact failed.</MissionFailure.salvagethermalartifactcave>
+  <MissionHeader0.salvagethermalartifactcave>Artifact collected</MissionHeader0.salvagethermalartifactcave>
+  <MissionMessage0.salvagethermalartifactcave>The artifact is now on board. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.salvagethermalartifactcave>
+
+  <MissionName.salvagenasonovartifactcave>Salvaging an artifact</MissionName.salvagenasonovartifactcave>
+  <MissionDescription.salvagenasonovartifactcave>Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact.</MissionDescription.salvagenasonovartifactcave>
+  <MissionSonarLabel.salvagenasonovartifactcave>Infrasonic signal</MissionSonarLabel.salvagenasonovartifactcave>
+  <MissionSuccess.salvagenasonovartifactcave>The artifact has been successfully retrieved.</MissionSuccess.salvagenasonovartifactcave>
+  <MissionFailure.salvagenasonovartifactcave>Retrieving the artifact failed.</MissionFailure.salvagenasonovartifactcave>
+  <MissionHeader0.salvagenasonovartifactcave>Artifact collected</MissionHeader0.salvagenasonovartifactcave>
+  <MissionMessage0.salvagenasonovartifactcave>The artifact is now on board. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.salvagenasonovartifactcave>
+
+  <MissionName.killmoloch>Killing a Moloch</MissionName.killmoloch>
+  <MissionDescription.killmoloch>A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature.</MissionDescription.killmoloch>
+  <MissionSonarLabel.killmoloch>Moloch</MissionSonarLabel.killmoloch>
+  <MissionSuccess.killmoloch>The Moloch has been killed.</MissionSuccess.killmoloch>
+  <MissionHeader0.killmoloch>Target terminated</MissionHeader0.killmoloch>
+  <MissionMessage0.killmoloch>The moloch is dead. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killmoloch>
+
+  <MissionName.killtigerthresher>Killing a Tiger Thresher</MissionName.killtigerthresher>
+  <MissionDescription.killtigerthresher>A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature.</MissionDescription.killtigerthresher>
+  <MissionSonarLabel.killtigerthresher>Tiger Thresher</MissionSonarLabel.killtigerthresher>
+  <MissionSuccess.killtigerthresher>The Tiger Thresher has been killed.</MissionSuccess.killtigerthresher>
+  <MissionHeader0.killtigerthresher>Target terminated</MissionHeader0.killtigerthresher>
+  <MissionMessage0.killtigerthresher>The thresher is dead. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killtigerthresher>
+
+  <MissionName.killhammerhead>Killing a Hammerhead</MissionName.killhammerhead>
+  <MissionDescription.killhammerhead>A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature.</MissionDescription.killhammerhead>
+  <MissionSonarLabel.killhammerhead>Hammerhead</MissionSonarLabel.killhammerhead>
+  <MissionSuccess.killhammerhead>The Hammerhead has been killed.</MissionSuccess.killhammerhead>
+  <MissionHeader0.killhammerhead>Target terminated</MissionHeader0.killhammerhead>
+  <MissionMessage0.killhammerhead>The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killhammerhead>
+
+  <MissionName.killcrawlerswarm>Terminate a Swarm</MissionName.killcrawlerswarm>
+  <MissionDescription.killcrawlerswarm>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature.</MissionDescription.killcrawlerswarm>
+  <MissionSonarLabel.killcrawlerswarm>Swarm</MissionSonarLabel.killcrawlerswarm>
+  <MissionSuccess.killcrawlerswarm>The swarm has been terminated.</MissionSuccess.killcrawlerswarm>
+  <MissionHeader0.killcrawlerswarm>Target terminated</MissionHeader0.killcrawlerswarm>
+  <MissionMessage0.killcrawlerswarm>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killcrawlerswarm>
+
+  <MissionName.killendworm>Beast from the Abyss</MissionName.killendworm>
+  <MissionDescription.killendworm>Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of [reward] has been promised to those who get rid of whatever is causing the seismic activity.</MissionDescription.killendworm>
+  <MissionSonarLabel.killendworm>Target</MissionSonarLabel.killendworm>
+  <MissionSuccess.killendworm>The Endworm is dead and the passageway is open for transport again.</MissionSuccess.killendworm>
+  <MissionHeader0.killendworm>Target terminated</MissionHeader0.killendworm>
+  <MissionMessage0.killendworm>The beast is dead. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killendworm>
+
+  <MissionName.salvagekillmoloch>Salvaging an artifact</MissionName.salvagekillmoloch>
+  <MissionDescription.salvagekillmoloch>Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact.</MissionDescription.salvagekillmoloch>
+  <MissionSonarLabel.salvagekillmoloch>Infrasonic signal</MissionSonarLabel.salvagekillmoloch>
+  <MissionSuccess.salvagekillmoloch>It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch.</MissionSuccess.salvagekillmoloch>
+  <MissionHeader0.salvagekillmoloch>Target terminated</MissionHeader0.salvagekillmoloch>
+  <MissionMessage0.salvagekillmoloch>Turns out the signal was emitted by a Moloch! You should navigate out of the cavern and inform the researchers.</MissionMessage0.salvagekillmoloch>
+
+  <MissionName.salvagekillcarrier>Salvaging a Derelict</MissionName.salvagekillcarrier>
+  <MissionDescription.salvagekillcarrier>A small cargo vessel went missing approximately two months ago when transporting xenomaterials from [location1] to [location2]. The vessel was presumed to be taken by the abyss, but now its emergency beacon seems to have been activated near [location2]. Find the vessel and recover the cargo.</MissionDescription.salvagekillcarrier>
+  <MissionSonarLabel.salvagekillcarrier>Emergency Signal</MissionSonarLabel.salvagekillcarrier>
+  <MissionSuccess.salvagekillcarrier>The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;.</MissionSuccess.salvagekillcarrier>
+  <MissionHeader0.salvagekillcarrier>Target destroyed</MissionHeader0.salvagekillcarrier>
+  <MissionMessage0.salvagekillcarrier>The missing vessel appears to have been taken over by some sort of parasitic growth and tried to attack your submarine. It seems to be incapacitated now. You should report the incident to [location2].</MissionMessage0.salvagekillcarrier>
+
+  <MissionName.cargocompoundn>Explosive cargo</MissionName.cargocompoundn>
+  <MissionDescription.cargocompoundn>A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2].</MissionDescription.cargocompoundn>
+  <MissionSuccess.cargocompoundn>The explosives have been successfully delivered.</MissionSuccess.cargocompoundn>
+
+  <MissionName.cargovolatilecompoundn>Explosive cargo</MissionName.cargovolatilecompoundn>
+  <MissionDescription.cargovolatilecompoundn>A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2].</MissionDescription.cargovolatilecompoundn>
+  <MissionSuccess.cargovolatilecompoundn>The explosives have been successfully delivered.</MissionSuccess.cargovolatilecompoundn>
+
+  <MissionName.cargochemicals>Chemical shipment</MissionName.cargochemicals>
+  <MissionDescription.cargochemicals>Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits.</MissionDescription.cargochemicals>
+  <MissionSuccess.cargochemicals>The chemicals have been successfully delivered.</MissionSuccess.cargochemicals>
+
+  <MissionName.cargohuskeggs>Biohazard</MissionName.cargohuskeggs>
+  <MissionDescription.cargohuskeggs>Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2].</MissionDescription.cargohuskeggs>
+  <MissionSuccess.cargohuskeggs>The husk eggs have been successfully delivered.</MissionSuccess.cargohuskeggs>
+
+  <MissionName.cargonitroglycerin>Handle with care</MissionName.cargonitroglycerin>
+  <MissionDescription.cargonitroglycerin>Local researchers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2].</MissionDescription.cargonitroglycerin>
+  <MissionSuccess.cargonitroglycerin>The chemicals have been successfully delivered.</MissionSuccess.cargonitroglycerin>
+
+  <MissionName.cargoclowngear>Praise the Honkmother</MissionName.cargoclowngear>
+  <MissionDescription.cargoclowngear>A local clown syndicate is offering [reward] credits for delivering a shipment of clowning supplies to [location2].</MissionDescription.cargoclowngear>
+  <MissionSuccess.cargoclowngear>The clown gear has been successfully delivered.</MissionSuccess.cargoclowngear>
+
+  <MissionName.cargoconstructionminerals>Mining outpost material transport</MissionName.cargoconstructionminerals>
+  <MissionDescription.cargoconstructionminerals>A consignment of materials for construction needs to be transported to [location2] and the crew chief here is prepared to pay [reward] credits for your trouble.</MissionDescription.cargoconstructionminerals>
+  <MissionSuccess.cargoconstructionminerals>The materials have been successfully delivered.</MissionSuccess.cargoconstructionminerals>
+
+  <MissionName.cargosecurityminerals>Mining outpost material transport</MissionName.cargosecurityminerals>
+  <MissionDescription.cargosecurityminerals>The security team at [location2] needs to be resupplied with materials for weapon fabrication. There's [reward] credits for you if you get these supplies to them.</MissionDescription.cargosecurityminerals>
+  <MissionSuccess.cargosecurityminerals>The materials have been successfully delivered.</MissionSuccess.cargosecurityminerals>
+
+  <MissionName.cargomeditems>Medical item transport</MissionName.cargomeditems>
+  <MissionDescription.cargomeditems>A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there.</MissionDescription.cargomeditems>
+  <MissionSuccess.cargomeditems>The materials have been successfully delivered.</MissionSuccess.cargomeditems>
+
+  <MissionName.cargomeditems>Medical item transport</MissionName.cargomeditems>
+  <MissionDescription.cargomeditems>A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there.</MissionDescription.cargomeditems>
+  <MissionSuccess.cargomeditems>The materials have been successfully delivered.</MissionSuccess.cargomeditems>
+
+  <MissionName.cargomedemergency>Medical item transport</MissionName.cargomedemergency>
+  <MissionDescription.cargomedemergency>A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid [reward] credits on delivery.</MissionDescription.cargomedemergency>
+  <MissionSuccess.cargomedemergency>The antidote has been successfully delivered.</MissionSuccess.cargomedemergency>
+
+  <MissionName.pvpmission>Search and Destroy</MissionName.pvpmission>
+  <MissionDescriptionNeutral.pvpmission>A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2].</MissionDescriptionNeutral.pvpmission>
+  <MissionDescription1.pvpmission>A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death - eliminate the renegades by any means necessary.</MissionDescription1.pvpmission>
+  <MissionDescription2.pvpmission>You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition vessel has just been dispatched on a mission to take down your boat. Eliminate their crew by any means necessary.</MissionDescription2.pvpmission>
+  <MissionTeam1.pvpmission>Coalition</MissionTeam1.pvpmission>
+  <MissionTeam2.pvpmission>Renegade</MissionTeam2.pvpmission>
+  <MissionSuccess.pvpmission>The antidote has been successfully delivered.</MissionSuccess.pvpmission>
+  <MissionFailure.pvpmission>Both crews have perished.</MissionFailure.pvpmission>
+
+  <MapEntityCategory.All>All</MapEntityCategory.All>
 </infotexts>

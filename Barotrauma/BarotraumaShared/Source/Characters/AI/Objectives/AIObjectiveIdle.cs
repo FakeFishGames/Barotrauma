@@ -21,6 +21,8 @@ namespace Barotrauma
         private Hull currentTarget;
         private float newTargetTimer;
 
+        private bool searchingNewHull;
+
         private float standStillTimer;
         private float walkDuration;
 
@@ -52,24 +54,78 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
+            bool currentHullForbidden = IsForbidden(character.CurrentHull);
+            if (!currentHullForbidden && !character.AnimController.InWater && !character.IsClimbing && HumanAIController.ObjectiveManager.WaitTimer > 0)
+            {
+                SteeringManager.Reset();
+                return;
+            }
+
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-            if (currentTargetIsInvalid || (currentTarget == null && IsForbidden(character.CurrentHull)))
+            if (currentTargetIsInvalid || (currentTarget == null && currentHullForbidden))
             {
                 newTargetTimer = 0;
                 standStillTimer = 0;
             }
-            if (character.AnimController.InWater || character.IsClimbing)
+            else if (character.IsClimbing)
             {
-                standStillTimer = 0;
+                if (currentTarget == null)
+                {
+                    newTargetTimer = 0;
+                }
+                else
+                {
+                    // Don't allow new targets when climbing.
+                    newTargetTimer = Math.Max(newTargetIntervalMin, newTargetTimer);
+                }
+            }
+            else if (character.AnimController.InWater)
+            {
+                if (currentTarget == null)
+                {
+                    newTargetTimer = 0;
+                }
             }
             if (newTargetTimer <= 0.0f)
             {
-                currentTarget = FindRandomHull();
+                if (!searchingNewHull)
+                {
+                    //find all available hulls first
+                    FindTargetHulls();
+                    searchingNewHull = true;
+                    return;
+                }
+                else if (targetHulls.Count > 0)
+                {
+                    //choose a random available hull
+                    var randomHull = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
+
+                    bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
+                    if (isCurrentHullOK)
+                    {
+                        // Check that there is no unsafe or forbidden hulls on the way to the target
+                        // Only do this when the current hull is ok, because otherwise the would block all paths from the current hull to the target hull.
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, randomHull.SimPosition);
+                        if (path.Unreachable ||
+                            path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull)))
+                        {
+                            //can't go to this room, remove it from the list and try another room next frame
+                            int index = targetHulls.IndexOf(randomHull);
+                            targetHulls.RemoveAt(index);
+                            hullWeights.RemoveAt(index);
+                            PathSteering.Reset();
+                            return;
+                        }
+                    }
+                    currentTarget = randomHull;
+                    searchingNewHull = false;
+                }
 
                 if (currentTarget != null)
                 {
+                    character.AIController.SelectTarget(currentTarget.AiTarget);
                     string errorMsg = null;
 #if DEBUG
                     bool isRoomNameFound = currentTarget.RoomName != null;
@@ -88,23 +144,28 @@ namespace Barotrauma
             // - if reached the end of the path 
             // - if the target is unreachable
             // - if the path requires going outside
-            if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
-                (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
+            if (!character.IsClimbing)
             {
-                standStillTimer -= deltaTime;
-                if (standStillTimer > 0.0f)
+                if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
+                    (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
                 {
-                    walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
-                    PathSteering.Reset();
+                    if (!character.AnimController.InWater)
+                    {
+                        standStillTimer -= deltaTime;
+                        if (standStillTimer > 0.0f)
+                        {
+                            walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
+                            PathSteering.Reset();
+                            return;
+                        }
+                        if (standStillTimer < -walkDuration)
+                        {
+                            standStillTimer = Rand.Range(standStillMin, standStillMax);
+                        }
+                    }
+                    Wander(deltaTime);
                     return;
                 }
-                if (standStillTimer < -walkDuration)
-                {
-                    standStillTimer = Rand.Range(standStillMin, standStillMax);
-                }
-               
-                Wander(deltaTime);
-                return;
             }
 
             if (currentTarget != null)
@@ -115,44 +176,54 @@ namespace Barotrauma
 
         public void Wander(float deltaTime)
         {
+            if (character.IsClimbing) { return; }
             //steer away from edges of the hull
-            if (character.AnimController.CurrentHull != null && !character.IsClimbing)
+            var currentHull = character.CurrentHull;
+            if (currentHull != null)
             {
-                float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
-                float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
-                if (leftDist < WallAvoidDistance && rightDist < WallAvoidDistance)
+                float roomWidth = currentHull.Rect.Width;
+                if (roomWidth < WallAvoidDistance * 4)
                 {
-                    if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
-                    {
-                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
-                    }
-                    else
-                    {
-                        PathSteering.Reset();
-                    }
-                }
-                else if (leftDist < WallAvoidDistance)
-                {
-                    //PathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance - leftDist) / WallAvoidDistance);
-                    PathSteering.SteeringManual(deltaTime, Vector2.UnitX);
-                    PathSteering.WanderAngle = 0.0f;
-                }
-                else if (rightDist < WallAvoidDistance)
-                {
-                    //PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance - rightDist) / WallAvoidDistance);
-                    PathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
-                    PathSteering.WanderAngle = MathHelper.Pi;
+                    PathSteering.Reset();
                 }
                 else
                 {
-                    SteeringManager.SteeringWander();
+                    float leftDist = character.Position.X - currentHull.Rect.X;
+                    float rightDist = currentHull.Rect.Right - character.Position.X;
+                    if (leftDist < WallAvoidDistance && rightDist < WallAvoidDistance)
+                    {
+                        if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
+                        {
+                            PathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
+                        }
+                        else
+                        {
+                            PathSteering.Reset();
+                        }
+                    }
+                    else if (leftDist < WallAvoidDistance)
+                    {
+                        float speed = (WallAvoidDistance - leftDist) / WallAvoidDistance;
+                        PathSteering.SteeringManual(deltaTime, Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
+                        PathSteering.WanderAngle = 0.0f;
+                    }
+                    else if (rightDist < WallAvoidDistance)
+                    {
+                        float speed = (WallAvoidDistance - rightDist) / WallAvoidDistance;
+                        PathSteering.SteeringManual(deltaTime, -Vector2.UnitX * MathHelper.Clamp(speed, 0.25f, 1));
+                        PathSteering.WanderAngle = MathHelper.Pi;
+                    }
+                    else
+                    {
+                        SteeringManager.SteeringWander();
+                    }
                 }
             }
             else
             {
                 SteeringManager.SteeringWander();
             }
-            if (!character.IsClimbing && !character.AnimController.InWater)
+            if (!character.AnimController.InWater)
             {
                 //reset vertical steering to prevent dropping down from platforms etc
                 character.AIController.SteeringManager.ResetY();
@@ -162,68 +233,40 @@ namespace Barotrauma
         private readonly List<Hull> targetHulls = new List<Hull>(20);
         private readonly List<float> hullWeights = new List<float>(20);
 
-        private Hull FindRandomHull()
+        private void FindTargetHulls()
         {
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            Hull targetHull = null;
             bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
-            //random chance of navigating back to the room where the character spawned
-            if (Rand.Int(5) == 1 && idCard != null)
-            {
-                foreach (WayPoint wp in WayPoint.WayPointList)
-                {
-                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) { continue; }
 
-                    foreach (string tag in wp.IdCardTags)
+            targetHulls.Clear();
+            hullWeights.Clear();
+            foreach (var hull in Hull.hullList)
+            {
+                if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
+                if (hull.Submarine == null) { continue; }
+                if (hull.Submarine.TeamID != character.TeamID) { continue; }
+                // If the character is inside, only take connected hulls into account.
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                if (IsForbidden(hull)) { continue; }
+                // Ignore hulls that are too low to stand inside
+                if (character.AnimController is HumanoidAnimController animController)
+                {
+                    if (hull.CeilingHeight < ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value))
                     {
-                        if (idCard.HasTag(tag))
-                        {
-                            targetHull = wp.CurrentHull;
-                        }
+                        continue;
                     }
                 }
-            }
-            if (targetHull == null)
-            {
-                targetHulls.Clear();
-                hullWeights.Clear();
-                foreach (var hull in Hull.hullList)
+                if (!targetHulls.Contains(hull))
                 {
-                    if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
-                    if (hull.Submarine == null) { continue; }
-                    if (hull.Submarine.TeamID != character.TeamID) { continue; }
-                    // If the character is inside, only take connected hulls into account.
-                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
-                    if (IsForbidden(hull)) { continue; }
-                    // Ignore hulls that are too low to stand inside
-                    if (character.AnimController is HumanoidAnimController animController)
-                    {
-                        if (hull.CeilingHeight < ConvertUnits.ToDisplayUnits(animController.HeadPosition.Value))
-                        {
-                            continue;
-                        }
-                    }
-                    if (isCurrentHullOK)
-                    {
-                        // Check that there is no unsafe or forbidden hulls on the way to the target
-                        // Only do this when the current hull is ok, because otherwise the would block all paths from the current hull to the target hull.
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                        if (path.Unreachable) { continue; }
-                        if (path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull))) { continue; }
-                    }
-
-                    // If we want to do a steering check, we should do it here, before setting the path
-                    //if (path.Cost > 1000.0f) { continue; }
-
-                    if (!targetHulls.Contains(hull))
-                    {
-                        targetHulls.Add(hull);
-                        hullWeights.Add(hull.Volume);
-                    }
+                    targetHulls.Add(hull);
+                    float weight = hull.Volume;
+                    // Prefer rooms that are closer. Avoid rooms that are not in the same level.
+                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 5.0f;
+                    float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 2500, dist));
+                    weight *= distanceFactor;
+                    hullWeights.Add(weight);
                 }
-                return ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
             }
-            return targetHull;
+            
         }
 
         private bool IsForbidden(Hull hull)

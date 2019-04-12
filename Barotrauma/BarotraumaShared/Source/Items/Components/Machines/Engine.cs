@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
 #endif
             }
 
-            voltage = 0.0f;
+            voltage -= deltaTime;
         }
 
         private void UpdatePropellerDamage(float deltaTime)

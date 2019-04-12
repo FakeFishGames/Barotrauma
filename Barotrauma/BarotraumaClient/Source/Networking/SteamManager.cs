@@ -107,6 +107,56 @@ namespace Barotrauma.Steam
             return true;
         }
 
+        public static bool GetFavouriteServers(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return false;
+            }
+
+            var filter = new ServerList.Filter
+            {
+                { "appid", AppID.ToString() },
+                { "gamedir", "Barotrauma" },
+                { "secure", "1" }
+            };
+
+            //include unresponsive servers in the server list
+
+            //the response is queried using the server's query port, not the game port,
+            //so it may be possible to play on the server even if it doesn't respond to server list queries
+            var query = instance.client.ServerList.Favourites(filter);
+            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnFinished = onFinished;
+
+            return true;
+        }
+
+        public static bool GetServersFromHistory(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return false;
+            }
+
+            var filter = new ServerList.Filter
+            {
+                { "appid", AppID.ToString() },
+                { "gamedir", "Barotrauma" },
+                { "secure", "1" }
+            };
+
+            //include unresponsive servers in the server list
+
+            //the response is queried using the server's query port, not the game port,
+            //so it may be possible to play on the server even if it doesn't respond to server list queries
+            var query = instance.client.ServerList.History(filter);
+            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived, includeUnresponsive: true); };
+            query.OnFinished = onFinished;
+
+            return true;
+        }
+
         private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, bool includeUnresponsive)
         {
             IEnumerable<ServerList.Server> servers = includeUnresponsive ?
@@ -210,7 +260,7 @@ namespace Barotrauma.Steam
         public const string WorkshopItemPreviewImageFolder = "Workshop";
         public const string PreviewImageName = "PreviewImage.png";
         private const string MetadataFileName = "filelist.xml";
-        private const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
+        public const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
 
         private Sprite defaultPreviewImage;
         public Sprite DefaultPreviewImage
@@ -548,6 +598,8 @@ namespace Barotrauma.Steam
 
             if (!allowFileOverwrite)
             {
+                // TODO: If you create a new mod via the workshop interface and enable it, it will show the error msg, but still allows you to enable the content.
+
                 if (File.Exists(newContentPackagePath))
                 {
                     errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")

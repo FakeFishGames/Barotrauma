@@ -555,6 +555,37 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("resetselected", "Reset selected items and structures to prefabs. Only applicable in the subeditor.", args =>
+            {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    foreach (MapEntity entity in MapEntity.SelectedList)
+                    {
+                        if (entity is Item item)
+                        {
+                            item.Reset();
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            structure.Reset();
+                        }
+                    }
+                    foreach (MapEntity entity in MapEntity.SelectedList)
+                    {
+                        if (entity is Item item)
+                        {
+                            item.CreateEditingHUD();
+                            break;
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            structure.CreateEditingHUD();
+                            break;
+                        }
+                    }
+                }
+            }));
+
             commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)

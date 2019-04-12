@@ -146,7 +146,7 @@
     name="Killing a Moloch"
     identifier="killmoloch"
     type="Monster"
-    description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 5000 credits has been promised to those who kill the creature."
+    description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
     commonness="5"
     reward="5000"
     sonarlabel="Moloch"
@@ -174,7 +174,7 @@
     name="Killing a Tiger Thresher"
     identifier="killtigerthresher"
     type="Monster"
-    description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
+    description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
     commonness="7"
     reward="1000"
     sonarlabel="Tiger Thresher"
@@ -202,15 +202,15 @@
 
 
   <MonsterMission
-  name="Killing a Hammerhead"
-  identifier="killhammerhead"
-  type="Monster"
-  description="A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
-  commonness="7"
-  reward="1000"
-  sonarlabel="Hammerhead"
-  successmessage="The Hammerhead has been killed."
-  monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
+    name="Killing a Hammerhead"
+    identifier="killhammerhead"
+    type="Monster"
+    description="A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
+    commonness="7"
+    reward="1000"
+    sonarlabel="Hammerhead"
+    successmessage="The Hammerhead has been killed."
+    monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
     <LocationType from="City" to="City"/>
@@ -232,15 +232,15 @@
   </MonsterMission>
   
   <!--<MonsterMission
-  name="Terminate a Swarm"
-  identifier="killswarm"
-  type="Monster"
-  description="A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of 400 credits has been promised to those who kill the creature."
-  commonness="10"
-  reward="400"
-  sonarlabel="Swarm"
-  successmessage="The swarm has been terminated."
-  monsterfile="Content/Characters/Crawler/crawler.xml" >   
+    name="Terminate a Swarm"
+    identifier="killcrawlerswarm"
+    type="Monster"
+    description="A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
+    commonness="10"
+    reward="400"
+    sonarlabel="Swarm"
+    successmessage="The swarm has been terminated."
+    monsterfile="Content/Characters/Crawler/crawler.xml" >   
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <LocationType from="City" to="None"/>
@@ -362,7 +362,7 @@
     name="Explosive cargo"
     identifier="cargovolatilecompoundn"
     type="Cargo"
-    description="A local arms dealer is offering 500 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
+    description="A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="2"
     reward="500"
     achievementidentifier="cargomission"
@@ -435,7 +435,7 @@
     name="Biohazard"
     identifier="cargohuskeggs"
     type="Cargo"
-    description="Local researchers are offering 250 credits for delivering a container of husk parasite eggs to [location2]."
+    description="Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2]."
     commonness="5"
     reward="250"
     achievementidentifier="cargomission"
@@ -492,8 +492,8 @@
     name="Praise the Honkmother"
     identifier="cargoclowngear"
     type="Cargo"
-    description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
-    commonness="5"
+    description="A local clown syndicate is offering [reward] credits for delivering a shipment of clowning supplies to [location2]."
+    commonness="1"
     reward="100"
     achievementidentifier="cargomission"
     successmessage="The clown gear has been successfully delivered."
@@ -520,7 +520,7 @@
     name="Mining outpost material transport"
     identifier="cargoconstructionminerals"
     type="Cargo"
-    description="A consignment of materials for construction needs to be transported to [location2] and the crew chief here is prepared to pay 150 credits for your trouble."
+    description="A consignment of materials for construction needs to be transported to [location2] and the crew chief here is prepared to pay [reward] credits for your trouble."
     commonness="10"
     reward="150"
     achievementidentifier="cargomission"
@@ -549,7 +549,7 @@
     name="Mining outpost material transport"
     identifier="cargosecurityminerals"
     type="Cargo"
-    description="The security team at [location2] needs to be resupplied with materials for weapon fabrication. There's 150 credits for you if you get these supplies to them."
+    description="The security team at [location2] needs to be resupplied with materials for weapon fabrication. There's [reward] credits for you if you get these supplies to them."
     commonness="5"
     reward="150"
     achievementidentifier="cargomission"
@@ -578,7 +578,7 @@
     name="Medical item transport"
     identifier="cargomeditems"
     type="Cargo"
-    description="A consignment of medical items needs to be transported to [location2]. There's 150 credits if you can get them there."
+    description="A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there."
     commonness="10"
     reward="150"
     achievementidentifier="cargomission"
@@ -609,7 +609,7 @@
     name="Medical item transport"
     identifier="cargomedemergency"
     type="Cargo"
-    description="A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid 300 credits on delivery."
+    description="A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid [reward] credits on delivery."
     commonness="5"
     reward="300"
     achievementidentifier="cargomission"

@@ -224,23 +224,24 @@ namespace Barotrauma
             {
                 if (Prefab.BackgroundSprite != null)
                 {
-                    bool drawDropShadow = Submarine != null && HasBody;
                     Vector2 dropShadowOffset = Vector2.Zero;
-                    if (drawDropShadow)
+                    if (UseDropShadow)
                     {
-                        dropShadowOffset = Submarine.HiddenSubPosition - Position;
-                        if (dropShadowOffset != Vector2.Zero)
+                        dropShadowOffset = DropShadowOffset;
+                        if (dropShadowOffset == Vector2.Zero)
                         {
-                            if (IsHorizontal)
+                            if (Submarine == null)
                             {
-                                dropShadowOffset = new Vector2(0.0f, Math.Sign(dropShadowOffset.Y) * 10.0f);
+                                dropShadowOffset = Vector2.UnitY * 10.0f;
                             }
                             else
                             {
-                                dropShadowOffset = new Vector2(Math.Sign(dropShadowOffset.X) * 10.0f, 0.0f);
+                                dropShadowOffset = IsHorizontal ? 
+                                    new Vector2(0.0f, Math.Sign(Submarine.HiddenSubPosition.Y - Position.Y) * 10.0f) : 
+                                    new Vector2(Math.Sign(Submarine.HiddenSubPosition.X - Position.X) * 10.0f, 0.0f);
                             }
-                            dropShadowOffset.Y = -dropShadowOffset.Y;
                         }
+                        dropShadowOffset.Y = -dropShadowOffset.Y;
                     }
 
                     if (DrawTiled)
@@ -260,7 +261,7 @@ namespace Barotrauma
                             textureScale: TextureScale * Scale,
                             startOffset: backGroundOffset);
 
-                        if (drawDropShadow)
+                        if (UseDropShadow)
                         {
                             Prefab.BackgroundSprite.DrawTiled(
                                 spriteBatch,
@@ -285,7 +286,7 @@ namespace Barotrauma
                             rotate: 0,
                             spriteEffect: SpriteEffects);
 
-                        if (drawDropShadow)
+                        if (UseDropShadow)
                         {
                             Prefab.BackgroundSprite.Draw(
                                 spriteBatch,

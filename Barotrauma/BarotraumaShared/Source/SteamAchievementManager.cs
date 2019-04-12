@@ -377,9 +377,9 @@ namespace Barotrauma
         public static void UnlockAchievement(string identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
         {
             if (CheatsEnabled) return;
+            identifier = identifier.ToLowerInvariant();
             
 #if SERVER
-            identifier = identifier.ToLowerInvariant();
 
             if (unlockClients && GameMain.Server != null)
             {

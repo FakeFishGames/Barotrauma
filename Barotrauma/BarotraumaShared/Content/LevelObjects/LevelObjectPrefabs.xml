@@ -461,41 +461,6 @@
     </Trigger>
     <LightSource color="255,216,204,102" range="1500" />
     <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <LightSource color="255,216,204,102" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora1>
   <sonarflora2 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.2" scaleoscillationfrequency="0.3" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01" alignment="TopLeft, BottomRight" minsurfacewidth="976" swingamount="0" swingfrequency="0" sonardisruption="0">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
@@ -515,41 +480,6 @@
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
     <LightSource color="255,216,204,127" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <LightSource color="255,216,204,127" range="1500" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
     <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora2>
   <sonarflora3 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01" alignment="TopLeft, BottomRight" minsurfacewidth="760" swingamount="0" swingfrequency="0" sonardisruption="0">
@@ -571,41 +501,6 @@
     </Trigger>
     <LightSource color="255,216,204,102" range="1200" />
     <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <LightSource color="255,216,204,102" range="1200" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora3>
   <sonarflora4 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01" alignment="TopLeft, BottomRight" minsurfacewidth="636" swingamount="0" swingfrequency="0" sonardisruption="0">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
@@ -625,41 +520,6 @@
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
     <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
     <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora4>
   <sonarflora5 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="0" depthrange="-0.01,-0.01" alignment="TopLeft, BottomRight" minsurfacewidth="618" swingamount="0" swingfrequency="0" sonardisruption="0">
@@ -681,41 +541,6 @@
     </Trigger>
     <LightSource color="255,216,204,102" range="1000" />
     <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora5>
   <sonarflora6 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5" minsize="0.5" maxsize="1" alignwithsurface="True" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01" alignment="TopLeft, BottomRight" minsurfacewidth="608" swingamount="0" swingfrequency="0" sonardisruption="0">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
@@ -735,41 +560,6 @@
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7" />
     </Trigger>
     <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <LightSource color="255,216,204,102" range="1000" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
-    <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
     <ChildObject names="sonarflorabranch1, sonarflorabranch2, sonarflorabranch3, sonarflorabranch4" mincount="1" maxcount="3" />
   </sonarflora6>
   <sonarflorabranch1 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" scaleoscillation="0,0.1" scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="638" sonardisruption="0">
@@ -914,23 +704,6 @@
       <ParticleEmitter particle="lavachunk" particlespersecond="40" position="-50,700" anglemin="70" anglemax="110" velocitymin="2500" velocitymax="4000" />
     </Trigger>
     <ParticleEmitter particle="hydrosmokesmall" particlespersecond="10" position="-50,700" anglemin="60" anglemax="120" velocitymin="100" velocitymax="600" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
-    <LightSource color="255,0,0,255" range="2048" />
     <LightSource color="255,0,0,255" range="2048" />
   </lavavent>
   <geothermalvent_A spawnpos="Wall, SeaFloor" alignment="Top" minsize="0.5" maxsize="1" alignwithsurface="True" randomrotation="-10,10" depthrange="0,1" clusteringamount="0" clusteringgroup="0" minsurfacewidth="336" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" commonness="1" sonardisruption="0">

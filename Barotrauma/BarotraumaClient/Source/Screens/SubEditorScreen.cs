@@ -310,6 +310,12 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f,
                 Stretch = true
             };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
+            {
+                OnClicked = (btn, userdata) => { ClearFilter(); return true; }
+            };
+
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
                 entityCategoryButtons.Add(new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform),
@@ -1272,13 +1278,17 @@ namespace Barotrauma
             };
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
-            GUIFrame paddedLoadFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
-            var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), paddedLoadFrame.RectTransform))
+            var paddedLoadFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.05f };
+
+            var deleteButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform, Anchor.Center));
+
+            var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLoadFrame.RectTransform))
             {
+                ScrollBarVisible = true,
                 OnSelected = (GUIComponent selected, object userData) =>
                 {
-                    if (paddedLoadFrame.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
+                    if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
                     return true;
                 }
             };
@@ -1303,17 +1313,7 @@ namespace Barotrauma
                 }
             }
 
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
-            {
-                OnClicked = (GUIButton btn, object userdata) =>
-                {
-                    loadFrame = null;
-                    return true;
-                }
-            };
-
-            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.31f, 0.0f) },
+            var deleteButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), deleteButtonHolder.RectTransform, Anchor.TopCenter),
                 TextManager.Get("Delete"), style: "GUIButtonLarge")
             {
                 Enabled = false,
@@ -1327,11 +1327,23 @@ namespace Barotrauma
                 }
 
                 deleteButton.Enabled = false;
-                
+
                 return true;
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight),
+            var controlBtnHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform), isHorizontal: true) { RelativeSpacing = 0.2f, Stretch = true };
+
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), controlBtnHolder.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+            {
+                OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    loadFrame = null;
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), controlBtnHolder.RectTransform, Anchor.BottomRight),
                 TextManager.Get("Load"), style: "GUIButtonLarge")
             {
                 OnClicked = LoadSub

@@ -235,6 +235,26 @@ namespace Barotrauma
             set { /*do nothing*/ }
         }
 
+        [Serialize(0.0f, false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to modify the sound range
+        /// </summary>
+        public float SoundRange
+        {
+            get { return aiTarget == null ? 0.0f : aiTarget.SoundRange; }
+            set { if (aiTarget != null) { aiTarget.SoundRange = Math.Max(0.0f, value); } }
+        }
+
+        [Serialize(0.0f, false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to modify the sound range
+        /// </summary>
+        public float SightRange
+        {
+            get { return aiTarget == null ? 0.0f : aiTarget.SightRange; }
+            set { if (aiTarget != null) { aiTarget.SightRange = Math.Max(0.0f, value); } }
+        }
+
         /// <summary>
         /// Should the item's Use method be called with the "Use" or with the "Shoot" key?
         /// </summary>
@@ -781,7 +801,12 @@ namespace Barotrauma
             if (findNewHull) FindHull();
         }
 
-        partial void SetActiveSprite();
+        public void SetActiveSprite()
+        {
+            SetActiveSpriteProjSpecific();
+        }
+
+        partial void SetActiveSpriteProjSpecific();
 
         public override void Move(Vector2 amount)
         {
@@ -1412,13 +1437,13 @@ namespace Barotrauma
                             selectHit = picker.IsKeyHit(ic.SelectKey);
 
 #if CLIENT
-                        //if the cursor is on a UI component, disable interaction with the left mouse button
-                        //to prevent accidentally selecting items when clicking UI elements
-                        if (picker == Character.Controlled && GUI.MouseOn != null)
-                        {
-                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
-                        }
+                            //if the cursor is on a UI component, disable interaction with the left mouse button
+                            //to prevent accidentally selecting items when clicking UI elements
+                            if (picker == Character.Controlled && GUI.MouseOn != null)
+                            {
+                                if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
+                                if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
+                            }
 #endif
                         }
                     }
@@ -1588,18 +1613,22 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
+        List<ColoredText> texts = new List<ColoredText>();
         public List<ColoredText> GetHUDTexts(Character character)
         {
-            List<ColoredText> texts = new List<ColoredText>();
-            
+            texts.Clear();
             foreach (ItemComponent ic in components)
             {
                 if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
-               
-                Color color = Color.Red;
-                if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
+
+                Color color = Color.Gray;
+                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
+                if (hasRequiredSkillsAndItems)
+                {
+                    color = Color.Cyan;
+                }
 
                 texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }
@@ -1630,21 +1659,25 @@ namespace Barotrauma
                 }
             }
 
-            foreach (ItemComponent ic in components) { ic.Drop(dropper); }
+            if (body != null)
+            {
+                body.Enabled = true;
+                body.ResetDynamics();
+                if (dropper != null)
+                {
+                    body.SetTransform(dropper.SimPosition, 0.0f);
+                }
+            }
 
+            foreach (ItemComponent ic in components) { ic.Drop(dropper); }
+            
             if (Container != null)
             {
-                if (body != null)
-                {
-                    body.Enabled = true;
-                    body.LinearVelocity = Vector2.Zero;
-                }
                 SetTransform(Container.SimPosition, 0.0f);
-
                 Container.RemoveContained(this);
                 Container = null;
             }
-
+            
             if (parentInventory != null)
             {
                 parentInventory.RemoveItem(this);
@@ -2034,6 +2067,8 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+            Sprite.ReloadXML();
+            SpriteDepth = Sprite.Depth;
             components.ForEach(c => c.Reset());
         }
 

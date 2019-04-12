@@ -495,6 +495,8 @@ namespace Barotrauma.Lights
                 spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
                     (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
             }
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Enabled) { c.Draw(spriteBatch, cam); }

@@ -785,15 +785,32 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null || !c.Enabled) continue;
-                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) continue;
+                if (c.AnimController.CurrentHull != null || !c.Enabled) { continue; }
+                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
+
+                if (c.AnimController.SimplePhysicsEnabled)
+                {
+                    float pointDist = ((c.WorldPosition - pingSource) * displayScale).LengthSquared();
+                    if (pointDist > DisplayRadius * DisplayRadius) { continue; }
+
+                    if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
+                    {
+                        var blip = new SonarBlip(
+                            c.WorldPosition,
+                            MathHelper.Clamp(c.Mass, 0.1f, pingStrength),
+                            MathHelper.Clamp(c.Mass * 0.03f, 0.1f, 2.0f));
+                        if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
+                        sonarBlips.Add(blip);
+                    }
+                    continue;
+                }
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (!limb.body.Enabled) { continue; }
 
                     float pointDist = ((limb.WorldPosition - pingSource) * displayScale).LengthSquared();
-                    if (limb.SimPosition == Vector2.Zero || pointDist > DisplayRadius * DisplayRadius) continue;
+                    if (limb.SimPosition == Vector2.Zero || pointDist > DisplayRadius * DisplayRadius) { continue; }
 
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
@@ -801,13 +818,13 @@ namespace Barotrauma.Items.Components
                             limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f), 
                             MathHelper.Clamp(limb.Mass, 0.1f, pingStrength), 
                             MathHelper.Clamp(limb.Mass * 0.1f, 0.1f, 2.0f));
-                        if (!passive && !CheckBlipVisibility(blip, transducerPos)) continue;
+                        if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
                         sonarBlips.Add(blip);
                     }
                 }
             }
         }
-
+        
         private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius,
             float lineStep, float zStep, float range, float pingStrength, bool passive)
         {
