@@ -2918,7 +2918,9 @@
   <Officer.Radio.CrawlerDead>Good job, but that was just a baby crawler. I’m seeing something bigger up ahead, so keep on your toes.</Officer.Radio.CrawlerDead>
   <Officer.Radio.SomethingBig>I’m reading something big on the sonar. Load the coilgun and see if you can take it down.</Officer.Radio.SomethingBig>
   <Officer.Radio.HammerheadDead>Nice shooting. Bad news is, this station is unsalvageable. Come down to the sub, we’re leaving before it’s too late.</Officer.Radio.HammerheadDead>
-  
+  <Officer.Radio.Submarine>Welcome aboard. I need you to make sure we’re ready to deal with whatever comes after us when we leave. Start inspecting the weaponry.</Officer.Radio.Submarine>
+  <Officer.Radio.Complete>Outstanding. Now get ready. Once the rest of the crew arrives, we’re out of here.</Officer.Radio.Complete>
+
   <!--  Room 2 -->
   <Officer.Equipment>Inventory</Officer.Equipment>
   <Officer.EquipmentObjective>Retrieve equipment from the cabinet</Officer.EquipmentObjective>
@@ -2929,7 +2931,7 @@
   <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand.\n\nReady the weapon by holding [AIMBUTTON] and swing it by clicking [FIREBUTTON].</Officer.MeleeWeaponText>
 
   <!--  Room 3 -->
-  <Officer.Crawler>Monsters</Officer.Crawler>
+  <Officer.Crawler>Crawlers</Officer.Crawler>
   <Officer.CrawlerObjective>Kill the crawler</Officer.CrawlerObjective>
   <Officer.CrawlerText>Take the crawler down using the stun baton. Stun baton hits inflict stun on the enemies, so use that to your advantage.</Officer.CrawlerText>
 
@@ -2938,9 +2940,20 @@
   <Officer.SomethingBigObjective>Load coilgun and turn on the supercapacitor</Officer.SomethingBigObjective>
   <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo make the coilgun ready, you must ensure the supercapacitor has enough power by setting the recharge rate high enough (>50% is usually enough) and insert full ammunition boxes into the coilgun loader.</Officer.SomethingBigText>
 
-  <Officer.Hammerhead>Hammerhead</Officer.Hammerhead>
+  <Officer.Hammerhead>Hammerheads</Officer.Hammerhead>
   <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
   <Officer.HammerheadText>To use the coilgun, interact with the periscope. While on the periscope, aim with the mouse and fire by pressing [FIREBUTTON].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
+
+  <!--  Room 5 -->
+  <Officer.Mudraptor>Mudraptors</Officer.Mudraptor>
+  <Officer.MudraptorObjective>Kill the mudraptor</Officer.MudraptorObjective>
+  <Officer.MudraptorText>Mudraptors are bigger, meaner and more armored than crawlers. Taking them down requires more firepower. Try to keep your distance.</Officer.MudraptorText>
+  
+  <!-- Submarine -->
+  <Officer.ArmSubmarine>Weaponry</Officer.ArmSubmarine>
+  <Officer.ArmSubmarineObjective>Ready coilguns</Officer.ArmSubmarineObjective>
+  <Officer.ArmSubmarineText>Find ammunition for the coilguns and load them. Recharge supercapacitors.</Officer.ArmSubmarineText>  
+  
   <!-- Tutorial END -->
 
   <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
