@@ -1,5 +1,253 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
+  <!--  FINS START-->
+  <fin name="Fin S 01" identifier="fins01" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="0,0,192,192" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 02" identifier="fins02" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="224,0,192,192" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 03" identifier="fins03" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="448,-2,195,99" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 04" identifier="fins04" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="446,130,197,65" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 05" identifier="fins05" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="671,2,69,193" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 06" identifier="fins06" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="832,-1,98,197" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 07" identifier="fins07" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="3,222,100,105" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 08" identifier="fins08" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="125,224,75,103" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 09" identifier="fins09" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="224,224,102,102" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 10" identifier="fins10" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="349,221,73,84" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 11" identifier="fins11" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="447,224,200,38" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 12" identifier="fins12" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="3,349,105,77" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 13" identifier="fins13" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="125,351,174,73" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 14" identifier="fins14" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="314,351,147,77" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 15" identifier="fins15" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="452,289,105,138" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 16" identifier="fins16" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="569,284,83,81" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 17" identifier="fins17" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="255,448,122,104" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 18" identifier="fins18" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="-2,445,107,108" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 19" identifier="fins19" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="125,510,73,47" depth="0.5" origin="0.4595993,0.6038165" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin S 20" identifier="fins20" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="125,445,46,44" depth="0.5" origin="0.5339039,0.4379086" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 01" identifier="finm01" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="451,451,197,98" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 02" identifier="finm02" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="253,572,174,108" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 03" identifier="finm03" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="-1,575,224,106" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 04" identifier="finm04" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="672,225,263,199" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 05" identifier="finm05" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="958,0,333,330" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 06" identifier="finm06" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="957,415,203,266" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 07" identifier="finm07" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1212,478,178,201" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 08" identifier="finm08" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="-1,700,232,205" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 09" identifier="finm09" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="256,700,326,200" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 10" identifier="finm10" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="607,700,233,200" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 11" identifier="finm11" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="861,704,295,196" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 12" identifier="finm12" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1183,706,393,196" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 13" identifier="finm13" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="955,346,241,48" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 14" identifier="finm14" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1187,389,293,69" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 15" identifier="finm15" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1504,348,521,110" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 16" identifier="finm16" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1323,1349,260,232" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 17" identifier="finm17" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1588,1347,258,231" depth="0.5" origin="0.695432,0.9253635" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 18" identifier="finm18" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1848,1437,201,141" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 19" identifier="finm19" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1466,1710,270,341" depth="0.5" origin="0.4595993,0.6038165" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin M 20" identifier="finm20" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1757,1664,296,387" depth="0.5" origin="0.5339039,0.4379086" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 01" identifier="finl01" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="-2,931,269,392" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 02" identifier="finl02" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="288,933,268,390" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 03" identifier="finl03" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="572,936,239,387" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 04" identifier="finl04" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="829,946,523,377" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 05" identifier="finl05" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="1370,1022,658,304" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 06" identifier="finl06" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="0,1347,109,359" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 07" identifier="finl07" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="124,1347,115,353" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 08" identifier="finl08" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="252,1339,523,367" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 09" identifier="finl09" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="803,1342,510,358" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 10" identifier="finl10" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="5,1726,260,201" depth="0.5" origin="0.6148124,0.5381715" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 11" identifier="finl11" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="286,1729,525,198" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 12" identifier="finl12" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="829,1729,520,195" depth="0.5" origin="1,1" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 13" identifier="finl13" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="-2,1955,358,99" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 14" identifier="finl14" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="377,1950,528,104" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <fin name="Fin L 15" identifier="finl15" description="Fin construction piece" body="true" health="200">
+    <sprite texture="Content/Map/FinsA.png" sourcerect="920,1950,383,102" depth="0.5" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
+  </fin>
+  <!-- TAILS START-->
+  <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="80" bodyheight="330" bodyoffset="-20,0" castshadow="false" health="200">
+    <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
+    <sprite texture="Content/Map/SubRearBow.png" sourcerect="309,234,128,339" depth="0.01" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="309,234,128,339" depth="0.85" />
+  </extA_Tail>
+  <TailFin name="Tail Fin A" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.9" origin="0.5,0.5" />
+  </TailFin>
+  <TailFin name="Tail Fin B" identifier="tailfinb" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="1064,2,988,514" depth="0.9" origin="0.5,0.5" />
+  </TailFin>
+  <TailFin name="Tail Fin C" identifier="tailfinc" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="0,1524,1033,180" depth="0.9" origin="0.5,0.5" />
+  </TailFin>
+  <TailFin name="Tail Fin D" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+    <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.9" origin="0.5,0.5" />
+  </TailFin>
+  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="160" bodyheight="320" bodyoffset="-0,0" castshadow="false" health="200">
+    <sprite texture="Content/Map/SubRearBow.png" sourcerect="674,148,306,500" depth="0.01" origin="0.5,0.5" />
+    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="675,147,306,500" depth="0.85" />
+  </Front>
+  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="120" bodyheight="400" bodyoffset="0,0" castshadow="false" health="200">
+    <sprite texture="Content/Map/SubRearBow.png" sourcerect="1093,3,271,975" depth="0.01" origin="0.238248,0.5" />
+    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="1093,3,271,975" depth="0.85" />
+  </Front>
+  <!-- TAIL ENDS-->
   <!-- INTERIOR WALLS FF -->
   <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,0,512,48" origin="0.5,0.5" />
@@ -55,78 +303,52 @@
   </structure>
   <!-- BACK WALLS START -->
   <Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" />
   </Wall_B>
   <Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" />
   </Wall_BP>
   <Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_Ballast_C.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_Ballast_C.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" />
   </Wall_BC>
   <Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,224" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,224" depth="0.98" premultiplyalpha="false" />
   </Wall_C1>
   <Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,512,224" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,224,512,224" depth="0.98" premultiplyalpha="false" />
   </Wall_C2>
   <Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,512,224" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,448,512,224" depth="0.98" premultiplyalpha="false" />
   </Wall_C3>
   <Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,0,688,240" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,0,688,240" depth="0.98" premultiplyalpha="false" />
   </Wall_D1>
   <Wall_D2 name="BackWall D2" identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,224,688,240" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,224,688,240" depth="0.98" premultiplyalpha="false" />
   </Wall_D2>
   <Wall_D3 name="BackWall D3" identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,464,688,224" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,464,688,224" depth="0.98" premultiplyalpha="false" />
   </Wall_D3>
   <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" />
   </Wall_E>
   <!--<Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
   </Wall_F>-->
   <Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="0.98" premultiplyalpha="false" />
   </Wall_G1>
   <Wall_G2 name="BackWall G2" identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,222,334,240" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,222,334,240" depth="0.98" premultiplyalpha="false" />
   </Wall_G2>
   <Wall_G3 name="BackWall G3" identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,444,334,224" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,444,334,224" depth="0.98" premultiplyalpha="false" />
   </Wall_G3>
   <Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
-    <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </Wall_H1>
   <!-- BACK WALLS ENDS -->
-  <!-- TAIL -->
-  <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="80" bodyheight="330" bodyoffset="-20,0" castshadow="false" health="200">
-    <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
-    <sprite texture="Content/Map/SubRearBow.png" sourcerect="309,234,128,339" depth="0.01" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="309,234,128,339" depth="0.85" />
-  </extA_Tail>
-  <TailFin name="Tail Fin A" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.9" origin="0.5,0.5" />
-  </TailFin>
-  <TailFin name="Tail Fin B" identifier="tailfinb" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="1064,2,988,514" depth="0.9" origin="0.5,0.5" />
-  </TailFin>
-  <TailFin name="Tail Fin C" identifier="tailfinc" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="0,1524,1033,180" depth="0.9" origin="0.5,0.5" />
-  </TailFin>
-  <TailFin name="Tail Fin D" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
-    <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.9" origin="0.5,0.5" />
-  </TailFin>
-  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="160" bodyheight="320" bodyoffset="-0,0" castshadow="false" health="200">
-    <sprite texture="Content/Map/SubRearBow.png" sourcerect="674,148,306,500" depth="0.01" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="675,147,306,500" depth="0.85" />
-  </Front>
-  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="120" bodyheight="400" bodyoffset="0,0" castshadow="false" health="200">
-    <sprite texture="Content/Map/SubRearBow.png" sourcerect="1093,3,271,975" depth="0.01" origin="0.238248,0.5" />
-    <backgroundsprite texture="Content/Map/SubRearBowBack.png" sourcerect="1093,3,271,975" depth="0.85" />
-  </Front>
-  <!-- TAIL ENDS-->
+  <!-- SUBMARINE WALLS aka *SHELLS" START -->
   <shellA name="Shell A 90 deg" identifier="shella90deg" description="Submarine wall" body="true" castshadow="true" health="200" width="96" height="512" bodywidth="72" bodyoffset="12,0" resizevertical="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,0,96,512" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="0,0,96,512" depth="0.85" />
@@ -245,6 +467,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1488,1312,560,338" depth="0.1" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" sourcerect="1488,1312,560,338" depth="0.85" />
   </shellA>
+  <!-- SUBMARINE WALLS aka *SHELLS" END -->
   <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS -->
   <sshellA name="Shuttle Shell A01" identifier="sshella01" description="Shuttle wall" body="true" bodywidth="40" bodyheight="60" resizevertical="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,0,45,208" depth="0.1" origin="0.5,0.5" />
@@ -558,21 +781,21 @@
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth="0.85" />
   </RightWallHeavy>
   <CableHolderHorizontal name="Cable Holder Horizontal" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="16" resizehorizontal="true">
-  <sprite texture="Content/Map/testroom.png" sourcerect="533,907,32,16" depth="0.85" />
+    <sprite texture="Content/Map/testroom.png" sourcerect="533,907,32,16" depth="0.85" />
   </CableHolderHorizontal>
-    <CableHolderHorizontal2 name="Cable Holder Horizontal 2" identifier="CableHolderHorizontal2" allowattachitems="true" width="32" height="28" resizehorizontal="true">
+  <CableHolderHorizontal2 name="Cable Holder Horizontal 2" identifier="CableHolderHorizontal2" allowattachitems="true" width="32" height="28" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="491,907,32,28" depth="0.85" />
   </CableHolderHorizontal2>
-    <CableHolderHorizontal3 name="Cable Holder Horizontal 3" identifier="CableHolderHorizontal3" allowattachitems="true" width="32" height="38" resizehorizontal="true">
+  <CableHolderHorizontal3 name="Cable Holder Horizontal 3" identifier="CableHolderHorizontal3" allowattachitems="true" width="32" height="38" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="449,907,32,38" depth="0.85" />
   </CableHolderHorizontal3>
   <CableHolderVertical name="Cable Holder Vertical" identifier="CableHolderVertical" allowattachitems="true" width="16" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="423,907,16,32" depth="0.85" />
   </CableHolderVertical>
-    <CableHolderVertical2 name="Cable Holder Vertical 2" identifier="CableHolderVertical 2" allowattachitems="true" width="27" height="32" resizevertical="true">
+  <CableHolderVertical2 name="Cable Holder Vertical 2" identifier="CableHolderVertical 2" allowattachitems="true" width="27" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="386,907,27,32" depth="0.85" />
   </CableHolderVertical2>
-      <CableHolderVertical3 name="Cable Holder Vertical 3" identifier="CableHolderVertical 3" allowattachitems="true" width="38" height="32" resizevertical="true">
+  <CableHolderVertical3 name="Cable Holder Vertical 3" identifier="CableHolderVertical 3" allowattachitems="true" width="38" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="338,907,38,32" depth="0.85" />
   </CableHolderVertical3>
   <topwindow name="Window Top" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
@@ -652,22 +875,22 @@
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="202,0,54,256" depth="0.063" />
   </RuinWallVerticalSmall>
   <RuinBack1 name="Ruin BackWall 1" identifier="RuinBack1" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack1>
   <RuinBack2 name="Ruin BackWall 2" identifier="RuinBack2" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground2.png" sourcerect="0,0,512,512" depth="0.981" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/AlienBackground2.png" sourcerect="0,0,512,512" depth="0.981" premultiplyalpha="false" />
   </RuinBack2>
   <RuinBack3 name="Ruin BackWall 3" identifier="RuinBack3" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground3.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/AlienBackground3.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack3>
-    <RuinBack4 name="Ruin BackWall 4" identifier="RuinBack4" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground4.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false"/>
+  <RuinBack4 name="Ruin BackWall 4" identifier="RuinBack4" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/AlienBackground4.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack4>
   <RuinBack5 name="Ruin BackWall 5" identifier="RuinBack5" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground5.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/AlienBackground5.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack5>
   <RuinBack6 name="Ruin BackWall 6" identifier="RuinBack6" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/AlienBackground6.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false"/>
+    <sprite texture="Content/Map/AlienBackground6.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack6>
   <RuinBlock name="Ruin Prop Block" identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth="0.98" />
@@ -690,7 +913,6 @@
   <RuinDecal4 name="Ruin Decal 4" identifier="RuinDecal4" category="Alien" allowattachitems="true" width="256" height="256">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="256,256,256,256" depth="0.97" />
   </RuinDecal4>
-  
   <!-- BACKGROUND ROCKS -->
   <BGRock1 name="Background Rock 1" identifier="BGRock1" category="Misc" allowattachitems="true" width="668" height="523">
     <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" depth="1" />
