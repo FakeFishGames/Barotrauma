@@ -165,7 +165,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(5);
             do { yield return null; } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
-            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complet"), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete"), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);
             // Tutorial complete
