@@ -3092,6 +3092,9 @@
   <CharacterEditor.ExistingCharacterFound>An existing character with the same name was found.</CharacterEditor.ExistingCharacterFound>
   <GenericReplaceVerification>Do you want to replace it?</GenericReplaceVerification>
 
+  <StringPropertyTranslate>This text will be translated to "[translation]".</StringPropertyTranslate>
+  <StringPropertyCannotTranslate>This text will not be translated - text with the tag "[tag]" not found in the language files.</StringPropertyCannotTranslate>
+
   <!-- rooms -->
   <RoomName.ReactorRoom>Reactor room</RoomName.ReactorRoom>
   <RoomName.EngineRoom>Engine room</RoomName.EngineRoom>
@@ -3177,29 +3180,15 @@
   <Label.CloseLabel>Close</Label.CloseLabel>
   <Label.BallastHatch>Ballast hatch</Label.BallastHatch>
 
+  <CampaignDisclaimerTitle>Welcome to Barotrauma!</CampaignDisclaimerTitle>
+  <CampaignDisclaimerText>Please note that Barotrauma is still in Early Access, and that many aspects of the game are still being worked on and incomplete.\n\nThe Campaign Mode is still lacking many of the features we've planned for the full version, and is not yet as enjoyable as the multiplayer. In the current version, playing the game solo can also be more challenging to new players than playing it with other people - even though the AI crew can give you a hand at some tasks, they are usually not as useful as real human players. If you're interested in what's to come in future updates, click the "Campaign Roadmap" button below.\n\nWe do however recommend that you at least play the single player tutorial before diving into the multiplayer. Good luck, sailor!</CampaignDisclaimerText>
+  <CampaignRoadMapTitle>Campaign Roadmap</CampaignRoadMapTitle>
+  <CampaignRoadMapText>- Explorable locations: as of now, the locations on the campaign map are essentially just menus where you can buy supplies and hire new crew members, but during the Early Access period they will become actual physical locations you can enter and explore.\n\n- Expanded story: you will be able to learn more about the world of Barotrauma by interacting with NPCs and by exploring the outposts and non-man-made locations.\n\n- New mission types: we have plans for several completely new mission types, for example personnel transport missions and salvage missions into shipwrecks.\n\n- Balancing: currently the campaign economy is not very well balanced, but we will start to put more focus into it when we start to have all the content in.\n\n- End goal: at the moment it’s not possible to complete the campaign, but in future versions the mysterious location at the center of the map will become reachable...</CampaignRoadMapText>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  <EditorDisclaimerTitle>Editors</EditorDisclaimerTitle>
+  <EditorDisclaimerText>The submarine and character editors are modding tools that can be used to expand the core game by creating your own submarines and monsters. The custom creations can be shared in the Steam Workshop.\n\nAt the moment the editors are only available in English. The process of building a fully playable submarine or a functional monster can be quite involved, and unfortunately we don’t offer in-game tutorials or documentation for the editors yet. If you want to take a shot at creating your own custom content with the editors, you may be able to find help through the following links:</EditorDisclaimerText>
+  <EditorDisclaimerWikiLink>Barotrauma Wiki</EditorDisclaimerWikiLink>
+  <EditorDisclaimerDiscordLink>Barotrauma Discord Server</EditorDisclaimerDiscordLink>
+  <EditorDisclaimerForumLink>Barotrauma Forums</EditorDisclaimerForumLink>
+  
 </infotexts>
