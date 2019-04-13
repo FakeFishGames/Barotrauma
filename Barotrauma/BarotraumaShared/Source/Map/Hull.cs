@@ -71,7 +71,7 @@ namespace Barotrauma
         }
 
         private string roomName;
-        [Editable, Serialize("", true)]
+        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
         public string RoomName
         {
             get { return roomName; }

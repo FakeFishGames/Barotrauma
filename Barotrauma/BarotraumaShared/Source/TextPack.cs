@@ -62,6 +62,20 @@ namespace Barotrauma
             return textList;
         }
 
+        public List<KeyValuePair<string, string>> GetAllTagTextPairs()
+        {
+            var pairs = new List<KeyValuePair<string, string>>();
+            foreach (KeyValuePair<string, List<string>> kvp in texts)
+            {
+                foreach (string line in kvp.Value)
+                {
+                    pairs.Add(new KeyValuePair<string, string>(kvp.Key, line));
+                }
+            }
+
+            return pairs;
+        }
+
 #if DEBUG
         public void CheckForDuplicates(int index)
         {
