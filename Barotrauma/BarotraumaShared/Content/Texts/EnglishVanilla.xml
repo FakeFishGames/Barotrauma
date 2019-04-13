@@ -2962,7 +2962,7 @@
   <!--  Room 4 -->
   <Officer.SomethingBig>Something big</Officer.SomethingBig>
   <Officer.SomethingBigObjective>Load coilgun and turn on the supercapacitor</Officer.SomethingBigObjective>
-  <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo ready the coilgun, you must make sure the supercapacitor has enough power by setting the recharge rate high enough (50% is usually enough) and insert full ammunition boxes into the coilgun loader.\n\nAmmo boxes are large and unwieldy. You must use two hands to carry one and they can’t be carried around in the inventory. To drop an ammo box, either drag it away from your equip slot or press the unequip button on top of the equip slot.</Officer.SomethingBigText>
+  <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo ready the coilgun, you must make sure the supercapacitor has enough power by setting the recharge rate high enough (50% is usually enough) and insert full ammunition boxes into the coilgun loader.\n\nCoilgun loaders have their own inventory where you can load the ammo boxes. When a box is depleted, it must be unloaded before a new one can be loaded in.\n\nAmmo boxes are large and unwieldy. You must use two hands to carry one and they can’t be carried around in the inventory. To drop an ammo box, either drag it away from your equip slot or press the unequip button on top of the equip slot.</Officer.SomethingBigText>
 
   <Officer.Hammerhead>Hammerheads</Officer.Hammerhead>
   <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
