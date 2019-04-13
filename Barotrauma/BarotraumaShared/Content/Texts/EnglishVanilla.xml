@@ -2175,33 +2175,9 @@
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
   <EngineRoom>Engine room</EngineRoom>
-  <CommandRoom>Command room</CommandRoom>
-  <CrewQuarters>Crew quarters</CrewQuarters>
-  <JunctionCompartment>Junction compartment</JunctionCompartment>
-  <CentralAccessPassage>Central access passage</CentralAccessPassage>
-  <CentralAccessShaft>Central access shaft</CentralAccessShaft>
-  <ForwardAccessShaft>Forward access shaft</ForwardAccessShaft>
-  <AftAccessShaft>Aft access shaft</AftAccessShaft>
+  <CommandRoom>Command room</CommandRoom>  
   <Airlock>Airlock</Airlock>
-  <Ballast>Ballast</Ballast>
-  <BallastTank1>Ballast tank A</BallastTank1>
-  <BallastTank2>Ballast tank B</BallastTank2>
-  <BallastTank3>Ballast tank C</BallastTank3>
-  <BallastTank4>Ballast tank E</BallastTank4>
-  <Stowage>Sotwage compartment</Stowage>
-  <Berthing>Berthing compartment</Berthing>
-  <Utility>Utility compartment</Utility>
-  <RearBallast>Rear ballast</RearBallast>
-  <FrontBallast>Front ballast</FrontBallast>
-  <Medbay>Medbay</Medbay>
-  <Engineering>Engineering</Engineering>
-  <Electrical>Electrical</Electrical>
-  <Armory>Armory</Armory>
-  <DockingPort>Docking port</DockingPort>
-  <UpperDockingPort>Upper docking port</UpperDockingPort>
-  <LowerDockingPort>Lower docking port</LowerDockingPort>
-  <Cargo>Cargo</Cargo>
-  <Brig>Brig</Brig>
+  <Ballast>Ballast</Ballast>  
   <SubTopLeft>Upper aft side</SubTopLeft>
   <SubTopCenter>Upper mid</SubTopCenter>
   <SubTopRight>Upper fore side</SubTopRight>
@@ -2212,50 +2188,6 @@
   <SubBottomCenter>Lower mid</SubBottomCenter>
   <SubBottomRight>Lower fore side</SubBottomRight>
   <SubDirOClock>[dir] o'clock</SubDirOClock>
-
-  <!-- Labels -->
-  <VentralCoilgunControl>Ventral Coilgun Control</VentralCoilgunControl>
-  <DorsalCoilgunControl>Dorsal Coilgun Control</DorsalCoilgunControl>
-  <RearCoilgunControl>Rear Coilgun Control</RearCoilgunControl>
-  <FrontCoilgunControl>Front Coilgun Control</FrontCoilgunControl>
-  <VentralRailgunControl>Ventral Railgun Control</VentralRailgunControl>
-  <DorsalRailgunControl>Dorsal Railgun Control</DorsalRailgunControl>
-  <RearRailgunControl>Rear Railgun Control</RearRailgunControl>
-  <FrontRailgunControl>Front Railgun Control</FrontRailgunControl>
-  <ToggleDocking>Toggle Docking</ToggleDocking>
-  <ReactorShutdown>Reactor Shutdown</ReactorShutdown>
-  <Engine1>Engine #1</Engine1>
-  <Engine2>Engine #2</Engine2>
-  <AuxiliaryEngine>Aux. engine</AuxiliaryEngine>
-  <LaunchDecoy>Launch Decoy</LaunchDecoy>
-  <LaunchDepthCharge>Launch Depth Charge</LaunchDepthCharge>
-  <ActivateDischargeCoil>Electrical Discharge Coil</ActivateDischargeCoil>
-  <ActivateUpperDischargeCoil>Upper Discharge Coil</ActivateUpperDischargeCoil>
-  <ActivateLowerDischargeCoil>Lower Discharge Coil</ActivateLowerDischargeCoil>
-  <ExteriorCamera>Ext. camera view</ExteriorCamera>
-  <VentralCamera>Ventral camera view</VentralCamera>
-  <DorsalCamera>Dorsal camera view</DorsalCamera>
-  <ReactorTemp>Reactor temp.</ReactorTemp>
-  <LetWaterDrain>Let all water drain before exiting</LetWaterDrain>
-  <AlphaDeck>Alpha Deck</AlphaDeck>
-  <GammaDeck>Gamma Deck</GammaDeck>
-  <DeltaDeck>Delta Deck</DeltaDeck>
-  <ReadyToDock>Ready to dock</ReadyToDock>
-  <Docked>Docked</Docked>
-  <EmergencyDoorOverride>Emergency door override</EmergencyDoorOverride>
-  <EmergencyHatchOverride>Emergency hatch override</EmergencyHatchOverride>
-  <Supplies>Supplies</Supplies>
-  <ToggleBatteries>Toggle Batteries</ToggleBatteries>
-  <ToggleSiren>Toggle Siren</ToggleSiren>
-  <Emergency>Emergency</Emergency>
-  <BackUpPowerArray>Backup power array</BackUpPowerArray>
-  <DroneControl>Drone control</DroneControl>
-  <StatusLabel>Status</StatusLabel>
-  <OnlineLabel>Online</OnlineLabel>
-  <OfflineLabel>Offline</OfflineLabel>
-  <OpenLabel>Open</OpenLabel>
-  <CloseLabel>Close</CloseLabel>
-  <BallastHatch>Close</BallastHatch>
 
   <!-- Sub description -->
   <Dimensions>Dimensions</Dimensions>
@@ -3174,5 +3106,73 @@
   <CharacterEditor.ExistingCharacterFound>An existing character with the same name was found.</CharacterEditor.ExistingCharacterFound>
   <GenericReplaceVerification>Do you want to replace it?</GenericReplaceVerification>
 
+  <!-- rooms -->
+  <BallastTank1>Ballast tank A</BallastTank1>
+  <BallastTank2>Ballast tank B</BallastTank2>
+  <BallastTank3>Ballast tank C</BallastTank3>
+  <BallastTank4>Ballast tank E</BallastTank4>
+  <Stowage>Sotwage compartment</Stowage>
+  <Berthing>Berthing compartment</Berthing>
+  <Utility>Utility compartment</Utility>
+  <RearBallast>Rear ballast</RearBallast>
+  <FrontBallast>Front ballast</FrontBallast>
+  <Medbay>Medbay</Medbay>
+  <Engineering>Engineering</Engineering>
+  <Electrical>Electrical</Electrical>
+  <Armory>Armory</Armory>
+  <DockingPort>Docking port</DockingPort>
+  <UpperDockingPort>Upper docking port</UpperDockingPort>
+  <LowerDockingPort>Lower docking port</LowerDockingPort>
+  <Cargo>Cargo</Cargo>
+  <Brig>Brig</Brig>
+  <CrewQuarters>Crew quarters</CrewQuarters>
+  <JunctionCompartment>Junction compartment</JunctionCompartment>
+  <CentralAccessPassage>Central access passage</CentralAccessPassage>
+  <CentralAccessShaft>Central access shaft</CentralAccessShaft>
+  <ForwardAccessShaft>Forward access shaft</ForwardAccessShaft>
+  <AftAccessShaft>Aft access shaft</AftAccessShaft>
 
+  <!-- Labels -->
+  <VentralCoilgunControl>Ventral Coilgun Control</VentralCoilgunControl>
+  <DorsalCoilgunControl>Dorsal Coilgun Control</DorsalCoilgunControl>
+  <RearCoilgunControl>Rear Coilgun Control</RearCoilgunControl>
+  <FrontCoilgunControl>Front Coilgun Control</FrontCoilgunControl>
+  <VentralRailgunControl>Ventral Railgun Control</VentralRailgunControl>
+  <DorsalRailgunControl>Dorsal Railgun Control</DorsalRailgunControl>
+  <RearRailgunControl>Rear Railgun Control</RearRailgunControl>
+  <FrontRailgunControl>Front Railgun Control</FrontRailgunControl>
+  <ToggleDocking>Toggle Docking</ToggleDocking>
+  <ReactorShutdown>Reactor Shutdown</ReactorShutdown>
+  <Engine1>Engine #1</Engine1>
+  <Engine2>Engine #2</Engine2>
+  <AuxiliaryEngine>Aux. engine</AuxiliaryEngine>
+  <LaunchDecoy>Launch Decoy</LaunchDecoy>
+  <LaunchDepthCharge>Launch Depth Charge</LaunchDepthCharge>
+  <ActivateDischargeCoil>Electrical Discharge Coil</ActivateDischargeCoil>
+  <ActivateUpperDischargeCoil>Upper Discharge Coil</ActivateUpperDischargeCoil>
+  <ActivateLowerDischargeCoil>Lower Discharge Coil</ActivateLowerDischargeCoil>
+  <ExteriorCamera>Ext. camera view</ExteriorCamera>
+  <VentralCamera>Ventral camera view</VentralCamera>
+  <DorsalCamera>Dorsal camera view</DorsalCamera>
+  <ReactorTemp>Reactor temp.</ReactorTemp>
+  <LetWaterDrain>Let all water drain before exiting</LetWaterDrain>
+  <AlphaDeck>Alpha Deck</AlphaDeck>
+  <GammaDeck>Gamma Deck</GammaDeck>
+  <DeltaDeck>Delta Deck</DeltaDeck>
+  <ReadyToDock>Ready to dock</ReadyToDock>
+  <Docked>Docked</Docked>
+  <EmergencyDoorOverride>Emergency door override</EmergencyDoorOverride>
+  <EmergencyHatchOverride>Emergency hatch override</EmergencyHatchOverride>
+  <Supplies>Supplies</Supplies>
+  <ToggleBatteries>Toggle Batteries</ToggleBatteries>
+  <ToggleSiren>Toggle Siren</ToggleSiren>
+  <Emergency>Emergency</Emergency>
+  <BackUpPowerArray>Backup power array</BackUpPowerArray>
+  <DroneControl>Drone control</DroneControl>
+  <StatusLabel>Status</StatusLabel>
+  <OnlineLabel>Online</OnlineLabel>
+  <OfflineLabel>Offline</OfflineLabel>
+  <OpenLabel>Open</OpenLabel>
+  <CloseLabel>Close</CloseLabel>
+  <BallastHatch>Ballast hatch</BallastHatch>
 </infotexts>
