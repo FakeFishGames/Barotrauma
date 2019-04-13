@@ -72,7 +72,7 @@ namespace Barotrauma.Tutorials
         private string crawlerCharacterFile;
         private string hammerheadCharacterFile;
         private string mudraptorCharacterFile;
-        private float superCapacitorPercentage = 50;
+        private float superCapacitorRechargeRate = 50;
 
         public OfficerTutorial(XElement element) : base(element)
         {
@@ -287,9 +287,9 @@ namespace Barotrauma.Tutorials
             do
             {
                 SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.Items[0] == null);
-                SetHighlight(officer_superCapacitor.Item, officer_superCapacitor.ChargePercentage < superCapacitorPercentage);
+                SetHighlight(officer_superCapacitor.Item, officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate);
                 yield return null;
-            } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.ChargePercentage < superCapacitorPercentage);
+            } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate);
             SetHighlight(officer_coilgunLoader.Item, false);
             SetHighlight(officer_superCapacitor.Item, false);
             RemoveCompletedObjective(segments[3]);
@@ -369,8 +369,8 @@ namespace Barotrauma.Tutorials
             {
                 SetHighlight(officer_subLoader_1.Item, officer_subLoader_1.Inventory.Items[0] == null || officer_subLoader_1.Inventory.Items[0].Condition == 0);
                 SetHighlight(officer_subLoader_2.Item, officer_subLoader_2.Inventory.Items[0] == null || officer_subLoader_2.Inventory.Items[0].Condition == 0);
-                SetHighlight(officer_subSuperCapacitor_1.Item, officer_subSuperCapacitor_1.ChargePercentage < superCapacitorPercentage);
-                SetHighlight(officer_subSuperCapacitor_2.Item, officer_subSuperCapacitor_2.ChargePercentage < superCapacitorPercentage);
+                SetHighlight(officer_subSuperCapacitor_1.Item, officer_subSuperCapacitor_1.RechargeSpeed < superCapacitorRechargeRate);
+                SetHighlight(officer_subSuperCapacitor_2.Item, officer_subSuperCapacitor_2.RechargeSpeed < superCapacitorRechargeRate);
                 SetHighlight(officer_subAmmoBox_1, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
                 SetHighlight(officer_subAmmoBox_2, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
                 yield return null;
