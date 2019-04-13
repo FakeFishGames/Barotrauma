@@ -2775,6 +2775,7 @@
   <Tutorial.TryAgainHeader>You have died</Tutorial.TryAgainHeader>
   <Tutorial.TryAgain>Do you want to try again?</Tutorial.TryAgain>
   <Tutorial.Radio.Speaker>Captain Huskinson</Tutorial.Radio.Speaker>
+  <Tutorial.Radio.Watchman>Watchman</Tutorial.Radio.Watchman>
   
   <!-- Mechanic Tutorial -->  
   <!-- Radio -->
@@ -2918,8 +2919,7 @@
   <Doctor.Submarine>Medical assistance</Doctor.Submarine>
   <Doctor.SubmarineObjective>Give medical assistance to everyone that needs it.</Doctor.SubmarineObjective>
   <Doctor.SubmarineText>Inspect patient by pressing [InputType.Health], then administer the correct treatment. You can check each medical item’s description to see what they treat.</Doctor.SubmarineText>
-  
-  
+    
   <!-- Officer Tutorial -->
   <!-- Radio -->
   <Officer.Radio.WakeUp>Is there any security still alive? We have a hull breach and some unwanted visitors!</Officer.Radio.WakeUp>
@@ -2966,8 +2966,42 @@
   <!-- Submarine -->
   <Officer.ArmSubmarine>Weaponry</Officer.ArmSubmarine>
   <Officer.ArmSubmarineObjective>Ready coilguns</Officer.ArmSubmarineObjective>
-  <Officer.ArmSubmarineText>Find ammunition for the coilguns and load them. Recharge supercapacitors.</Officer.ArmSubmarineText>  
+  <Officer.ArmSubmarineText>Find ammunition for the coilguns and load them. Recharge supercapacitors.</Officer.ArmSubmarineText>
+
+  <!-- Captain Tutorial -->
+  <!-- Radio -->
+  <Captain.Radio.Medic>Ahoy, captain. Any orders?</Captain.Radio.Medic>
+  <Captain.Radio.Complete>Glad you made it out of there. Welcome to [OUTPOSTNAME].</Captain.Radio.Complete>
   
+  <!-- Room 2 -->
+  <Captain.CommandMedic>Commanding</Captain.CommandMedic>
+  <Captain.CommandMedicObjective>Command the medic to follow</Captain.CommandMedicObjective>
+  <Captain.CommandMedicText>Find the medic in the crew list to the left. Then find the “Follow” button in the command interface next to the portraits and click on it. The character will now follow you until dismissed by clicking on the button again.</Captain.CommandMedicText>
+
+  <Captain.CommandMechanic>Commanding</Captain.CommandMechanic>
+  <Captain.CommandMechanicObjective>Order the mechanic to perform maintenance</Captain.CommandMechanicObjective>
+  <Captain.CommandMechanicText>To order repairs, clicking on the “Repair Damaged Systems” button in the list next to the mechanic’s portrait. The character will then patrol and search for any mechanical items in need of repairing.</Captain.CommandMechanicText>
+
+  <Captain.CommandSecurity>Commanding</Captain.CommandSecurity>
+  <Captain.CommandSecurityObjective>Order the security to man guns</Captain.CommandSecurityObjective>
+  <Captain.CommandSecurityText>To order somebody to man guns, click on the “Operate Weapons” button in the list next to the character’s portrait. Then choose the weapon you want them to operate.</Captain.CommandSecurityText>
+
+  <Captain.CommandEngineer>Commanding</Captain.CommandEngineer>
+  <Captain.CommandEngineerObjective>Order the engineer to power up the reactor</Captain.CommandEngineerObjective>
+  <Captain.CommandEngineerText>To order somebody to operate the reactor, click on the command interface and choose “Operate Reactor”, then “Power up”. The character will then tend to the reactor.</Captain.CommandEngineerText>
+
+  <Captain.Undock>Undocking</Captain.Undock>
+  <Captain.UndockObjective>Undock from the station</Captain.UndockObjective>
+  <Captain.UndockText>To get moving, you need to undock the submarine from the outpost. Do this by going into the navigation console and press the “Toggle docking” button.</Captain.UndockText>
+
+  <Captain.Navigate>Navigating</Captain.Navigate>
+  <Captain.NavigateObjective>Navigate to destination</Captain.NavigateObjective>
+  <Captain.NavigateText>Plot a course for the submarine by clicking on the sonar display. Navigation terminal will adjust the ballast and engine accordingly and automatically.\n\nTo see where the sub is heading, turn on active sonar. Do that by finding sonar settings next to the display and set it from “passive” to active.</Captain.NavigateText>
+
+  <Captain.Dock>Docking</Captain.Dock>
+  <Captain.DockObjective>Dock with destination outpost</Captain.DockObjective>
+  <Captain.DockText>To dock the submarine, maneuver the ship’s and outpost’s docking ports close to each other and toggle docking clamps. Ports are displayed in green on sonar display.\n\nWhen the ports are close to each other, a line will be displayed on the sonar display, use that to your advantage. When the line is fully green, close the clamps by pressing “toggle docking”. The submarine will then be locked into position and the docking hatch will be open for as long as the docking clamps are engaged.</Captain.DockText>
+
   <!-- Tutorial END -->
 
   <CannotRemoveContentPackageSub>Cannot remove the submarine file because it's a part of the content package "[contentpackage]". Please uninstall the content package through the Steam Workshop menu.</CannotRemoveContentPackageSub>
