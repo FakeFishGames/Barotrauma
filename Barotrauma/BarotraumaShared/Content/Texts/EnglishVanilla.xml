@@ -1089,6 +1089,130 @@
   <EntityName.sshella40>Shuttle Shell A40</EntityName.sshella40>
   <EntityDescription.sshella40>Shuttle wall</EntityDescription.sshella40>
   <EntityName.sshella41>Shuttle Shell A41</EntityName.sshella41>
+  <EntityName.fins01>Fin S 01</EntityName.fins01>
+  <EntityDescription.fins01>Fin construction piece</EntityDescription.fins01>
+  <EntityName.fins02>Fin S 02</EntityName.fins02>
+  <EntityDescription.fins02>Fin construction piece</EntityDescription.fins02>
+  <EntityName.fins03>Fin S 03</EntityName.fins03>
+  <EntityDescription.fins03>Fin construction piece</EntityDescription.fins03>
+  <EntityName.fins04>Fin S 04</EntityName.fins04>
+  <EntityDescription.fins04>Fin construction piece</EntityDescription.fins04>
+  <EntityName.fins05>Fin S 05</EntityName.fins05>
+  <EntityDescription.fins05>Fin construction piece</EntityDescription.fins05>
+  <EntityName.fins06>Fin S 06</EntityName.fins06>
+  <EntityDescription.fins06>Fin construction piece</EntityDescription.fins06>
+  <EntityName.fins07>Fin S 07</EntityName.fins07>
+  <EntityDescription.fins07>Fin construction piece</EntityDescription.fins07>
+  <EntityName.fins08>Fin S 08</EntityName.fins08>
+  <EntityDescription.fins08>Fin construction piece</EntityDescription.fins08>
+  <EntityName.fins09>Fin S 09</EntityName.fins09>
+  <EntityDescription.fins09>Fin construction piece</EntityDescription.fins09>
+  <EntityName.fins10>Fin S 10</EntityName.fins10>
+  <EntityDescription.fins10>Fin construction piece</EntityDescription.fins10>
+  <EntityName.fins11>Fin S 11</EntityName.fins11>
+  <EntityDescription.fins11>Fin construction piece</EntityDescription.fins11>
+  <EntityName.fins12>Fin S 12</EntityName.fins12>
+  <EntityDescription.fins12>Fin construction piece</EntityDescription.fins12>
+  <EntityName.fins13>Fin S 13</EntityName.fins13>
+  <EntityDescription.fins13>Fin construction piece</EntityDescription.fins13>
+  <EntityName.fins14>Fin S 14</EntityName.fins14>
+  <EntityDescription.fins14>Fin construction piece</EntityDescription.fins14>
+  <EntityName.fins15>Fin S 15</EntityName.fins15>
+  <EntityDescription.fins15>Fin construction piece</EntityDescription.fins15>
+  <EntityName.fins16>Fin S 16</EntityName.fins16>
+  <EntityDescription.fins16>Fin construction piece</EntityDescription.fins16>
+  <EntityName.fins17>Fin S 17</EntityName.fins17>
+  <EntityDescription.fins17>Fin construction piece</EntityDescription.fins17>
+  <EntityName.fins18>Fin S 18</EntityName.fins18>
+  <EntityDescription.fins18>Fin construction piece</EntityDescription.fins18>
+  <EntityName.fins19>Fin S 19</EntityName.fins19>
+  <EntityDescription.fins19>Fin construction piece</EntityDescription.fins19>
+  <EntityName.fins20>Fin S 20</EntityName.fins20>
+  <EntityDescription.fins20>Fin construction piece</EntityDescription.fins20>
+  <EntityName.finm01>Fin M 01</EntityName.finm01>
+  <EntityDescription.finm01>Fin construction piece</EntityDescription.finm01>
+  <EntityName.finm02>Fin M 02</EntityName.finm02>
+  <EntityDescription.finm02>Fin construction piece</EntityDescription.finm02>
+  <EntityName.finm03>Fin M 03</EntityName.finm03>
+  <EntityDescription.finm03>Fin construction piece</EntityDescription.finm03>
+  <EntityName.finm04>Fin M 04</EntityName.finm04>
+  <EntityDescription.finm04>Fin construction piece</EntityDescription.finm04>
+  <EntityName.finm05>Fin M 05</EntityName.finm05>
+  <EntityDescription.finm05>Fin construction piece</EntityDescription.finm05>
+  <EntityName.finm06>Fin M 06</EntityName.finm06>
+  <EntityDescription.finm06>Fin construction piece</EntityDescription.finm06>
+  <EntityName.finm07>Fin M 07</EntityName.finm07>
+  <EntityDescription.finm07>Fin construction piece</EntityDescription.finm07>
+  <EntityName.finm08>Fin M 08</EntityName.finm08>
+  <EntityDescription.finm08>Fin construction piece</EntityDescription.finm08>
+  <EntityName.finm09>Fin M 09</EntityName.finm09>
+  <EntityDescription.finm09>Fin construction piece</EntityDescription.finm09>
+  <EntityName.finm10>Fin M 10</EntityName.finm10>
+  <EntityDescription.finm10>Fin construction piece</EntityDescription.finm10>
+  <EntityName.finm11>Fin M 11</EntityName.finm11>
+  <EntityDescription.finm11>Fin construction piece</EntityDescription.finm11>
+  <EntityName.finm12>Fin M 12</EntityName.finm12>
+  <EntityDescription.finm12>Fin construction piece</EntityDescription.finm12>
+  <EntityName.finm13>Fin M 13</EntityName.finm13>
+  <EntityDescription.finm13>Fin construction piece</EntityDescription.finm13>
+  <EntityName.finm14>Fin M 14</EntityName.finm14>
+  <EntityDescription.finm14>Fin construction piece</EntityDescription.finm14>
+  <EntityName.finm15>Fin M 15</EntityName.finm15>
+  <EntityDescription.finm15>Fin construction piece</EntityDescription.finm15>
+  <EntityName.finm16>Fin M 16</EntityName.finm16>
+  <EntityDescription.finm16>Fin construction piece</EntityDescription.finm16>
+  <EntityName.finm17>Fin M 17</EntityName.finm17>
+  <EntityDescription.finm17>Fin construction piece</EntityDescription.finm17>
+  <EntityName.finm18>Fin M 18</EntityName.finm18>
+  <EntityDescription.finm18>Fin construction piece</EntityDescription.finm18>
+  <EntityName.finm19>Fin M 19</EntityName.finm19>
+  <EntityDescription.finm19>Fin construction piece</EntityDescription.finm19>
+  <EntityName.finm20>Fin M 20</EntityName.finm20>
+  <EntityDescription.finm20>Fin construction piece</EntityDescription.finm20>
+  <EntityName.finl01>Fin L 01</EntityName.finl01>
+  <EntityDescription.finl01>Fin construction piece</EntityDescription.finl01>
+  <EntityName.finl02>Fin L 02</EntityName.finl02>
+  <EntityDescription.finl02>Fin construction piece</EntityDescription.finl02>
+  <EntityName.finl03>Fin L 03</EntityName.finl03>
+  <EntityDescription.finl03>Fin construction piece</EntityDescription.finl03>
+  <EntityName.finl04>Fin L 04</EntityName.finl04>
+  <EntityDescription.finl04>Fin construction piece</EntityDescription.finl04>
+  <EntityName.finl05>Fin L 05</EntityName.finl05>
+  <EntityDescription.finl05>Fin construction piece</EntityDescription.finl05>
+  <EntityName.finl06>Fin L 06</EntityName.finl06>
+  <EntityDescription.finl06>Fin construction piece</EntityDescription.finl06>
+  <EntityName.finl07>Fin L 07</EntityName.finl07>
+  <EntityDescription.finl07>Fin construction piece</EntityDescription.finl07>
+  <EntityName.finl08>Fin L 08</EntityName.finl08>
+  <EntityDescription.finl08>Fin construction piece</EntityDescription.finl08>
+  <EntityName.finl09>Fin L 09</EntityName.finl09>
+  <EntityDescription.finl09>Fin construction piece</EntityDescription.finl09>
+  <EntityName.finl10>Fin L 10</EntityName.finl10>
+  <EntityDescription.finl10>Fin construction piece</EntityDescription.finl10>
+  <EntityName.finl11>Fin L 11</EntityName.finl11>
+  <EntityDescription.finl11>Fin construction piece</EntityDescription.finl11>
+  <EntityName.finl12>Fin L 12</EntityName.finl12>
+  <EntityDescription.finl12>Fin construction piece</EntityDescription.finl12>
+  <EntityName.finl13>Fin L 13</EntityName.finl13>
+  <EntityDescription.finl13>Fin construction piece</EntityDescription.finl13>
+  <EntityName.finl14>Fin L 14</EntityName.finl14>
+  <EntityDescription.finl14>Fin construction piece</EntityDescription.finl14>
+  <EntityName.finl15>Fin L 15</EntityName.finl15>
+  <EntityDescription.finl15>Fin construction piece</EntityDescription.finl15>
+  <EntityName.extA_Tail>Tail Fin Old A</EntityName.extA_Tail>
+  <EntityDescription.extA_Tail>Submarine tail</EntityDescription.extA_Tail>
+  <EntityName.tailfina>Tail Fin A</EntityName.tailfina>
+  <EntityDescription.tailfina>Submarine tail</EntityDescription.tailfina>
+  <EntityName.tailfinb>Tail Fin B</EntityName.tailfinb>
+  <EntityDescription.tailfinb>Submarine tail</EntityDescription.tailfinb>
+  <EntityName.tailfinc>Tail Fin C</EntityName.tailfinc>
+  <EntityDescription.tailfinc>Submarine tail</EntityDescription.tailfinc>
+  <EntityName.tailfind>Tail Fin D</EntityName.tailfind>
+  <EntityDescription.tailfind>Submarine tail</EntityDescription.tailfind>
+  <EntityName.extA_Front>Submarine front A</EntityName.extA_Front>
+  <EntityDescription.extA_Front>Front</EntityDescription.extA_Front>
+  <EntityName.subfrontb>Submarine front B</EntityName.subfrontb>
+  <EntityDescription.subfrontb>Front</EntityDescription.subfrontb>
   <EntityDescription.sshella41>Shuttle wall</EntityDescription.sshella41>
   <EntityName.sshellalightsa>Shuttle Lights A</EntityName.sshellalightsa>
   <EntityDescription.sshellalightsa>Shuttle wall</EntityDescription.sshellalightsa>
@@ -1444,6 +1568,17 @@
   <EntityDescription.switch>Produces a constant signal which can be used to change the state of equipment and doors</EntityDescription.switch>
   <EntityName.lamp>Lamp</EntityName.lamp>
   <EntityDescription.lamp>Wall mounted lighting</EntityDescription.lamp>
+  <EntityName.lightfluorescentm01>Light Fluorescent M1</EntityName.lightfluorescentm01>
+  <EntityName.lightfluorescentm02>Light Fluorescent M2</EntityName.lightfluorescentm02>
+  <EntityName.lightfluorescentm03>Light Fluorescent M3</EntityName.lightfluorescentm03>
+  <EntityName.lightfluorescentm04>Light Fluorescent M4</EntityName.lightfluorescentm04>
+  <EntityName.lightfluorescentl01>Light Fluorescent L1</EntityName.lightfluorescentl01>
+  <EntityName.lightfluorescentl02>Light Fluorescent L2</EntityName.lightfluorescentl02>
+  <EntityName.lighthalogenmm01>Light Halogen M1</EntityName.lighthalogenmm01>
+  <EntityName.lighthalogenmm02>Light Halogen M2</EntityName.lighthalogenmm02>
+  <EntityName.lighthalogenmm03>Light Halogen M3</EntityName.lighthalogenmm03>
+  <EntityName.lighthalogenm04>Light Halogen M4</EntityName.lighthalogenm04>
+  <EntityName.lightleds01>Light Led S1</EntityName.lightleds01>
   <EntityName.emergencylight>Emergency Light</EntityName.emergencylight>
   <EntityDescription.emergencylight>Wall mounted lighting, requires no electrical input</EntityDescription.emergencylight>
   <EntityName.wire>Wire</EntityName.wire>
