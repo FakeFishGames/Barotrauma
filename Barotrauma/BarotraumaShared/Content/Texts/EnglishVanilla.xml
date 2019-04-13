@@ -2172,23 +2172,9 @@
   <CharacterEditor.MultipleItemsWithSameHierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</CharacterEditor.MultipleItemsWithSameHierarchy>
   <CharacterEditor.CannotEditVanillaCharacters>Cannot edit the characters defined in the Vanilla content package!</CharacterEditor.CannotEditVanillaCharacters>
 
-  <!-- Rooms -->
-  <ReactorRoom>Reactor room</ReactorRoom>
-  <EngineRoom>Engine room</EngineRoom>
-  <CommandRoom>Command room</CommandRoom>  
-  <Airlock>Airlock</Airlock>
-  <Ballast>Ballast</Ballast>  
-  <SubTopLeft>Upper aft side</SubTopLeft>
-  <SubTopCenter>Upper mid</SubTopCenter>
-  <SubTopRight>Upper fore side</SubTopRight>
-  <SubCenterLeft>Mid aft side</SubCenterLeft>
-  <SubCenter>Amidships</SubCenter>
-  <SubCenterRight>Mid fore side</SubCenterRight>
-  <SubBottomLeft>Lower aft side</SubBottomLeft>
-  <SubBottomCenter>Lower mid</SubBottomCenter>
-  <SubBottomRight>Lower fore side</SubBottomRight>
-  <SubDirOClock>[dir] o'clock</SubDirOClock>
-
+  <!-- Rooms -->  
+  <!-- NOTE: all old room tags have been removed, new ones start with "RoomName." -->
+  
   <!-- Sub description -->
   <Dimensions>Dimensions</Dimensions>
   <DimensionsFormat>[width]x[height] m</DimensionsFormat>
@@ -3107,30 +3093,45 @@
   <GenericReplaceVerification>Do you want to replace it?</GenericReplaceVerification>
 
   <!-- rooms -->
-  <BallastTank1>Ballast tank A</BallastTank1>
-  <BallastTank2>Ballast tank B</BallastTank2>
-  <BallastTank3>Ballast tank C</BallastTank3>
-  <BallastTank4>Ballast tank E</BallastTank4>
-  <Stowage>Sotwage compartment</Stowage>
-  <Berthing>Berthing compartment</Berthing>
-  <Utility>Utility compartment</Utility>
-  <RearBallast>Rear ballast</RearBallast>
-  <FrontBallast>Front ballast</FrontBallast>
-  <Medbay>Medbay</Medbay>
-  <Engineering>Engineering</Engineering>
-  <Electrical>Electrical</Electrical>
-  <Armory>Armory</Armory>
-  <DockingPort>Docking port</DockingPort>
-  <UpperDockingPort>Upper docking port</UpperDockingPort>
-  <LowerDockingPort>Lower docking port</LowerDockingPort>
-  <Cargo>Cargo</Cargo>
-  <Brig>Brig</Brig>
-  <CrewQuarters>Crew quarters</CrewQuarters>
-  <JunctionCompartment>Junction compartment</JunctionCompartment>
-  <CentralAccessPassage>Central access passage</CentralAccessPassage>
-  <CentralAccessShaft>Central access shaft</CentralAccessShaft>
-  <ForwardAccessShaft>Forward access shaft</ForwardAccessShaft>
-  <AftAccessShaft>Aft access shaft</AftAccessShaft>
+  <RoomName.ReactorRoom>Reactor room</RoomName.ReactorRoom>
+  <RoomName.EngineRoom>Engine room</RoomName.EngineRoom>
+  <RoomName.CommandRoom>Command room</RoomName.CommandRoom>
+  <RoomName.Airlock>Airlock</RoomName.Airlock>
+  <RoomName.Ballast>Ballast</RoomName.Ballast>
+  <RoomName.SubTopLeft>Upper aft side</RoomName.SubTopLeft>
+  <RoomName.SubTopCenter>Upper mid</RoomName.SubTopCenter>
+  <RoomName.SubTopRight>Upper fore side</RoomName.SubTopRight>
+  <RoomName.SubCenterLeft>Mid aft side</RoomName.SubCenterLeft>
+  <RoomName.SubCenter>Amidships</RoomName.SubCenter>
+  <RoomName.SubCenterRight>Mid fore side</RoomName.SubCenterRight>
+  <RoomName.SubBottomLeft>Lower aft side</RoomName.SubBottomLeft>
+  <RoomName.SubBottomCenter>Lower mid</RoomName.SubBottomCenter>
+  <RoomName.SubBottomRight>Lower fore side</RoomName.SubBottomRight>
+  <RoomName.SubDirOClock>[dir] o'clock</RoomName.SubDirOClock>
+  <RoomName.BallastTank1>Ballast tank A</RoomName.BallastTank1>
+  <RoomName.BallastTank2>Ballast tank B</RoomName.BallastTank2>
+  <RoomName.BallastTank3>Ballast tank C</RoomName.BallastTank3>
+  <RoomName.BallastTank4>Ballast tank E</RoomName.BallastTank4>
+  <RoomName.Stowage>Sotwage compartment</RoomName.Stowage>
+  <RoomName.Berthing>Berthing compartment</RoomName.Berthing>
+  <RoomName.Utility>Utility compartment</RoomName.Utility>
+  <RoomName.RearBallast>Rear ballast</RoomName.RearBallast>
+  <RoomName.FrontBallast>Front ballast</RoomName.FrontBallast>
+  <RoomName.Medbay>Medbay</RoomName.Medbay>
+  <RoomName.Engineering>Engineering</RoomName.Engineering>
+  <RoomName.Electrical>Electrical</RoomName.Electrical>
+  <RoomName.Armory>Armory</RoomName.Armory>
+  <RoomName.DockingPort>Docking port</RoomName.DockingPort>
+  <RoomName.UpperDockingPort>Upper docking port</RoomName.UpperDockingPort>
+  <RoomName.LowerDockingPort>Lower docking port</RoomName.LowerDockingPort>
+  <RoomName.Cargo>Cargo</RoomName.Cargo>
+  <RoomName.Brig>Brig</RoomName.Brig>
+  <RoomName.CrewQuarters>Crew quarters</RoomName.CrewQuarters>
+  <RoomName.JunctionCompartment>Junction compartment</RoomName.JunctionCompartment>
+  <RoomName.CentralAccessPassage>Central access passage</RoomName.CentralAccessPassage>
+  <RoomName.CentralAccessShaft>Central access shaft</RoomName.CentralAccessShaft>
+  <RoomName.ForwardAccessShaft>Forward access shaft</RoomName.ForwardAccessShaft>
+  <RoomName.AftAccessShaft>Aft access shaft</RoomName.AftAccessShaft>
 
   <!-- Labels -->
   <Label.VentralCoilgunControl>Ventral Coilgun Control</Label.VentralCoilgunControl>
@@ -3175,5 +3176,30 @@
   <Label.OpenLabel>Open</Label.OpenLabel>
   <Label.CloseLabel>Close</Label.CloseLabel>
   <Label.BallastHatch>Ballast hatch</Label.BallastHatch>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </infotexts>
