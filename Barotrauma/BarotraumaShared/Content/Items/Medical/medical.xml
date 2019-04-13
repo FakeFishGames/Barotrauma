@@ -273,13 +273,13 @@
       <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="1.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="20" />
+        <ReduceAffliction identifier="bleeding" amount="25" />
         <ReduceAffliction identifier="burn" amount="45" />
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Limb, This" duration="1">
         <Sound file="Content/Items/Medical/Bandage2.ogg" type="OnUse" range="500" />
         <Sound file="Content/Items/Medical/Bandage1.ogg" type="OnUse" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="10" />
+        <ReduceAffliction identifier="bleeding" amount="15" />
         <ReduceAffliction identifier="burn" amount="30" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -315,17 +315,17 @@
       <RequiredSkill identifier="medical" level="20"></RequiredSkill>
       <StatusEffect type="OnFailure" target="This" Condition="-25.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" />
-      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="1">
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="5">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="20" />
-        <ReduceAffliction identifier="burn" amount="15" />
+        <ReduceAffliction identifier="bleeding" amount="7" />
+        <ReduceAffliction identifier="burn" amount="7" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="1">
+      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="5">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
         <Sound file="Content/Items/Medical/Bandage2.ogg" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="10" />
-        <ReduceAffliction identifier="burn" amount="7.5" />
+        <ReduceAffliction identifier="bleeding" amount="6" />
+        <ReduceAffliction identifier="burn" amount="6" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -363,16 +363,16 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-50.0" disabledeltatime="true" />
       <RequiredSkill identifier="medical" level="22" />
-      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="3.0">
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="8">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="20"></ReduceAffliction>
-        <ReduceAffliction identifier="burn" amount="20" />
+        <ReduceAffliction identifier="bleeding" amount="7.5"></ReduceAffliction>
+        <ReduceAffliction identifier="burn" amount="7.5" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="3.0">
+      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="8.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
-        <Affliction identifier="internaldamage" amount="5" />
-        <ReduceAffliction identifier="bleeding" amount="10"></ReduceAffliction>
-        <ReduceAffliction identifier="burn" amount="10" />
+        <Affliction identifier="internaldamage" amount="1.875" />
+        <ReduceAffliction identifier="bleeding" amount="3.75"></ReduceAffliction>
+        <ReduceAffliction identifier="burn" amount="3.75" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
