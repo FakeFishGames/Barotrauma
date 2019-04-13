@@ -394,7 +394,7 @@
     <SuitableTreatment identifier="opiatewithdrawal" suitability="75" />
     <SuitableTreatment identifier="opiateoverdose" suitability="-75" />
     <SuitableTreatment identifier="opiateaddiction" suitability="-75" />
-    <SuitableTreatment identifier="oxygenloss" suitability="-10" />
+    <SuitableTreatment identifier="oxygenlow" suitability="-10" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="50"/>
@@ -462,7 +462,7 @@
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100" />
     <SuitableTreatment identifier="opiateoverdose" suitability="-100" />
     <SuitableTreatment identifier="opiateaddiction" suitability="-100" />
-    <SuitableTreatment identifier="oxygenloss" suitability="-60" />
+    <SuitableTreatment identifier="oxygenlow" suitability="-60" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="60"/>
@@ -1052,7 +1052,7 @@
   <LiquidOxygenite name="Liquid Oxygenite" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" impacttolerance="8" description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light"> 
     
     <SuitableTreatment identifier="internaldamage" suitability="-15" />
-    <SuitableTreatment identifier="oxygenloss" suitability="90" />
+    <SuitableTreatment identifier="oxygenlow" suitability="90" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="60"/>
