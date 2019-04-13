@@ -2852,7 +2852,7 @@
   <!-- Room 2 -->
   <Mechanic.Equipment>Inventory</Mechanic.Equipment>
   <Mechanic.EquipmentObjective>Get your equipment from the locker</Mechanic.EquipmentObjective>
-  <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Mechanic.EquipmentText>
+  <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.\n\nTo close the interface, press [InputType.Deselect].</Mechanic.EquipmentText>
 
   <!-- Room 3 -->
   <Mechanic.Welding>Fixing leaks</Mechanic.Welding>
@@ -2924,7 +2924,7 @@
   <!-- Room 5 -->
   <Engineer.WireJunctionBoxes>Wiring</Engineer.WireJunctionBoxes>
   <Engineer.WireJunctionBoxesObjective>Connect the junction boxes</Engineer.WireJunctionBoxesObjective>
-  <Engineer.WireJunctionBoxesText>Junction boxes serve as the main way to connect the submarine’s devices to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then interact with ([InputType.Select]) the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press [InputType.Deselect] to close the panel. Repeat the step at the next item.</Engineer.WireJunctionBoxesText>
+  <Engineer.WireJunctionBoxesText>Junction boxes serve as the main way to connect the submarine’s devices to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then interact with ([InputType.Select]) the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press [InputType.Deselect] to close the panel. Repeat the step at the next item.\n\nIf you don’t see a loose wire in the connection panel interface, make sure you have one equipped.</Engineer.WireJunctionBoxesText>
 
   <!-- Submarine -->
   <Engineer.RepairElectricalRoom>Electrical room</Engineer.RepairElectricalRoom>
@@ -2957,7 +2957,7 @@
   <!--  Room 3 -->
   <Officer.Crawler>Crawlers</Officer.Crawler>
   <Officer.CrawlerObjective>Kill the crawler</Officer.CrawlerObjective>
-  <Officer.CrawlerText>Take the crawler down using the stun baton. Stun baton hits inflict stun on the enemies, so use that to your advantage.</Officer.CrawlerText>
+  <Officer.CrawlerText>There's a monster in the next room. A Crawler. Take it down using the stun baton. Stun baton stuns enemies for a brief moment, so use that to your advantage.</Officer.CrawlerText>
 
   <!--  Room 4 -->
   <Officer.SomethingBig>Something big</Officer.SomethingBig>
@@ -2966,17 +2966,17 @@
 
   <Officer.Hammerhead>Hammerheads</Officer.Hammerhead>
   <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
-  <Officer.HammerheadText>To use the coilgun, interact with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot]. To stop aiming, press [InputType.Deselect].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
+  <Officer.HammerheadText>To use the coilgun, interact ([InputType.Select]) with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot]. To stop aiming, press [InputType.Deselect].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
 
   <!-- Room 5 -->
   <Officer.RangedWeapon>Ranged weapons</Officer.RangedWeapon>
   <Officer.RangedWeaponObjective>Grab some ranged weapons</Officer.RangedWeaponObjective>
-  <Officer.RangedWeaponText>Ranged weapons work the same way as melee weapons, except their accuracy is more dependent on the character’s weapons skill. Aim with [InputType.Aim] and fire with [InputType.Select].\n\nThey must also be loaded with ammunition. Hover the mouse cursor over a ranged weapon to see how many bullets, harpoons, etc. are contained. Drop ammunition into the slots to load the weapon.</Officer.RangedWeaponText>
+  <Officer.RangedWeaponText>Ranged weapons work the same way as melee weapons, except their accuracy is more dependent on the character’s weapons skill. Aim with [InputType.Aim] and fire with [InputType.Select].\n\nThey must also be loaded with ammunition. Hover the mouse cursor over a ranged weapon to see how many bullets, harpoons, etc. are contained. Drop ammunition into the slots or on the weapon itself to load the weapon.</Officer.RangedWeaponText>
 
   <!-- Room 6 -->
   <Officer.Mudraptor>Mudraptors</Officer.Mudraptor>
   <Officer.MudraptorObjective>Kill the mudraptor</Officer.MudraptorObjective>
-  <Officer.MudraptorText>Mudraptors are bigger, meaner and more armored than crawlers. Taking them down requires more firepower. Try to keep your distance.</Officer.MudraptorText>
+  <Officer.MudraptorText>Mudraptors are bigger, meaner and more armored than crawlers. Taking them down requires more firepower. Aim for the mouth or belly and try to keep your distance.</Officer.MudraptorText>
 
   <!-- Submarine -->
   <Officer.ArmSubmarine>Weaponry</Officer.ArmSubmarine>
@@ -3007,17 +3007,17 @@
   <!-- Room 4 -->
   <Doctor.Medbay>Med bay</Doctor.Medbay>
   <Doctor.MedbayObjective>Take the crew member to the med bay</Doctor.MedbayObjective>
-  <Doctor.MedbayText>Sometimes you will encounter afflictions that you don’t have supplies to treat on the spot. In these situations it’s handy to get the patient to follow you to the med bay, where there are more supplies to treat them.\n\nFind the character in question in the crew list to the left. Then find the “Follow” button and click on it. The character will now follow you until dismissed by clicking on the button again.</Doctor.MedbayText>
+  <Doctor.MedbayText>Sometimes you will encounter afflictions that you don’t have supplies to treat on the spot. In these situations it’s handy to get the patient to follow you to the med bay, where there are more supplies to treat them.\n\nFind the character in question in the crew list to the left. Then find the “Follow” button and click on it. The character will now follow you until dismissed by clicking on the button again.\n\n“Follow” command is only one of many commands you can give to other characters. Experiment with other commands during gameplay!</Doctor.MedbayText>
 
   <!-- Room 5 -->
   <Doctor.TreatBurns>Treat burns</Doctor.TreatBurns>
   <Doctor.TreatBurnsObjective>Treat crew member’s injuries.</Doctor.TreatBurnsObjective>
-  <Doctor.TreatBurnsText>First aid can be administered to other characters, too. Treat them by highlighting the target character and pressing [InputType.Health]. The interface will show their status on the left side of the screen.\n\nDrag the correct item into the medical interface to treat the affliction. Remember to select the correct limb before administering treatment. Bandages heal burns quickly.</Doctor.TreatBurnsText>
+  <Doctor.TreatBurnsText>First aid can be administered to other characters, too. Treat them by highlighting the target character and pressing [InputType.Health]. The interface will show their status on the left side of the screen.\n\nDrag the correct item into the medical interface to treat the affliction. Remember to select the correct limb before administering treatment. Bandages heal burns quickly. Find them in the highlighted cabinet.</Doctor.TreatBurnsText>
 
   <!-- Room 6 -->
   <Doctor.CPR>CPR</Doctor.CPR>
   <Doctor.CPRObjective>Perform CPR</Doctor.CPRObjective>
-  <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([InputType.Health]) and clicking the “resuscitate“ button. The process may take a while.</Doctor.CPRText>
+  <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([InputType.Health]) and clicking the green “resuscitate“ button. The process may take a while.</Doctor.CPRText>
   
   <!-- Sub -->
   <Doctor.Submarine>Medical assistance</Doctor.Submarine>
@@ -3243,8 +3243,6 @@
 
   <DontShowNotificationAgain>Don't show this again</DontShowNotificationAgain>
 
-  <Video>Video</Video>
-  
-  
+  <Video>Video</Video> 
 
 </infotexts>
