@@ -2784,6 +2784,8 @@
   <Tutorial.SecurityOfficerTraining>Security officer training</Tutorial.SecurityOfficerTraining>
   <Tutorial.MedicalDoctorTraining>Medical doctor training</Tutorial.MedicalDoctorTraining>
   <Tutorial.CaptainTraining>Captain training</Tutorial.CaptainTraining>
+  <NewObjective>New Objective</NewObjective>
+  <Objective>Objective (Click to review)</Objective>
   
   <!-- Job descriptions -->
   <Tutorial.MechanicTitle>Mechanic - Him, glue and duct tape, are the only things between you and certain death.</Tutorial.MechanicTitle>
@@ -2835,7 +2837,7 @@
   <!-- Radio -->
   <Mechanic.Radio.WakeUp>Are you okay? You need to get up and moving. Get to the sub ASAP!</Mechanic.Radio.WakeUp>
   <Mechanic.Radio.Equipment>Remember to get your gear from the locker. Grab everything you can carry. We’re in for some rough shit.</Mechanic.Radio.Equipment>
-  <Mechanic.Radio.Breach>Hey, I’m reading some hull breaches along your way. Better plug those real quick so others stand a chance, too.</Mechanic.Radio.Breach>
+  <Mechanic.Radio.Breach>Hey, I’m reading some hull breaches along your way. Better plug those real quick to buy us some time.</Mechanic.Radio.Breach>
   <Mechanic.Radio.News>All right, can you hear me? I got bad news and good news.</Mechanic.Radio.News>
   <Mechanic.Radio.Fire>The bad news is there’s a fire ahead. The good news is there’s probably enough scrap nearby for you to fabricate a fire extinguisher.</Mechanic.Radio.Fire>
   <Mechanic.Radio.Diving>You’re almost there. Just be careful, this next leak is large enough for the whole room to be pressurized. Find a diving suit. It should protect your organs against this kind of pressure.</Mechanic.Radio.Diving>
@@ -2844,8 +2846,8 @@
 
   <!-- Room 1 -->
   <Mechanic.OpenDoor>Doors</Mechanic.OpenDoor>
-  <Mechanic.OpenDoorObjective>Open door by pushing the adjacent button</Mechanic.OpenDoorObjective>
-  <Mechanic.OpenDoorText>Doors are often wired to be opened via nearby buttons. Interact with buttons by pressing [InputType.Select] when the cursor is over them.</Mechanic.OpenDoorText>
+  <Mechanic.OpenDoorObjective>Open the door by pushing the adjacent button</Mechanic.OpenDoorObjective>
+  <Mechanic.OpenDoorText>Move by pressing [UP], [LEFT], [DOWN], [RIGHT] buttons. Interact with items and devices with [SELECT] button.\n\nOpen this door by pressing [SELECT] while cursor is over it.</Mechanic.OpenDoorText>
 
   <!-- Room 2 -->
   <Mechanic.Equipment>Inventory</Mechanic.Equipment>
@@ -2855,7 +2857,7 @@
   <!-- Room 3 -->
   <Mechanic.Welding>Fixing leaks</Mechanic.Welding>
   <Mechanic.WeldingObjective>Repair leak</Mechanic.WeldingObjective>
-  <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [InputType.Aim] to aim. While aiming, hold [InputType.Shoot] to weld.</Mechanic.WeldingText>
+  <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [InputType.Aim] to aim. While aiming, hold [InputType.Select] to weld.</Mechanic.WeldingText>
 
   <Mechanic.Drain>Draining water</Mechanic.Drain>
   <Mechanic.DrainObjective>Turn on nearby pump to drain excess water</Mechanic.DrainObjective>
@@ -2864,16 +2866,16 @@
   <!-- Room 4 -->
   <Mechanic.Deconstruct>Crafting, part 1</Mechanic.Deconstruct>
   <Mechanic.DeconstructObjective>Deconstruct an extra oxygen tank</Mechanic.DeconstructObjective>
-  <Mechanic.DeconstructText>The fabricator is a machine that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructText>
+  <Mechanic.DeconstructText>The fabricator is a device that can take different kinds of materials and turn them into useful items. In the situation where there’s not enough material for fabrication, items can be broken down in the deconstructor. Just drag the item into one of the top slots and start by pressing the “Deconstruct” button.\n\nIn this case, fabricating a fire extinguisher requires aluminum and sodium. Sodium is readily available, but aluminum must be deconstructed from oxygen tanks.</Mechanic.DeconstructText>
 
   <Mechanic.Fabricate>Crafting, part 2</Mechanic.Fabricate>
   <Mechanic.FabricateObjective>Fabricate a fire extinguisher</Mechanic.FabricateObjective>
-  <Mechanic.FabricateText>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the machine with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s bottom inventory.</Mechanic.FabricateText>
+  <Mechanic.FabricateText>Now that we have all of the required materials, we can fabricate a fire extinguisher. Find it in the list, load the fabricator with materials and press the button to start fabricating.\n\nWhen done, the fabricated item can be found in the fabricator’s output slot.</Mechanic.FabricateText>
 
   <!-- Room 5 -->
   <Mechanic.Extinguisher>Fires</Mechanic.Extinguisher>
   <Mechanic.ExtinguisherObjective>Put out the fire</Mechanic.ExtinguisherObjective>
-  <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [InputType.Aim] and dispense by holding down [InputType.Shoot].</Mechanic.ExtinguisherText>
+  <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [InputType.Aim] and dispense by holding down [InputType.Select].</Mechanic.ExtinguisherText>
 
   <Mechanic.DropExtinguisher>Unequipping</Mechanic.DropExtinguisher>
   <Mechanic.DropExtinguisherObjective>Drop the fire extinguisher</Mechanic.DropExtinguisherObjective>
@@ -2887,18 +2889,18 @@
   <!-- Room 7 -->
   <Mechanic.RepairPump>Repairing machinery</Mechanic.RepairPump>
   <Mechanic.RepairPumpObjective>Repair pump</Mechanic.RepairPumpObjective>
-  <Mechanic.RepairPumpText>Machines and junction boxes require maintenance. Without it, they will break and stop working. Repair mechanical machines by equipping a wrench and interacting with the broken machine.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpText>
+  <Mechanic.RepairPumpText>Mechanical and electrical devices require maintenance. Without it, they will break and stop working. Repair mechanical devices by equipping a wrench and interacting with it.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpText>
 
   <!-- Submarine -->
   <Mechanic.RepairSubmarine>Submarine maintenance</Mechanic.RepairSubmarine>
-  <Mechanic.RepairSubmarineObjective>Repair the engine and the ballast pumps</Mechanic.RepairSubmarineObjective>
-  <Mechanic.RepairSubmarineText>Find the engine (usually located in the rear compartment of a submarine) and ballast pumps (in the bottom, some submarines have multiple ballast tanks).</Mechanic.RepairSubmarineText>
+  <Mechanic.RepairSubmarineObjective>Repair the engine and ballast pumps</Mechanic.RepairSubmarineObjective>
+  <Mechanic.RepairSubmarineText>You are now onboard a submarine, which is where you will spend most of your time in Barotrauma. This one is on the simpler side, but you will have a selection of different submarines available to you when you begin a game. You can take the diving suit off now. (Either by pressing and holding the unequip button on top of the equipment slot or dragging the suit away from the slot.)\n\nInteriors of a submarine are usually cramped and finding things can be difficult until you get your bearings.\n\nFind the engine (usually located in the rear compartment of a submarine) and ballast pumps (in the bottom, some submarines have multiple ballast tanks).</Mechanic.RepairSubmarineText>
 
   <!-- Engineer Tutorial -->
   <!-- Radio -->
   <Engineer.Radio.WakeUp>Get your ass up! We need power!</Engineer.Radio.WakeUp>
   <Engineer.Radio.Equipment>That last impact cut power to half of the outpost. I want you to grab what you need to get us online again.</Engineer.Radio.Equipment>
-  <Engineer.Radio.ReactorStable>We seem to be stable now. Some junction boxes blew their fuses and pumps aren’t working, you should go see what you can do about it.</Engineer.Radio.ReactorStable>
+  <Engineer.Radio.ReactorStable>We seem to be stable now. Some junction boxes blew their fuses and pumps aren’t working, you should go see what you can do about it. Remember to switch the reactor to automatic before you go.</Engineer.Radio.ReactorStable>
   <Engineer.Radio.FaultyWiring>Some of the wiring seems to be faulty. Find some wire and do some quick fixing, otherwise we’re without power.</Engineer.Radio.FaultyWiring>
   <Engineer.Radio.ChangeOfPlans>Change of plans. Come to the sub. We’re gonna blow this joint.</Engineer.Radio.ChangeOfPlans>
   <Engineer.Radio.Submarine>Looks like the electrical room’s seen better days. See if you can get it online, then start up the reactor.</Engineer.Radio.Submarine>
@@ -2916,27 +2918,75 @@
 
   <!-- Room 4 -->
   <Engineer.RepairJunctionBox>Maintenance</Engineer.RepairJunctionBox>
-  <Engineer.RepairJunctionBoxObjective>Repair junction box</Engineer.RepairJunctionBoxObjective>
-  <Engineer.RepairJunctionBoxText>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact with the machine to see the repair interface.</Engineer.RepairJunctionBoxText>
+  <Engineer.RepairJunctionBoxObjective>Repair the broken junction box</Engineer.RepairJunctionBoxObjective>
+  <Engineer.RepairJunctionBoxText>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact with the device to see the repair interface.</Engineer.RepairJunctionBoxText>
 
   <!-- Room 5 -->
   <Engineer.WireJunctionBoxes>Wiring</Engineer.WireJunctionBoxes>
   <Engineer.WireJunctionBoxesObjective>Connect the junction boxes</Engineer.WireJunctionBoxesObjective>
-  <Engineer.WireJunctionBoxesText>Junction boxes serve as the main way to connect the sub’s machines to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then click on the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press esc to close the panel. Repeat the step at the next item.</Engineer.WireJunctionBoxesText>
+  <Engineer.WireJunctionBoxesText>Junction boxes serve as the main way to connect the submarine’s devices to the power grid. Connect them with wires to allow the power to travel between them.\n\nTo connect wires to items, equip a screwdriver and wire in separate hands, then interact with ([InputType.Select]) the item you want to add the wire to. You will see a connection panel with a couple of connection pins and a wire sticking out from the bottom. Drag the wire to “power” pin, then press [InputType.Deselect] to close the panel. Repeat the step at the next item.</Engineer.WireJunctionBoxesText>
 
   <!-- Submarine -->
   <Engineer.RepairElectricalRoom>Electrical room</Engineer.RepairElectricalRoom>
   <Engineer.RepairElectricalRoomObjective>Repair the electrical room</Engineer.RepairElectricalRoomObjective>
-  <Engineer.RepairElectricalRoomText>Find the sub’s electrical room and repair the junction boxes by interacting with them while holding a screwdriver.</Engineer.RepairElectricalRoomText>
+  <Engineer.RepairElectricalRoomText>Find the sub’s electrical room and repair the junction boxes by interacting with them while holding a screwdriver, then press the “Repair” button.</Engineer.RepairElectricalRoomText>
   
   <Engineer.PowerUpReactor>Reactor room</Engineer.PowerUpReactor>
   <Engineer.PowerUpReactorObjective>Power up submarine’s reactor</Engineer.PowerUpReactorObjective>
-  <Engineer.PowerUpReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create heat and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorText>
+  <Engineer.PowerUpReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create power and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorText>
+
+  <!-- Officer Tutorial -->
+  <!-- Radio -->
+  <Officer.Radio.WakeUp>Is there any security still alive? We have a hull breach and some unwanted visitors!</Officer.Radio.WakeUp>
+  <Officer.Radio.Equipment>Find what you need to take out these monsters.</Officer.Radio.Equipment>
+  <Officer.Radio.CrawlerDead>Good job, but that was just a baby crawler. I see something bigger up ahead, so keep on your toes.</Officer.Radio.CrawlerDead>
+  <Officer.Radio.SomethingBig>I’m reading something big on the sonar. Load the coilgun and see if you can take it down.</Officer.Radio.SomethingBig>
+  <Officer.Radio.HammerheadDead>Nice shooting. Bad news is, this station is unsalvageable. Come down to the sub, we’re leaving before it’s too late.</Officer.Radio.HammerheadDead>
+  <Officer.Radio.Submarine>Welcome aboard. I need you to make sure we’re ready to deal with whatever comes after us when we leave. Start inspecting the weaponry.</Officer.Radio.Submarine>
+  <Officer.Radio.Complete>Outstanding. Now get ready. Once the rest of the crew arrives, we’re out of here.</Officer.Radio.Complete>
+
+  <!--  Room 2 -->
+  <Officer.Equipment>Inventory</Officer.Equipment>
+  <Officer.EquipmentObjective>Retrieve equipment from the cabinet</Officer.EquipmentObjective>
+  <Officer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Officer.EquipmentText>
+
+  <Officer.MeleeWeapon>Equipping</Officer.MeleeWeapon>
+  <Officer.MeleeWeaponObjective>Equip a melee weapon and protective gear</Officer.MeleeWeaponObjective>
+  <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand. Wearable equipment can either be double-clicked or dragged into their corresponding slots in the character inventory.\n\nReady the weapon by holding [InputType.Aim] and swing it by clicking [InputType.Select].</Officer.MeleeWeaponText>
+
+  <!--  Room 3 -->
+  <Officer.Crawler>Crawlers</Officer.Crawler>
+  <Officer.CrawlerObjective>Kill the crawler</Officer.CrawlerObjective>
+  <Officer.CrawlerText>Take the crawler down using the stun baton. Stun baton hits inflict stun on the enemies, so use that to your advantage.</Officer.CrawlerText>
+
+  <!--  Room 4 -->
+  <Officer.SomethingBig>Something big</Officer.SomethingBig>
+  <Officer.SomethingBigObjective>Load coilgun and turn on the supercapacitor</Officer.SomethingBigObjective>
+  <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo ready the coilgun, you must make sure the supercapacitor has enough power by setting the recharge rate high enough (50% is usually enough) and insert full ammunition boxes into the coilgun loader.\n\nAmmo boxes are large and unwieldy. You must use two hands to carry one and they can’t be carried around in the inventory. To drop an ammo box, either drag it away from your equip slot or press the unequip button on top of the equip slot.</Officer.SomethingBigText>
+
+  <Officer.Hammerhead>Hammerheads</Officer.Hammerhead>
+  <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
+  <Officer.HammerheadText>To use the coilgun, interact with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot]. To stop aiming, press [InputType.Deselect].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
+
+  <!-- Room 5 -->
+  <Officer.RangedWeapon>Ranged weapons</Officer.RangedWeapon>
+  <Officer.RangedWeaponObjective>Grab some ranged weapons</Officer.RangedWeaponObjective>
+  <Officer.RangedWeaponText>Ranged weapons work the same way as melee weapons, except their accuracy is more dependent on the character’s weapons skill. Aim with [InputType.Aim] and fire with [InputType.Select].\n\nThey must also be loaded with ammunition. Hover the mouse cursor over a ranged weapon to see how many bullets, harpoons, etc. are contained. Drop ammunition into the slots to load the weapon.</Officer.RangedWeaponText>
+
+  <!-- Room 6 -->
+  <Officer.Mudraptor>Mudraptors</Officer.Mudraptor>
+  <Officer.MudraptorObjective>Kill the mudraptor</Officer.MudraptorObjective>
+  <Officer.MudraptorText>Mudraptors are bigger, meaner and more armored than crawlers. Taking them down requires more firepower. Try to keep your distance.</Officer.MudraptorText>
+
+  <!-- Submarine -->
+  <Officer.ArmSubmarine>Weaponry</Officer.ArmSubmarine>
+  <Officer.ArmSubmarineObjective>Ready coilguns</Officer.ArmSubmarineObjective>
+  <Officer.ArmSubmarineText>Find ammunition for the coilguns and load them. Recharge supercapacitors.\n\nIn most submarines gun loaders and supercapacitors are located next to their respective gun controls. A value of 50% for supercapacitors’ recharge is usually enough to keep them ready for monster encounters. Set it to 100% when a lot of firing is expected.</Officer.ArmSubmarineText>
 
   <!-- Doctor Tutorial -->  
   <!-- Radio -->
   <Doctor.Radio.WakeUp>We need a medic here!</Doctor.Radio.WakeUp>
-  <Doctor.Radio.KnockedDown>That was a big one. Are you ok? Get yourself patched up.</Doctor.Radio.KnockedDown>
+  <Doctor.Radio.KnockedDown>That was a big one. Are you ok? Get yourself patched up, fast. We need a medic here stat.</Doctor.Radio.KnockedDown>
   <Doctor.Radio.AssistantBurns>They’ve got a nasty burn. You don’t have any bandages with you, do you? Get them to follow you while you go find some.</Doctor.Radio.AssistantBurns>
   <Doctor.Radio.AssistantBurnsHealed>I guess that’ll do. Make your way to the sub, it’s too dangerous to stay here.</Doctor.Radio.AssistantBurnsHealed>
   <Doctor.Radio.EnteredSub>Good. Everyone’s here. Check up on everybody while we get the vessel ready for transit.</Doctor.Radio.EnteredSub>
@@ -2947,16 +2997,16 @@
   <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
 
   <Doctor.OpenMedicalInterface>Medical interface</Doctor.OpenMedicalInterface>
-  <Doctor.OpenMedicalInterfaceObjective>Open the medical interface</Doctor.OpenMedicalInterfaceObjective>
-  <Doctor.OpenMedicalInterfaceText>Press [InputType.Health] or click your healthbar to open the medical interface. </Doctor.OpenMedicalInterfaceText>
+  <Doctor.OpenMedicalInterfaceObjective>Open medical interface</Doctor.OpenMedicalInterfaceObjective>
+  <Doctor.OpenMedicalInterfaceText>Press [InputType.Health] or click your health bar to enter the medical interface.</Doctor.OpenMedicalInterfaceText>
 
   <Doctor.FirstAidSelf>First aid</Doctor.FirstAidSelf>
-  <Doctor.FirstAidSelfObjective>Perform first aid on yourself</Doctor.FirstAidSelfObjective>
-  <Doctor.FirstAidSelfText>Afflictions affecting the character are shown to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfText>
+  <Doctor.FirstAidSelfObjective>Heal your injuries</Doctor.FirstAidSelfObjective>
+  <Doctor.FirstAidSelfText>Afflictions affecting the character are shown in the list to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfText>
 
   <!-- Room 4 -->
   <Doctor.Medbay>Med bay</Doctor.Medbay>
-  <Doctor.MedbayObjective>Take the crew member to the med bay.</Doctor.MedbayObjective>
+  <Doctor.MedbayObjective>Take the crew member to the med bay</Doctor.MedbayObjective>
   <Doctor.MedbayText>Sometimes you will encounter afflictions that you don’t have supplies to treat on the spot. In these situations it’s handy to get the patient to follow you to the med bay, where there are more supplies to treat them.\n\nFind the character in question in the crew list to the left. Then find the “Follow” button and click on it. The character will now follow you until dismissed by clicking on the button again.</Doctor.MedbayText>
 
   <!-- Room 5 -->
@@ -2972,56 +3022,8 @@
   <!-- Sub -->
   <Doctor.Submarine>Medical assistance</Doctor.Submarine>
   <Doctor.SubmarineObjective>Give medical assistance to everyone that needs it.</Doctor.SubmarineObjective>
-  <Doctor.SubmarineText>Inspect patient by pressing [InputType.Health], then administer the correct treatment. You can check each medical item’s description to see what they treat.</Doctor.SubmarineText>
-    
-  <!-- Officer Tutorial -->
-  <!-- Radio -->
-  <Officer.Radio.WakeUp>Is there any security still alive? We have a hull breach and some unwanted visitors!</Officer.Radio.WakeUp>
-  <Officer.Radio.Equipment>Find what you need to take out these monsters.</Officer.Radio.Equipment>
-  <Officer.Radio.CrawlerDead>Good job, but that was just a baby crawler. I’m seeing something bigger up ahead, so keep on your toes.</Officer.Radio.CrawlerDead>
-  <Officer.Radio.SomethingBig>I’m reading something big on the sonar. Load the coilgun and see if you can take it down.</Officer.Radio.SomethingBig>
-  <Officer.Radio.HammerheadDead>Nice shooting. Bad news is, this station is unsalvageable. Come down to the sub, we’re leaving before it’s too late.</Officer.Radio.HammerheadDead>
-  <Officer.Radio.Submarine>Welcome aboard. I need you to make sure we’re ready to deal with whatever comes after us when we leave. Start inspecting the weaponry.</Officer.Radio.Submarine>
-  <Officer.Radio.Complete>Outstanding. Now get ready. Once the rest of the crew arrives, we’re out of here.</Officer.Radio.Complete>
-
-  <!--  Room 2 -->
-  <Officer.Equipment>Inventory</Officer.Equipment>
-  <Officer.EquipmentObjective>Retrieve equipment from the cabinet</Officer.EquipmentObjective>
-  <Officer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Officer.EquipmentText>
-
-  <Officer.MeleeWeapon>Equipping a weapon</Officer.MeleeWeapon>
-  <Officer.MeleeWeaponObjective>Equip a melee weapon</Officer.MeleeWeaponObjective>
-  <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand.\n\nReady the weapon by holding [InputType.Aim] and swing it by clicking [InputType.Shoot].</Officer.MeleeWeaponText>
-
-  <!--  Room 3 -->
-  <Officer.Crawler>Crawlers</Officer.Crawler>
-  <Officer.CrawlerObjective>Kill the crawler</Officer.CrawlerObjective>
-  <Officer.CrawlerText>Take the crawler down using the stun baton. Stun baton hits inflict stun on the enemies, so use that to your advantage.</Officer.CrawlerText>
-
-  <!--  Room 4 -->
-  <Officer.SomethingBig>Something big</Officer.SomethingBig>
-  <Officer.SomethingBigObjective>Load coilgun and turn on the supercapacitor</Officer.SomethingBigObjective>
-  <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo make the coilgun ready, you must ensure the supercapacitor has enough power by setting the recharge rate high enough (>50% is usually enough) and insert full ammunition boxes into the coilgun loader.</Officer.SomethingBigText>
-
-  <Officer.Hammerhead>Hammerheads</Officer.Hammerhead>
-  <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
-  <Officer.HammerheadText>To use the coilgun, interact with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
-
-  <!-- Room 5 -->
-  <Officer.RangedWeapon>Ranged weapons</Officer.RangedWeapon>
-  <Officer.RangedWeaponObjective>Grab some ranged weapons</Officer.RangedWeaponObjective>
-  <Officer.RangedWeaponText>Ranged weapons work the same way as melee weapons, except they need to be loaded with ammunition and they are more dependent on the character’s weapons skill. Aim with [AIMBUTTON] and fire with [SELECTBUTTON].</Officer.RangedWeaponText>
-  
-  <!-- Room 6 -->
-  <Officer.Mudraptor>Mudraptors</Officer.Mudraptor>
-  <Officer.MudraptorObjective>Kill the mudraptor</Officer.MudraptorObjective>
-  <Officer.MudraptorText>Mudraptors are bigger, meaner and more armored than crawlers. Taking them down requires more firepower. Try to keep your distance.</Officer.MudraptorText>
-  
-  <!-- Submarine -->
-  <Officer.ArmSubmarine>Weaponry</Officer.ArmSubmarine>
-  <Officer.ArmSubmarineObjective>Ready coilguns</Officer.ArmSubmarineObjective>
-  <Officer.ArmSubmarineText>Find ammunition for the coilguns and load them. Recharge supercapacitors.</Officer.ArmSubmarineText>
-
+  <Doctor.SubmarineText>The crew is ready to leave but they are a bit banged up and someone is unconscious. Equipping the Health Scanner HUD will let you see who is injured and how.\n\nInspect each patient by pressing [InputType.Health], then administer the correct treatment. Remember to check each limb by selecting them in the medical interface.\n\nMedical supplies are often found in the med bay or storage, along with some basic meds in the supply cabinets scattered throughout the sub. You can check each medical item’s description to see what they treat.</Doctor.SubmarineText>
+   
   <!-- Captain Tutorial -->
   <!-- Radio -->
   <Captain.Radio.Medic>Ahoy, captain. Any orders?</Captain.Radio.Medic>
@@ -3050,11 +3052,11 @@
 
   <Captain.Navigate>Navigating</Captain.Navigate>
   <Captain.NavigateObjective>Navigate to destination</Captain.NavigateObjective>
-  <Captain.NavigateText>Plot a course for the submarine by clicking on the sonar display. Navigation terminal will adjust the ballast and engine accordingly and automatically.\n\nTo see where the sub is heading, turn on active sonar. Do that by finding sonar settings next to the display and set it from “passive” to active.</Captain.NavigateText>
+  <Captain.NavigateText>Plot a course for the submarine by clicking on the sonar display. Navigation terminal will adjust the ballast and engine’s force accordingly and automatically.\n\nTo see where the sub is heading, turn on active sonar. Do that by finding sonar settings next to the display and set it from “passive” to active.</Captain.NavigateText>
 
   <Captain.Dock>Docking</Captain.Dock>
   <Captain.DockObjective>Dock with destination outpost</Captain.DockObjective>
-  <Captain.DockText>To dock the submarine, maneuver the ship’s and outpost’s docking ports close to each other and toggle docking clamps. Ports are displayed in green on sonar display.\n\nWhen the ports are close to each other, a line will be displayed on the sonar display, use that to your advantage. When the line is fully green, close the clamps by pressing “toggle docking”. The submarine will then be locked into position and the docking hatch will be open for as long as the docking clamps are engaged.</Captain.DockText>
+  <Captain.DockText>To dock the submarine, maneuver the ship’s and outpost’s docking ports close to each other and toggle docking clamps. Ports are displayed in green on sonar display.\n\nWhen the ports are close to each other, a line will be displayed on the sonar display, use that to your advantage. When the line is fully green, close the clamps by pressing “toggle docking”. The submarine will then be locked into position and the docking hatch will be open for as long as the docking clamps are engaged.\n\nWhen positioning the submarine for docking, radical movements can easily cause you to overshoot your target. Move slowly and carefully to avoid colliding with the outpost. Using autopilot and “maintain position” is helpful in setting the position you want the submarine to move to.</Captain.DockText>
 
   <!-- Tutorial END -->
 
