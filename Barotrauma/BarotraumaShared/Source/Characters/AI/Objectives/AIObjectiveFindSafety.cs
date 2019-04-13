@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -17,10 +18,7 @@ namespace Barotrauma
         const float SearchHullInterval = 3.0f;
         const float clearUnreachableInterval = 30;
 
-        private readonly List<Hull> targetHulls = new List<Hull>(20);
-        private readonly List<float> hullWeights = new List<float>(20);
-
-        private List<Hull> unreachable = new List<Hull>();
+        public readonly List<Hull> unreachable = new List<Hull>();
 
         private float currenthullSafety;
         private float unreachableClearTimer;
@@ -67,6 +65,11 @@ namespace Barotrauma
                 }
             }
 
+            if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
+            {
+                searchHullTimer = Math.Min(1, searchHullTimer);
+            }
+
             if (unreachableClearTimer > 0)
             {
                 unreachableClearTimer -= deltaTime;
@@ -81,7 +84,7 @@ namespace Barotrauma
             {
                 searchHullTimer -= deltaTime;
             }
-            else if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
+            else
             {
                 var bestHull = FindBestHull();
                 if (bestHull != null && bestHull != currentHull)
@@ -190,15 +193,17 @@ namespace Barotrauma
                     float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
                     float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
                     hullSafety *= distanceFactor;
-
                     //skip the hull if the safety is already less than the best hull
                     //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
                     if (hullSafety < bestValue) { continue; }
-
                     // Each unsafe node reduces the hull safety value.
                     // Ignore current hull, because otherwise the would block all paths from the current hull to the target hull.
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                    if (path.Unreachable) { continue; }
+                    if (path.Unreachable)
+                    {
+                        unreachable.Add(hull);
+                        continue;
+                    }
                     int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
                     hullSafety /= 1 + unsafeNodes;
                     // If the target is not inside a friendly submarine, considerably reduce the hull safety.
@@ -226,7 +231,6 @@ namespace Barotrauma
                             }
                         }
                     }
-
                     // Huge preference for closer targets
                     float distance = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
                     float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));
