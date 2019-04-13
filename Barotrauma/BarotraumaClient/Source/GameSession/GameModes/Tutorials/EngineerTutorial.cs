@@ -271,6 +271,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(3); // Connect the junction boxes
             do { CheckGhostWires(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
+            CheckGhostWires();
             SetHighlight(engineer_disconnectedJunctionBox_1.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_2.Item, false);
             SetHighlight(engineer_disconnectedJunctionBox_3.Item, false);
