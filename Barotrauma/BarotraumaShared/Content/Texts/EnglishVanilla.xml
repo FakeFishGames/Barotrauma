@@ -3133,46 +3133,47 @@
   <AftAccessShaft>Aft access shaft</AftAccessShaft>
 
   <!-- Labels -->
-  <VentralCoilgunControl>Ventral Coilgun Control</VentralCoilgunControl>
-  <DorsalCoilgunControl>Dorsal Coilgun Control</DorsalCoilgunControl>
-  <RearCoilgunControl>Rear Coilgun Control</RearCoilgunControl>
-  <FrontCoilgunControl>Front Coilgun Control</FrontCoilgunControl>
-  <VentralRailgunControl>Ventral Railgun Control</VentralRailgunControl>
-  <DorsalRailgunControl>Dorsal Railgun Control</DorsalRailgunControl>
-  <RearRailgunControl>Rear Railgun Control</RearRailgunControl>
-  <FrontRailgunControl>Front Railgun Control</FrontRailgunControl>
-  <ToggleDocking>Toggle Docking</ToggleDocking>
-  <ReactorShutdown>Reactor Shutdown</ReactorShutdown>
-  <Engine1>Engine #1</Engine1>
-  <Engine2>Engine #2</Engine2>
-  <AuxiliaryEngine>Aux. engine</AuxiliaryEngine>
-  <LaunchDecoy>Launch Decoy</LaunchDecoy>
-  <LaunchDepthCharge>Launch Depth Charge</LaunchDepthCharge>
-  <ActivateDischargeCoil>Electrical Discharge Coil</ActivateDischargeCoil>
-  <ActivateUpperDischargeCoil>Upper Discharge Coil</ActivateUpperDischargeCoil>
-  <ActivateLowerDischargeCoil>Lower Discharge Coil</ActivateLowerDischargeCoil>
-  <ExteriorCamera>Ext. camera view</ExteriorCamera>
-  <VentralCamera>Ventral camera view</VentralCamera>
-  <DorsalCamera>Dorsal camera view</DorsalCamera>
-  <ReactorTemp>Reactor temp.</ReactorTemp>
-  <LetWaterDrain>Let all water drain before exiting</LetWaterDrain>
-  <AlphaDeck>Alpha Deck</AlphaDeck>
-  <GammaDeck>Gamma Deck</GammaDeck>
-  <DeltaDeck>Delta Deck</DeltaDeck>
-  <ReadyToDock>Ready to dock</ReadyToDock>
-  <Docked>Docked</Docked>
-  <EmergencyDoorOverride>Emergency door override</EmergencyDoorOverride>
-  <EmergencyHatchOverride>Emergency hatch override</EmergencyHatchOverride>
-  <Supplies>Supplies</Supplies>
-  <ToggleBatteries>Toggle Batteries</ToggleBatteries>
-  <ToggleSiren>Toggle Siren</ToggleSiren>
-  <Emergency>Emergency</Emergency>
-  <BackUpPowerArray>Backup power array</BackUpPowerArray>
-  <DroneControl>Drone control</DroneControl>
-  <StatusLabel>Status</StatusLabel>
-  <OnlineLabel>Online</OnlineLabel>
-  <OfflineLabel>Offline</OfflineLabel>
-  <OpenLabel>Open</OpenLabel>
-  <CloseLabel>Close</CloseLabel>
-  <BallastHatch>Ballast hatch</BallastHatch>
+  <Label.VentralCoilgunControl>Ventral Coilgun Control</Label.VentralCoilgunControl>
+  <Label.DorsalCoilgunControl>Dorsal Coilgun Control</Label.DorsalCoilgunControl>
+  <Label.RearCoilgunControl>Rear Coilgun Control</Label.RearCoilgunControl>
+  <Label.FrontCoilgunControl>Front Coilgun Control</Label.FrontCoilgunControl>
+  <Label.VentralRailgunControl>Ventral Railgun Control</Label.VentralRailgunControl>
+  <Label.DorsalRailgunControl>Dorsal Railgun Control</Label.DorsalRailgunControl>
+  <Label.RearRailgunControl>Rear Railgun Control</Label.RearRailgunControl>
+  <Label.FrontRailgunControl>Front Railgun Control</Label.FrontRailgunControl>
+  <Label.ToggleDocking>Toggle Docking</Label.ToggleDocking>
+  <Label.ReactorShutdown>Reactor Shutdown</Label.ReactorShutdown>
+  <Label.Engine1>Engine #1</Label.Engine1>
+  <Label.Engine2>Engine #2</Label.Engine2>
+  <Label.AuxiliaryEngine>Aux. engine</Label.AuxiliaryEngine>
+  <Label.LaunchDecoy>Launch Decoy</Label.LaunchDecoy>
+  <Label.LaunchDepthCharge>Launch Depth Charge</Label.LaunchDepthCharge>
+  <Label.ActivateDischargeCoil>Electrical Discharge Coil</Label.ActivateDischargeCoil>
+  <Label.ActivateUpperDischargeCoil>Upper Discharge Coil</Label.ActivateUpperDischargeCoil>
+  <Label.ActivateLowerDischargeCoil>Lower Discharge Coil</Label.ActivateLowerDischargeCoil>
+  <Label.ExteriorCamera>Ext. camera view</Label.ExteriorCamera>
+  <Label.VentralCamera>Ventral camera view</Label.VentralCamera>
+  <Label.DorsalCamera>Dorsal camera view</Label.DorsalCamera>
+  <Label.ReactorTemp>Reactor temp.</Label.ReactorTemp>
+  <Label.LetWaterDrain>Let all water drain before exiting</Label.LetWaterDrain>
+  <Label.AlphaDeck>Alpha Deck</Label.AlphaDeck>
+  <Label.GammaDeck>Gamma Deck</Label.GammaDeck>
+  <Label.DeltaDeck>Delta Deck</Label.DeltaDeck>
+  <Label.ReadyToDock>Ready to dock</Label.ReadyToDock>
+  <Label.Docked>Docked</Label.Docked>
+  <Label.EmergencyDoorOverride>Emergency door override</Label.EmergencyDoorOverride>
+  <Label.EmergencyHatchOverride>Emergency hatch override</Label.EmergencyHatchOverride>
+  <Label.Supplies>Supplies</Label.Supplies>
+  <Label.ToggleBatteries>Toggle Batteries</Label.ToggleBatteries>
+  <Label.ToggleSiren>Toggle Siren</Label.ToggleSiren>
+  <Label.Emergency>Emergency</Label.Emergency>
+  <Label.BackUpPowerArray>Backup power array</Label.BackUpPowerArray>
+  <Label.DroneControl>Drone control</Label.DroneControl>
+  <Label.StatusLabel>Status</Label.StatusLabel>
+  <Label.OnlineLabel>Online</Label.OnlineLabel>
+  <Label.OfflineLabel>Offline</Label.OfflineLabel>
+  <Label.OpenLabel>Open</Label.OpenLabel>
+  <Label.CloseLabel>Close</Label.CloseLabel>
+  <Label.BallastHatch>Ballast hatch</Label.BallastHatch>
+
 </infotexts>
