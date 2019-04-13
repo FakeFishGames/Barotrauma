@@ -167,8 +167,6 @@
 
 
   <DoctorTutorial name="Medical training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
-    
-    <!-- TODO: use identifiers instead of names -->
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Medical Doctor">
         <Skill identifier="medical" level="70"/>
@@ -267,7 +265,54 @@
     </Segment>
   </OfficerTutorial>
 
-  <!--
+  <CaptainTutorial name="Captain training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+    <Character file="Content/Characters/Human/Human.xml">
+      <Job identifier="captain">
+        <Skill identifier="medical" level="20"/>
+        <Skill identifier="weapons" level="20"/>
+        <Skill identifier="mechanical" level="20"/>
+        <Skill identifier="electrical" level="20"/>
+        <Skill identifier="helm" level="70"/>
+      </Job>
+    </Character>
+
+    <Segment id="Captain.CommandMedic" objective="Captain.CommandMedicObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Captain.CommandMedicText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandMedicText" width="450"/>
+    </Segment>
+
+    <Segment id="Captain.CommandMechanic" objective="Captain.CommandMechanicObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Captain.CommandMechanicText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandMechanicText" width="450"/>
+    </Segment>
+
+    <Segment id="Captain.CommandSecurity" objective="Captain.CommandSecurityObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Captain.CommandSecurityText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandSecurityText" width="450"/>
+    </Segment>
+
+    <Segment id="Captain.CommandEngineer" objective="Captain.CommandEngineerObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Captain.CommandEngineerText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandEngineerText" width="450"/>
+    </Segment>
+
+    <Segment id="Captain.Undock" objective="Captain.UndockObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Captain.UndockText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.UndockText" width="450"/>
+    </Segment>
+
+    <Segment id="Captain.Navigate" objective="Captain.NavigateObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Captain.NavigateText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.NavigateText" width="450"/>
+    </Segment>
+
+    <Segment id="Captain.Dock" objective="Captain.DockObjective" contenttype="manualvideo" istriggered="false">
+      <Text tag="Captain.DockText" width="450" anchor="Center"/>
+      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.DockText" width="450"/>
+    </Segment>
+  </CaptainTutorial>
+
+    <!--
   <BasicTutorial name="Basic training" tutorialtype="scenario" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Engineer">
