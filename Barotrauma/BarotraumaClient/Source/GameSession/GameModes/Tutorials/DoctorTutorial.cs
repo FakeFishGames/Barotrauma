@@ -19,10 +19,22 @@ namespace Barotrauma.Tutorials
         private Character doctor;
 
         private ItemContainer doctor_suppliesCabinet;
+        private ItemContainer doctor_medBayCabinet;
         private Character patient1, patient2;
         private List<Character> subPatients = new List<Character>();
         private Hull startRoom;
         private Hull medBay;
+
+        private Door doctor_firstDoor;
+        private Door doctor_secondDoor;
+        private Door doctor_thirdDoor;
+
+        private LightComponent doctor_firstDoorLight;
+        private LightComponent doctor_secondDoorLight;
+        private LightComponent doctor_thirdDoorLight;
+        private Door tutorial_submarineDoor;
+        private LightComponent tutorial_submarineDoorLight;
+
 
         public DoctorTutorial(XElement element) : base(element)
         {
@@ -35,6 +47,7 @@ namespace Barotrauma.Tutorials
             doctor = Character.Controlled;
 
             doctor_suppliesCabinet = Item.ItemList.Find(i => i.HasTag("doctor_suppliescabinet"))?.GetComponent<ItemContainer>();
+            doctor_medBayCabinet = Item.ItemList.Find(i => i.HasTag("doctor_medbaycabinet"))?.GetComponent<ItemContainer>();
 
             var patientHull1 = Hull.hullList.Find(h => h.RoomName == "Waiting room" && h.Submarine == doctor.Submarine);
             var patientHull2 = Hull.hullList.Find(h => h.RoomName == "Airlock" && h.Submarine == doctor.Submarine);
@@ -68,6 +81,19 @@ namespace Barotrauma.Tutorials
             subPatient3.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 20.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient3);
 
+            doctor_firstDoor = Item.ItemList.Find(i => i.HasTag("doctor_firstdoor")).GetComponent<Door>();
+            doctor_secondDoor = Item.ItemList.Find(i => i.HasTag("doctor_seconddoor")).GetComponent<Door>();
+            doctor_thirdDoor = Item.ItemList.Find(i => i.HasTag("doctor_thirddoor")).GetComponent<Door>();
+            doctor_firstDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_firstdoorlight")).GetComponent<LightComponent>();
+            doctor_secondDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_seconddoorlight")).GetComponent<LightComponent>();
+            doctor_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_thirddoorlight")).GetComponent<LightComponent>();
+            SetDoorAccess(doctor_firstDoor, doctor_firstDoorLight, false);
+            SetDoorAccess(doctor_secondDoor, doctor_secondDoorLight, false);
+            SetDoorAccess(doctor_thirdDoor, doctor_thirdDoorLight, false);
+            tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
+            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
+            SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
+
             foreach (var patient in subPatients)
             {
                 patient.CanSpeak = false;
@@ -85,21 +111,21 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(3.0f);
 
-            SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition);
-            // Room 1
-            while (shakeTimer > 0.0f) // Wake up, shake
-            {
-                shakeTimer -= 0.1f;
-                GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(0.1f);
-            }
-            yield return new WaitForSeconds(2.5f);
-            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
+            //SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition);
+            //// Room 1
+            //while (shakeTimer > 0.0f) // Wake up, shake
+            //{
+            //    shakeTimer -= 0.1f;
+            //    GameMain.GameScreen.Cam.Shake = shakeAmount;
+            //    yield return new WaitForSeconds(0.1f);
+            //}
+            //yield return new WaitForSeconds(2.5f);
+            //GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
 
-            yield return new WaitForSeconds(2.5f);
+            //yield return new WaitForSeconds(2.5f);
 
             doctor.SetStun(2.0f);
-            var explosion = new Explosion(range: 100, force: 20, damage: 0, structureDamage: 0);
+            var explosion = new Explosion(range: 100, force: 10, damage: 0, structureDamage: 0);
             explosion.DisableParticles();
             GameMain.GameScreen.Cam.Shake = shakeAmount;
             explosion.Explode(Character.Controlled.WorldPosition - Vector2.UnitX * 50, null);
@@ -109,11 +135,11 @@ namespace Barotrauma.Tutorials
 
             doctor.DamageLimb(
                 Character.Controlled.WorldPosition,
-                doctor.AnimController.GetLimb(LimbType.Head),
+                doctor.AnimController.GetLimb(LimbType.Torso),
                 new List<Affliction> { new Affliction(AfflictionPrefab.InternalDamage, 10.0f) },
                 stun: 3.0f, playSound: true, attackImpulse: 0.0f);
 
-            shakeTimer = 2.0f;
+            shakeTimer = 0.5f;
             while (shakeTimer > 0.0f) // Wake up, shake
             {
                 shakeTimer -= 0.1f;
@@ -157,6 +183,7 @@ namespace Barotrauma.Tutorials
 
             SetHighlight(doctor_suppliesCabinet.Item, false);
             RemoveCompletedObjective(segments[0]);
+
             yield return new WaitForSeconds(1.0f);
 
             // 2nd tutorial segment, treat self -------------------------------------------------------------------------
@@ -184,6 +211,7 @@ namespace Barotrauma.Tutorials
             }
 
             RemoveCompletedObjective(segments[2]);
+            SetDoorAccess(doctor_firstDoor, doctor_firstDoorLight, true);
 
             while (CharacterHealth.OpenHealthWindow != null)
             {
@@ -220,15 +248,39 @@ namespace Barotrauma.Tutorials
                 yield return null;
             }
 
+            SetDoorAccess(doctor_secondDoor, doctor_secondDoorLight, true);
+
             while (patient1.CurrentHull != medBay)
             {
                 yield return new WaitForSeconds(1.0f);
             }
             RemoveCompletedObjective(segments[3]);
+            SetHighlight(doctor_medBayCabinet.Item, true);
+            SetDoorAccess(doctor_thirdDoor, doctor_thirdDoorLight, true);
 
             yield return new WaitForSeconds(2.0f);
 
             TriggerTutorialSegment(4); // treat burns
+
+            do
+            {
+                for (int i = 0; i < doctor_medBayCabinet.Inventory.Items.Length; i++)
+                {
+                    if (doctor_medBayCabinet.Inventory.Items[i] != null)
+                    {
+                        HighlightInventorySlot(doctor_medBayCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+                if (doctor.SelectedConstruction == doctor_medBayCabinet.Item)
+                {
+                    for (int i = 0; i < doctor.Inventory.slots.Length; i++)
+                    {
+                        if (doctor.Inventory.Items[i] == null) HighlightInventorySlot(doctor.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+                yield return null;
+            } while (doctor.Inventory.FindItemByIdentifier("antibleeding1") == null); // Wait until looted
+            SetHighlight(doctor_medBayCabinet.Item, false);
 
             while (patient1.CharacterHealth.GetAfflictionStrength("burn") > 0.01f)
             {
