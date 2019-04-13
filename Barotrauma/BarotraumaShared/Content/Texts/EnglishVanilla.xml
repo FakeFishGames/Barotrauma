@@ -2776,6 +2776,60 @@
   <Tutorial.TryAgain>Do you want to try again?</Tutorial.TryAgain>
   <Tutorial.Radio.Speaker>Captain Huskinson</Tutorial.Radio.Speaker>
   <Tutorial.Radio.Watchman>Watchman</Tutorial.Radio.Watchman>
+  <Tutorial.Course>Training Course</Tutorial.Course>
+  <Tutorial.CourseComplete>Training Course complete!</Tutorial.CourseComplete>
+  <Tutorial.StartButton>Let's go!</Tutorial.StartButton>
+  <Tutorial.MechanicTraining>Mechanic training</Tutorial.MechanicTraining>
+  <Tutorial.EngineerTraining>Engineer training</Tutorial.EngineerTraining>
+  <Tutorial.SecurityOfficerTraining>Security officer training</Tutorial.SecurityOfficerTraining>
+  <Tutorial.MedicalDoctorTraining>Medical doctor training</Tutorial.MedicalDoctorTraining>
+  <Tutorial.CaptainTraining>Captain training</Tutorial.CaptainTraining>
+  
+  <!-- Job descriptions -->
+  <Tutorial.MechanicTitle>Mechanic - Him, glue and duct tape, are the only things between you and certain death.</Tutorial.MechanicTitle>
+  <Tutorial.MechanicDescription>When the plan goes as planned and the gear works is as probable as human race leaving this shithole. There are no breaks and no rest for you as everything that can break down, will break down. And if nothing’s broken, then its maintenance, maintenance, maintenance. Getting to the next destination is all that matters, and you’re the guy that delivers. There’s no “thank you”s or respect, just snickering and contempt from your "fellow crew members" but that’s ok, this is YOUR survival vessel, and if any of them make it too, well... whoop dee doo for them.</Tutorial.MechanicDescription>
+  <Tutorial.MechanicResponsibilities>Responsibilities\n-Maintenance of machinery\n-Repairing leaks</Tutorial.MechanicResponsibilities>
+
+  <Tutorial.EngineerTitle>Engineer - The one who harnesses the power of nature.</Tutorial.EngineerTitle>
+  <Tutorial.EngineerDescription>Power and oxygen, its like that. Without, the ship don’t move and the longue won’t breath. Beyond the fancy talk and costume play, you are the guy who really runs the ship, get it? Trust in the laws of physics and think clear. Also, keep your eye on that damn toy-tinkering wanna-be engineer mechanic and whatever you do, don’t bite into the psycho-babble of the medic, he’s so deep in his softie inner world he’s practically a woman. Captain and security are harmless, and way below your intelligence. Obviously.</Tutorial.EngineerDescription>
+  <Tutorial.EngineerResponsibilities>Responsibilities\n-Electrical item maintenance\n-Operating the reactor</Tutorial.EngineerResponsibilities>
+
+  <Tutorial.SecurityOfficerTitle>Security Officer - The backbone of violence.</Tutorial.SecurityOfficerTitle>
+  <Tutorial.SecurityOfficerDescription>It is said that pressure brings out the worst in people. Not everybody has your moral strength, hell, most of them are so crooked that it’s questionable if they even should be allowed to live. Channel the crew’s anger towards the creatures outside, but never fool yourself into trusting them. Keep the nukes ready, handcuffs available and every now and then put someone into the brig so they know who’s in charge!</Tutorial.SecurityOfficerDescription>
+  <Tutorial.SecurityOfficerResponsibilities>Responsibilities\n-Keeping the order\n-Repelling intruders</Tutorial.SecurityOfficerResponsibilities>
+
+  <Tutorial.MedicalDoctorTitle>Medical Doctor - Maintaining the key resource: the people</Tutorial.MedicalDoctorTitle>
+  <Tutorial.MedicalDoctorDescription>Guns and engines and reactors don't keep the ship running, people do. It’s up to you to keep the gunner alive to man the guns and captain alive to steer the ship. And remember, your job goes well beyond the physical. We live crammed into tight spaces, under ice, in the sea. When the lights go out and your "buddies" go to sleep, all kinds of dark shit crawls into their mind. Keep them alive and sane, or put them down like dogs, it’s up to you.</Tutorial.MedicalDoctorDescription>
+  <Tutorial.MedicalDoctorResponsibilities>Responsibilities\n-First aid\n-Poisons and antidotes</Tutorial.MedicalDoctorResponsibilities>
+
+  <Tutorial.CaptainTitle>Captain - Naval visionary, seafarer, a genius. Possibly.</Tutorial.CaptainTitle>
+  <Tutorial.CaptainDescription>Captain Ahab once said "Hell is an idea first born on an undigested apple-dumpling" - do you know what that means? No. Does the crew think you are a mysterious genius? Hell yeah. This job is at least as much appearing to know what to do than knowing what to do. You are the map and the compass, the guy with the big picture. Navigate and do the tough calls. And remember, you’re just a couple of steps away from being the mayor of an outpost and if a couple fellows need to die for that - so be it!</Tutorial.CaptainDescription>
+  <Tutorial.CaptainResponsibilities>Responsibilities\n-Steering the ship\n-Delegating</Tutorial.CaptainResponsibilities>
+
+  <!-- Tutorial extras -->
+  <Tutorial.AirlockTitle>Airlock</Tutorial.AirlockTitle>
+  <Tutorial.AirlockDescription>Every submarine should be equipped with a secure airlock where the crew can exit the sub safely and without flooding the sub too much.\n\nTo safely exit the submarine, equip a diving suit and other necessary items (usually a handheld sonar, weapons and extra oxygen tank or two). Then make your way to the airlock. Be sure to close all the doors behind you to stop the water’s flow before too much of it gets inside.\n\nWhen coming back inside, use water pumps to drain all of the water before going deeper into the submarine. It is also helpful to return all of the equipment back to their proper place and refill used oxygen tanks at the oxygen generator.</Tutorial.AirlockDescription>
+
+  <Tutorial.RailgunTitle>Rail gun</Tutorial.RailgunTitle>
+  <Tutorial.RailgunDescription>The rail gun works like a coil gun, except it fires big shells that can be upgraded with explosives.\n\nRail gun loaders are loaded with single railgun shells instead of boxes of ammunition. Otherwise operating them is the same: interact with the periscope to aim with the turret, then press [InputType.Select] to fire. Press [InputType.Deselect] to stop aiming.</Tutorial.RailgunDescription>
+
+  <Tutorial.SyringegunTitle>Syringe gun</Tutorial.SyringegunTitle>
+  <Tutorial.SyringegunDescription> A ranged weapon of choice for medics, the syringe gun uses medicine as ammunition. This allows for administering cures from afar. Be aware: medicine fired from long range doesn’t have the effectiveness one used in medical interface.\n\nA tactical choice in combat would be to load the syringe gun with poison and fire it at enemies. Aim the syringe gun the same way you would other long-range weapons: [InputType.Aim] to aim, [InputType.Select] to fire.</Tutorial.SyringegunDescription>
+
+  <Tutorial.PlasmaCutterTitle>Plasma cutter</Tutorial.PlasmaCutterTitle>
+  <Tutorial.PlasmaCutterDescription>Plasma cutter is a device that is used to cut through walls and doors. It is used like the welding tool, [InputType.Aim] to aim, [InputType.Select] to fire.\n\nWhile the plasma cutter is primarily a tool, it does inflict burns on anyone that gets in the way, which makes it a handy makeshift weapon.</Tutorial.PlasmaCutterDescription>
+
+  <Tutorial.CrowbarTitle>Crowbar</Tutorial.CrowbarTitle>
+  <Tutorial.CrowbarDescription>A heavy instrument that can be used to force open doors. Handy when someone has been tampering with door wiring or when you need to get to rooms you’re not allowed in.\n\nAlso, for desperate measures, a blunt weapon.</Tutorial.CrowbarDescription>
+
+  <Tutorial.MineralsTitle>Minerals</Tutorial.MineralsTitle>
+  <Tutorial.MineralsDescription>The basic materials for crafting can be bought, deconstructed or found in the world.\n\nMinerals are spawned in the cave and ice walls and they can be cut out using the plasma cutter and then picked up. Raw minerals can be deconstructed to create craftable elements.</Tutorial.MineralsDescription>
+
+  <Tutorial.PsychosisTitle>Psychosis</Tutorial.PsychosisTitle>
+  <Tutorial.PsychosisDescription>When in contact with certain performance enhancing drugs or under some extraterrestrial influence, players may be afflicted with psychosis. When under psychosis, patient may experience visual and auditory hallucinations and phantom pains.\n\nPsychosis may be cured using Haloperidol.</Tutorial.PsychosisDescription>
+
+  <Tutorial.OpiatesTitle>Opiate addiction and withdrawals</Tutorial.OpiatesTitle>
+  <Tutorial.OpiatesDescription>Overuse of pain medication causes addiction, and in time, withdrawal. Withdrawal symptoms can be by feeding the addiction, but to truly be rid of the effects, one must either endure some time without feeding the habit or by using Naloxone.</Tutorial.OpiatesDescription>
   
   <!-- Mechanic Tutorial -->  
   <!-- Radio -->
@@ -3188,5 +3242,7 @@
   <DontShowNotificationAgain>Don't show this again</DontShowNotificationAgain>
 
   <Video>Video</Video>
+  
+  
 
 </infotexts>
