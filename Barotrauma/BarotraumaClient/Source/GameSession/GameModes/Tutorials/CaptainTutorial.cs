@@ -50,6 +50,17 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Watchman");
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
 
+            var revolver = captain.Inventory.FindItemByIdentifier("revolver");
+            captain.Inventory.RemoveItem(revolver);
+
+            var captainscap = captain.Inventory.FindItemByIdentifier("captainscap");
+            captainscap.Unequip(captain);
+            captain.Inventory.RemoveItem(captainscap);
+
+            var captainsuniform = captain.Inventory.FindItemByIdentifier("captainsuniform");
+            captainsuniform.Unequip(captain);
+            captain.Inventory.RemoveItem(captainsuniform);
+
             // Room 2
             captain_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("captain_equipmentobjectivesensor")).GetComponent<MotionSensor>();
             captain_equipmentCabinet = Item.ItemList.Find(i => i.HasTag("captain_equipmentcabinet")).GetComponent<ItemContainer>();
@@ -59,12 +70,13 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(captain_firstDoor, captain_firstDoorLight, false);
 
             // Room 3
+            captain_medicObjectiveSensor = Item.ItemList.Find(i => i.HasTag("captain_medicobjectivesensor")).GetComponent<MotionSensor>();
             captain_medicSpawnPos = Item.ItemList.Find(i => i.HasTag("captain_medicspawnpos")).WorldPosition;
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
 
             var medicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "medic"));
-            captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medic");
+            captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
             captain_medic.GiveJobItems(null);
             captain_medic.CanSpeak = captain_medic.AIController.Enabled = false;
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
@@ -108,6 +120,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_equipmentCabinet.Item, true);
             do { yield return null; } while (!captain_equipmentCabinet.Inventory.IsEmpty());
             SetHighlight(captain_equipmentCabinet.Item, false);
+            captain_medic.AIController.Enabled = true;
             SetDoorAccess(captain_firstDoor, captain_firstDoorLight, true);
 
             // Room 3
@@ -121,12 +134,13 @@ namespace Barotrauma.Tutorials
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_medic, "follow", highlightColor);
                 yield return null;
             }
-            while (captain_medic.CurrentOrder == null || captain_medic.CurrentOrder.AITag != "follow");
+            while (!HasOrder(captain_medic, "follow"));
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
             RemoveCompletedObjective(segments[0]);
 
             // Submarine
             do { yield return null; } while (!captain_enteredSubmarineSensor.MotionDetected);
+            captain_mechanic.AIController.Enabled = captain_security.AIController.Enabled = captain_engineer.AIController.Enabled = true;
             TriggerTutorialSegment(1);
             GameMain.GameSession.CrewManager.AddCharacter(captain_mechanic);
             do
@@ -134,7 +148,7 @@ namespace Barotrauma.Tutorials
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor);
                 yield return null;
             }
-            while (captain_mechanic.CurrentOrder == null || captain_mechanic.CurrentOrder.AITag != "repairsystems");
+            while (!HasOrder(captain_mechanic, "repairsystems"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(2);
@@ -144,7 +158,7 @@ namespace Barotrauma.Tutorials
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_security, "operateweapons", highlightColor);
                 yield return null;
             }
-            while (captain_security.CurrentOrder == null || captain_security.CurrentOrder.AITag != "operateweapons");
+            while (!HasOrder(captain_security, "operateweapons"));
             RemoveCompletedObjective(segments[2]);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(3);
@@ -154,17 +168,22 @@ namespace Barotrauma.Tutorials
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_engineer, "operatereactor", highlightColor);
                 yield return null;
             }
-            while (captain_engineer.CurrentOrder == null || captain_engineer.CurrentOrder.AITag != "operatereactor");
+            while (!HasOrder(captain_engineer, "operatereactor", "powerup"));
             RemoveCompletedObjective(segments[3]);
             do { yield return null; } while (!tutorial_submarineReactor.IsActive); // Wait until reactor on      
             TriggerTutorialSegment(4);
             SetHighlight(captain_navConsole.Item, true);
             SetHighlight(captain_sonar.Item, true);
-            do { yield return null; } while (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 4000f);
+            do { yield return null; } while (Submarine.MainSub.DockedTo.Count > 0);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(5);
+            do { yield return null; } while (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 4000f);
+            RemoveCompletedObjective(segments[5]);
+            yield return new WaitForSeconds(2f);
+            TriggerTutorialSegment(6);
             do { yield return null; } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
+            RemoveCompletedObjective(segments[6]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete"), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);

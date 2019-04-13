@@ -148,6 +148,24 @@ namespace Barotrauma.Tutorials
             return WayPoint.GetRandom(spawnPointType, charInfo.Job, spawnSub);
         }
 
+        protected bool HasOrder(Character character, string aiTag, string option = null)
+        {
+            if (character.CurrentOrder?.AITag == aiTag)
+            {
+                if (option == null)
+                {
+                    return true;
+                }
+                else
+                {
+                    HumanAIController humanAI = character.AIController as HumanAIController;
+                    return humanAI.CurrentOrderOption == option;
+                }
+            }
+
+            return false;
+        }
+
         protected void SetHighlight(Item item, bool state)
         {
             if (item.ExternalHighlight == state) return;
