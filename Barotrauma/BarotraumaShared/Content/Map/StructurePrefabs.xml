@@ -1,5 +1,188 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
+  <!--LABELS START-->
+  <label name="label Icon Medical " identifier="labeliconmedical" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,0,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Steering " identifier="labeliconsteering" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,0,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Diving " identifier="labelicondiving" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="512,0,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Reactor" identifier="labeliconreactor" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="768,0,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Exit" identifier="labeliconexit" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,256,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Engine" identifier="labeliconengine" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,256,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Weapons" identifier="labeliconweapons" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,256,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Ballast" identifier="labeliconballast" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="512,256,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Docking" identifier="labelicondocking" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,512,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon cargo" identifier="labeliconcargo" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,512,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Electricity" identifier="labeliconelectricity" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="512,512,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Engineering" identifier="labeliconengineering" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="768,512,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Security" identifier="labeliconsecurity" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,768,256,256" depth="0.85" />
+  </label>
+  <label name="label Icon Airlock" identifier="labeliconairlock" scale="0.5">
+    <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,768,256,256" depth="0.85" />
+  </label>
+  <label name="label Letter A" identifier="labellettera" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,0,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter B" identifier="labelletterb" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,0,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter C" identifier="labelletterc" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,0,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter D" identifier="labelletterd" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,0,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter E" identifier="labellettere" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,0,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter F" identifier="labelletterf" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,0,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter G" identifier="labelletterg" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,0,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter H" identifier="labelletterh" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="897,-1,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter I" identifier="labelletteri" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,128,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter J" identifier="labelletterj" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,128,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter K" identifier="labelletterk" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,128,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter L" identifier="labelletterl" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,128,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter M" identifier="labelletterm" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,128,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter N" identifier="labellettern" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,128,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter O" identifier="labellettero" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,128,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter P" identifier="labelletterp" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="905,126,109,133" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter Q" identifier="labelletterq" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,256,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter R" identifier="labelletterr" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,256,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter S" identifier="labelletters" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,256,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter T" identifier="labellettert" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,256,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter U" identifier="labelletteru" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,256,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter V" identifier="labelletterv" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,256,122,126" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter W" identifier="labelletterw" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="765,256,133,125" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter X" identifier="labelletterx" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="900,262,122,123" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter Y" identifier="labellettery" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Letter Z" identifier="labelletterz" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 1" identifier="labelnumber1" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 2" identifier="labelnumber2" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 3" identifier="labelnumber3" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 4" identifier="labelnumber4" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 5" identifier="labelnumber5" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 6" identifier="labelnumber6" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="869,384,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 7" identifier="labelnumber7" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,512,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 8" identifier="labelnumber8" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,512,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 9" identifier="labelnumber9" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,511,121,133" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="label Number 0" identifier="labelnumber0" scale="1">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="383,511,122,133" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <!--OLD LABELS-->
+  <doorlabel identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/structures2.png" sourcerect="2,263,76,132" depth="0.85" canflipx="false" />
+  </doorlabel>
+  <engineeringLabel identifier="engineeringLabel" width="153">
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.97" canflipx="false" />
+  </engineeringLabel>
+  <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.97" canflipx="false" />
+  </commandLabel>
+  <airlockLabel name="Airlock Label" identifier="airlockLabel" width="99" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.97" canflipx="false" />
+  </airlockLabel>
+  <cabinsLabel name="Cabins Label" identifier="cabinsLabel" width="83" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.97" canflipx="false" />
+  </cabinsLabel>
+  <medicalLabel name="Medical Label" identifier="medicalLabel" width="110" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.97" canflipx="false" />
+  </medicalLabel>
+  <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.97" />
+  </arrowUp>
+  <arrowDown name="Arrow Down" identifier="arrowDown" width="16" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth="0.97" />
+  </arrowDown>
+  <arrowLeft name="Arrow Left" identifier="arrowLeft" width="16" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth="0.97" />
+  </arrowLeft>
+  <arrowRight name="Arrow Right" identifier="arrowRight" width="16" height="16">
+    <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth="0.97" />
+  </arrowRight>
+  <!--LABELS END-->
   <!--  FINS START-->
   <fin name="Fin S 01" identifier="fins01" description="Fin construction piece" body="true" health="200">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,0,192,192" depth="0.5" origin="0.5,0.5" />
@@ -726,36 +909,6 @@
   <smallverticalback2 identifier="smallverticalback2" allowattachitems="true" description="A decorative structure with no collision detection" width="32" height="128" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="160,96,32,352" depth="0.9" />
   </smallverticalback2>
-  <doorlabel identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5">
-    <sprite texture="Content/Map/structures2.png" sourcerect="2,263,76,132" depth="0.85" canflipx="false" />
-  </doorlabel>
-  <engineeringLabel identifier="engineeringLabel" width="153">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.97" canflipx="false" />
-  </engineeringLabel>
-  <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.97" canflipx="false" />
-  </commandLabel>
-  <airlockLabel name="Airlock Label" identifier="airlockLabel" width="99" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.97" canflipx="false" />
-  </airlockLabel>
-  <cabinsLabel name="Cabins Label" identifier="cabinsLabel" width="83" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.97" canflipx="false" />
-  </cabinsLabel>
-  <medicalLabel name="Medical Label" identifier="medicalLabel" width="110" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.97" canflipx="false" />
-  </medicalLabel>
-  <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.97" />
-  </arrowUp>
-  <arrowDown name="Arrow Down" identifier="arrowDown" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth="0.97" />
-  </arrowDown>
-  <arrowLeft name="Arrow Left" identifier="arrowLeft" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth="0.97" />
-  </arrowLeft>
-  <arrowRight name="Arrow Right" identifier="arrowRight" width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth="0.97" />
-  </arrowRight>
   <leftwall name="Basic Wall Left" identifier="leftwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="55">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth="0.05" fliphorizontal="true" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="989,214,32,576" depth="0.85" fliphorizontal="true" />
