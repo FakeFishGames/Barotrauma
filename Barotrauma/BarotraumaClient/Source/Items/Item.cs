@@ -577,8 +577,13 @@ namespace Barotrauma
                 }
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
-                
-                if (inGame) continue;
+
+                if (inGame)
+                {
+                    ic.CreateEditingHUD(componentEditor);
+                    componentEditor.Recalculate();
+                    continue;
+                }
 
                 foreach (var kvp in ic.requiredItems)
                 {
@@ -611,6 +616,9 @@ namespace Barotrauma
                         };
                     }
                 }
+
+                ic.CreateEditingHUD(componentEditor);
+                componentEditor.Recalculate();
             }
 
             PositionEditingHUD();
