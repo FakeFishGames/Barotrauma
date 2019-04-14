@@ -12,7 +12,7 @@
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="168,0,114,124" origin="0.4761672,0.4675852" depth="0.1" />
     <attack context="Water" cooldown="1" afterattack="Pursue" range="100" damagerange="100" duration="0.25" structuredamage="5" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="0" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False">
       <Affliction identifier="internaldamage" strength="10" />
-      <Affliction identifier="bleeding" strength="50" />
+      <Affliction identifier="bleeding" strength="25" />
       <Affliction identifier="stun" strength="0.1" />
     </attack>
   </limb>
