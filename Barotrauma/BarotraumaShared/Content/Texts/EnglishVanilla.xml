@@ -1089,6 +1089,130 @@
   <EntityName.sshella40>Shuttle Shell A40</EntityName.sshella40>
   <EntityDescription.sshella40>Shuttle wall</EntityDescription.sshella40>
   <EntityName.sshella41>Shuttle Shell A41</EntityName.sshella41>
+  <EntityName.fins01>Fin S 01</EntityName.fins01>
+  <EntityDescription.fins01>Fin construction piece</EntityDescription.fins01>
+  <EntityName.fins02>Fin S 02</EntityName.fins02>
+  <EntityDescription.fins02>Fin construction piece</EntityDescription.fins02>
+  <EntityName.fins03>Fin S 03</EntityName.fins03>
+  <EntityDescription.fins03>Fin construction piece</EntityDescription.fins03>
+  <EntityName.fins04>Fin S 04</EntityName.fins04>
+  <EntityDescription.fins04>Fin construction piece</EntityDescription.fins04>
+  <EntityName.fins05>Fin S 05</EntityName.fins05>
+  <EntityDescription.fins05>Fin construction piece</EntityDescription.fins05>
+  <EntityName.fins06>Fin S 06</EntityName.fins06>
+  <EntityDescription.fins06>Fin construction piece</EntityDescription.fins06>
+  <EntityName.fins07>Fin S 07</EntityName.fins07>
+  <EntityDescription.fins07>Fin construction piece</EntityDescription.fins07>
+  <EntityName.fins08>Fin S 08</EntityName.fins08>
+  <EntityDescription.fins08>Fin construction piece</EntityDescription.fins08>
+  <EntityName.fins09>Fin S 09</EntityName.fins09>
+  <EntityDescription.fins09>Fin construction piece</EntityDescription.fins09>
+  <EntityName.fins10>Fin S 10</EntityName.fins10>
+  <EntityDescription.fins10>Fin construction piece</EntityDescription.fins10>
+  <EntityName.fins11>Fin S 11</EntityName.fins11>
+  <EntityDescription.fins11>Fin construction piece</EntityDescription.fins11>
+  <EntityName.fins12>Fin S 12</EntityName.fins12>
+  <EntityDescription.fins12>Fin construction piece</EntityDescription.fins12>
+  <EntityName.fins13>Fin S 13</EntityName.fins13>
+  <EntityDescription.fins13>Fin construction piece</EntityDescription.fins13>
+  <EntityName.fins14>Fin S 14</EntityName.fins14>
+  <EntityDescription.fins14>Fin construction piece</EntityDescription.fins14>
+  <EntityName.fins15>Fin S 15</EntityName.fins15>
+  <EntityDescription.fins15>Fin construction piece</EntityDescription.fins15>
+  <EntityName.fins16>Fin S 16</EntityName.fins16>
+  <EntityDescription.fins16>Fin construction piece</EntityDescription.fins16>
+  <EntityName.fins17>Fin S 17</EntityName.fins17>
+  <EntityDescription.fins17>Fin construction piece</EntityDescription.fins17>
+  <EntityName.fins18>Fin S 18</EntityName.fins18>
+  <EntityDescription.fins18>Fin construction piece</EntityDescription.fins18>
+  <EntityName.fins19>Fin S 19</EntityName.fins19>
+  <EntityDescription.fins19>Fin construction piece</EntityDescription.fins19>
+  <EntityName.fins20>Fin S 20</EntityName.fins20>
+  <EntityDescription.fins20>Fin construction piece</EntityDescription.fins20>
+  <EntityName.finm01>Fin M 01</EntityName.finm01>
+  <EntityDescription.finm01>Fin construction piece</EntityDescription.finm01>
+  <EntityName.finm02>Fin M 02</EntityName.finm02>
+  <EntityDescription.finm02>Fin construction piece</EntityDescription.finm02>
+  <EntityName.finm03>Fin M 03</EntityName.finm03>
+  <EntityDescription.finm03>Fin construction piece</EntityDescription.finm03>
+  <EntityName.finm04>Fin M 04</EntityName.finm04>
+  <EntityDescription.finm04>Fin construction piece</EntityDescription.finm04>
+  <EntityName.finm05>Fin M 05</EntityName.finm05>
+  <EntityDescription.finm05>Fin construction piece</EntityDescription.finm05>
+  <EntityName.finm06>Fin M 06</EntityName.finm06>
+  <EntityDescription.finm06>Fin construction piece</EntityDescription.finm06>
+  <EntityName.finm07>Fin M 07</EntityName.finm07>
+  <EntityDescription.finm07>Fin construction piece</EntityDescription.finm07>
+  <EntityName.finm08>Fin M 08</EntityName.finm08>
+  <EntityDescription.finm08>Fin construction piece</EntityDescription.finm08>
+  <EntityName.finm09>Fin M 09</EntityName.finm09>
+  <EntityDescription.finm09>Fin construction piece</EntityDescription.finm09>
+  <EntityName.finm10>Fin M 10</EntityName.finm10>
+  <EntityDescription.finm10>Fin construction piece</EntityDescription.finm10>
+  <EntityName.finm11>Fin M 11</EntityName.finm11>
+  <EntityDescription.finm11>Fin construction piece</EntityDescription.finm11>
+  <EntityName.finm12>Fin M 12</EntityName.finm12>
+  <EntityDescription.finm12>Fin construction piece</EntityDescription.finm12>
+  <EntityName.finm13>Fin M 13</EntityName.finm13>
+  <EntityDescription.finm13>Fin construction piece</EntityDescription.finm13>
+  <EntityName.finm14>Fin M 14</EntityName.finm14>
+  <EntityDescription.finm14>Fin construction piece</EntityDescription.finm14>
+  <EntityName.finm15>Fin M 15</EntityName.finm15>
+  <EntityDescription.finm15>Fin construction piece</EntityDescription.finm15>
+  <EntityName.finm16>Fin M 16</EntityName.finm16>
+  <EntityDescription.finm16>Fin construction piece</EntityDescription.finm16>
+  <EntityName.finm17>Fin M 17</EntityName.finm17>
+  <EntityDescription.finm17>Fin construction piece</EntityDescription.finm17>
+  <EntityName.finm18>Fin M 18</EntityName.finm18>
+  <EntityDescription.finm18>Fin construction piece</EntityDescription.finm18>
+  <EntityName.finm19>Fin M 19</EntityName.finm19>
+  <EntityDescription.finm19>Fin construction piece</EntityDescription.finm19>
+  <EntityName.finm20>Fin M 20</EntityName.finm20>
+  <EntityDescription.finm20>Fin construction piece</EntityDescription.finm20>
+  <EntityName.finl01>Fin L 01</EntityName.finl01>
+  <EntityDescription.finl01>Fin construction piece</EntityDescription.finl01>
+  <EntityName.finl02>Fin L 02</EntityName.finl02>
+  <EntityDescription.finl02>Fin construction piece</EntityDescription.finl02>
+  <EntityName.finl03>Fin L 03</EntityName.finl03>
+  <EntityDescription.finl03>Fin construction piece</EntityDescription.finl03>
+  <EntityName.finl04>Fin L 04</EntityName.finl04>
+  <EntityDescription.finl04>Fin construction piece</EntityDescription.finl04>
+  <EntityName.finl05>Fin L 05</EntityName.finl05>
+  <EntityDescription.finl05>Fin construction piece</EntityDescription.finl05>
+  <EntityName.finl06>Fin L 06</EntityName.finl06>
+  <EntityDescription.finl06>Fin construction piece</EntityDescription.finl06>
+  <EntityName.finl07>Fin L 07</EntityName.finl07>
+  <EntityDescription.finl07>Fin construction piece</EntityDescription.finl07>
+  <EntityName.finl08>Fin L 08</EntityName.finl08>
+  <EntityDescription.finl08>Fin construction piece</EntityDescription.finl08>
+  <EntityName.finl09>Fin L 09</EntityName.finl09>
+  <EntityDescription.finl09>Fin construction piece</EntityDescription.finl09>
+  <EntityName.finl10>Fin L 10</EntityName.finl10>
+  <EntityDescription.finl10>Fin construction piece</EntityDescription.finl10>
+  <EntityName.finl11>Fin L 11</EntityName.finl11>
+  <EntityDescription.finl11>Fin construction piece</EntityDescription.finl11>
+  <EntityName.finl12>Fin L 12</EntityName.finl12>
+  <EntityDescription.finl12>Fin construction piece</EntityDescription.finl12>
+  <EntityName.finl13>Fin L 13</EntityName.finl13>
+  <EntityDescription.finl13>Fin construction piece</EntityDescription.finl13>
+  <EntityName.finl14>Fin L 14</EntityName.finl14>
+  <EntityDescription.finl14>Fin construction piece</EntityDescription.finl14>
+  <EntityName.finl15>Fin L 15</EntityName.finl15>
+  <EntityDescription.finl15>Fin construction piece</EntityDescription.finl15>
+  <EntityName.extA_Tail>Tail Fin Old A</EntityName.extA_Tail>
+  <EntityDescription.extA_Tail>Submarine tail</EntityDescription.extA_Tail>
+  <EntityName.tailfina>Tail Fin A</EntityName.tailfina>
+  <EntityDescription.tailfina>Submarine tail</EntityDescription.tailfina>
+  <EntityName.tailfinb>Tail Fin B</EntityName.tailfinb>
+  <EntityDescription.tailfinb>Submarine tail</EntityDescription.tailfinb>
+  <EntityName.tailfinc>Tail Fin C</EntityName.tailfinc>
+  <EntityDescription.tailfinc>Submarine tail</EntityDescription.tailfinc>
+  <EntityName.tailfind>Tail Fin D</EntityName.tailfind>
+  <EntityDescription.tailfind>Submarine tail</EntityDescription.tailfind>
+  <EntityName.extA_Front>Submarine front A</EntityName.extA_Front>
+  <EntityDescription.extA_Front>Front</EntityDescription.extA_Front>
+  <EntityName.subfrontb>Submarine front B</EntityName.subfrontb>
+  <EntityDescription.subfrontb>Front</EntityDescription.subfrontb>
   <EntityDescription.sshella41>Shuttle wall</EntityDescription.sshella41>
   <EntityName.sshellalightsa>Shuttle Lights A</EntityName.sshellalightsa>
   <EntityDescription.sshellalightsa>Shuttle wall</EntityDescription.sshellalightsa>
@@ -1444,6 +1568,17 @@
   <EntityDescription.switch>Produces a constant signal which can be used to change the state of equipment and doors</EntityDescription.switch>
   <EntityName.lamp>Lamp</EntityName.lamp>
   <EntityDescription.lamp>Wall mounted lighting</EntityDescription.lamp>
+  <EntityName.lightfluorescentm01>Light Fluorescent M1</EntityName.lightfluorescentm01>
+  <EntityName.lightfluorescentm02>Light Fluorescent M2</EntityName.lightfluorescentm02>
+  <EntityName.lightfluorescentm03>Light Fluorescent M3</EntityName.lightfluorescentm03>
+  <EntityName.lightfluorescentm04>Light Fluorescent M4</EntityName.lightfluorescentm04>
+  <EntityName.lightfluorescentl01>Light Fluorescent L1</EntityName.lightfluorescentl01>
+  <EntityName.lightfluorescentl02>Light Fluorescent L2</EntityName.lightfluorescentl02>
+  <EntityName.lighthalogenmm01>Light Halogen M1</EntityName.lighthalogenmm01>
+  <EntityName.lighthalogenmm02>Light Halogen M2</EntityName.lighthalogenmm02>
+  <EntityName.lighthalogenmm03>Light Halogen M3</EntityName.lighthalogenmm03>
+  <EntityName.lighthalogenm04>Light Halogen M4</EntityName.lighthalogenm04>
+  <EntityName.lightleds01>Light Led S1</EntityName.lightleds01>
   <EntityName.emergencylight>Emergency Light</EntityName.emergencylight>
   <EntityDescription.emergencylight>Wall mounted lighting, requires no electrical input</EntityDescription.emergencylight>
   <EntityName.wire>Wire</EntityName.wire>
@@ -2037,23 +2172,9 @@
   <CharacterEditor.MultipleItemsWithSameHierarchy>Multiple items with the same hierarchy [hierarchy] found ([name]). Cannot continue.</CharacterEditor.MultipleItemsWithSameHierarchy>
   <CharacterEditor.CannotEditVanillaCharacters>Cannot edit the characters defined in the Vanilla content package!</CharacterEditor.CannotEditVanillaCharacters>
 
-  <!-- Rooms -->
-  <ReactorRoom>Reactor room</ReactorRoom>
-  <EngineRoom>Engine room</EngineRoom>
-  <CommandRoom>Command room</CommandRoom>
-  <Airlock>Airlock</Airlock>
-  <Ballast>Ballast</Ballast>
-  <SubTopLeft>Upper aft side</SubTopLeft>
-  <SubTopCenter>Upper mid</SubTopCenter>
-  <SubTopRight>Upper fore side</SubTopRight>
-  <SubCenterLeft>Mid aft side</SubCenterLeft>
-  <SubCenter>Amidships</SubCenter>
-  <SubCenterRight>Mid fore side</SubCenterRight>
-  <SubBottomLeft>Lower aft side</SubBottomLeft>
-  <SubBottomCenter>Lower mid</SubBottomCenter>
-  <SubBottomRight>Lower fore side</SubBottomRight>
-  <SubDirOClock>[dir] o'clock</SubDirOClock>
-
+  <!-- Rooms -->  
+  <!-- NOTE: all old room tags have been removed, new ones start with "RoomName." -->
+  
   <!-- Sub description -->
   <Dimensions>Dimensions</Dimensions>
   <DimensionsFormat>[width]x[height] m</DimensionsFormat>
@@ -2813,16 +2934,16 @@
   <Tutorial.AirlockDescription>Every submarine should be equipped with a secure airlock where the crew can exit the sub safely and without flooding the sub too much.\n\nTo safely exit the submarine, equip a diving suit and other necessary items (usually a handheld sonar, weapons and extra oxygen tank or two). Then make your way to the airlock. Be sure to close all the doors behind you to stop the water’s flow before too much of it gets inside.\n\nWhen coming back inside, use water pumps to drain all of the water before going deeper into the submarine. It is also helpful to return all of the equipment back to their proper place and refill used oxygen tanks at the oxygen generator.</Tutorial.AirlockDescription>
 
   <Tutorial.RailgunTitle>Rail gun</Tutorial.RailgunTitle>
-  <Tutorial.RailgunDescription>The rail gun works like a coil gun, except it fires big shells that can be upgraded with explosives.\n\nRail gun loaders are loaded with single railgun shells instead of boxes of ammunition. Otherwise operating them is the same: interact with the periscope to aim with the turret, then press [InputType.Select] to fire. Press [InputType.Deselect] to stop aiming.</Tutorial.RailgunDescription>
+  <Tutorial.RailgunDescription>The rail gun works like a coil gun, except it fires big shells that can be upgraded with explosives.\n\nRail gun loaders are loaded with single railgun shells instead of boxes of ammunition. Otherwise operating them is the same: interact with the periscope to aim with the turret, then press [InputType.Shoot] to fire. Press [InputType.Deselect] to stop aiming.</Tutorial.RailgunDescription>
 
   <Tutorial.SyringegunTitle>Syringe gun</Tutorial.SyringegunTitle>
-  <Tutorial.SyringegunDescription> A ranged weapon of choice for medics, the syringe gun uses medicine as ammunition. This allows for administering cures from afar. Be aware: medicine fired from long range doesn’t have the effectiveness one used in medical interface.\n\nA tactical choice in combat would be to load the syringe gun with poison and fire it at enemies. Aim the syringe gun the same way you would other long-range weapons: [InputType.Aim] to aim, [InputType.Select] to fire.</Tutorial.SyringegunDescription>
+  <Tutorial.SyringegunDescription> A ranged weapon of choice for medics, the syringe gun uses medicine as ammunition. This allows for administering cures from afar. Be aware: medicine fired from long range doesn’t have the effectiveness one used in medical interface.\n\nA tactical choice in combat would be to load the syringe gun with poison and fire it at enemies. Aim the syringe gun the same way you would other long-range weapons: [InputType.Aim] to aim, [InputType.Shoot] to fire.</Tutorial.SyringegunDescription>
 
   <Tutorial.PlasmaCutterTitle>Plasma cutter</Tutorial.PlasmaCutterTitle>
-  <Tutorial.PlasmaCutterDescription>Plasma cutter is a device that is used to cut through walls and doors. It is used like the welding tool, [InputType.Aim] to aim, [InputType.Select] to fire.\n\nWhile the plasma cutter is primarily a tool, it does inflict burns on anyone that gets in the way, which makes it a handy makeshift weapon.</Tutorial.PlasmaCutterDescription>
+  <Tutorial.PlasmaCutterDescription>Plasma cutter is a device that is used to cut through walls and doors. It is used like the welding tool, [InputType.Aim] to aim, [InputType.Shoot] to fire.\n\nWhile the plasma cutter is primarily a tool, it does inflict burns on anyone that gets in the way, which makes it a handy makeshift weapon.</Tutorial.PlasmaCutterDescription>
 
   <Tutorial.CrowbarTitle>Crowbar</Tutorial.CrowbarTitle>
-  <Tutorial.CrowbarDescription>A heavy instrument that can be used to force open doors. Handy when someone has been tampering with door wiring or when you need to get to rooms you’re not allowed in.\n\nAlso, for desperate measures, a blunt weapon.</Tutorial.CrowbarDescription>
+  <Tutorial.CrowbarDescription>A heavy instrument that can be used to force open doors. Handy when someone has been tampering with door wiring or when you need to get to rooms you’re not allowed in. Use ([InputType.Use]) the crowbar on a closed door to start prying it open. The crowbar must be equipped to do this.</Tutorial.CrowbarDescription>
 
   <Tutorial.MineralsTitle>Minerals</Tutorial.MineralsTitle>
   <Tutorial.MineralsDescription>The basic materials for crafting can be bought, deconstructed or found in the world.\n\nMinerals are spawned in the cave and ice walls and they can be cut out using the plasma cutter and then picked up. Raw minerals can be deconstructed to create craftable elements.</Tutorial.MineralsDescription>
@@ -2832,6 +2953,12 @@
 
   <Tutorial.OpiatesTitle>Opiate addiction and withdrawals</Tutorial.OpiatesTitle>
   <Tutorial.OpiatesDescription>Overuse of pain medication causes addiction, and in time, withdrawal. Withdrawal symptoms can be by feeding the addiction, but to truly be rid of the effects, one must either endure some time without feeding the habit or by using Naloxone.</Tutorial.OpiatesDescription>
+
+  <Tutorial.OxygenTitle>Oxygen</Tutorial.OxygenTitle>
+  <Tutorial.OxygenDescription>Oxygen is a valuable commodity in underwater Europa. It must be readily available during long transits aboard submarines, which is made possible by Oxygen Generators. They pump air through ventilation to different rooms and can be used to refill oxygen tanks.\n\nTo refill oxygen tanks, interact ([InteractType.Use]) with the generator to open it’s inventory. Insert an empty oxygen tank to one of the slots to start refilling it. When the tank is full, drag it back to your inventory or into your diving suit/mask.</Tutorial.OxygenDescription>
+
+  <Tutorial.LadderTitle>Ladders</Tutorial.LadderTitle>
+  <Tutorial.LadderDescription>To grab onto a ladder, press [InteractType.Use]. Use [UP] and [DOWN] buttons to climb the ladder. Let go of the ladder by pressing [InteractType.Use] again.</Tutorial.LadderDescription>
   
   <!-- Mechanic Tutorial -->  
   <!-- Radio -->
@@ -2852,12 +2979,12 @@
   <!-- Room 2 -->
   <Mechanic.Equipment>Containers</Mechanic.Equipment>
   <Mechanic.EquipmentObjective>Get your equipment from the locker</Mechanic.EquipmentObjective>
-  <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.\n\nTo close the interface, press [InputType.Deselect].</Mechanic.EquipmentText>
+  <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Use]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the corresponding quick-slot key.\n\nTo close the interface, press [InputType.Deselect].</Mechanic.EquipmentText>
 
   <!-- Room 3 -->
   <Mechanic.Welding>Leaks</Mechanic.Welding>
   <Mechanic.WeldingObjective>Repair leak</Mechanic.WeldingObjective>
-  <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [InputType.Aim] to aim. While aiming, hold [InputType.Select] to weld.</Mechanic.WeldingText>
+  <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [InputType.Aim] to aim. While aiming, hold [InputType.Shoot] to weld.</Mechanic.WeldingText>
 
   <Mechanic.Drain>Water pumps</Mechanic.Drain>
   <Mechanic.DrainObjective>Turn on nearby pump to drain excess water</Mechanic.DrainObjective>
@@ -2875,7 +3002,7 @@
   <!-- Room 5 -->
   <Mechanic.Extinguisher>Fires</Mechanic.Extinguisher>
   <Mechanic.ExtinguisherObjective>Put out the fire</Mechanic.ExtinguisherObjective>
-  <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [InputType.Aim] and dispense by holding down [InputType.Select].</Mechanic.ExtinguisherText>
+  <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [InputType.Aim] and dispense by holding down [InputType.Shoot].</Mechanic.ExtinguisherText>
 
   <Mechanic.DropExtinguisher>Dropping items</Mechanic.DropExtinguisher>
   <Mechanic.DropExtinguisherObjective>Drop the fire extinguisher</Mechanic.DropExtinguisherObjective>
@@ -2889,7 +3016,7 @@
   <!-- Room 7 -->
   <Mechanic.RepairPump>Repairing devices</Mechanic.RepairPump>
   <Mechanic.RepairPumpObjective>Repair pump</Mechanic.RepairPumpObjective>
-  <Mechanic.RepairPumpText>Mechanical and electrical devices require maintenance. Without it, they will break and stop working. Repair mechanical devices by equipping a wrench and interacting with it.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpText>
+  <Mechanic.RepairPumpText>Mechanical and electrical devices require maintenance. Without it, they will break and stop working. Repair mechanical devices by equipping a wrench and interacting ([InputType.Use]) with it.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpText>
 
   <!-- Submarine -->
   <Mechanic.RepairSubmarine>Submarine maintenance</Mechanic.RepairSubmarine>
@@ -2909,7 +3036,7 @@
   <!-- Room 2 -->
   <Engineer.Equipment>Containers</Engineer.Equipment>
   <Engineer.EquipmentObjective>Retrieve equipment from the cabinet</Engineer.EquipmentObjective>
-  <Engineer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentText>
+  <Engineer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Use]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the corresponding quick-slot key.</Engineer.EquipmentText>
 
   <!-- Room 3 -->
   <Engineer.Reactor>Reactor</Engineer.Reactor>
@@ -2919,7 +3046,7 @@
   <!-- Room 4 -->
   <Engineer.RepairJunctionBox>Maintenance</Engineer.RepairJunctionBox>
   <Engineer.RepairJunctionBoxObjective>Repair the broken junction box</Engineer.RepairJunctionBoxObjective>
-  <Engineer.RepairJunctionBoxText>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact with the device to see the repair interface.</Engineer.RepairJunctionBoxText>
+  <Engineer.RepairJunctionBoxText>Like mechanical items, junction boxes need maintenance. In addition to wear and tear, they are damaged by water and overvoltage.\n\nThey are repaired using a screwdriver, as opposed to a wrench when fixing mechanical items. Otherwise the process is the same. Equip a screwdriver and interact ([InputType.Use]) with the device to see the repair interface.</Engineer.RepairJunctionBoxText>
 
   <!-- Room 5 -->
   <Engineer.WireJunctionBoxes>Wiring</Engineer.WireJunctionBoxes>
@@ -2948,11 +3075,11 @@
   <!--  Room 2 -->
   <Officer.Equipment>Containers</Officer.Equipment>
   <Officer.EquipmentObjective>Retrieve equipment from the cabinet</Officer.EquipmentObjective>
-  <Officer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Officer.EquipmentText>
+  <Officer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Use]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the corresponding quick-slot key.</Officer.EquipmentText>
 
   <Officer.MeleeWeapon>Melee weapons</Officer.MeleeWeapon>
   <Officer.MeleeWeaponObjective>Equip a melee weapon and protective gear</Officer.MeleeWeaponObjective>
-  <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand. Wearable equipment can either be double-clicked or dragged into their corresponding slots in the character inventory.\n\nReady the weapon by holding [InputType.Aim] and swing it by clicking [InputType.Select].</Officer.MeleeWeaponText>
+  <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand. Wearable equipment can either be double-clicked or dragged into their corresponding slots in the character inventory.\n\nReady the weapon by holding [InputType.Aim] and swing it by clicking [InputType.Shoot].</Officer.MeleeWeaponText>
 
   <!--  Room 3 -->
   <Officer.Crawler>Crawlers</Officer.Crawler>
@@ -2962,16 +3089,16 @@
   <!--  Room 4 -->
   <Officer.SomethingBig>Coilgun, part 1</Officer.SomethingBig>
   <Officer.SomethingBigObjective>Load coilgun and turn on the supercapacitor</Officer.SomethingBigObjective>
-  <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo ready the coilgun, you must make sure the supercapacitor has enough power by setting the recharge rate high enough (50% is usually enough) and insert full ammunition boxes into the coilgun loader.\n\nCoilgun loaders have their own inventory where you can load the ammo boxes. When a box is depleted, it must be unloaded before a new one can be loaded in.\n\nAmmo boxes are large and unwieldy. You must use two hands to carry one and they can’t be carried around in the inventory. To drop an ammo box, either drag it away from your equip slot or press the unequip button on top of the equip slot.</Officer.SomethingBigText>
+  <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo ready the coilgun, you must make sure the supercapacitor has enough power by setting the recharge rate high enough (50% is usually enough) and insert full ammunition boxes into the coilgun loader.\n\nThe ammo boxes loaded in the coilguns seem empty. You need to unload them. Do this by dragging the empty boxes away from the loader. Drop the empty boxes on the ground by holding the green arrow above the ammo box when it's equipped.\n\nAmmo boxes are large and unwieldy. You must use two hands to carry one and they can’t be carried around in the inventory. To drop an ammo box, either drag it away from your equip slot or press the unequip button on top of the equip slot.</Officer.SomethingBigText>
 
   <Officer.Hammerhead>Coilgun, part 2</Officer.Hammerhead>
   <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
-  <Officer.HammerheadText>To use the coilgun, interact ([InputType.Select]) with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot]. To stop aiming, press [InputType.Deselect].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
+  <Officer.HammerheadText>To use the coilgun, interact ([InputType.Use]) with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot]. To stop aiming, press [InputType.Deselect].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
 
   <!-- Room 5 -->
   <Officer.RangedWeapon>Ranged weapons</Officer.RangedWeapon>
   <Officer.RangedWeaponObjective>Grab some ranged weapons</Officer.RangedWeaponObjective>
-  <Officer.RangedWeaponText>Ranged weapons work the same way as melee weapons, except their accuracy is more dependent on the character’s weapons skill. Aim with [InputType.Aim] and fire with [InputType.Select].\n\nThey must also be loaded with ammunition. Hover the mouse cursor over a ranged weapon to see how many bullets, harpoons, etc. are contained. Drop ammunition into the slots or on the weapon itself to load the weapon.</Officer.RangedWeaponText>
+  <Officer.RangedWeaponText>Ranged weapons work the same way as melee weapons, except their accuracy is more dependent on the character’s weapons skill. Aim with [InputType.Aim] and fire with [InputType.Shoot].\n\nThey must also be loaded with ammunition. Hover the mouse cursor over a ranged weapon to see how many bullets, harpoons, etc. are contained. Drop ammunition into the slots or on the weapon itself to load the weapon.</Officer.RangedWeaponText>
 
   <!-- Room 6 -->
   <Officer.Mudraptor>Mudraptors</Officer.Mudraptor>
@@ -2994,7 +3121,7 @@
   <!-- Room 3 -->
   <Doctor.Supplies>Containers</Doctor.Supplies>
   <Doctor.SuppliesObjective>Find medical supplies</Doctor.SuppliesObjective>
-  <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
+  <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Use]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the corresponding quick-slot key.</Doctor.SuppliesText>
 
   <Doctor.OpenMedicalInterface>Medical interface</Doctor.OpenMedicalInterface>
   <Doctor.OpenMedicalInterfaceObjective>Open medical interface</Doctor.OpenMedicalInterfaceObjective>
@@ -3017,7 +3144,7 @@
   <!-- Room 6 -->
   <Doctor.CPR>Resuscitation</Doctor.CPR>
   <Doctor.CPRObjective>Perform CPR</Doctor.CPRObjective>
-  <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([InputType.Health]) and clicking the green “resuscitate“ button. The process may take a while.</Doctor.CPRText>
+  <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be resuscitated by performing CPR to get them to a stable state.\n\nResuscitate the patient by entering the medical interface ([InputType.Health]) and clicking the green “resuscitate“ button. The process may take a while.</Doctor.CPRText>
   
   <!-- Sub -->
   <Doctor.Submarine>Medical assistance</Doctor.Submarine>
@@ -3052,7 +3179,7 @@
 
   <Captain.Navigate>Navigation</Captain.Navigate>
   <Captain.NavigateObjective>Navigate to destination</Captain.NavigateObjective>
-  <Captain.NavigateText>Plot a course for the submarine by clicking on the sonar display. Navigation terminal will adjust the ballast and engine’s force accordingly and automatically.\n\nTo see where the sub is heading, turn on active sonar. Do that by finding sonar settings next to the display and set it from “passive” to active.</Captain.NavigateText>
+  <Captain.NavigateText>Plot a course for the submarine by clicking on the sonar display. Navigation terminal will adjust the ballast and engine’s force accordingly and automatically.\n\nTo see where the sub is heading, turn on active sonar. Do that by finding sonar settings next to the display and set it from “passive” to active.\n\nMove carefully. The faster the submarine moves, the more difficult it will be to slow it down. Colliding with cave walls will damage the hull and cause leaks. For tutorial purposes, this sub will be protected against hull breaches.</Captain.NavigateText>
 
   <Captain.Dock>Docking</Captain.Dock>
   <Captain.DockObjective>Dock with destination outpost</Captain.DockObjective>
@@ -3083,6 +3210,9 @@
   <RepairAllWalls>Repair all walls</RepairAllWalls>
   <RepairAllItems>Repair all items</RepairAllItems>
 
+  <EntityName.beacon>Beacon</EntityName.beacon>
+  <EntityDescription.beacon>When deployed and activated in the correct location, it will signal colonists to come and set up an outpost.</EntityDescription.beacon>
+  
   <Karma>Karma</Karma>
   <KarmaExplanation>Karma reflects the helpful and harmful actions you've done while playing. Actions such as repairing the submarine, operating devices and killing monsters increase Karma, while actions such as attacking members of your crew or damaging the submarine decrease it. If your Karma drops too low, you may not get assigned to certain jobs anymore, or in more extreme cases, you may be banned from the server.</KarmaExplanation>
   <ResetKarma>Reset Karma</ResetKarma>
@@ -3150,12 +3280,19 @@
   <MissionHeader0.killhammerhead>Target terminated</MissionHeader0.killhammerhead>
   <MissionMessage0.killhammerhead>The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killhammerhead>
 
-  <MissionName.killcrawlerswarm>Terminate a Swarm</MissionName.killcrawlerswarm>
-  <MissionDescription.killcrawlerswarm>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature.</MissionDescription.killcrawlerswarm>
-  <MissionSonarLabel.killcrawlerswarm>Swarm</MissionSonarLabel.killcrawlerswarm>
-  <MissionSuccess.killcrawlerswarm>The swarm has been terminated.</MissionSuccess.killcrawlerswarm>
-  <MissionHeader0.killcrawlerswarm>Target terminated</MissionHeader0.killcrawlerswarm>
-  <MissionMessage0.killcrawlerswarm>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killcrawlerswarm>
+  <MissionName.killcrawlerswarm1>Terminate a Swarm</MissionName.killcrawlerswarm1>
+  <MissionDescription.killcrawlerswarm1>A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize the it.</MissionDescription.killcrawlerswarm1>
+  <MissionSonarLabel.killcrawlerswarm1>Swarm</MissionSonarLabel.killcrawlerswarm1>
+  <MissionSuccess.killcrawlerswarm1>The swarm has been terminated.</MissionSuccess.killcrawlerswarm1>
+  <MissionHeader0.killcrawlerswarm1>Target terminated</MissionHeader0.killcrawlerswarm1>
+  <MissionMessage0.killcrawlerswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killcrawlerswarm1>
+  
+  <MissionName.killcrawlerswarm2>Terminate a Swarm</MissionName.killcrawlerswarm2>
+  <MissionDescription.killcrawlerswarm2>A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize the it.</MissionDescription.killcrawlerswarm2>
+  <MissionSonarLabel.killcrawlerswarm2>Swarm</MissionSonarLabel.killcrawlerswarm2>
+  <MissionSuccess.killcrawlerswarm2>The swarm has been terminated.</MissionSuccess.killcrawlerswarm2>
+  <MissionHeader0.killcrawlerswarm2>Target terminated</MissionHeader0.killcrawlerswarm2>
+  <MissionMessage0.killcrawlerswarm2>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</MissionMessage0.killcrawlerswarm2>
 
   <MissionName.killendworm>Beast from the Abyss</MissionName.killendworm>
   <MissionDescription.killendworm>Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of [reward] has been promised to those who get rid of whatever is causing the seismic activity.</MissionDescription.killendworm>
@@ -3195,7 +3332,7 @@
   <MissionSuccess.cargohuskeggs>The husk eggs have been successfully delivered.</MissionSuccess.cargohuskeggs>
 
   <MissionName.cargonitroglycerin>Handle with care</MissionName.cargonitroglycerin>
-  <MissionDescription.cargonitroglycerin>Local researchers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2].</MissionDescription.cargonitroglycerin>
+  <MissionDescription.cargonitroglycerin>Local researchers are offering [reward] credits for delivering a large amount of nitroglycerin to [location2].</MissionDescription.cargonitroglycerin>
   <MissionSuccess.cargonitroglycerin>The chemicals have been successfully delivered.</MissionSuccess.cargonitroglycerin>
 
   <MissionName.cargoclowngear>Praise the Honkmother</MissionName.cargoclowngear>
@@ -3214,13 +3351,22 @@
   <MissionDescription.cargomeditems>A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there.</MissionDescription.cargomeditems>
   <MissionSuccess.cargomeditems>The materials have been successfully delivered.</MissionSuccess.cargomeditems>
 
-  <MissionName.cargomeditems>Medical item transport</MissionName.cargomeditems>
-  <MissionDescription.cargomeditems>A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there.</MissionDescription.cargomeditems>
-  <MissionSuccess.cargomeditems>The materials have been successfully delivered.</MissionSuccess.cargomeditems>
+  <MissionName.personneltransport>Personnel transport</MissionName.personneltransport>
+  <MissionDescription.personneltransport>We have a crewmember here who needs to get to [location2] in a hurry. The payment is [reward] credits if you get them there in once piece.</MissionDescription.personneltransport>
+  <MissionSuccess.personneltransport>The personnel have been successfully delivered.</MissionSuccess.personneltransport>
+  
+  <MissionName.prospect>Prospecting</MissionName.prospect>
+  <MissionDescription.prospect>The mining crews want to start extracting [resourcename] if you can prove there's enough deposits of it in the area between [location1] and the mining outpost at [location2]. If you can find [quantity] units, you'll be paid a reward of [reward] credits, and you can keep whatever you find.</MissionDescription.prospect>
+  <MissionSuccess.prospect>Resource has been prospected succesfully, navigate the submarine out of the cavern to claim the reward..</MissionSuccess.prospect>
 
   <MissionName.cargomedemergency>Medical item transport</MissionName.cargomedemergency>
   <MissionDescription.cargomedemergency>A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid [reward] credits on delivery.</MissionDescription.cargomedemergency>
   <MissionSuccess.cargomedemergency>The antidote has been successfully delivered.</MissionSuccess.cargomedemergency>
+  
+  <MissionName.beacon>Beacon deployment</MissionName.beacon>
+  <MissionDescription.beacon>Head over to [location2] and drop a beacon to begin the process of colonizing the area. Payment is [reward] credits when it starts transmitting.</MissionDescription.beacon>
+  <MissionSonarLabel.beacon>Beacon deployment location</MissionSonarLabel.beacon>
+  <MissionSuccess.beacon>Beacon successfully deployed.</MissionSuccess.beacon>
 
   <MissionName.pvpmission>Search and Destroy</MissionName.pvpmission>
   <MissionDescriptionNeutral.pvpmission>A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2].</MissionDescriptionNeutral.pvpmission>
@@ -3232,8 +3378,6 @@
   <MissionFailure.pvpmission>Both crews have perished.</MissionFailure.pvpmission>
 
   <MapEntityCategory.All>All</MapEntityCategory.All>
-  
-  <!-- new -->
 
   <SettingResetVerification>Are you sure you want to reset the settings?</SettingResetVerification>
 
@@ -3242,7 +3386,104 @@
   <GenericReplaceVerification>Do you want to replace it?</GenericReplaceVerification>
 
   <DontShowNotificationAgain>Don't show this again</DontShowNotificationAgain>
-
   <Video>Video</Video> 
 
+  <StringPropertyTranslate>This text will be translated to "[translation]".</StringPropertyTranslate>
+  <StringPropertyCannotTranslate>This text will not be translated - text with the tag "[tag]" not found in the language files.</StringPropertyCannotTranslate>
+
+  <!-- Room names -->
+  <RoomName.ReactorRoom>Reactor room</RoomName.ReactorRoom>
+  <RoomName.EngineRoom>Engine room</RoomName.EngineRoom>
+  <RoomName.CommandRoom>Command room</RoomName.CommandRoom>
+  <RoomName.Airlock>Airlock</RoomName.Airlock>
+  <RoomName.Ballast>Ballast</RoomName.Ballast>
+  <RoomName.SubTopLeft>Upper aft side</RoomName.SubTopLeft>
+  <RoomName.SubTopCenter>Upper mid</RoomName.SubTopCenter>
+  <RoomName.SubTopRight>Upper fore side</RoomName.SubTopRight>
+  <RoomName.SubCenterLeft>Mid aft side</RoomName.SubCenterLeft>
+  <RoomName.SubCenter>Amidships</RoomName.SubCenter>
+  <RoomName.SubCenterRight>Mid fore side</RoomName.SubCenterRight>
+  <RoomName.SubBottomLeft>Lower aft side</RoomName.SubBottomLeft>
+  <RoomName.SubBottomCenter>Lower mid</RoomName.SubBottomCenter>
+  <RoomName.SubBottomRight>Lower fore side</RoomName.SubBottomRight>
+  <RoomName.SubDirOClock>[dir] o'clock</RoomName.SubDirOClock>
+  <RoomName.BallastTank1>Ballast tank A</RoomName.BallastTank1>
+  <RoomName.BallastTank2>Ballast tank B</RoomName.BallastTank2>
+  <RoomName.BallastTank3>Ballast tank C</RoomName.BallastTank3>
+  <RoomName.BallastTank4>Ballast tank E</RoomName.BallastTank4>
+  <RoomName.Stowage>Sotwage compartment</RoomName.Stowage>
+  <RoomName.Berthing>Berthing compartment</RoomName.Berthing>
+  <RoomName.Utility>Utility compartment</RoomName.Utility>
+  <RoomName.RearBallast>Rear ballast</RoomName.RearBallast>
+  <RoomName.FrontBallast>Front ballast</RoomName.FrontBallast>
+  <RoomName.Medbay>Medbay</RoomName.Medbay>
+  <RoomName.Engineering>Engineering</RoomName.Engineering>
+  <RoomName.Electrical>Electrical</RoomName.Electrical>
+  <RoomName.Armory>Armory</RoomName.Armory>
+  <RoomName.DockingPort>Docking port</RoomName.DockingPort>
+  <RoomName.UpperDockingPort>Upper docking port</RoomName.UpperDockingPort>
+  <RoomName.LowerDockingPort>Lower docking port</RoomName.LowerDockingPort>
+  <RoomName.Cargo>Cargo</RoomName.Cargo>
+  <RoomName.Brig>Brig</RoomName.Brig>
+  <RoomName.CrewQuarters>Crew quarters</RoomName.CrewQuarters>
+  <RoomName.JunctionCompartment>Junction compartment</RoomName.JunctionCompartment>
+  <RoomName.CentralAccessPassage>Central access passage</RoomName.CentralAccessPassage>
+  <RoomName.CentralAccessShaft>Central access shaft</RoomName.CentralAccessShaft>
+  <RoomName.ForwardAccessShaft>Forward access shaft</RoomName.ForwardAccessShaft>
+  <RoomName.AftAccessShaft>Aft access shaft</RoomName.AftAccessShaft>
+
+  <!-- Labels -->
+  <Label.VentralCoilgunControl>Ventral Coilgun Control</Label.VentralCoilgunControl>
+  <Label.DorsalCoilgunControl>Dorsal Coilgun Control</Label.DorsalCoilgunControl>
+  <Label.RearCoilgunControl>Rear Coilgun Control</Label.RearCoilgunControl>
+  <Label.FrontCoilgunControl>Front Coilgun Control</Label.FrontCoilgunControl>
+  <Label.VentralRailgunControl>Ventral Railgun Control</Label.VentralRailgunControl>
+  <Label.DorsalRailgunControl>Dorsal Railgun Control</Label.DorsalRailgunControl>
+  <Label.RearRailgunControl>Rear Railgun Control</Label.RearRailgunControl>
+  <Label.FrontRailgunControl>Front Railgun Control</Label.FrontRailgunControl>
+  <Label.ToggleDocking>Toggle Docking</Label.ToggleDocking>
+  <Label.ReactorShutdown>Reactor Shutdown</Label.ReactorShutdown>
+  <Label.Engine1>Engine #1</Label.Engine1>
+  <Label.Engine2>Engine #2</Label.Engine2>
+  <Label.AuxiliaryEngine>Aux. engine</Label.AuxiliaryEngine>
+  <Label.LaunchDecoy>Launch Decoy</Label.LaunchDecoy>
+  <Label.LaunchDepthCharge>Launch Depth Charge</Label.LaunchDepthCharge>
+  <Label.ActivateDischargeCoil>Electrical Discharge Coil</Label.ActivateDischargeCoil>
+  <Label.ActivateUpperDischargeCoil>Upper Discharge Coil</Label.ActivateUpperDischargeCoil>
+  <Label.ActivateLowerDischargeCoil>Lower Discharge Coil</Label.ActivateLowerDischargeCoil>
+  <Label.ExteriorCamera>Ext. camera view</Label.ExteriorCamera>
+  <Label.VentralCamera>Ventral camera view</Label.VentralCamera>
+  <Label.DorsalCamera>Dorsal camera view</Label.DorsalCamera>
+  <Label.ReactorTemp>Reactor temp.</Label.ReactorTemp>
+  <Label.LetWaterDrain>Let all water drain before exiting</Label.LetWaterDrain>
+  <Label.AlphaDeck>Alpha Deck</Label.AlphaDeck>
+  <Label.GammaDeck>Gamma Deck</Label.GammaDeck>
+  <Label.DeltaDeck>Delta Deck</Label.DeltaDeck>
+  <Label.ReadyToDock>Ready to dock</Label.ReadyToDock>
+  <Label.Docked>Docked</Label.Docked>
+  <Label.EmergencyDoorOverride>Emergency door override</Label.EmergencyDoorOverride>
+  <Label.EmergencyHatchOverride>Emergency hatch override</Label.EmergencyHatchOverride>
+  <Label.Supplies>Supplies</Label.Supplies>
+  <Label.ToggleBatteries>Toggle Batteries</Label.ToggleBatteries>
+  <Label.ToggleSiren>Toggle Siren</Label.ToggleSiren>
+  <Label.Emergency>Emergency</Label.Emergency>
+  <Label.BackUpPowerArray>Backup power array</Label.BackUpPowerArray>
+  <Label.DroneControl>Drone control</Label.DroneControl>
+  <Label.StatusLabel>Status</Label.StatusLabel>
+  <Label.OnlineLabel>Online</Label.OnlineLabel>
+  <Label.OfflineLabel>Offline</Label.OfflineLabel>
+  <Label.OpenLabel>Open</Label.OpenLabel>
+  <Label.CloseLabel>Close</Label.CloseLabel>
+  <Label.BallastHatch>Ballast hatch</Label.BallastHatch>
+
+  <CampaignDisclaimerTitle>Welcome to Barotrauma!</CampaignDisclaimerTitle>
+  <CampaignDisclaimerText>Please note that Barotrauma is still in Early Access, and that many aspects of the game are still being worked on and incomplete.\n\nThe Campaign Mode is still lacking many of the features we've planned for the full version, and is not yet as enjoyable as the multiplayer. In the current version, playing the game solo can also be more challenging to new players than playing it with other people - even though the AI crew can give you a hand at some tasks, they are usually not as useful as real human players. If you're interested in what's to come in future updates, click the "Campaign Roadmap" button below.\n\nWe do however recommend that you at least play the single player tutorial before diving into the multiplayer. Good luck, sailor!</CampaignDisclaimerText>
+  <CampaignRoadMapTitle>Campaign Roadmap</CampaignRoadMapTitle>
+  <CampaignRoadMapText>- Explorable locations: as of now, the locations on the campaign map are essentially just menus where you can buy supplies and hire new crew members, but during the Early Access period they will become actual physical locations you can enter and explore.\n\n- Expanded story: you will be able to learn more about the world of Barotrauma by interacting with NPCs and by exploring the outposts and non-man-made locations.\n\n- New mission types: we have plans for several completely new mission types, for example personnel transport missions and salvage missions into shipwrecks.\n\n- Balancing: currently the campaign economy is not very well balanced, but we will start to put more focus into it when we start to have all the content in.\n\n- End goal: at the moment it’s not possible to complete the campaign, but in future versions the mysterious location at the center of the map will become reachable...</CampaignRoadMapText>
+
+  <EditorDisclaimerTitle>Editors</EditorDisclaimerTitle>
+  <EditorDisclaimerText>The submarine and character editors are modding tools that can be used to expand the core game by creating your own submarines and monsters. The custom creations can be shared in the Steam Workshop.\n\nAt the moment the editors are only available in English. The process of building a fully playable submarine or a functional monster can be quite involved, and unfortunately we don’t offer in-game tutorials or documentation for the editors yet. If you want to take a shot at creating your own custom content with the editors, you may be able to find help through the following links:</EditorDisclaimerText>
+  <EditorDisclaimerWikiLink>Barotrauma Wiki</EditorDisclaimerWikiLink>
+  <EditorDisclaimerDiscordLink>Barotrauma Discord Server</EditorDisclaimerDiscordLink>
+  <EditorDisclaimerForumLink>Barotrauma Forums</EditorDisclaimerForumLink>
 </infotexts>

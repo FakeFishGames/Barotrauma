@@ -394,7 +394,7 @@
     <SuitableTreatment identifier="opiatewithdrawal" suitability="75" />
     <SuitableTreatment identifier="opiateoverdose" suitability="-75" />
     <SuitableTreatment identifier="opiateaddiction" suitability="-75" />
-    <SuitableTreatment identifier="oxygenloss" suitability="-10" />
+    <SuitableTreatment identifier="oxygenlow" suitability="-10" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="50"/>
@@ -462,7 +462,7 @@
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100" />
     <SuitableTreatment identifier="opiateoverdose" suitability="-100" />
     <SuitableTreatment identifier="opiateaddiction" suitability="-100" />
-    <SuitableTreatment identifier="oxygenloss" suitability="-60" />
+    <SuitableTreatment identifier="oxygenlow" suitability="-60" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="60"/>
@@ -614,10 +614,10 @@
     <Sprite texture="Medicines.png" sourcerect="378,515,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     
-    <SuitableTreatment identifier="oxygenlow" suitability="90" />
-    <SuitableTreatment identifier="damage" suitability="90" />
-    <SuitableTreatment identifier="bloodloss" suitability="30" />
-    <SuitableTreatment identifier="burn" suitability="90" />
+    <SuitableTreatment identifier="oxygenlow" suitability="10" />
+    <SuitableTreatment identifier="damage" suitability="10" />
+    <SuitableTreatment identifier="bloodloss" suitability="10" />
+    <SuitableTreatment identifier="burn" suitability="10" />
     
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
@@ -1052,7 +1052,7 @@
   <LiquidOxygenite name="Liquid Oxygenite" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" impacttolerance="8" description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light"> 
     
     <SuitableTreatment identifier="internaldamage" suitability="-15" />
-    <SuitableTreatment identifier="oxygenloss" suitability="90" />
+    <SuitableTreatment identifier="oxygenlow" suitability="90" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="60"/>
