@@ -182,7 +182,7 @@ namespace Barotrauma.Tutorials
         public virtual void Start()
         {
             activeObjectives.Clear();
-            objectiveTranslated = TextManager.Get("Objective");
+            objectiveTranslated = TextManager.Get("Tutorial.Objective");
             CreateObjectiveFrame();
         }
 
