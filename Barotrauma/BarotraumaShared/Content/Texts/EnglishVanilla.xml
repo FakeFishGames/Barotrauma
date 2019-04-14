@@ -2850,16 +2850,16 @@
   <Mechanic.OpenDoorText>Move by pressing [UP], [LEFT], [DOWN], [RIGHT] buttons. Interact with items and devices with [SELECT] button.\n\nOpen this door by pressing [SELECT] while cursor is over it.</Mechanic.OpenDoorText>
 
   <!-- Room 2 -->
-  <Mechanic.Equipment>Inventory</Mechanic.Equipment>
+  <Mechanic.Equipment>Containers</Mechanic.Equipment>
   <Mechanic.EquipmentObjective>Get your equipment from the locker</Mechanic.EquipmentObjective>
   <Mechanic.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.\n\nTo close the interface, press [InputType.Deselect].</Mechanic.EquipmentText>
 
   <!-- Room 3 -->
-  <Mechanic.Welding>Fixing leaks</Mechanic.Welding>
+  <Mechanic.Welding>Leaks</Mechanic.Welding>
   <Mechanic.WeldingObjective>Repair leak</Mechanic.WeldingObjective>
   <Mechanic.WeldingText>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold [InputType.Aim] to aim. While aiming, hold [InputType.Select] to weld.</Mechanic.WeldingText>
 
-  <Mechanic.Drain>Draining water</Mechanic.Drain>
+  <Mechanic.Drain>Water pumps</Mechanic.Drain>
   <Mechanic.DrainObjective>Turn on nearby pump to drain excess water</Mechanic.DrainObjective>
   <Mechanic.DrainText>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it and flip the switch to “on” position.</Mechanic.DrainText>
 
@@ -2877,7 +2877,7 @@
   <Mechanic.ExtinguisherObjective>Put out the fire</Mechanic.ExtinguisherObjective>
   <Mechanic.ExtinguisherText>Equip the fire extinguisher like you would a welding tool. Then aim by holding down [InputType.Aim] and dispense by holding down [InputType.Select].</Mechanic.ExtinguisherText>
 
-  <Mechanic.DropExtinguisher>Unequipping</Mechanic.DropExtinguisher>
+  <Mechanic.DropExtinguisher>Dropping items</Mechanic.DropExtinguisher>
   <Mechanic.DropExtinguisherObjective>Drop the fire extinguisher</Mechanic.DropExtinguisherObjective>
   <Mechanic.DropExtinguisherText>Some items, like the fire extinguisher, are too large to carry around in the character’s inventory. To unequip the fire extinguisher, drag it away from the inventory and release the mouse button.</Mechanic.DropExtinguisherText>
 
@@ -2887,7 +2887,7 @@
   <Mechanic.DivingText>Diving suit protects the wearer from high pressure. Equip one to be able to swim outside the submarine. Make sure the suit has a full oxygen tank attached, otherwise wearer will suffocate.</Mechanic.DivingText>
   
   <!-- Room 7 -->
-  <Mechanic.RepairPump>Repairing machinery</Mechanic.RepairPump>
+  <Mechanic.RepairPump>Repairing devices</Mechanic.RepairPump>
   <Mechanic.RepairPumpObjective>Repair pump</Mechanic.RepairPumpObjective>
   <Mechanic.RepairPumpText>Mechanical and electrical devices require maintenance. Without it, they will break and stop working. Repair mechanical devices by equipping a wrench and interacting with it.\n\nItems in need of maintenance are marked with a repair icon.</Mechanic.RepairPumpText>
 
@@ -2907,7 +2907,7 @@
   <Engineer.Radio.Complete>Good work. We may yet make it out of this alive.</Engineer.Radio.Complete>
   
   <!-- Room 2 -->
-  <Engineer.Equipment>Inventory</Engineer.Equipment>
+  <Engineer.Equipment>Containers</Engineer.Equipment>
   <Engineer.EquipmentObjective>Retrieve equipment from the cabinet</Engineer.EquipmentObjective>
   <Engineer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Engineer.EquipmentText>
 
@@ -2931,7 +2931,7 @@
   <Engineer.RepairElectricalRoomObjective>Repair the electrical room</Engineer.RepairElectricalRoomObjective>
   <Engineer.RepairElectricalRoomText>Find the sub’s electrical room and repair the junction boxes by interacting with them while holding a screwdriver, then press the “Repair” button.</Engineer.RepairElectricalRoomText>
   
-  <Engineer.PowerUpReactor>Reactor room</Engineer.PowerUpReactor>
+  <Engineer.PowerUpReactor>Reactor</Engineer.PowerUpReactor>
   <Engineer.PowerUpReactorObjective>Power up submarine’s reactor</Engineer.PowerUpReactorObjective>
   <Engineer.PowerUpReactorText>Nuclear reactors provide power to submarines and outposts. They require fuel to create power and a crewmember to regulate the output.\n\nDrag a fuel rod to the item slot on the left side. Multiple fuel rods create more heat, but in normal circumstances one is enough and any more might lead to overheating.\n\nStart by setting the fission rate so that the needle is on green, then do the same for turbine output. You can see load and output values to the right. Try to keep the output as close to load as possible. When the output is lower, it leads to power outages and when it’s higher, overvoltage and fires.\n\nWhen the reactor operator leaves the interface, it’s recommended to turn automatic control on. It responds to any fluctuations in grid load, but is considerably slower than a human operator.</Engineer.PowerUpReactorText>
 
@@ -2946,11 +2946,11 @@
   <Officer.Radio.Complete>Outstanding. Now get ready. Once the rest of the crew arrives, we’re out of here.</Officer.Radio.Complete>
 
   <!--  Room 2 -->
-  <Officer.Equipment>Inventory</Officer.Equipment>
+  <Officer.Equipment>Containers</Officer.Equipment>
   <Officer.EquipmentObjective>Retrieve equipment from the cabinet</Officer.EquipmentObjective>
   <Officer.EquipmentText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Officer.EquipmentText>
 
-  <Officer.MeleeWeapon>Equipping</Officer.MeleeWeapon>
+  <Officer.MeleeWeapon>Melee weapons</Officer.MeleeWeapon>
   <Officer.MeleeWeaponObjective>Equip a melee weapon and protective gear</Officer.MeleeWeaponObjective>
   <Officer.MeleeWeaponText>Equip a weapon by double-clicking it in your inventory. Weapons require at least one free hand. Wearable equipment can either be double-clicked or dragged into their corresponding slots in the character inventory.\n\nReady the weapon by holding [InputType.Aim] and swing it by clicking [InputType.Select].</Officer.MeleeWeaponText>
 
@@ -2960,11 +2960,11 @@
   <Officer.CrawlerText>There's a monster in the next room. A Crawler. Take it down using the stun baton. Stun baton stuns enemies for a brief moment, so use that to your advantage.</Officer.CrawlerText>
 
   <!--  Room 4 -->
-  <Officer.SomethingBig>Something big</Officer.SomethingBig>
+  <Officer.SomethingBig>Coilgun, part 1</Officer.SomethingBig>
   <Officer.SomethingBigObjective>Load coilgun and turn on the supercapacitor</Officer.SomethingBigObjective>
   <Officer.SomethingBigText>Coilguns are standard issue equipment in most subs. They require short bursts of power and boxes of ammunition.\n\nTo ready the coilgun, you must make sure the supercapacitor has enough power by setting the recharge rate high enough (50% is usually enough) and insert full ammunition boxes into the coilgun loader.\n\nCoilgun loaders have their own inventory where you can load the ammo boxes. When a box is depleted, it must be unloaded before a new one can be loaded in.\n\nAmmo boxes are large and unwieldy. You must use two hands to carry one and they can’t be carried around in the inventory. To drop an ammo box, either drag it away from your equip slot or press the unequip button on top of the equip slot.</Officer.SomethingBigText>
 
-  <Officer.Hammerhead>Hammerheads</Officer.Hammerhead>
+  <Officer.Hammerhead>Coilgun, part 2</Officer.Hammerhead>
   <Officer.HammerheadObjective>Kill the attacking hammerhead</Officer.HammerheadObjective>
   <Officer.HammerheadText>To use the coilgun, interact ([InputType.Select]) with the periscope. While on the periscope, aim with the mouse and fire by pressing [InputType.Shoot]. To stop aiming, press [InputType.Deselect].\n\nThe gun uses a lot of power, so firing conservatively is key. Otherwise the supercapacitor may not be able keep up.</Officer.HammerheadText>
 
@@ -2979,7 +2979,7 @@
   <Officer.MudraptorText>Mudraptors are bigger, meaner and more armored than crawlers. Taking them down requires more firepower. Aim for the mouth or belly and try to keep your distance.</Officer.MudraptorText>
 
   <!-- Submarine -->
-  <Officer.ArmSubmarine>Weaponry</Officer.ArmSubmarine>
+  <Officer.ArmSubmarine>Submarine weapons</Officer.ArmSubmarine>
   <Officer.ArmSubmarineObjective>Ready coilguns</Officer.ArmSubmarineObjective>
   <Officer.ArmSubmarineText>Find ammunition for the coilguns and load them. Recharge supercapacitors.\n\nIn most submarines gun loaders and supercapacitors are located next to their respective gun controls. A value of 50% for supercapacitors’ recharge is usually enough to keep them ready for monster encounters. Set it to 100% when a lot of firing is expected.</Officer.ArmSubmarineText>
 
@@ -2992,7 +2992,7 @@
   <Doctor.Radio.EnteredSub>Good. Everyone’s here. Check up on everybody while we get the vessel ready for transit.</Doctor.Radio.EnteredSub>
   
   <!-- Room 3 -->
-  <Doctor.Supplies>Medical supplies</Doctor.Supplies>
+  <Doctor.Supplies>Containers</Doctor.Supplies>
   <Doctor.SuppliesObjective>Find medical supplies</Doctor.SuppliesObjective>
   <Doctor.SuppliesText>Items are stored in containers of different sizes. You can see what’s inside one by interacting with them ([InputType.Select]). Transfer items between character and container inventory by dragging or double-clicking.\n\nWhen in character’s inventory, items can be equipped by double-clicking on them or by pressing the correct quick-slot key.</Doctor.SuppliesText>
 
@@ -3005,7 +3005,7 @@
   <Doctor.FirstAidSelfText>Afflictions affecting the character are shown in the list to the left, although some afflictions are local to specific limbs. You can inspect different limbs by clicking on them.\n\nTo treat an affliction, drag a medical item onto the highlighted area. Suggested items are shown in the interface, but caution must be exercised, since some characters’ medical skills aren’t high enough to suggest the correct treatment. In this case, you have some light internal damage. Morphine is effective in treating this affliction.</Doctor.FirstAidSelfText>
 
   <!-- Room 4 -->
-  <Doctor.Medbay>Med bay</Doctor.Medbay>
+  <Doctor.Medbay>Giving commands</Doctor.Medbay>
   <Doctor.MedbayObjective>Take the crew member to the med bay</Doctor.MedbayObjective>
   <Doctor.MedbayText>Sometimes you will encounter afflictions that you don’t have supplies to treat on the spot. In these situations it’s handy to get the patient to follow you to the med bay, where there are more supplies to treat them.\n\nFind the character in question in the crew list to the left. Then find the “Follow” button and click on it. The character will now follow you until dismissed by clicking on the button again.\n\n“Follow” command is only one of many commands you can give to other characters. Experiment with other commands during gameplay!</Doctor.MedbayText>
 
@@ -3015,7 +3015,7 @@
   <Doctor.TreatBurnsText>First aid can be administered to other characters, too. Treat them by highlighting the target character and pressing [InputType.Health]. The interface will show their status on the left side of the screen.\n\nDrag the correct item into the medical interface to treat the affliction. Remember to select the correct limb before administering treatment. Bandages heal burns quickly. Find them in the highlighted cabinet.</Doctor.TreatBurnsText>
 
   <!-- Room 6 -->
-  <Doctor.CPR>CPR</Doctor.CPR>
+  <Doctor.CPR>Resuscitation</Doctor.CPR>
   <Doctor.CPRObjective>Perform CPR</Doctor.CPRObjective>
   <Doctor.CPRText>When characters suffer too many injuries, they enter an unconscious state. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be saved by performing CPR to get them to a stable state.\n\nPerform CPR by entering the medical interface ([InputType.Health]) and clicking the green “resuscitate“ button. The process may take a while.</Doctor.CPRText>
   
@@ -3030,19 +3030,19 @@
   <Captain.Radio.Complete>Glad you made it out of there. Welcome to [OUTPOSTNAME].</Captain.Radio.Complete>
   
   <!-- Room 2 -->
-  <Captain.CommandMedic>Commanding</Captain.CommandMedic>
+  <Captain.CommandMedic>Commands, part 1</Captain.CommandMedic>
   <Captain.CommandMedicObjective>Command the medic to follow</Captain.CommandMedicObjective>
   <Captain.CommandMedicText>Find the medic in the crew list to the left. Then find the “Follow” button in the command interface next to the portraits and click on it. The character will now follow you until dismissed by clicking on the button again.</Captain.CommandMedicText>
 
-  <Captain.CommandMechanic>Commanding</Captain.CommandMechanic>
+  <Captain.CommandMechanic>Commands, part 2</Captain.CommandMechanic>
   <Captain.CommandMechanicObjective>Order the mechanic to perform maintenance</Captain.CommandMechanicObjective>
   <Captain.CommandMechanicText>To order repairs, clicking on the “Repair Damaged Systems” button in the list next to the mechanic’s portrait. The character will then patrol and search for any mechanical items in need of repairing.</Captain.CommandMechanicText>
 
-  <Captain.CommandSecurity>Commanding</Captain.CommandSecurity>
+  <Captain.CommandSecurity>Commands, part 3</Captain.CommandSecurity>
   <Captain.CommandSecurityObjective>Order the security to man guns</Captain.CommandSecurityObjective>
   <Captain.CommandSecurityText>To order somebody to man guns, click on the “Operate Weapons” button in the list next to the character’s portrait. Then choose the weapon you want them to operate.</Captain.CommandSecurityText>
 
-  <Captain.CommandEngineer>Commanding</Captain.CommandEngineer>
+  <Captain.CommandEngineer>Commands, part 4</Captain.CommandEngineer>
   <Captain.CommandEngineerObjective>Order the engineer to power up the reactor</Captain.CommandEngineerObjective>
   <Captain.CommandEngineerText>To order somebody to operate the reactor, click on the command interface and choose “Operate Reactor”, then “Power up”. The character will then tend to the reactor.</Captain.CommandEngineerText>
 
@@ -3050,7 +3050,7 @@
   <Captain.UndockObjective>Undock from the station</Captain.UndockObjective>
   <Captain.UndockText>To get moving, you need to undock the submarine from the outpost. Do this by going into the navigation console and press the “Toggle docking” button.</Captain.UndockText>
 
-  <Captain.Navigate>Navigating</Captain.Navigate>
+  <Captain.Navigate>Navigation</Captain.Navigate>
   <Captain.NavigateObjective>Navigate to destination</Captain.NavigateObjective>
   <Captain.NavigateText>Plot a course for the submarine by clicking on the sonar display. Navigation terminal will adjust the ballast and engine’s force accordingly and automatically.\n\nTo see where the sub is heading, turn on active sonar. Do that by finding sonar settings next to the display and set it from “passive” to active.</Captain.NavigateText>
 
