@@ -3002,9 +3002,6 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
-
-  <!-- To be removed: -->
-  <TutorialActive>Tutorial active</TutorialActive>
   
    <!-- Changed Values -->
 

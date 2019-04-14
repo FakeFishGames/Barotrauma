@@ -212,7 +212,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!officer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(1f);
-            TriggerTutorialSegment(0);
+            TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
             SetHighlight(officer_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -251,7 +251,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_equipmentCabinet.Item, false);
             do { yield return null; } while (IsSelectedItem(officer_equipmentCabinet.Item));
             yield return new WaitForSeconds(1f);
-            TriggerTutorialSegment(1);
+            TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Equip melee weapon & armor
             do
             {
                 if (!officer.HasEquippedItem("stunbaton"))
@@ -283,7 +283,7 @@ namespace Barotrauma.Tutorials
 
             // Room 4
             do { yield return null; } while (!officer_somethingBigSensor.MotionDetected);
-            TriggerTutorialSegment(3);
+            TriggerTutorialSegment(3); // Arm railgun
             do
             {
                 SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.Items[0] == null);
@@ -294,7 +294,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_superCapacitor.Item, false);
             RemoveCompletedObjective(segments[3]);
             yield return new WaitForSeconds(1f);
-            TriggerTutorialSegment(4);
+            TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = Character.Create(hammerheadCharacterFile, officer_hammerheadSpawnPos, ToolBox.RandomSeed(8));
             SetHighlight(officer_coilgunPeriscope, true);
             do { yield return null; } while (!officer_hammerhead.IsDead);
@@ -306,7 +306,7 @@ namespace Barotrauma.Tutorials
 
             // Room 5
             do { yield return null; } while (!officer_rangedWeaponSensor.MotionDetected);
-            TriggerTutorialSegment(5);
+            TriggerTutorialSegment(5, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Ranged weapons
             SetHighlight(officer_rangedWeaponHolder.Item, true);
             do { yield return null; } while (!officer_rangedWeaponHolder.Inventory.IsEmpty()); // Wait until looted
             SetHighlight(officer_rangedWeaponHolder.Item, false);

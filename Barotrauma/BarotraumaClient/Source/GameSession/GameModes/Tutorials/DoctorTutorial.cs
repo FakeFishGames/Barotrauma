@@ -159,7 +159,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(2.0f);
             }
 
-            TriggerTutorialSegment(0); // Medical supplies objective
+            TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Medical supplies objective
 
             do
             {
@@ -188,7 +188,7 @@ namespace Barotrauma.Tutorials
 
             // 2nd tutorial segment, treat self -------------------------------------------------------------------------
 
-            TriggerTutorialSegment(1); // Open health interface
+            TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Health)); // Open health interface
             while (CharacterHealth.OpenHealthWindow == null)
             {
                 yield return new WaitForSeconds(1.0f);
@@ -260,7 +260,7 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(2.0f);
 
-            TriggerTutorialSegment(4); // treat burns
+            TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Health)); // treat burns
 
             do
             {
@@ -309,7 +309,7 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(3.0f);
 
-            TriggerTutorialSegment(5); // perform CPR
+            TriggerTutorialSegment(5, GameMain.Config.KeyBind(InputType.Health)); // perform CPR
 
             while (patient2.IsUnconscious)
             {
@@ -331,7 +331,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.EnteredSub"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(3.0f);
-            TriggerTutorialSegment(6); // give treatment to anyone in need
+            TriggerTutorialSegment(6, GameMain.Config.KeyBind(InputType.Health)); // give treatment to anyone in need
 
             foreach (var patient in subPatients)
             {

@@ -221,7 +221,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(2.5f);
-            TriggerTutorialSegment(0); // Open door objective
+            TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Left), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Right), GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Select)); // Open door objective
             yield return new WaitForSeconds(1.5f);
             SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
             SetHighlight(mechanic_firstDoor.Item, true);
@@ -234,7 +234,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(0.0f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(1); // Equipment & inventory objective
+            TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -276,7 +276,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(2); // Welding objective
+            TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Aim)); // Welding objective
             do
             {
                 if (!mechanic.HasEquippedItem("divingmask"))
@@ -409,7 +409,7 @@ namespace Barotrauma.Tutorials
 
             // Room 5
             do { yield return null; } while (!mechanic_fireSensor.MotionDetected);
-            TriggerTutorialSegment(6); // Using the extinguisher
+            TriggerTutorialSegment(6, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Using the extinguisher
             do { yield return null; } while (!mechanic_fire.Removed); // Wait until extinguished
             yield return new WaitForSeconds(3f);
             RemoveCompletedObjective(segments[6]);
@@ -449,7 +449,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_brokenWall_2, true);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_2));
             SetHighlight(mechanic_brokenWall_2, false);
-            TriggerTutorialSegment(9); // Repairing machinery (pump)
+            TriggerTutorialSegment(9, GameMain.Config.KeyBind(InputType.Use)); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
             Repairable repairablePumpComponent = mechanic_brokenPump.Item.GetComponent<Repairable>();
             do
