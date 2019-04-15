@@ -84,7 +84,6 @@ namespace Barotrauma
             var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName))?.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
-                //DebugConsole.NewMessage("[RagollParams] Using the default folder.");
                 folder = GetDefaultFolder(speciesName);
             }
             return folder;
