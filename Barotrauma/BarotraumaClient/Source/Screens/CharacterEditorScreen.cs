@@ -4343,7 +4343,7 @@ namespace Barotrauma
                     GUITextBox xmlPathElement = null;
                     void UpdatePaths()
                     {
-                        string pathBase = $"Mods/Characters/{Name}/{Name}";
+                        string pathBase = $"Content/Characters/{Name}/{Name}";
                         XMLPath = $"{pathBase}.xml";
                         TexturePath = $"{pathBase}.png";
                         texturePathElement.Text = TexturePath;
