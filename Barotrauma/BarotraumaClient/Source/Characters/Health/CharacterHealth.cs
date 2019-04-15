@@ -96,6 +96,11 @@ namespace Barotrauma
         private const float UpdateDisplayedAfflictionsInterval = 0.5f;
         private List<Affliction> currentDisplayedAfflictions = new List<Affliction>();
 
+        public bool MouseOnElement
+        {
+            get { return highlightedLimbIndex > -1 || GUI.MouseOn == dropItemArea; }
+        }
+
         private static CharacterHealth openHealthWindow;
         public static CharacterHealth OpenHealthWindow
         {
@@ -172,18 +177,16 @@ namespace Barotrauma
 
             afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), paddedInfoFrame.RectTransform), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopRight);
-            lowSkillIndicator = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.07f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.08f) },
-              TextManager.Get("LowMedicalSkillWarning"), Color.Orange, textAlignment: Alignment.Center, font: GUI.SmallFont, wrap: true)
+            lowSkillIndicator = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedInfoFrame.RectTransform, Anchor.TopRight),
+              TextManager.Get("LowMedicalSkillWarning"), Color.Orange, textAlignment: Alignment.TopRight, font: GUI.SmallFont, wrap: true)
             {
                 Visible = false
             };
-            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.15f) })
-            {
-                Spacing = 10
-            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedInfoFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.05f) }, TextManager.Get("SuitableTreatments"), textAlignment: Alignment.BottomRight);
+            
+            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.12f) });
             dropItemArea = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.3f), paddedInfoFrame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.0f, 0.0f) }, style: null)
+            { RelativeOffset = new Vector2(0.02f, 0.0f) }, style: null)
             {
                 ToolTip = TextManager.Get("HealthItemUseTip")
             };
@@ -598,6 +601,7 @@ namespace Barotrauma
                         var limbHealth = limbHealths.OrderByDescending(l => l.TotalDamage).FirstOrDefault();
                         selectedLimbIndex = limbHealths.IndexOf(limbHealth);
                     }
+
                 }
                 LimbHealth selectedLimb = selectedLimbIndex < 0 ? highlightedLimb : limbHealths[selectedLimbIndex];
                 if (selectedLimb != currentDisplayedLimb || forceAfflictionContainerUpdate)
@@ -937,7 +941,7 @@ namespace Barotrauma
         {
             afflictionInfoContainer.Content.ClearChildren();
             recommendedTreatmentContainer.Content.ClearChildren();
-
+            
             float characterSkillLevel = Character.Controlled == null ? 0.0f : Character.Controlled.GetSkillLevel("medical");
 
             //random variance is 200% when the skill is 0
@@ -1032,14 +1036,15 @@ namespace Barotrauma
             {
                 ItemPrefab item = MapEntityPrefab.Find(name: null, identifier: treatment.Key, showErrorMessages: false) as ItemPrefab;
                 if (item == null) continue;
-                int slotSize = (int)(recommendedTreatmentContainer.Content.Rect.Width * 0.8f);
+                int slotSize = (int)(recommendedTreatmentContainer.Content.Rect.Width * 0.5f);
 
-                var itemSlot = new GUIButton(new RectTransform(new Point(slotSize), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopCenter),
-                    text: "", style: "InventorySlotSmall")
+                var itemSlot = new GUIFrame(new RectTransform(new Point(recommendedTreatmentContainer.Content.Rect.Width, slotSize), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopCenter),
+                    style: "InnerGlow")
                 {
-                    UserData = item
+                    UserData = item,
+                    CanBeFocused = false
                 };
-                itemSlot.Color = ToolBox.GradientLerp(treatment.Value, Color.Red, Color.White, Color.LightGreen);
+                itemSlot.Color = ToolBox.GradientLerp(treatment.Value, Color.Red, Color.Orange, Color.LightGreen);
 
                 Sprite itemSprite = item.InventoryIcon ?? item.sprite;
                 Color itemColor = itemSprite == item.sprite ? item.SpriteColor : item.InventoryIconColor;

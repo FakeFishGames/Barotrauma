@@ -66,8 +66,6 @@ namespace Barotrauma
 
         public LightComponent LightComponent { get; set; }
 
-        public int Variant { get; private set; }
-
         private Gender _gender;
         /// <summary>
         /// None = Any/Not Defined -> no effect.
@@ -114,11 +112,10 @@ namespace Barotrauma
         /// <summary>
         /// Note: this constructor cannot initialize automatically, because the gender is unknown at this point. We only know it when the item is equipped.
         /// </summary>
-        public WearableSprite(XElement subElement, Wearable wearable, int variant = 1)
+        public WearableSprite(XElement subElement, Wearable wearable)
         {
             Type = WearableType.Item;
             WearableComponent = wearable;
-            Variant = Math.Max(variant, 1);
             SpritePath = ParseSpritePath(subElement.GetAttributeString("texture", string.Empty));
             SourceElement = subElement;
         }
@@ -134,7 +131,6 @@ namespace Barotrauma
             {
                 SpritePath = SpritePath.Replace("[GENDER]", (_gender == Gender.Female) ? "female" : "male");
             }
-            SpritePath = SpritePath.Replace("[VARIANT]", Variant.ToString());
             if (Sprite != null)
             {
                 Sprite.Remove();
