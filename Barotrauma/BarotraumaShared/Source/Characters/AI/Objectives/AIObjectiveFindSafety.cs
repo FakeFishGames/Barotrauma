@@ -17,6 +17,9 @@ namespace Barotrauma
         const float SearchHullInterval = 3.0f;
         const float clearUnreachableInterval = 30;
 
+        private readonly List<Hull> targetHulls = new List<Hull>(20);
+        private readonly List<float> hullWeights = new List<float>(20);
+
         private List<Hull> unreachable = new List<Hull>();
 
         private float currenthullSafety;
@@ -187,6 +190,11 @@ namespace Barotrauma
                     float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y) * 2.0f;
                     float distanceFactor = MathHelper.Lerp(1, 0.9f, MathUtils.InverseLerp(0, 10000, dist));
                     hullSafety *= distanceFactor;
+
+                    //skip the hull if the safety is already less than the best hull
+                    //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
+                    if (hullSafety < bestValue) { continue; }
+
                     // Each unsafe node reduces the hull safety value.
                     // Ignore current hull, because otherwise the would block all paths from the current hull to the target hull.
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
