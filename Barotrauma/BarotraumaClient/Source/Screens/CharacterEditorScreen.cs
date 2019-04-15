@@ -3772,7 +3772,7 @@ namespace Barotrauma
                                         void RecalculateCollider(Limb l)
                                         {
                                             // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
-                                            float multiplier = 0.75f;
+                                            float multiplier = 0.85f;
                                             l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale * multiplier);
                                             TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / RagdollParams.LimbScale / RagdollParams.TextureScale));
                                             TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / RagdollParams.LimbScale / RagdollParams.TextureScale));
