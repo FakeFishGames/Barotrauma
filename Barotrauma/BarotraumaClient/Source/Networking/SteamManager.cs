@@ -598,6 +598,8 @@ namespace Barotrauma.Steam
 
             if (!allowFileOverwrite)
             {
+                // TODO: If you create a new mod via the workshop interface and enable it, it will show the error msg, but still allows you to enable the content.
+
                 if (File.Exists(newContentPackagePath))
                 {
                     errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
