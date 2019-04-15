@@ -2228,7 +2228,7 @@
   <mechanic.weldingtext>To repair leaks in hulls, equip the welding tool by double-clicking on it. Some items, like the welding tool, require two free hands to use. Unequip or drop an item by double-clicking it while it is in use.\n\nWhen welding tool is equipped, hold {0} to aim. While aiming, hold {1} to weld.</mechanic.weldingtext>
   <mechanic.drain>Water pumps</mechanic.drain>
   <mechanic.drainobjective>Turn on nearby pump to drain excess water</mechanic.drainobjective>
-  <mechanic.draintext>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it and flip the switch to “on” position.</mechanic.draintext>
+  <mechanic.draintext>When the sub is flooded, use pumps to drain excess water. Usually pumps receive signal from nearby water detectors or navigation terminals but some can be operated manually. This pump is programmed to only pump water out. Turn it on by interacting with it ({0}) and flip the switch to “on” position.</mechanic.draintext> //
 
   <!-- Room 4 -->
   <mechanic.deconstruct>Crafting, part 1</mechanic.deconstruct>

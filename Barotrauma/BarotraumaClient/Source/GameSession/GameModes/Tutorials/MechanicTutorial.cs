@@ -234,7 +234,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(0.0f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Equipment & inventory objective
+            TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -296,7 +296,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[2]);
             SetHighlight(mechanic_brokenWall_1, false);
             yield return new WaitForSeconds(1f);
-            TriggerTutorialSegment(3); // Pump objective
+            TriggerTutorialSegment(3, GameMain.Config.KeyBind(InputType.Select)); // Pump objective
             SetHighlight(mechanic_workingPump.Item, true);
             do
             {
@@ -449,7 +449,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_brokenWall_2, true);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_2));
             SetHighlight(mechanic_brokenWall_2, false);
-            TriggerTutorialSegment(9, GameMain.Config.KeyBind(InputType.Use)); // Repairing machinery (pump)
+            TriggerTutorialSegment(9, GameMain.Config.KeyBind(InputType.Select)); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
             Repairable repairablePumpComponent = mechanic_brokenPump.Item.GetComponent<Repairable>();
             do
