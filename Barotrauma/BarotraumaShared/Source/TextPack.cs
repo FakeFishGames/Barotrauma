@@ -37,7 +37,6 @@ namespace Barotrauma
                 text = text.Replace("&amp;", "&");
                 text = text.Replace("&lt;", "<");
                 text = text.Replace("&gt;", ">");
-                text = text.Replace("&quot;", "\"");
                 infoList.Add(text);
             }
         }

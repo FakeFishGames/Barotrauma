@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
         
-        [Editable, Serialize("", true, translationTextTag: "ItemMsg")]
+        [Editable, Serialize("", true)]
         public string Msg
         {
             get;
