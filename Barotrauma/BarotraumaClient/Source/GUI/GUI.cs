@@ -1559,6 +1559,8 @@ namespace Barotrauma
                 }
                 GameMain.GameSession = null;
             }
+
+            GUIMessageBox.CloseAll();
             
             GameMain.MainMenuScreen.Select();
 
