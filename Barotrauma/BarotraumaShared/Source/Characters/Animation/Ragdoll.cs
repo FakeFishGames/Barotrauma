@@ -692,7 +692,7 @@ namespace Barotrauma
             ImpactProjSpecific(impact, f1.Body);
         }
         
-        public void SeverLimbJoint(LimbJoint limbJoint, bool playSound = true)
+        public void SeverLimbJoint(LimbJoint limbJoint)
         {
             if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
             {
@@ -721,7 +721,7 @@ namespace Barotrauma
             }
         }
 
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound = true);
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint);
 
         private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
         {
