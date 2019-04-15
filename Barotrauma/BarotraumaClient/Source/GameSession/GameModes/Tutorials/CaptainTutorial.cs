@@ -67,15 +67,14 @@ namespace Barotrauma.Tutorials
             captain_firstDoor = Item.ItemList.Find(i => i.HasTag("captain_firstdoor")).GetComponent<Door>();
             captain_firstDoorLight = Item.ItemList.Find(i => i.HasTag("captain_firstdoorlight")).GetComponent<LightComponent>();
 
-            SetDoorAccess(captain_firstDoor, captain_firstDoorLight, false);
+            SetDoorAccess(captain_firstDoor, captain_firstDoorLight, true);
 
             // Room 3
             captain_medicObjectiveSensor = Item.ItemList.Find(i => i.HasTag("captain_medicobjectivesensor")).GetComponent<MotionSensor>();
             captain_medicSpawnPos = Item.ItemList.Find(i => i.HasTag("captain_medicspawnpos")).WorldPosition;
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
-
-            var medicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "medic"));
+            var medicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "medicaldoctor"));
             captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
             captain_medic.GiveJobItems(null);
             captain_medic.CanSpeak = captain_medic.AIController.Enabled = false;
@@ -116,12 +115,13 @@ namespace Barotrauma.Tutorials
             }
 
             // Room 2
-            do { yield return null; } while (!captain_equipmentObjectiveSensor.MotionDetected);
+            do { yield return null; } while (!captain_firstDoor.IsOpen);
+            /*do { yield return null; } while (!captain_equipmentObjectiveSensor.MotionDetected);
             SetHighlight(captain_equipmentCabinet.Item, true);
             do { yield return null; } while (!captain_equipmentCabinet.Inventory.IsEmpty());
-            SetHighlight(captain_equipmentCabinet.Item, false);
+            SetHighlight(captain_equipmentCabinet.Item, false);*/
             captain_medic.AIController.Enabled = true;
-            SetDoorAccess(captain_firstDoor, captain_firstDoorLight, true);
+            //SetDoorAccess(captain_firstDoor, captain_firstDoorLight, true);
 
             // Room 3
             do { yield return null; } while (!captain_medicObjectiveSensor.MotionDetected);
@@ -160,7 +160,7 @@ namespace Barotrauma.Tutorials
             }
             while (!HasOrder(captain_security, "operateweapons"));
             RemoveCompletedObjective(segments[2]);
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(3);
             GameMain.GameSession.CrewManager.AddCharacter(captain_engineer);
             do
@@ -176,14 +176,15 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_sonar.Item, true);
             do { yield return null; } while (Submarine.MainSub.DockedTo.Count > 0);
             RemoveCompletedObjective(segments[4]);
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(5);
             do { yield return null; } while (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 4000f);
             RemoveCompletedObjective(segments[5]);
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(6);
             do { yield return null; } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
             RemoveCompletedObjective(segments[6]);
+            yield return new WaitForSeconds(3f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete").Replace("[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);
