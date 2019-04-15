@@ -598,6 +598,7 @@ namespace Barotrauma
                         var limbHealth = limbHealths.OrderByDescending(l => l.TotalDamage).FirstOrDefault();
                         selectedLimbIndex = limbHealths.IndexOf(limbHealth);
                     }
+
                 }
                 LimbHealth selectedLimb = selectedLimbIndex < 0 ? highlightedLimb : limbHealths[selectedLimbIndex];
                 if (selectedLimb != currentDisplayedLimb || forceAfflictionContainerUpdate)
