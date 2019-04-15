@@ -60,8 +60,8 @@ namespace Barotrauma
                 else
                 {
                     divingGearObjective = null;
-                    // Reduce the timer so that we get a safe hull target faster.
-                    searchHullTimer = Math.Min(1, searchHullTimer);
+                    // Reset the timer so that we get a safe hull target.
+                    searchHullTimer = 0;
                 }
             }
 
