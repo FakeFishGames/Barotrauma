@@ -292,10 +292,10 @@ namespace Barotrauma
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
                         damageSoundType = damageModifier.DamageSound;
-                        SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
                         break;
                     }
                 }
+                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
             }
 
             // Always spawn damage particles
