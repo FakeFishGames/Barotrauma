@@ -739,7 +739,7 @@ namespace Barotrauma
                 ReadyToStartBox.Selected = false;
                 if (campaignUI != null)
                 {
-                    SelectTab(Tab.Map);
+                    //SelectTab(Tab.Map);
                     if (campaignUI.StartButton != null)
                     {
                         campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
