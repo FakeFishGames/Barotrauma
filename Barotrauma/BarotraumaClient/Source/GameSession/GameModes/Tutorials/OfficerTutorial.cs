@@ -72,7 +72,7 @@ namespace Barotrauma.Tutorials
         private string crawlerCharacterFile;
         private string hammerheadCharacterFile;
         private string mudraptorCharacterFile;
-        private float superCapacitorRechargeRate = 50;
+        private float superCapacitorRechargeRate = 10;
 
         public OfficerTutorial(XElement element) : base(element)
         {

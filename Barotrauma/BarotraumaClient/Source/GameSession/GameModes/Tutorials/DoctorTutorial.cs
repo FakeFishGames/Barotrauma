@@ -28,6 +28,7 @@ namespace Barotrauma.Tutorials
         private Door doctor_firstDoor;
         private Door doctor_secondDoor;
         private Door doctor_thirdDoor;
+        private Door tutorial_upperFinalDoor;
 
         private LightComponent doctor_firstDoorLight;
         private LightComponent doctor_secondDoorLight;
@@ -84,6 +85,7 @@ namespace Barotrauma.Tutorials
             doctor_firstDoor = Item.ItemList.Find(i => i.HasTag("doctor_firstdoor")).GetComponent<Door>();
             doctor_secondDoor = Item.ItemList.Find(i => i.HasTag("doctor_seconddoor")).GetComponent<Door>();
             doctor_thirdDoor = Item.ItemList.Find(i => i.HasTag("doctor_thirddoor")).GetComponent<Door>();
+            tutorial_upperFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_upperfinaldoor")).GetComponent<Door>();
             doctor_firstDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_firstdoorlight")).GetComponent<LightComponent>();
             doctor_secondDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_seconddoorlight")).GetComponent<LightComponent>();
             doctor_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_thirddoorlight")).GetComponent<LightComponent>();
@@ -149,15 +151,16 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(3.0f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.KnockedDown"), ChatMessageType.Radio, null);
-            
+
             // first tutorial segment, get medical supplies ------------------------------------------------------
 
+            yield return new WaitForSeconds(1.5f);
             SetHighlight(doctor_suppliesCabinet.Item, true);
 
-            while (doctor.CurrentHull != doctor_suppliesCabinet.Item.CurrentHull)
+            /*while (doctor.CurrentHull != doctor_suppliesCabinet.Item.CurrentHull)
             {
                 yield return new WaitForSeconds(2.0f);
-            }
+            }*/
 
             TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Medical supplies objective
 
@@ -231,7 +234,7 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(1.0f);
             }
-            yield return new WaitForSeconds(2.0f);
+            yield return new WaitForSeconds(0.0f);
 
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.AssistantBurns"), ChatMessageType.Radio, null);
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
@@ -264,7 +267,7 @@ namespace Barotrauma.Tutorials
 
             do
             {
-                for (int i = 0; i < doctor_medBayCabinet.Inventory.Items.Length; i++)
+                for (int i = 0; i < 3; i++)
                 {
                     if (doctor_medBayCabinet.Inventory.Items[i] != null)
                     {
@@ -285,7 +288,17 @@ namespace Barotrauma.Tutorials
             while (patient1.CharacterHealth.GetAfflictionStrength("burn") > 0.01f)
             {
                 //TODO: highlight patient
+
+                if (CharacterHealth.OpenHealthWindow == null)
+                {
+                    doctor.CharacterHealth.HealthBarPulsateTimer = 1.0f;
+                }
+                else
+                {
+                    HighlightInventorySlot(doctor.Inventory, "antibleeding1", highlightColor, .5f, .5f, 0f);
+                }
                 yield return null;
+
             }
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(1.0f);
@@ -303,11 +316,12 @@ namespace Barotrauma.Tutorials
             patient2.Oxygen = -50;
             CoroutineManager.StartCoroutine(KeepPatientAlive(patient2), "KeepPatient2Alive");
 
-            while (doctor.CurrentHull != patient2.CurrentHull)
+            /*while (doctor.CurrentHull != patient2.CurrentHull)
             {
                 yield return new WaitForSeconds(1.0f);
-            }
-            yield return new WaitForSeconds(3.0f);
+            }*/
+            do { yield return null; } while (!tutorial_upperFinalDoor.IsOpen);
+            yield return new WaitForSeconds(2.0f);
 
             TriggerTutorialSegment(5, GameMain.Config.KeyBind(InputType.Health)); // perform CPR
 
@@ -322,6 +336,8 @@ namespace Barotrauma.Tutorials
             }
             RemoveCompletedObjective(segments[5]);
             CoroutineManager.StopCoroutines("KeepPatient2Alive");
+
+            SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
 
             while (doctor.Submarine != Submarine.MainSub)
             {
