@@ -57,10 +57,20 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            var newEvent = new ClientEntityEvent(entity, (UInt16)(ID + 1))
+            {
+                CharacterStateID = GameMain.Client.Character.LastNetworkUpdateID
+            };
+            if (extraData != null) { newEvent.SetData(extraData); }
+
+            for (int i = events.Count - 1; i >= 0; i--)
+            {
+                //we already have an identical event that's waiting to be sent
+                // -> no need to add a new one
+                if (!events[i].Sent && events[i].IsDuplicate(newEvent)) return;
+            }
+
             ID++;
-            var newEvent = new ClientEntityEvent(entity, ID);
-            newEvent.CharacterStateID = GameMain.Client.Character.LastNetworkUpdateID;
-            if (extraData != null) newEvent.SetData(extraData);
 
             events.Add(newEvent);
         }
@@ -79,7 +89,10 @@ namespace Barotrauma.Networking
                 startIndex--;
             }
 
-            for (int i = startIndex; i < events.Count; i++)
+            //remove events the server has already received
+            events.RemoveRange(0, startIndex);
+
+            for (int i = 0; i < events.Count; i++)
             {
                 //find the first event that hasn't been sent in roundtriptime or at all
                 eventLastSent.TryGetValue(events[i].ID, out float lastSent);
@@ -232,6 +245,7 @@ namespace Barotrauma.Networking
             if (clientEvent == null) return;
 
             clientEvent.Write(buffer);
+            clientEvent.Sent = true;
         }
 
         protected void ReadEvent(NetIncomingMessage buffer, IServerSerializable entity, float sendingTime)

@@ -25,6 +25,8 @@ namespace Barotrauma.Networking
         //(the index of an itemcomponent for example)
         protected object[] Data;
 
+        public bool Sent;
+
         protected NetEntityEvent(INetSerializable entity, UInt16 id)
         {
             this.ID = id;

@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Fiber Plant" identifier="fiberplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
+  <Item name="Fiber Plant" identifier="fiberplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Deconstruct time="5">
       <Item identifier="organicfiber" />
       <Item identifier="organicfiber" />
       <Item identifier="organicfiber" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="118,47,282,416" />
-    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="118,47,282,416" origin="0.5,0.5" />
-    <Body radius="85" height="170" density="12" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="0,0,108,166" />
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="0,0,108,166" origin="0.5,0.5" />
+    <Body radius="30" height="50" density="12" />
     <LevelResource deattachduration="1">
       <Commonness commonness="8" />
     </LevelResource>
@@ -19,15 +19,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Elastin Plant" identifier="elastinplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
+  <Item name="Elastin Plant" identifier="elastinplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Deconstruct time="5">
       <Item identifier="elastin" />
       <Item identifier="elastin" />
       <Item identifier="elastin" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="586,54,364,373" />
-    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="586,54,364,373" origin="0.5,0.5" />
-    <Body width="280" height="200" density="12" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="115,19,138,140" />
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="115,19,138,140" origin="0.5,0.5" />
+    <Body width="120" height="120" density="12" />
     <LevelResource deattachduration="1">
       <Commonness commonness="8" />
     </LevelResource>
@@ -38,15 +38,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Aquatic Poppy" identifier="aquaticpoppy" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
+  <Item name="Aquatic Poppy" identifier="aquaticpoppy" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Deconstruct time="5">
       <Item identifier="opium" />
       <Item identifier="opium" />
       <Item identifier="opium" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="103,605,322,319" />
-    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="103,605,322,319" origin="0.5,0.5" />
-    <Body radius="120" density="12" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="4,172,114,111" />
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="4,172,114,111" origin="0.5,0.5" />
+    <Body radius="30" width="30" density="12" />
     <LevelResource deattachduration="1">
       <Commonness commonness="10" />
     </LevelResource>
@@ -57,15 +57,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Sea Yeast Shroom" identifier="yeastshroom" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2">
+  <Item name="Sea Yeast Shroom" identifier="yeastshroom" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5">
     <Deconstruct time="5">
       <Item identifier="ethanol" />
       <Item identifier="ethanol" />
       <Item identifier="ethanol" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="580,618,370,298" />
-    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="580,618,370,298" origin="0.5,0.5" />
-    <Body radius="100" width="150" density="12" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="133,166,143,115" />
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="133,166,143,115" origin="0.5,0.5" />
+    <Body radius="40" width="50" density="12" />
     <LevelResource deattachduration="1">
       <Commonness commonness="10" />
     </LevelResource>
@@ -76,15 +76,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Slime Bacteria" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="A colony of myxobacteria. Can be processed into antibiotics." cargocontaineridentifier="metalcrate" scale="0.3">
+  <Item name="Slime Bacteria" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="A colony of myxobacteria. Can be processed into antibiotics." cargocontaineridentifier="metalcrate" scale="0.5">
     <Deconstruct time="5">
       <Item identifier="antibiotics" />
       <Item identifier="antibiotics" />
       <Item identifier="antibiotics" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,770,58,59" origin="0.5,0.5" />
-    <Sprite texture="CraftingElements2.png" depth="0.2" sourcerect="0,288,91,29" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/Materials/LootablePlants.png" sourcerect="282,165,144,122" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/LootablePlants.png" depth="0.2" sourcerect="282,165,144,122" origin="0.5,0.5" />
+    <Body radius="40" width="40" density="15" />
     <LevelResource deattachduration="1">
       <Commonness commonness="2" />
     </LevelResource>

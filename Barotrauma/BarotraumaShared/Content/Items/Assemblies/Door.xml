@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="Door" description="" hideinmenus="false">
+<ItemAssembly name="Button Door" description="" hideinmenus="false">
   <Item name="Door" identifier="door" ID="4" rect="-16,112,48,208" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="door" displaysidebysidewhenlinked="False" spritedepth="0.01" scale="0.5">
     <Door isopen="False" pickingtime="10" canbepicked="True" allowingameediting="True" msg="ItemMsgForceOpenCrowbar">
       <requireditem identifiers="crowbar" type="Equipped" />

@@ -360,7 +360,7 @@ namespace Barotrauma
                         Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                         tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
-                    tempBuffer.Write(IsRagdolled);
+                    tempBuffer.Write(IsRagdolled || IsUnconscious || Stun > 0.0f || IsDead);
 
                     tempBuffer.Write(AnimController.Dir > 0.0f);
                 }

@@ -10,6 +10,7 @@ using System.Xml.Linq;
 #if CLIENT
 using Barotrauma.Lights;
 #endif
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -126,6 +127,9 @@ namespace Barotrauma.Items.Components
                 OpenState = (isOpen) ? 1.0f : 0.0f;
             }
         }
+
+        [Serialize(false, false)]
+        public bool HasIntegratedButtons { get; private set; }
                 
         public float OpenState
         {
@@ -210,34 +214,71 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override bool HasRequiredItems(Character character, bool addMessage)
+        private string accessDeniedTxt = TextManager.Get("AccessDenied");
+        private string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
+        private bool hasValidIdCard;
+        public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (item.Condition <= RepairThreshold) return true; //For repairing
 
+            var idCard = character.Inventory.FindItemByIdentifier("idcard");
+            hasValidIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
+            Msg = requiredItems.None() || hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
+            ParseMsg();
+            if (addMessage)
+            {
+                msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
+            }
+
             //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
-            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage) : canBePicked;
+            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg) : canBePicked;
         }
 
         public override bool Pick(Character picker)
         {
-            return item.Condition <= RepairThreshold ? true : base.Pick(picker);
+            if (item.Condition <= RepairThreshold) { return true; }
+            if (requiredItems.None()) { return false; }
+            if (HasRequiredItems(picker, false) && hasValidIdCard) { return false; }
+            return base.Pick(picker);
         }
 
         public override bool OnPicked(Character picker)
         {
             if (item.Condition <= RepairThreshold) return true; //repairs
+            if (requiredItems.Any() && !hasValidIdCard)
+            {
+                ForceOpen(ActionType.OnPicked);
+            }
+            return false;
+        }
 
+        private void ForceOpen(ActionType actionType)
+        {
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true); //crowbar function
 #if CLIENT
-            PlaySound(ActionType.OnPicked, item.WorldPosition, picker);
+            PlaySound(actionType, item.WorldPosition, picker);
 #endif
-            return false;
         }
 
         public override bool Select(Character character)
         {
             //can only be selected if the item is broken
-            return item.Condition <= RepairThreshold;
+            if (item.Condition <= RepairThreshold) return true; //repairs
+            bool hasRequiredItems = HasRequiredItems(character, false);
+            if (requiredItems.None() || hasRequiredItems && hasValidIdCard)
+            {
+                float originalPickingTime = PickingTime;
+                PickingTime = 0;
+                ForceOpen(ActionType.OnUse);
+                PickingTime = originalPickingTime;
+            }
+            else if (hasRequiredItems)
+            {
+#if CLIENT
+                GUI.AddMessage(accessDeniedTxt, Color.Red);
+#endif
+            }
+            return false;
         }
 
         public override void Update(float deltaTime, Camera cam)

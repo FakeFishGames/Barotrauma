@@ -69,7 +69,7 @@
     </Limb>
   </health>
 
-  <inventory arrowslot="9" slots="InnerClothes, OuterClothes, LeftHand, RightHand, Head, Card, Headset, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
+  <inventory arrowslot="9" slots="Card, Headset, Head, InnerClothes, OuterClothes, LeftHand, RightHand, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
 
   <HeadAttachments>
     
