@@ -584,11 +584,21 @@ namespace Barotrauma
                     var affliction = GetAllAfflictions(a => a.Prefab.IndicatorLimb != LimbType.None)
                         .OrderByDescending(a => a.DamagePerSecond)
                         .ThenByDescending(a => a.Strength).FirstOrDefault();
-                    var limbHealth = GetMathingLimbHealth(affliction);
-                    if (limbHealth != null)
+                    if (affliction.DamagePerSecond > 0 && affliction.Strength > 0)
                     {
+                        var limbHealth = GetMathingLimbHealth(affliction);
+                        if (limbHealth != null)
+                        {
+                            selectedLimbIndex = limbHealths.IndexOf(limbHealth);
+                        }
+                    }
+                    else
+                    {
+                        // If no affliction is critical, select the limb which has most damage.
+                        var limbHealth = limbHealths.OrderByDescending(l => l.TotalDamage).FirstOrDefault();
                         selectedLimbIndex = limbHealths.IndexOf(limbHealth);
                     }
+
                 }
                 LimbHealth selectedLimb = selectedLimbIndex < 0 ? highlightedLimb : limbHealths[selectedLimbIndex];
                 if (selectedLimb != currentDisplayedLimb || forceAfflictionContainerUpdate)
