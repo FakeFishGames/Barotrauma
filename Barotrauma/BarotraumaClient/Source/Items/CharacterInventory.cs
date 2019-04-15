@@ -424,42 +424,6 @@ namespace Barotrauma
                     }
                     slots[i].DrawOffset = Vector2.Lerp(Vector2.Zero, new Vector2(personalSlotArea.Width, 0.0f), hidePersonalSlotsState);
                 }
-                
-                /*var arrowSlot = slots[arrowSlotIndex];
-
-                Rectangle arrowRect = new Rectangle(
-                    (int)(arrowSlot.Rect.X + arrowSlot.DrawOffset.X - toggleArrow.size.X / 2),
-                    (int)(arrowSlot.Rect.Y), 
-                    (int)toggleArrow.size.X, (int)arrowSlot.Rect.Height);
-                arrowRect.Inflate(30, 0);
-
-                if (arrowRect.Contains(PlayerInput.MousePosition))
-                {
-                    arrowAlpha = Math.Min(arrowAlpha + deltaTime * 10.0f, 1.0f);
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        hidden = !hidden;
-                        HideTimer = 0.0f;
-
-                        foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
-                        {
-                            highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
-                        }
-                        return;
-                    }
-                }
-                else
-                {
-                    arrowAlpha = Math.Max(arrowAlpha - deltaTime * 10.0f, 0.5f);
-                }
-
-                if (GUI.MouseOn == null &&
-                    (slots[toggleArrowSlotIndex].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
-                    slots[toggleArrowSlotIndex].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[toggleArrowSlotIndex].EquipButtonRect.Bottom) &&
-                    slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
-                {
-                    hoverOnInventory = true;
-                }*/
             }
             
             if (hoverOnInventory) HideTimer = 0.5f;
@@ -474,7 +438,23 @@ namespace Barotrauma
                     QuickUseItem(Items[i], true, false, true);
                 }
             }
-            
+
+            //force personal slots open if an item is running out of battery/fuel/oxygen/etc
+            if (hidePersonalSlots)
+            {
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    if (Items[i]?.OwnInventory != null && Items[i].OwnInventory.Capacity == 1 && PersonalSlots.HasFlag(SlotTypes[i]))
+                    {
+                        if (Items[i].OwnInventory.Items[0].Condition > 0.0f &&
+                            Items[i].OwnInventory.Items[0].Condition / Items[i].OwnInventory.Items[0].MaxCondition < 0.15f)
+                        {
+                            hidePersonalSlots = false;
+                        }
+                    }
+                }
+            }
+
             List<SlotReference> hideSubInventories = new List<SlotReference>();
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
