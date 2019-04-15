@@ -26,6 +26,9 @@ namespace Barotrauma
         private float standStillTimer;
         private float walkDuration;
 
+        private readonly List<Hull> targetHulls = new List<Hull>(20);
+        private readonly List<float> hullWeights = new List<float>(20);
+
         public AIObjectiveIdle(Character character) : base(character, "")
         {
             standStillTimer = Rand.Range(-10.0f, 10.0f);
@@ -106,7 +109,7 @@ namespace Barotrauma
                     if (isCurrentHullOK)
                     {
                         // Check that there is no unsafe or forbidden hulls on the way to the target
-                        // Only do this when the current hull is ok, because otherwise the would block all paths from the current hull to the target hull.
+                        // Only do this when the current hull is ok, because otherwise would block all paths from the current hull to the target hull.
                         var path = PathSteering.PathFinder.FindPath(character.SimPosition, randomHull.SimPosition);
                         if (path.Unreachable ||
                             path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull)))
@@ -230,13 +233,9 @@ namespace Barotrauma
             }
         }
 
-        private readonly List<Hull> targetHulls = new List<Hull>(20);
-        private readonly List<float> hullWeights = new List<float>(20);
-
         private void FindTargetHulls()
         {
             bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
-
             targetHulls.Clear();
             hullWeights.Clear();
             foreach (var hull in Hull.hullList)
@@ -266,7 +265,6 @@ namespace Barotrauma
                     hullWeights.Add(weight);
                 }
             }
-            
         }
 
         private bool IsForbidden(Hull hull)
