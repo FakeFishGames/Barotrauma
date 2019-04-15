@@ -131,8 +131,8 @@ namespace Barotrauma
                     character.AIController.SelectTarget(currentTarget.AiTarget);
                     string errorMsg = null;
 #if DEBUG
-                    bool isRoomNameFound = currentTarget.RoomName != null;
-                    errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.RoomName : currentTarget.ToString()) + ")";
+                    bool isRoomNameFound = currentTarget.DisplayName != null;
+                    errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.DisplayName : currentTarget.ToString()) + ")";
 #endif
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsg);
                     PathSteering.SetPath(path);
