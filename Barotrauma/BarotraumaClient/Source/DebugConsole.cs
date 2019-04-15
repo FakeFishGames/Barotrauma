@@ -1111,8 +1111,8 @@ namespace Barotrauma
                 List<string> lines = new List<string>();
                 foreach (MapEntityPrefab me in MapEntityPrefab.List)
                 {
-                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
-                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</EntityName." + me.Identifier + ">");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</EntityDescription." + me.Identifier + ">");
                 }
                 File.WriteAllLines(filePath, lines);
             }));
