@@ -296,6 +296,7 @@ namespace Barotrauma
                         break;
                     }
                 }
+                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
             }
 
             // Always spawn damage particles
