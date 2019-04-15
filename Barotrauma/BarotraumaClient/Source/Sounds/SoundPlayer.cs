@@ -269,6 +269,13 @@ namespace Barotrauma
                 }
 
                 movementSoundVolume = Math.Max(movementSoundVolume, movementFactor);
+                if (!MathUtils.IsValid(movementSoundVolume))
+                {
+                    string errorMsg = "Failed to update water ambience volume - submarine's movement value invalid (" + movementSoundVolume + ", sub velocity: " + sub.Velocity + ")";
+                    DebugConsole.Log(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.UpdateWaterAmbience:InvalidVolume", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    movementSoundVolume = 0.0f;
+                }
             }
 
             if (waterAmbiences.Count > 1)

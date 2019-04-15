@@ -207,7 +207,6 @@ namespace Barotrauma.Items.Components
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime * 10.0f);
                 HideHUDs(true);
             }
-            HideHUDs(true);
 #endif
 
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)

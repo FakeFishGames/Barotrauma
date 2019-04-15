@@ -84,7 +84,7 @@ namespace Barotrauma
             {
                 searchHullTimer -= deltaTime;
             }
-            else if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
+            else
             {
                 var bestHull = FindBestHull();
                 if (bestHull != null && bestHull != currentHull)

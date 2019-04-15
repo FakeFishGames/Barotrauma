@@ -906,30 +906,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Client != null)
                     {
-                        foreach (var mapEntity in MapEntity.SelectedList)
-                        {
-                            if (mapEntity is Item item)
-                            {
-                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y,
-                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale),
-                                    (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
-                            }
-                            else if (mapEntity is Structure structure)
-                            {
-                                if (!structure.ResizeHorizontal)
-                                {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
-                                        (int)structure.Prefab.ScaledSize.X,
-                                        structure.Rect.Height);
-                                }
-                                if (!structure.ResizeVertical)
-                                {
-                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
-                                        structure.Rect.Width,
-                                        (int)structure.Prefab.ScaledSize.Y);
-                                }
-                            }
-                        }
+                        GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
                     }
                 }
             }));
