@@ -493,12 +493,15 @@ namespace Barotrauma
 
         private GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value, string displayName, string toolTip)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var frame = new GUILayoutGroup(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
             var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: GUI.SmallFont, textAlignment: Alignment.Left)
             {
                 ToolTip = toolTip
             };
-            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight))
+            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform))
             {
                 ToolTip = toolTip,
                 Font = GUI.SmallFont,
@@ -514,6 +517,31 @@ namespace Barotrauma
                     return true;
                 }
             };
+            string translationTextTag = property.GetAttribute<Serialize>()?.translationTextTag;
+            if (translationTextTag != null)
+            {
+                new GUIButton(new RectTransform(new Vector2(0.1f, 1), frame.RectTransform, Anchor.TopRight), "...")
+                {
+                    OnClicked = (bt, userData) => { CreateTextPicker(translationTextTag, entity, property, propertyBox); return true; }
+                };
+                propertyBox.OnTextChanged += (tb, text) =>
+                {
+                    string translatedText = TextManager.Get(text, returnNull: true);
+                    if (translatedText == null)
+                    {
+                        propertyBox.TextColor = Color.Gray;
+                        propertyBox.ToolTip = TextManager.Get("StringPropertyCannotTranslate").Replace("[tag]", text ?? "");
+                    }
+                    else
+                    {
+                        propertyBox.TextColor = Color.LightGreen;
+                        propertyBox.ToolTip = TextManager.Get("StringPropertyTranslate").Replace("[translation]", translatedText);
+                    }
+                    return true;
+                };
+                propertyBox.Text = value;
+            }
+
             Fields.Add(property.Name, new GUIComponent[] { propertyBox });
             return frame;
         }
@@ -869,6 +897,40 @@ namespace Barotrauma
             }
             Fields.Add(property.Name, fields);
             return frame;
+        }
+
+        private void CreateTextPicker(string textTag, ISerializableEntity entity, SerializableProperty property, GUITextBox textBox)
+        {
+            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, width: 300, height: 400);
+            msgBox.Buttons[0].OnClicked = msgBox.Close;
+
+            var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
+            {
+                OnSelected = (component, userData) =>
+                {
+                    string text = userData as string ?? "";
+
+                    if (property.TrySetValue(entity, text))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                        textBox.Text = (string)property.GetValue(entity);
+                        textBox.Deselect();
+                    }
+                    return true;
+                }
+            };
+
+            textTag = textTag.ToLowerInvariant();
+            var tagTextPairs = TextManager.GetAllTagTextPairs();
+            foreach (KeyValuePair<string, string> tagTextPair in tagTextPairs)
+            {
+                if (!tagTextPair.Key.StartsWith(textTag)) { continue; }
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    ToolBox.LimitString(tagTextPair.Value, GUI.Font, textList.Content.Rect.Width))
+                {
+                    UserData = tagTextPair.Key
+                };
+            }
         }
         
         private void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
