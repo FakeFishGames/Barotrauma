@@ -3,7 +3,10 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Tutorials
 {
@@ -184,6 +187,19 @@ namespace Barotrauma.Tutorials
             activeObjectives.Clear();
             objectiveTranslated = TextManager.Get("Tutorial.Objective");
             CreateObjectiveFrame();
+
+            // Setup doors:  Clear all requirements, unless the door is setup as locked.
+            foreach (var item in Item.ItemList)
+            {
+                var door = item.GetComponent<Door>();
+                if (door != null)
+                {
+                    if (door.requiredItems.Values.None(ris => ris.None(ri => ri.Identifiers.None(i => i == "locked"))))
+                    {
+                        door.requiredItems.Clear();
+                    }
+                }
+            }
         }
 
         public virtual void AddToGUIUpdateList()
