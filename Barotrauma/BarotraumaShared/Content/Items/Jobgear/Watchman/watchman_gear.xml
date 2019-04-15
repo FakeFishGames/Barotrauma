@@ -8,7 +8,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" />
     <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="264,36,183,67" depth="0.6" />
     <Body width="50" height="17" density="20" />
-    <Wearable slots="Any,InnerClothes">
+    <Wearable slots="Any,InnerClothes" variants="3">
       <sprite name="Watchman Torso" texture="watchman_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Watchman Left Upper Arm" texture="watchman_torso_[GENDER]_[VARIANT].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Watchman Right Upper Arm" texture="watchman_torso_[GENDER]_[VARIANT].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />

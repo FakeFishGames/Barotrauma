@@ -19,7 +19,7 @@
 
     <Body width="50" height="17" density="20"/>
 
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="2">
       <sprite name="Engineer Torso" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
       
       <sprite name="Engineer Left Upper Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
