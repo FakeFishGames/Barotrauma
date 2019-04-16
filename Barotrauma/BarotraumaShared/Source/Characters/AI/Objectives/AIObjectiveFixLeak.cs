@@ -39,18 +39,10 @@ namespace Barotrauma
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (leak.Open == 0.0f) { return 0.0f; }
-
-            //float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
-            //float dist = Vector2.DistanceSquared(character.SimPosition, leak.SimPosition);
-            //dist = Math.Max(dist / 100.0f, 1.0f);
-            //return Math.Min(leakSize / dist, 40.0f);
-
-            float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
-            float dist = Vector2.DistanceSquared(character.SimPosition, leak.SimPosition);
-            dist = Math.Max(dist / 100.0f, 1.0f);
+            float priority = AIObjectiveFixLeaks.GetLeakSeverity(leak);
             float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
             float max = MathHelper.Min((AIObjectiveManager.OrderPriority + 20) * maxMultiplier, 90);
-            return MathHelper.Clamp(Priority + leakSize / dist, 0, max);
+            return MathHelper.Clamp(Priority + priority, 0, max);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
