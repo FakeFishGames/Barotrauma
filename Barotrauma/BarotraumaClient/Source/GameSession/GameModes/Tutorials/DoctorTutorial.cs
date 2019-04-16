@@ -109,6 +109,8 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
+            while (GameMain.Instance.LoadingScreenOpen) yield return null;
+
             // explosions and radio messages ------------------------------------------------------
 
             yield return new WaitForSeconds(3.0f);

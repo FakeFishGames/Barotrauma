@@ -176,6 +176,8 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
+            while (GameMain.Instance.LoadingScreenOpen) yield return null;
+
             // Room 1
             while (shakeTimer > 0.0f) // Wake up, shake
             {
