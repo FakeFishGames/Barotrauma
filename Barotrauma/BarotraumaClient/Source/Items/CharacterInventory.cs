@@ -440,16 +440,6 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
-        {
-            if (!AccessibleWhenAlive && !character.IsDead)
-            {
-                syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
-                return;
-            }
-
-            base.Update(deltaTime, cam);
-
             //force personal slots open if an item is running out of battery/fuel/oxygen/etc
             if (hidePersonalSlots)
             {
@@ -473,6 +463,7 @@ namespace Barotrauma
                 {
                     UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex, cam);
                 }
+            }
 
                 Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
                 if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))
