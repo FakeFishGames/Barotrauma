@@ -154,8 +154,6 @@ namespace Barotrauma
 
             public SlotReference(Inventory parentInventory, InventorySlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
-
-
                 ParentInventory = parentInventory;
                 Slot = slot;
                 SlotIndex = slotIndex;
@@ -856,7 +854,7 @@ namespace Barotrauma
                         if (itemContainer.ContainedStateIndicator?.Texture == null)
                         {
                             containedIndicatorArea.Inflate(0, -2);
-                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.8f, true);
+                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.9f, true);
                             GUI.DrawRectangle(spriteBatch,
                                 new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
                                 Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f, true);
@@ -870,11 +868,11 @@ namespace Barotrauma
 
                             if (containedState > 0.0f && containedState < 0.25f)
                             {
-                                indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.1f;
+                                indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.25f;
                             }
 
                             indicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
-                                Color.DarkGray * 0.6f, 
+                                Color.DarkGray * 0.9f, 
                                 origin: indicatorSprite.size / 2,
                                 rotate: 0.0f,
                                 scale: indicatorScale);

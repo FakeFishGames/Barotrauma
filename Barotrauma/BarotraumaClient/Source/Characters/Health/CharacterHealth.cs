@@ -587,7 +587,7 @@ namespace Barotrauma
                     var affliction = GetAllAfflictions(a => a.Prefab.IndicatorLimb != LimbType.None)
                         .OrderByDescending(a => a.DamagePerSecond)
                         .ThenByDescending(a => a.Strength).FirstOrDefault();
-                    if (affliction.DamagePerSecond > 0 || affliction.Strength > 0)
+                    if (affliction.DamagePerSecond > 0 && affliction.Strength > 0)
                     {
                         var limbHealth = GetMathingLimbHealth(affliction);
                         if (limbHealth != null)
