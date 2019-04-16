@@ -449,6 +449,7 @@ namespace Barotrauma.Tutorials
                 activeObjectives[i].ReplayButton.RectTransform.AbsoluteOffset = new Point(0, (activeObjectives[i].ReplayButton.Rect.Height + 20) * i);
             }
         }
+
         #endregion
 
         #region InfoFrame

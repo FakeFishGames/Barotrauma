@@ -77,6 +77,7 @@ namespace Barotrauma.Tutorials
         private string hammerheadCharacterFile;
         private string mudraptorCharacterFile;
         private float superCapacitorRechargeRate = 10;
+        private Color officer_iconColor = new Color(147, 136, 163);
 
         public OfficerTutorial(XElement element) : base(element)
         {

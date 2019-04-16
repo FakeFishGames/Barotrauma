@@ -71,6 +71,7 @@ namespace Barotrauma.Tutorials
         private const float waterVolumeBeforeOpening = 15f;
         private string radioSpeakerName;
         private Character mechanic;
+        private Color mechanic_iconColor = new Color(141, 184, 225);
 
         public MechanicTutorial(XElement element) : base(element)
         {

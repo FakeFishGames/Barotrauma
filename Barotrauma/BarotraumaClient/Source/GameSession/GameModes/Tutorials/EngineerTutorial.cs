@@ -70,6 +70,7 @@ namespace Barotrauma.Tutorials
         private float reactorLoadError = 100f;
         private bool reactorOperatedProperly;
         private const float waterVolumeBeforeOpening = 15f;
+        private Color engineer_iconColor = new Color(187, 166, 168);
 
         public EngineerTutorial(XElement element) : base(element)
         {

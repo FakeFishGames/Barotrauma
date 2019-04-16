@@ -36,6 +36,8 @@ namespace Barotrauma.Tutorials
         private Door tutorial_submarineDoor;
         private LightComponent tutorial_submarineDoorLight;
 
+        // Variables
+        private Color doctor_iconColor = new Color(178, 118, 139);
 
         public DoctorTutorial(XElement element) : base(element)
         {

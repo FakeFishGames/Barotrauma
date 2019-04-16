@@ -37,6 +37,7 @@ namespace Barotrauma.Tutorials
         // Variables
         private Character captain;
         private string radioSpeakerName;
+        private Color captain_iconColor = new Color(159, 168, 216);
 
         public CaptainTutorial(XElement element) : base(element)
         {
