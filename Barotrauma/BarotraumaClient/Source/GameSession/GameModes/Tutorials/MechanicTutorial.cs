@@ -71,7 +71,8 @@ namespace Barotrauma.Tutorials
         private const float waterVolumeBeforeOpening = 15f;
         private string radioSpeakerName;
         private Character mechanic;
-        private Color mechanic_iconColor = new Color(141, 184, 225);
+        private Sprite mechanic_repairIcon;
+        private Color mechanic_repairIconColor;
 
         public MechanicTutorial(XElement element) : base(element)
         {
@@ -90,6 +91,10 @@ namespace Barotrauma.Tutorials
 
             var crowbar = mechanic.Inventory.FindItemByIdentifier("crowbar");
             mechanic.Inventory.RemoveItem(crowbar);
+
+            var repairOrder = Order.PrefabList.Find(order => order.AITag == "repairsystems");
+            mechanic_repairIcon = repairOrder.SymbolSprite;
+            mechanic_repairIconColor = repairOrder.Color;
 
             // Other tutorial items
             tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
@@ -441,13 +446,17 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!mechanic_fire.Removed); // Wait until extinguished
             yield return new WaitForSeconds(3f);
             RemoveCompletedObjective(segments[6]);
-            TriggerTutorialSegment(7);
-            do
+
+            if (mechanic.HasEquippedItem("extinguisher")) // do not trigger if dropped already
             {
-                HighlightInventorySlot(mechanic.Inventory, "extinguisher", highlightColor, 0.5f, 0.5f, 0f);
-                yield return null;
-            } while (mechanic.HasEquippedItem("extinguisher"));
-            RemoveCompletedObjective(segments[7]);
+                TriggerTutorialSegment(7);
+                do
+                {
+                    HighlightInventorySlot(mechanic.Inventory, "extinguisher", highlightColor, 0.5f, 0.5f, 0f);
+                    yield return null;
+                } while (mechanic.HasEquippedItem("extinguisher"));
+                RemoveCompletedObjective(segments[7]);
+            }
             SetDoorAccess(mechanic_fifthDoor, mechanic_fifthDoorLight, true);
 
             // Room 6
@@ -507,6 +516,10 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Submarine"), ChatMessageType.Radio, null);
             TriggerTutorialSegment(10); // Repairing ballast pumps, engine
+            while (ContentRunning) yield return null;
+            mechanic.AddActiveObjectiveEntity(mechanic_ballastPump_1.Item, mechanic_repairIcon, mechanic_repairIconColor);
+            mechanic.AddActiveObjectiveEntity(mechanic_ballastPump_2.Item, mechanic_repairIcon, mechanic_repairIconColor);
+            mechanic.AddActiveObjectiveEntity(mechanic_submarineEngine.Item, mechanic_repairIcon, mechanic_repairIconColor);
             SetHighlight(mechanic_ballastPump_1.Item, true);
             SetHighlight(mechanic_ballastPump_2.Item, true);
             SetHighlight(mechanic_submarineEngine.Item, true);
@@ -537,9 +550,21 @@ namespace Barotrauma.Tutorials
 
         private void CheckHighlights()
         {
-            if (mechanic_ballastPump_1.Item.IsFullCondition && mechanic_ballastPump_1.Item.ExternalHighlight) SetHighlight(mechanic_ballastPump_1.Item, false);
-            if (mechanic_ballastPump_2.Item.IsFullCondition && mechanic_ballastPump_2.Item.ExternalHighlight) SetHighlight(mechanic_ballastPump_2.Item, false);
-            if (mechanic_submarineEngine.Item.IsFullCondition && mechanic_submarineEngine.Item.ExternalHighlight) SetHighlight(mechanic_submarineEngine.Item, false);
+            if (mechanic_ballastPump_1.Item.IsFullCondition && mechanic_ballastPump_1.Item.ExternalHighlight)
+            {
+                SetHighlight(mechanic_ballastPump_1.Item, false);
+                mechanic.RemoveActiveObjectiveEntity(mechanic_ballastPump_1.Item);
+            }
+            if (mechanic_ballastPump_2.Item.IsFullCondition && mechanic_ballastPump_2.Item.ExternalHighlight)
+            {
+                SetHighlight(mechanic_ballastPump_2.Item, false);
+                mechanic.RemoveActiveObjectiveEntity(mechanic_ballastPump_2.Item);
+            }
+            if (mechanic_submarineEngine.Item.IsFullCondition && mechanic_submarineEngine.Item.ExternalHighlight)
+            {
+                SetHighlight(mechanic_submarineEngine.Item, false);
+                mechanic.RemoveActiveObjectiveEntity(mechanic_submarineEngine.Item);
+            }
         }
     }
 }

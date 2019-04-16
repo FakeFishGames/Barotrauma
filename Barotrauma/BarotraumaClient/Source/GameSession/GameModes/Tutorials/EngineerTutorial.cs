@@ -71,7 +71,10 @@ namespace Barotrauma.Tutorials
         private float reactorLoadError = 100f;
         private bool reactorOperatedProperly;
         private const float waterVolumeBeforeOpening = 15f;
-        private Color engineer_iconColor = new Color(187, 166, 168);
+        private Sprite engineer_repairIcon;
+        private Color engineer_repairIconColor;
+        private Sprite engineer_reactorIcon;
+        private Color engineer_reactorIconColor;
 
         public EngineerTutorial(XElement element) : base(element)
         {
@@ -87,6 +90,14 @@ namespace Barotrauma.Tutorials
 
             var toolbox = engineer.Inventory.FindItemByIdentifier("toolbox");
             engineer.Inventory.RemoveItem(toolbox);
+
+            var repairOrder = Order.PrefabList.Find(order => order.AITag == "repairsystems");
+            engineer_repairIcon = repairOrder.SymbolSprite;
+            engineer_repairIconColor = repairOrder.Color;
+
+            var reactorOrder = Order.PrefabList.Find(order => order.AITag == "operatereactor");
+            engineer_reactorIcon = reactorOrder.SymbolSprite;
+            engineer_reactorIconColor = reactorOrder.Color;
 
             // Other tutorial items
             tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
@@ -292,16 +303,22 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Submarine"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(4); // Repair junction box
+            while (ContentRunning) yield return null;
             SetHighlight(engineer_submarineJunctionBox_1, true);
             SetHighlight(engineer_submarineJunctionBox_2, true);
             SetHighlight(engineer_submarineJunctionBox_3, true);
+            engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_1, engineer_repairIcon, engineer_repairIconColor);
+            engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_2, engineer_repairIcon, engineer_repairIconColor);
+            engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_3, engineer_repairIcon, engineer_repairIconColor);
             // Remove highlights when each individual machine is repaired
             do { CheckJunctionBoxHighlights(); yield return null; } while (!engineer_submarineJunctionBox_1.IsFullCondition || !engineer_submarineJunctionBox_2.IsFullCondition || !engineer_submarineJunctionBox_3.IsFullCondition);
             CheckJunctionBoxHighlights();
             RemoveCompletedObjective(segments[4]);
             TriggerTutorialSegment(5); // Powerup reactor
             SetHighlight(engineer_submarineReactor.Item, true);
+            engineer.AddActiveObjectiveEntity(engineer_submarineReactor.Item, engineer_reactorIcon, engineer_reactorIconColor);
             do { yield return null; } while (!IsReactorPoweredUp(engineer_submarineReactor)); // Wait until ~matches load
+            engineer.RemoveActiveObjectiveEntity(engineer_submarineReactor.Item);
             SetHighlight(engineer_submarineReactor.Item, false);
             RemoveCompletedObjective(segments[5]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
@@ -353,9 +370,21 @@ namespace Barotrauma.Tutorials
 
         private void CheckJunctionBoxHighlights()
         {
-            if (engineer_submarineJunctionBox_1.IsFullCondition && engineer_submarineJunctionBox_1.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_1, false);
-            if (engineer_submarineJunctionBox_2.IsFullCondition && engineer_submarineJunctionBox_2.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_2, false);
-            if (engineer_submarineJunctionBox_3.IsFullCondition && engineer_submarineJunctionBox_3.ExternalHighlight) SetHighlight(engineer_submarineJunctionBox_3, false);
+            if (engineer_submarineJunctionBox_1.IsFullCondition && engineer_submarineJunctionBox_1.ExternalHighlight)
+            {
+                SetHighlight(engineer_submarineJunctionBox_1, false);
+                engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_1);
+            }
+            if (engineer_submarineJunctionBox_2.IsFullCondition && engineer_submarineJunctionBox_2.ExternalHighlight)
+            {
+                SetHighlight(engineer_submarineJunctionBox_2, false);
+                engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_2);
+            }
+            if (engineer_submarineJunctionBox_3.IsFullCondition && engineer_submarineJunctionBox_3.ExternalHighlight)
+            {
+                SetHighlight(engineer_submarineJunctionBox_3, false);
+                engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_3);
+            }
         }
 
         private bool IsReactorPoweredUp(Reactor reactor)

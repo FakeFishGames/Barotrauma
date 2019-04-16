@@ -39,7 +39,8 @@ namespace Barotrauma.Tutorials
         // Variables
         private Character captain;
         private string radioSpeakerName;
-        private Color captain_iconColor = new Color(159, 168, 216);
+        private Sprite captain_steerIcon;
+        private Color captain_steerIconColor;
 
         public CaptainTutorial(XElement element) : base(element)
         {
@@ -63,6 +64,10 @@ namespace Barotrauma.Tutorials
             var captainsuniform = captain.Inventory.FindItemByIdentifier("captainsuniform");
             captainsuniform.Unequip(captain);
             captain.Inventory.RemoveItem(captainsuniform);
+
+            var steerOrder = Order.PrefabList.Find(order => order.AITag == "steer");
+            captain_steerIcon = steerOrder.SymbolSprite;
+            captain_steerIconColor = steerOrder.Color;
 
             // Room 2
             captain_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("captain_equipmentobjectivesensor")).GetComponent<MotionSensor>();
@@ -182,6 +187,8 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[3]);
             do { yield return null; } while (!tutorial_submarineReactor.IsActive); // Wait until reactor on      
             TriggerTutorialSegment(4);
+            while (ContentRunning) yield return null;
+            captain.AddActiveObjectiveEntity(captain_navConsole.Item, captain_steerIcon, captain_steerIconColor);
             SetHighlight(captain_navConsole.Item, true);
             SetHighlight(captain_sonar.Item, true);
             do { yield return null; } while (Submarine.MainSub.DockedTo.Count > 0);
@@ -198,6 +205,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete").Replace("[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);
+            captain.RemoveActiveObjectiveEntity(captain_navConsole.Item);
 
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }

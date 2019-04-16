@@ -171,7 +171,7 @@ namespace Barotrauma
 
             foreach (Character.ObjectiveEntity objectiveEntity in character.ActiveObjectiveEntities)
             {
-                DrawObjectiveIndicator(spriteBatch, cam, character, objectiveEntity, 1f);
+                DrawObjectiveIndicator(spriteBatch, cam, character, objectiveEntity, 1.0f);
             }
 
             foreach (Item brokenItem in brokenItems)

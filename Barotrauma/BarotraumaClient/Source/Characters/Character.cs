@@ -763,14 +763,14 @@ namespace Barotrauma
 
         public void AddActiveObjectiveEntity(Entity entity, Sprite sprite, Color? color = null)
         {
-            if (activeObjectiveEntities.Any(aoe => aoe.Entity == entity && aoe.Sprite == sprite)) return;
+            if (activeObjectiveEntities.Any(aoe => aoe.Entity == entity)) return;
             ObjectiveEntity objectiveEntity = new ObjectiveEntity(entity, sprite, color);
             activeObjectiveEntities.Add(objectiveEntity);
         }
 
-        public void RemoveActiveObjectiveEntity(Entity entity, Sprite sprite)
+        public void RemoveActiveObjectiveEntity(Entity entity)
         {
-            ObjectiveEntity found = activeObjectiveEntities.Find(aoe => aoe.Entity == entity && aoe.Sprite == sprite);
+            ObjectiveEntity found = activeObjectiveEntities.Find(aoe => aoe.Entity == entity);
             if (found == null) return;
             activeObjectiveEntities.Remove(found);
         }

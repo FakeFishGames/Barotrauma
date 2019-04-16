@@ -77,7 +77,8 @@ namespace Barotrauma.Tutorials
         private string hammerheadCharacterFile;
         private string mudraptorCharacterFile;
         private float superCapacitorRechargeRate = 10;
-        private Color officer_iconColor = new Color(147, 136, 163);
+        private Sprite officer_gunIcon;
+        private Color officer_gunIconColor;
 
         public OfficerTutorial(XElement element) : base(element)
         {
@@ -106,6 +107,10 @@ namespace Barotrauma.Tutorials
             var bodyarmor = officer.Inventory.FindItemByIdentifier("bodyarmor");
             bodyarmor.Unequip(officer);
             officer.Inventory.RemoveItem(bodyarmor);
+
+            var gunOrder = Order.PrefabList.Find(order => order.AITag == "operateweapons");
+            officer_gunIcon = gunOrder.SymbolSprite;
+            officer_gunIconColor = gunOrder.Color;
 
             // Other tutorial items
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
@@ -371,6 +376,11 @@ namespace Barotrauma.Tutorials
             // Submarine
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
             TriggerTutorialSegment(7);
+            while (ContentRunning) yield return null;
+            officer.AddActiveObjectiveEntity(officer_subAmmoBox_1, officer_gunIcon, officer_gunIconColor);
+            officer.AddActiveObjectiveEntity(officer_subAmmoBox_2, officer_gunIcon, officer_gunIconColor);
+            officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_1.Item, officer_gunIcon, officer_gunIconColor);
+            officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_2.Item, officer_gunIcon, officer_gunIconColor);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Submarine"), ChatMessageType.Radio, null);
             do
             {
@@ -378,10 +388,23 @@ namespace Barotrauma.Tutorials
                 SetHighlight(officer_subLoader_2.Item, officer_subLoader_2.Inventory.Items[0] == null || officer_subLoader_2.Inventory.Items[0].Condition == 0);
                 HighlightInventorySlot(officer_subLoader_1.Inventory, 0, highlightColor, .5f, .5f, 0f);
                 HighlightInventorySlot(officer_subLoader_2.Inventory, 0, highlightColor, .5f, .5f, 0f);
-                SetHighlight(officer_subSuperCapacitor_1.Item, officer_subSuperCapacitor_1.RechargeSpeed < superCapacitorRechargeRate);
-                SetHighlight(officer_subSuperCapacitor_2.Item, officer_subSuperCapacitor_2.RechargeSpeed < superCapacitorRechargeRate);
+
+                if (officer_subSuperCapacitor_1.Item.ExternalHighlight && officer_subSuperCapacitor_1.RechargeSpeed >= superCapacitorRechargeRate)
+                {
+                    SetHighlight(officer_subSuperCapacitor_1.Item, false);
+                    officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_1.Item);
+                }
+
+                if (officer_subSuperCapacitor_2.Item.ExternalHighlight && officer_subSuperCapacitor_2.RechargeSpeed >= superCapacitorRechargeRate)
+                {
+                    SetHighlight(officer_subSuperCapacitor_2.Item, false);
+                    officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_2.Item);
+                }
+
                 SetHighlight(officer_subAmmoBox_1, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
                 SetHighlight(officer_subAmmoBox_2, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
+                if (officer_subAmmoBox_1.ParentInventory == officer_subLoader_1.Inventory || officer_subAmmoBox_1.ParentInventory == officer_subLoader_2.Inventory) officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_1);
+                if (officer_subAmmoBox_2.ParentInventory == officer_subLoader_1.Inventory || officer_subAmmoBox_2.ParentInventory == officer_subLoader_2.Inventory) officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_2);
                 yield return null;
             } while (officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight || officer_subSuperCapacitor_1.Item.ExternalHighlight || officer_subSuperCapacitor_2.Item.ExternalHighlight);
             SetHighlight(officer_subLoader_1.Item, false);
@@ -390,6 +413,10 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_subSuperCapacitor_2.Item, false);
             SetHighlight(officer_subAmmoBox_1, false);
             SetHighlight(officer_subAmmoBox_2, false);
+            officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_1.Item);
+            officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_2.Item);
+            officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_1);
+            officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_2);
             RemoveCompletedObjective(segments[7]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Complete"), ChatMessageType.Radio, null);
 
