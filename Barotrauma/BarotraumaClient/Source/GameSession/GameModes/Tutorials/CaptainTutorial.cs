@@ -189,7 +189,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);
 
-            CoroutineManager.StartCoroutine(TutorialCompleted(2f));
+            CoroutineManager.StartCoroutine(TutorialCompleted());
         }
     }
 }

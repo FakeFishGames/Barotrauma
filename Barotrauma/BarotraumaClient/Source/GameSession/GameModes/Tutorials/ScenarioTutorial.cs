@@ -23,6 +23,7 @@ namespace Barotrauma.Tutorials
         private Submarine endOutpost = null;
         private bool currentTutorialCompleted = false;
         private float fadeOutTime = 3f;
+        protected float waitBeforeFade = 2f;
 
         // Colors
         protected Color highlightColor = Color.OrangeRed;
@@ -252,14 +253,14 @@ namespace Barotrauma.Tutorials
             yield return CoroutineStatus.Success;
         }
 
-        protected IEnumerable<object> TutorialCompleted(float waitBeforeEnd)
+        protected IEnumerable<object> TutorialCompleted()
         {
             GUI.PreventPauseMenuToggle = true;
 
             Character.Controlled.ClearInputs();
             Character.Controlled = null;
 
-            yield return new WaitForSeconds(waitBeforeEnd);
+            yield return new WaitForSeconds(waitBeforeFade);
 
             var endCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, fadeOutTime);
             currentTutorialCompleted = Completed = true;

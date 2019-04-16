@@ -514,7 +514,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Complete"), ChatMessageType.Radio, null);
 
             // END TUTORIAL
-            CoroutineManager.StartCoroutine(TutorialCompleted(2f));
+            CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 
         private bool IsSelectedItem(Item item)
