@@ -80,13 +80,13 @@ namespace Barotrauma
         public HitDetection HitDetectionType { get; private set; }
 
         [Serialize(AIBehaviorAfterAttack.FallBack, true), Editable(ToolTip = "The preferred AI behavior after the attack.")]
-        public AIBehaviorAfterAttack AfterAttack { get; private set; }
+        public AIBehaviorAfterAttack AfterAttack { get; set; }
 
         [Serialize(false, true), Editable(ToolTip = "Should the ai try to reverse when aiming with this attack?")]
         public bool Reverse { get; private set; }
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target before the AI tries to attack.")]
-        public float Range { get; private set; }
+        public float Range { get; set; }
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f, ToolTip = "Min distance from the attack limb to the target to do damage. In distance based hit detection, the hit will be registered as soon as the target is within the damage range, unless the attack duration has expired.")]
         public float DamageRange { get; set; }
@@ -95,19 +95,19 @@ namespace Barotrauma
         public float Duration { get; private set; }
 
         [Serialize(5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "How long the AI waits between the attacks.")]
-        public float CoolDown { get; private set; } = 5;
+        public float CoolDown { get; set; } = 5;
 
         [Serialize(0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, DecimalCount = 2, ToolTip = "Used as the attack cooldown between different kind of attacks. Does not have effect, if set to 0.")]
-        public float SecondaryCoolDown { get; private set; } = 0;
+        public float SecondaryCoolDown { get; set; } = 0;
 
         [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2, ToolTip = "Random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases).")]
         public float CoolDownRandomFactor { get; private set; } = 0;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
-        public float StructureDamage { get; private set; }
+        public float StructureDamage { get; set; }
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
-        public float ItemDamage { get; private set; }
+        public float ItemDamage { get; set; }
 
         /// <summary>
         /// Legacy support. Use Afflictions.
