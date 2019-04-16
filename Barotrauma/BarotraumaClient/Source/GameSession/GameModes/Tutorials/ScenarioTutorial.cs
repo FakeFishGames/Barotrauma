@@ -195,6 +195,10 @@ namespace Barotrauma.Tutorials
             base.Update(deltaTime);
             if (character != null)
             {
+                if (character.Oxygen < 1)
+                {
+                    character.Oxygen = 1;
+                }
                 if (character.IsDead)
                 {
                     CoroutineManager.StartCoroutine(Dead());
