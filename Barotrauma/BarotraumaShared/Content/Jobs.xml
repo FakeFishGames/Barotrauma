@@ -58,10 +58,10 @@
       <sprite name="Portrait Clothing Engineer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,0"/>
     </PortraitClothing>
     <AutomaticOrders>
-      <Order aitag="operatereactor" option="powerup" prioritymodifier="1"/>
       <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.25"/>
+      <Order aitag="operatereactor" option="powerup" prioritymodifier="0.5"/>
       <Order aitag="fixleaks" prioritymodifier="0.5"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.25"/>
     </AutomaticOrders>
   </Job>
 
