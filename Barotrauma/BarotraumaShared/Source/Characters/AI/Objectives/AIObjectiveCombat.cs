@@ -296,7 +296,7 @@ namespace Barotrauma
         }
 
         public override bool CanBeCompleted => !abandon && (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && (retreatObjective == null || retreatObjective.CanBeCompleted);
-        public override float GetPriority(AIObjectiveManager objectiveManager) => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : 100;
+        public override float GetPriority(AIObjectiveManager objectiveManager) => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : 100 * PriorityModifier;
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {

@@ -230,6 +230,7 @@ namespace Barotrauma
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            // TODO: review
             if (targetCharacter.AnimController.CurrentHull == null || targetCharacter.IsDead) { return 0.0f; }
 
             Vector2 diff = targetCharacter.WorldPosition - character.WorldPosition;

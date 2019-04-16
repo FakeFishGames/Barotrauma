@@ -40,11 +40,15 @@ namespace Barotrauma
         {
             if (leak.Open == 0.0f) { return 0.0f; }
 
-            float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
+            //float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
+            //float dist = Vector2.DistanceSquared(character.SimPosition, leak.SimPosition);
+            //dist = Math.Max(dist / 100.0f, 1.0f);
+            //return Math.Min(leakSize / dist, 40.0f);
 
+            float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
             float dist = Vector2.DistanceSquared(character.SimPosition, leak.SimPosition);
             dist = Math.Max(dist / 100.0f, 1.0f);
-            return Math.Min(leakSize / dist, 40.0f);
+            return MathHelper.Clamp(Priority + leakSize / dist, 0, 100);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

@@ -61,6 +61,7 @@
       <Order aitag="operatereactor" option="powerup" prioritymodifier="1"/>
       <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
       <Order aitag="repairsystems" option="all" prioritymodifier="0.25"/>
+      <Order aitag="fixleaks" prioritymodifier="0.5"/>
     </AutomaticOrders>
   </Job>
 
@@ -94,6 +95,8 @@
     </PortraitClothing>
     <AutomaticOrders>
       <Order aitag="fixleaks" prioritymodifier="1"/>
+      <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.25"/>
     </AutomaticOrders>
   </Job>
 

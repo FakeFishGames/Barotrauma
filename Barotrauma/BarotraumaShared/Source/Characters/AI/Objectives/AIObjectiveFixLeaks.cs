@@ -14,17 +14,6 @@ namespace Barotrauma
 
         public AIObjectiveFixLeaks(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) { }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (character.Submarine == null) { return 0; }
-            if (targets.None()) { return 0; }
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority, targets.Average(t => Average(t)));
-        }
-
         protected override void FindTargets()
         {
             base.FindTargets();
@@ -61,7 +50,7 @@ namespace Barotrauma
         }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
-        protected override float Average(Gap gap) => gap.Open;
+        protected override float Average(Gap gap) => gap.Open * 100;
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character);
     }
