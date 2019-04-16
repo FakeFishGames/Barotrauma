@@ -3058,4 +3058,7 @@
   <!-- Changed Values -->
 
    <!-- New Additions -->
+
+  <dialogcannotrepair>Can't repair [item]!</dialogcannotrepair>
+  
 </infotexts>
