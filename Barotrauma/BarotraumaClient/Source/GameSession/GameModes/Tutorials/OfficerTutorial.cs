@@ -376,7 +376,8 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_subAmmoBox_2, false);
             RemoveCompletedObjective(segments[7]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Complete"), ChatMessageType.Radio, null);
-            // END TUTORIAL
+
+            CoroutineManager.StartCoroutine(TutorialCompleted(2f));
         }
 
         private bool IsSelectedItem(Item item)

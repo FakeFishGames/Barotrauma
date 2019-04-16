@@ -388,7 +388,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[6]);
 
             // END TUTORIAL
-            Completed = true;
+            CoroutineManager.StartCoroutine(TutorialCompleted(2f));
         }
 
         public IEnumerable<object> KeepPatientAlive(Character patient)

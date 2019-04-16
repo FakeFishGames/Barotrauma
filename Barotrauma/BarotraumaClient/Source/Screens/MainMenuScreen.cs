@@ -443,6 +443,8 @@ namespace Barotrauma
 
         public bool ReturnToMainMenu(GUIButton button, object obj)
         {
+            GUI.PreventPauseMenuToggle = false;
+
             if (Selected != this)
             {
                 Select();

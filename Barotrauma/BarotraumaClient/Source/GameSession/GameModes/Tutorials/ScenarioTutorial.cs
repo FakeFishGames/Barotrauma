@@ -21,7 +21,9 @@ namespace Barotrauma.Tutorials
 
         private Submarine startOutpost = null;
         private Submarine endOutpost = null;
-        
+        private bool currentTutorialCompleted = false;
+        private float fadeOutTime = 3f;
+
         // Colors
         protected Color highlightColor = Color.OrangeRed;
         protected Color uiHighlightColor = new Color(150, 50, 0);
@@ -45,6 +47,7 @@ namespace Barotrauma.Tutorials
         public override void Initialize()
         {
             base.Initialize();
+            currentTutorialCompleted = false;
             GameMain.Instance.ShowLoading(Loading());
         }
 
@@ -121,6 +124,14 @@ namespace Barotrauma.Tutorials
             idCard.AddTag("eng");
 
             CoroutineManager.StartCoroutine(UpdateState());
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            if (!currentTutorialCompleted)
+            {
+                base.AddToGUIUpdateList();
+            }
         }
 
         private WayPoint GetSpawnPoint(CharacterInfo charInfo)
@@ -223,6 +234,7 @@ namespace Barotrauma.Tutorials
 
         private IEnumerable<object> Dead()
         {
+            GUI.PreventPauseMenuToggle = true;
             Character.Controlled = character = null;
             Stop();
 
@@ -238,6 +250,22 @@ namespace Barotrauma.Tutorials
             messageBox.Buttons[1].OnClicked += messageBox.Close;
 
             yield return CoroutineStatus.Success;
+        }
+
+        protected IEnumerable<object> TutorialCompleted(float waitBeforeEnd)
+        {
+            GUI.PreventPauseMenuToggle = true;
+
+            Character.Controlled.ClearInputs();
+            Character.Controlled = null;
+
+            yield return new WaitForSeconds(waitBeforeEnd);
+
+            var endCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, fadeOutTime);
+            currentTutorialCompleted = Completed = true;
+            while (endCinematic.Running) yield return null;
+            Stop();
+            GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
         }
 
         protected void Heal(Character character)
