@@ -438,7 +438,6 @@ namespace Barotrauma
                     QuickUseItem(Items[i], true, false, true);
                 }
             }
-        }
 
             //force personal slots open if an item is running out of battery/fuel/oxygen/etc
             if (hidePersonalSlots)
@@ -463,16 +462,6 @@ namespace Barotrauma
                 {
                     UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex, cam);
                 }
-            }
-            
-            List<SlotReference> hideSubInventories = new List<SlotReference>();
-            foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
-            {
-                if (highlightedSubInventorySlot.ParentInventory == this)
-                {
-                    UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex, cam);
-                }
-            }
 
                 Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
                 if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))

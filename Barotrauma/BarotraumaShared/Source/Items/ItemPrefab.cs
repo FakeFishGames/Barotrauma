@@ -449,18 +449,6 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             FabricationRecipes  = new List<FabricationRecipe>();
             DeconstructTime     = 1.0f;
-            
-            Tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true).ToHashSet();
-            if (Tags.None())
-            {
-                Tags = element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true).ToHashSet();
-            }
-
-            Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
-            if (Tags.None())
-            {
-                Tags = new HashSet<string>(element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true));
-            }
 
             Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
             if (Tags.None())

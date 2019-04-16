@@ -4,7 +4,6 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -607,20 +606,7 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-        #region Dialog
-        /// <summary>
-        /// Adds the message to the single player chatbox.
-        /// </summary>
-        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
-        {
-            if (!isSinglePlayer)
-            {
-                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
-                return;
-            }
-            if (string.IsNullOrEmpty(text)) { return; }
-
-            ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
+            return false;
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -633,12 +619,6 @@ namespace Barotrauma
             {
                 comp.Color = Color.DarkRed;
             }
-            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
-                c.AIController is HumanAIController &&
-                !c.IsDead &&
-                c.SpeechImpediment <= 100.0f);
-            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
-        }
 
             yield return new WaitForSeconds(1.0f);
 
