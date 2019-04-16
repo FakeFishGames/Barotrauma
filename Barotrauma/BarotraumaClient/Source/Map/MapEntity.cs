@@ -505,7 +505,7 @@ namespace Barotrauma
                     foreach (MapEntity e in selectedList)
                     {
                         e.prefab?.DrawPlacing(spriteBatch,
-                            new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size));
+                            new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale);
                         GUI.DrawRectangle(spriteBatch,
                             new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount,
                             new Vector2(e.rect.Width, e.rect.Height),
