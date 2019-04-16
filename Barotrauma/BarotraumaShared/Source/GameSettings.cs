@@ -44,6 +44,7 @@ namespace Barotrauma
         public bool ChromaticAberrationEnabled { get; set; }
 
         public bool MuteOnFocusLost { get; set; }
+        public bool UseDirectionalVoiceChat { get; set; }
 
         public enum VoiceMode
         {
@@ -148,6 +149,9 @@ namespace Barotrauma
         }
 
         public bool EnableMouseLook { get; set; } = true;
+
+        public bool CrewMenuOpen { get; set; } = true;
+        public bool ChatOpen { get; set; } = true;
 
         private bool unsavedSettings;
         public bool UnsavedSettings
@@ -826,6 +830,8 @@ namespace Barotrauma
                 SoundVolume = audioSettings.GetAttributeFloat("soundvolume", SoundVolume);
                 MusicVolume = audioSettings.GetAttributeFloat("musicvolume", MusicVolume);
                 VoiceChatVolume = audioSettings.GetAttributeFloat("voicechatvolume", VoiceChatVolume);
+                MuteOnFocusLost = audioSettings.GetAttributeBool("muteonfocuslost", false);
+                UseDirectionalVoiceChat = audioSettings.GetAttributeBool("usedirectionalvoicechat", true);
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "Disabled");
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", "");
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", -45);
@@ -843,6 +849,9 @@ namespace Barotrauma
 
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
             EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
+
+            CrewMenuOpen = doc.Root.GetAttributeBool("crewmenuopen", CrewMenuOpen);
+            ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -1019,7 +1028,9 @@ namespace Barotrauma
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
                 new XAttribute("aimassistamount", aimAssistAmount),
-                new XAttribute("enablemouselook", EnableMouseLook));
+                new XAttribute("enablemouselook", EnableMouseLook),
+                new XAttribute("chatopen", ChatOpen),
+                new XAttribute("crewmenuopen", CrewMenuOpen));
 
             if (!ShowUserStatisticsPrompt)
             {
@@ -1055,6 +1066,8 @@ namespace Barotrauma
             audio.ReplaceAttributes(
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
+                new XAttribute("muteonfocuslost", MuteOnFocusLost),
+                new XAttribute("usedirectionalvoicechat", UseDirectionalVoiceChat),
                 new XAttribute("voicesetting", VoiceSetting),
                 new XAttribute("voicecapturedevice", VoiceCaptureDevice ?? ""),
                 new XAttribute("noisegatethreshold", NoiseGateThreshold));

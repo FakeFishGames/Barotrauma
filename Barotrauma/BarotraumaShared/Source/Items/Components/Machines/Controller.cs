@@ -343,5 +343,7 @@ namespace Barotrauma.Items.Components
                 limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
             }
         }
+
+        partial void HideHUDs(bool value);
     }
 }

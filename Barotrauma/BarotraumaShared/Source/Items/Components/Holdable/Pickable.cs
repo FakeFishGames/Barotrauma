@@ -142,8 +142,6 @@ namespace Barotrauma.Items.Components
                     pickTimer / requiredTime,
                     Color.Red, Color.Green);
 #endif
-
-                picker.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
                 
                 picker.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
                 pickTimer += CoroutineManager.DeltaTime;

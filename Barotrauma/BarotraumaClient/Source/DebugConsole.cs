@@ -555,6 +555,37 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("resetselected", "Reset selected items and structures to prefabs. Only applicable in the subeditor.", args =>
+            {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    foreach (MapEntity entity in MapEntity.SelectedList)
+                    {
+                        if (entity is Item item)
+                        {
+                            item.Reset();
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            structure.Reset();
+                        }
+                    }
+                    foreach (MapEntity entity in MapEntity.SelectedList)
+                    {
+                        if (entity is Item item)
+                        {
+                            item.CreateEditingHUD();
+                            break;
+                        }
+                        else if (entity is Structure structure)
+                        {
+                            structure.CreateEditingHUD();
+                            break;
+                        }
+                    }
+                }
+            }));
+
             commands.Add(new Command("alpha", "Change the alpha (as bytes from 0 to 255) of the selected item/structure instances. Applied only in the subeditor.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
@@ -990,6 +1021,130 @@ namespace Barotrauma
                     lines = File.ReadAllLines(sourcePath);
                 }
                 catch (Exception e)
+                {
+                    ThrowError("Reading the file \"" + sourcePath + "\" failed.", e);
+                    return;
+                }
+                var doc = XMLExtensions.TryLoadXml(destinationPath);
+                int i = 0;
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    if (i >= lines.Length)
+                    {
+                        ThrowError("Error while loading texts to the xml file. The xml has more elements than the number of lines in the text file.");
+                        return;
+                    }
+                    element.Value = lines[i];
+                    i++;
+                }
+                doc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    files.Where(f => Path.GetExtension(f)==".txt").ToArray(),
+                    files.Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("updatetextfile", "updatetextfile [sourcefile] [destinationfile]: Inserts all the xml elements that are only present in the source file into the destination file. Can be used to update outdated translation files more easily.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+                string sourcePath = args[0];
+                string destinationPath = args[1];
+
+                var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
+                var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                XElement destinationElement = destinationDoc.Root.Elements().First();
+                foreach (XElement element in sourceDoc.Root.Elements())
+                {
+                    if (destinationDoc.Root.Element(element.Name) == null)
+                    {
+                        element.Value = "!!!!!!!!!!!!!" + element.Value;
+                        destinationElement.AddAfterSelf(element);
+                    }
+                    XNode nextNode = destinationElement.NextNode;
+                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
+                    destinationElement = nextNode as XElement;
+                }
+                destinationDoc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                return new string[][]
+                {
+                    files,
+                    files
+                };
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</EntityName." + me.Identifier + ">");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</EntityDescription." + me.Identifier + ">");
+                }
+                File.WriteAllLines(filePath, lines);
+            }));
+#if DEBUG
+            commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
+            {
+                if (args.Length != 1) return;
+                TextManager.CheckForDuplicates(args[0]);
+            }));
+
+            commands.Add(new Command("writetocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
+            {
+                TextManager.WriteToCSV();
+                NPCConversation.WriteToCSV();
+            }));
+
+            commands.Add(new Command("csvtoxml", "csvtoxml [language] -> Converts .csv localization files in Content/NPCConversations & Content/Texts to .xml for use in-game.", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                LocalizationCSVtoXML.Convert(args[0]);
+            }));
+#endif
+
+            commands.Add(new Command("cleanbuild", "", (string[] args) =>
+            {
+                GameMain.Config.MusicVolume = 0.5f;
+                GameMain.Config.SoundVolume = 0.5f;
+                NewMessage("Music and sound volume set to 0.5", Color.Green);
+
+                GameMain.Config.GraphicsWidth = 0;
+                GameMain.Config.GraphicsHeight = 0;
+                GameMain.Config.WindowMode = WindowMode.Fullscreen;
+                NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
+                NewMessage("Fullscreen enabled", Color.Green);
+
+                GameSettings.ShowUserStatisticsPrompt = true;
+
+                GameSettings.VerboseLogging = false;
+
+                if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
+                {
+                    ThrowError("MasterServerUrl \"" + GameMain.Config.MasterServerUrl + "\"!");
+                }
+
+                GameMain.Config.SaveNewPlayerConfig();
+
+                var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
+
+                foreach (string saveFile in saveFiles)
+                {
+                    System.IO.File.Delete(saveFile);
+                    NewMessage("Deleted " + saveFile, Color.Green);
+                }
+
+                if (System.IO.Directory.Exists(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp")))
                 {
                     ThrowError("Reading the file \"" + sourcePath + "\" failed.", e);
                     return;
@@ -1694,7 +1849,7 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
             }, isCheat: true));
 
-            commands.Add(new Command("reloadwearables|reloadlimbs", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
+            commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
@@ -1703,6 +1858,26 @@ namespace Barotrauma
                     return;
                 }
                 ReloadWearables(character);
+            }, isCheat: true));
+
+            commands.Add(new Command("loadwearable", "Force select certain variant for the selected character.", args =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character.");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("No arguments provided! Give an index number for the variant starting from 1.");
+                    return;
+                }
+                if (int.TryParse(args[0], out int variant))
+                {
+                    ReloadWearables(character, variant);
+                }
+                
             }, isCheat: true));
 
             commands.Add(new Command("reloadsprite|reloadsprites", "Reloads the sprites of the selected item(s)/structure(s) (hovering over or selecting in the subeditor) or the controlled character. Can also reload sprites by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
@@ -1852,7 +2027,7 @@ namespace Barotrauma
             }, isCheat: true));
         }
 
-        private static void ReloadWearables(Character character)
+        private static void ReloadWearables(Character character, int variant = 0)
         {
             foreach (var limb in character.AnimController.Limbs)
             {
@@ -1861,11 +2036,17 @@ namespace Barotrauma
                 limb.DeformSprite?.Sprite.ReloadTexture();
                 foreach (var wearable in limb.WearingItems)
                 {
+                    if (variant > 0 && wearable.Variant > 0)
+                    {
+                        wearable.Variant = variant;
+                    }
+                    wearable.RefreshPath();
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }
                 foreach (var wearable in limb.OtherWearables)
                 {
+                    wearable.RefreshPath();
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }

@@ -16,6 +16,8 @@ namespace Barotrauma
             Container
         }
 
+        public bool IsOptional { get; set; }
+
         private string[] identifiers;
 
         private string[] excludedIdentifiers;
@@ -138,7 +140,8 @@ namespace Barotrauma
         {
             element.Add(
                 new XAttribute("identifiers", JoinedIdentifiers),
-                new XAttribute("type", type.ToString()));
+                new XAttribute("type", type.ToString()),
+                new XAttribute("optional", IsOptional));
 
             if (excludedIdentifiers.Length > 0)
             {
