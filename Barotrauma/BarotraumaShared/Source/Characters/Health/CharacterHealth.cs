@@ -612,6 +612,12 @@ namespace Barotrauma
 
         partial void UpdateBleedingProjSpecific(AfflictionBleeding affliction, Limb targetLimb, float deltaTime);
 
+        public void SetVitality(float newVitality)
+        {
+            maxVitality = newVitality;
+            CalculateVitality();
+        }
+
         public void CalculateVitality()
         {
             Vitality = MaxVitality;
