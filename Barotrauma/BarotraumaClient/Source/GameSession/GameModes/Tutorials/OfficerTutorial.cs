@@ -76,33 +76,9 @@ namespace Barotrauma.Tutorials
 
         public OfficerTutorial(XElement element) : base(element)
         {
-            IEnumerable<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-            foreach (string characterFile in characterFiles)
-            {
-                if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == "crawler")
-                {
-                    crawlerCharacterFile = characterFile;
-                    break;
-                }
-            }
-
-            foreach (string characterFile in characterFiles)
-            {
-                if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == "hammerhead")
-                {
-                    hammerheadCharacterFile = characterFile;
-                    break;
-                }
-            }
-
-            foreach (string characterFile in characterFiles)
-            {
-                if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == "mudraptor")
-                {
-                    mudraptorCharacterFile = characterFile;
-                    break;
-                }
-            }
+            crawlerCharacterFile = Character.GetConfigFile("crawler");
+            hammerheadCharacterFile = Character.GetConfigFile("hammerhead");
+            mudraptorCharacterFile = Character.GetConfigFile("mudraptor");
         }
 
         public override void Start()
