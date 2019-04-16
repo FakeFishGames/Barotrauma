@@ -233,7 +233,7 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f)
+        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (!ResizeHorizontal && !ResizeVertical)
             {
