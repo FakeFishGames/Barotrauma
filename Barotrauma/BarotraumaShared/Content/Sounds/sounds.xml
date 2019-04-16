@@ -38,6 +38,14 @@
   <damagesound file="Content/Sounds/Damage/LimbSlash5.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
   <damagesound file="Content/Sounds/Damage/LimbSlash6.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
 
+  <damagesound file="Content/Sounds/Damage/Gore1.ogg" damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore2.ogg" damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore3.ogg" damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore4.ogg" damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore5.ogg" damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore6.ogg" damagesoundtype="Gore"/>
+  <damagesound file="Content/Sounds/Damage/Gore7.ogg" damagesoundtype="Gore"/>
+  
   <damagesound file="Content/Sounds/Damage/HitArmor1.ogg" damagesoundtype="LimbArmor"/>
   <damagesound file="Content/Sounds/Damage/HitArmor2.ogg" damagesoundtype="LimbArmor"/>
   <damagesound file="Content/Sounds/Damage/HitArmor3.ogg" damagesoundtype="LimbArmor"/> 

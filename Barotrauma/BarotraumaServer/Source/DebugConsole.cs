@@ -193,7 +193,7 @@ namespace Barotrauma
             Console.CursorLeft = 0;
             Console.CursorTop -= cursorLine;
             Console.Write(input);
-            Console.CursorLeft = input.Length % Console.WindowWidth;
+            Console.CursorLeft = input.Length % consoleWidth;
         }
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)

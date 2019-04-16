@@ -313,8 +313,8 @@ namespace Barotrauma
                 }
             }
 
-            // Only add ai targets automatically to walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall"))
+            // Only add ai targets automatically to submarine/outpost walls 
+            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null)
             {
                 aiTarget = new AITarget(this);
             }

@@ -37,6 +37,7 @@ namespace Barotrauma
                 text = text.Replace("&amp;", "&");
                 text = text.Replace("&lt;", "<");
                 text = text.Replace("&gt;", ">");
+                text = text.Replace("&quot;", "\"");
                 infoList.Add(text);
             }
         }
@@ -60,6 +61,20 @@ namespace Barotrauma
             }
 
             return textList;
+        }
+
+        public List<KeyValuePair<string, string>> GetAllTagTextPairs()
+        {
+            var pairs = new List<KeyValuePair<string, string>>();
+            foreach (KeyValuePair<string, List<string>> kvp in texts)
+            {
+                foreach (string line in kvp.Value)
+                {
+                    pairs.Add(new KeyValuePair<string, string>(kvp.Key, line));
+                }
+            }
+
+            return pairs;
         }
 
 #if DEBUG
