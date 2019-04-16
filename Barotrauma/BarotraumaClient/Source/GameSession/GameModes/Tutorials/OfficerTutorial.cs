@@ -36,6 +36,8 @@ namespace Barotrauma.Tutorials
         // Room 4
         private MotionSensor officer_somethingBigSensor;
         private ItemContainer officer_coilgunLoader;
+        private ItemContainer officer_ammoShelf_1;
+        private ItemContainer officer_ammoShelf_2;
         private PowerContainer officer_superCapacitor;
         private Item officer_coilgunPeriscope;
         private Character officer_hammerhead;
@@ -140,6 +142,8 @@ namespace Barotrauma.Tutorials
             officer_hammerheadSpawnPos = Item.ItemList.Find(i => i.HasTag("officer_hammerheadspawn")).WorldPosition;
             officer_thirdDoor = Item.ItemList.Find(i => i.HasTag("officer_thirddoor")).GetComponent<Door>();
             officer_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("officer_thirddoorlight")).GetComponent<LightComponent>();
+            officer_ammoShelf_1 = Item.ItemList.Find(i => i.HasTag("officer_ammoshelf_1")).GetComponent<ItemContainer>();
+            officer_ammoShelf_2 = Item.ItemList.Find(i => i.HasTag("officer_ammoshelf_2")).GetComponent<ItemContainer>();
 
             SetDoorAccess(officer_thirdDoor, officer_thirdDoorLight, false);
 
@@ -191,7 +195,7 @@ namespace Barotrauma.Tutorials
             // Room 2
             do { yield return null; } while (!officer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Equipment"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0f);
             TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
             SetHighlight(officer_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
@@ -267,10 +271,17 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(3); // Arm railgun
             do
             {
-                SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.Items[0] == null);
+                SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.Items[0] == null || officer_coilgunLoader.Inventory.Items[0].Condition == 0);
+                HighlightInventorySlot(officer_coilgunLoader.Inventory, 0, highlightColor, .5f, .5f, 0f);
                 SetHighlight(officer_superCapacitor.Item, officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate);
-                yield return null;
-            } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate);
+                SetHighlight(officer_ammoShelf_1.Item, officer_coilgunLoader.Item.ExternalHighlight );
+                SetHighlight(officer_ammoShelf_2.Item, officer_coilgunLoader.Item.ExternalHighlight );
+                if (IsSelectedItem(officer_coilgunLoader.Item))
+                {
+                    HighlightInventorySlot(officer.Inventory, "coilgunammobox", highlightColor, .5f, .5f, 0f); //TODO: don't highlight if ammo box is empty
+                }
+            yield return null;
+            } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate || officer_coilgunLoader.Inventory.Items[0].Condition == 0);
             SetHighlight(officer_coilgunLoader.Item, false);
             SetHighlight(officer_superCapacitor.Item, false);
             RemoveCompletedObjective(segments[3]);
@@ -364,6 +375,8 @@ namespace Barotrauma.Tutorials
             {
                 SetHighlight(officer_subLoader_1.Item, officer_subLoader_1.Inventory.Items[0] == null || officer_subLoader_1.Inventory.Items[0].Condition == 0);
                 SetHighlight(officer_subLoader_2.Item, officer_subLoader_2.Inventory.Items[0] == null || officer_subLoader_2.Inventory.Items[0].Condition == 0);
+                HighlightInventorySlot(officer_subLoader_1.Inventory, 0, highlightColor, .5f, .5f, 0f);
+                HighlightInventorySlot(officer_subLoader_2.Inventory, 0, highlightColor, .5f, .5f, 0f);
                 SetHighlight(officer_subSuperCapacitor_1.Item, officer_subSuperCapacitor_1.RechargeSpeed < superCapacitorRechargeRate);
                 SetHighlight(officer_subSuperCapacitor_2.Item, officer_subSuperCapacitor_2.RechargeSpeed < superCapacitorRechargeRate);
                 SetHighlight(officer_subAmmoBox_1, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
