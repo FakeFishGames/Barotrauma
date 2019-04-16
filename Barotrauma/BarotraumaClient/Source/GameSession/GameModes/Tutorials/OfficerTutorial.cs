@@ -255,6 +255,7 @@ namespace Barotrauma.Tutorials
             officer_crawler = SpawnMonster(crawlerCharacterFile, officer_crawlerSpawnPos);
             do { yield return null; } while (!officer_crawler.IsDead);
             RemoveCompletedObjective(segments[2]);
+            Heal(officer);
             yield return new WaitForSeconds(1f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.CrawlerDead"), ChatMessageType.Radio, null);
             SetDoorAccess(officer_secondDoor, officer_secondDoorLight, true);
@@ -288,6 +289,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             }
             while(!officer_hammerhead.IsDead);
+            Heal(officer);
             SetHighlight(officer_coilgunPeriscope, false);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(1f);
@@ -348,6 +350,7 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(6);
             officer_mudraptor = SpawnMonster(mudraptorCharacterFile, officer_mudraptorSpawnPos);
             do { yield return null; } while (!officer_mudraptor.IsDead);
+            Heal(officer);
             RemoveCompletedObjective(segments[6]);
             SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, true);
 

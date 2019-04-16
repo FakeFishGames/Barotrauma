@@ -235,5 +235,13 @@ namespace Barotrauma.Tutorials
 
             yield return CoroutineStatus.Success;
         }
+
+        protected void Heal(Character character)
+        {
+            character.SetAllDamage(0.0f, 0.0f, 0.0f);
+            character.Oxygen = 100.0f;
+            character.Bloodloss = 0.0f;
+            character.SetStun(0.0f, true);
+        }
     }
 }
