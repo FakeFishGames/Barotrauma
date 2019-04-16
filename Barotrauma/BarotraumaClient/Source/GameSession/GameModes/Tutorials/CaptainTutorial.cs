@@ -33,6 +33,8 @@ namespace Barotrauma.Tutorials
         private Character captain_mechanic;
         private Character captain_engineer;
         private Reactor tutorial_submarineReactor;
+        private Door tutorial_lockedDoor_1;
+        private Door tutorial_lockedDoor_2;
 
         // Variables
         private Character captain;
@@ -87,6 +89,11 @@ namespace Barotrauma.Tutorials
             captain_sonar = captain_navConsole.Item.GetComponent<Sonar>();
 
             tutorial_submarineReactor.CanBeSelected = false;
+
+            tutorial_lockedDoor_1 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_1")).GetComponent<Door>();
+            tutorial_lockedDoor_2 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_2")).GetComponent<Door>();
+            SetDoorAccess(tutorial_lockedDoor_1, null, false);
+            SetDoorAccess(tutorial_lockedDoor_2, null, false);
 
             var mechanicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "mechanic"));
             captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "mechanic");

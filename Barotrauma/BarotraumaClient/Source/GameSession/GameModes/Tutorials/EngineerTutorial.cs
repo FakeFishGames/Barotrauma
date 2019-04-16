@@ -52,6 +52,7 @@ namespace Barotrauma.Tutorials
 
         // Room 6
         private Pump engineer_workingPump;
+        private Door tutorial_lockedDoor_1;
 
         // Submarine
         private Door tutorial_submarineDoor;
@@ -154,6 +155,8 @@ namespace Barotrauma.Tutorials
             engineer_workingPump = Item.ItemList.Find(i => i.HasTag("engineer_workingpump")).GetComponent<Pump>();
             engineer_workingPump.Item.CurrentHull.WaterVolume += engineer_workingPump.Item.CurrentHull.Volume;
             engineer_workingPump.IsActive = true;
+            tutorial_lockedDoor_1 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_1")).GetComponent<Door>();
+            SetDoorAccess(tutorial_lockedDoor_1, null, true);
 
             // Submarine
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
