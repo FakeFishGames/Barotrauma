@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,10 +41,7 @@ namespace Barotrauma
         private bool toggleCrewAreaOpen = true;
         private int characterInfoWidth;
 
-        /// <summary>
-        /// Present only in single player games. In multiplayer. The chatbox is found from GameSession.Client.
-        /// </summary>
-        public ChatBox ChatBox { get; private set; }
+        private ChatBox chatBox;
 
         private float prevUIScale;
 
@@ -52,15 +50,7 @@ namespace Barotrauma
         public bool ToggleCrewAreaOpen
         {
             get { return toggleCrewAreaOpen; }
-            set
-            {
-                if (toggleCrewAreaOpen == value) { return; }
-                toggleCrewAreaOpen = GameMain.Config.CrewMenuOpen = value;
-                foreach (GUIComponent child in toggleCrewButton.Children)
-                {
-                    child.SpriteEffects = toggleCrewAreaOpen ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-                }
-            }
+            set { toggleCrewAreaOpen = value; }
         }
 
         #endregion
@@ -103,7 +93,11 @@ namespace Barotrauma
                 "", style: "UIToggleButton");
             toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
             {
-                ToggleCrewAreaOpen = !ToggleCrewAreaOpen;
+                toggleCrewAreaOpen = !toggleCrewAreaOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = toggleCrewAreaOpen ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                }
                 return true;
             };
 
@@ -131,7 +125,7 @@ namespace Barotrauma
 
             if (isSinglePlayer)
             {
-                ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
+                chatBox = new ChatBox(guiFrame, isSinglePlayer: true)
                 {
                     OnEnterMessage = (textbox, text) =>
                     {
@@ -164,7 +158,7 @@ namespace Barotrauma
                     }
                 };
 
-                ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
+                chatBox.InputBox.OnTextChanged += chatBox.TypingChatMessage;
             }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
@@ -214,8 +208,6 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
-
-            ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
         }
 
 
@@ -279,6 +271,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
                 return;
             }
+        }
 
             characterInfos.Add(characterInfo);
         }
@@ -654,7 +647,7 @@ namespace Barotrauma
             }
             if (string.IsNullOrEmpty(text)) { return; }
 
-            ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
+            chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
 
         private WifiComponent GetHeadset(Character character, bool requireEquipped)
@@ -730,7 +723,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
-                        order.GetChatMessage("", orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
+                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
                 }
                 else
                 {
@@ -747,7 +740,7 @@ namespace Barotrauma
             if (IsSinglePlayer)
             {
                 orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
             }
             else if (orderGiver != null)
             {
@@ -1064,24 +1057,24 @@ namespace Barotrauma
             }
 
             if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
-            if (ChatBox != null)
+            if (chatBox != null)
             {
-                ChatBox.Update(deltaTime);
-                ChatBox.InputBox.Visible = Character.Controlled != null;
+                chatBox.Update(deltaTime);
+                chatBox.InputBox.Visible = Character.Controlled != null;
 
-                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible)
+                if (!DebugConsole.IsOpen && chatBox.InputBox.Visible)
                 {
-                    if (PlayerInput.KeyHit(InputType.Chat) && !ChatBox.InputBox.Selected)
+                    if (PlayerInput.KeyHit(InputType.Chat) && !chatBox.InputBox.Selected)
                     {
-                        ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
-                        ChatBox.InputBox.Select();
+                        chatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
+                        chatBox.InputBox.Select();
                     }
 
-                    if (PlayerInput.KeyHit(InputType.RadioChat) && !ChatBox.InputBox.Selected)
+                    if (PlayerInput.KeyHit(InputType.RadioChat) && !chatBox.InputBox.Selected)
                     {
-                        ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
-                        ChatBox.InputBox.Select();
-                        ChatBox.InputBox.Text = "r; ";
+                        chatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
+                        chatBox.InputBox.Select();
+                        chatBox.InputBox.Text = "r; ";
                     }
                 }
             }
@@ -1151,7 +1144,7 @@ namespace Barotrauma
 
             crewArea.RectTransform.AbsoluteOffset =
                 Vector2.SmoothStep(new Vector2(-crewArea.Rect.Width, 0), new Vector2(toggleCrewButton.Rect.Width, 0), crewAreaOpenState).ToPoint();
-            crewAreaOpenState = ToggleCrewAreaOpen ?
+            crewAreaOpenState = toggleCrewAreaOpen ?
                 Math.Min(crewAreaOpenState + deltaTime * 2.0f, 1.0f) :
                 Math.Max(crewAreaOpenState - deltaTime * 2.0f, 0.0f);
 
@@ -1164,7 +1157,7 @@ namespace Barotrauma
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
-                ToggleCrewAreaOpen = !ToggleCrewAreaOpen;
+                toggleCrewAreaOpen = !toggleCrewAreaOpen;
             }
 
             UpdateReports(deltaTime);
@@ -1292,7 +1285,7 @@ namespace Barotrauma
             {
                 reportButtonFrame.Visible = true;
 
-                var reportButtonParent = ChatBox ?? GameMain.Client.ChatBox;
+                var reportButtonParent = chatBox ?? GameMain.Client.ChatBox;
                 reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
                     Math.Min(reportButtonParent.GUIFrame.Rect.X, reportButtonParent.ToggleButton.Rect.X) - reportButtonFrame.Rect.Width - (int)(10 * GUI.Scale),
                     reportButtonParent.GUIFrame.Rect.Y);

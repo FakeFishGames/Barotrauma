@@ -26,21 +26,7 @@ namespace Barotrauma
         private bool isSinglePlayer;
         public bool IsSinglePlayer => isSinglePlayer;
 
-        private bool _toggleOpen = true;
-        public bool ToggleOpen
-        {
-            get { return _toggleOpen; }
-            set
-            {
-                if (_toggleOpen == value) { return; }
-                _toggleOpen = GameMain.Config.ChatOpen = value;
-                foreach (GUIComponent child in ToggleButton.Children)
-                {
-                    child.SpriteEffects = _toggleOpen == (HUDLayoutSettings.ChatBoxAlignment == Alignment.Right) ?
-                      SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                }
-            }
-        }
+        private bool toggleOpen = true;
         private float openState;
 
         private float prevUIScale;
@@ -95,7 +81,12 @@ namespace Barotrauma
 
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
-                ToggleOpen = !ToggleOpen;
+                toggleOpen = !toggleOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = toggleOpen == (HUDLayoutSettings.ChatBoxAlignment == Alignment.Right) ?
+                      SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
                 return true;
             };
 
@@ -133,8 +124,6 @@ namespace Barotrauma
                 }
                 return true;
             };
-
-            ToggleOpen = GameMain.Config.ChatOpen;
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
@@ -239,7 +228,7 @@ namespace Barotrauma
 
             chatBox.UpdateScrollBarSize();
 
-            if (!ToggleOpen)
+            if (!toggleOpen)
             {
                 var popupMsg = new GUIFrame(new RectTransform(Vector2.One, guiFrame.RectTransform), style: "GUIToolTip")
                 {
@@ -324,7 +313,9 @@ namespace Barotrauma
                 prevUIScale = GUI.Scale;
             }
 
-            if (ToggleOpen || (inputBox != null && inputBox.Selected))
+
+
+            if (toggleOpen || (inputBox != null && inputBox.Selected))
             {
                 openState += deltaTime * 5.0f;
                 //delete all popup messages when the chatbox is open

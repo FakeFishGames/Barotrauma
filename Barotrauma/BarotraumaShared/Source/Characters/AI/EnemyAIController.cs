@@ -12,8 +12,6 @@ namespace Barotrauma
 {
     partial class EnemyAIController : AIController
     {
-        public static bool DisableEnemyAI;
-
         class WallTarget
         {
             public Vector2 Position;
@@ -251,7 +249,7 @@ namespace Barotrauma
             }
         }
         
-        private TargetingPriority GetTargetingPriority(string targetTag)
+        public TargetingPriority GetTargetingPriority(string targetTag)
         {
             if (targetingPriorities.TryGetValue(targetTag, out TargetingPriority priority))
             {
@@ -487,7 +485,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!IsProperlyLatchedOnSub)
+                if (!IsProperlyLatched)
                 {
                     UpdateWallTarget();
                 }
@@ -1003,7 +1001,7 @@ namespace Barotrauma
 
         private void UpdateEating(float deltaTime)
         {
-            if (SelectedAiTarget == null)   //SelectedAiTarget.Entity is Character c && !c.IsDead
+            if (SelectedAiTarget == null)
             {
                 State = AIState.Idle;
                 return;
@@ -1040,14 +1038,14 @@ namespace Barotrauma
 
         #region Targeting
 
-        private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
+        private bool IsProperlyLatched => LatchOntoAI != null && LatchOntoAI.IsAttached && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
         public AITarget UpdateTargets(Character character, out TargetingPriority priority)
         {
-            if (IsProperlyLatchedOnSub)
+            if (IsProperlyLatched)
             {
                 // If attached to a valid target, just keep the target.
                 // Priority not used in this case.

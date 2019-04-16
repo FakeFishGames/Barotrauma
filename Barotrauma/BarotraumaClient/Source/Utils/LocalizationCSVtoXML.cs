@@ -151,7 +151,6 @@ namespace Barotrauma
 
             for (int i = traitStart + NPCPersonalityTrait.List.Count; i < csvContent.Length; i++) // Conversations
             {
-                string[] presplit = csvContent[i].Split(','); // Handling speaker index fetching, somehow doesn't work with the regex
                 string[] split = SplitCSV(csvContent[i]);
 
                 int emptyFields = 0;
@@ -173,20 +172,20 @@ namespace Barotrauma
                     continue;
                 }
 
-                string speaker = presplit[1];
-                int depthIndex = int.Parse(presplit[2]);
+                string speaker = split[1];
+                int depthIndex = int.Parse(split[2]);
                 // 3 = original line
                 string line = split[4].Replace("\"", "");
                 string flags = split[5].Replace("\"", "");
                 string allowedJobs = split[6].Replace("\"", "");
                 string speakerTags = split[7].Replace("\"", "");
-                string minIntensity = split[8].Replace("\"", "").Replace(",", ".");
-                string maxIntensity = split[9].Replace("\"", "").Replace(",", ".");
+                string minIntensity = split[8].Replace("\"", "");
+                string maxIntensity = split[9].Replace("\"", "");
 
                 string element =
                     $"{GetIndenting(depthIndex)}" +
                     $"<Conversation line=\"{line}\" " +
-                    $"{GetVariable("speaker", speaker)}" +
+                    $"{GetVariable("speaker" ,speaker)}" +
                     $"{GetVariable("flags", flags)}" +
                     $"{GetVariable("allowedjobs", allowedJobs)}" +
                     $"{GetVariable("speakertags", speakerTags)}" +

@@ -87,6 +87,7 @@ namespace Barotrauma
 
         public string FullPath { get; private set; }
 
+
         public override string ToString()
         {
             return FilePath + ": " + sourceRect;
@@ -106,7 +107,25 @@ namespace Barotrauma
         {
             this.lazyLoad = lazyLoad;
             SourceElement = element;
-            if (!ParseTexturePath(path, file)) { return; }
+            if (file == "")
+            {
+                file = SourceElement.GetAttributeString("texture", "");
+            }
+            if (file == "")
+            {
+                DebugConsole.ThrowError("Sprite " + SourceElement + " doesn't have a texture specified!");
+                return;
+            }
+            if (!string.IsNullOrEmpty(path))
+            {
+                LoadTexture(ref sourceVector, ref shouldReturn, preMultipliedAlpha);
+            }
+            FilePath = path + file;
+            if (!string.IsNullOrEmpty(FilePath))
+            {
+                FullPath = Path.GetFullPath(FilePath);
+            }
+
             Name = SourceElement.GetAttributeString("name", null);
             Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             preMultipliedAlpha = preMultiplyAlpha ?? SourceElement.GetAttributeBool("premultiplyalpha", true);
@@ -249,29 +268,6 @@ namespace Barotrauma
                 Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
                 ID = GetID(SourceElement);
             }
-        }
-
-        public bool ParseTexturePath(string path = "", string file = "")
-        {
-            if (file == "")
-            {
-                file = SourceElement.GetAttributeString("texture", "");
-            }
-            if (file == "")
-            {
-                DebugConsole.ThrowError("Sprite " + SourceElement + " doesn't have a texture specified!");
-                return false;
-            }
-            if (!string.IsNullOrEmpty(path))
-            {
-                if (!path.EndsWith("/")) path += "/";
-            }
-            FilePath = path + file;
-            if (!string.IsNullOrEmpty(FilePath))
-            {
-                FullPath = Path.GetFullPath(FilePath);
-            }
-            return true;
         }
     }
 }

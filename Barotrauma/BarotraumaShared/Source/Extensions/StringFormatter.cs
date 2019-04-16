@@ -8,22 +8,6 @@ namespace Barotrauma
 {
     public static class StringFormatter
     {
-        public static string Replace(this string s, string replacement, Func<char, bool> predicate)
-        {
-            var newString = new string[s.Length];
-            for (int i = 0; i < s.Length; i++)
-            {
-                char letter = s[i];
-                string newLetter = letter.ToString();
-                if (predicate(letter))
-                {
-                    newLetter = replacement;
-                }
-                newString[i] = newLetter;
-            }
-            return new string(newString.SelectMany(str => str.ToCharArray()).ToArray());
-        }
-
         public static string Remove(this string s, Func<char, bool> predicate)
         {
             return new string(s.ToCharArray().Where(c => !predicate(c)).ToArray());

@@ -261,7 +261,7 @@ namespace Barotrauma
 
         public NetLobbyScreen()
         {
-            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center) { MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 100) }, style: null);
+            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center), style: null);
             campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.75f), Frame.RectTransform, Anchor.TopCenter), style: null)
             {
                 Visible = false
@@ -737,15 +737,11 @@ namespace Barotrauma
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
-                if (campaignUI != null)
+                if (campaignUI?.StartButton != null)
                 {
-                    //SelectTab(Tab.Map);
-                    if (campaignUI.StartButton != null)
-                    {
-                        campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
-                            (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
-                            GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
-                    }
+                    campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
+                        (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
+                        GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
                 }
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }

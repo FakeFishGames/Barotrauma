@@ -56,7 +56,7 @@ namespace Barotrauma
                 switch (SlotTypes[i])
                 {
                     //case InvSlotType.Head:
-                    //case InvSlotType.OuterClothes:
+                    case InvSlotType.OuterClothes:
                     case InvSlotType.LeftHand:
                     case InvSlotType.RightHand:
                         hideEmptySlot[i] = true;
@@ -176,9 +176,6 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] != null && Items[i] != item)
                     {
-#if CLIENT
-                        if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
-#endif
                         if (!Items[i].AllowedSlots.Contains(InvSlotType.Any) || !TryPutItem(Items[i], character, new List<InvSlotType> { InvSlotType.Any }, true))
                         {
                             free = false;
@@ -198,9 +195,6 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] == null)
                     {
-#if CLIENT
-                        if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
-#endif
                         bool removeFromOtherSlots = item.ParentInventory != this;
                         if (placedInSlot == -1 && inWrongSlot)
                         {
@@ -254,9 +248,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("CharacterInventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return false;
             }
-#if CLIENT
-            if (PersonalSlots.HasFlag(SlotTypes[index])) { hidePersonalSlots = false; }
-#endif
+
             //there's already an item in the slot
             if (Items[index] != null)
             {
@@ -281,9 +273,7 @@ namespace Barotrauma
             foreach (InvSlotType allowedSlot in allowedSlots)
             {
                 if (!allowedSlot.HasFlag(SlotTypes[index])) continue;
-#if CLIENT
-                if (PersonalSlots.HasFlag(allowedSlot)) { hidePersonalSlots = false; }
-#endif
+
                 for (int i = 0; i < capacity; i++)
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] != null && Items[i] != item)

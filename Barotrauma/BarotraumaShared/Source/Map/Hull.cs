@@ -63,6 +63,13 @@ namespace Barotrauma
                 return "Hull";
             }
         }
+        
+        [Editable, Serialize("", true)]
+        public string RoomName
+        {
+            get;
+            set;
+        }
 
         public string DisplayName
         {
@@ -810,17 +817,17 @@ namespace Barotrauma
             }
 
             if (roomItems.Contains("reactor"))
-                return "RoomName.ReactorRoom";
+                return TextManager.Get("ReactorRoom");
             else if (roomItems.Contains("engine"))
-                return "RoomName.EngineRoom";
+                return TextManager.Get("EngineRoom");
             else if (roomItems.Contains("steering") && roomItems.Contains("sonar"))
-                return "RoomName.CommandRoom";
+                return TextManager.Get("CommandRoom");
             else if (roomItems.Contains("ballast"))
-                return "RoomName.Ballast";
+                return TextManager.Get("Ballast");
 
             if (ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
             {
-                return "RoomName.Airlock";
+                return TextManager.Get("Airlock");
             }
 
             Rectangle subRect = Submarine.CalculateDimensions();
@@ -840,7 +847,7 @@ namespace Barotrauma
             else
                 roomPos |= Alignment.Right;
 
-            return "RoomName.Sub" + roomPos.ToString();
+            return TextManager.Get("Sub" + roomPos.ToString());
         }
 
         public static Hull Load(XElement element, Submarine submarine)

@@ -456,6 +456,12 @@ namespace Barotrauma
                 Tags = element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true).ToHashSet();
             }
 
+            Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
+            if (Tags.None())
+            {
+                Tags = new HashSet<string>(element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true));
+            }
+
             if (element.Attribute("cargocontainername") != null)
             {
                 DebugConsole.ThrowError("Error in item prefab \"" + name + "\" - cargo container should be configured using the item's identifier, not the name.");
@@ -615,25 +621,10 @@ namespace Barotrauma
 
                         string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
 
-                        List<AfflictionPrefab> matchingAfflictions = AfflictionPrefab.List.FindAll(a => a.Identifier == treatmentIdentifier || a.AfflictionType == treatmentIdentifier);
-                        if (matchingAfflictions.Count == 0)
+                        var matchingAffliction = AfflictionPrefab.List.Find(a => a.Identifier == treatmentIdentifier);
+                        if (matchingAffliction != null)
                         {
-                            DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - couldn't define as a treatment, no treatments with the identifier or type \"" + treatmentIdentifier + "\" were found.");
-                            continue;
-                        }
-
-                        float suitability = subElement.GetAttributeFloat("suitability", 0.0f);
-                        foreach (AfflictionPrefab matchingAffliction in matchingAfflictions)
-                        {
-                            if (matchingAffliction.TreatmentSuitability.ContainsKey(identifier))
-                            {
-                                matchingAffliction.TreatmentSuitability[identifier] =
-                                    Math.Max(matchingAffliction.TreatmentSuitability[identifier], suitability);
-                            }
-                            else
-                            {
-                                matchingAffliction.TreatmentSuitability.Add(identifier, suitability);
-                            }
+                            matchingAffliction.TreatmentSuitability.Add(identifier, subElement.GetAttributeFloat("suitability", 0.0f));
                         }
                         break;
                 }

@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
                 {                    
                     hullInfoFrame.RectTransform.ScreenSpaceOffset = hullFrame.Rect.Center;
                     hullInfoFrame.Visible = true;
-                    hullNameText.Text = hull.DisplayName;
+                    hullNameText.Text = hull.RoomName;
 
                     foreach (Hull linkedHull in hullData.LinkedHulls)
                     {

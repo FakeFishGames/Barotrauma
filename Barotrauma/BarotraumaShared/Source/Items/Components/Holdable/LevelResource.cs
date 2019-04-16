@@ -11,12 +11,6 @@ namespace Barotrauma.Items.Components
     {
         private float lastSentDeattachTimer;
 
-        private PhysicsBody trigger;
-
-        private Holdable holdable;
-
-        private float deattachTimer;
-
         [Serialize(1.0f, false)]
         public float DeattachDuration
         {
@@ -55,7 +49,13 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-                
+
+        private PhysicsBody trigger;
+
+        private Holdable holdable;
+
+        private float deattachTimer;
+        
         public LevelResource(Item item, XElement element) : base(item, element)
         {
             IsActive = true;

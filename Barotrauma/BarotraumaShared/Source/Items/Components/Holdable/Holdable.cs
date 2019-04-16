@@ -58,6 +58,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, true)]
+        public bool Aimable
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, false)]
         public bool ControlPose
         {

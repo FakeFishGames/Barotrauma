@@ -83,7 +83,6 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
-            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
@@ -91,6 +90,7 @@ namespace Barotrauma
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
             LocationType.Init();

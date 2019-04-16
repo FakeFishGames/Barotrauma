@@ -10,7 +10,9 @@ namespace Barotrauma.Networking
     class ServerEntityEvent : NetEntityEvent
     {
         private IServerSerializable serializable;
-        
+
+        public bool Sent;
+
 #if DEBUG
         public string StackTrace;
 #endif

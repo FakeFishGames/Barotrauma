@@ -209,7 +209,6 @@ namespace Barotrauma
 
             //isActive = false;
 
-            bool spawnReady = false;
             if (spawnPending)
             {
                 //wait until there are no submarines at the spawnpos
@@ -220,30 +219,24 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos) < minDist * minDist) return;
                 }
 
-                spawnPending = false;
-
                 //+1 because Range returns an integer less than the max value
                 int amount = Rand.Range(minAmount, maxAmount + 1, Rand.RandSync.Server);
-                monsters = new List<Character>();
-                float offsetAmount = spawnPosType == Level.PositionType.MainPath ? 1000 : 100;
-                for (int i = 0; i < amount; i++)
-                {                    
-                    CoroutineManager.InvokeAfter(() =>
-                    {
-                        bool isClient = false;
-#if CLIENT
-                        isClient = GameMain.Client != null;
-#endif
-                        monsters.Add(Character.Create(characterFile, spawnPos + Rand.Vector(offsetAmount, Rand.RandSync.Server), i.ToString(), null, isClient, true, true));
-                        if (monsters.Count == amount)
-                        {
-                            spawnReady = true;
-                        }
-                    }, Rand.Range(0f, amount / 2, Rand.RandSync.Server));
-                }
-            }
+                monsters = new Character[amount];
 
-            if (!spawnReady) { return; }
+                for (int i = 0; i < amount; i++)
+                {
+                    bool isClient = false;
+#if CLIENT
+                    isClient = GameMain.Client != null;
+#endif
+
+                    monsters[i] = Character.Create(
+                        characterFile, spawnPos + Rand.Vector(100.0f, Rand.RandSync.Server), 
+                        i.ToString(), null, isClient, true, true);
+                }
+
+                spawnPending = false;
+            }
 
             Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
 #if CLIENT

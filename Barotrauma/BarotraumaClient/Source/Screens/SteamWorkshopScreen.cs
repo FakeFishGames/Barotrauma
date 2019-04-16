@@ -43,7 +43,6 @@ namespace Barotrauma
 
         private ContentPackage itemContentPackage;
         private Facepunch.Steamworks.Workshop.Editor itemEditor;
-        //private Facepunch.Steamworks.Overlay overlay;
 
         public SteamWorkshopScreen()
         {
@@ -638,12 +637,6 @@ namespace Barotrauma
                 OutlineColor = new Color(72, 124, 77, 255),
                 OnClicked = (btn, userdata) =>
                 {
-                    // Failed attempt, might have to be activated before accessing because as of now it just throws a null for overlay
-                    /*if (overlay.Enabled)
-                    {
-                        overlay.OpenUrl("steam://url/CommunityFilePage/" + item.Id);
-                    }*/
-
                     System.Diagnostics.Process.Start("steam://url/CommunityFilePage/" + item.Id);
                     return true;
                 }

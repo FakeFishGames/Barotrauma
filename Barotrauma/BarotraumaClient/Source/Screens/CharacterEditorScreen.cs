@@ -42,16 +42,16 @@ namespace Barotrauma
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool isFreezed;
-        private bool autoFreeze;
-        private bool limbPairEditing;
-        private bool uniformScaling;
-        private bool lockSpriteOrigin;
+        private bool autoFreeze = true;
+        private bool limbPairEditing = true;
+        private bool uniformScaling = true;
+        private bool lockSpriteOrigin = true;
         private bool lockSpritePosition;
         private bool lockSpriteSize;
         private bool recalculateCollider;
         private bool copyJointSettings;
         private bool displayColliders;
-        private bool displayWearables;
+        private bool displayWearables = true;
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
         private bool animationResetRequiresForceLoading;
@@ -89,17 +89,10 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-
-            SoundPlayer.OverrideMusicType = "none";
-            SoundPlayer.OverrideMusicDuration = null;
-            GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f);
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
-
             GUI.ForceMouseOn(null);
             CalculateSpritesheetPosition();
             if (Submarine.MainSub == null)
             {
-                ResetVariables();
                 Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
                 Submarine.MainSub.Load(unloadPrevious: false, showWarningMessages: false);
                 originalWall = new WallGroup(new List<Structure>(Structure.WallList));
@@ -107,10 +100,6 @@ namespace Barotrauma
                 CalculateMovementLimits();
                 isEndlessRunner = true;
                 GameMain.LightManager.LightingEnabled = false;
-            }
-            else if (instance == null)
-            {
-                ResetVariables();
             }
             Submarine.MainSub.GodMode = true;
             if (Character.Controlled == null)
@@ -129,65 +118,31 @@ namespace Barotrauma
             instance = this;
         }
 
-        private void ResetVariables()
-        {
-            editAnimations = false;
-            editLimbs = false;
-            editJoints = false;
-            editIK = false;
-            showRagdoll = false;
-            showParamsEditor = false;
-            showSpritesheet = false;
-            isFreezed = false;
-            autoFreeze = true;
-            limbPairEditing = true;
-            uniformScaling = true;
-            lockSpriteOrigin = false;
-            lockSpritePosition = false;
-            lockSpriteSize = false;
-            recalculateCollider = false;
-            copyJointSettings = false;
-            displayColliders = false;
-            displayWearables = true;
-            displayBackgroundColor = false;
-            ragdollResetRequiresForceLoading = false;
-            animationResetRequiresForceLoading = false;
-            isExtrudingJoint = false;
-            isDrawingJoint = false;
-            Wizard.instance = null;
-        }
-
         private void Reset()
         {
-            ResetVariables();
-            if (character != null)
+            AnimParams.ForEach(a => a.Reset(true));
+            RagdollParams.Reset(true);
+            RagdollParams.ClearHistory();
+            CurrentAnimation.ClearHistory();
+            if (!character.Removed)
             {
-                AnimParams.ForEach(a => a.Reset(true));
-                RagdollParams.Reset(true);
-                RagdollParams.ClearHistory();
-                CurrentAnimation.ClearHistory();
-                if (!character.Removed)
-                {
-                    character.Remove();
-                }
-                character = null;
+                character.Remove();
             }
+            character = null;
         }
 
         public override void Deselect()
         {
             base.Deselect();
-
-            SoundPlayer.OverrideMusicType = null;
-            GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume);
-            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume);
-
             GUI.ForceMouseOn(null);
             if (isEndlessRunner)
             {
                 Submarine.MainSub.Remove();
                 isEndlessRunner = false;
-                Reset();
+                if (character != null)
+                {
+                    Reset();
+                }
                 GameMain.World.ProcessChanges();
             }
             else
@@ -220,7 +175,7 @@ namespace Barotrauma
         {
             //base.AddToGUIUpdateList();
             rightPanel.AddToGUIUpdateList();
-            Wizard.instance?.AddToGUIUpdateList();
+            Wizard.Instance.AddToGUIUpdateList();
             if (displayBackgroundColor)
             {
                 backgroundColorPanel.AddToGUIUpdateList();
@@ -252,7 +207,7 @@ namespace Barotrauma
             base.Update(deltaTime);
             spriteSheetRect = CalculateSpritesheetRectangle();
             // Handle shortcut keys
-            if (GUI.KeyboardDispatcher.Subscriber == null && Wizard.instance == null)
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
                 if (PlayerInput.KeyDown(Keys.LeftControl))
                 {
@@ -441,7 +396,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (!isFreezed && Wizard.instance == null)
+            if (!isFreezed)
             {
                 if (character.AnimController.Invalid)
                 {
@@ -1176,22 +1131,7 @@ namespace Barotrauma
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
                 selectedJob = null;
             }
-            if (character != null)
-            {
-                character.dontFollowCursor = dontFollowCursor;
-            }
-            if (character == null)
-            {
-                if (currentCharacterConfig == configFile)
-                {
-                    return null;
-                }
-                else
-                {
-                    // Respawn the current character;
-                    SpawnCharacter(currentCharacterConfig);
-                }
-            }
+            character.dontFollowCursor = dontFollowCursor;
             OnPostSpawn();
             return character;
         }
@@ -1307,33 +1247,27 @@ namespace Barotrauma
             string speciesName = name;
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
-            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).Any(path => path.Contains(speciesName)))
+            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).None(path => path.Contains(speciesName)))
             {
-                GUI.AddMessage(GetCharacterEditorTranslation("ExistingCharacterFound"), Color.Red, font: GUI.LargeFont);
-                // TODO: add a prompt: "Do you want to replace it?" + functionality
-                return false;
+                // Create the config file
+                XElement mainElement = new XElement("Character",
+                    new XAttribute("name", speciesName),
+                    new XAttribute("humanoid", isHumanoid),
+                    new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
+                    new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
+                    new XElement("health"),
+                    new XElement("ai"));
+                XDocument doc = new XDocument(mainElement);
+                if (!Directory.Exists(mainFolder))
+                {
+                    Directory.CreateDirectory(mainFolder);
+                }
+                doc.Save(configFilePath);
+                // Add to the selected content package
+                contentPackage.AddFile(configFilePath, ContentType.Character);
+                contentPackage.Save(contentPackage.Path);
+                DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
             }
-
-            // Create the config file
-            XElement mainElement = new XElement("Character",
-                new XAttribute("name", speciesName),
-                new XAttribute("humanoid", isHumanoid),
-                new XElement("ragdolls", new XAttribute("folder", Path.Combine(mainFolder, $"Ragdolls/").Replace(@"\", @"/"))),
-                new XElement("animations", new XAttribute("folder", Path.Combine(mainFolder, $"Animations/").Replace(@"\", @"/"))),
-                new XElement("health"),
-                new XElement("ai"));
-
-            XDocument doc = new XDocument(mainElement);
-            if (!Directory.Exists(mainFolder))
-            {
-                Directory.CreateDirectory(mainFolder);
-            }
-            doc.Save(configFilePath);
-            // Add to the selected content package
-            contentPackage.AddFile(configFilePath, ContentType.Character);
-            contentPackage.Save(contentPackage.Path);
-            DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
-
             // Ragdoll
             string ragdollFolder = RagdollParams.GetFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
@@ -1344,20 +1278,12 @@ namespace Barotrauma
             string animFolder = AnimationParams.GetFolder(speciesName);
             foreach (AnimationType animType in Enum.GetValues(typeof(AnimationType)))
             {
-                switch (animType)
+                if (animType != AnimationType.NotDefined)
                 {
-                    case AnimationType.Walk:
-                    case AnimationType.Run:
-                        if (!ragdollParams.CanEnterSubmarine) { continue; }
-                        break;
-                    case AnimationType.SwimSlow:
-                    case AnimationType.SwimFast:
-                        break;
-                    default: continue;
+                    Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
+                    string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
+                    AnimationParams.Create(fullPath, speciesName, animType, type);
                 }
-                Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
-                string fullPath = AnimationParams.GetDefaultFile(speciesName, animType);
-                AnimationParams.Create(fullPath, speciesName, animType, type);
             }
             if (!AllFiles.Contains(configFilePath))
             {
@@ -3838,7 +3764,7 @@ namespace Barotrauma
                                         void RecalculateCollider(Limb l)
                                         {
                                             // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
-                                            float multiplier = 0.85f;
+                                            float multiplier = 0.75f;
                                             l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale * multiplier);
                                             TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / RagdollParams.LimbScale / RagdollParams.TextureScale));
                                             TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / RagdollParams.LimbScale / RagdollParams.TextureScale));
@@ -4357,7 +4283,7 @@ namespace Barotrauma
             private List<XElement> jointXElements = new List<XElement>();
             private List<GUIComponent> jointGUIElements = new List<GUIComponent>();
 
-            public static Wizard instance;
+            private static Wizard instance;
             public static Wizard Instance
             {
                 get
@@ -4388,6 +4314,7 @@ namespace Barotrauma
                         break;
                     case Tab.None:
                     default:
+                        //activeView = null;
                         instance = null;
                         break;
                 }
@@ -4416,7 +4343,7 @@ namespace Barotrauma
                     GUITextBox xmlPathElement = null;
                     void UpdatePaths()
                     {
-                        string pathBase = $"Mods/Characters/{Name}/{Name}";
+                        string pathBase = $"Content/Characters/{Name}/{Name}";
                         XMLPath = $"{pathBase}.xml";
                         TexturePath = $"{pathBase}.png";
                         texturePathElement.Text = TexturePath;
@@ -4495,7 +4422,7 @@ namespace Barotrauma
                     // Cancel
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
-                        Wizard.Instance.SelectTab(Tab.None);
+                        Instance.SelectTab(Tab.None);
                         return true;
                     };
                     // Next
@@ -4507,7 +4434,7 @@ namespace Barotrauma
                             texturePathElement.Flash(Color.Red);
                             return false;
                         }
-                        Wizard.Instance.SelectTab(Tab.Ragdoll);
+                        Instance.SelectTab(Tab.Ragdoll);
                         return true;
                     };
                     return box;
@@ -4648,7 +4575,7 @@ namespace Barotrauma
                     // Previous
                     box.Buttons[0].OnClicked += (b, d) =>
                     {
-                        Wizard.Instance.SelectTab(Tab.Character);
+                        Instance.SelectTab(Tab.Character);
                         return true;
                     };
                     // Parse and create
@@ -4739,7 +4666,7 @@ namespace Barotrauma
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                         }
-                        Wizard.Instance.SelectTab(Tab.None);
+                        Instance.SelectTab(Tab.None);
                         return true;
                     };
                     return box;
@@ -4919,27 +4846,23 @@ namespace Barotrauma
                         int width = rectInputs[2].IntValue;
                         int height = rectInputs[3].IntValue;
                         var colliderAttributes = new List<XAttribute>();
-                        // Capsules/Circles
-                        //if (width == height)
-                        //{
-                        //    colliderAttributes.Add(new XAttribute("radius", (int)(width / 2 * 0.85f)));
-                        //}
-                        //else
-                        //{
-                        //    if (height > width)
-                        //    {
-                        //        colliderAttributes.Add(new XAttribute("radius", (int)(width / 2 * 0.85f)));
-                        //        colliderAttributes.Add(new XAttribute("height",(int) (height - width * 0.85f)));
-                        //    }
-                        //    else
-                        //    {
-                        //        colliderAttributes.Add(new XAttribute("radius", (int)(height / 2 * 0.85f)));
-                        //        colliderAttributes.Add(new XAttribute("width", (int)(width - height * 0.85f)));
-                        //    }
-                        //}
-                        // Rectangles
-                        colliderAttributes.Add(new XAttribute("height", (int)(height * 0.85f)));
-                        colliderAttributes.Add(new XAttribute("width", (int)(width * 0.85f)));
+                        if (width == height)
+                        {
+                            colliderAttributes.Add(new XAttribute("radius", width / 2));
+                        }
+                        else
+                        {
+                            if (height > width)
+                            {
+                                colliderAttributes.Add(new XAttribute("radius", width / 2));
+                                colliderAttributes.Add(new XAttribute("height", height - width));
+                            }
+                            else
+                            {
+                                colliderAttributes.Add(new XAttribute("radius", height / 2));
+                                colliderAttributes.Add(new XAttribute("width", width - height));
+                            }
+                        }
                         idToCodeName.TryGetValue(id, out string notes);
                         LimbXElements.Add(id.ToString(), new XElement("limb",
                             new XAttribute("id", id),

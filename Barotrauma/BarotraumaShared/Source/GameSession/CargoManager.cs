@@ -108,7 +108,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            new GUIMessageBox("", TextManager.Get("CargoSpawnNotification").Replace("[roomname]", cargoRoom.DisplayName));
+            new GUIMessageBox("", TextManager.Get("CargoSpawnNotification").Replace("[roomname]", cargoRoom.RoomName));
 #endif
 
             Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();

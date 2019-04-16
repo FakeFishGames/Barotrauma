@@ -801,12 +801,7 @@ namespace Barotrauma
             if (findNewHull) FindHull();
         }
 
-        public void SetActiveSprite()
-        {
-            SetActiveSpriteProjSpecific();
-        }
-
-        partial void SetActiveSpriteProjSpecific();
+        partial void SetActiveSprite();
 
         public override void Move(Vector2 amount)
         {
@@ -1437,13 +1432,13 @@ namespace Barotrauma
                             selectHit = picker.IsKeyHit(ic.SelectKey);
 
 #if CLIENT
-                            //if the cursor is on a UI component, disable interaction with the left mouse button
-                            //to prevent accidentally selecting items when clicking UI elements
-                            if (picker == Character.Controlled && GUI.MouseOn != null)
-                            {
-                                if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                                if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
-                            }
+                        //if the cursor is on a UI component, disable interaction with the left mouse button
+                        //to prevent accidentally selecting items when clicking UI elements
+                        if (picker == Character.Controlled && GUI.MouseOn != null)
+                        {
+                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
+                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
+                        }
 #endif
                         }
                     }
@@ -1613,7 +1608,6 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
-        List<ColoredText> texts = new List<ColoredText>();
         public List<ColoredText> GetHUDTexts(Character character)
         {
             texts.Clear();
@@ -1622,13 +1616,6 @@ namespace Barotrauma
                 if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
-
-                Color color = Color.Gray;
-                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
-                if (hasRequiredSkillsAndItems)
-                {
-                    color = Color.Cyan;
-                }
 
                 texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }
@@ -2067,8 +2054,6 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
-            Sprite.ReloadXML();
-            SpriteDepth = Sprite.Depth;
             components.ForEach(c => c.Reset());
         }
 

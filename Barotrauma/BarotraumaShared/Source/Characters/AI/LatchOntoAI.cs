@@ -54,8 +54,6 @@ namespace Barotrauma
             get { return attachJoints.Count > 0; }
         }
 
-        public bool IsAttachedToSub => IsAttached && attachTargetBody?.UserData is Entity entity && (entity is Submarine sub || entity?.Submarine != null);
-
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
         {
             attachToWalls = element.GetAttributeBool("attachtowalls", false);
@@ -209,10 +207,10 @@ namespace Barotrauma
                     break;
             }
 
-            if (IsAttached && attachTargetBody != null && deattachTimer < 0.0f)
+            if (attachTargetBody != null && deattachTimer < 0.0f)
             {
                 Entity entity = attachTargetBody.UserData as Entity;
-                Submarine attachedSub = entity is Submarine sub ? sub : entity?.Submarine;
+                Submarine attachedSub = entity is Submarine ? (Submarine)entity : entity?.Submarine;
                 if (attachedSub != null)
                 {
                     float velocity = attachedSub.Velocity == Vector2.Zero ? 0.0f : attachedSub.Velocity.Length();

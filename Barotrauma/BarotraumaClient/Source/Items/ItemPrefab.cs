@@ -25,14 +25,12 @@ namespace Barotrauma
     class ContainedItemSprite
     {
         public readonly Sprite Sprite;
-        public readonly bool UseWhenAttached;
         public readonly string[] AllowedContainerIdentifiers;
         public readonly string[] AllowedContainerTags;
 
         public ContainedItemSprite(XElement element, string path = "", bool lazyLoad = false)
         {
             Sprite = new Sprite(element, path, lazyLoad: lazyLoad);
-            UseWhenAttached = element.GetAttributeBool("usewhenattached", false);
             AllowedContainerIdentifiers = element.GetAttributeStringArray("allowedcontaineridentifiers", new string[0], convertToLowerInvariant: true);
             AllowedContainerTags = element.GetAttributeStringArray("allowedcontainertags", new string[0], convertToLowerInvariant: true);
         }

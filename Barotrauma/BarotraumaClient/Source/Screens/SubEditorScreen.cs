@@ -310,12 +310,6 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f,
                 Stretch = true
             };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
-            {
-                OnClicked = (btn, userdata) => { ClearFilter(); return true; }
-            };
-
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
                 entityCategoryButtons.Add(new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform),
@@ -1017,7 +1011,7 @@ namespace Barotrauma
 
             var previewImageButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
 
-            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageCreate"))
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageGenerate"))
             {
                 OnClicked = (btn, userdata) =>
                 {

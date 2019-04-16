@@ -1103,14 +1103,14 @@ namespace Barotrauma
             if (leftFoot != null)
             {
                 float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", leftFoot, true);
-                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
+                speed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
             var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
             if (rightFoot != null)
             {
                 float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
-                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
+                speed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
             return speed;

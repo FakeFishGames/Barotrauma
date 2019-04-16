@@ -291,6 +291,11 @@ namespace Barotrauma.Lights
                 spriteBatch.Draw(HighlightMap, Vector2.Zero, Color.White);
                 spriteBatch.End();
             }
+            GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
+            spriteBatch.End();
+
+            //draw a black rectangle on hulls to hide background lights behind subs
+            //---------------------------------------------------------------------------------------------------
 
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
@@ -495,8 +500,6 @@ namespace Barotrauma.Lights
                 spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
                     (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
             }
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Enabled) { c.Draw(spriteBatch, cam); }

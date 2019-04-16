@@ -231,8 +231,7 @@ namespace Barotrauma
                 : afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
         }
 
-        private LimbHealth GetMatchingLimbHealth(Limb limb) => limbHealths[limb.HealthIndex];
-        private LimbHealth GetMathingLimbHealth(Affliction affliction) => GetMatchingLimbHealth(Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb));
+        private LimbHealth GetMathingLimbHealth(Affliction affliction) => limbHealths[Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb).HealthIndex];
 
         /// <summary>
         /// Returns the limb afflictions and non-limbspecific afflictions that are set to be displayed on this limb.

@@ -267,7 +267,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
                 }
             }
         }
@@ -286,7 +286,7 @@ namespace Barotrauma
 
             if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
             {
-                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.DisplayName), null, 0, "pressure", 30.0f);
+                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.RoomName), null, 0, "pressure", 30.0f);
             }
         }
 

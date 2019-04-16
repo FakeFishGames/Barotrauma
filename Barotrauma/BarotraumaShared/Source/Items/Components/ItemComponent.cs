@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
         
-        [Editable, Serialize("", true, translationTextTag: "ItemMsg")]
+        [Editable, Serialize("", true)]
         public string Msg
         {
             get;
@@ -538,6 +538,7 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
+            float average = skillSuccessSum / requiredSkills.Count;
 
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
@@ -554,7 +555,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool HasRequiredContainedItems(bool addMessage, string msg = null)
+        public bool HasRequiredContainedItems(bool addMessage)
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
@@ -581,52 +582,33 @@ namespace Barotrauma.Items.Components
         {
             if (!requiredItems.Any()) return true;
             if (character.Inventory == null) return false;
-            bool hasRequiredItems = false;
-            bool canContinue = true;
+                       
             if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
             {
                 foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
                 {
-                    canContinue = CheckItems(ri, character.SelectedItems);
-                    if (!canContinue) { break; }
-                }
-            }
-            if (canContinue)
-            {
-                if (requiredItems.ContainsKey(RelatedItem.RelationType.Picked))
-                {
-                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
+                    if (character.SelectedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
                     {
-                        if (!CheckItems(ri, character.Inventory.Items)) { break; }
+#if CLIENT
+                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+#endif
+                        return false;
                     }
                 }
             }
-
+            if (requiredItems.ContainsKey(RelatedItem.RelationType.Picked))
+            {
+                foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
+                {
+                    if (character.Inventory.Items.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
+                    {
 #if CLIENT
             if (!hasRequiredItems && addMessage && !string.IsNullOrEmpty(msg))
             {
                 GUI.AddMessage(msg, Color.Red);
             }
 #endif
-            return hasRequiredItems;
-
-            bool CheckItems(RelatedItem relatedItem, IEnumerable<Item> itemList)
-            {
-                bool Predicate(Item it) => it != null && it.Condition > 0.0f && relatedItem.MatchesItem(it);
-                bool shouldBreak = false;
-                if (relatedItem.IsOptional)
-                {
-                    if (!hasRequiredItems)
-                    {
-                        hasRequiredItems = itemList.Any(Predicate);
-                    }
-                }
-                else
-                {
-                    hasRequiredItems = itemList.Any(Predicate);
-                    if (!hasRequiredItems)
-                    {
-                        shouldBreak = true;
+                        return false;
                     }
                 }
                 if (!hasRequiredItems)
@@ -638,6 +620,8 @@ namespace Barotrauma.Items.Components
                 }
                 return !shouldBreak;
             }
+            
+            return true;
         }
         
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Character user = null)
@@ -782,7 +766,6 @@ namespace Barotrauma.Items.Components
                         {
                             newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
                             newRequiredItem.Msg = prevRequiredItem.Msg;
-                            newRequiredItem.IsOptional = prevRequiredItem.IsOptional;
                         }
 
                         if (!requiredItems.ContainsKey(newRequiredItem.Type))

@@ -32,9 +32,6 @@ namespace Barotrauma.Sounds
         public bool UseRadioFilter;
         public bool UseMuffleFilter;
 
-        public float Near { get; private set; }
-        public float Far { get; private set; }
-
         private static BiQuad[] muffleFilters = new BiQuad[]
         {
             new LowpassFilter(VoipConfig.FREQUENCY, 800)
@@ -43,16 +40,6 @@ namespace Barotrauma.Sounds
         {
             new BandpassFilter(VoipConfig.FREQUENCY, 2000)
         };
-
-        public float Gain
-        {
-            get { return soundChannel == null ? 0.0f : soundChannel.Gain; }
-            set
-            {
-                if (soundChannel == null) { return; }
-                soundChannel.Gain = value;
-            }
-        }
 
         public VoipSound(SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
         {
@@ -77,8 +64,8 @@ namespace Barotrauma.Sounds
 
         public void SetRange(float near, float far)
         {
-            soundChannel.Near = Near = near;
-            soundChannel.Far = Far = far;
+            soundChannel.Near = near;
+            soundChannel.Far = far;
         }
 
         public void ApplyFilters(short[] buffer, int readSamples)

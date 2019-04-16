@@ -1568,7 +1568,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages. TODO: Allow to show messages at the middle of the screen (instead of the top center).
+        /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
         /// </summary>
         public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, ScalableFont font = null)
         {

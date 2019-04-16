@@ -1754,10 +1754,11 @@ namespace Barotrauma.Networking
                 Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
                 Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
                 Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
-            }
+            }            
 
-            MissionMode missionMode = GameMain.GameSession.GameMode as MissionMode;
-            bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
+            bool missionAllowRespawn = campaign == null &&
+                (!(GameMain.GameSession.GameMode is MissionMode) ||
+                ((MissionMode)GameMain.GameSession.GameMode).Mission.AllowRespawn);
 
             if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
 
@@ -1765,12 +1766,6 @@ namespace Barotrauma.Networking
             for (int n = 0; n < teamCount; n++)
             {
                 var teamID = n == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
-
-                Submarine.MainSubs[n].TeamID = teamID;
-                foreach (Submarine sub in Submarine.MainSubs[n].DockedTo)
-                {
-                    sub.TeamID = teamID;
-                }
 
                 //find the clients in this team
                 List<Client> teamClients = teamCount == 1 ? 
@@ -1940,8 +1935,10 @@ namespace Barotrauma.Networking
 
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
 
-            MissionMode missionMode = GameMain.GameSession.GameMode as MissionMode;
-            bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
+            bool missionAllowRespawn = campaign == null &&
+                (!(GameMain.GameSession.GameMode is MissionMode) ||
+                ((MissionMode)GameMain.GameSession.GameMode).Mission.AllowRespawn);
+
             msg.Write(serverSettings.AllowRespawn && missionAllowRespawn);
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
