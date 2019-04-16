@@ -37,6 +37,7 @@ namespace Barotrauma.Tutorials
         private MotionSensor mechanic_craftingObjectiveSensor;
         private Deconstructor mechanic_deconstructor;
         private Fabricator mechanic_fabricator;
+        private ItemContainer mechanic_craftingCabinet;
         private Door mechanic_fourthDoor;
         private LightComponent mechanic_fourthDoorLight;
 
@@ -137,6 +138,7 @@ namespace Barotrauma.Tutorials
             mechanic_craftingObjectiveSensor = Item.ItemList.Find(i => i.HasTag("mechanic_craftingobjectivesensor")).GetComponent<MotionSensor>();
             mechanic_deconstructor = Item.ItemList.Find(i => i.HasTag("deconstructor")).GetComponent<Deconstructor>();
             mechanic_fabricator = Item.ItemList.Find(i => i.HasTag("fabricator")).GetComponent<Fabricator>();
+            mechanic_craftingCabinet = Item.ItemList.Find(i => i.HasTag("mechanic_craftingcabinet")).GetComponent<ItemContainer>();
             mechanic_fourthDoor = Item.ItemList.Find(i => i.HasTag("mechanic_fourthdoor")).GetComponent<Door>();
             mechanic_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_fourthdoorlight")).GetComponent<LightComponent>();
 
@@ -320,6 +322,29 @@ namespace Barotrauma.Tutorials
             mechanic_fire = new DummyFireSource(new Vector2(20f, 2f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
             do { yield return null; } while (!mechanic_craftingObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(4); // Deconstruct
+
+            SetHighlight(mechanic_craftingCabinet.Item, true);
+            do
+            {
+                for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
+                {
+                    if (mechanic_craftingCabinet.Inventory.Items[i] != null)
+                    {
+                        HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+                if (mechanic.SelectedConstruction == mechanic_craftingCabinet.Item)
+                {
+                    for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
+                    {
+                        if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                    }
+                }
+                yield return null;
+            } while (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null || mechanic.Inventory.FindItemByIdentifier("sodium") == null); // Wait until looted
+            yield return new WaitForSeconds(1.0f);
+            SetHighlight(mechanic_craftingCabinet.Item, false);
+
             SetHighlight(mechanic_deconstructor.Item, true);
 
             do
