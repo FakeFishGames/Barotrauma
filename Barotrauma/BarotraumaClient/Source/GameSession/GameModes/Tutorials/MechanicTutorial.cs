@@ -231,7 +231,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_firstDoor.Item, false);
             yield return new WaitForSeconds(1.5f);
             RemoveCompletedObjective(segments[0]);
-            
+
             // Room 2
             yield return new WaitForSeconds(0.0f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
@@ -514,7 +514,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Complete"), ChatMessageType.Radio, null);
 
             // END TUTORIAL
-            Completed = true;
+            CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 
         private bool IsSelectedItem(Item item)

@@ -188,7 +188,8 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete").Replace("[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);
-            // Tutorial complete
+
+            CoroutineManager.StartCoroutine(TutorialCompleted());
         }
     }
 }

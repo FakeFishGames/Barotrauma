@@ -249,6 +249,7 @@ namespace Barotrauma.Tutorials
 
         protected bool Restart(GUIButton button, object obj)
         {
+            GUI.PreventPauseMenuToggle = false;
             TutorialMode.StartTutorial(this);
             return true;
         }

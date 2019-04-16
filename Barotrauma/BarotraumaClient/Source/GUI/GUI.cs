@@ -129,6 +129,8 @@ namespace Barotrauma
             get { return pauseMenuOpen; }
         }
 
+        public static bool PreventPauseMenuToggle = false;
+
         public static Color ScreenOverlayColor
         {
             get;
@@ -1413,6 +1415,7 @@ namespace Barotrauma
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) return;
+            if (PreventPauseMenuToggle) return;
 
             settingsMenuOpen = false;
 

@@ -300,7 +300,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[5]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
 
-            Completed = true;
+            CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 
         private bool IsSelectedItem(Item item)
