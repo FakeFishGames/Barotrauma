@@ -19,7 +19,7 @@ namespace Barotrauma
 
         private float previousCondition = -1;
 
-        public AIObjectiveRepairItem(Character character, Item item) : base(character, "")
+        public AIObjectiveRepairItem(Character character, Item item, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             Item = item;
         }
@@ -114,7 +114,7 @@ namespace Barotrauma
                         {
                             // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
                             abandon = true;
-                            character?.Speak(TextManager.Get("DialogRepairFailed").Replace("[itemname]", Item.Name), null, 0.0f, "repairfailed", 10.0f);
+                            character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
                         }
                     }
                     repairable.CurrentFixer = abandon && repairable.CurrentFixer == character ? null : character;

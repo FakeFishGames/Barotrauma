@@ -20,7 +20,7 @@ namespace Barotrauma
 
         private float useExtinquisherTimer;
 
-        public AIObjectiveExtinguishFire(Character character, Hull targetHull) : base(character, "")
+        public AIObjectiveExtinguishFire(Character character, Hull targetHull, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             this.targetHull = targetHull;
         }

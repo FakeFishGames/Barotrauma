@@ -52,8 +52,7 @@ namespace Barotrauma
             return base.GetPriority(objectiveManager);
         }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false)
-            : base (character, option)
+        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) : base (character, option, priorityModifier)
         {
             this.component = item ?? throw new System.ArgumentNullException("item", "Attempted to create an AIObjectiveOperateItem with a null target.");
             this.requireEquip = requireEquip;

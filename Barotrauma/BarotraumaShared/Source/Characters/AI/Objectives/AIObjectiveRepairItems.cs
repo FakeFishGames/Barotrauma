@@ -14,9 +14,8 @@ namespace Barotrauma
         /// </summary>
         public bool RequireAdequateSkills;
 
-        public AIObjectiveRepairItems(Character character) : base(character, "") { }
+        public AIObjectiveRepairItems(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) { }
 
-        // TODO: This can allow two active repair items objectives, if RequireAdequateSkills is not at the same value. We don't want that.
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
 
         protected override void CreateObjectives()

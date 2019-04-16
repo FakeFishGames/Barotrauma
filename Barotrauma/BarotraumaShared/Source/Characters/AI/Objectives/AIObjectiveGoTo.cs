@@ -84,8 +84,7 @@ namespace Barotrauma
 
         public bool FollowControlledCharacter;
 
-        public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
-            : base (character, "")
+        public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) : base (character, "", priorityModifier)
         {
             this.Target = target;
             this.repeat = repeat;
@@ -96,8 +95,7 @@ namespace Barotrauma
         }
 
 
-        public AIObjectiveGoTo(Vector2 simPos, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
-            : base(character, "")
+        public AIObjectiveGoTo(Vector2 simPos, Character character, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             this.targetPos = simPos;
             this.repeat = repeat;

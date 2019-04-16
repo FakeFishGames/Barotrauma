@@ -10,7 +10,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         private readonly IEnumerable<Pump> pumpList;
 
-        public AIObjectivePumpWater(Character character, string option) : base(character, option)
+        public AIObjectivePumpWater(Character character, string option, float priorityModifier = 1) : base(character, option, priorityModifier)
         {
             pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
         }

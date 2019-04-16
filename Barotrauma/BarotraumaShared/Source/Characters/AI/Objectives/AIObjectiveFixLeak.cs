@@ -24,7 +24,7 @@ namespace Barotrauma
             get { return leak; }
         }
 
-        public AIObjectiveFixLeak(Gap leak, Character character) : base (character, "")
+        public AIObjectiveFixLeak(Gap leak, Character character, float priorityModifier = 1) : base (character, "", priorityModifier)
         {
             this.leak = leak;
         }

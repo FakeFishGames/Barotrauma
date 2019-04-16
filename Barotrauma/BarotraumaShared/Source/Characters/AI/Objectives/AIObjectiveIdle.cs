@@ -29,7 +29,7 @@ namespace Barotrauma
         private readonly List<Hull> targetHulls = new List<Hull>(20);
         private readonly List<float> hullWeights = new List<float>(20);
 
-        public AIObjectiveIdle(Character character) : base(character, "")
+        public AIObjectiveIdle(Character character, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             standStillTimer = Rand.Range(-10.0f, 10.0f);
             walkDuration = Rand.Range(0.0f, 10.0f);

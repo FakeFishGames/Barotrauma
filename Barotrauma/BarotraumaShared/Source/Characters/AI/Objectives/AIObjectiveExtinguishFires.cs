@@ -13,7 +13,7 @@ namespace Barotrauma
 
         private Dictionary<Hull, AIObjectiveExtinguishFire> extinguishObjectives = new Dictionary<Hull, AIObjectiveExtinguishFire>();
 
-        public AIObjectiveExtinguishFires(Character character) : base(character, "") { }
+        public AIObjectiveExtinguishFires(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) { }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {

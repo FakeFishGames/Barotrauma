@@ -12,7 +12,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool ForceRun => true;
 
-        public AIObjectiveFixLeaks(Character character) : base (character, "") { }
+        public AIObjectiveFixLeaks(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) { }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
