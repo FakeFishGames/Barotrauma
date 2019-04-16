@@ -504,8 +504,19 @@ namespace Barotrauma
                 {
                     foreach (MapEntity e in selectedList)
                     {
+                        SpriteEffects spriteEffects = SpriteEffects.None;
+                        if (e is Item item)
+                        {
+                            if (item.FlippedX && item.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
+                            if (item.flippedY && item.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
+                        }
+                        else if (e is Structure structure)
+                        {
+                            if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
+                            if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
+                        }
                         e.prefab?.DrawPlacing(spriteBatch,
-                            new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale);
+                            new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);
                         GUI.DrawRectangle(spriteBatch,
                             new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount,
                             new Vector2(e.rect.Width, e.rect.Height),
