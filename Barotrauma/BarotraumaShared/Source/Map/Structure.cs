@@ -159,6 +159,32 @@ namespace Barotrauma
             private set;
         }
 
+        private float scale = 1.0f;
+        public override float Scale
+        {
+            get { return scale; }
+            set
+            {
+                if (scale == value) { return; }
+                scale = MathHelper.Clamp(value, 0.1f, 10.0f);
+
+                float relativeScale = scale / prefab.Scale;
+
+                if (!ResizeHorizontal || !ResizeVertical)
+                {
+                    int newWidth = ResizeHorizontal ? rect.Width : (int)(defaultRect.Width * relativeScale);
+                    int newHeight = ResizeVertical ? rect.Height : (int)(defaultRect.Height * relativeScale);
+                    Rect = new Rectangle(rect.X, rect.Y, newWidth, newHeight);
+                    if (Sections != null)
+                    {
+                        UpdateSections();
+                    }
+                }
+            }
+        }
+
+        private Rectangle defaultRect;
+
         public override Rectangle Rect
         {
             get
@@ -169,9 +195,13 @@ namespace Barotrauma
             {
                 Rectangle oldRect = Rect;
                 base.Rect = value;
-                if (Prefab.Body) CreateSections();
+                if (Prefab.Body)
+                {
+                    CreateSections();
+                }
                 else
                 {
+                    if (Sections == null) { return; }
                     foreach (WallSection sec in Sections)
                     {
                         Rectangle secRect = sec.rect;
@@ -189,11 +219,11 @@ namespace Barotrauma
 
         public float BodyWidth
         {
-            get { return Prefab.BodyWidth > 0.0f ? Prefab.BodyWidth : rect.Width; }
+            get { return Prefab.BodyWidth > 0.0f ? Prefab.BodyWidth * scale : rect.Width; }
         }
         public float BodyHeight
         {
-            get { return Prefab.BodyHeight > 0.0f ? Prefab.BodyHeight : rect.Height; }
+            get { return Prefab.BodyHeight > 0.0f ? Prefab.BodyHeight * scale : rect.Height; }
         }
 
         /// <summary>
@@ -261,8 +291,9 @@ namespace Barotrauma
         public Structure(Rectangle rectangle, StructurePrefab sp, Submarine submarine)
             : base(sp, submarine)
         {
-            if (rectangle.Width == 0 || rectangle.Height == 0) return;
             System.Diagnostics.Debug.Assert(rectangle.Width > 0 && rectangle.Height > 0);
+            if (rectangle.Width == 0 || rectangle.Height == 0) return;
+            defaultRect = rectangle;
 
             rect = rectangle;
 #if CLIENT
@@ -961,6 +992,7 @@ namespace Barotrauma
 
         private void UpdateSections()
         {
+            if (Bodies == null) return;
             foreach (Body b in Bodies)
             {
                 GameMain.World.RemoveBody(b);
@@ -1024,9 +1056,9 @@ namespace Barotrauma
                 if (BodyWidth > 0.0f) rect.Width = (int)BodyWidth;
                 if (BodyHeight > 0.0f) rect.Height = Math.Max((int)Math.Round(BodyHeight * (rect.Height / (float)this.rect.Height)), 1);
             }
-            if (FlippedX) diffFromCenter = -diffFromCenter;
+            if (FlippedX) { diffFromCenter = -diffFromCenter; }
             
-            Vector2 bodyOffset = ConvertUnits.ToSimUnits(Prefab.BodyOffset);
+            Vector2 bodyOffset = ConvertUnits.ToSimUnits(Prefab.BodyOffset) * scale;
             if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
             if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
 
@@ -1046,7 +1078,8 @@ namespace Barotrauma
             {
                 newBody.Position = structureCenter + bodyOffset + new Vector2(
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
-                    (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * ConvertUnits.ToSimUnits(diffFromCenter);
+                    (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation))
+                        * ConvertUnits.ToSimUnits(diffFromCenter);
                 newBody.Rotation = -BodyRotation;
             }
             else
@@ -1187,6 +1220,9 @@ namespace Barotrauma
         {
             XElement element = new XElement("Structure");
 
+            int width = ResizeHorizontal ? rect.Width : defaultRect.Width;
+            int height = ResizeVertical ? rect.Height : defaultRect.Height;
+
             element.Add(
                 new XAttribute("name", prefab.Name),
                 new XAttribute("identifier", prefab.Identifier),
@@ -1194,7 +1230,7 @@ namespace Barotrauma
                 new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
+                    width + "," + height));
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
             if (FlippedY) element.Add(new XAttribute("flippedy", true));
