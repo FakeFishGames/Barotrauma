@@ -620,7 +620,7 @@ namespace Barotrauma
             }
             if (string.IsNullOrEmpty(text)) { return; }
 
-            chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
+            ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)

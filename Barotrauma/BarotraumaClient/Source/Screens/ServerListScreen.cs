@@ -80,6 +80,32 @@ namespace Barotrauma
                     sender.UserData = null;
                 }
             };
+            clientNameBox.OnTextChanged += RefreshJoinButtonState;
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("ServerIP"));
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "");
+            ipBox.OnTextChanged += RefreshJoinButtonState;
+            ipBox.OnSelected += (sender, key) => 
+            {
+                if (sender.UserData is ServerInfo)
+                {
+                    sender.Text = "";
+                    sender.UserData = null;
+                }
+            };
+
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), filterHolder.RectTransform), "");
+
+            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), filterHolder.RectTransform));
+
+            searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
+            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
+            filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
 
             var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
 
@@ -151,46 +177,6 @@ namespace Barotrauma
                 Enabled = false
             };
 
-            //-------------------------------------------------------------------------------------
-            //right column
-            //-------------------------------------------------------------------------------------
-
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.017f, 0.97f),
-                paddedFrame.RectTransform, Anchor.TopRight))
-            {
-                RelativeSpacing = 0.02f,
-                Stretch = true
-            };
-
-			serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), rightColumn.RectTransform, Anchor.Center))
-            {
-                OnSelected = SelectServer
-            };
-
-            columnRelativeWidth = new float[] { 0.04f, 0.02f, 0.044f, 0.77f, 0.02f, 0.075f, 0.06f };
-
-            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), rightColumn.RectTransform), style: null);
-
-            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
-                TextManager.Get("Back"), style: "GUIButtonLarge")
-            {
-                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
-            };
-
-			var refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
-				"", style: "GUIButtonRefresh") {
-
-				ToolTip = TextManager.Get("ServerListRefresh"),
-				OnClicked = RefreshServers
-			};
-
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopRight),
-                TextManager.Get("ServerListJoin"), style: "GUIButtonLarge")
-            {
-                OnClicked = JoinServer,
-                Enabled = false
-            };
-
             //--------------------------------------------------------
 
             button.SelectedColor = button.Color;
@@ -233,6 +219,8 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
+
+            return true;
         }
 
         private bool RefreshJoinButtonState(GUIComponent component, object obj)
