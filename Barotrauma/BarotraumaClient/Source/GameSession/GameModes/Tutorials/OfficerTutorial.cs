@@ -250,7 +250,7 @@ namespace Barotrauma.Tutorials
             // Room 3
             do { yield return null; } while (!officer_crawlerSensor.MotionDetected);
             TriggerTutorialSegment(2);
-            officer_crawler = Character.Create(crawlerCharacterFile, officer_crawlerSpawnPos, ToolBox.RandomSeed(8));
+            officer_crawler = SpawnMonster(crawlerCharacterFile, officer_crawlerSpawnPos);
             do { yield return null; } while (!officer_crawler.IsDead);
             RemoveCompletedObjective(segments[2]);
             yield return new WaitForSeconds(1f);
@@ -271,7 +271,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[3]);
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Deselect)); // Kill hammerhead
-            officer_hammerhead = Character.Create(hammerheadCharacterFile, officer_hammerheadSpawnPos, ToolBox.RandomSeed(8));
+            officer_hammerhead = SpawnMonster(hammerheadCharacterFile, officer_hammerheadSpawnPos);
             SetHighlight(officer_coilgunPeriscope, true);
             do { yield return null; } while (!officer_hammerhead.IsDead);
             SetHighlight(officer_coilgunPeriscope, false);
@@ -332,7 +332,7 @@ namespace Barotrauma.Tutorials
             // Room 6
             do { yield return null; } while (!officer_mudraptorObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(6);
-            officer_mudraptor = Character.Create(mudraptorCharacterFile, officer_mudraptorSpawnPos, ToolBox.RandomSeed(8));
+            officer_mudraptor = SpawnMonster(mudraptorCharacterFile, officer_mudraptorSpawnPos);
             do { yield return null; } while (!officer_mudraptor.IsDead);
             RemoveCompletedObjective(segments[6]);
             SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, true);
@@ -365,6 +365,14 @@ namespace Barotrauma.Tutorials
         private bool IsSelectedItem(Item item)
         {
             return officer?.SelectedConstruction == item;
+        }
+
+        private Character SpawnMonster(string characterFile, Vector2 pos)
+        {
+            var character = Character.Create(characterFile, pos, ToolBox.RandomSeed(8));
+            var ai = character.AIController as EnemyAIController;
+            ai.TargetOutposts = true;
+            return character;
         }
     }
 }
