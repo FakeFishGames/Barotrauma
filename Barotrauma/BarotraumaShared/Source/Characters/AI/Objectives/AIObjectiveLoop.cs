@@ -79,7 +79,10 @@ namespace Barotrauma
 
         public override void OnSelected()
         {
-            Reset();
+            if (HumanAIController.ObjectiveManager.CurrentOrder == this)
+            {
+                Reset();
+            }
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
