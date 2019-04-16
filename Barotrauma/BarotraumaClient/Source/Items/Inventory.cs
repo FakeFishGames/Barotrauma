@@ -156,8 +156,6 @@ namespace Barotrauma
 
             public SlotReference(Inventory parentInventory, InventorySlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
-
-
                 ParentInventory = parentInventory;
                 Slot = slot;
                 SlotIndex = slotIndex;
@@ -716,12 +714,15 @@ namespace Barotrauma
                     float scale = Math.Min(Math.Min(iconSize / sprite.size.X, iconSize / sprite.size.Y), 1.5f);
                     Vector2 itemPos = PlayerInput.MousePosition;
 
-                    if (GUI.MouseOn == null && selectedSlot == null)
+                    bool mouseOnHealthInterface = CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement;
+
+                    if ((GUI.MouseOn == null || mouseOnHealthInterface) && selectedSlot == null)
                     {
                         var shadowSprite = GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0];
-                        string toolTip = Character.Controlled.FocusedItem != null ?
-                            TextManager.Get("PutItemIn").Replace("[itemname]", Character.Controlled.FocusedItem.Name) :
-                            TextManager.Get("DropItem");
+                        string toolTip = mouseOnHealthInterface ? TextManager.Get("QuickUseAction.UseTreatment") :                            
+                            Character.Controlled.FocusedItem != null ?
+                                TextManager.Get("PutItemIn").Replace("[itemname]", Character.Controlled.FocusedItem.Name) :
+                                TextManager.Get("DropItem");
                         int textWidth = (int)Math.Max(GUI.Font.MeasureString(draggingItem.Name).X, GUI.SmallFont.MeasureString(toolTip).X);
                         int textSpacing = (int)(15 * GUI.Scale);
                         Point shadowBorders = (new Point(40, 10)).Multiply(GUI.Scale);
@@ -729,7 +730,7 @@ namespace Barotrauma
                             new Rectangle(itemPos.ToPoint() - new Point(iconSize / 2) - shadowBorders, new Point(iconSize + textWidth + textSpacing, iconSize) + shadowBorders.Multiply(2)), Color.Black * 0.8f);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y - iconSize / 2), draggingItem.Name, Color.White);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y), toolTip,
-                            color: Character.Controlled.FocusedItem == null ? Color.Red : Color.LightGreen,
+                            color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? Color.Red : Color.LightGreen,
                             font: GUI.SmallFont);
                     }
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black, scale: scale);
@@ -854,7 +855,7 @@ namespace Barotrauma
                         if (itemContainer.ContainedStateIndicator?.Texture == null)
                         {
                             containedIndicatorArea.Inflate(0, -2);
-                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.8f, true);
+                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.9f, true);
                             GUI.DrawRectangle(spriteBatch,
                                 new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
                                 Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f, true);
@@ -868,11 +869,11 @@ namespace Barotrauma
 
                             if (containedState > 0.0f && containedState < 0.25f)
                             {
-                                indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.1f;
+                                indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.25f;
                             }
 
                             indicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
-                                Color.DarkGray * 0.6f, 
+                                Color.DarkGray * 0.9f, 
                                 origin: indicatorSprite.size / 2,
                                 rotate: 0.0f,
                                 scale: indicatorScale);

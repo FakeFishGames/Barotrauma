@@ -63,7 +63,7 @@
     <damagemodifier armorsector="0,180" afflictiontypes="damage, bleeding" damagemultiplier="1.5" damagesound="LimbSlash" deflectprojectiles="false" />
   </limb>
   <limb id="15" name="FrontUpperLeg" type="None" width="40" height="0" notes="3bc_FrontUpperLeg" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="16,288,189,136" origin="0.5,0.5" depth="0.09" />
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="16,288,185,134" origin="0.5,0.5" depth="0.09" />
   </limb>
   <limb id="16" name="ArmPalm" type="None" width="60" height="200" notes="1121rm_ArmPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="334,162,70,143" origin="0.5053436,0.462937" depth="0.07" />

@@ -127,6 +127,9 @@ namespace Barotrauma.Items.Components
                 OpenState = (isOpen) ? 1.0f : 0.0f;
             }
         }
+
+        [Serialize(false, false)]
+        public bool HasIntegratedButtons { get; private set; }
                 
         public float OpenState
         {
@@ -220,11 +223,11 @@ namespace Barotrauma.Items.Components
 
             var idCard = character.Inventory.FindItemByIdentifier("idcard");
             hasValidIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
-            Msg = hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
+            Msg = requiredItems.None() || hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
             ParseMsg();
             if (addMessage)
             {
-                msg = msg ?? (requiredItems.Any(ri => ri.Value.Any(r => r.Identifiers.Contains("idcard"))) ? accessDeniedTxt : cannotOpenText);
+                msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
             }
 
             //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
@@ -234,6 +237,7 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             if (item.Condition <= RepairThreshold) { return true; }
+            if (requiredItems.None()) { return false; }
             if (HasRequiredItems(picker, false) && hasValidIdCard) { return false; }
             return base.Pick(picker);
         }

@@ -3002,8 +3002,60 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
+
+  <!-- To be removed: -->
   
-   <!-- Changed Values -->
+  <!-- Contextual tutorial -->
+  <TutorialActive>Tutorial active</TutorialActive>
+  <Welcome>Welcome</Welcome>
+  <WelcomeText>Welcome aboard 'captain'. We'll be plain with you: We don't think much of you, and we don't think you have what it takes to command this fine vessel or us, its crew, through these hellish waters. What does a child of privilege from the colonies with an inherited sub know of survival way out there in the dark and the cold? Regardless, it seems this is how things are going to be... for now, and we need to get you making decisions that at least won't get us all killed immediately, although that might be a small mercy... Listen well when we have something to say, or you'll be taking a swim with the gulper fishes, the waitawhile, the mantises and god knows what else, you hear?</WelcomeText>
+
+  <NewObjective>New Objective</NewObjective>
+  <Objective>Objective</Objective>
+
+  <ReactorCommand>Giving commands</ReactorCommand>
+  <ReactorCommandObjective>Give the order to power up the reactor</ReactorCommandObjective>
+
+  <NavConsole>Plotting the course</NavConsole>
+  <NavConsoleText>Now that we have power, let's get her moving. Go attend to the navigation console and activate the ship's sonar so we can see where we're going. After that, we can safely undock and set the course to {0}.</NavConsoleText>
+  <NavConsoleInstructions>-Use the Navigation Terminal\n-Set sonar to "active"\n-Press the button to undock\n-While on manual steering, click on sonar UI to set course</NavConsoleInstructions>
+  <NavConsoleObjective>Plot the course</NavConsoleObjective>
+
+  <DestinationObjective>We're underway</DestinationObjective>
+  <DestinationObjectiveText>Wonders will never cease! You managed to get us underway. You're still fresh meat, though 'captain', and we still need to make it to {0}... don't screw this up.</DestinationObjectiveText>
+
+  <Flood>Flooding</Flood>
+  <FloodText>We're taking water! Find somebody who knows what they're doing and start welding before we're completely screwed.</FloodText>
+  <FloodInstructions>-Click on crew list to switch control to mechanic\n-Equip welding torch\n-Right mouse button to aim, left click to fire</FloodInstructions>
+  <FloodObjective>Repair hull breach</FloodObjective>
+
+  <ReactorUse>Operating the reactor</ReactorUse>
+  <ReactorUseInstructions>-Left gauge controls the amount of power generated\n-Right gauge controls the amount of it sent to rest of the submarine\n-Try to keep both gauges green for a balanced power output</ReactorUseInstructions>
+
+  <EnemyOnSonar>Monsters</EnemyOnSonar>
+  <EnemyOnSonarText>Captain, we have a bogey on our sonar. Knowing these waters, it can't be anything too friendly. Order somebody to man the turret, preferably someone with some weapons know-how. Failing that, do it yourself. It's kill or be killed down here.</EnemyOnSonarText>
+  <EnemyOnSonarInstructions>-Use the periscope\n-Right mouse button to aim, left click to fire</EnemyOnSonarInstructions>
+  <EnemyOnSonarObjective>Dispatch enemies</EnemyOnSonarObjective>
+
+  <Degrading>Degrading machinery</Degrading>
+  <DegradingText>This vessel, she's a delicate thing and her systems tend to break down over time without maintenance! Any captain worth their salt would know this.</DegradingText>
+  <DegradingInstructions>-Select "repair devices", then "repair job-specific"</DegradingInstructions>
+  <DegradingObjective>Order the crew to perform maintenance</DegradingObjective>
+
+  <Medical>Medical assistance</Medical>
+  <MedicalText>Captain! {0} is hurt. We should have somebody tend to {1} injuries or we risk losing them.</MedicalText>
+  <MedicalInstructions>-Highlight a crewmember\n-Press H to enter health interface\n-Select injured limb\n-Drag medical supplies into highlighted area to treat</MedicalInstructions>
+  <MedicalObjective>Give medical assistance to {0}</MedicalObjective>
+
+  <Approach1>Docking</Approach1>
+  <Approach1Text>We are close to {0}! Carefully now, we should be slowing down so we don't ram them. Maneuver the sub close to their docking port and close the clamps when we're there.</Approach1Text>
+  <Approach1Instructions>-Maneuver so that the docking ports are close to each other\n-When docking line is green, toggle docking clamps</Approach1Instructions>
+  <Approach1Objective>Dock at {0}</Approach1Objective>
+
+  <Approach2>First of many</Approach2>
+  <Approach2Text>Well now, looks like Captain Fresh Meat here has gained a little salt! You managed to get us to where we were going, but don't let that go to your head, you're still way out of your depth here, but maybe you can learn... maybe we do stand a chance.</Approach2Text>
+
+  <!-- Changed Values -->
 
    <!-- New Additions -->
 </infotexts>
