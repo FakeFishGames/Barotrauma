@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Tutorials
@@ -272,8 +274,20 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster(hammerheadCharacterFile, officer_hammerheadSpawnPos);
+            officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
             SetHighlight(officer_coilgunPeriscope, true);
-            do { yield return null; } while (!officer_hammerhead.IsDead);
+            float originalDistance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerheadSpawnPos);
+            do
+            {
+                float distance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerhead.WorldPosition);
+                if (distance > originalDistance)
+                {
+                    // Don't let the Hammerhead go too far from the periscope.
+                    officer_hammerhead.TeleportTo(officer_hammerheadSpawnPos);
+                }
+                yield return null;
+            }
+            while(!officer_hammerhead.IsDead);
             SetHighlight(officer_coilgunPeriscope, false);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(1f);
@@ -372,6 +386,8 @@ namespace Barotrauma.Tutorials
             var character = Character.Create(characterFile, pos, ToolBox.RandomSeed(8));
             var ai = character.AIController as EnemyAIController;
             ai.TargetOutposts = true;
+            character.CharacterHealth.SetVitality(character.Health / 2);
+            character.AnimController.Limbs.Where(l => l.attack != null).Select(l => l.attack).ForEach(a => a.AfterAttack = AIBehaviorAfterAttack.FallBack);
             return character;
         }
     }
