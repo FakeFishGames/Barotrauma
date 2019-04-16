@@ -29,6 +29,7 @@ namespace Barotrauma.Tutorials
         private Door doctor_secondDoor;
         private Door doctor_thirdDoor;
         private Door tutorial_upperFinalDoor;
+        private Door tutorial_lockedDoor_2;
 
         private LightComponent doctor_firstDoorLight;
         private LightComponent doctor_secondDoorLight;
@@ -97,6 +98,9 @@ namespace Barotrauma.Tutorials
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
+            tutorial_lockedDoor_2 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_2")).GetComponent<Door>();
+            SetDoorAccess(tutorial_lockedDoor_2, null, true);
+
 
             foreach (var patient in subPatients)
             {
