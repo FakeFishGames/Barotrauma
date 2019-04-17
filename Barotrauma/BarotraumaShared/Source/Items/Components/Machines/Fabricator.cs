@@ -108,7 +108,23 @@ namespace Barotrauma.Items.Components
         {
             return (picker != null);
         }
-        
+
+        public void RemoveFabricationRecipes(List<string> allowedIdentifiers)
+        {
+            for (int i = 0; i < fabricationRecipes.Count; i++)
+            {
+                if (!allowedIdentifiers.Contains(fabricationRecipes[i].TargetItem.Identifier))
+                {
+                    fabricationRecipes.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            CreateRecipes();
+        }
+
+        partial void CreateRecipes();
+
         private void StartFabricating(FabricationRecipe selectedItem, Character user)
         {
             if (selectedItem == null) return;

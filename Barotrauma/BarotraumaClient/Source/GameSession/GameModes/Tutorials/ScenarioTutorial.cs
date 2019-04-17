@@ -10,6 +10,8 @@ namespace Barotrauma.Tutorials
 {
     class ScenarioTutorial : Tutorial
     {
+        private CoroutineHandle tutorialCoroutine;
+
         private Character character;
         private string spawnSub;
         private SpawnType spawnPointType;
@@ -124,7 +126,7 @@ namespace Barotrauma.Tutorials
             idCard.AddTag("com");
             idCard.AddTag("eng");
 
-            CoroutineManager.StartCoroutine(UpdateState());
+            tutorialCoroutine = CoroutineManager.StartCoroutine(UpdateState());
         }
 
         public override void AddToGUIUpdateList()
@@ -217,7 +219,10 @@ namespace Barotrauma.Tutorials
                 }
                 else if (Character.Controlled == null)
                 {
-                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
+                    if (tutorialCoroutine != null)
+                    {
+                        CoroutineManager.StopCoroutines(tutorialCoroutine);
+                    }
                     infoBox = null;
                 }
                 else if (Character.Controlled.IsDead)
@@ -229,7 +234,10 @@ namespace Barotrauma.Tutorials
 
         public override void Stop()
         {
-            CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
+            if (tutorialCoroutine != null)
+            {
+                CoroutineManager.StopCoroutines(tutorialCoroutine);
+            }
             base.Stop();
         }
 

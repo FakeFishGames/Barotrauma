@@ -55,6 +55,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
 
             var revolver = captain.Inventory.FindItemByIdentifier("revolver");
+            revolver.Unequip(captain);
             captain.Inventory.RemoveItem(revolver);
 
             var captainscap = captain.Inventory.FindItemByIdentifier("captainscap");

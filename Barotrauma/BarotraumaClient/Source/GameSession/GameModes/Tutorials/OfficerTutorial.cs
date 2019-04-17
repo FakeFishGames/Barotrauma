@@ -95,9 +95,11 @@ namespace Barotrauma.Tutorials
             officer = Character.Controlled;
 
             var handcuffs = officer.Inventory.FindItemByIdentifier("handcuffs");
+            handcuffs.Unequip(officer);
             officer.Inventory.RemoveItem(handcuffs);
 
             var stunbaton = officer.Inventory.FindItemByIdentifier("stunbaton");
+            stunbaton.Unequip(officer);
             officer.Inventory.RemoveItem(stunbaton);
 
             var ballistichelmet = officer.Inventory.FindItemByIdentifier("ballistichelmet");

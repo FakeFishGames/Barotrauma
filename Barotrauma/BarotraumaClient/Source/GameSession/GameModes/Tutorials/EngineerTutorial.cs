@@ -89,6 +89,7 @@ namespace Barotrauma.Tutorials
             engineer = Character.Controlled;
 
             var toolbox = engineer.Inventory.FindItemByIdentifier("toolbox");
+            toolbox.Unequip(engineer);
             engineer.Inventory.RemoveItem(toolbox);
 
             var repairOrder = Order.PrefabList.Find(order => order.AITag == "repairsystems");
