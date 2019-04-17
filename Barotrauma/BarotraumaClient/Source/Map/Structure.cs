@@ -327,9 +327,12 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < SectionCount; i++)
                     {
-                        var textPos = SectionPosition(i, true);
-                        textPos.Y = -textPos.Y;
-                        GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / Health) * 100f) + "%", Color.Yellow);
+                        if (GetSection(i).damage > 0)
+                        {
+                            var textPos = SectionPosition(i, true);
+                            textPos.Y = -textPos.Y;
+                            GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / Health) * 100f) + "%", Color.Yellow);
+                        }
                     }
                 }
 
