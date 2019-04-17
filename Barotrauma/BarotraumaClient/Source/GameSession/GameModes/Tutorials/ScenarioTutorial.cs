@@ -23,7 +23,7 @@ namespace Barotrauma.Tutorials
         private Submarine endOutpost = null;
         private bool currentTutorialCompleted = false;
         private float fadeOutTime = 3f;
-        protected float waitBeforeFade = 2f;
+        protected float waitBeforeFade = 4f;
 
         // Colors
         protected Color highlightColor = Color.OrangeRed;
