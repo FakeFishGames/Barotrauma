@@ -60,6 +60,10 @@
       attachlimb="Head"
       localattachpos="40,10"
       attachlimbrotation="100"/>
+    <SwarmBehavior
+      mindistfromclosest="200"
+      maxdistfromcenter="1000"
+      cohesion="0.1"/>
   </ai>
   
 </Character>

@@ -337,6 +337,20 @@ namespace Barotrauma
                             -Bodies[i].Rotation, Color.White);
                     }
                 }
+
+                if (SectionCount > 0 && HasBody)
+                {
+                    for (int i = 0; i < SectionCount; i++)
+                    {
+                        if (GetSection(i).damage > 0)
+                        {
+                            var textPos = SectionPosition(i, true);
+                            textPos.Y = -textPos.Y;
+                            GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / Health) * 100f) + "%", Color.Yellow);
+                        }
+                    }
+                }
+
                 AiTarget?.Draw(spriteBatch);
             }
         }

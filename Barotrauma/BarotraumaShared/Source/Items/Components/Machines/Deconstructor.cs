@@ -76,8 +76,10 @@ namespace Barotrauma.Items.Components
             var targetItem = inputContainer.Inventory.Items.LastOrDefault(i => i != null);
             if (targetItem == null) { return; }
 
-            progressState = Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
-            if (progressTimer > targetItem.Prefab.DeconstructTime)
+            float deconstructTime = targetItem.Prefab.DeconstructItems.Any() ? targetItem.Prefab.DeconstructTime : 1.0f;
+
+            progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
+            if (progressTimer > deconstructTime)
             {
                 foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
                 {
@@ -105,10 +107,13 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 
-                inputContainer.Inventory.RemoveItem(targetItem);
-                Entity.Spawner.AddToRemoveQueue(targetItem);
-                MoveInputQueue();
-                PutItemsToLinkedContainer();
+                if (targetItem.Prefab.DeconstructItems.Any())
+                {
+                    inputContainer.Inventory.RemoveItem(targetItem);
+                    Entity.Spawner.AddToRemoveQueue(targetItem);
+                    MoveInputQueue();
+                    PutItemsToLinkedContainer();
+                }
 
                 if (inputContainer.Inventory.Items.Any(i => i != null))
                 {
