@@ -96,6 +96,7 @@ namespace Barotrauma.Tutorials
             captain_sonar = captain_navConsole.Item.GetComponent<Sonar>();
 
             tutorial_submarineReactor.CanBeSelected = false;
+            tutorial_submarineReactor.IsActive = tutorial_submarineReactor.AutoTemp = false;
 
             tutorial_lockedDoor_1 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_1")).GetComponent<Door>();
             tutorial_lockedDoor_2 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_2")).GetComponent<Door>();
@@ -186,6 +187,7 @@ namespace Barotrauma.Tutorials
             }
             while (!HasOrder(captain_engineer, "operatereactor", "powerup"));
             RemoveCompletedObjective(segments[3]);
+            tutorial_submarineReactor.CanBeSelected = true;
             do { yield return null; } while (!tutorial_submarineReactor.IsActive); // Wait until reactor on      
             TriggerTutorialSegment(4);
             while (ContentRunning) yield return null;
