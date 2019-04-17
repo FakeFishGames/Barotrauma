@@ -12,7 +12,7 @@ namespace Barotrauma.Tutorials
     class DoctorTutorial : ScenarioTutorial
     {
         // Room 1
-        private float shakeTimer = 3.0f;
+        private float shakeTimer = 1f;
         private float shakeAmount = 20f;
 
         private string radioSpeakerName;
@@ -134,12 +134,12 @@ namespace Barotrauma.Tutorials
 
             //yield return new WaitForSeconds(2.5f);
 
-            doctor.SetStun(2.0f);
+            doctor.SetStun(1.5f);
             var explosion = new Explosion(range: 100, force: 10, damage: 0, structureDamage: 0);
             explosion.DisableParticles();
             GameMain.GameScreen.Cam.Shake = shakeAmount;
-            explosion.Explode(Character.Controlled.WorldPosition - Vector2.UnitX * 50, null);
-            SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition - Vector2.UnitX * 50);
+            explosion.Explode(Character.Controlled.WorldPosition - Vector2.UnitX * 25, null);
+            SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition - Vector2.UnitX * 25);
 
             yield return new WaitForSeconds(0.5f);
 
