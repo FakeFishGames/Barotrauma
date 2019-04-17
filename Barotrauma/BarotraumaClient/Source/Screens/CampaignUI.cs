@@ -230,7 +230,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f,
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), crewContent.RectTransform), "", font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), repairContent.RectTransform), "", font: GUI.LargeFont)
             {
                 TextGetter = GetMoney
             };
@@ -254,14 +254,22 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (campaign.Money >= CampaignMode.HullRepairCost)
+                    if (campaign.PurchasedHullRepairs)
                     {
-                        campaign.Money -= CampaignMode.HullRepairCost;
-                        campaign.PurchasedHullRepairs = true;
-                        GameMain.Client?.SendCampaignState();
-                        btn.GetChild<GUITickBox>().Selected = true;
+                        campaign.Money += CampaignMode.HullRepairCost;
+                        campaign.PurchasedHullRepairs = false;
                     }
-                    btn.Enabled = false;
+                    else
+                    {
+                        if (campaign.Money >= CampaignMode.HullRepairCost)
+                        {
+                            campaign.Money -= CampaignMode.HullRepairCost;
+                            campaign.PurchasedHullRepairs = true;
+                        }
+                    }
+                    GameMain.Client?.SendCampaignState();
+                    btn.GetChild<GUITickBox>().Selected = campaign.PurchasedHullRepairs;
+
                     return true;
                 }
             };
@@ -289,14 +297,22 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (campaign.Money >= CampaignMode.ItemRepairCost)
+                    if (campaign.PurchasedItemRepairs)
                     {
-                        campaign.Money -= CampaignMode.ItemRepairCost;
-                        campaign.PurchasedItemRepairs = true;
-                        GameMain.Client?.SendCampaignState();
-                        btn.GetChild<GUITickBox>().Selected = true;
+                        campaign.Money += CampaignMode.ItemRepairCost;
+                        campaign.PurchasedItemRepairs = false;
                     }
-                    btn.Enabled = false;
+                    else
+                    {
+                        if (campaign.Money >= CampaignMode.ItemRepairCost)
+                        {
+                            campaign.Money -= CampaignMode.ItemRepairCost;
+                            campaign.PurchasedItemRepairs = true;
+                        }
+                    }
+                    GameMain.Client?.SendCampaignState();
+                    btn.GetChild<GUITickBox>().Selected = campaign.PurchasedItemRepairs;
+
                     return true;
                 }
             };
@@ -747,11 +763,11 @@ namespace Barotrauma
             {
                 case Tab.Repair:
                     repairHullsButton.Enabled = 
-                        !Campaign.PurchasedHullRepairs && Campaign.Money >= CampaignMode.HullRepairCost &&
+                        (Campaign.PurchasedHullRepairs || Campaign.Money >= CampaignMode.HullRepairCost) &&
                         (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                     repairHullsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedHullRepairs;
                     repairItemsButton.Enabled = 
-                        !Campaign.PurchasedItemRepairs && Campaign.Money >= CampaignMode.ItemRepairCost &&
+                        (Campaign.PurchasedItemRepairs || Campaign.Money >= CampaignMode.ItemRepairCost) &&
                         (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
                     break;
