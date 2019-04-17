@@ -363,6 +363,8 @@ namespace Barotrauma
         
         partial void UpdateProjSpecific(float deltaTime)
         {
+            if (!character.Enabled || SimplePhysicsEnabled) { return; }
+
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             foreach (var deformation in SpriteDeformations)
             {
