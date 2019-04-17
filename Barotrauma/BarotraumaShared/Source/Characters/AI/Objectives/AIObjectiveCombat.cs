@@ -44,6 +44,7 @@ namespace Barotrauma
         private AIObjectiveContainItem reloadWeaponObjective;
         private Hull retreatTarget;
         private AIObjectiveGoTo retreatObjective;
+        private AIObjectiveFindSafety findSafety;
 
         private float coolDownTimer;
 
@@ -60,7 +61,9 @@ namespace Barotrauma
         {
             Enemy = enemy;
             coolDownTimer = CoolDown;
-            HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 0;
+            findSafety = HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>();
+            findSafety.Priority = 0;
+            findSafety.unreachable.Clear();
             Mode = mode;
             if (Enemy == null)
             {
@@ -175,7 +178,7 @@ namespace Barotrauma
         {
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
-                retreatTarget = HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(new List<Hull>() { character.CurrentHull });
+                retreatTarget = findSafety.FindBestHull(new List<Hull>() { character.CurrentHull });
             }
             if (retreatTarget != null)
             {
@@ -235,6 +238,7 @@ namespace Barotrauma
             {
                 if (Vector2.DistanceSquared(character.Position, Enemy.Position) <= meleeWeapon.Range * meleeWeapon.Range)
                 {
+                    character.SetInput(InputType.Shoot, false, true);
                     Weapon.Use(deltaTime, character);
                 }
             }
@@ -264,6 +268,7 @@ namespace Barotrauma
                         }
                         if (target != null && target == Enemy)
                         {
+                            character.SetInput(InputType.Shoot, false, true);
                             Weapon.Use(deltaTime, character);
                         }
                     }
@@ -275,7 +280,6 @@ namespace Barotrauma
         {
             abandon = true;
             SteeringManager.Reset();
-            //HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>().Priority = 100;
         }
 
         public override bool IsCompleted()

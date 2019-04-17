@@ -1114,7 +1114,9 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
+                GameMain.GameSession = missionIndex < 0 ?
+                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
+                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);
                 GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else
@@ -1124,6 +1126,18 @@ namespace Barotrauma.Networking
                     reloadSub: true,
                     loadSecondSub: false,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
+            }
+
+            for (int i = 0; i < Submarine.MainSubs.Length; i++)
+            {
+                if (!loadSecondSub && i > 0) { break; }
+
+                var teamID = i == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
+                Submarine.MainSubs[i].TeamID = teamID;
+                foreach (Submarine sub in Submarine.MainSubs[i].DockedTo)
+                {
+                    sub.TeamID = teamID;
+                }
             }
 
             if (Level.Loaded.EqualityCheckVal != levelEqualityCheckVal)

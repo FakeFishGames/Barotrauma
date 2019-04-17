@@ -33,7 +33,7 @@ namespace Barotrauma
             set
             {
                 if (_toggleOpen == value) { return; }
-                _toggleOpen = value;
+                _toggleOpen = GameMain.Config.ChatOpen = value;
                 foreach (GUIComponent child in ToggleButton.Children)
                 {
                     child.SpriteEffects = _toggleOpen == (HUDLayoutSettings.ChatBoxAlignment == Alignment.Right) ?
@@ -133,6 +133,8 @@ namespace Barotrauma
                 }
                 return true;
             };
+
+            ToggleOpen = GameMain.Config.ChatOpen;
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
@@ -321,8 +323,6 @@ namespace Barotrauma
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 prevUIScale = GUI.Scale;
             }
-
-
 
             if (ToggleOpen || (inputBox != null && inputBox.Selected))
             {

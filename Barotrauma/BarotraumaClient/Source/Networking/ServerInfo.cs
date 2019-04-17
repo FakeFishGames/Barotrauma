@@ -120,17 +120,17 @@ namespace Barotrauma.Networking
             };*/
 
             var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("GameMode"));
-            new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform), string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode, textAlignment: Alignment.Right);
+            new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform), TextManager.Get(string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode), textAlignment: Alignment.Right);
 
            var traitors = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("Traitors"));
-            new GUITextBlock(new RectTransform(Vector2.One, traitors.RectTransform), !TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString(), textAlignment: Alignment.Right);
+            new GUITextBlock(new RectTransform(Vector2.One, traitors.RectTransform), TextManager.Get(!TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString()), textAlignment: Alignment.Right);
 
 
             var subSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListSubSelection"));
-            new GUITextBlock(new RectTransform(Vector2.One, subSelection.RectTransform), !SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString(), textAlignment: Alignment.Right);
+            new GUITextBlock(new RectTransform(Vector2.One, subSelection.RectTransform), TextManager.Get(!SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
 
             var modeSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListModeSelection"));
-            new GUITextBlock(new RectTransform(Vector2.One, modeSelection.RectTransform), (!ModeSelectionMode.HasValue ? "Unknown" : ModeSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
+            new GUITextBlock(new RectTransform(Vector2.One, modeSelection.RectTransform), TextManager.Get(!ModeSelectionMode.HasValue ? "Unknown" : ModeSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
 
             var allowSpectating = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListAllowSpectating"))
             {
@@ -141,7 +141,7 @@ namespace Barotrauma.Networking
             else
                 allowSpectating.Selected = AllowSpectating.Value;
 
-            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Allow respawn")
+            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerSettingsAllowRespawning"))
             {
                 CanBeFocused = false
             };

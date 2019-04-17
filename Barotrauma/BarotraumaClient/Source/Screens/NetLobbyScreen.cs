@@ -737,11 +737,15 @@ namespace Barotrauma
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
-                if (campaignUI?.StartButton != null)
+                if (campaignUI != null)
                 {
-                    campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
-                        (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
-                        GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                    //SelectTab(Tab.Map);
+                    if (campaignUI.StartButton != null)
+                    {
+                        campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
+                            (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
+                            GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                    }
                 }
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }

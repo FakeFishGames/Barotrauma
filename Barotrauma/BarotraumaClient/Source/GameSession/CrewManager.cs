@@ -4,7 +4,6 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +55,7 @@ namespace Barotrauma
             set
             {
                 if (toggleCrewAreaOpen == value) { return; }
-                toggleCrewAreaOpen = value;
+                toggleCrewAreaOpen = GameMain.Config.CrewMenuOpen = value;
                 foreach (GUIComponent child in toggleCrewButton.Children)
                 {
                     child.SpriteEffects = toggleCrewAreaOpen ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
@@ -215,6 +214,8 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
+
+            ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
         }
 
 
@@ -729,7 +730,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
-                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
+                        order.GetChatMessage("", orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
                 }
                 else
                 {
@@ -746,7 +747,7 @@ namespace Barotrauma
             if (IsSinglePlayer)
             {
                 orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
             }
             else if (orderGiver != null)
             {
