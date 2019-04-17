@@ -15,7 +15,7 @@ namespace Barotrauma.Tutorials
         private Steering tutorial_submarineSteering;
 
         // Room 1
-        private float shakeTimer = 3f;
+        private float shakeTimer = 1f;
         private float shakeAmount = 20f;
 
         // Room 2

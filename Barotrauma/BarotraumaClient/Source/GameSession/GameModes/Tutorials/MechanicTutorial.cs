@@ -14,7 +14,7 @@ namespace Barotrauma.Tutorials
         private Steering tutorial_submarineSteering;
 
         // Room 1
-        private float shakeTimer = 3.0f;
+        private float shakeTimer = 1f;
         private float shakeAmount = 20f;
         private Door mechanic_firstDoor;
         private LightComponent mechanic_firstDoorLight;

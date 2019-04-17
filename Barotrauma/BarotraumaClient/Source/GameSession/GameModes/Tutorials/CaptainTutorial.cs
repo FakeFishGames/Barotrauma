@@ -9,7 +9,7 @@ namespace Barotrauma.Tutorials
     class CaptainTutorial : ScenarioTutorial
     {
         // Room 1
-        private float shakeTimer = 3.0f;
+        private float shakeTimer = 1f;
         private float shakeAmount = 20f;
 
         // Room 2
