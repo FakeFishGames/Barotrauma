@@ -65,6 +65,7 @@ namespace Barotrauma.Tutorials
         private MotionSensor tutorial_enteredSubmarineSensor;
         private Item officer_subAmmoBox_1;
         private Item officer_subAmmoBox_2;
+        private ItemContainer officer_subAmmoShelf;
         private ItemContainer officer_subLoader_1;
         private ItemContainer officer_subLoader_2;
         private PowerContainer officer_subSuperCapacitor_1;
@@ -180,7 +181,7 @@ namespace Barotrauma.Tutorials
             officer_subLoader_2 = Item.ItemList.Find(i => i.HasTag("officer_subloader_2")).GetComponent<ItemContainer>();
             officer_subSuperCapacitor_1 = Item.ItemList.Find(i => i.HasTag("officer_subsupercapacitor_1")).GetComponent<PowerContainer>();
             officer_subSuperCapacitor_2 = Item.ItemList.Find(i => i.HasTag("officer_subsupercapacitor_2")).GetComponent<PowerContainer>();
-
+            officer_subAmmoShelf = Item.ItemList.Find(i => i.HasTag("officer_subammoshelf")).GetComponent<ItemContainer>();
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
         }
 
@@ -380,6 +381,7 @@ namespace Barotrauma.Tutorials
             officer.AddActiveObjectiveEntity(officer_subAmmoBox_1, officer_gunIcon, officer_gunIconColor);
             officer.AddActiveObjectiveEntity(officer_subAmmoBox_2, officer_gunIcon, officer_gunIconColor);
             officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_1.Item, officer_gunIcon, officer_gunIconColor);
+            officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_1.Item, officer_gunIcon, officer_gunIconColor);
             officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_2.Item, officer_gunIcon, officer_gunIconColor);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Submarine"), ChatMessageType.Radio, null);
             do
@@ -403,6 +405,7 @@ namespace Barotrauma.Tutorials
 
                 SetHighlight(officer_subAmmoBox_1, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
                 SetHighlight(officer_subAmmoBox_2, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
+                SetHighlight(officer_subAmmoShelf.Item, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
                 if (officer_subAmmoBox_1.ParentInventory == officer_subLoader_1.Inventory || officer_subAmmoBox_1.ParentInventory == officer_subLoader_2.Inventory) officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_1);
                 if (officer_subAmmoBox_2.ParentInventory == officer_subLoader_1.Inventory || officer_subAmmoBox_2.ParentInventory == officer_subLoader_2.Inventory) officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_2);
                 yield return null;
@@ -413,6 +416,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_subSuperCapacitor_2.Item, false);
             SetHighlight(officer_subAmmoBox_1, false);
             SetHighlight(officer_subAmmoBox_2, false);
+            SetHighlight(officer_subAmmoShelf.Item, false);
             officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_1.Item);
             officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_2.Item);
             officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_1);
