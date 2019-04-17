@@ -122,6 +122,7 @@ namespace Barotrauma
         private readonly float memoryFadeTime = 0.5f;
 
         public LatchOntoAI LatchOntoAI { get; private set; }
+        public SwarmBehavior SwarmBehavior { get; private set; }
 
         public bool AttackHumans
         {
@@ -214,6 +215,10 @@ namespace Barotrauma
                 {
                     case "latchonto":
                         LatchOntoAI = new LatchOntoAI(subElement, this);
+                        break;
+                    case "swarm":
+                    case "swarmbehavior":
+                        SwarmBehavior = new SwarmBehavior(subElement, this);
                         break;
                     case "targetpriority":
                         targetingPriorities.Add(subElement.GetAttributeString("tag", "").ToLowerInvariant(), new TargetingPriority(subElement));
@@ -364,12 +369,8 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-
-            // Just some debug code that makes the characters to follow the mouse cursor 
-            //run = true;
-            //Vector2 mousePos = ConvertUnits.ToSimUnits(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
-            //steeringManager.SteeringSeek(mousePos, Character.AnimController.GetCurrentSpeed(run));
-
+            
+            SwarmBehavior?.Update(deltaTime);
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
         }
 
