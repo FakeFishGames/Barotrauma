@@ -76,7 +76,7 @@ namespace Barotrauma
             else if (Vector2.DistanceSquared(center, ai.SimPosition) > maxDistFromCenter * maxDistFromCenter)
             {
                 float distFromCenter = Vector2.Distance(center, ai.SimPosition);
-                ai.SteeringManager.SteeringSeek(center, distFromCenter - maxDistFromCenter);
+                ai.SteeringManager.SteeringSeek(center, (distFromCenter - maxDistFromCenter) / 10.0f);
             }
 
             //keep the characters moving in roughly the same direction
