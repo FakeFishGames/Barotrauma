@@ -142,8 +142,11 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!captain_medicObjectiveSensor.MotionDetected);
+
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(captain_medic.Info.DisplayName, TextManager.Get("Captain.Radio.Medic"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f);
             GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
+
             GameMain.GameSession.CrewManager.AddCharacter(captain_medic);
             TriggerTutorialSegment(0);
             do
