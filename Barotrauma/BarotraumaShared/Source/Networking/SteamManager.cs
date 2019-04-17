@@ -69,6 +69,11 @@ namespace Barotrauma.Steam
 
         public static void OverlayCustomURL(string url)
         {
+            if (instance == null || !instance.isInitialized || instance.client == null)
+            {
+                return;
+            }
+
             instance.client.Overlay.OpenUrl(url);
         }
         
