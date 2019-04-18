@@ -439,11 +439,14 @@ namespace Barotrauma.Items.Components
             {
                 var mission = GameMain.GameSession.Mission;
 
-                if (!string.IsNullOrWhiteSpace(mission.SonarLabel) && mission.SonarPosition != Vector2.Zero)
+                if (!string.IsNullOrWhiteSpace(mission.SonarLabel))
                 {
-                    DrawMarker(spriteBatch,
-                        mission.SonarLabel,
-                        mission.SonarPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
+                    foreach (Vector2 sonarPosition in mission.SonarPositions)
+                    {
+                        DrawMarker(spriteBatch,
+                            mission.SonarLabel,
+                            sonarPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
+                    }
                 }
             }
 
