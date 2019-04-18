@@ -165,7 +165,7 @@
     </Segment>
 
     <Segment id="Engineer.PowerUpReactor" objective="Engineer.PowerUpReactorObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="Engineer.PowerUpReactorText" width="450" anchor="Center"/>
+      <Text tag="Engineer.PowerUpReactorText" width="700" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.PowerUpReactorText" width="450"/>
     </Segment>
   </EngineerTutorial>

@@ -201,7 +201,7 @@ namespace Barotrauma.Tutorials
             {
                 shakeTimer -= 0.1f;
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(1.5f);
             }
 
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.WakeUp"), ChatMessageType.Radio, null);
