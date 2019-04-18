@@ -8,8 +8,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,37" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -27,8 +27,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="11,1,112,130" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -46,8 +46,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="144,0,91,129" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -65,8 +65,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="269,-1,93,129" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -84,8 +84,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="398,1,111,134" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -103,8 +103,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="5,263,372,111" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -122,8 +122,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="1,408,389,81" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -141,8 +141,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="9,128,101,134" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -160,8 +160,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="113,143,150,94" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -179,8 +179,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="258,120,122,143" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -198,8 +198,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="375,130,135,120" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -218,8 +218,8 @@
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="385,262,122,118" alpha="1.0" />
-      <!--additiivinen huippuvalo-->
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
@@ -230,9 +230,9 @@
     </ConnectionPanel>
   </Item>
   
-  <Item name="Emergency Light" identifier="emergencylight" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Emergency Light" identifier="emergencylight" category="Electrical" Tags="smallitem,light" scale="1.0">
     <Sprite texture="lamp.png" sourcerect="0,48,48,16" depth="0.8" />
-    <!--pohjatekstuuri-->
+    <!-- base texture -->
     <LightComponent lightcolor="1.0,0.0,0.0,0.1" range="250.0" IsOn="true" castlights="false">
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="0,48,48,16" alpha="1.0" />
