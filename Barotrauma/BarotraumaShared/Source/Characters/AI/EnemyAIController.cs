@@ -791,7 +791,6 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
-            return false;
         }
 
         private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
