@@ -2183,6 +2183,11 @@ namespace Barotrauma.Networking
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
+                bool disableButtons =
+                    Character.Controlled != null &&
+                    Character.Controlled.SelectedConstruction?.GetComponent<Controller>() != null;
+                buttonContainer.Visible = !disableButtons;
+                
                 if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
                 {
                     inGameHUD.UpdateManually(deltaTime);
