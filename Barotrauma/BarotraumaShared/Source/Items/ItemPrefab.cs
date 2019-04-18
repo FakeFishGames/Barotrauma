@@ -566,7 +566,7 @@ namespace Barotrauma
                         break;
 #endif
                     case "deconstruct":
-                        DeconstructTime = subElement.GetAttributeFloat("time", 10.0f);
+                        DeconstructTime = subElement.GetAttributeFloat("time", 1.0f);
 
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
