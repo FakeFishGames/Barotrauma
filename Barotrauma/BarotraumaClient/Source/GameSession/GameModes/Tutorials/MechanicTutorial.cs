@@ -32,6 +32,7 @@ namespace Barotrauma.Tutorials
         private LightComponent mechanic_thirdDoorLight;
         private Structure mechanic_brokenWall_1;
         private Hull mechanic_brokenhull_1;
+        private MotionSensor mechanic_ladderSensor;
 
         // Room 4
         private MotionSensor mechanic_craftingObjectiveSensor;
@@ -132,6 +133,7 @@ namespace Barotrauma.Tutorials
             mechanic_thirdDoor = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoor")).GetComponent<Door>();
             mechanic_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoorlight")).GetComponent<LightComponent>();
             mechanic_brokenWall_1 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenwall_1");
+            mechanic_ladderSensor = Item.ItemList.Find(i => i.HasTag("mechanic_laddersensor")).GetComponent<MotionSensor>();
 
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, false);
             mechanic_brokenWall_1.Indestructible = false;
@@ -324,6 +326,9 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
+            TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Use));
+            do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
+            RemoveCompletedObjective(segments[11]);
             yield return new WaitForSeconds(2f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(1f);

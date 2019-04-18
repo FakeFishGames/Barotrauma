@@ -121,6 +121,11 @@
       <Text tag="Mechanic.RepairSubmarineText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.RepairSubmarineText" width="450"/>
     </Segment>
+
+    <Segment id="tutorial.laddertitle" objective="tutorial.laddertitle" contenttype="textonly" istriggered="false">
+      <Text tag="tutorial.ladderdescription" width="450" anchor="Center"/>
+    </Segment>
+
   </MechanicTutorial>
 
   <EngineerTutorial name="Engineer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Submarines/Dugong_Tutorial.sub" startoutpostpath="Submarines/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
