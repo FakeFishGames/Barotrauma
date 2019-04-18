@@ -849,8 +849,10 @@ namespace Barotrauma
             }
             
             string savePath = nameBox.Text + ".sub";
+            string prevSavePath = null;
             if (Submarine.MainSub != null)
             {
+                prevSavePath = Submarine.MainSub.FilePath;
                 savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.FilePath), savePath);
             }
             else
@@ -889,6 +891,10 @@ namespace Barotrauma
             GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
 
             Submarine.RefreshSavedSub(savePath);
+            if (prevSavePath != null && prevSavePath != savePath)
+            {
+                Submarine.RefreshSavedSub(prevSavePath);
+            }
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -1280,9 +1286,7 @@ namespace Barotrauma
         {
             if (CharacterMode) SetCharacterMode(false);
             if (WiringMode) SetWiringMode(false);
-
-            Submarine.RefreshSavedSubs();
-
+            
             loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
@@ -1432,6 +1436,7 @@ namespace Barotrauma
                 {
                     sub.Remove();
                     File.Delete(sub.FilePath);
+                    Submarine.RefreshSavedSubs();
                     CreateLoadScreen();
                 }
                 catch (Exception e)
