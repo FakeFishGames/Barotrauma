@@ -133,6 +133,7 @@ namespace Barotrauma.Items.Components
 
             set
             {
+                if (base.IsActive == value) { return; }
                 base.IsActive = value;
 #if CLIENT
                 if (light == null) return;
