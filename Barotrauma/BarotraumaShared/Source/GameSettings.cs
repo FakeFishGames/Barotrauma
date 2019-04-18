@@ -975,14 +975,8 @@ namespace Barotrauma
                     ToolBox.IsProperFilenameCase(file.Path);
                 }
             }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
+
+            EnsureCoreContentPackageSelected();
 
             //save to get rid of the invalid selected packages in the config file
             if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
@@ -1001,6 +995,25 @@ namespace Barotrauma
                                 .Replace("[gameversion]", GameMain.Version.ToString()));
             }
         }
+
+        public void EnsureCoreContentPackageSelected()
+        {
+            if (SelectedContentPackages.Any(cp => cp.CorePackage)) { return; }
+
+            if (GameMain.VanillaContent != null)
+            {
+                SelectedContentPackages.Add(GameMain.VanillaContent);
+            }
+            else
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+        }
+
         #endregion
 
         #region Save PlayerConfig

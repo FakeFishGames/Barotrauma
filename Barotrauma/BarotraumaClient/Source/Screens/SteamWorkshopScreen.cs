@@ -594,6 +594,7 @@ namespace Barotrauma
                 {
                     tickBox.Enabled = false;
                 }
+                GameMain.Config.EnsureCoreContentPackageSelected();
             }
             if (updateButton != null)
             {
