@@ -215,14 +215,14 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(1.5f);
             }
 
-            // Remove
-            for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
-            {
-                SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, true);
-            }
-            do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
-            CheckGhostWires();
-            // Remove
+            //// Remove
+            //for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
+            //{
+            //    SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, true);
+            //}
+            //do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
+            //CheckGhostWires();
+            //// Remove
 
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.WakeUp"), ChatMessageType.Radio, null);
             SetHighlight(engineer_equipmentCabinet.Item, true);
