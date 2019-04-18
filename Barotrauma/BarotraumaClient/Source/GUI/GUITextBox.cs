@@ -359,9 +359,9 @@ namespace Barotrauma
             OnDeselected?.Invoke(this, Keys.None);
         }
 
-        public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false)
+        public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectOffset = null)
         {
-            textBlock.Flash(color, flashDuration, useRectangleFlash);
+            textBlock.Flash(color, flashDuration, useRectangleFlash, flashRectOffset);
         }
         
         protected override void Update(float deltaTime)

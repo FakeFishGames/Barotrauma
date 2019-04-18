@@ -67,7 +67,7 @@ namespace Barotrauma.Tutorials
         private string radioSpeakerName;
         private Character engineer;
         private int[] reactorLoads = new int[5] { 1500, 3000, 2000, 5000, 3500 };
-        private float reactorLoadChangeTime = 1f;
+        private float reactorLoadChangeTime = 2f;
         private float reactorLoadError = 100f;
         private bool reactorOperatedProperly;
         private const float waterVolumeBeforeOpening = 15f;
@@ -128,6 +128,7 @@ namespace Barotrauma.Tutorials
             engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
             engineer_reactor.FireDelay = engineer_reactor.MeltdownDelay = float.PositiveInfinity;
             engineer_reactor.FuelConsumptionRate = 0.0f;
+            engineer_reactor.OnOffSwitch.BarScroll = 1f;
             reactorOperatedProperly = false;
 
             engineer_secondDoor = Item.ItemList.Find(i => i.HasTag("engineer_seconddoor")).GetComponent<Door>(); ;
@@ -259,13 +260,61 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!IsSelectedItem(engineer_reactor.Item));
             yield return new WaitForSeconds(0.5f);
             TriggerTutorialSegment(1);
-            while (!engineer_reactor.IsActive) yield return null;
+            do
+            {
+                if (IsSelectedItem(engineer_reactor.Item))
+                {
+                    if (engineer_reactor.OnOffSwitch.FlashTimer <= 0)
+                    {
+                        engineer_reactor.OnOffSwitch.Flash(highlightColor, 1.5f, false);
+                    }
+                }
+                yield return null;
+            } while (engineer_reactor.OnOffSwitch.BarScroll > 0.45f);
+            do
+            {
+                if (IsSelectedItem(engineer_reactor.Item) && engineer_reactor.Item.OwnInventory.slots != null)
+                {
+                    HighlightInventorySlot(engineer.Inventory, "fuelrod", highlightColor, 0.5f, 0.5f, 0f);
+
+                    for (int i = 0; i < engineer_reactor.Item.OwnInventory.slots.Length; i++)
+                    {
+                        HighlightInventorySlot(engineer_reactor.Item.OwnInventory, i, highlightColor, 0.5f, 0.5f, 0f);
+                    }
+                }
+                yield return null;
+            } while (engineer_reactor.AvailableFuel == 0);
             CoroutineManager.StartCoroutine(ReactorOperatedProperly());
-            while (!reactorOperatedProperly) yield return null;
+            do
+            {
+                if (IsSelectedItem(engineer_reactor.Item))
+                {
+                    if (engineer_reactor.FissionRateScrollBar.FlashTimer <= 0)
+                    {
+                        engineer_reactor.FissionRateScrollBar.Flash(highlightColor, 1.5f);
+                    }
+
+                    if (engineer_reactor.TurbineOutputScrollBar.FlashTimer <= 0)
+                    {
+                        engineer_reactor.TurbineOutputScrollBar.Flash(highlightColor, 1.5f);
+                    }
+                }
+                yield return null;
+            } while (!reactorOperatedProperly);
             yield return new WaitForSeconds(2f);
-            RemoveCompletedObjective(segments[1]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ReactorStable"), ChatMessageType.Radio, null);
-            do { yield return null; } while (!engineer_reactor.AutoTemp);
+            do
+            {
+                if (IsSelectedItem(engineer_reactor.Item))
+                {
+                    if (engineer_reactor.AutoTempSlider.FlashTimer <= 0)
+                    {
+                        engineer_reactor.AutoTempSlider.Flash(highlightColor, 1.5f, false, new Vector2(10, 10));
+                    }
+                }
+                yield return null;
+            } while (!engineer_reactor.AutoTemp);
+            RemoveCompletedObjective(segments[1]);
             SetHighlight(engineer_reactor.Item, false);
             SetHighlight(engineer_brokenJunctionBox, true);
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, true);

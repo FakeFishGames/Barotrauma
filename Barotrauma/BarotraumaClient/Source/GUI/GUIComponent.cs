@@ -127,12 +127,13 @@ namespace Barotrauma
 
         protected Color flashColor;
         protected float flashDuration = 1.5f;
-        protected bool useRectangleFlash;
+        private bool useRectangleFlash;
         public float FlashTimer
         {
             get { return flashTimer; }
         }
         protected float flashTimer;
+        private Rectangle flashRect;
 
         public bool IgnoreLayoutGroups;
 
@@ -449,12 +450,12 @@ namespace Barotrauma
                 if (!useRectangleFlash)
                 {
                     GUI.UIGlow.Draw(spriteBatch,
-                        rect,
+                        flashRect,
                         flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
                 }
                 else
                 {
-                    GUI.DrawRectangle(spriteBatch, rect, flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), true);
+                    GUI.DrawRectangle(spriteBatch, flashRect, flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), true);
                 }
             }
         }
@@ -503,9 +504,20 @@ namespace Barotrauma
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
         }
 
-        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectOffset = null)
         {
             flashTimer = flashDuration;
+            if (flashRectOffset.HasValue)
+            {
+                flashRect = new Rectangle(Rect.Location, Rect.Size);
+                flashRect.Inflate(flashRectOffset.Value.X, flashRectOffset.Value.Y);
+                DebugConsole.NewMessage("Rect:" + Rect.Size);
+                DebugConsole.NewMessage("flashRect:" + flashRect.Size);
+            }
+            else
+            {
+                flashRect = Rect;
+            }
             this.useRectangleFlash = useRectangleFlash;
             this.flashDuration = flashDuration;
             flashColor = (color == null) ? Color.Red : (Color)color;

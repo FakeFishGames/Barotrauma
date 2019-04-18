@@ -140,7 +140,7 @@
     </Segment>
 
     <Segment id="Engineer.Reactor" objective="Engineer.ReactorObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="Engineer.ReactorText" width="450" anchor="Center"/>
+      <Text tag="Engineer.ReactorText" width="700" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.ReactorText" width="450"/>
     </Segment>
 
