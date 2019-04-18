@@ -283,6 +283,7 @@ namespace Barotrauma
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
+                                continue;
                             }
                         }
                         else
@@ -292,6 +293,7 @@ namespace Barotrauma
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
+                                continue;
                             }
                         }
 
