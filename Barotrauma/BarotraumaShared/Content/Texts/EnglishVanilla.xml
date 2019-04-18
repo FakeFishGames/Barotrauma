@@ -2432,8 +2432,11 @@
   <editordisclaimertitle>Editors</editordisclaimertitle>
   <editordisclaimertext>The submarine and character editors are modding tools that can be used to expand the core game by creating your own submarines and monsters. The custom creations can be shared in the Steam Workshop.\n\nAt the moment the editors are only available in English. The process of building a fully playable submarine or a functional monster can be quite involved, and unfortunately we don’t offer in-game tutorials or documentation for the editors yet. If you want to take a shot at creating your own custom content with the editors, you may be able to find help through the following links:</editordisclaimertext>
   <editordisclaimerwikilink>Barotrauma Wiki</editordisclaimerwikilink>
+  <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerdiscordlink>Barotrauma Discord Server</editordisclaimerdiscordlink>
+  <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
   <editordisclaimerforumlink>Barotrauma Forums</editordisclaimerforumlink>
+  <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
 
   <!-- Structure -->
   <entityname.hull>Hull</entityname.hull>

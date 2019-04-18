@@ -127,6 +127,11 @@ namespace Barotrauma
             OpenDoors();
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
             instance = this;
+
+            if (!GameMain.Config.EditorDisclaimerShown)
+            {
+                GameMain.Instance.ShowEditorDisclaimer();
+            }
         }
 
         private void ResetVariables()
@@ -1776,8 +1781,20 @@ namespace Barotrauma
             Vector2 buttonSize = new Vector2(1, 0.04f);
             Vector2 toggleSize = new Vector2(0.03f, 0.03f);
             Point margin = new Point(40, 60);
-            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(rightPanel.Rect.Width - margin.X, rightPanel.Rect.Height - margin.Y), rightPanel.RectTransform, Anchor.Center));
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), parent: Frame.RectTransform, anchor: Anchor.CenterRight), style: "GUIFrameRight");
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(rightPanel.Rect.Width - margin.X, rightPanel.Rect.Height - margin.Y), rightPanel.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            var disclaimerBtnHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), layoutGroup.RectTransform), style: null);
+
+            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), disclaimerBtnHolder.RectTransform, Anchor.TopRight), style: "GUINotificationButton")
+            {
+                OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
+            };
+            disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
+
             var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.04f), layoutGroup.RectTransform), elementCount: 10, style: null);
             characterDropDown.ListBox.Color = new Color(characterDropDown.ListBox.Color.R, characterDropDown.ListBox.Color.G, characterDropDown.ListBox.Color.B, byte.MaxValue);
             foreach (var file in AllFiles)
@@ -1808,14 +1825,16 @@ namespace Barotrauma
                     return true;
                 };
             }
-            var charButtons = new GUIFrame(new RectTransform(buttonSize, parent: layoutGroup.RectTransform), style: null);
-            var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("PreviousCharacter"));
+            var charButtons = new GUIFrame(new RectTransform(new Vector2(buttonSize.X, buttonSize.Y * 1.5f), parent: layoutGroup.RectTransform), style: null);
+            var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("PreviousCharacter"));
+            prevCharacterButton.TextBlock.AutoScale = true;
             prevCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetPreviousConfigFile());
                 return true;
             };
-            var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("NextCharacter"));
+            var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("NextCharacter"));
+            prevCharacterButton.TextBlock.AutoScale = true;
             nextCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetNextConfigFile());

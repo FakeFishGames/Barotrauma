@@ -626,6 +626,17 @@
     selectedcolor="150,150,150,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="918,1,53,46"/>
   </GUISoundIconDisabled>
+
+  <GUINotificationButton
+    color="152,177,197,255"
+    hovercolor="200,214,223,255"
+    selectedcolor="163,186,203,255"
+    pressedcolor="90,130,158,255">
+    <Sprite texture="Content/UI/IconAtlas.png" state="None" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Hover" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Selected" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Pressed" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+  </GUINotificationButton>
   
   <GUIMessageBox    
     color="0,0,0,204"
