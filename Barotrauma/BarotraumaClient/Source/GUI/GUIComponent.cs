@@ -511,8 +511,6 @@ namespace Barotrauma
             {
                 flashRect = new Rectangle(Rect.Location, Rect.Size);
                 flashRect.Inflate(flashRectOffset.Value.X, flashRectOffset.Value.Y);
-                DebugConsole.NewMessage("Rect:" + Rect.Size);
-                DebugConsole.NewMessage("flashRect:" + flashRect.Size);
             }
             else
             {

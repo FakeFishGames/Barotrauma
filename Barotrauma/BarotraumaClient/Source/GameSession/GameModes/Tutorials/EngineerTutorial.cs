@@ -39,10 +39,8 @@ namespace Barotrauma.Tutorials
 
         // Room 5
         private MotionSensor engineer_disconnectedJunctionBoxObjectiveSensor;
-        private PowerTransfer engineer_disconnectedJunctionBox_1;
-        private PowerTransfer engineer_disconnectedJunctionBox_2;
-        private PowerTransfer engineer_disconnectedJunctionBox_3;
-        private PowerTransfer engineer_disconnectedJunctionBox_4;
+        private PowerTransfer[] engineer_disconnectedJunctionBoxes;
+        private ConnectionPanel[] engineer_disconnectedConnectionPanels;
         private Item engineer_wire_1;
         private Powered engineer_lamp_1;
         private Item engineer_wire_2;
@@ -75,6 +73,7 @@ namespace Barotrauma.Tutorials
         private Color engineer_repairIconColor;
         private Sprite engineer_reactorIcon;
         private Color engineer_reactorIconColor;
+        private bool wiringActive = false;
 
         public EngineerTutorial(XElement element) : base(element)
         {
@@ -149,14 +148,26 @@ namespace Barotrauma.Tutorials
 
             // Room 5
             engineer_disconnectedJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
-            engineer_disconnectedJunctionBox_1 = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionbox_1")).GetComponent<PowerTransfer>();
-            engineer_disconnectedJunctionBox_1.Item.GetComponent<ConnectionPanel>().Locked = false;
-            engineer_disconnectedJunctionBox_2 = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionbox_2")).GetComponent<PowerTransfer>();
-            engineer_disconnectedJunctionBox_2.Item.GetComponent<ConnectionPanel>().Locked = false;
-            engineer_disconnectedJunctionBox_3 = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionbox_3")).GetComponent<PowerTransfer>();
-            engineer_disconnectedJunctionBox_3.Item.GetComponent<ConnectionPanel>().Locked = false;
-            engineer_disconnectedJunctionBox_4 = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionbox_4")).GetComponent<PowerTransfer>();
-            engineer_disconnectedJunctionBox_4.Item.GetComponent<ConnectionPanel>().Locked = false;
+
+            engineer_disconnectedJunctionBoxes = new PowerTransfer[4];
+            engineer_disconnectedConnectionPanels = new ConnectionPanel[4];
+
+            for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
+            {
+                engineer_disconnectedJunctionBoxes[i] = Item.ItemList.Find(item => item.HasTag($"engineer_disconnectedjunctionbox_{i + 1}")).GetComponent<PowerTransfer>();
+                engineer_disconnectedConnectionPanels[i] = engineer_disconnectedJunctionBoxes[i].Item.GetComponent<ConnectionPanel>();
+                engineer_disconnectedConnectionPanels[i].Locked = false;
+
+                for (int j = 0; j < engineer_disconnectedJunctionBoxes[i].PowerConnections.Count; j++)
+                {
+                    foreach (Wire wire in engineer_disconnectedJunctionBoxes[i].PowerConnections[j].Wires)
+                    {
+                        if (wire == null) continue;
+                        wire.Locked = true;
+                    }
+                }
+            }
+
             engineer_wire_1 = Item.ItemList.Find(i => i.HasTag("engineer_wire_1"));
             engineer_wire_2 = Item.ItemList.Find(i => i.HasTag("engineer_wire_2"));
             engineer_lamp_1 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_1")).GetComponent<Powered>();
@@ -204,6 +215,15 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(1.5f);
             }
 
+            // Remove
+            for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
+            {
+                SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, true);
+            }
+            do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
+            CheckGhostWires();
+            // Remove
+
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.WakeUp"), ChatMessageType.Radio, null);
             SetHighlight(engineer_equipmentCabinet.Item, true);
 
@@ -250,7 +270,8 @@ namespace Barotrauma.Tutorials
                     }
                 }
 
-                yield return null; } while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null); // Wait until looted
+                yield return null;
+            } while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null); // Wait until looted
             RemoveCompletedObjective(segments[0]);
             SetHighlight(engineer_equipmentCabinet.Item, false);
             SetHighlight(engineer_reactor.Item, true);
@@ -327,24 +348,25 @@ namespace Barotrauma.Tutorials
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
-            SetHighlight(engineer_disconnectedJunctionBox_1.Item, true);
-            SetHighlight(engineer_disconnectedJunctionBox_2.Item, true);
-            SetHighlight(engineer_disconnectedJunctionBox_3.Item, true);
-            SetHighlight(engineer_disconnectedJunctionBox_4.Item, true);
+            for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
+            {
+                SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, true);
+            }
 
             // Room 5
             do { yield return null; } while (!engineer_thirdDoor.IsOpen);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(3, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Connect the junction boxes
-            do { CheckGhostWires(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
+            do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             CheckGhostWires();
-            SetHighlight(engineer_disconnectedJunctionBox_1.Item, false);
-            SetHighlight(engineer_disconnectedJunctionBox_2.Item, false);
-            SetHighlight(engineer_disconnectedJunctionBox_3.Item, false);
-            SetHighlight(engineer_disconnectedJunctionBox_4.Item, false);
+            for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
+            {
+                SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, false);
+            }
             RemoveCompletedObjective(segments[3]);
             do { yield return null; } while (engineer_workingPump.Item.CurrentHull.WaterPercentage > waterVolumeBeforeOpening); // Wait until drained
+            wiringActive = false;
             SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, true);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ChangeOfPlans"), ChatMessageType.Radio, null);
 
@@ -376,11 +398,26 @@ namespace Barotrauma.Tutorials
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+
+            if (wiringActive)
+            {
+                for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
+                {
+                    for (int j = 0; j < engineer_disconnectedJunctionBoxes[i].PowerConnections.Count; j++)
+                    {
+                        engineer_disconnectedJunctionBoxes[i].PowerConnections[j].UpdateFlashTimer(deltaTime);
+                    }
+                }
+            }
+        }
+
         private bool IsSelectedItem(Item item)
         {
             return engineer?.SelectedConstruction == item;
         }
-
 
         private IEnumerable<object> ReactorOperatedProperly()
         {
@@ -415,6 +452,58 @@ namespace Barotrauma.Tutorials
             {
                 engineer_wire_2.Remove();
                 engineer_wire_2 = null;
+            }
+        }
+
+        private void HandleJunctionBoxWiringHighlights()
+        {
+            Item selected = engineer.SelectedConstruction;
+
+            if (!engineer.HasEquippedItem("screwdriver"))
+            {
+                HighlightInventorySlot(engineer.Inventory, "screwdriver", highlightColor, 0.5f, 0.5f, 0f);
+            }
+
+            int selectedIndex = -1;
+
+            if (selected != null)
+            {
+                for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
+                {
+                    if (selected == engineer_disconnectedJunctionBoxes[i].Item)
+                    {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            wiringActive = selectedIndex != -1;
+
+            if (!engineer.HasEquippedItem("wire"))
+            {
+                HighlightInventorySlotWithTag(engineer.Inventory, "wire", highlightColor, 0.5f, 0.5f, 0f);
+            }
+            else
+            {
+                if (!wiringActive) return;
+                for (int i = 0; i < engineer_disconnectedConnectionPanels[selectedIndex].Connections.Count; i++)
+                {
+                    var connection = engineer_disconnectedConnectionPanels[selectedIndex].Connections[i];
+                    if (connection.IsPower && connection.FlashTimer <= 0)
+                    {
+                        foreach (Wire wire in engineer_disconnectedConnectionPanels[selectedIndex].Connections[i].Wires)
+                        {
+                            if (wire == null) continue;
+                            if (!wire.Locked)
+                            {
+                                return;
+                            }
+                        }
+
+                        connection.Flash(highlightColor);
+                    }
+                }
             }
         }
 
