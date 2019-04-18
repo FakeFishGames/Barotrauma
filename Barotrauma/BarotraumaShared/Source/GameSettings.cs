@@ -841,6 +841,82 @@ namespace Barotrauma
                     VoiceSetting = voiceSetting;
                 }
             }
+
+            TextManager.LoadTextPacks(SelectedContentPackages);
+
+            //display error messages after all content packages have been loaded
+            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
+            foreach (string missingPackagePath in missingPackagePaths)
+            {
+                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
+            }
+            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
+            {
+                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                .Replace("[packagename]", incompatiblePackage.Name)
+                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
+                                .Replace("[gameversion]", GameMain.Version.ToString()));
+            }
+            foreach (ContentPackage contentPackage in SelectedContentPackages)
+            {
+                foreach (ContentFile file in contentPackage.Files)
+                {
+                    if (!System.IO.File.Exists(file.Path))
+                    {
+                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
+                        continue;
+                    }
+                    ToolBox.IsProperFilenameCase(file.Path);
+                }
+            }
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+
+            //save to get rid of the invalid selected packages in the config file
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+        }
+        #endregion
+
+        #region Save DefaultConfig
+        private void SaveNewDefaultConfig()
+        {
+            XDocument doc = new XDocument();
+
+            if (doc.Root == null)
+            {
+                doc.Add(new XElement("config"));
+            }
+
+            doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
+                new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("autocheckupdates", AutoCheckUpdates),
+                new XAttribute("musicvolume", musicVolume),
+                new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("verboselogging", VerboseLogging),
+                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("quickstartsub", QuickStartSubmarineName),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
+
+            if (WasGameUpdated)
+            {
+                doc.Root.Add(new XAttribute("wasgameupdated", true));
+            }
             
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
@@ -975,14 +1051,8 @@ namespace Barotrauma
                     ToolBox.IsProperFilenameCase(file.Path);
                 }
             }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
+
+            EnsureCoreContentPackageSelected();
 
             //save to get rid of the invalid selected packages in the config file
             if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
@@ -1001,6 +1071,25 @@ namespace Barotrauma
                                 .Replace("[gameversion]", GameMain.Version.ToString()));
             }
         }
+
+        public void EnsureCoreContentPackageSelected()
+        {
+            if (SelectedContentPackages.Any(cp => cp.CorePackage)) { return; }
+
+            if (GameMain.VanillaContent != null)
+            {
+                SelectedContentPackages.Add(GameMain.VanillaContent);
+            }
+            else
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+        }
+
         #endregion
 
         #region Save PlayerConfig
