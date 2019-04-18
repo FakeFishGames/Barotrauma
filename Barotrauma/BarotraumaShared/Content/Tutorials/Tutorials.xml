@@ -245,7 +245,7 @@
     </Segment>
 
     <Segment id="Officer.SomethingBig" objective="Officer.SomethingBigObjective" contenttype="manualvideo" istriggered="false">
-      <Text tag="Officer.SomethingBigText" width="450" anchor="Center"/>
+      <Text tag="Officer.SomethingBigText" width="700" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.SomethingBigText" width="450"/>
     </Segment>
     
