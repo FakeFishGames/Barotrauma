@@ -334,12 +334,12 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(1f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(4f);
+            yield return new WaitForSeconds(6f);
 
             // Room 4
             do { yield return null; } while (!mechanic_thirdDoor.IsOpen);
             mechanic_fire = new DummyFireSource(new Vector2(20f, 2f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
-            do { yield return null; } while (!mechanic_craftingObjectiveSensor.MotionDetected);
+            //do { yield return null; } while (!mechanic_craftingObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(4); // Deconstruct
 
             SetHighlight(mechanic_craftingCabinet.Item, true);
