@@ -241,7 +241,7 @@
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
-    <Deconstruct time="10">
+    <Deconstruct time="2">
       <Item identifier="iron" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
