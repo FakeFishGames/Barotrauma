@@ -238,7 +238,7 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(2.5f);
             TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Left), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Right), GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Select)); // Open door objective
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(0.0f);
             SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
             SetHighlight(mechanic_firstDoor.Item, true);
             do { yield return null; } while (!mechanic_firstDoor.IsOpen);
@@ -326,13 +326,15 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
-            TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Use));
-            do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
-            RemoveCompletedObjective(segments[11]);
+            yield return new WaitForSeconds(1.5f);
+            //TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Select)); // Ladder objective
+            //do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
+            //RemoveCompletedObjective(segments[11]);
             yield return new WaitForSeconds(2f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(1f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
+            yield return new WaitForSeconds(4f);
 
             // Room 4
             do { yield return null; } while (!mechanic_thirdDoor.IsOpen);
