@@ -188,6 +188,9 @@
     <None Include="libvlc.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="libMonoPosixHelper.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Barotrauma">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
