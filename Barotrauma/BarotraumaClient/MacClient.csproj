@@ -191,9 +191,6 @@
     <None Include="libMonoPosixHelper.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="libfreetype.6.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
     <None Include="Barotrauma">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
