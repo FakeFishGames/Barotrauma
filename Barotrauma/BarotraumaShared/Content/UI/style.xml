@@ -637,6 +637,21 @@
     <Sprite texture="Content/UI/IconAtlas.png" state="Selected" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
     <Sprite texture="Content/UI/IconAtlas.png" state="Pressed" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
   </GUINotificationButton>
+
+  <GUIBugButton
+    color="197,100,100,255"
+    hovercolor="223,200,200,255"
+    selectedcolor="203,163,163,255"
+    pressedcolor="158,90,90,255">
+    <Sprite texture="Content/UI/IconAtlas.png" state="None" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Hover" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Selected" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Pressed" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+
+    <GUITextBlock
+      textcolor="255,255,255,255"
+      padding="0.0, 0.0, 0.0, 0.0"/>
+  </GUIBugButton>
   
   <GUIMessageBox    
     color="0,0,0,204"

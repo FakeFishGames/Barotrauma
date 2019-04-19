@@ -756,6 +756,31 @@ namespace Barotrauma
             Config.SaveNewPlayerConfig();
         }
 
+        // ToDo: Move texts/links to localization, when possible.
+        public void ShowBugReporter()
+        {
+            var msgBox = new GUIMessageBox("", "");
+            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
+
+            List<Pair<string, string>> links = new List<Pair<string, string>>()
+                {
+                    new Pair<string, string>("Barotrauma Feedback Form","https://barotraumagame.com/feedback"),
+                    new Pair<string, string>("Github Issue Form (Needs account)","https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
+                };
+            foreach (var link in links)
+            {
+                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+                {
+                    UserData = link.Second,
+                    OnClicked = (btn, userdata) =>
+                    {
+                        Process.Start(userdata as string);
+                        return true;
+                    }
+                };
+            }
+        }
+
         static bool waitForKeyHit = true;
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
