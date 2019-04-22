@@ -255,7 +255,7 @@ namespace Barotrauma.Tutorials
 
             while (patient1.CurrentOrder == null || patient1.CurrentOrder.AITag != "follow")
             {
-                GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor);
+                GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor, new Vector2(5, 5));
                 yield return null;
             }
 

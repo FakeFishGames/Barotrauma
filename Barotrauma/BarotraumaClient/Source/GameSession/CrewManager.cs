@@ -959,7 +959,7 @@ namespace Barotrauma
                 color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
         }
 
-        public void HighlightOrderButton(Character character, string orderAiTag, Color color)
+        public void HighlightOrderButton(Character character, string orderAiTag, Color color, Vector2? flashRectOffset = null)
         {
             var order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
             if (order == null)
@@ -968,9 +968,13 @@ namespace Barotrauma
                 return;
             }
             var characterElement = characterListBox.Content.FindChild(character);
-            var orderBtn = characterElement.FindChild(order, recursive: true);
-            orderBtn.Flash(color);
-            orderBtn.Pulsate(Vector2.One, Vector2.One * 2.0f, 1.0f);
+            GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
+            if (orderBtn.Frame.FlashTimer <= 0)
+            {
+                orderBtn.Flash(color, 1.5f, false, flashRectOffset);
+            }
+
+            //orderBtn.Pulsate(Vector2.One, Vector2.One * 2.0f, 1.5f);
         }
 
 #region Updating and drawing the UI
