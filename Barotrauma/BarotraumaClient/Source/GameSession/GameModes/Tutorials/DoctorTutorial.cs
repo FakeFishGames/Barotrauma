@@ -292,11 +292,10 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (doctor.Inventory.FindItemByIdentifier("antibleeding1") == null); // Wait until looted
             SetHighlight(doctor_medBayCabinet.Item, false);
+            SetHighlight(patient1, true);
 
             while (patient1.CharacterHealth.GetAfflictionStrength("burn") > 0.01f)
             {
-                //TODO: highlight patient
-
                 if (CharacterHealth.OpenHealthWindow == null)
                 {
                     doctor.CharacterHealth.HealthBarPulsateTimer = 1.0f;
@@ -309,6 +308,7 @@ namespace Barotrauma.Tutorials
 
             }
             RemoveCompletedObjective(segments[4]);
+            SetHighlight(patient1, false);
             yield return new WaitForSeconds(1.0f);
 
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.AssistantBurnsHealed"), ChatMessageType.Radio, null);
@@ -332,7 +332,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2.0f);
 
             TriggerTutorialSegment(5, GameMain.Config.KeyBind(InputType.Health)); // perform CPR
-
+            SetHighlight(patient2, true);
             while (patient2.IsUnconscious)
             {
                 if (CharacterHealth.OpenHealthWindow != null && doctor.AnimController.Anim != AnimController.Animation.CPR)
@@ -343,6 +343,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             }
             RemoveCompletedObjective(segments[5]);
+            SetHighlight(patient2, false);
             CoroutineManager.StopCoroutines("KeepPatient2Alive");
 
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
@@ -361,6 +362,7 @@ namespace Barotrauma.Tutorials
             {
                 patient.CanSpeak = true;
                 patient.AIController.Enabled = true;
+                SetHighlight(patient, true);
             }
             subPatients[2].Oxygen = -50;
             CoroutineManager.StartCoroutine(KeepPatientAlive(subPatients[2]), "KeepPatient3Alive");
@@ -390,10 +392,19 @@ namespace Barotrauma.Tutorials
                         }
                         patientCalledHelp[i] = true;
                     }
+
+                    if (subPatients[i].ExternalHighlight && subPatients[i].Vitality >= subPatients[i].MaxVitality * 0.9f)
+                    {
+                        SetHighlight(subPatients[i], false);
+                    }
                 }
                 yield return new WaitForSeconds(1.0f);
             }
             RemoveCompletedObjective(segments[6]);
+            foreach (var patient in subPatients)
+            {
+                SetHighlight(patient, false);
+            }
 
             // END TUTORIAL
             CoroutineManager.StartCoroutine(TutorialCompleted());

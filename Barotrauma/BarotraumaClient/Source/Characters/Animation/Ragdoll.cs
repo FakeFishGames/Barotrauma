@@ -436,7 +436,7 @@ namespace Barotrauma
             Color? color = null;
             if (character.ExternalHighlight)
             {
-                color = Color.Lerp(Color.White, Color.OrangeRed, (float)(Math.Sin(Timing.TotalTime) + 1.0f) / 2.0f);
+                color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
             }
 
             for (int i = 0; i < limbs.Length; i++)
