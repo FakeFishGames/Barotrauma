@@ -530,6 +530,9 @@
   <Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </Wall_H1>
+  <Wall_I1 name="BackWall Outpost" identifier="FF_Wall_I1" description="Outpost back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Wall_I1>
   <!-- BACK WALLS ENDS -->
   <!-- SUBMARINE WALLS aka *SHELLS" START -->
   <shellA name="Shell A 90 deg" identifier="shella90deg" description="Submarine wall" body="true" castshadow="true" health="200" width="96" height="512" bodywidth="72" bodyoffset="12,0" resizevertical="true">
