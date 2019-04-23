@@ -775,6 +775,7 @@ namespace Barotrauma
                     OnClicked = (btn, userdata) =>
                     {
                         Process.Start(userdata as string);
+                        msgBox.Close();
                         return true;
                     }
                 };
