@@ -133,7 +133,7 @@ namespace Barotrauma.Tutorials
             mechanic_thirdDoor = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoor")).GetComponent<Door>();
             mechanic_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("mechanic_thirddoorlight")).GetComponent<LightComponent>();
             mechanic_brokenWall_1 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenwall_1");
-            mechanic_ladderSensor = Item.ItemList.Find(i => i.HasTag("mechanic_laddersensor")).GetComponent<MotionSensor>();
+            //mechanic_ladderSensor = Item.ItemList.Find(i => i.HasTag("mechanic_laddersensor")).GetComponent<MotionSensor>();
 
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, false);
             mechanic_brokenWall_1.Indestructible = false;
