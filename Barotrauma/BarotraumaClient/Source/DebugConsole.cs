@@ -361,6 +361,10 @@ namespace Barotrauma
 
             commands.Add(new Command("gamescreen|game", "gamescreen/game: Go to the \"in-game\" view.", (string[] args) =>
             {
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    NewMessage("WARNING: Switching directly from the submarine editor to the game view may cause bugs and crashes. Use with caution.", Color.Orange);
+                }
                 GameMain.GameScreen.Select();
             }));
 
