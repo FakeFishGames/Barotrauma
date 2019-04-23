@@ -631,7 +631,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(myClient);
+                        GameMain.GameSession?.CrewManager?.SetClientSpeaking(myClient);
                     }
                 }
             }
