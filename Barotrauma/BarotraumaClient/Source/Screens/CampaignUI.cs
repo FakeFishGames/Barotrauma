@@ -69,7 +69,7 @@ namespace Barotrauma
             var outpostBtn = new GUIButton(new RectTransform(new Vector2(0.15f, 0.55f), topPanelContent.RectTransform), 
                 TextManager.Get("Outpost"), textAlignment: Alignment.Center, style: "GUISlopedHeader")
             {
-             OnClicked = (btn, userdata) => { SelectTab(Tab.Map); return true; }   
+                OnClicked = (btn, userdata) => { SelectTab(Tab.Map); return true; }   
             };
             outpostBtn.TextBlock.Font = GUI.LargeFont;
             outpostBtn.TextBlock.AutoScale = true;
