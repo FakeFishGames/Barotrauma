@@ -1123,12 +1123,12 @@ namespace Barotrauma
 #if CLIENT
                 if (Math.Abs(leftFootPos - prevLeftFootPos) > stepHeight && leftFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                 {
-                    SoundPlayer.PlaySound("footstep_armor_heavy", volume: 0.5f, range: 500.0f, position: leftFoot.WorldPosition);
+                    SoundPlayer.PlaySound("footstep_armor_heavy", leftFoot.WorldPosition, hullGuess: currentHull);
                     leftFoot.LastImpactSoundTime = (float)Timing.TotalTime;
                 }
                 if (Math.Abs(rightFootPos - prevRightFootPos) > stepHeight && rightFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                 {
-                    SoundPlayer.PlaySound("footstep_armor_heavy", volume: 0.5f, range: 500.0f, position: rightFoot.WorldPosition);
+                    SoundPlayer.PlaySound("footstep_armor_heavy", rightFoot.WorldPosition, hullGuess: currentHull);
                     rightFoot.LastImpactSoundTime = (float)Timing.TotalTime;
                 }
 #endif

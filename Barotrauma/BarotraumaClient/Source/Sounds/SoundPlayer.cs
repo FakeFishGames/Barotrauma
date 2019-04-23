@@ -451,9 +451,9 @@ namespace Barotrauma
             {
                 PlaySound(
                     "ambient",
+                    new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f),
                     Rand.Range(0.5f, 1.0f), 
-                    1000.0f, 
-                    new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f));
+                    1000.0f);
 
                 ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
             }
@@ -467,23 +467,31 @@ namespace Barotrauma
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }
 
+        /// <summary>
+        /// Play a sound defined in a sound xml file without any positional effects.
+        /// </summary>
         public static SoundChannel PlaySound(string soundTag, float volume = 1.0f)
         {
             var sound = GetSound(soundTag);            
             return sound?.Play(volume);
         }
 
-        public static SoundChannel PlaySound(string soundTag, float volume, float range, Vector2 position, Hull hullGuess = null)
+        /// <summary>
+        /// Play a sound defined in a sound xml file. If the volume or range parameters are omitted, the volume and range defined in the sound xml are used.
+        /// </summary>
+        public static SoundChannel PlaySound(string soundTag, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
             var sound = GetSound(soundTag);
             if (sound == null) return null;
-            return PlaySound(sound, sound.BaseGain * volume, range, position, hullGuess);
+            return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, hullGuess);
         }
 
-        public static SoundChannel PlaySound(Sound sound, float volume, float range, Vector2 position, Hull hullGuess = null)
+        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
-            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > range * range) return null;
-            return sound.Play(sound.BaseGain * volume, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, hullGuess));            
+            float far = range ?? sound.BaseFar;
+
+            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far) return null;
+            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: ShouldMuffleSound(Character.Controlled, position, far, hullGuess));            
         }
 
         private static void UpdateMusic(float deltaTime)

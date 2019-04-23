@@ -218,7 +218,7 @@ namespace Barotrauma.Items.Components
                 if (voltage > 0.1f && sparkSounds.Count > 0) 
                 {
                     var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
-                    SoundPlayer.PlaySound(sparkSound.Sound, sparkSound.Volume, sparkSound.Range, item.WorldPosition, item.CurrentHull);
+                    SoundPlayer.PlaySound(sparkSound.Sound, item.WorldPosition, sparkSound.Volume, sparkSound.Range, item.CurrentHull);
                 }
 #endif
                 lightBrightness = 0.0f;
