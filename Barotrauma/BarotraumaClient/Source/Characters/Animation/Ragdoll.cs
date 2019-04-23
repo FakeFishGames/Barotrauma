@@ -266,22 +266,15 @@ namespace Barotrauma
         {
             float volume = MathHelper.Clamp(impact - 3.0f, 0.5f, 1.0f);
 
-            if (body.UserData is Limb && character.Stun <= 0f)
+            if (body.UserData is Limb limb && character.Stun <= 0f)
             {
-                Limb limb = (Limb)body.UserData;
-                if (impact > 3.0f && limb.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
-                {
-                    PlayImpactSound(limb);
-                }
+                if (impact > 3.0f) { PlayImpactSound(limb); }
             }
             else if (body.UserData is Limb || body == Collider.FarseerBody)
             {
-                if (!character.IsRemotePlayer)
+                if (!character.IsRemotePlayer && impact > ImpactTolerance)
                 {
-                    if (impact > ImpactTolerance)
-                    {
-                        SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
-                    }
+                    SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                 }
             }
             if (Character.Controlled == character)
