@@ -178,7 +178,7 @@ namespace Barotrauma
         {
             get
             {
-                return (body == null) ? base.Position : ConvertUnits.ToDisplayUnits(SimPosition);
+                return (body == null) ? base.Position : body.Position;
             }
         }
 
@@ -186,7 +186,7 @@ namespace Barotrauma
         {
             get
             {
-                return (body == null) ? base.SimPosition : body.SimPosition;
+                return (body == null) ? ConvertUnits.ToSimUnits(base.Position) : body.SimPosition;
             }
         }
 

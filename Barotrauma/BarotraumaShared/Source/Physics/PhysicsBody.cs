@@ -732,7 +732,7 @@ namespace Barotrauma
                 }
             }
 
-            SetTransform((Vector2)targetPosition, targetRotation == null ? body.Rotation : (float)targetRotation);
+            SetTransformIgnoreContacts((Vector2)targetPosition, targetRotation == null ? body.Rotation : (float)targetRotation);
             targetPosition = null;
             targetRotation = null;
         }
