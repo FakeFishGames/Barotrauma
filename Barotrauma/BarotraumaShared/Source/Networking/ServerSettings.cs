@@ -378,6 +378,12 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
+        public bool VoipEnabled {
+            get;
+            private set;
+        }
+
+        [Serialize(true, true)]
         public bool EndRoundAtLevelEnd
         {
             get;
