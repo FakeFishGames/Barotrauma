@@ -225,6 +225,7 @@ namespace Barotrauma.Tutorials
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
 
             // Room 1
+            SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition);
             while (shakeTimer > 0.0f) // Wake up, shake
             {
                 shakeTimer -= 0.1f;

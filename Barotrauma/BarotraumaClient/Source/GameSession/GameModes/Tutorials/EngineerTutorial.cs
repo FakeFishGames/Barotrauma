@@ -66,7 +66,7 @@ namespace Barotrauma.Tutorials
         private Character engineer;
         private int[] reactorLoads = new int[5] { 1500, 3000, 2000, 5000, 3500 };
         private float reactorLoadChangeTime = 2f;
-        private float reactorLoadError = 100f;
+        private float reactorLoadError = 200f;
         private bool reactorOperatedProperly;
         private const float waterVolumeBeforeOpening = 15f;
         private Sprite engineer_repairIcon;
@@ -208,11 +208,12 @@ namespace Barotrauma.Tutorials
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
 
             // Room 1
+            SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition);
             while (shakeTimer > 0.0f) // Wake up, shake
             {
                 shakeTimer -= 0.1f;
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(1.5f);
+                yield return new WaitForSeconds(0.1f);
             }
 
             //// Remove
