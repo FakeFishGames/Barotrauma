@@ -20,7 +20,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M1" identifier="lightfluorescentm01" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="11,1,112,130" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="18,1,85,124" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -39,7 +39,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M2" identifier="lightfluorescentm02" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="144,0,91,129" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="152,1,74,126" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -58,7 +58,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M3" identifier="lightfluorescentm03" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="269,-1,93,129" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="284,2,68,124" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -77,7 +77,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M4" identifier="lightfluorescentm04" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="398,1,111,134" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="406,0,85,127" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -96,7 +96,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent L1" identifier="lightfluorescentl01" category="Electrical" Tags="largeitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="5,263,372,111" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="18,272,346,90" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -115,7 +115,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent L2" identifier="lightfluorescentl02" category="Electrical" Tags="largeitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="1,408,389,81" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="13,416,370,61" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -134,7 +134,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M1" identifier="lighthalogenmm01" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="9,128,101,134" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="20,132,76,124" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -153,7 +153,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M2" identifier="lighthalogenmm02" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="113,143,150,94" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="128,152,125,77" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -172,7 +172,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M3" identifier="lighthalogenmm03" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="258,120,122,143" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="268,129,103,123" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -191,7 +191,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M4" identifier="lighthalogenm04" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="375,130,135,120" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="388,138,124,101" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -209,9 +209,8 @@
       <input name="set_state" />
     </ConnectionPanel>
   </Item>
-
   <Item name="Light Led S1" identifier="lightleds01" category="Electrical" Tags="smallitem,light" scale="0.5">
-    <Sprite texture="Lamps.png" sourcerect="385,262,122,118" depth="0.8" origin="0.5,0.5" />
+    <Sprite texture="Lamps.png" sourcerect="397,271,99,99" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
@@ -229,7 +228,6 @@
       <input name="set_state" />
     </ConnectionPanel>
   </Item>
-  
   <Item name="Emergency Light" identifier="emergencylight" category="Electrical" Tags="smallitem,light" scale="1.0">
     <Sprite texture="lamp.png" sourcerect="0,48,48,16" depth="0.8" />
     <!-- base texture -->
