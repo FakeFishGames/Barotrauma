@@ -132,9 +132,6 @@ namespace Barotrauma
             {
                 GameMain.Instance.ShowEditorDisclaimer();
             }
-            OpenDoors();
-            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
-            instance = this;
         }
 
         private void ResetVariables()

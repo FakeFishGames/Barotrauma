@@ -279,7 +279,6 @@ namespace Barotrauma
                     movementSoundVolume = 0.0f;
                 }
             }
-        }
 
             if (waterAmbiences.Count > 1)
             {
