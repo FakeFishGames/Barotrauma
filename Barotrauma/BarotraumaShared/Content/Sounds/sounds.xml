@@ -60,7 +60,7 @@
   <damagesound file="Content/Sounds/Damage/Creak4.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/Creak5.ogg" damagesoundtype="Pressure"/>
 
-  <implode file="Content/Sounds/Damage/Implode.ogg"/>
+  <implode file="Content/Sounds/Damage/Implode.ogg" range="800"/>
   <drownmale file="Content/Sounds/Water/DrownMale1.ogg"/>
   <drownmale file="Content/Sounds/Water/DrownMale2.ogg"/>
   <drownmale file="Content/Sounds/Water/DrownMale3.ogg"/>
@@ -89,43 +89,61 @@
   <waterambience file="Content/Sounds/Water/WaterAmbience1.ogg"/>
   <waterambience file="Content/Sounds/Water/WaterAmbience2.ogg"/>
 
-  <impact_soft file="Content/Sounds/Impact/SoftImpact1.ogg"/>
-  <impact_soft file="Content/Sounds/Impact/SoftImpact2.ogg"/>
-  <impact_soft file="Content/Sounds/Impact/SoftImpact3.ogg"/>
-  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight1.ogg"/>
-  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight2.ogg"/>
-  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight3.ogg"/>
-  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight4.ogg"/>
-  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight5.ogg"/>
-  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy1.ogg"/>
-  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy2.ogg"/>
-  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy3.ogg"/>
-  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy4.ogg"/>
+  <impact_soft file="Content/Sounds/Impact/SoftImpact1.ogg" range="500"/>
+  <impact_soft file="Content/Sounds/Impact/SoftImpact2.ogg" range="600"/>
+  <impact_soft file="Content/Sounds/Impact/SoftImpact3.ogg" range="700"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight1.ogg" range="500"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight2.ogg" range="500"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight3.ogg" range="500"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight4.ogg" range="600"/>
+  <impact_metal_light file="Content/Sounds/Impact/MetalImpactLight5.ogg" range="600"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy1.ogg" range="700"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy2.ogg" range="700"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy3.ogg" range="800"/>
+  <impact_metal_heavy file="Content/Sounds/Impact/MetalImpactHeavy4.ogg" range="800"/>
 
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal1.ogg" volume="0.5"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal2.ogg" volume="0.5"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal3.ogg" volume="0.5"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal4.ogg" volume="0.5"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal5.ogg" volume="0.5"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal6.ogg" volume="0.5"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal7.ogg" volume="0.5"/>
-  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal8.ogg" volume="0.5"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal1.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal2.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal3.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal4.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal5.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal6.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal7.ogg" volume="0.5" range="500"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/FootstepMetal8.ogg" volume="0.5" range="500"/>
 
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor1.ogg"/>
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor2.ogg"/>
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor3.ogg"/>
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor4.ogg"/>
-  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor5.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor1.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor2.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor3.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor4.ogg" range="500"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/FootstepArmor5.ogg" range="500"/>
 
-  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy1.ogg"/>
-  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy2.ogg"/>
-  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy3.ogg"/>
-  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy4.ogg"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy1.ogg" range="800"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy2.ogg" range="800"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy3.ogg" range="800"/>
+  <footstep_armor_heavy file="Content/Sounds/Footsteps/Armor/FootstepArmorHeavy4.ogg" range="800"/>
 
-  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown1.ogg"/>
-  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown2.ogg"/>
-  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown3.ogg"/>
-  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown4.ogg"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown1.ogg" range="500"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown2.ogg" range="500"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown3.ogg" range="500"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/FootstepClown4.ogg" range="500"/>
+
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler1.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler2.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler3.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler4.ogg" range="500"/>
+  <footstep_crawler file="Content/Sounds/Footsteps/Monsters/FootstepCrawler5.ogg" range="500"/>
+  
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor1.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor2.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor3.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor4.ogg" range="800"/>
+  <footstep_mudraptor file="Content/Sounds/Footsteps/Monsters/FootstepMudraptor5.ogg" range="800"/>
+
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater1.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater2.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater3.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater4.ogg" range="500"/>
+  <footstep_water file="Content/Sounds/Footsteps/Water/FootstepWater5.ogg" range="500"/>
   
   <ambient file="Content/Sounds/Ambient/Ambient1.ogg"/>
   <ambient file="Content/Sounds/Ambient/Ambient2.ogg"/>
