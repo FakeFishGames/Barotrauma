@@ -1117,6 +1117,7 @@ namespace Barotrauma
                 }
             }
             savedSubmarines.Add(new Submarine(filePath));
+            savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
         }
 
         public static void RefreshSavedSubs()
