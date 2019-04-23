@@ -183,6 +183,12 @@ namespace Barotrauma
                 TextGetter = GetSubName
             };
 
+            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), paddedTopPanel.RectTransform, Anchor.CenterRight), style: "GUINotificationButton")
+            {
+                OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
+            };
+            disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
+
             linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform) { RelativeOffset = new Vector2(0.385f, 0.0f) },
                 TextManager.Get("AddSubButton"), elementCount: 20)
             {
@@ -627,6 +633,10 @@ namespace Barotrauma
             cam.UpdateTransform();
 
             GameAnalyticsManager.SetCustomDimension01("editor");
+            if (!GameMain.Config.EditorDisclaimerShown)
+            {
+                GameMain.Instance.ShowEditorDisclaimer();
+            }
         }
 
         public override void Deselect()
