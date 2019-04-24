@@ -93,7 +93,10 @@ namespace Barotrauma
                         target.Item.TryInteract(character, false, true);
                     }
 
-                    if (component.AIOperate(deltaTime, character, this)) isCompleted = true;
+                    if (component.AIOperate(deltaTime, character, this))
+                    {
+                        isCompleted = true;
+                    }
                     return;
                 }
 
@@ -150,14 +153,17 @@ namespace Barotrauma
                         return;
                     }
 
-                    if (component.AIOperate(deltaTime, character, this)) isCompleted = true;
+                    if (component.AIOperate(deltaTime, character, this))
+                    {
+                        isCompleted = true;
+                    }
                 }
             }
         }
 
         public override bool IsCompleted()
         {
-            return isCompleted;
+            return isCompleted && !IsLoop;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

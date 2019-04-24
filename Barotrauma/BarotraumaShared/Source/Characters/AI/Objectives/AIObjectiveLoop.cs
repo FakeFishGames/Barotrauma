@@ -26,6 +26,8 @@ namespace Barotrauma
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
+        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
+
         public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
             base.Update(objectiveManager, deltaTime);

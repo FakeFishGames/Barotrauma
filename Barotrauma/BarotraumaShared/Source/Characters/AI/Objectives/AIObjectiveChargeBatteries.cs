@@ -53,6 +53,6 @@ namespace Barotrauma
         protected override bool Filter(PowerContainer battery) => true;
         protected override float Average(PowerContainer battery) => 100 - battery.ChargePercentage;
         protected override IEnumerable<PowerContainer> GetList() => batteryList;
-        protected override AIObjective ObjectiveConstructor(PowerContainer battery) => new AIObjectiveOperateItem(battery, character, Option, false);
+        protected override AIObjective ObjectiveConstructor(PowerContainer battery) => new AIObjectiveOperateItem(battery, character, Option, false) { IsLoop = true };
     }
 }

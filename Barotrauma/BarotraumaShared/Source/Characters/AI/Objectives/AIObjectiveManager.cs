@@ -191,11 +191,11 @@ namespace Barotrauma
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
                     if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
                     if (order.TargetItemComponent == null) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
                     break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
                     break;
             }
             return newObjective;
