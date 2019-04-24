@@ -833,16 +833,16 @@ namespace Barotrauma
         {
             return world ? 
                 new Rectangle(
-                    WorldRect.X + trigger.X,
-                    WorldRect.Y + trigger.Y,
-                    (trigger.Width == 0) ? Rect.Width : trigger.Width,
-                    (trigger.Height == 0) ? Rect.Height : trigger.Height)
+                    (int)(WorldRect.X + trigger.X * Scale),
+                    (int)(WorldRect.Y + trigger.Y * Scale),
+                    (trigger.Width == 0) ? Rect.Width : (int)(trigger.Width * Scale),
+                    (trigger.Height == 0) ? Rect.Height : (int)(trigger.Height * Scale))
                     :
                 new Rectangle(
-                    Rect.X + trigger.X,
-                    Rect.Y + trigger.Y,
-                    (trigger.Width == 0) ? Rect.Width : trigger.Width,
-                    (trigger.Height == 0) ? Rect.Height : trigger.Height);
+                    (int)(Rect.X + trigger.X * Scale),
+                    (int)(Rect.Y + trigger.Y * Scale),
+                    (trigger.Width == 0) ? Rect.Width : (int)(trigger.Width * Scale),
+                    (trigger.Height == 0) ? Rect.Height : (int)(trigger.Height * Scale));
         }
 
         /// <summary>
