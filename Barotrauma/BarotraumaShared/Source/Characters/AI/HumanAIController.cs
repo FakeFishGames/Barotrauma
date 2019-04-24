@@ -113,7 +113,7 @@ namespace Barotrauma
 
             objectiveManager.DoCurrentObjective(deltaTime);
 
-            bool run = objectiveManager.GetCurrentPriority() > AIObjectiveManager.OrderPriority;
+            bool run = objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
                 if (Vector2.DistanceSquared(Character.SimPosition, goTo.Target.SimPosition) > 3 * 3)
