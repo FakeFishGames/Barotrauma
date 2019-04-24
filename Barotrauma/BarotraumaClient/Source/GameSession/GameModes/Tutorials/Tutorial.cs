@@ -232,13 +232,17 @@ namespace Barotrauma.Tutorials
                     CheckActiveObjectives(activeObjectives[i], deltaTime);
                 }
             }
+        }
 
-            if (infoBox != null)
+        public void CloseActiveContentGUI()
+        {
+            if (videoPlayer.IsPlaying)
             {
-                if (PlayerInput.KeyHit(Keys.Enter) || PlayerInput.KeyHit(Keys.Escape))
-                {
-                    CloseInfoFrame(null, null);
-                }
+                videoPlayer.Stop();
+            }
+            else if (infoBox != null)
+            {
+                CloseInfoFrame(null, null);
             }
         }
 

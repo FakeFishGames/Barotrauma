@@ -10,9 +10,10 @@ namespace Barotrauma
 {
     class VideoPlayer
     {
+        public bool IsPlaying;
+
         private Video currentVideo;
         private string filePath;
-        private bool isPlaying;
 
         private GUIFrame background, videoFrame, textFrame;
         private GUITextBlock title, textContent, objectiveTitle, objectiveText;
@@ -87,12 +88,12 @@ namespace Barotrauma
 
         public void Play()
         {
-            isPlaying = true;
+            IsPlaying = true;
         }
 
         public void Stop()
         {
-            isPlaying = false;
+            IsPlaying = false;
             if (currentVideo == null) return;
             currentVideo.Dispose();
             currentVideo = null;
@@ -108,13 +109,6 @@ namespace Barotrauma
         public void Update()
         {
             if (currentVideo == null) return;
-
-            if (PlayerInput.KeyHit(Keys.Enter) || PlayerInput.KeyHit(Keys.Escape))
-            {
-                DisposeVideo(null, null);
-                return;
-            }
-
             if (currentVideo.IsPlaying) return;
 
             currentVideo.Dispose();
@@ -124,7 +118,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
-            if (!isPlaying) return;
+            if (!IsPlaying) return;
             background.AddToGUIUpdateList(ignoreChildren, order);
         }
 
@@ -282,7 +276,7 @@ namespace Barotrauma
 
         private void DrawVideo(SpriteBatch spriteBatch, Rectangle rect)
         {
-            if (!isPlaying) return;
+            if (!IsPlaying) return;
             spriteBatch.Draw(currentVideo.GetTexture(), rect, Color.White);
         }
 

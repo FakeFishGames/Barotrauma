@@ -610,8 +610,12 @@ namespace Barotrauma
                         {
                             ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
+                        else if (Tutorial.Initialized && Tutorial.ContentRunning)
+                        {
+                            (GameMain.GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+                        }
                         else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                        && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -638,9 +642,9 @@ namespace Barotrauma
                     {
                         Screen.Selected.Update(Timing.Step);
                     }
-                    else if (GameSession?.GameMode is SinglePlayerCampaign && Tutorial.Initialized && Tutorial.ContentRunning)
+                    else if (Tutorial.Initialized && Tutorial.ContentRunning)
                     {
-                        (GameSession.GameMode as SinglePlayerCampaign).ContextualTutorial.Update((float)Timing.Step);
+                        (GameSession.GameMode as TutorialMode).Update((float)Timing.Step);
                     }
 
                     if (NetworkMember != null)
