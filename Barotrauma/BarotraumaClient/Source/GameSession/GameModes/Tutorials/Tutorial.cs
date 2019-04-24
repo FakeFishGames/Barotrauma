@@ -370,7 +370,7 @@ namespace Barotrauma.Tutorials
             segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
             {
-                if (type != TutorialContentTypes.ManualVideo)
+                if (type == TutorialContentTypes.Video)
                 {
                     ReplaySegmentVideo(segment);
                 }
@@ -409,10 +409,18 @@ namespace Barotrauma.Tutorials
             ContentRunning = true;
 
             string tutorialText = TextManager.GetFormatted(segment.TextContent.GetAttributeString("tag", ""), true, segment.Args);
+
+            Action videoAction = null;
+
+            if (segment.ContentType != TutorialContentTypes.TextOnly)
+            {
+                videoAction = () => LoadVideo(segment, false);
+            }
+
             infoBox = CreateInfoFrame(TextManager.Get(segment.Id), tutorialText,
             segment.TextContent.GetAttributeInt("width", 300),
             segment.TextContent.GetAttributeInt("height", 80),
-            segment.TextContent.GetAttributeString("anchor", "Center"), true, () => ContentRunning = false, () => LoadVideo(segment, false));
+            segment.TextContent.GetAttributeString("anchor", "Center"), true, () => ContentRunning = false, videoAction);
         }
 
         protected void RemoveCompletedObjective(TutorialSegment segment)
