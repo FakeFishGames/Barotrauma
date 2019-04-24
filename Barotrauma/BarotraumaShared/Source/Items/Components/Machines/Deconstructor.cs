@@ -109,6 +109,17 @@ namespace Barotrauma.Items.Components
                     MoveInputQueue();
                     PutItemsToLinkedContainer();
                 }
+                else
+                {
+                    if (outputContainer.Inventory.Items.All(i => i != null))
+                    {
+                        targetItem.Drop(dropper: null);
+                    }
+                    else
+                    {
+                        outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
+                    }
+                }
 
                 if (inputContainer.Inventory.Items.Any(i => i != null))
                 {
