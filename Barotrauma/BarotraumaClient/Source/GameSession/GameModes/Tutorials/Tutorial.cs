@@ -383,7 +383,7 @@ namespace Barotrauma.Tutorials
 
             string objectiveText = TextManager.ParseInputTypes(objectiveTranslated);
             int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveText).Y / 2f + 5) * GUI.Scale);
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.BottomCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) },
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveNameFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.BottomRight) { AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) },
                 objectiveText, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
             segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, 
                 TextManager.ParseInputTypes(segment.Objective), textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
@@ -433,11 +433,28 @@ namespace Barotrauma.Tutorials
             int checkMarkWidth = (int)(checkMarkHeight * 0.93f);
 
             Color color = new Color(4, 180, 108);
-            RectTransform rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-            rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5, 0);
+
+            bool objectiveLonger = false;
+            int objectiveTextWidth = segment.LinkedText.Rect.Width;
+            int objectiveTitleWidth = segment.LinkedTitle.Rect.Width;
+
+            DebugConsole.NewMessage("TextW: " + objectiveTextWidth);
+            DebugConsole.NewMessage("TitleW: " + objectiveTitleWidth);
+
+            RectTransform rectTA;
+            if (objectiveTextWidth > objectiveTitleWidth)
+            {
+                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5, 0);
+            }
+            else
+            {
+                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5 - (objectiveTitleWidth), 0);
+            }
+
             GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
-            checkmark.Color = checkmark.SelectedColor = checkmark.HoverColor = checkmark.PressedColor = color;
-  
+            checkmark.Color = checkmark.SelectedColor = checkmark.HoverColor = checkmark.PressedColor = color;  
 
             RectTransform rectTB = new RectTransform(new Vector2(1.1f, .8f), segment.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
             GUIImage stroke = new GUIImage(rectTB, "Stroke");
