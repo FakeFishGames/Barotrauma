@@ -38,7 +38,7 @@ namespace Barotrauma
             float isSelected = character.SelectedConstruction == Item ? 50 : 0;
             float baseLevel = Math.Max(Priority + isSelected, 1);
             float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority + 20) * maxMultiplier, 90);
+            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
             return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, max);
         }
 
