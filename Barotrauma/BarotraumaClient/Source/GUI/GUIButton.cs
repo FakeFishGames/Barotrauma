@@ -168,9 +168,9 @@ namespace Barotrauma
             if (frame != null) frame.ApplyStyle(style);
         }
 
-        public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectOffset = null)
+        public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectInflate = null)
         {
-            Frame.Flash(color, flashDuration, useRectangleFlash, flashRectOffset);
+            Frame.Flash(color, flashDuration, useRectangleFlash, flashRectInflate);
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
