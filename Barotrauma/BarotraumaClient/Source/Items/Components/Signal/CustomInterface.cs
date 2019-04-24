@@ -92,6 +92,25 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public void HighlightElement(int index, Color color, float duration, float pulsateAmount = 0.0f)
+        {
+            if (index < 0 || index >= uiElements.Count) { return; }
+            uiElements[index].Flash(color, duration);
+
+            if (pulsateAmount > 0.0f)
+            {
+                if (uiElements[index] is GUIButton button)
+                {
+                    button.Frame.Pulsate(Vector2.One, Vector2.One * (1.0f + pulsateAmount), duration);
+                    button.Frame.RectTransform.SetPosition(Anchor.Center);
+                }
+                else
+                {
+                    uiElements[index].Pulsate(Vector2.One, Vector2.One * (1.0f + pulsateAmount), duration);
+                }
+            }
+        }
+
         partial void UpdateLabelsProjSpecific()
         {
             for (int i = 0; i < labels.Length && i < uiElements.Count; i++)
