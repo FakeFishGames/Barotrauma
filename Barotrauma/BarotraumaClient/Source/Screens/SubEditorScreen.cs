@@ -1322,12 +1322,7 @@ namespace Barotrauma
             searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterContainer.RectTransform), "x")
             {
-                OnClicked = (btn, userdata) => {
-                    searchBox.Text = "";
-                    FilterSubs(subList, "");
-                    searchBox.Flash(Color.White);
-                    searchTitle.Visible = true;
-                    return true; }
+                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
             };
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
