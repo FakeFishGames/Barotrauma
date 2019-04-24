@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -28,8 +29,8 @@ namespace Barotrauma
         public AIObjectiveManager(Character character)
         {
             this.character = character;
-
             Objectives = new List<AIObjective>();
+            CreateAutomaticObjectives();
         }
 
         public void AddObjective(AIObjective objective)
@@ -46,6 +47,26 @@ namespace Barotrauma
         }
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
+
+        public void CreateAutomaticObjectives()
+        {
+            Objectives.Clear();
+            AddObjective(new AIObjectiveFindSafety(character));
+            AddObjective(new AIObjectiveIdle(character));
+            foreach (var automaticOrder in character.Info.Job.Prefab.AutomaticOrders)
+            {
+                var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
+                // TODO: Similar code is used in CrewManager:815-> DRY
+                var matchingItems = orderPrefab.ItemIdentifiers.Any() ?
+                    Item.ItemList.FindAll(it => orderPrefab.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(orderPrefab.ItemIdentifiers)) :
+                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == orderPrefab.ItemComponentType));
+                matchingItems.RemoveAll(it => it.Submarine != character.Submarine);
+                var item = matchingItems.GetRandom();
+                var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType));
+                AddObjective(CreateObjective(order, automaticOrder.option, character, automaticOrder.priorityModifier));
+            }
+        }
+
         public void AddObjective(AIObjective objective, float delay, Action callback = null)
         {
             if (DelayedObjectives.TryGetValue(objective, out CoroutineHandle coroutine))
@@ -146,6 +167,11 @@ namespace Barotrauma
         public void SetOrder(Order order, string option, Character orderGiver)
         {
             CurrentOrder = CreateObjective(order, option, orderGiver);
+            if (CurrentOrder == null)
+            {
+                // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
+                CreateAutomaticObjectives();
+            }
         }
 
         public AIObjective CreateObjective(Order order, string option, Character orderGiver, float priorityModifier = 1)
