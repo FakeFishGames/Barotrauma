@@ -206,7 +206,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!officer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(3f);
-            TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
+            //TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
             SetHighlight(officer_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -241,10 +241,9 @@ namespace Barotrauma.Tutorials
 
                 yield return null;
             } while (!officer_equipmentCabinet.Inventory.IsEmpty()); // Wait until looted
-            RemoveCompletedObjective(segments[0]);
+            //RemoveCompletedObjective(segments[0]);
             SetHighlight(officer_equipmentCabinet.Item, false);
             do { yield return null; } while (IsSelectedItem(officer_equipmentCabinet.Item));
-            yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Equip melee weapon & armor
             do
             {
@@ -260,7 +259,7 @@ namespace Barotrauma.Tutorials
                 {
                     HighlightInventorySlot(officer.Inventory, "ballistichelmet", highlightColor, .5f, .5f, 0f);
                 }
-                yield return null;
+                yield return new WaitForSeconds(1f);
             } while (!officer.HasEquippedItem("stunbaton") || !officer.HasEquippedItem("bodyarmor") || !officer.HasEquippedItem("ballistichelmet"));
             RemoveCompletedObjective(segments[1]);
             SetDoorAccess(officer_firstDoor, officer_firstDoorLight, true);
@@ -288,14 +287,16 @@ namespace Barotrauma.Tutorials
                 SetHighlight(officer_ammoShelf_2.Item, officer_coilgunLoader.Item.ExternalHighlight );
                 if (IsSelectedItem(officer_coilgunLoader.Item))
                 {
-                    HighlightInventorySlot(officer.Inventory, "coilgunammobox", highlightColor, .5f, .5f, 0f); //TODO: don't highlight if ammo box is empty
+                    HighlightInventorySlot(officer.Inventory, "coilgunammobox", highlightColor, .5f, .5f, 0f);
                 }
             yield return null;
             } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate || officer_coilgunLoader.Inventory.Items[0].Condition == 0);
             SetHighlight(officer_coilgunLoader.Item, false);
             SetHighlight(officer_superCapacitor.Item, false);
+            SetHighlight(officer_ammoShelf_1.Item, false);
+            SetHighlight(officer_ammoShelf_2.Item, false);
             RemoveCompletedObjective(segments[3]);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster(hammerheadCharacterFile, officer_hammerheadSpawnPos);
             officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
