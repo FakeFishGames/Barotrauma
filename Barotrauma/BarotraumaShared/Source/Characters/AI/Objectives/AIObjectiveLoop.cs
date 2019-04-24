@@ -95,13 +95,13 @@ namespace Barotrauma
             //{
             //    return AIObjectiveManager.OrderPriority;
             //}
-            float avg = targets.Average(t => Average(t));
-            // If the avg is less than 1% of the max value, let's just treat it as zero.
-            if (avg < 1) { return 0; }
+            float targetValue = MathHelper.Clamp(TargetEvaluation(), 0, 100);
+            // If the target value is less than 1% of the max value, let's just treat it as zero.
+            if (targetValue < 1) { return 0; }
             float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
             float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
             float devotion = MathHelper.Min(10, Priority);
-            float value = MathHelper.Min((devotion + avg) / 100 * PriorityModifier, 1);
+            float value = MathHelper.Min((devotion + targetValue) / 100 * PriorityModifier, 1);
             return MathHelper.Lerp(0, max, value);
         }
 
@@ -145,7 +145,9 @@ namespace Barotrauma
         /// <summary>
         /// 0 to 100.
         /// </summary>
-        protected abstract float Average(T target);
+        /// <returns></returns>
+        protected abstract float TargetEvaluation();
+
         protected abstract AIObjective ObjectiveConstructor(T target);
         protected abstract bool Filter(T target);
     }
