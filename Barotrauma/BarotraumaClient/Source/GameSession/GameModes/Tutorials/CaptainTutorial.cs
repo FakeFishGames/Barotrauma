@@ -157,6 +157,7 @@ namespace Barotrauma.Tutorials
 
             // Submarine
             do { yield return null; } while (!captain_enteredSubmarineSensor.MotionDetected);
+            yield return new WaitForSeconds(3f);
             captain_mechanic.AIController.Enabled = captain_security.AIController.Enabled = captain_engineer.AIController.Enabled = true;
             TriggerTutorialSegment(1);
             GameMain.GameSession.CrewManager.AddCharacter(captain_mechanic);
@@ -197,11 +198,11 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_statusMonitor, true);
             do
             {
-                captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.5f);
+                captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f);
             } while (Submarine.MainSub.DockedTo.Count > 0);
             RemoveCompletedObjective(segments[4]);
-            yield return new WaitForSeconds(4f);
+            yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(5); // Navigate to destination
             do
             {
@@ -210,7 +211,7 @@ namespace Barotrauma.Tutorials
                     if (captain_sonar.ActiveTickBox.Box.FlashTimer <= 0)
                     {
                         captain_sonar.ActiveTickBox.Box.Flash(highlightColor, 1.5f, false, new Vector2(2.5f, 2.5f));
-                        captain_sonar.ActiveTickBox.Box.Pulsate(Vector2.One, Vector2.One * 1.5f, 1.5f);
+                        //captain_sonar.ActiveTickBox.Box.Pulsate(Vector2.One, Vector2.One * 1.5f, 1.5f);
                     }
                 }
                 yield return null;
@@ -219,7 +220,11 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[5]);
             yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(6); // Docking
-            do { yield return null; } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
+            do
+            {
+                captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
+                yield return new WaitForSeconds(1.0f);
+            } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
             RemoveCompletedObjective(segments[6]);
             yield return new WaitForSeconds(3f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete").Replace("[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
