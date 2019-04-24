@@ -28,6 +28,7 @@ namespace Barotrauma.Tutorials
         // Submarine
         private MotionSensor captain_enteredSubmarineSensor;
         private Steering captain_navConsole;
+        private CustomInterface captain_navConsoleCustomInterface;
         private Sonar captain_sonar;
         private Item captain_statusMonitor;
         private Character captain_security;
@@ -94,6 +95,7 @@ namespace Barotrauma.Tutorials
             captain_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("captain_enteredsubmarinesensor")).GetComponent<MotionSensor>();
             tutorial_submarineReactor = Item.ItemList.Find(i => i.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
             captain_navConsole = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
+            captain_navConsoleCustomInterface = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<CustomInterface>();
             captain_sonar = captain_navConsole.Item.GetComponent<Sonar>();
             captain_statusMonitor = Item.ItemList.Find(i => i.HasTag("captain_statusmonitor"));
 
@@ -193,7 +195,11 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_navConsole.Item, true);
             SetHighlight(captain_sonar.Item, true);
             SetHighlight(captain_statusMonitor, true);
-            do { yield return null; } while (Submarine.MainSub.DockedTo.Count > 0); // TODO: Highlight toggle docking button
+            do
+            {
+                captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.5f);
+                yield return new WaitForSeconds(1.0f);
+            } while (Submarine.MainSub.DockedTo.Count > 0);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(5); // Navigate to destination
@@ -204,6 +210,7 @@ namespace Barotrauma.Tutorials
                     if (captain_sonar.ActiveTickBox.Box.FlashTimer <= 0)
                     {
                         captain_sonar.ActiveTickBox.Box.Flash(highlightColor, 1.5f, false, new Vector2(2.5f, 2.5f));
+                        captain_sonar.ActiveTickBox.Box.Pulsate(Vector2.One, Vector2.One * 1.5f, 1.5f);
                     }
                 }
                 yield return null;

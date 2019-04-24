@@ -133,7 +133,7 @@ namespace Barotrauma
             get { return flashTimer; }
         }
         protected float flashTimer;
-        private Rectangle flashRect;
+        private Vector2 flashRectInflate;
 
         public bool IgnoreLayoutGroups;
 
@@ -445,6 +445,9 @@ namespace Barotrauma
                 int flashCycleCount = (int)Math.Max(flashDuration, 1);
                 float flashCycleDuration = flashDuration / flashCycleCount;
 
+                Rectangle flashRect = Rect;
+                flashRect.Inflate(flashRectInflate.X, flashRectInflate.Y);
+
                 //MathHelper.Pi * 0.8f -> the curve goes from 144 deg to 0, 
                 //i.e. quickly bumps up from almost full brightness to full and then fades out
                 if (!useRectangleFlash)
@@ -504,18 +507,10 @@ namespace Barotrauma
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
         }
 
-        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectOffset = null)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectInflate = null)
         {
             flashTimer = flashDuration;
-            if (flashRectOffset.HasValue)
-            {
-                flashRect = new Rectangle(Rect.Location, Rect.Size);
-                flashRect.Inflate(flashRectOffset.Value.X, flashRectOffset.Value.Y);
-            }
-            else
-            {
-                flashRect = Rect;
-            }
+            this.flashRectInflate = flashRectInflate ?? Vector2.Zero;            
             this.useRectangleFlash = useRectangleFlash;
             this.flashDuration = flashDuration;
             flashColor = (color == null) ? Color.Red : (Color)color;
