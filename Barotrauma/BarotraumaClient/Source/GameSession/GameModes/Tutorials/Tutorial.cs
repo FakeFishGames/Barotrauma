@@ -434,12 +434,8 @@ namespace Barotrauma.Tutorials
 
             Color color = new Color(4, 180, 108);
 
-            bool objectiveLonger = false;
             int objectiveTextWidth = segment.LinkedText.Rect.Width;
             int objectiveTitleWidth = segment.LinkedTitle.Rect.Width;
-
-            DebugConsole.NewMessage("TextW: " + objectiveTextWidth);
-            DebugConsole.NewMessage("TitleW: " + objectiveTitleWidth);
 
             RectTransform rectTA;
             if (objectiveTextWidth > objectiveTitleWidth)
