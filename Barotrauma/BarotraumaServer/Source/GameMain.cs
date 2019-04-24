@@ -53,6 +53,21 @@ namespace Barotrauma
             get { return Config.SelectedContentPackages; }
         }
 
+
+        private static ContentPackage vanillaContent;
+        public static ContentPackage VanillaContent
+        {
+            get
+            {
+                if (vanillaContent == null)
+                {
+                    // TODO: Dynamic method for defining and finding the vanilla content package.
+                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
+                }
+                return vanillaContent;
+            }
+        }
+
         public readonly string[] CommandLineArgs;
 
         public GameMain(string[] args)

@@ -660,6 +660,10 @@ namespace Barotrauma
             }
             if (string.IsNullOrEmpty(text)) { return; }
 
+            if (sender != null)
+            {
+                GameMain.GameSession.CrewManager.SetCharacterSpeaking(sender);
+            }
             ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
 
@@ -711,15 +715,19 @@ namespace Barotrauma
             soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
         }
 
-        public void SetPlayerSpeaking(Client client)
+        public void SetClientSpeaking(Client client)
         {
-            if (client?.Character == null) { return; }
+            if (client?.Character != null) { SetCharacterSpeaking(client.Character); }
+        }
 
-            var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
+        public void SetCharacterSpeaking(Character character)
+        {
+            var playerFrame = characterListBox.Content.FindChild(character)?.FindChild(character);
             if (playerFrame == null) { return; }
             var soundIcon = playerFrame.FindChild("soundicon");
             soundIcon.Color = new Color(soundIcon.Color, 1.0f);
         }
+
         #endregion
 
         /// <summary>

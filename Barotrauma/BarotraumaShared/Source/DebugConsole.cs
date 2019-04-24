@@ -228,7 +228,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
                     ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
                 }
             },
             () =>
@@ -1461,12 +1461,26 @@ namespace Barotrauma
 
             if (spawnPos != null)
             {
-                Entity.Spawner.AddToSpawnQueue(itemPrefab, (Vector2)spawnPos);
-
+                if (Entity.Spawner == null)
+                {
+                    new Item(itemPrefab, spawnPos.Value, null);
+                }
+                else
+                {
+                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnPos.Value);
+                }
             }
             else if (spawnInventory != null)
             {
-                Entity.Spawner.AddToSpawnQueue(itemPrefab, spawnInventory);
+                if (Entity.Spawner == null)
+                {
+                    var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
+                    spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
+                }
+                else
+                {
+                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory);
+                }
             }
         }
 

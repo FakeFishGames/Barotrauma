@@ -757,7 +757,7 @@ namespace Barotrauma
 
             var matchingSoundsList = matchingSounds.ToList();
             var selectedSound = matchingSoundsList[Rand.Int(matchingSoundsList.Count)];
-            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
+            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, CurrentHull);
             soundTimer = soundInterval;
         }
 
@@ -779,7 +779,7 @@ namespace Barotrauma
         {
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
 
-            SoundPlayer.PlaySound("implode", 1.0f, 150.0f, WorldPosition);
+            SoundPlayer.PlaySound("implode", WorldPosition);
 
             for (int i = 0; i < 10; i++)
             {

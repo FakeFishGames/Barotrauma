@@ -35,6 +35,7 @@ namespace Barotrauma
     {
         public readonly string File;
         public readonly string Type;
+        public readonly bool DuckVolume;
 
         public readonly Vector2 IntensityRange;
                 
@@ -43,6 +44,7 @@ namespace Barotrauma
             this.File = Path.GetFullPath(element.GetAttributeString("file", ""));
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
+            this.DuckVolume = element.GetAttributeBool("duckvolume", false);
         }
     }
 
@@ -449,9 +451,9 @@ namespace Barotrauma
             {
                 PlaySound(
                     "ambient",
+                    new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f),
                     Rand.Range(0.5f, 1.0f), 
-                    1000.0f, 
-                    new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f));
+                    1000.0f);
 
                 ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
             }
@@ -465,23 +467,31 @@ namespace Barotrauma
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }
 
+        /// <summary>
+        /// Play a sound defined in a sound xml file without any positional effects.
+        /// </summary>
         public static SoundChannel PlaySound(string soundTag, float volume = 1.0f)
         {
             var sound = GetSound(soundTag);            
             return sound?.Play(volume);
         }
 
-        public static SoundChannel PlaySound(string soundTag, float volume, float range, Vector2 position, Hull hullGuess = null)
+        /// <summary>
+        /// Play a sound defined in a sound xml file. If the volume or range parameters are omitted, the volume and range defined in the sound xml are used.
+        /// </summary>
+        public static SoundChannel PlaySound(string soundTag, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
             var sound = GetSound(soundTag);
             if (sound == null) return null;
-            return PlaySound(sound, sound.BaseGain * volume, range, position, hullGuess);
+            return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, hullGuess);
         }
 
-        public static SoundChannel PlaySound(Sound sound, float volume, float range, Vector2 position, Hull hullGuess = null)
+        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
-            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > range * range) return null;
-            return sound.Play(sound.BaseGain * volume, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, hullGuess));            
+            float far = range ?? sound.BaseFar;
+
+            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far) return null;
+            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: ShouldMuffleSound(Character.Controlled, position, far, hullGuess));            
         }
 
         private static void UpdateMusic(float deltaTime)
@@ -515,7 +525,7 @@ namespace Barotrauma
                 //switch the music if nothing playing atm or the currently playing clip is not suitable anymore
                 else if (targetMusic[0] == null || currentMusic[0] == null || !suitableMusic.Any(m => m.File == currentMusic[0].Filename))
                 {
-                    targetMusic[0] = suitableMusic.GetRandom();                    
+                    targetMusic[0] = suitableMusic.GetRandom();
                 }
                                 
                 //get the appropriate intensity layers for current situation
@@ -550,6 +560,7 @@ namespace Barotrauma
                 updateMusicTimer = UpdateMusicInterval;
             }
 
+            int activeTrackCount = targetMusic.Count(m => m != null);
             for (int i = 0; i < MaxMusicChannels; i++)
             {
                 //nothing should be playing on this channel
@@ -589,7 +600,12 @@ namespace Barotrauma
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
                         musicChannel[i].Looping = true;
                     }
-                    musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 1.0f, MusicLerpSpeed * deltaTime);
+                    float targetGain = 1.0f;
+                    if (targetMusic[i].DuckVolume)
+                    {
+                        targetGain = (float)Math.Sqrt(1.0f / activeTrackCount);
+                    }
+                    musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, targetGain, MusicLerpSpeed * deltaTime);
                 }
             } 
         }
@@ -657,8 +673,7 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead || !character.Enabled) continue;
-                EnemyAIController enemyAI = character.AIController as EnemyAIController;
-                if (enemyAI == null || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
+                if (!(character.AIController is EnemyAIController enemyAI) || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
 
                 if (targetSubmarine != null)
                 {
@@ -676,9 +691,16 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0)
+            if (GameMain.GameSession != null)
             {
-                return "start";
+                if (Submarine.Loaded != null && Level.Loaded != null && Submarine.MainSub.AtEndPosition)
+                {
+                    return "levelend";
+                }
+                if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0)
+                {
+                    return "start";
+                }
             }
             
             return "default";

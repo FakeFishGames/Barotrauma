@@ -237,7 +237,7 @@ namespace Barotrauma
         {
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor * 0.8f, scale: Scale * scale);
+                sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor * 0.8f, scale: scale);
             }
             else
             {

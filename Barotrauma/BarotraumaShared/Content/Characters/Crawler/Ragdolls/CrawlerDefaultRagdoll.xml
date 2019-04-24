@@ -74,7 +74,7 @@
   <!-- ArmLower -->
   <limb id="10" width="60" height="0" type="RightFoot" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="10" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="16.03577,-9.425465" refjoint="8" ignorecollisions="False" name="Limb 10" notes="">
     <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="160,130,95,43" depth="0.1" origin="0.5264239,0.3615547" />
-    <sound tag="footstep_armor_heavy" />
+    <sound tag="footstep_crawler" />
   </limb>
   <!-- FakeFoot1 -->
   <limb id="11" width="38" height="50" ignorecollisions="True" flip="True" mass="0.5" type="None" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" bodytype="Dynamic" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 11" notes="">

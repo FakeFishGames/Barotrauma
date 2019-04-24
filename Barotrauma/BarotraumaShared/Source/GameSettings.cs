@@ -271,6 +271,8 @@ namespace Barotrauma
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
 
+        public bool CampaignDisclaimerShown, EditorDisclaimerShown;
+
         private static bool sendUserStatistics;
         public static bool SendUserStatistics
         {
@@ -853,6 +855,9 @@ namespace Barotrauma
             CrewMenuOpen = doc.Root.GetAttributeBool("crewmenuopen", CrewMenuOpen);
             ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
 
+            CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", false);
+            EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", false);
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -975,14 +980,8 @@ namespace Barotrauma
                     ToolBox.IsProperFilenameCase(file.Path);
                 }
             }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
+
+            EnsureCoreContentPackageSelected();
 
             //save to get rid of the invalid selected packages in the config file
             if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
@@ -1001,6 +1000,25 @@ namespace Barotrauma
                                 .Replace("[gameversion]", GameMain.Version.ToString()));
             }
         }
+
+        public void EnsureCoreContentPackageSelected()
+        {
+            if (SelectedContentPackages.Any(cp => cp.CorePackage)) { return; }
+
+            if (GameMain.VanillaContent != null)
+            {
+                SelectedContentPackages.Add(GameMain.VanillaContent);
+            }
+            else
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+        }
+
         #endregion
 
         #region Save PlayerConfig
@@ -1030,7 +1048,9 @@ namespace Barotrauma
                 new XAttribute("aimassistamount", aimAssistAmount),
                 new XAttribute("enablemouselook", EnableMouseLook),
                 new XAttribute("chatopen", ChatOpen),
-                new XAttribute("crewmenuopen", CrewMenuOpen));
+                new XAttribute("crewmenuopen", CrewMenuOpen),
+                new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
+                new XAttribute("editordisclaimershown", EditorDisclaimerShown));
 
             if (!ShowUserStatisticsPrompt)
             {

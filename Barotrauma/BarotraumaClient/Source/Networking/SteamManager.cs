@@ -214,6 +214,7 @@ namespace Barotrauma.Steam
                     }
                     if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
                     if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
+                    if (s.Rules.ContainsKey("voicechatenabled")) serverInfo.VoipEnabled = s.Rules["voicechatenabled"] == "True";
                     if (s.Rules.ContainsKey("traitors"))
                     {
                         if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;

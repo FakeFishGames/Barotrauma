@@ -594,6 +594,7 @@ namespace Barotrauma
                 {
                     tickBox.Enabled = false;
                 }
+                GameMain.Config.EnsureCoreContentPackageSelected();
             }
             if (updateButton != null)
             {
@@ -739,24 +740,27 @@ namespace Barotrauma
             itemEditor.Tags.Add("Submarine");
             itemEditor.Description = sub.Description;
 
-            string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
-            try
+            if (sub.PreviewImage != null)
             {
-                using (Stream s = File.Create(previewImagePath))
+                string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+                try
                 {
-                    sub.PreviewImage.Texture.SaveAsPng(s, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
-                    itemEditor.PreviewImage = previewImagePath;
+                    using (Stream s = File.Create(previewImagePath))
+                    {
+                        sub.PreviewImage.Texture.SaveAsPng(s, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
+                        itemEditor.PreviewImage = previewImagePath;
+                    }
+                    if (new FileInfo(previewImagePath).Length > 1024 * 1024)
+                    {
+                        new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                        itemEditor.PreviewImage = SteamManager.DefaultPreviewImagePath;
+                    }
                 }
-                if (new FileInfo(previewImagePath).Length > 1024 * 1024)
+                catch (Exception e)
                 {
-                    new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
-                    itemEditor.PreviewImage = SteamManager.DefaultPreviewImagePath;
+                    DebugConsole.ThrowError("Saving submarine preview image failed.", e);
+                    itemEditor.PreviewImage = null;
                 }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving submarine preview image failed.", e);
-                itemEditor.PreviewImage = null;
             }
         }
         private void CreateWorkshopItem(ContentPackage contentPackage)

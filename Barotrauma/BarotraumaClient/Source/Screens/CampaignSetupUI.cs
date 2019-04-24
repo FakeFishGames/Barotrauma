@@ -61,6 +61,20 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub") + ":");
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
+            
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), leftColumn.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(0.9f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
+
+            searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), filterContainer.RectTransform), "x")
+            {
+                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
+            };
 
             if (!isMultiplayer) { subList.OnSelected = OnSubSelected; }
 
@@ -169,6 +183,16 @@ namespace Barotrauma
         public void RandomizeSeed()
         {
             seedBox.Text = ToolBox.RandomSeed(8);
+        }
+
+        private void FilterSubs(GUIListBox subList, string filter)
+        {
+            foreach (GUIComponent child in subList.Content.Children)
+            {
+                var sub = child.UserData as Submarine;
+                if (sub == null) { return; }
+                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.Name.ToLower().Contains(filter.ToLower());
+            }
         }
 
         private bool OnSubSelected(GUIComponent component, object obj)
