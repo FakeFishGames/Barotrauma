@@ -292,7 +292,7 @@ namespace Barotrauma.Items.Components
             {
                 float volume = GetSoundVolume(itemSound);
                 if (volume <= 0.0f) return;
-                SoundPlayer.PlaySound(itemSound.RoundSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
+                SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, item.CurrentHull);
             }
         }
 
