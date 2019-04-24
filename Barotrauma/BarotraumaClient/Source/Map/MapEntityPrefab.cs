@@ -37,7 +37,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void DrawPlacing(SpriteBatch spriteBatch, Rectangle drawRect, float scale = 1.0f)
+        public virtual void DrawPlacing(SpriteBatch spriteBatch, Rectangle drawRect, float scale = 1.0f, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (Submarine.MainSub != null)
             {

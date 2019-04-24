@@ -1427,6 +1427,8 @@ namespace Barotrauma
         {
             foreach (Limb limb in Character.AnimController.Limbs)
             {
+                if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count) { continue; }
+
                 limb.BurnOverlayStrength = 0.0f;
                 limb.DamageOverlayStrength = 0.0f;
                 if (limbHealths[limb.HealthIndex].Afflictions.Count == 0) continue;

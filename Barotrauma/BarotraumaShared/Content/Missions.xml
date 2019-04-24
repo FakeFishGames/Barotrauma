@@ -240,7 +240,8 @@
     reward="400"
     sonarlabel="Swarm"
     successmessage="The swarm has been terminated."
-    monsterfile="Content/Characters/Crawler/crawler.xml" >   
+    monsterfile="Content/Characters/Crawler/crawler.xml"
+    monstercount="10" >   
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <LocationType from="City" to="None"/>

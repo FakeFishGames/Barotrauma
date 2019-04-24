@@ -266,6 +266,12 @@ namespace Barotrauma
 
         public Affliction GetAffliction(string afflictionType, Limb limb)
         {
+            if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
+            {
+                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
+                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
+                return null;
+            }
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
                 if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
@@ -467,7 +473,13 @@ namespace Barotrauma
 
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)
         {
-            if (!newAffliction.Prefab.LimbSpecific) return;
+            if (!newAffliction.Prefab.LimbSpecific || limb == null) return;
+            if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
+            {
+                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
+                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
+                return;
+            }
             AddLimbAffliction(limbHealths[limb.HealthIndex], newAffliction);
         }
 

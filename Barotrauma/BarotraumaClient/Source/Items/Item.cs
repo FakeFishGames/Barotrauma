@@ -384,7 +384,7 @@ namespace Barotrauma
                 Timing.TotalTime > LastImpactSoundTime + ImpactSoundInterval)
             {
                 LastImpactSoundTime = (float)Timing.TotalTime;
-                SoundPlayer.PlaySound(Prefab.ImpactSoundTag, 1.0f, 500.0f, WorldPosition, CurrentHull);
+                SoundPlayer.PlaySound(Prefab.ImpactSoundTag, WorldPosition, hullGuess: CurrentHull);
             }
         }
 

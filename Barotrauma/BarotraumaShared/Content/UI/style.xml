@@ -12,12 +12,54 @@
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
   -->
 
-  <Font file="Content/Fonts/Roboto/Roboto-Medium.ttf" size="14"/>
-  <SmallFont file="Content/Fonts/Roboto/Roboto-Bold.ttf" size="12"/>
-  <LargeFont file="Content/Fonts/WorkSans/WorkSans-ExtraBold.ttf" size="22"/>
-  <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28"/>
-  <ObjectiveTitle file="Content/Fonts/Code Pro Bold.otf" size="14"/>
-  <ObjectiveName file="Content/Fonts/BebasNeue-Regular.otf" size="22"/>
+  <Font file="Content/Fonts/Roboto/Roboto-Medium.ttf">
+    <Size maxresolution="1024,768" size="11"/>
+    <Size maxresolution="1280,800" size="12"/>
+    <Size maxresolution="1920,1080" size="14"/>
+    <Size maxresolution="2048,1080" size="16"/>
+    <Size maxresolution="2560,1600" size="16"/>
+    <Size size="24"/>
+  </Font>
+  <SmallFont file="Content/Fonts/Roboto/Roboto-Bold.ttf">
+    <Size maxresolution="1024,768" size="9"/>
+    <Size maxresolution="1280,800" size="10"/>
+    <Size maxresolution="1920,1080" size="12"/>
+    <Size maxresolution="2048,1080" size="14"/>
+    <Size maxresolution="2560,1600" size="14"/>
+    <Size size="24"/>
+  </SmallFont>
+  <LargeFont file="Content/Fonts/WorkSans/WorkSans-ExtraBold.ttf" size="22">
+    <Size maxresolution="1024,768" size="15"/>
+    <Size maxresolution="1280,800" size="16"/>
+    <Size maxresolution="1920,1080" size="22"/>
+    <Size maxresolution="2048,1080" size="24"/>
+    <Size maxresolution="2560,1600" size="26"/>
+    <Size size="44"/>
+  </LargeFont>
+  <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28">
+    <Size maxresolution="1024,768" size="11"/>
+    <Size maxresolution="1280,800" size="12"/>
+    <Size maxresolution="1920,1080" size="28"/>
+    <Size maxresolution="2048,1080" size="30"/>
+    <Size maxresolution="2560,1600" size="38"/>
+    <Size size="56"/>
+  </VideoTitle>
+  <ObjectiveTitle file="Content/Fonts/Code Pro Bold.otf" size="14">
+    <Size maxresolution="1024,768" size="10"/>
+    <Size maxresolution="1280,800" size="12"/>
+    <Size maxresolution="1920,1080" size="14"/>
+    <Size maxresolution="2048,1080" size="16"/>
+    <Size maxresolution="2560,1600" size="18"/>
+    <Size size="24"/>    
+  </ObjectiveTitle>
+  <ObjectiveName file="Content/Fonts/BebasNeue-Regular.otf" size="22">
+    <Size maxresolution="1024,768" size="10"/>
+    <Size maxresolution="1280,800" size="12"/>
+    <Size maxresolution="1920,1080" size="22"/>
+    <Size maxresolution="2048,1080" size="24"/>
+    <Size maxresolution="2560,1600" size="26"/>
+    <Size size="44"/>
+  </ObjectiveName>
 
   <!-- Covers rest of the languages which Roboto or WorkSans doesn't
   <Font file="Content/Fonts/NotoSans/NotoSans-Medium.ttf" size="14"/>
@@ -584,6 +626,32 @@
     selectedcolor="150,150,150,255">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="918,1,53,46"/>
   </GUISoundIconDisabled>
+
+  <GUINotificationButton
+    color="152,177,197,255"
+    hovercolor="200,214,223,255"
+    selectedcolor="163,186,203,255"
+    pressedcolor="90,130,158,255">
+    <Sprite texture="Content/UI/IconAtlas.png" state="None" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Hover" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Selected" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Pressed" sourcerect="904,525,114,114" tile="false" maintainaspectratio="true"/>
+  </GUINotificationButton>
+
+  <GUIBugButton
+    color="197,100,100,255"
+    hovercolor="223,200,200,255"
+    selectedcolor="203,163,163,255"
+    pressedcolor="158,90,90,255">
+    <Sprite texture="Content/UI/IconAtlas.png" state="None" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Hover" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Selected" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/IconAtlas.png" state="Pressed" sourcerect="778,525,114,114" tile="false" maintainaspectratio="true"/>
+
+    <GUITextBlock
+      textcolor="255,255,255,255"
+      padding="0.0, 0.0, 0.0, 0.0"/>
+  </GUIBugButton>
   
   <GUIMessageBox    
     color="0,0,0,204"

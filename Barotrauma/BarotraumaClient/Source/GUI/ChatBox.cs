@@ -18,9 +18,7 @@ namespace Barotrauma
         private GUITextBox inputBox;
 
         private GUIButton toggleButton;
-
-        private GUIButton radioButton;
-
+        
         private Point screenResolution;
 
         private bool isSinglePlayer;
@@ -60,12 +58,7 @@ namespace Barotrauma
         {
             get { return guiFrame; }
         }
-
-        public GUIButton RadioButton
-        {
-            get { return radioButton; }
-        }
-
+        
         public GUITextBox InputBox
         {
             get { return inputBox; }
@@ -109,31 +102,7 @@ namespace Barotrauma
             {
                 gui.Text = "";
             };
-
-            radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 2.0f), inputBox.RectTransform,
-                HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Anchor.BottomRight : Anchor.BottomLeft,
-                HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Pivot.TopRight : Pivot.TopLeft),
-                style: null);
-            new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
-            radioButton.OnClicked = (GUIButton btn, object userData) =>
-            {
-                if (inputBox.Selected)
-                {
-                    inputBox.Text = "";
-                    inputBox.Deselect();
-                }
-                else
-                {
-                    inputBox.Select();
-                    var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                    if (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit())
-                    {
-                        inputBox.Text = "r; ";
-                    }
-                }
-                return true;
-            };
-
+            
             ToggleOpen = GameMain.Config.ChatOpen;
         }
 
@@ -368,7 +337,6 @@ namespace Barotrauma
             }
             openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
             int hiddenBoxOffset = guiFrame.Rect.Width + toggleButton.Rect.Width;
-            if (radioButton != null) hiddenBoxOffset += (int)(radioButton.Rect.Width * 1.5f);
             guiFrame.RectTransform.AbsoluteOffset =
                 new Point((int)MathHelper.SmoothStep(hiddenBoxOffset * (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ? -1 : 1), 0, openState), 0);
         }

@@ -68,13 +68,14 @@
   <limb id="16" name="ArmPalm" type="None" width="60" height="200" notes="1121rm_ArmPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="334,162,70,143" origin="0.5053436,0.462937" depth="0.07" />
   </limb>
-  <limb id="17" name="FrontLegPalm" type="RightFoot" width="25" height="0" notes="311cr_FrontLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="60,0" radius="25" mass="0" density="5" pullpos="39.07472,-35.74048" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="310,314,100,67" origin="0.25,0.3470137" depth="0.1" />
+  <limb id="17" name="FrontLegPalm" type="RightFoot" width="25" height="0" notes="311cr_FrontLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="10,-10" radius="25" mass="0" density="5" pullpos="4.173793,-17.46399" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="310,314,100,67" origin="0.2436671,0.3523624" depth="0.1" />
+    <sound tag="footstep_mudraptor" />
   </limb>
   <limb id="18" name="ArmLower" type="None" width="90" height="40" notes="112bc_ArmLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="435,521,87,43" origin="0.4531075,0.5604911" depth="0.08" />
   </limb>
-  <limb id="19" name="FrontLegLower" type="None" width="72" height="90.75" notes="31cr_FrontLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="19" name="FrontLegLower" type="None" width="72" height="30" notes="31cr_FrontLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="-50,0" radius="0" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="205,319,97,61" origin="0.4274307,0.37087" depth="0.1" />
   </limb>
   <limb id="20" name="BackLegUpper" type="None" width="74" height="0" notes="4bl_BackLegUpper" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="40" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
@@ -83,8 +84,9 @@
   <limb id="21" name="BackLegLower" type="None" width="12" height="0" notes="41cr_BackLegLower" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="27" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="410,416,88,72" origin="0.4280843,0.4588513" depth="0.52" />
   </limb>
-  <limb id="22" name="BackLegPalm" type="LeftFoot" width="40" height="0" notes="411cr_backLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="50,0" radius="20" mass="0" density="5" pullpos="68.81641,-29.82208" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="309,313,104,68" origin="0.25,0.3470137" depth="0.53" />
+  <limb id="22" name="BackLegPalm" type="LeftFoot" width="40" height="0" notes="411cr_backLegPalm" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,-10" radius="20" mass="0" density="5" pullpos="9.568464,-10.85143" refjoint="12" ignorecollisions="False" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="309,313,104,68" origin="0.2522305,0.3777648" depth="0.53" />
+    <sound tag="footstep_mudraptor" />
   </limb>
   <limb id="23" name="Tail1" type="Tail" width="162" height="102" notes="5cl_Tail1" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="0,449,199,130" origin="0.5147893,0.5160481" depth="0.5" />
@@ -122,7 +124,7 @@
   <joint name="Joint Spine - Chest" limb1="13" limb2="14" limb1anchor="82.55321,-14.64405" limb2anchor="-76.2757,24.92116" canbesevered="True" limitenabled="True" upperlimit="43.63014" lowerlimit="-17.56277" stiffness="5" />
   <joint name="Joint Hips - FrontUpperLeg" limb1="12" limb2="15" limb1anchor="-36.07759,-68.02441" limb2anchor="-124.8587,-6.155147" canbesevered="True" limitenabled="True" upperlimit="-50" lowerlimit="-193.177" stiffness="0.25" />
   <joint name="Joint ArmLower - ArmPalm" limb1="18" limb2="16" limb1anchor="78.08107,18.77836" limb2anchor="14.26053,58.34429" canbesevered="True" limitenabled="True" upperlimit="96.65473" lowerlimit="-20.6231" stiffness="5" />
-  <joint name="Joint FrontLegLower - FrontLegPalm" limb1="19" limb2="17" limb1anchor="62.68488,1.204891" limb2anchor="-31.57386,-16.3619" canbesevered="True" limitenabled="True" upperlimit="11.01659" lowerlimit="-93.62492" stiffness="2" />
+  <joint name="Joint FrontLegLower - FrontLegPalm" limb1="19" limb2="17" limb1anchor="62.68488,1.204891" limb2anchor="-31.57386,-16.3619" canbesevered="True" limitenabled="True" upperlimit="8.399084" lowerlimit="-84.67241" stiffness="2" />
   <joint name="Joint Chest - ArmLower" limb1="14" limb2="18" limb1anchor="-37.91945,-65.71705" limb2anchor="-54.58921,2.952353" canbesevered="True" limitenabled="True" upperlimit="298.0002" lowerlimit="216.261" stiffness="5" />
   <joint name="Joint FrontUpperLeg - FrontLegLower" limb1="15" limb2="19" limb1anchor="172.8147,-13.23166" limb2anchor="-63.97142,0.7581948" canbesevered="True" limitenabled="True" upperlimit="88.57513" lowerlimit="15.89218" stiffness="0.25" />
   <joint name="Joint 12 - 20" limb1="12" limb2="20" limb1anchor="-67.65621,-14.22805" limb2anchor="-125.9277,10.81425" canbesevered="True" limitenabled="True" upperlimit="-50" lowerlimit="-193" stiffness="0.25" />

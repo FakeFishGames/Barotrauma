@@ -56,6 +56,7 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("usingwhitelist", (server.ServerSettings.Whitelist != null && server.ServerSettings.Whitelist.Enabled).ToString());
             Instance.server.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Instance.server.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
+            Instance.server.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());
             Instance.server.SetKey("allowspectating", server.ServerSettings.AllowSpectating.ToString());
             Instance.server.SetKey("allowrespawn", server.ServerSettings.AllowRespawn.ToString());
             Instance.server.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());

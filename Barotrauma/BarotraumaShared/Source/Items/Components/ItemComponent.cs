@@ -219,6 +219,7 @@ namespace Barotrauma.Items.Components
             requiredSkills = new List<Skill>();
 
 #if CLIENT
+            hasSoundsOfType = new bool[Enum.GetValues(typeof(ActionType)).Length];
             sounds = new Dictionary<ActionType, List<ItemSound>>();
 #endif
 

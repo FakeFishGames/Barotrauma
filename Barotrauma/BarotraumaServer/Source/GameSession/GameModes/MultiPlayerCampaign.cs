@@ -212,15 +212,31 @@ namespace Barotrauma
                 return;
             }
 
-            if (purchasedHullRepairs && !this.PurchasedHullRepairs && Money >= HullRepairCost)
+            if (purchasedHullRepairs != this.PurchasedHullRepairs)
             {
-                this.PurchasedHullRepairs = true;
-                Money -= HullRepairCost;
+                if (purchasedHullRepairs && Money >= HullRepairCost)
+                {
+                    this.PurchasedHullRepairs = true;
+                    Money -= HullRepairCost;
+                }
+                else if (!purchasedHullRepairs)
+                {
+                    this.PurchasedHullRepairs = false;
+                    Money += HullRepairCost;
+                }
             }
-            if (purchasedItemRepairs && !this.PurchasedItemRepairs && Money >= ItemRepairCost)
+            if (purchasedItemRepairs != this.PurchasedItemRepairs)
             {
-                this.PurchasedItemRepairs = true;
-                Money -= ItemRepairCost;
+                if (purchasedItemRepairs && Money >= ItemRepairCost)
+                {
+                    this.PurchasedItemRepairs = true;
+                    Money -= ItemRepairCost;
+                }
+                else if (!purchasedItemRepairs)
+                {
+                    this.PurchasedItemRepairs = false;
+                    Money += ItemRepairCost;
+                }
             }
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);

@@ -66,6 +66,16 @@ namespace Barotrauma.Steam
             if (!USE_STEAM) return;
             instance = new SteamManager();
         }
+
+        public static void OverlayCustomURL(string url)
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null)
+            {
+                return;
+            }
+
+            instance.client.Overlay.OpenUrl(url);
+        }
         
         public static bool UnlockAchievement(string achievementName)
         {
