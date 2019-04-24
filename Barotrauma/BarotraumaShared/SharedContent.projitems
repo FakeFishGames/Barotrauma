@@ -1971,7 +1971,7 @@
     <Content Include="$(MSBuildThisFileDirectory)serversettings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="$(MSBuildThisFileDirectory)Content\Items\Alien\alienbutton.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Alien\AlienButton.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Alien\AlienCoil1.ogg">
@@ -1980,7 +1980,7 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Alien\AlienCoil2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Items\Alien\alienpump.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Alien\AlienPump.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Alien\AlienTurret1.ogg">
