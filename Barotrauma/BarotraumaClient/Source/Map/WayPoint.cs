@@ -52,6 +52,11 @@ namespace Barotrauma
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
                     Color.Green, width: 5);
             }
+
+            GUI.SmallFont.DrawString(spriteBatch,
+                ID.ToString(),
+                new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
+                Color.WhiteSmoke);
         }
 
         private bool IsHidden()
