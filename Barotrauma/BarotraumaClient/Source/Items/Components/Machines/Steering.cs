@@ -27,6 +27,8 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent statusContainer, dockingContainer;
 
+        private GUIButton dockingButton;
+
         private GUIFrame autoPilotControlsDisabler;
 
         private GUIComponent steerArea;
@@ -288,7 +290,7 @@ namespace Barotrauma.Items.Components
             { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, style: null);
             var paddedDockingContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), dockingContainer.RectTransform, Anchor.Center), style: null);
 
-            var dockButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.Center), "Dock");
+            dockingButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.Center), "Dock");
 
             new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.CenterLeft), "<")
             {
@@ -383,16 +385,20 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            Vector2 displaySubPos = ((posToMaintain.Value - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+            displaySubPos.Y = -displaySubPos.Y;
+            displaySubPos = displaySubPos.ClampLength(velRect.Width / 2);
+            displaySubPos = velRect.Center.ToVector2() + displaySubPos;
+
             //map velocity from rectangle to circle
             Vector2 unitTargetVel = targetVelocity / 100.0f;
             Vector2 steeringPos = new Vector2(
                 targetVelocity.X * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.Y * unitTargetVel.Y),
                 -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
-            steeringPos.X += velRect.Center.X;
-            steeringPos.Y += velRect.Center.Y;
+            steeringPos += displaySubPos;
 
             GUI.DrawLine(spriteBatch,
-                new Vector2(velRect.Center.X, velRect.Center.Y),
+                displaySubPos,
                 steeringPos,
                 Color.CadetBlue, 0, 2);            
         }
@@ -465,6 +471,15 @@ namespace Barotrauma.Items.Components
 
             dockingContainer.Visible = DockingModeEnabled;
             statusContainer.Visible = !DockingModeEnabled;
+
+            if (DockingModeEnabled)
+            {
+                if (Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X &&
+                    Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X)
+                {
+                    //TODO: flash docking button
+                }
+            }
 
             autoPilotControlsDisabler.Visible = !AutoPilot;
 
@@ -567,8 +582,7 @@ namespace Barotrauma.Items.Components
                 inputCumulation = 0;
                 keyboardInput = Vector2.Zero;
             }
-
-
+            
             float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;
             DockingSource = null;
