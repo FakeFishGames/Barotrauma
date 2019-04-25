@@ -12,7 +12,7 @@
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
   -->
 
-  <Font file="Content/Fonts/Roboto/Roboto-Medium.ttf">
+  <Font file="Content/Fonts/Exo2-Medium.otf">
     <Size maxresolution="1024,768" size="11"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -20,7 +20,7 @@
     <Size maxresolution="2560,1600" size="16"/>
     <Size size="24"/>
   </Font>
-  <SmallFont file="Content/Fonts/Roboto/Roboto-Bold.ttf">
+  <SmallFont file="Content/Fonts/Exo2-Light.otf">
     <Size maxresolution="1024,768" size="9"/>
     <Size maxresolution="1280,800" size="10"/>
     <Size maxresolution="1920,1080" size="12"/>
@@ -28,7 +28,7 @@
     <Size maxresolution="2560,1600" size="14"/>
     <Size size="24"/>
   </SmallFont>
-  <LargeFont file="Content/Fonts/WorkSans/WorkSans-ExtraBold.ttf" size="22">
+  <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22">
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
