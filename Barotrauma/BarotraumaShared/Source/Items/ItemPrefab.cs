@@ -132,7 +132,7 @@ namespace Barotrauma
         //default size
         protected Vector2 size;                
 
-        private List<XElement> fabricationRecipeElements = new List<XElement>();
+        private float impactTolerance;
 
         private bool canSpriteFlipX, canSpriteFlipY;
         

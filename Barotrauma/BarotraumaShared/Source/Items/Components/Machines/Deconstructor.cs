@@ -120,14 +120,6 @@ namespace Barotrauma.Items.Components
                         outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
                     }
                 }
-                
-                if (targetItem.Prefab.DeconstructItems.Any())
-                {
-                    inputContainer.Inventory.RemoveItem(targetItem);
-                    Entity.Spawner.AddToRemoveQueue(targetItem);
-                    MoveInputQueue();
-                    PutItemsToLinkedContainer();
-                }
 
                 if (inputContainer.Inventory.Items.Any(i => i != null))
                 {
