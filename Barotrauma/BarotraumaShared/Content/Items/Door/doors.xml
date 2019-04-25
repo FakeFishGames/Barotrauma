@@ -92,7 +92,7 @@
   </Item>
 
   <Item 
-    name="Door" identifier="doorwbuttons" tags="door" scale="0.5" health="100">
+    name="Door" identifier="doorwbuttons" tags="door" scale="0.5" health="100" requirebodyinsidetrigger="false">
     <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="door2.png" sourcerect="0,0,170,416" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="0.7,1" hasintegratedbuttons="true">
@@ -109,6 +109,7 @@
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
+    <trigger x="-60" y="-140" width="170" height="85" />
     <AiTarget sightrange="3000.0" />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
@@ -123,7 +124,7 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Windowed Door" identifier="windoweddoorwbuttons" tags="door" scale="0.5" health="100">
+  <Item name="Windowed Door" identifier="windoweddoorwbuttons" tags="door" scale="0.5" health="100" requirebodyinsidetrigger="false">
     <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="door2.png" sourcerect="0,0,170,416" depth="0.89" origin="0.5,0.5"/>
     <Door window="0,0,50,227" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="0.7,1" hasintegratedbuttons="true">
@@ -140,6 +141,7 @@
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
+    <trigger x="-60" y="-140" width="170" height="85" />
     <AiTarget sightrange="3000.0" />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
@@ -154,7 +156,7 @@
       <output name="state_out" />
     </ConnectionPanel>
   </Item>
-  <Item name="Hatch" identifier="hatchwbuttons" allowedlinks="gap, hull" tags="door" scale="0.5" health="100">
+  <Item name="Hatch" identifier="hatchwbuttons" allowedlinks="gap, hull" tags="door" scale="0.5" health="100" requirebodyinsidetrigger="false">
     <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="hatch.png" sourcerect="0,234,256,193" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="10.0" shadowscale="1,0.8" hasintegratedbuttons="true">
@@ -171,6 +173,7 @@
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
+    <trigger x="170" y="51" width="70" height="200" />
     <AiTarget sightrange="1500.0" />
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />

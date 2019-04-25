@@ -159,6 +159,15 @@ namespace Barotrauma
 
         public GameMain()
         {
+#if !DEBUG && OSX
+            // Use a separate path for content that's editable due to macOS's .app bundles crashing when edited during runtime
+            string macPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Barotrauma");
+            Directory.SetCurrentDirectory(macPath);
+            Content.RootDirectory = macPath + "/Content";
+#else
+            Content.RootDirectory = "Content";
+#endif
+
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             Window.Title = "Barotrauma";
@@ -169,7 +178,6 @@ namespace Barotrauma
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
-            Content.RootDirectory = "Content";
 
             PerformanceCounter = new PerformanceCounter();
 
@@ -610,8 +618,12 @@ namespace Barotrauma
                         {
                             ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
+                        else if (Tutorial.Initialized && Tutorial.ContentRunning)
+                        {
+                            (GameMain.GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+                        }
                         else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                        && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -619,7 +631,7 @@ namespace Barotrauma
                     }
 
                     GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || ContextualTutorial.ContentRunning) &&
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
                     Screen.Selected.AddToGUIUpdateList();
@@ -638,9 +650,9 @@ namespace Barotrauma
                     {
                         Screen.Selected.Update(Timing.Step);
                     }
-                    else if (ContextualTutorial.Initialized && ContextualTutorial.ContentRunning && GameSession.GameMode is SinglePlayerCampaign)
+                    else if (Tutorial.Initialized && Tutorial.ContentRunning)
                     {
-                        (GameSession.GameMode as SinglePlayerCampaign).ContextualTutorial.Update((float)Timing.Step);
+                        (GameSession.GameMode as TutorialMode).Update((float)Timing.Step);
                     }
 
                     if (NetworkMember != null)

@@ -13,6 +13,11 @@ namespace Barotrauma.Items.Components
 
         private ItemContainer inputContainer, outputContainer;
 
+        public ItemContainer InputContainer
+        {
+            get { return inputContainer; }
+        }
+
         public ItemContainer OutputContainer
         {
             get { return outputContainer; }
@@ -108,6 +113,17 @@ namespace Barotrauma.Items.Components
                     Entity.Spawner.AddToRemoveQueue(targetItem);
                     MoveInputQueue();
                     PutItemsToLinkedContainer();
+                }
+                else
+                {
+                    if (outputContainer.Inventory.Items.All(i => i != null))
+                    {
+                        targetItem.Drop(dropper: null);
+                    }
+                    else
+                    {
+                        outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
+                    }
                 }
 
                 if (inputContainer.Inventory.Items.Any(i => i != null))

@@ -49,6 +49,8 @@ namespace Barotrauma
 
         private GUIComponent orderTargetFrame, orderTargetFrameShadow;
 
+        public bool AllowCharacterSwitch = true;
+
         public bool ToggleCrewAreaOpen
         {
             get { return toggleCrewAreaOpen; }
@@ -62,6 +64,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        public List<GUIButton> OrderOptionButtons = new List<GUIButton>();
 
         #endregion
 
@@ -473,7 +477,10 @@ namespace Barotrauma
                     orderButtonFrame.RectTransform;
 
                 var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), btnParent, Anchor.CenterLeft),
-                    style: null);
+                    style: null)
+                {
+                    UserData = order
+                };
 
                 new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
                 {
@@ -565,6 +572,7 @@ namespace Barotrauma
         /// </summary>
         public bool CharacterClicked(GUIComponent component, object selection)
         {
+            if (!AllowCharacterSwitch) { return false; }
             Character character = selection as Character;
             if (character == null || character.IsDead || character.IsUnconscious) return false;
             SelectCharacter(character);
@@ -908,9 +916,12 @@ namespace Barotrauma
                                 if (Character.Controlled == null) return false;
                                 SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                                 orderTargetFrame = null;
+                                OrderOptionButtons.Clear();
                                 return true;
                             }
                         };
+
+                        OrderOptionButtons.Add(optionButton);
                     }
                 }
 
@@ -943,9 +954,13 @@ namespace Barotrauma
                             if (Character.Controlled == null) return false;
                             SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                             orderTargetFrame = null;
+                            OrderOptionButtons.Clear();
                             return true;
                         }
                     };
+
+                    OrderOptionButtons.Add(optionButton);
+
                     //lines between the order buttons
                     if (i < order.Options.Length - 1)
                     {
@@ -959,6 +974,24 @@ namespace Barotrauma
                 { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) },
                 style: "OuterGlow",
                 color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
+        }
+
+        public void HighlightOrderButton(Character character, string orderAiTag, Color color, Vector2? flashRectInflate = null)
+        {
+            var order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            if (order == null)
+            {
+                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderAiTag + "\".\n" + Environment.StackTrace);
+                return;
+            }
+            var characterElement = characterListBox.Content.FindChild(character);
+            GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
+            if (orderBtn.Frame.FlashTimer <= 0)
+            {
+                orderBtn.Flash(color, 1.5f, false, flashRectInflate);
+            }
+
+            //orderBtn.Pulsate(Vector2.One, Vector2.One * 2.0f, 1.5f);
         }
 
 #region Updating and drawing the UI
@@ -1018,6 +1051,7 @@ namespace Barotrauma
 
         public void SelectNextCharacter()
         {
+            if (!AllowCharacterSwitch) { return; }
             if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
             SelectCharacter(characters[TryAdjustIndex(1)]);
@@ -1025,6 +1059,7 @@ namespace Barotrauma
 
         public void SelectPreviousCharacter()
         {
+            if (!AllowCharacterSwitch) { return; }
             if (GameMain.IsMultiplayer) { return; }
             if (characters.None()) { return; }
             SelectCharacter(characters[TryAdjustIndex(-1)]);
@@ -1032,6 +1067,7 @@ namespace Barotrauma
 
         private void SelectCharacter(Character character)
         {
+            if (!AllowCharacterSwitch) { return; }
             //make the previously selected character wait in place for some time
             //(so they don't immediately start idling and walking away from their station)
             if (Character.Controlled?.AIController?.ObjectiveManager != null)

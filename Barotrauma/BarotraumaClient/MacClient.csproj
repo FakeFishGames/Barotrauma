@@ -243,6 +243,7 @@
     <None Include="System.Xml.Linq.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="barotrauma.icns" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="ClientCode.projitems" Label="Shared" />

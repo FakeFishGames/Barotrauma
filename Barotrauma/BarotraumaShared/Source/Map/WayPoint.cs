@@ -299,7 +299,7 @@ namespace Barotrauma
                 {
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
-                        WayPoint closest = stairPoints[i].FindClosest(dir, true, new Vector2(-30.0f,30f));
+                        WayPoint closest = stairPoints[i].FindClosest(dir, true, new Vector2(-30.0f, 30f));
                         if (closest == null) continue;
                         stairPoints[i].ConnectTo(closest);
                     }                    
@@ -412,7 +412,7 @@ namespace Barotrauma
 
                     WayPoint closest = wayPoint.FindClosest(
                         dir, true, new Vector2(-tolerance, tolerance), 
-                        gap.ConnectedDoor == null ? null : gap.ConnectedDoor.Body.FarseerBody);
+                        gap.ConnectedDoor?.Body.FarseerBody);
 
                     if (closest != null)
                     {
@@ -423,13 +423,26 @@ namespace Barotrauma
 
             foreach (Gap gap in Gap.GapList)
             {
-                if (gap.IsHorizontal || gap.IsRoomToRoom) continue;
+                if (gap.IsHorizontal || gap.IsRoomToRoom || !gap.linkedTo.Any(l => l is Hull)) { continue; }
 
                 //too small to walk through
-                if (gap.Rect.Width < 100.0f) continue;
+                if (gap.Rect.Width < 100.0f) { continue; }
 
                 var wayPoint = new WayPoint(
                     new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height / 2), SpawnType.Path, submarine, gap);
+
+                float tolerance = outSideWaypointInterval / 2.0f;
+                Hull connectedHull = (Hull)gap.linkedTo.First(l => l is Hull);
+                int dir = Math.Sign(connectedHull.Position.Y - gap.Position.Y);
+
+                WayPoint closest = wayPoint.FindClosest(
+                    dir, false, new Vector2(-tolerance, tolerance),
+                    gap.ConnectedDoor?.Body.FarseerBody);
+
+                if (closest != null)
+                {
+                    wayPoint.ConnectTo(closest);
+                }
             }
 
             var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && !w.linkedTo.Any());

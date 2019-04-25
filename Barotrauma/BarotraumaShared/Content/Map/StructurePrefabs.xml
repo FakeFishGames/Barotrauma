@@ -1,5 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
+  <!-- OUTPOST BACK WALLS START -->
+  <Opbg name="Outpost Shop A1" identifier="opbgshopa1" description="Outpost Shop back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,0,2007,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Opbg>
+  <Opbg name="Outpost Social Center A1" identifier="opbgsocialcentera1" description="Outpost Social Center back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/OpbgSocialCenter.png" sourcerect="0,0,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Opbg>
+  <Opbg name="Outpost Maintenace Bay A1" identifier="opbgmaintenancebaya1" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,0,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Opbg>
+  <Opbg name="Outpost Maintenace Bay A2" identifier="opbgmaintenancebaya2" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,768,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Opbg>
+  <Opbg name="Outpost Maintenace Bay A3" identifier="opbgmaintenancebaya3" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+    <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,1440,1926,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Opbg>
+  <!-- OUTPOST BACK WALLS END -->
   <!--LABELS START-->
   <label name="Label Icon Medical " identifier="labeliconmedical" scale="0.5">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,0,256,256" depth="0.85" origin="0.5,0.5" />
@@ -530,9 +547,15 @@
   <Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </Wall_H1>
-  <Wall_I1 name="BackWall Outpost" identifier="FF_Wall_I1" description="Outpost back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_I1 name="BackWall Outpost A" identifier="FF_Wall_I1" description="Outpost back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I1>
+  <Wall_I2 name="BackWall Outpost B" identifier="FF_Wall_I2" description="Outpost back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/OutpostWall_B.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Wall_I2>
+  <Wall_I3 name="BackWall Outpost C" identifier="FF_Wall_I3" description="Outpost back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/OutpostWall_C.png" sourcerect="0,0,256,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
+  </Wall_I3>
   <!-- BACK WALLS ENDS -->
   <!-- SUBMARINE WALLS aka *SHELLS" START -->
   <shellA name="Shell A 90 deg" identifier="shella90deg" description="Submarine wall" body="true" castshadow="true" health="200" width="96" height="512" bodywidth="72" bodyoffset="12,0" resizevertical="true">

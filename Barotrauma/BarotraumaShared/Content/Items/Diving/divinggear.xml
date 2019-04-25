@@ -9,7 +9,7 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" displayname="OxygenTankEmpty" outcondition="0.0">
-      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
@@ -35,9 +35,9 @@
       <Item identifier="liquidoxygenite" mincondition="0.9" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" outcondition="100.0" requiredtime="5">
-      <RequiredItem identifier="aluminium"/>
-      <RequiredItem identifier="liquidoxygenite"/>
-      <RequiredItem identifier="liquidoxygenite"/>
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="liquidoxygenite" />
+      <RequiredItem identifier="liquidoxygenite" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,65,66" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="473,223,39,112" depth="0.55" />
@@ -63,17 +63,17 @@
       <Item identifier="rubber" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="mechanical" level="25"/>
-      <RequiredItem identifier="plastic"/>
-      <RequiredItem identifier="rubber"/>
-      <RequiredItem identifier="rubber"/>
+      <RequiredSkill identifier="mechanical" level="25" />
+      <RequiredItem identifier="plastic" />
+      <RequiredItem identifier="rubber" />
+      <RequiredItem identifier="rubber" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,322,57,62" />
     <Sprite name="Diving Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.55" sourcerect="96,0,96,96" origin="0.5,0.5" />
     <Body width="26" height="18" density="15" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="1,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
-      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true" />
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5" comparison="Or">
         <Conditional IsDead="false" />
         <RequiredItem identifier="oxygentank" type="Contained" />
@@ -111,10 +111,10 @@
       <Item identifier="rubber" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="titaniumaluminiumalloy"/>
-      <RequiredItem identifier="rubber"/>
-      <RequiredItem identifier="rubber"/>
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="titaniumaluminiumalloy" />
+      <RequiredItem identifier="rubber" />
+      <RequiredItem identifier="rubber" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="449,320,63,64" />
     <!--
@@ -155,7 +155,7 @@
           <LightTexture texture="Content/Lights/divinghelmetvisorlight.png" origin="0.5, 0.5" size="0.2,0.2" />
         </LightComponent>
     	  -->
-    	  <!-- Spotlight
+        <!-- Spotlight
     	  <LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
             <Conditional IsDead="false" />
@@ -164,7 +164,7 @@
         </LightComponent>
     	  -->
       </sprite>
-      <sprite texture="DivingSuit_Torso.png" limb="Torso" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true"/>
+      <sprite texture="DivingSuit_Torso.png" limb="Torso" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Legs.png" limb="Waist" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Torso.png" limb="RightHand" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Torso.png" limb="LeftHand" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
@@ -177,7 +177,7 @@
       <sprite texture="DivingSuit_Legs.png" limb="RightFoot" sound="footstep_armor_heavy" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Legs.png" limb="LeftFoot" sound="footstep_armor_heavy" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true">
-        <Sound file="Content/Items/Diving/DivingSuitLoop1.ogg" range="500" />      
+        <Sound file="Content/Items/Diving/DivingSuitLoop1.ogg" range="500" />
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.3" comparison="Or">
         <Conditional IsDead="false" />
@@ -225,13 +225,13 @@
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
-      <RequiredItem identifier="aluminium"/>
-      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="aluminium" />
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,128,67,62" origin="0.5,0.5" />
     <Sprite texture="Scooter.png" depth="0.55" sourcerect="0,0,219,159" />
     <Body width="180" height="95" density="11" />
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="90,0" handle1="-50,65" handle2="-54,69" msg="ItemMsgPickUpSelect" />
     <Propulsion force="150" usablein="water" particles="bubbles">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       <StatusEffect type="OnUse" target="Contained" Condition="-0.25" />
@@ -244,6 +244,6 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable identifiers="batterycell,fulguriumbatterycell" />
     </ItemContainer>
-    <AiTarget maxsoundrange="2000" minsoundrange="0"/>
+    <AiTarget maxsoundrange="2000" minsoundrange="0" />
   </Item>
 </Items>

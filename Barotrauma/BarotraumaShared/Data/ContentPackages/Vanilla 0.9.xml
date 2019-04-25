@@ -12,6 +12,7 @@
   <Item file="Content/Items/Jobgear/Assistant/assistant_gear.xml" />
   <Item file="Content/Items/Jobgear/Watchman/watchman_gear.xml" />
   <Item file="Content/Items/Jobgear/Security/securityofficer_gear.xml" />
+  <Item file="Content/Items/Jobgear/Clown/clown.xml" />
   <Item file="Content/Items/Jobgear/misc.xml" />
   <Item file="Content/Items/CreatureLoot/creatureloot.xml" />
   <Item file="Content/Items/Diving/divinggear.xml" />

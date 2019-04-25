@@ -1,11 +1,10 @@
 ﻿using Barotrauma.Tutorials;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
     class TutorialMode : GameMode
     {
-        public Tutorial tutorial;
+        public Tutorial Tutorial;
         
         public static void StartTutorial(Tutorial tutorial)
         {     
@@ -20,18 +19,20 @@ namespace Barotrauma
         public override void Start()
         {
             base.Start();
-            tutorial.Start();
+            GameMain.GameSession.CrewManager = new CrewManager(true);
+            Tutorial.Start();
         }
 
         public override void AddToGUIUpdateList()
         {
-            tutorial.AddToGUIUpdateList();
+            base.AddToGUIUpdateList();
+            Tutorial.AddToGUIUpdateList();
         }
 
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
-            tutorial.Update(deltaTime);
+            Tutorial.Update(deltaTime);
         }
     }
 }

@@ -171,6 +171,7 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
 
 #if CLIENT
+            light.SpriteScale = Vector2.One * item.Scale;
             light.ParentSub = item.Submarine;
             if (item.Container != null)
             {

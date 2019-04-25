@@ -7,14 +7,14 @@
     <Price locationtype="Outpost" buyprice="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" />
     <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="0,96,96,96" origin="0.5,0.5" />
-    <Body width="12" height="8" density="13" />
+    <Body radius="15" height="10" density="30" />
     <Deconstruct time="10">
       <Item identifier="plastic" />
       <Item identifier="fpgacircuit" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="plastic"/>
-      <RequiredItem identifier="fpgacircuit"/>
+      <RequiredItem identifier="plastic" />
+      <RequiredItem identifier="fpgacircuit" />
     </Fabricate>
     <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
       <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" />
@@ -26,44 +26,6 @@
     <Wearable limbtype="Head" slots="Any,Headset" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnWearing" target="Contained" Condition="-0.05" />
       <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,1" sourcerect="2,3,288,288" origin="0.5,0.5" />
-    </Wearable>
-  </Item>
-  <Item name="Clown Mask" identifier="clownmask" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother.">
-    <Sprite texture="clownmask.png" depth="0.6" sourcerect="0,0,37,38" />
-    <Body width="10" radius="10" density="15" />
-    <Deconstruct time="10">
-      <Item identifier="bikehorn" />
-    </Deconstruct>
-    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
-      <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5" />
-      <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false"/>
-    </Wearable>
-  </Item>
-  <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother." impactsoundtag="impact_soft">
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,448,64,64" />
-    <Sprite texture="clownpants.png" sourcerect="0,62,53,18" depth="0.6" origin="0.5,0.5" />
-    <Body width="53" height="18" density="30" />
-    <Deconstruct time="40">
-      <Item identifier="bikehorn" />
-      <Item identifier="bikehorn" />
-      <Item identifier="bikehorn" />
-    </Deconstruct>
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
-      <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,0,30,58" origin="0.5,0.48" depth="0.02" />
-      <sprite texture="clownshirt.png" limb="RightHand" sourcerect="47,0,15,49" origin="0.45,0.6" hidelimb="true" />
-      <sprite texture="clownshirt.png" limb="LeftHand" sourcerect="47,0,15,49" origin="0.45,0.6" depth="0.14" hidelimb="true" />
-      <sprite texture="clownshirt.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" depth="0.005" hidelimb="true" />
-      <sprite texture="clownshirt.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" depth="0.13" hidelimb="true" />
-      <sprite texture="clownpants.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true" />
-      <sprite texture="clownpants.png" limb="RightThigh" sourcerect="0,0,38,50" origin="0.5,0.5" depth="0.01" hidelimb="true" />
-      <sprite texture="clownpants.png" limb="LeftThigh" sourcerect="0,0,38,50" origin="0.5,0.5" depth="0.14" hidelimb="true" />
-      <sprite texture="clownpants.png" limb="RightLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.11" hidelimb="true" />
-      <sprite texture="clownpants.png" limb="LeftLeg" sourcerect="38,0,27,51" origin="0.55,0.5" depth="0.15" hidelimb="true" />
-      <sprite texture="clownpants.png" limb="RightFoot" sound="footstep_clown" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true" />
-      <sprite texture="clownpants.png" limb="LeftFoot" sound="footstep_clown" sourcerect="66,42,14,38" origin="0.5,0.35" depth="0.15" hidelimb="true" />
-      <!-- HENK -->
-      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown" />
-      <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagesound="LimbClown" />
     </Wearable>
   </Item>
 </Items>

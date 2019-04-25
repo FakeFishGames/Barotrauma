@@ -426,7 +426,7 @@ namespace Barotrauma
             }
         }
 
-        private bool canSpeak;
+        public bool CanSpeak;
 
         private bool speechImpedimentSet;
 
@@ -436,7 +436,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!canSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
+                if (!CanSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
                 return speechImpediment;
             }
             set
@@ -710,7 +710,7 @@ namespace Barotrauma
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            canSpeak = doc.Root.GetAttributeBool("canspeak", false);
+            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
             Noise = doc.Root.GetAttributeFloat("noise", 100f);
 
@@ -1546,12 +1546,11 @@ namespace Barotrauma
                     }
                 }
             }
-
-
-            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
+            
+            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) { return false; }
             
             Pickable pickableComponent = item.GetComponent<Pickable>();
-            if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) return false;
+            if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) { return false; }
                         
             Vector2 characterDirection = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(AnimController.Collider.Rotation));
 
@@ -1565,7 +1564,7 @@ namespace Barotrauma
             }
 
             bool insideTrigger = item.IsInsideTrigger(upperBodyPosition) || item.IsInsideTrigger(lowerBodyPosition);
-            if (item.Prefab.Triggers.Count > 0 && !insideTrigger) return false;
+            if (item.Prefab.Triggers.Count > 0 && !insideTrigger && item.Prefab.RequireBodyInsideTrigger) { return false; }
 
             Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
 

@@ -121,7 +121,7 @@
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap3.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap4.ogg" range="500" loop="false" />
-      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <LightTexture texture="Content/Lights/light_fluorescent_L2.png" origin="0.5,0.5" />
       <!-- additive "top light" -->
       <sprite texture="Content/Items/Electricity/LampsAdditive.png" sourcerect="1,408,389,81" alpha="1.0" />
     </LightComponent>

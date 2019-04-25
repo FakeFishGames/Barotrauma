@@ -231,38 +231,52 @@
 
   </MonsterMission>
   
-  <!--<MonsterMission
+  <MonsterMission
     name="Terminate a Swarm"
     identifier="killcrawlerswarm"
     type="Monster"
-    description="A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
-    commonness="10"
-    reward="400"
+    description="A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it."
+    commonness="2"
+    reward="1000"
     sonarlabel="Swarm"
     successmessage="The swarm has been terminated."
-    monsterfile="Content/Characters/Crawler/crawler.xml"
+    monsterfile="Content/Characters/Crawler/Crawler.xml"
     monstercount="10" >   
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <LocationType from="City" to="None"/>
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
-    <LocationType from="City" to="Military"/>
-    <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
     <LocationType from="Military" to="None"/>
-    <LocationType from="Military" to="City"/>
-    <LocationType from="Military" to="Outpost"/>
-    <LocationType from="Military" to="Military"/>
-    <LocationType from="Military" to="Research"/>
-    <LocationType from="Military" to="Ruins"/>
+    <LocationType from="Outpost" to="None"/>
+    <LocationType from="Research" to="None"/>
 
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
-  </MonsterMission>  -->
-  
+  </MonsterMission>
 
   <MonsterMission
+    name="Terminate a Swarm"
+    identifier="killcrawlerswarm"
+    type="Monster"
+    description="A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it."
+    commonness="1"
+    reward="2000"
+    sonarlabel="Swarm"
+    successmessage="The swarm has been terminated."
+    monsterfile="Content/Characters/Crawler/Crawler.xml"
+    monstercount="18" >
+    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Outpost" to="None"/>
+    <LocationType from="Research" to="None"/>
+
+    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
+
+  </MonsterMission>
+
+
+   <!--  <MonsterMission
     name="Beast from the Abyss"
     identifier="killendworm"
     type="Monster"
@@ -280,7 +294,7 @@
     
     <message header="Target terminated" text="The beast is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
-  </MonsterMission>
+  </MonsterMission> -->
 
   <MonsterMission
     name="Salvaging an artifact"

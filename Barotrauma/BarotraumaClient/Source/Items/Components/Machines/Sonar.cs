@@ -20,6 +20,10 @@ namespace Barotrauma.Items.Components
         private bool unsentChanges;
         private float networkUpdateTimer;
 
+        public GUITickBox ActiveTickBox
+        {
+            get { return activeTickBox; }
+        }
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
