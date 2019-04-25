@@ -2172,15 +2172,19 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Impact\SoftImpact3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Tutorials\Dugong_Tutorial.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Tutorials\TutorialOutpost.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Berilia.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Dugong_Tutorial.sub">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialOutpost.sub">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialOutpost.sub" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\CARRIER_alarmLoop.ogg">
