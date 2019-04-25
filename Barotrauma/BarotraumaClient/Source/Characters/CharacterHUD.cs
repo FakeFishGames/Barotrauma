@@ -168,7 +168,12 @@ namespace Barotrauma
                     DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
                 }                
             }
-            
+
+            foreach (Character.ObjectiveEntity objectiveEntity in character.ActiveObjectiveEntities)
+            {
+                DrawObjectiveIndicator(spriteBatch, cam, character, objectiveEntity, 1.0f);
+            }
+
             foreach (Item brokenItem in brokenItems)
             {
                 float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
@@ -371,5 +376,13 @@ namespace Barotrauma
 
             orderIndicatorCount[target] = orderIndicatorCount[target] + 1;
         }        
+
+        private static void DrawObjectiveIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Character.ObjectiveEntity objectiveEntity, float iconAlpha = 1.0f)
+        {
+            if (objectiveEntity == null) return;
+
+            Vector2 drawPos = objectiveEntity.Entity.WorldPosition;// + Vector2.UnitX * objectiveEntity.Sprite.size.X * 1.5f;
+            GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, objectiveEntity.Sprite, objectiveEntity.Color * iconAlpha);
+        }
     }
 }
