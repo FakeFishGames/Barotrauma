@@ -22,9 +22,6 @@ namespace Barotrauma.Tutorials
         private Action infoBoxClosedCallback;
         protected XElement configElement;
 
-        private enum TutorialType { None, Scenario, Contextual };
-        private TutorialType tutorialType = TutorialType.None;
-
         protected VideoPlayer videoPlayer;
         protected enum TutorialContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
         protected string playableContentPath;
@@ -164,7 +161,6 @@ namespace Barotrauma.Tutorials
             configElement = element;
             Name = element.GetAttributeString("name", "Unnamed");
             completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
-            Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
             playableContentPath = element.GetAttributeString("playablecontentpath", "");
 
             segments = new List<TutorialSegment>();
