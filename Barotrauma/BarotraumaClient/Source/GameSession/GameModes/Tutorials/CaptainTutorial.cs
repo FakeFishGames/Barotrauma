@@ -165,8 +165,9 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(1.5f);
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
+                HighlightOrderOption("jobspecific");
             }
-            while (!HasOrder(captain_mechanic, "repairsystems"));
+            while (!HasOrder(captain_mechanic, "repairsystems", "jobspecific"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(2);
@@ -175,8 +176,9 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(1.5f);
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_security, "operateweapons", highlightColor, new Vector2(5, 5));
+                HighlightOrderOption("fireatwill");
             }
-            while (!HasOrder(captain_security, "operateweapons"));
+            while (!HasOrder(captain_security, "operateweapons", "fireatwill"));
             RemoveCompletedObjective(segments[2]);
             yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(3);
@@ -185,6 +187,7 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(1.5f);
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_engineer, "operatereactor", highlightColor, new Vector2(5, 5));
+                HighlightOrderOption("powerup");
             }
             while (!HasOrder(captain_engineer, "operatereactor", "powerup"));
             RemoveCompletedObjective(segments[3]);
@@ -234,6 +237,30 @@ namespace Barotrauma.Tutorials
             captain.RemoveActiveObjectiveEntity(captain_navConsole.Item);
 
             CoroutineManager.StartCoroutine(TutorialCompleted());
+        }
+
+        private void HighlightOrderOption(string option)
+        {
+            if (GameMain.GameSession.CrewManager.OrderOptionButtons.Count == 0) return;
+            var order = GameMain.GameSession.CrewManager.OrderOptionButtons[0].UserData as Order;
+
+            int orderIndex = 0;
+            for (int i = 0; i < GameMain.GameSession.CrewManager.OrderOptionButtons.Count; i++)
+            {
+                if (orderIndex >= order.Options.Length)
+                {
+                    orderIndex = 0;
+                }
+                if (order.Options[orderIndex] == option)
+                {
+                    if (GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.FlashTimer <= 0)
+                    {
+                        GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.Flash(highlightColor);
+                    }
+                }
+
+                orderIndex++;
+            }            
         }
 
         private bool IsSelectedItem(Item item)
