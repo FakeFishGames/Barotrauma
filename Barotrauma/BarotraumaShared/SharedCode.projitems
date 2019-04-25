@@ -181,6 +181,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Entity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\EntityGrid.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Explosion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\DummyFireSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\FireSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Hull.cs" />
