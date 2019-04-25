@@ -22,36 +22,26 @@ namespace Barotrauma
         protected override void FindTargets()
         {
             if (option == null) { return; }
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.HasTag("ballast")) { continue; }
-                if (item.Submarine == null) { continue; }
-                if (item.Submarine.TeamID != character.TeamID) { continue; }
-                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
-                var pump = item.GetComponent<Pump>();
-                if (pump != null)
-                {
-                    if (!ignoreList.Contains(pump))
-                    {
-                        if (option == "stoppumping")
-                        {
-                            if (!pump.IsActive || pump.FlowPercentage == 0.0f) { continue; }
-                        }
-                        else
-                        {
-                            if (!pump.Item.InWater) { continue; }
-                            if (pump.IsActive && pump.FlowPercentage <= -90.0f) { continue; }
-                        }
-                        if (!targets.Contains(pump))
-                        {
-                            targets.Add(pump);
-                        }
-                    }
-                }
-            }
+            base.FindTargets();
         }
 
-        protected override bool Filter(Pump pump) => true;
+        protected override bool Filter(Pump pump)
+        {
+            if (pump.Item.HasTag("ballast")) { return false; }
+            if (pump.Item.Submarine == null) { return false; }
+            if (pump.Item.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
+            if (option == "stoppumping")
+            {
+                if (!pump.IsActive || pump.FlowPercentage == 0.0f) { return false; }
+            }
+            else
+            {
+                if (!pump.Item.InWater) { return false; }
+                if (pump.IsActive && pump.FlowPercentage <= -90.0f) { return false; }
+            }
+            return true;
+        }
         protected override IEnumerable<Pump> GetList() => pumpList;
         protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, Option, false) { IsLoop = true };
         protected override float TargetEvaluation() => targets.Max(t => MathHelper.Lerp(100, 0, t.CurrFlow / t.MaxFlow));

@@ -38,7 +38,7 @@ namespace Barotrauma
 
         protected override bool Filter(Item item)
         {
-            bool ignore = ignoreList.Contains(item) || item.IsFullCondition;
+            bool ignore = item.IsFullCondition;
             if (!ignore)
             {
                 if (item.Submarine == null) { ignore = true; }
@@ -64,11 +64,11 @@ namespace Barotrauma
                     }
                 }
             }
-            return ignore;
+            return !ignore;
         }
 
         protected override float TargetEvaluation() => targets.Max(t => 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
-        protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item);
+        protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item, PriorityModifier);
     }
 }

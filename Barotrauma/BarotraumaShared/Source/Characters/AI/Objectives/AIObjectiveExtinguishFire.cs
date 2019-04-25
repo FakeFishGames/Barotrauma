@@ -31,9 +31,10 @@ namespace Barotrauma
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
-            float severityFactor = MathHelper.Lerp(0, 1, MathHelper.Clamp(targetHull.FireSources.Sum(fs => fs.Size.X) / targetHull.Size.X, 0, 1));
-            // Devotion?
-            return MathHelper.Lerp(0, 100, severityFactor * distanceFactor);
+            float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
+            float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
+            float devotion = Math.Max(Priority, 10) / 100;
+            return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + severityFactor * distanceFactor, 0, 1));
         }
 
         public override bool IsCompleted()

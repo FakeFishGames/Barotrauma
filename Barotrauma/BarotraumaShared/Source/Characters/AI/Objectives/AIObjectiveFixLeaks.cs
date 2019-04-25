@@ -17,29 +17,21 @@ namespace Barotrauma
         protected override void FindTargets()
         {
             base.FindTargets();
-            targets.Sort((x, y) => GetLeakFixPriority(y).CompareTo(GetLeakFixPriority(x)));
+            // Sorting should be handled by the objective manager, because the targets should be subobjectives.
+            //targets.Sort((x, y) => GetLeakFixPriority(y).CompareTo(GetLeakFixPriority(x)));
+            // TODO: Add a dialog when no leaks are found.
         }
 
         protected override bool Filter(Gap gap)
         {
-            bool ignore = ignoreList.Contains(gap) || gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null);
+            bool ignore = gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null);
             if (!ignore)
             {
                 if (gap.Submarine == null) { ignore = true; }
                 else if (gap.Submarine.TeamID != character.TeamID) { ignore = true; }
                 else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { ignore = true; }
             }
-            return ignore;
-        }
-
-        private float GetLeakFixPriority(Gap leak)
-        {
-            if (leak == null) { return 0; }
-            float severity = GetLeakSeverity(leak);
-            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = Math.Abs(character.WorldPosition.X - leak.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - leak.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 10000, dist));
-            return severity * distanceFactor;
+            return !ignore;
         }
 
         public static float GetLeakSeverity(Gap leak)
@@ -54,6 +46,6 @@ namespace Barotrauma
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
         protected override float TargetEvaluation() => targets.Max(t => GetLeakSeverity(t));
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
-        protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character);
+        protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character, PriorityModifier);
     }
 }
