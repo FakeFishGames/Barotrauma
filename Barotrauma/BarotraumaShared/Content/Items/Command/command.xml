@@ -31,6 +31,7 @@
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
       <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
+      <LineSprite texture="Content/Items/Command/NavUI.png" sourcerect="181,141,109,4" origin="0,0.5"/>
     </Sonar>
     <CustomInterface canbeselected="true">
       <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI" />

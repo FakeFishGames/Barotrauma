@@ -173,6 +173,31 @@ namespace Barotrauma.Items.Components
             sonarMode.Selected = Mode.Passive;
             
             GuiFrame.CanBeFocused = false;
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "pingcircle":
+                        pingCircle = new Sprite(subElement);
+                        break;
+                    case "directionalpingcircle":
+                        directionalPingCircle = new Sprite(subElement);
+                        break;
+                    case "screenoverlay":
+                        screenOverlay = new Sprite(subElement);
+                        break;
+                    case "screenbackground":
+                        screenBackground = new Sprite(subElement);
+                        break;
+                    case "blip":
+                        sonarBlip = new Sprite(subElement);
+                        break;
+                    case "linesprite":
+                        lineSprite = new Sprite(subElement);
+                        break;
+                }
+            }
         }
 
         public override void OnItemLoaded()
@@ -414,8 +439,8 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
                 Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
-                GUI.DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
-                GUI.DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
+                DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
+                DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
             }
 
             if (GameMain.DebugDraw)
@@ -518,7 +543,7 @@ namespace Barotrauma.Items.Components
                     Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
                     end.Y = -end.Y;
 
-                    DrawLine(spriteBatch, start, end, Color.LightBlue * signalStrength * 0.5f, width: 3);
+                    DrawLine(spriteBatch, start, end, Color.LightBlue * signalStrength * 0.5f, width: 4);
                 }
             }
         }
@@ -535,21 +560,37 @@ namespace Barotrauma.Items.Components
             {
                 if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
                 {
-                    GUI.DrawLine(spriteBatch, center + intersection1.Value, center + end, color, width: width);
+                    DrawLineSprite(spriteBatch, center + intersection1.Value, center + end, color, width: width);
                 }
             }
             else if (endOutside)
             {
                 if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
                 {
-                    GUI.DrawLine(spriteBatch, center + start, center + intersection1.Value, color, width: width);
+                    DrawLineSprite(spriteBatch, center + start, center + intersection1.Value, color, width: width);
                 }
             }
             else
             {
-                GUI.DrawLine(spriteBatch, center + start, center + end, color, width: width);
+                DrawLineSprite(spriteBatch, center + start, center + end, color, width: width);
             }
         }
+
+        private void DrawLineSprite(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, int width)
+        {
+            if (lineSprite == null)
+            {
+                GUI.DrawLine(spriteBatch, start, end, color, width: width);
+            }
+            else
+            {
+                Vector2 dir = end - start;
+                float angle = (float)Math.Atan2(dir.Y, dir.X);
+                lineSprite.Draw(spriteBatch, start, color, origin: lineSprite.Origin, rotate: angle,
+                    scale: new Vector2(dir.Length() / lineSprite.size.X, 1.0f));
+            }
+        }
+
 
         private void DrawDockingPorts(SpriteBatch spriteBatch, Vector2 transducerCenter, float signalStrength)
         {
@@ -624,7 +665,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Color staticLineColor = Color.White * 0.5f;
+            Color staticLineColor = Color.White * 0.2f;
 
             float sector = MathHelper.ToRadians(MathHelper.Lerp(10.0f, 45.0f, MathHelper.Clamp(dist / steering.DockingAssistThreshold, 0.0f, 1.0f)));
             float sectorLength = DisplayRadius;
@@ -642,7 +683,7 @@ namespace Barotrauma.Items.Components
             for (float z = 0; z < 1.0f; z += 0.1f * zoom)
             {
                 Vector2 linePos = targetPortPos + normalizedDockingDir * midLength * z;
-                DrawLine(spriteBatch, linePos + midNormal * 3.0f, linePos - midNormal * 3.0f, staticLineColor, width: 2);
+                DrawLine(spriteBatch, linePos + midNormal * 3.0f, linePos - midNormal * 3.0f, staticLineColor, width: 3);
             }
 
             float indicatorSector = sector * 0.75f;
@@ -656,9 +697,9 @@ namespace Barotrauma.Items.Components
             Color indicatorColor = withinSector ? Color.LightGreen * 0.8f : Color.Red * 0.8f;
 
             DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 2);
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
             DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -indicatorSector) * indicatorSectorLength, indicatorColor, width: 2);
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
             
         }
 
