@@ -182,24 +182,23 @@ namespace Barotrauma
             {
                 TextGetter = GetMoney
             };
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.4f), storeContentTop.RectTransform), isHorizontal: true)
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), storeContentTop.RectTransform), isHorizontal: true)
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.02f
             };
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
-            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
-            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
-
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterRight, font: GUI.Font);
+            searchBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
             searchBox.OnTextChanged += (textBox, text) => { FilterStoreItems(null, text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterContainer.RectTransform), "x")
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), filterContainer.RectTransform), "x")
             {
                 OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterStoreItems(selectedItemCategory, ""); searchBox.Flash(Color.White); return true; }
             };
 
             var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), storeContent.RectTransform), isHorizontal: true)
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.02f
             };
             myItemList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), storeItemLists.RectTransform));
             storeItemList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), storeItemLists.RectTransform))

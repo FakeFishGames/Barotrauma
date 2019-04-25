@@ -159,6 +159,11 @@ namespace Barotrauma
 
         public GameMain()
         {
+            #if !DEBUG && OSX
+            string macPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Barotrauma");
+            Directory.SetCurrentDirectory(macPath);
+            #endif
+
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             Window.Title = "Barotrauma";
