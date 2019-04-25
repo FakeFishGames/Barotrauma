@@ -75,20 +75,28 @@ namespace Barotrauma
             }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub") + ":");
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
             
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), leftColumn.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            var searchBox = new GUITextBox(new RectTransform(new Vector2(0.9f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
+
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
 
             searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), filterContainer.RectTransform), "x")
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.075f, 1.0f), filterContainer.RectTransform), "x")
             {
-                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
+                OnClicked = (btn, userdata) => {
+                    searchBox.Text = "";
+                    FilterSubs(subList, "");
+                    searchBox.Flash(Color.White);
+                    searchTitle.Visible = true;
+                    return true;
+                }
             };
 
             if (!isMultiplayer) { subList.OnSelected = OnSubSelected; }
