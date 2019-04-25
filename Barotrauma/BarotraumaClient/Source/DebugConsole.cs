@@ -394,6 +394,10 @@ namespace Barotrauma
 
             commands.Add(new Command("charactereditor|editcharacter|editcharacters|editanimation|editanimations|animedit|animationeditor|animeditor|animationedit", "charactereditor: Edit characters, animations, ragdolls....", (string[] args) =>
             {
+                if (Screen.Selected == GameMain.GameScreen)
+                {
+                    NewMessage("WARNING: Switching between the character editor and the game view may cause odd behaviour or bugs. Use with caution.", Color.Orange);
+                }
                 GameMain.CharacterEditorScreen.Select();
             }));
 
