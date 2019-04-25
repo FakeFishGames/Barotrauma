@@ -513,25 +513,23 @@ namespace Barotrauma.Tutorials
             var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), infoBlock.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.02f
             };
 
             if (title.Length > 0)
             {
-                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
+                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform), 
                     title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
                 titleBlock.TextScale = textScale;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform),
-                text, wrap: true);
-            textBlock.TextScale = textScale;
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), infoContent.RectTransform), text, wrap: true);
 
             infoBoxClosedCallback = callback;
 
             if (hasButton)
             {
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), infoContent.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform) { MinSize = new Point(0, 30), MaxSize = new Point((int) infoContent.Rect.X, 60) }, isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.1f
