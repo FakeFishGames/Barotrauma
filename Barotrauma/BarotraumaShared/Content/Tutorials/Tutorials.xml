@@ -67,9 +67,8 @@
       </Job>
     </Character>
 
-    <Segment id="Mechanic.OpenDoor" objective="Mechanic.OpenDoorObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Mechanic.OpenDoor" objective="Mechanic.OpenDoorObjective" contenttype="textonly" istriggered="false">
       <Text tag="Mechanic.OpenDoorText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.OpenDoorText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.Equipment" objective="Mechanic.EquipmentObjective" contenttype="manualvideo" istriggered="false">
@@ -82,9 +81,8 @@
       <Video file="../TutorialVideos/tutorial_leaks.mp4" text="Mechanic.WeldingText" width="450"/>
     </Segment>
 
-    <Segment id="Mechanic.Drain" objective="Mechanic.DrainObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Mechanic.Drain" objective="Mechanic.DrainObjective" contenttype="textonly" istriggered="false">
       <Text tag="Mechanic.DrainText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.DrainText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.Deconstruct" objective="Mechanic.DeconstructObjective" contenttype="manualvideo" istriggered="false">
@@ -97,7 +95,7 @@
       <Video file="../TutorialVideos/tutorial_fabricate.mp4" text="Mechanic.FabricateText" width="450"/>
     </Segment>
 
-    <Segment id="Mechanic.Extinguisher" objective="Mechanic.ExtinguisherObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Mechanic.Extinguisher" objective="Mechanic.ExtinguisherObjective" contenttype="textonly" istriggered="false">
       <Text tag="Mechanic.ExtinguisherText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.ExtinguisherText" width="450"/>
     </Segment>
@@ -107,19 +105,16 @@
       <Video file="../TutorialVideos/tutorial_unequip.mp4" text="Mechanic.DropExtinguisherText" width="450"/>
     </Segment>
 
-    <Segment id="Mechanic.Diving" objective="Mechanic.DivingObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Mechanic.Diving" objective="Mechanic.DivingObjective" contenttype="textonly" istriggered="false">
       <Text tag="Mechanic.DivingText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.DivingText" width="450"/>
     </Segment>
 
-    <Segment id="Mechanic.RepairPump" objective="Mechanic.RepairPumpObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Mechanic.RepairPump" objective="Mechanic.RepairPumpObjective" contenttype="textonly" istriggered="false">
       <Text tag="Mechanic.RepairPumpText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.RepairPumpText" width="450"/>
     </Segment>
 
-    <Segment id="Mechanic.RepairSubmarine" objective="Mechanic.RepairSubmarineObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Mechanic.RepairSubmarine" objective="Mechanic.RepairSubmarineObjective" contenttype="textonly" istriggered="false">
       <Text tag="Mechanic.RepairSubmarineText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.RepairSubmarineText" width="450"/>
     </Segment>
 
     <Segment id="tutorial.laddertitle" objective="tutorial.laddertitle" contenttype="textonly" istriggered="false">
@@ -139,9 +134,8 @@
       </Job>
     </Character>
 
-    <Segment id="Engineer.Equipment" objective="Engineer.EquipmentObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Engineer.Equipment" objective="Engineer.EquipmentObjective" contenttype="textonly" istriggered="false">
       <Text tag="Engineer.EquipmentText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.EquipmentText" width="450"/>
     </Segment>
 
     <Segment id="Engineer.Reactor" objective="Engineer.ReactorObjective" contenttype="manualvideo" istriggered="false">
@@ -149,24 +143,22 @@
       <Video file="../TutorialVideos/tutorial_reactor.mp4" text="Engineer.ReactorText" width="450"/>
     </Segment>
 
-    <Segment id="Engineer.RepairJunctionBox" objective="Engineer.RepairJunctionBoxObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Engineer.RepairJunctionBox" objective="Engineer.RepairJunctionBoxObjective" contenttype="textonly" istriggered="false">
       <Text tag="Engineer.RepairJunctionBoxText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.RepairJunctionBoxText" width="450"/>
     </Segment>
 
     <Segment id="Engineer.WireJunctionBoxes" objective="Engineer.WireJunctionBoxesObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Engineer.WireJunctionBoxesText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.WireJunctionBoxesText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_wiring.mp4" text="Engineer.WireJunctionBoxesText" width="450"/>
     </Segment>
 
-    <Segment id="Engineer.RepairElectricalRoom" objective="Engineer.RepairElectricalRoomObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Engineer.RepairElectricalRoom" objective="Engineer.RepairElectricalRoomObjective" contenttype="textonly" istriggered="false">
       <Text tag="Engineer.RepairElectricalRoomText" width="450" anchor="Center"/>
       <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.RepairElectricalRoomText" width="450"/>
     </Segment>
 
-    <Segment id="Engineer.PowerUpReactor" objective="Engineer.PowerUpReactorObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Engineer.PowerUpReactor" objective="Engineer.PowerUpReactorObjective" contenttype="textonly" istriggered="false">
       <Text tag="Engineer.PowerUpReactorText" width="700" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.PowerUpReactorText" width="450"/>
     </Segment>
   </EngineerTutorial>
 
@@ -182,39 +174,37 @@
       </Job>
     </Character>
 
-    <Segment id="Doctor.Supplies" objective="Doctor.SuppliesObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Doctor.Supplies" objective="Doctor.SuppliesObjective" contenttype="textonly" istriggered="false">
       <Text tag="Doctor.SuppliesText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.SuppliesText" width="450"/>
     </Segment>
 
     <Segment id="Doctor.OpenMedicalInterface" objective="Doctor.OpenMedicalInterfaceObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.OpenMedicalInterfaceText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.OpenMedicalInterfaceText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_medinterface1.mp4" text="Doctor.OpenMedicalInterfaceText" width="450"/>
     </Segment>
     
     <Segment id="Doctor.FirstAidSelf" objective="Doctor.FirstAidSelfObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.FirstAidSelfText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.FirstAidSelfText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_medinterface1.mp4" text="Doctor.FirstAidSelfText" width="450"/>
     </Segment>
     
     <Segment id="Doctor.Medbay" objective="Doctor.MedbayObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.MedbayText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.MedbayText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_command.mp4" text="Doctor.MedbayText" width="450"/>
     </Segment>
     
     <Segment id="Doctor.TreatBurns" objective="Doctor.TreatBurnsObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.TreatBurnsText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.TreatBurnsText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_medinterface2.mp4" text="Doctor.TreatBurnsText" width="450"/>
     </Segment>
 
     <Segment id="Doctor.CPR" objective="Doctor.CPRObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.CPRText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.CPRText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_cpr.mp4" text="Doctor.CPRText" width="450"/>
     </Segment>
 
-    <Segment id="Doctor.Submarine" objective="Doctor.SubmarineObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Doctor.Submarine" objective="Doctor.SubmarineObjective" contenttype="textonly" istriggered="false">
       <Text tag="Doctor.SubmarineText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Doctor.SubmarineText" width="450"/>
     </Segment>
   </DoctorTutorial>
 
@@ -229,19 +219,16 @@
       </Job>
     </Character>
 
-    <Segment id="Officer.Equipment" objective="Officer.EquipmentObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Officer.Equipment" objective="Officer.EquipmentObjective" contenttype="textonly" istriggered="false">
       <Text tag="Officer.EquipmentText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.EquipmentText" width="450"/>
     </Segment>
 
-    <Segment id="Officer.MeleeWeapon" objective="Officer.MeleeWeaponObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Officer.MeleeWeapon" objective="Officer.MeleeWeaponObjective" contenttype="textonly" istriggered="false">
       <Text tag="Officer.MeleeWeaponText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.MeleeWeaponText" width="450"/>
     </Segment>
 
-    <Segment id="Officer.Crawler" objective="Officer.CrawlerObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Officer.Crawler" objective="Officer.CrawlerObjective" contenttype="textonly" istriggered="false">
       <Text tag="Officer.CrawlerText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.CrawlerText" width="450"/>
     </Segment>
 
     <Segment id="Officer.SomethingBig" objective="Officer.SomethingBigObjective" contenttype="manualvideo" istriggered="false">
@@ -249,9 +236,8 @@
       <Video file="../TutorialVideos/tutorial_loaders.mp4" text="Officer.SomethingBigText" width="450"/>
     </Segment>
     
-    <Segment id="Officer.Hammerhead" objective="Officer.HammerheadObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Officer.Hammerhead" objective="Officer.HammerheadObjective" contenttype="textonly" istriggered="false">
       <Text tag="Officer.HammerheadText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.HammerheadText" width="450"/>
     </Segment>
 
     <Segment id="Officer.RangedWeapon" objective="Officer.RangedWeaponObjective" contenttype="manualvideo" istriggered="false">
@@ -259,14 +245,12 @@
       <Video file="../TutorialVideos/tutorial_ranged.mp4" text="Officer.RangedWeaponText" width="450"/>
     </Segment>
 
-    <Segment id="Officer.Mudraptor" objective="Officer.MudraptorObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Officer.Mudraptor" objective="Officer.MudraptorObjective" contenttype="textonly" istriggered="false">
       <Text tag="Officer.MudraptorText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.MudraptorText" width="450"/>
     </Segment>
 
-    <Segment id="Officer.ArmSubmarine" objective="Officer.ArmSubmarineObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Officer.ArmSubmarine" objective="Officer.ArmSubmarineObjective" contenttype="textonly" istriggered="false">
       <Text tag="Officer.ArmSubmarineText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Officer.ArmSubmarineText" width="450"/>
     </Segment>
   </OfficerTutorial>
 
@@ -283,37 +267,36 @@
 
     <Segment id="Captain.CommandMedic" objective="Captain.CommandMedicObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandMedicText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandMedicText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandMedicText" width="450"/>
     </Segment>
 
     <Segment id="Captain.CommandMechanic" objective="Captain.CommandMechanicObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandMechanicText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandMechanicText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandMechanicText" width="450"/>
     </Segment>
 
     <Segment id="Captain.CommandSecurity" objective="Captain.CommandSecurityObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandSecurityText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandSecurityText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandSecurityText" width="450"/>
     </Segment>
 
     <Segment id="Captain.CommandEngineer" objective="Captain.CommandEngineerObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandEngineerText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.CommandEngineerText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandEngineerText" width="450"/>
     </Segment>
 
     <Segment id="Captain.Undock" objective="Captain.UndockObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.UndockText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.UndockText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_undock.mp4" text="Captain.UndockText" width="450"/>
     </Segment>
 
     <Segment id="Captain.Navigate" objective="Captain.NavigateObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.NavigateText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.NavigateText" width="450"/>
+      <Video file="../TutorialVideos/tutorial_navigation.mp4" text="Captain.NavigateText" width="450"/>
     </Segment>
 
-    <Segment id="Captain.Dock" objective="Captain.DockObjective" contenttype="manualvideo" istriggered="false">
+    <Segment id="Captain.Dock" objective="Captain.DockObjective" contenttype="textonly" istriggered="false">
       <Text tag="Captain.DockText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Captain.DockText" width="450"/>
     </Segment>
   </CaptainTutorial>
 
