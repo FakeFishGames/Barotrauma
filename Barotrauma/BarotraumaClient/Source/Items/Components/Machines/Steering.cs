@@ -328,13 +328,18 @@ namespace Barotrauma.Items.Components
             int width = rect.Width, height = rect.Height;
             int x = rect.X;
             int y = rect.Y;
-            
+
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
-            Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);            
+            Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
+            Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+            displaySubPos.Y = -displaySubPos.Y;
+            displaySubPos = displaySubPos.ClampLength(velRect.Width / 2);
+            displaySubPos = steerArea.Rect.Center.ToVector2() + displaySubPos;
+
             GUI.DrawLine(spriteBatch,
-                new Vector2(velRect.Center.X, velRect.Center.Y),
-                new Vector2(velRect.Center.X + currVelocity.X, velRect.Center.Y - currVelocity.Y),
+                displaySubPos,
+                new Vector2(displaySubPos.X + currVelocity.X, displaySubPos.Y - currVelocity.Y),
                 Color.Gray);
 
             if (!AutoPilot)
@@ -344,17 +349,10 @@ namespace Barotrauma.Items.Components
                 Vector2 steeringInputPos = new Vector2(
                     steeringInput.X * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.Y * unitSteeringInput.Y),
                     -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
-                steeringInputPos.X += velRect.Center.X;
-                steeringInputPos.Y += velRect.Center.Y;
+                steeringInputPos += displaySubPos;
 
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(velRect.Center.X, velRect.Center.Y),
-                    steeringInputPos,
-                    Color.LightGray);
-
+                GUI.DrawLine(spriteBatch, displaySubPos, steeringInputPos, Color.LightGray);
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
-
-                //if (keyboardInput.Length() > 0 || Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
                 if (velRect.Contains(PlayerInput.MousePosition))
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
@@ -384,12 +382,7 @@ namespace Barotrauma.Items.Components
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)neutralPos.X - 5, (int)neutralPos.Y - 5, 10, 10), Color.Orange);
                 }
             }
-
-            Vector2 displaySubPos = ((posToMaintain.Value - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
-            displaySubPos.Y = -displaySubPos.Y;
-            displaySubPos = displaySubPos.ClampLength(velRect.Width / 2);
-            displaySubPos = velRect.Center.ToVector2() + displaySubPos;
-
+            
             //map velocity from rectangle to circle
             Vector2 unitTargetVel = targetVelocity / 100.0f;
             Vector2 steeringPos = new Vector2(
@@ -518,7 +511,11 @@ namespace Barotrauma.Items.Components
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
+                    Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+                    displaySubPos.Y = -displaySubPos.Y;
+                    displaySubPos = steerArea.Rect.Center.ToVector2() + displaySubPos;
+
+                    Vector2 inputPos = PlayerInput.MousePosition - displaySubPos;
                     inputPos.Y = -inputPos.Y;
                     if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
