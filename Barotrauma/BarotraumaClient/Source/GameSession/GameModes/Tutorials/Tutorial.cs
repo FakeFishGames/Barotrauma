@@ -505,7 +505,9 @@ namespace Barotrauma.Tutorials
                 Enum.TryParse(anchorStr, out anchor);
             }
 
-            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
+            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", new Color(0, 0, 0, 1f));
+
+            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), background.RectTransform, anchor) { AbsoluteOffset = new Point(20) });
             infoBlock.Flash(Color.Green);
 
             var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), infoBlock.RectTransform, Anchor.Center))
@@ -557,7 +559,7 @@ namespace Barotrauma.Tutorials
 
             GUI.PlayUISound(GUISoundType.UIMessage);
 
-            return infoBlock;
+            return background;
         }
         #endregion
 

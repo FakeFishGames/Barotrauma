@@ -148,7 +148,7 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(0);
             do
             {
-                yield return new WaitForSeconds(1.5f);
+                yield return null;
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_medic, "follow", highlightColor, new Vector2(5, 5));
             }
             while (!HasOrder(captain_medic, "follow"));
@@ -163,7 +163,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddCharacter(captain_mechanic);
             do
             {
-                yield return new WaitForSeconds(1.5f);
+                yield return null;
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
                 HighlightOrderOption("jobspecific");
             }
@@ -174,7 +174,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddCharacter(captain_security);
             do
             {
-                yield return new WaitForSeconds(1.5f);
+                yield return null;
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_security, "operateweapons", highlightColor, new Vector2(5, 5));
                 HighlightOrderOption("fireatwill");
             }
@@ -185,7 +185,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddCharacter(captain_engineer);
             do
             {
-                yield return new WaitForSeconds(1.5f);
+                yield return null;
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_engineer, "operatereactor", highlightColor, new Vector2(5, 5));
                 HighlightOrderOption("powerup");
             }
