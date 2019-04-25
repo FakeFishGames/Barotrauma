@@ -259,7 +259,7 @@ namespace Barotrauma.Items.Components
             int clockDir = (int)Math.Round((angle / MathHelper.TwoPi) * 12);
             if (clockDir == 0) clockDir = 12;
 
-            return TextManager.Get("SubDirOClock").Replace("[dir]", clockDir.ToString());
+            return TextManager.Get("roomname.subdiroclock").Replace("[dir]", clockDir.ToString());
         }
 
         private Vector2 GetTransducerCenter()
