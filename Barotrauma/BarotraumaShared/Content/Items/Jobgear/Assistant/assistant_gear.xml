@@ -6,9 +6,9 @@
     <Price locationtype="City" buyprice="20" />
     <Price locationtype="Outpost" buyprice="50" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" />
-    <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="264,36,183,67" depth="0.6" />
-    <Body width="50" height="17" density="20" />
-    <Wearable slots="Any,InnerClothes">
+    <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="264,36,185,69" depth="0.6" origin="0.5,0.5" />
+    <Body width="100" height="50" density="30" />
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
       <sprite name="Assistant Torso" texture="assistant_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Assistant Left Upper Arm" texture="assistant_torso_[GENDER]_[VARIANT].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Assistant Right Upper Arm" texture="assistant_torso_[GENDER]_[VARIANT].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
