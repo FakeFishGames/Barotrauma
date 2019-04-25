@@ -36,10 +36,9 @@ namespace Barotrauma
             float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
             float isSelected = character.SelectedConstruction == Item ? 50 : 0;
-            float baseLevel = Math.Max(Priority + isSelected, 1);
-            float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
-            return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, max);
+            float devotion = Math.Max(Priority + isSelected, 1);
+            float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
+            return MathHelper.Clamp(devotion * damagePriority * distanceFactor * successFactor * PriorityModifier, 0, max);
         }
 
         public override bool CanBeCompleted => !abandon;
