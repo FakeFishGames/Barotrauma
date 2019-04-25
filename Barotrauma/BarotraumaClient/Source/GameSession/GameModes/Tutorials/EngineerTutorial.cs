@@ -345,7 +345,6 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(0.1f);
                 wait -= 0.1f;
-                yield return null;
                 engineer_reactor.AutoTempSlider.BarScrollValue = 0.0f;
             } while (wait > 0.0f);
             engineer.SelectedConstruction = null;
