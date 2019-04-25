@@ -417,6 +417,11 @@ namespace Barotrauma
         public void AddFireSource(FireSource fireSource)
         {
             FireSources.Add(fireSource);
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !IdFreed)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -584,6 +589,11 @@ namespace Barotrauma
         public void RemoveFire(FireSource fire)
         {
             FireSources.Remove(fire);
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !Removed && !IdFreed)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this);
+            }
         }
 
         public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
