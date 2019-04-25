@@ -277,7 +277,7 @@ namespace Barotrauma
             Priority = MathHelper.Clamp(Priority, 0, 100);
             if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
             {
-                Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 10, 100));
+                Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 20, 100));
             }
         }
     }
