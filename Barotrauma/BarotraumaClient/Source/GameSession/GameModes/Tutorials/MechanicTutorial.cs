@@ -317,11 +317,14 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_workingPump.Item, true);
             do
             {
-                if (mechanic_workingPump.IsActiveSlider.FlashTimer <= 0)
-                {
-                    mechanic_workingPump.IsActiveSlider.Flash(uiHighlightColor, 1.5f, true);
-                }
                 yield return null;
+                if (IsSelectedItem(mechanic_brokenPump.Item))
+                {
+                    if (mechanic_workingPump.IsActiveSlider.FlashTimer <= 0)
+                    {
+                        mechanic_workingPump.IsActiveSlider.Flash(uiHighlightColor, 1.5f, true);
+                    }
+                }
             } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
@@ -510,6 +513,7 @@ namespace Barotrauma.Tutorials
             Repairable repairablePumpComponent = mechanic_brokenPump.Item.GetComponent<Repairable>();
             do
             {
+                yield return null;
                 if (!mechanic_brokenPump.Item.IsFullCondition)
                 {
                     if (!mechanic.HasEquippedItem("wrench"))
@@ -524,7 +528,6 @@ namespace Barotrauma.Tutorials
                         }
                     }
                 }
-                yield return null;
             } while (!mechanic_brokenPump.Item.IsFullCondition || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive);
             RemoveCompletedObjective(segments[9]);
             SetHighlight(mechanic_brokenPump.Item, false);
