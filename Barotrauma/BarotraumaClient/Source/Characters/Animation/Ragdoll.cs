@@ -257,12 +257,6 @@ namespace Barotrauma
                     }
 
                 }
-            }
-            if (Character.Controlled == character)
-            {
-                GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
-            }
-        }
 
                 if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
                 character.MemState.Clear();
