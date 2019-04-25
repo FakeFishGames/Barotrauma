@@ -272,7 +272,7 @@ namespace Barotrauma.Tutorials
                 }
 
                 yield return null;
-            } while (engineer.Inventory.FindItemByIdentifier("screwdriver") == null || engineer.Inventory.FindItemByIdentifier("redwire") == null || engineer.Inventory.FindItemByIdentifier("bluewire") == null); // Wait until looted
+            } while (!engineer_equipmentCabinet.Inventory.IsEmpty()); // Wait until looted
             RemoveCompletedObjective(segments[0]);
             SetHighlight(engineer_equipmentCabinet.Item, false);
             SetHighlight(engineer_reactor.Item, true);
@@ -286,6 +286,7 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(engineer_reactor.Item))
                 {
+                    engineer_reactor.AutoTempSlider.BarScrollValue = 1.0f;
                     if (engineer_reactor.OnOffSwitch.FlashTimer <= 0)
                     {
                         engineer_reactor.OnOffSwitch.Flash(highlightColor, 1.5f, false);
@@ -297,6 +298,7 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(engineer_reactor.Item) && engineer_reactor.Item.OwnInventory.slots != null)
                 {
+                    engineer_reactor.AutoTempSlider.BarScrollValue = 1.0f;
                     HighlightInventorySlot(engineer.Inventory, "fuelrod", highlightColor, 0.5f, 0.5f, 0f);
 
                     for (int i = 0; i < engineer_reactor.Item.OwnInventory.slots.Length; i++)
@@ -311,6 +313,7 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(engineer_reactor.Item))
                 {
+                    engineer_reactor.AutoTempSlider.BarScrollValue = 1.0f;
                     if (engineer_reactor.FissionRateScrollBar.FlashTimer <= 0)
                     {
                         engineer_reactor.FissionRateScrollBar.Flash(highlightColor, 1.5f);
@@ -336,6 +339,17 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             } while (!engineer_reactor.AutoTemp);
+
+            float wait = 1.5f;
+            do
+            {
+                yield return new WaitForSeconds(0.1f);
+                wait -= 0.1f;
+                yield return null;
+                engineer_reactor.AutoTempSlider.BarScrollValue = 0.0f;
+            } while (wait > 0.0f);
+            engineer.SelectedConstruction = null;
+            engineer_reactor.CanBeSelected = false;
             RemoveCompletedObjective(segments[1]);
             SetHighlight(engineer_reactor.Item, false);
             SetHighlight(engineer_brokenJunctionBox, true);
