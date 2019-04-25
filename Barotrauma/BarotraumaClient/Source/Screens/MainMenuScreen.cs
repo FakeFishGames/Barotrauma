@@ -195,6 +195,10 @@ namespace Barotrauma
                     UserData = Tab.SteamWorkshop,
                     OnClicked = SelectTab
                 };
+
+#if OSX && !DEBUG
+                steamWorkshopButton.Text += " (Not yet available on MacOS)";
+#endif
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -334,9 +338,9 @@ namespace Barotrauma
 
             this.game = game;
         }
-        #endregion
+#endregion
 
-        #region Selection
+#region Selection
         public override void Select()
         {
             base.Select();
@@ -469,7 +473,7 @@ namespace Barotrauma
                 otherButton.Selected = false;
             }
         }
-        #endregion
+#endregion
 
         private void QuickStart()
         {
@@ -687,6 +691,7 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 #if !DEBUG
+#if !OSX
             if (Steam.SteamManager.USE_STEAM)
             {
                 if (GameMain.Config.UseSteamMatchmaking)
@@ -696,6 +701,16 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+#else
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                }
+            }
+#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
@@ -806,7 +821,7 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
-        #region UI Methods      
+#region UI Methods      
         private void CreateHostServerFields()
         {
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
@@ -887,7 +902,7 @@ namespace Barotrauma
                 OnClicked = HostServerClicked
             };
         }
-        #endregion
+#endregion
 
     }
 }
