@@ -301,7 +301,7 @@ namespace Barotrauma.Items.Components
             //TODO: add new texts for these ("Dock" & "Undock")
             dockText = TextManager.Get("captain.dock");
             undockText = TextManager.Get("captain.undock");
-            dockingButton = new GUIButton(new RectTransform(new Vector2(0.35f, 0.35f), paddedDockingContainer.RectTransform, Anchor.Center), dockText)
+            dockingButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), paddedDockingContainer.RectTransform, Anchor.Center), dockText, style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -311,26 +311,30 @@ namespace Barotrauma.Items.Components
             };
             dockingButton.Font = GUI.SmallFont;
 
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.CenterLeft), "<")
+            var leftButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.5f), paddedDockingContainer.RectTransform, Anchor.CenterLeft), "")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = -Vector2.UnitX
             };
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.CenterRight), ">")
+            new GUIImage(new RectTransform(new Vector2(0.7f), leftButton.RectTransform, Anchor.Center), "GUIButtonHorizontalArrow").SpriteEffects = SpriteEffects.FlipHorizontally;
+            var rightButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.5f), paddedDockingContainer.RectTransform, Anchor.CenterRight), "")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = Vector2.UnitX
             };
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.TopCenter), "U")
+            new GUIImage(new RectTransform(new Vector2(0.7f), rightButton.RectTransform, Anchor.Center), "GUIButtonHorizontalArrow");
+            var upButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), paddedDockingContainer.RectTransform, Anchor.TopCenter), "")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = Vector2.UnitY
             };
-            new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.BottomCenter), "D")
+            new GUIImage(new RectTransform(new Vector2(0.7f), upButton.RectTransform, Anchor.Center), "GUIButtonVerticalArrow");
+            var downButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), paddedDockingContainer.RectTransform, Anchor.BottomCenter), "")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = -Vector2.UnitY
             };
+            new GUIImage(new RectTransform(new Vector2(0.7f), downButton.RectTransform, Anchor.Center), "GUIButtonVerticalArrow").SpriteEffects = SpriteEffects.FlipVertically;
 
             foreach (XElement subElement in element.Elements())
             {
@@ -549,12 +553,12 @@ namespace Barotrauma.Items.Components
             if (DockingModeEnabled)
             {
                 if (Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X &&
-                    Math.Abs(DockingSource.Item.WorldPosition.Y - DockingTarget.Item.WorldPosition.Y) < DockingSource.DistanceTolerance.X)
+                    Math.Abs(DockingSource.Item.WorldPosition.Y - DockingTarget.Item.WorldPosition.Y) < DockingSource.DistanceTolerance.Y)
                 {
                     dockingButton.Text = dockText;
                     if (dockingButton.FlashTimer <= 0.0f)
                     {
-                        dockingButton.Flash(Color.LightGreen);
+                        dockingButton.Flash(Color.LightGreen, 0.5f);
                         dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
                     }
                 }
@@ -566,7 +570,7 @@ namespace Barotrauma.Items.Components
                 statusContainer.Visible = false;
                 if (dockingButton.FlashTimer <= 0.0f)
                 {
-                    dockingButton.Flash(Color.LightGreen);
+                    dockingButton.Flash(Color.OrangeRed);
                     dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
                 }
             }
