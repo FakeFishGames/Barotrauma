@@ -293,8 +293,19 @@ namespace Barotrauma.Items.Components
             //steer closer if almost in range
             if (dist > Range)
             {
-                Vector2 standPos = leak.IsHorizontal ? new Vector2(Math.Sign(-fromItemToLeak.X), 0.0f) : new Vector2(0.0f, Math.Sign(-fromItemToLeak.Y) * 0.5f);
-                standPos = leak.WorldPosition + standPos * Range;
+                Vector2 standPos = new Vector2(Math.Sign(-fromItemToLeak.X), Math.Sign(-fromItemToLeak.Y)) / 2;
+                if (!character.AnimController.InWater)
+                {
+                    if (leak.IsHorizontal)
+                    {
+                        standPos.X *= 2;
+                        standPos.Y = 0;
+                    }
+                    else
+                    {
+                        standPos.X = 0;
+                    }
+                }
                 if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
                 {
                     if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && indoorSteering.CurrentPath.Unreachable)
@@ -329,24 +340,18 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-
             sinTime += deltaTime;
             character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             if (item.RequireAimToUse)
             {
                 character.SetInput(InputType.Aim, false, true);
             }
-
             // Press the trigger only when the tool is approximately facing the target.
             var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
             if (angle < MathHelper.PiOver4)
             {
                 character.SetInput(InputType.Shoot, false, true);
                 Use(deltaTime, character);
-            }
-            else
-            {
-                sinTime -= deltaTime * 2;
             }
 
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
