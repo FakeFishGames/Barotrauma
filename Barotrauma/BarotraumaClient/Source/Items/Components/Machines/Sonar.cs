@@ -233,8 +233,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 transducerCenter = UseTransducers ? GetTransducerCenter() : item.WorldPosition;
-            transducerCenter += DisplayOffset;
+            Vector2 transducerCenter = GetTransducerPos() + DisplayOffset;
 
             if (Level.Loaded != null)
             {
@@ -291,15 +290,15 @@ namespace Barotrauma.Items.Components
                 float dockingDist = Vector2.Distance(steering.DockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
                 if (prevDockingDist > steering.DockingAssistThreshold && dockingDist <= steering.DockingAssistThreshold)
                 {
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.25f));
+                }
+                else if (prevDockingDist > steering.DockingAssistThreshold * 0.75f && dockingDist <= steering.DockingAssistThreshold * 0.75f)
+                {
                     zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.5f));
                 }
-                else if (prevDockingDist > steering.DockingAssistThreshold * 0.6f && dockingDist <= steering.DockingAssistThreshold * 0.6f)
+                else if (prevDockingDist > steering.DockingAssistThreshold * 0.5f && dockingDist <= steering.DockingAssistThreshold * 0.5f)
                 {
-                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.75f));
-                }
-                else if (prevDockingDist > steering.DockingAssistThreshold * 0.3f && dockingDist <= steering.DockingAssistThreshold * 0.3f)
-                {
-                    zoom = Math.Max(zoom, MaxZoom);
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.25f));
                 }
                 prevDockingDist = Math.Min(dockingDist, prevDockingDist);
             }
@@ -378,7 +377,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 transducerCenter = UseTransducers && connectedTransducers.Count > 0 ? GetTransducerCenter() : item.WorldPosition;
+            Vector2 transducerCenter = GetTransducerPos();
 
             if (item.Submarine != null && !DetectSubmarineWalls)
             {
@@ -606,13 +605,16 @@ namespace Barotrauma.Items.Components
 
             Vector2 dockingDir = sourcePortPos - targetPortPos;
             Vector2 normalizedDockingDir = Vector2.Normalize(dockingDir);
-            if (steering.DockingSource.IsHorizontal)
+            if (!DynamicDockingIndicator)
             {
-                normalizedDockingDir = new Vector2(Math.Sign(normalizedDockingDir.X), 0.0f);
-            }
-            else
-            {
-                normalizedDockingDir = new Vector2(0.0f, Math.Sign(normalizedDockingDir.Y));
+                if (steering.DockingSource.IsHorizontal)
+                {
+                    normalizedDockingDir = new Vector2(Math.Sign(normalizedDockingDir.X), 0.0f);
+                }
+                else
+                {
+                    normalizedDockingDir = new Vector2(0.0f, Math.Sign(normalizedDockingDir.Y));
+                }
             }
 
             Color staticLineColor = Color.White * 0.8f;

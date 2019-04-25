@@ -86,6 +86,16 @@ namespace Barotrauma.Items.Components
             get { return zoom; }
         }
 
+        //TODO: remove, only for testing
+#if DEBUG
+        [Serialize(false, false), Editable]
+        public bool DynamicDockingIndicator
+        {
+            get;
+            set;
+        }
+#endif
+
         public override bool IsActive
         {
             get
@@ -262,12 +272,21 @@ namespace Barotrauma.Items.Components
             return TextManager.Get("SubDirOClock").Replace("[dir]", clockDir.ToString());
         }
 
-        private Vector2 GetTransducerCenter()
+        private Vector2 GetTransducerPos()
         {
-            if (!UseTransducers || connectedTransducers.Count == 0) return Vector2.Zero;
+            if (!UseTransducers || connectedTransducers.Count == 0)
+            {
+                //use the position of the sub if the item is static (no body) and inside a sub
+                return item.Submarine != null && item.body == null ? item.Submarine.WorldPosition : item.WorldPosition;
+            }
+
             Vector2 transducerPosSum = Vector2.Zero;
             foreach (ConnectedTransducer transducer in connectedTransducers)
             {
+                if (transducer.Transducer.Item.Submarine != null)
+                {
+                    return transducer.Transducer.Item.Submarine.WorldPosition;
+                }
                 transducerPosSum += transducer.Transducer.Item.WorldPosition;
             }
             return transducerPosSum / connectedTransducers.Count;
