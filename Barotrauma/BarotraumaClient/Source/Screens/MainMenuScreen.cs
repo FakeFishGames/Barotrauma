@@ -637,6 +637,7 @@ namespace Barotrauma
                     FileName = filename,
                     Arguments = arguments
 #if !DEBUG
+                    ,
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif
                 };
