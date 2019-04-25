@@ -65,8 +65,6 @@ namespace Barotrauma
             }
         }
 
-        public List<GUIButton> OrderOptionButtons = new List<GUIButton>();
-
         #endregion
 
         #region Constructors
@@ -916,12 +914,9 @@ namespace Barotrauma
                                 if (Character.Controlled == null) return false;
                                 SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                                 orderTargetFrame = null;
-                                OrderOptionButtons.Clear();
                                 return true;
                             }
                         };
-
-                        OrderOptionButtons.Add(optionButton);
                     }
                 }
 
@@ -954,13 +949,9 @@ namespace Barotrauma
                             if (Character.Controlled == null) return false;
                             SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                             orderTargetFrame = null;
-                            OrderOptionButtons.Clear();
                             return true;
                         }
                     };
-
-                    OrderOptionButtons.Add(optionButton);
-
                     //lines between the order buttons
                     if (i < order.Options.Length - 1)
                     {

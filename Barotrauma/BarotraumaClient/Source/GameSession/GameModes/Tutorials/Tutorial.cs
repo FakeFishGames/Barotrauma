@@ -505,31 +505,31 @@ namespace Barotrauma.Tutorials
                 Enum.TryParse(anchorStr, out anchor);
             }
 
-            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", new Color(0, 0, 0, 1f));
-
-            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), background.RectTransform, anchor) { AbsoluteOffset = new Point(20) });
+            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
             infoBlock.Flash(Color.Green);
 
             var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), infoBlock.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.05f
             };
 
             if (title.Length > 0)
             {
-                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform), 
+                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
                     title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
                 titleBlock.TextScale = textScale;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), infoContent.RectTransform), text, wrap: true);
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform),
+                text, wrap: true);
+            textBlock.TextScale = textScale;
 
             infoBoxClosedCallback = callback;
 
             if (hasButton)
             {
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform) { MinSize = new Point(0, 30), MaxSize = new Point((int) infoContent.Rect.X, 60) }, isHorizontal: true)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), infoContent.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.1f
@@ -557,7 +557,7 @@ namespace Barotrauma.Tutorials
 
             GUI.PlayUISound(GUISoundType.UIMessage);
 
-            return background;
+            return infoBlock;
         }
         #endregion
 

@@ -148,7 +148,7 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(0);
             do
             {
-                yield return null;
+                yield return new WaitForSeconds(1.5f);
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_medic, "follow", highlightColor, new Vector2(5, 5));
             }
             while (!HasOrder(captain_medic, "follow"));
@@ -163,31 +163,28 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddCharacter(captain_mechanic);
             do
             {
-                yield return null;
+                yield return new WaitForSeconds(1.5f);
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
-                HighlightOrderOption("jobspecific");
             }
-            while (!HasOrder(captain_mechanic, "repairsystems", "jobspecific"));
+            while (!HasOrder(captain_mechanic, "repairsystems"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(2);
             GameMain.GameSession.CrewManager.AddCharacter(captain_security);
             do
             {
-                yield return null;
+                yield return new WaitForSeconds(1.5f);
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_security, "operateweapons", highlightColor, new Vector2(5, 5));
-                HighlightOrderOption("fireatwill");
             }
-            while (!HasOrder(captain_security, "operateweapons", "fireatwill"));
+            while (!HasOrder(captain_security, "operateweapons"));
             RemoveCompletedObjective(segments[2]);
             yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(3);
             GameMain.GameSession.CrewManager.AddCharacter(captain_engineer);
             do
             {
-                yield return null;
+                yield return new WaitForSeconds(1.5f);
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_engineer, "operatereactor", highlightColor, new Vector2(5, 5));
-                HighlightOrderOption("powerup");
             }
             while (!HasOrder(captain_engineer, "operatereactor", "powerup"));
             RemoveCompletedObjective(segments[3]);
@@ -237,30 +234,6 @@ namespace Barotrauma.Tutorials
             captain.RemoveActiveObjectiveEntity(captain_navConsole.Item);
 
             CoroutineManager.StartCoroutine(TutorialCompleted());
-        }
-
-        private void HighlightOrderOption(string option)
-        {
-            if (GameMain.GameSession.CrewManager.OrderOptionButtons.Count == 0) return;
-            var order = GameMain.GameSession.CrewManager.OrderOptionButtons[0].UserData as Order;
-
-            int orderIndex = 0;
-            for (int i = 0; i < GameMain.GameSession.CrewManager.OrderOptionButtons.Count; i++)
-            {
-                if (orderIndex >= order.Options.Length)
-                {
-                    orderIndex = 0;
-                }
-                if (order.Options[orderIndex] == option)
-                {
-                    if (GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.FlashTimer <= 0)
-                    {
-                        GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.Flash(highlightColor);
-                    }
-                }
-
-                orderIndex++;
-            }            
         }
 
         private bool IsSelectedItem(Item item)
