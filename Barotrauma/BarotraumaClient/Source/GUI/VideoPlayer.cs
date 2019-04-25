@@ -25,7 +25,7 @@ namespace Barotrauma
 
         private Point scaledVideoResolution;
         private readonly int borderSize = 20;
-        private readonly Point buttonSize = new Point(160, 50);
+        private readonly Point buttonSize = new Point(120, 30);
         private readonly int titleHeight = 30;
         private readonly int objectiveFrameHeight = 60;
         private readonly int textHeight = 25;
@@ -251,7 +251,7 @@ namespace Barotrauma
             {
                 videoFrame.RectTransform.AbsoluteOffset = new Point(0, (int)(100 * GUI.Scale));
 
-                okButton = new GUIButton(new RectTransform(scaledButtonSize, videoFrame.RectTransform, Anchor.TopLeft, Pivot.Center), TextManager.Get("Back"))
+                okButton = new GUIButton(new RectTransform(scaledButtonSize, videoFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(scaledBorderSize, scaledBorderSize) }, TextManager.Get("Back"))
                 {
                     OnClicked = DisposeVideo
                 };
