@@ -10,7 +10,8 @@ namespace Barotrauma
         public override string DebugTag => "charge batteries";
         private readonly IEnumerable<PowerContainer> batteryList;
 
-        public AIObjectiveChargeBatteries(Character character, string option) : base(character, option)
+        public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
+            : base(character, objectiveManager, priorityModifier, option)
         {
             batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
         }
@@ -23,14 +24,9 @@ namespace Barotrauma
         protected override void FindTargets()
         {
             base.FindTargets();
-            if (targets.None())
+            if (targets.None() && objectiveManager.CurrentOrder == this)
             {
                 character.Speak(TextManager.Get("DialogNoBatteries"), null, 4.0f, "nobatteries", 10.0f);
-            }
-            else
-            {
-                // Sorting should be handled by the objective manager, because the targets should be subobjectives.
-                //targets.Sort((x, y) => x.ChargePercentage.CompareTo(y.ChargePercentage));
             }
         }
 
@@ -45,6 +41,8 @@ namespace Barotrauma
 
         protected override float TargetEvaluation() => targets.Max(t => 100 - t.ChargePercentage);
         protected override IEnumerable<PowerContainer> GetList() => batteryList;
-        protected override AIObjective ObjectiveConstructor(PowerContainer battery) => new AIObjectiveOperateItem(battery, character, Option, false, priorityModifier: PriorityModifier) { IsLoop = true };
+
+        protected override AIObjective ObjectiveConstructor(PowerContainer battery) 
+            => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier) { IsLoop = true };
     }
 }

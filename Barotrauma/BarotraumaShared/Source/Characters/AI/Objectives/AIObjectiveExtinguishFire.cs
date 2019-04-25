@@ -20,12 +20,13 @@ namespace Barotrauma
 
         private float useExtinquisherTimer;
 
-        public AIObjectiveExtinguishFire(Character character, Hull targetHull, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveExtinguishFire(Character character, Hull targetHull, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             this.targetHull = targetHull;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
@@ -61,7 +62,7 @@ namespace Barotrauma
                 if (getExtinguisherObjective == null)
                 {
                     character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
-                    getExtinguisherObjective = new AIObjectiveGetItem(character, "extinguisher", true);
+                    getExtinguisherObjective = new AIObjectiveGetItem(character, "extinguisher", objectiveManager, equip: true);
                 }
                 else
                 {
@@ -105,7 +106,7 @@ namespace Barotrauma
                     //go to the first firesource
                     if (gotoObjective == null || !gotoObjective.CanBeCompleted || gotoObjective.IsCompleted())
                     {
-                        gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character);
+                        gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character, objectiveManager);
                     }
                     else
                     {

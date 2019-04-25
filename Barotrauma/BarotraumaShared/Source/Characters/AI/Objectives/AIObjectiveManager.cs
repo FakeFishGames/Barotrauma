@@ -51,8 +51,8 @@ namespace Barotrauma
         public void CreateAutomaticObjectives()
         {
             Objectives.Clear();
-            AddObjective(new AIObjectiveFindSafety(character));
-            AddObjective(new AIObjectiveIdle(character));
+            AddObjective(new AIObjectiveFindSafety(character, this));
+            AddObjective(new AIObjectiveIdle(character, this));
             foreach (var automaticOrder in character.Info.Job.Prefab.AutomaticOrders)
             {
                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
@@ -96,7 +96,7 @@ namespace Barotrauma
         {
             var previousObjective = CurrentObjective;
             var firstObjective = Objectives.FirstOrDefault();
-            if (CurrentOrder != null && firstObjective != null && CurrentOrder.GetPriority(this) > firstObjective.GetPriority(this))
+            if (CurrentOrder != null && firstObjective != null && CurrentOrder.GetPriority() > firstObjective.GetPriority())
             {
                 CurrentObjective = CurrentOrder;
             }
@@ -113,12 +113,12 @@ namespace Barotrauma
 
         public float GetCurrentPriority()
         {
-            return CurrentObjective == null ? 0.0f : CurrentObjective.GetPriority(this);
+            return CurrentObjective == null ? 0.0f : CurrentObjective.GetPriority();
         }
 
         public void UpdateObjectives(float deltaTime)
         {
-            CurrentOrder?.Update(this, deltaTime);
+            CurrentOrder?.Update(deltaTime);
             for (int i = 0; i < Objectives.Count; i++)
             {
                 var objective = Objectives[i];
@@ -138,7 +138,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    objective.Update(this, deltaTime);
+                    objective.Update(deltaTime);
                 }
             }
             GetCurrentObjective();
@@ -148,9 +148,9 @@ namespace Barotrauma
         {
             if (Objectives.Any())
             {
-                Objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
+                Objectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             }
-            CurrentObjective?.SortSubObjectives(this);
+            CurrentObjective?.SortSubObjectives();
         }
         
         public void DoCurrentObjective(float deltaTime)
@@ -181,7 +181,7 @@ namespace Barotrauma
             switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
-                    newObjective = new AIObjectiveGoTo(orderGiver, character, true, priorityModifier: priorityModifier)
+                    newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
                         CloseEnough = 1.5f,
                         AllowGoingOutside = true,
@@ -190,38 +190,38 @@ namespace Barotrauma
                     };
                     break;
                 case "wait":
-                    newObjective = new AIObjectiveGoTo(character, character, true, priorityModifier: priorityModifier)
+                    newObjective = new AIObjectiveGoTo(character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
                         AllowGoingOutside = true
                     };
                     break;
                 case "fixleaks":
-                    newObjective = new AIObjectiveFixLeaks(character, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectiveFixLeaks(character, this, priorityModifier);
                     break;
                 case "chargebatteries":
-                    newObjective = new AIObjectiveChargeBatteries(character, option);
+                    newObjective = new AIObjectiveChargeBatteries(character, this, option, priorityModifier);
                     break;
                 case "rescue":
-                    newObjective = new AIObjectiveRescueAll(character, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectiveRescueAll(character, this, priorityModifier);
                     break;
                 case "repairsystems":
-                    newObjective = new AIObjectiveRepairItems(character, priorityModifier: priorityModifier) { RequireAdequateSkills = option != "all" };
+                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier) { RequireAdequateSkills = option != "all" };
                     break;
                 case "pumpwater":
-                    newObjective = new AIObjectivePumpWater(character, option, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectivePumpWater(character, this, option, priorityModifier: priorityModifier);
                     break;
                 case "extinguishfires":
-                    newObjective = new AIObjectiveExtinguishFires(character, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectiveExtinguishFires(character, this, priorityModifier: priorityModifier);
                     break;
                 case "steer":
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
                     if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
                     if (order.TargetItemComponent == null) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
                     break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
-                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier) { IsLoop = true };
                     break;
             }
             return newObjective;

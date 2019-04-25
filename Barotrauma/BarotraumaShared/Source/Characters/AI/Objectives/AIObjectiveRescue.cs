@@ -37,7 +37,8 @@ namespace Barotrauma
             }
         }
 
-        public AIObjectiveRescue(Character character, Character targetCharacter, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             Debug.Assert(character != targetCharacter);
             this.targetCharacter = targetCharacter;
@@ -58,7 +59,7 @@ namespace Barotrauma
                 {
                     if (!character.CanInteractWith(targetCharacter))
                     {
-                        AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character));
+                        AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
                     }
                     else
                     {
@@ -67,7 +68,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    AddSubObjective(new AIObjectiveFindSafety(character));
+                    AddSubObjective(new AIObjectiveFindSafety(character, objectiveManager));
                 }
                 return;
             }
@@ -75,7 +76,7 @@ namespace Barotrauma
             //target not in water -> we can start applying treatment
             if (!character.CanInteractWith(targetCharacter))
             {
-                AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character));
+                AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
             }
             else
             {
@@ -186,7 +187,7 @@ namespace Barotrauma
                 }
 
                 character.DeselectCharacter();
-                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), true));
+                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true));
             }
 
             character.AnimController.Anim = AnimController.Animation.CPR;
@@ -228,7 +229,7 @@ namespace Barotrauma
             return isCompleted || targetCharacter.IsDead;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             // TODO: review
             if (targetCharacter.AnimController.CurrentHull == null || targetCharacter.IsDead) { return 0.0f; }

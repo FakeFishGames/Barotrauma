@@ -29,7 +29,7 @@ namespace Barotrauma
         private readonly List<Hull> targetHulls = new List<Hull>(20);
         private readonly List<float> hullWeights = new List<float>(20);
 
-        public AIObjectiveIdle(Character character, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveIdle(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             standStillTimer = Rand.Range(-10.0f, 10.0f);
             walkDuration = Rand.Range(0.0f, 10.0f);
@@ -40,10 +40,8 @@ namespace Barotrauma
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            return 1.0f;
-        }
+        // TODO: take the initiative into account
+        public override float GetPriority() => 1;
 
         protected override void Act(float deltaTime)
         {

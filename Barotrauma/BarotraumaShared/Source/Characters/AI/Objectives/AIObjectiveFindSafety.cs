@@ -27,7 +27,7 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveFindDivingGear divingGearObjective;
 
-        public AIObjectiveFindSafety(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) {  }
+        public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) {  }
 
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
@@ -41,7 +41,7 @@ namespace Barotrauma
                 bool hasEquipment = needsDivingSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingGear(character);
                 if (!hasEquipment)
                 {
-                    divingGearObjective = new AIObjectiveFindDivingGear(character, needsDivingSuit);
+                    divingGearObjective = new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager);
                 }
             }
             if (divingGearObjective != null)
@@ -94,7 +94,7 @@ namespace Barotrauma
                         if (goToObjective.Target != bestHull)
                         {
                             // If we need diving gear, we should already have it, if possible.
-                            goToObjective = new AIObjectiveGoTo(bestHull, character, getDivingGearIfNeeded: false)
+                            goToObjective = new AIObjectiveGoTo(bestHull, character, objectiveManager, getDivingGearIfNeeded: false)
                             {
                                 AllowGoingOutside = HumanAIController.HasDivingSuit(character)
                             };
@@ -102,7 +102,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        goToObjective = new AIObjectiveGoTo(bestHull, character, getDivingGearIfNeeded: false)
+                        goToObjective = new AIObjectiveGoTo(bestHull, character, objectiveManager, getDivingGearIfNeeded: false)
                         {
                             AllowGoingOutside = HumanAIController.HasDivingSuit(character)
                         };
@@ -255,7 +255,7 @@ namespace Barotrauma
             return (otherObjective is AIObjectiveFindSafety);
         }
 
-        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
+        public override void Update(float deltaTime)
         {
             if (character.CurrentHull == null)
             {

@@ -29,7 +29,7 @@ namespace Barotrauma
             return false;
         }
 
-        public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             gearTag = needDivingSuit ? "divingsuit" : "diving";
         }
@@ -43,7 +43,7 @@ namespace Barotrauma
                 if (!(subObjective is AIObjectiveGetItem))
                 {
                     character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
-                    subObjective = new AIObjectiveGetItem(character, gearTag, true);
+                    subObjective = new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true);
                 }
             }
             else
@@ -67,7 +67,7 @@ namespace Barotrauma
                 if (!(subObjective is AIObjectiveContainItem) || subObjective.IsCompleted())
                 {
                     character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                    subObjective = new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>());
+                    subObjective = new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
                 }
             }
             if (subObjective != null)
@@ -77,7 +77,7 @@ namespace Barotrauma
         }
 
         public override bool CanBeCompleted => subObjective == null || subObjective.CanBeCompleted;
-        public override float GetPriority(AIObjectiveManager objectiveManager) => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
+        public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindDivingGear;
     }
 }

@@ -337,18 +337,18 @@ namespace Barotrauma
                     {
                         // Replace the old objective with the new.
                         ObjectiveManager.Objectives.Remove(combatObjective);
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
                     }
                 }
                 else
                 {
                     if (delay > 0)
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode), delay);
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager), delay);
                     }
                     else
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
                     }
                 }
             }

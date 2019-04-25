@@ -27,7 +27,7 @@ namespace Barotrauma
         private bool canBeCompleted = true;
         public override bool CanBeCompleted => canBeCompleted;
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             if (objectiveManager.CurrentOrder == this)
             {
@@ -36,16 +36,19 @@ namespace Barotrauma
             return 1.0f;
         }
 
-        public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = false, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
             this.equip = equip;
             this.targetItem = targetItem;
         }
 
-        public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false, float priorityModifier = 1) : this(character, new string[] { itemIdentifier }, equip, priorityModifier) { }
+        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = false, float priorityModifier = 1) 
+            : this(character, new string[] { itemIdentifier }, objectiveManager, equip, priorityModifier) { }
 
-        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = false, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
             this.equip = equip;
@@ -99,7 +102,7 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
-                HumanAIController.ObjectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
                 //SteeringManager.SteeringWander();
                 return;
             }
@@ -157,7 +160,7 @@ namespace Barotrauma
                                             (itemIdentifiers != null && (itemIdentifiers.Contains("diving") || itemIdentifiers.Contains("divingsuit")));
 
                     //don't attempt to get diving gear to reach the destination if the item we're trying to get is diving gear
-                    goToObjective = new AIObjectiveGoTo(moveToTarget, character, false, !gettingDivingGear);
+                    goToObjective = new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: !gettingDivingGear);
                 }
 
                 goToObjective.TryComplete(deltaTime);

@@ -19,12 +19,12 @@ namespace Barotrauma
 
         private float previousCondition = -1;
 
-        public AIObjectiveRepairItem(Character character, Item item, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             Item = item;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             // TODO: priority list?
             if (Item.Repairables.None()) { return 0; }
@@ -79,7 +79,7 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, true));
+                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true));
                         }
                     }
                     return;
@@ -131,7 +131,7 @@ namespace Barotrauma
                 {
                     subObjectives.Remove(goToObjective);
                 }
-                goToObjective = new AIObjectiveGoTo(Item, character);
+                goToObjective = new AIObjectiveGoTo(Item, character, objectiveManager);
                 if (repairTool != null)
                 {
                     //goToObjective.CloseEnough = (HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range)) * 0.75f;

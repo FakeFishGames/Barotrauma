@@ -26,7 +26,7 @@ namespace Barotrauma
 
         public bool AllowGoingOutside = false;
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
             if (Target != null && Target.Removed) { return 0.0f; }
@@ -68,7 +68,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {(Target != null ? Target.ToString() : TargetPos.ToString())}", Color.Yellow);
 #endif
-                    if (HumanAIController.ObjectiveManager.CurrentOrder != null)
+                    if (objectiveManager.CurrentOrder != null)
                     {
                         character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
                     }
@@ -84,7 +84,8 @@ namespace Barotrauma
 
         public bool FollowControlledCharacter;
 
-        public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) : base (character, "", priorityModifier)
+        public AIObjectiveGoTo(Entity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
+            : base (character, objectiveManager, priorityModifier)
         {
             this.Target = target;
             this.repeat = repeat;
@@ -95,7 +96,8 @@ namespace Barotrauma
         }
 
 
-        public AIObjectiveGoTo(Vector2 simPos, Character character, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveGoTo(Vector2 simPos, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             this.targetPos = simPos;
             this.repeat = repeat;
@@ -171,7 +173,7 @@ namespace Barotrauma
                         {
                             if (findDivingGear == null)
                             {
-                                findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                                findDivingGear = new AIObjectiveFindDivingGear(character, true, objectiveManager);
                                 AddSubObjective(findDivingGear);
                             }
                             else if (!findDivingGear.CanBeCompleted)

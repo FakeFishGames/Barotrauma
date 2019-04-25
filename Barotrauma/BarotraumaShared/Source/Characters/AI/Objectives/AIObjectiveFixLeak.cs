@@ -24,7 +24,7 @@ namespace Barotrauma
             get { return leak; }
         }
 
-        public AIObjectiveFixLeak(Gap leak, Character character, float priorityModifier = 1) : base (character, "", priorityModifier)
+        public AIObjectiveFixLeak(Gap leak, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base (character, objectiveManager, priorityModifier)
         {
             this.leak = leak;
         }
@@ -36,7 +36,7 @@ namespace Barotrauma
 
         public override bool CanBeCompleted => !abandon && base.CanBeCompleted;
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             if (leak.Open == 0.0f) { return 0.0f; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
@@ -61,7 +61,7 @@ namespace Barotrauma
             {
                 if (findDivingGear == null)
                 {
-                    findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                    findDivingGear = new AIObjectiveFindDivingGear(character, true, objectiveManager);
                     AddSubObjective(findDivingGear);
                 }
                 else if (!findDivingGear.CanBeCompleted)
@@ -75,7 +75,7 @@ namespace Barotrauma
 
             if (weldingTool == null)
             {
-                AddSubObjective(new AIObjectiveGetItem(character, "weldingtool", true));
+                AddSubObjective(new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true));
                 return;
             }
             else
@@ -86,7 +86,7 @@ namespace Barotrauma
                 var fuelTank = containedItems.FirstOrDefault(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f);
                 if (fuelTank == null)
                 {
-                    AddSubObjective(new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>()));
+                    AddSubObjective(new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager));
                     return;
                 }
             }
@@ -122,7 +122,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character)
+                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager)
                     {
                         CloseEnough = reach
                     };
@@ -136,7 +136,7 @@ namespace Barotrauma
             {
                 if (operateObjective == null)
                 {
-                    operateObjective = new AIObjectiveOperateItem(repairTool, character, "", true, leak);
+                    operateObjective = new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: leak);
                     AddSubObjective(operateObjective);
                 }
                 else if (!subObjectives.Contains(operateObjective))
