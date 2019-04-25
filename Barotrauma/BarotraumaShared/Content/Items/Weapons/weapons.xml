@@ -336,7 +336,7 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-20,-10" holdangle="45" reload="0.75" range="100" msg="ItemMsgPickUpSelect">
       <Attack stun="0.2">
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
-        <Affliction identifier="internaldamage" strength="2" />
+        <Affliction identifier="internaldamage" strength="4" />
       </Attack>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/StunBaton1.ogg" selectionmode="random" range="500" />

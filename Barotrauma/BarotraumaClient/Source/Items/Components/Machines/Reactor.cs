@@ -11,7 +11,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Reactor : Powered, IServerSerializable, IClientSerializable
     {
+        public GUIScrollBar AutoTempSlider
+        {
+            get { return autoTempSlider; }
+        }
         private GUIScrollBar autoTempSlider;
+
+        public GUIScrollBar OnOffSwitch
+        {
+            get { return onOffSwitch; }
+        }
         private GUIScrollBar onOffSwitch;
 
         private const int GraphSize = 25;
@@ -27,7 +36,16 @@ namespace Barotrauma.Items.Components
 
         private Sprite graphLine;
 
+        public GUIScrollBar FissionRateScrollBar
+        {
+            get { return fissionRateScrollBar; }
+        }
         private GUIScrollBar fissionRateScrollBar;
+
+        public GUIScrollBar TurbineOutputScrollBar
+        {
+            get { return turbineOutputScrollBar; }
+        }
         private GUIScrollBar turbineOutputScrollBar;
 
         private float[] outputGraph = new float[GraphSize];

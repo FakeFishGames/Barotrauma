@@ -14,15 +14,15 @@ namespace Barotrauma
     {
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 5.0f;
-        
-        private Hull hull;
 
-        private Vector2 position;
-        private Vector2 size;
+        protected Hull hull;
+
+        protected Vector2 position;
+        protected Vector2 size;
 
         private Entity Submarine;
 
-        private bool removed;
+        protected bool removed;
 
 #if CLIENT
         private List<Decal> burnDecals = new List<Decal>();
@@ -59,7 +59,7 @@ namespace Barotrauma
             }
         }
 
-        public float DamageRange
+        public virtual float DamageRange
         {
             get { return (float)Math.Sqrt(size.X) * 20.0f; }
         }
@@ -94,7 +94,7 @@ namespace Barotrauma
             size = new Vector2(10.0f, 10.0f);
         }
 
-        private void LimitSize()
+        protected virtual void LimitSize()
         {
             if (hull == null) return;
 
@@ -160,9 +160,9 @@ namespace Barotrauma
                 if (removed) { return; }
             }
 
-            hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
+            ReduceOxygen(deltaTime);
 
-            position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
+            AdjustXPos(growModifier, deltaTime);
 
             size.X += GrowSpeed * growModifier * deltaTime;
             size.Y = MathHelper.Clamp(size.Y + GrowSpeed * growModifier * deltaTime, 10.0f, 50.0f);
@@ -180,6 +180,16 @@ namespace Barotrauma
             {
                 Remove();
             }
+        }
+
+        protected virtual void ReduceOxygen(float deltaTime)
+        {
+            hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
+        }
+
+        protected virtual void AdjustXPos(float growModifier, float deltaTime)
+        {
+            position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
         }
 
         partial void UpdateProjSpecific(float growModifier);

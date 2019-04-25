@@ -33,6 +33,8 @@ namespace Barotrauma
 
         private List<CharacterSound> sounds;
 
+        public bool ExternalHighlight;
+
         //the Character that the player is currently controlling
         private static Character controlled;
 
@@ -107,6 +109,33 @@ namespace Barotrauma
         public IEnumerable<ParticleEmitter> GibEmitters
         {
             get { return gibEmitters; }
+        }
+
+        public class ObjectiveEntity
+        {
+            public Entity Entity;
+            public Sprite Sprite;
+            public Color Color;
+
+            public ObjectiveEntity(Entity entity, Sprite sprite, Color? color = null)
+            {
+                Entity = entity;
+                Sprite = sprite;
+                if (color.HasValue)
+                {
+                    Color = color.Value;
+                }
+                else
+                {
+                    Color = Color.White;
+                }
+            }
+        }
+
+        private List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
+        public IEnumerable<ObjectiveEntity> ActiveObjectiveEntities
+        {
+            get { return activeObjectiveEntities; }
         }
 
         partial void InitProjSpecific(XDocument doc)
@@ -730,6 +759,20 @@ namespace Barotrauma
             var selectedSound = matchingSoundsList[Rand.Int(matchingSoundsList.Count)];
             soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, CurrentHull);
             soundTimer = soundInterval;
+        }
+
+        public void AddActiveObjectiveEntity(Entity entity, Sprite sprite, Color? color = null)
+        {
+            if (activeObjectiveEntities.Any(aoe => aoe.Entity == entity)) return;
+            ObjectiveEntity objectiveEntity = new ObjectiveEntity(entity, sprite, color);
+            activeObjectiveEntities.Add(objectiveEntity);
+        }
+
+        public void RemoveActiveObjectiveEntity(Entity entity)
+        {
+            ObjectiveEntity found = activeObjectiveEntities.Find(aoe => aoe.Entity == entity);
+            if (found == null) return;
+            activeObjectiveEntities.Remove(found);
         }
 
         partial void ImplodeFX()

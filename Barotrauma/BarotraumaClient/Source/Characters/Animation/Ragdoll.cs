@@ -440,14 +440,15 @@ namespace Barotrauma
                 return;
             }
 
-            //foreach (Limb limb in Limbs)
-            //{
-            //    limb.Draw(spriteBatch, cam);
-            //}
+            Color? color = null;
+            if (character.ExternalHighlight)
+            {
+                color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
+            }
 
             for (int i = 0; i < limbs.Length; i++)
             {
-                inversedLimbDrawOrder[i].Draw(spriteBatch, cam);
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }

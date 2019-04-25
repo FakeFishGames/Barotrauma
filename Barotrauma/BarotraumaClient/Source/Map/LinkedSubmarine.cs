@@ -13,7 +13,7 @@ namespace Barotrauma
         {
             if (!editing || wallVertices == null) return;
 
-            Color color = (isHighlighted) ? Color.Orange : Color.Green;
+            Color color = (IsHighlighted) ? Color.Orange : Color.Green;
             if (IsSelected) color = Color.Red;
 
             Vector2 pos = Position;

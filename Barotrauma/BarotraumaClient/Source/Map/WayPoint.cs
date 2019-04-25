@@ -30,7 +30,7 @@ namespace Barotrauma
 
             Color clr = currentHull == null ? Color.Blue : Color.White;
             if (IsSelected) clr = Color.Red;
-            if (isHighlighted) clr = Color.DarkRed;
+            if (IsHighlighted) clr = Color.DarkRed;
 
             int iconX = iconIndices[(int)spawnType] * IconSize % iconTexture.Width;
             int iconY = (int)(Math.Floor(iconIndices[(int)spawnType] * IconSize / (float)iconTexture.Width)) * IconSize;
