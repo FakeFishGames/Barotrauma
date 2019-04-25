@@ -1,62 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tutorials>
-  <ContextualTutorial tutorialtype="contextual" playablecontentpath="Content/Tutorials/ContextualTutorial/">    
-    <Segment id="Welcome" contenttype="textonly" istriggered="false">
-    <!--<Segment id="Welcome" contenttype="video" istriggered="false">-->
-      <Text tag="WelcomeText" width="900" height="80" anchor="Center"/>
-      <!--<Video file="9_SwitchCharacter/BaroTutorial_SwitchCharacter.mp4" text="SwitchCharacterInstructions"/>-->
-    </Segment>
-    
-    <Segment id="ReactorCommand" objective="ReactorCommandObjective" contenttype="video" istriggered="false">
-      <Text tag="ReactorCommandText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="ReactorCommandInstructions" width="450"/>
-    </Segment>
-    
-    <Segment id="NavConsole" objective="NavConsoleObjective" contenttype="video" istriggered="false">
-      <Text tag="NavConsoleText" width="450" anchor="Center"/>
-      <Video file="2_NavConsole/BaroTutorial_NavConsole.mp4" text="NavConsoleInstructions"/>
-    </Segment>
-    
-    <Segment id="DestinationObjective" contenttype="textonly" istriggered="false">
-      <Text tag="DestinationObjectiveText" width="450" height="80" anchor="Center"/>
-    </Segment>
-    
-    <Segment id="Flood" objective="FloodObjective" contenttype="video" istriggered="false">
-      <Text tag="FloodText" width="450" height="80" anchor="Center"/>
-      <Video file="3_Flood/BaroTutorial_Flood.mp4" text="FloodInstructions"/>
-    </Segment>
-    
-    <Segment id="ReactorUse" contenttype="video" istriggered="false">
-      <Text tag="ReactorUseText" width="450" height="80" anchor="Center"/>
-      <Video file="4_Reactor/BaroTutorial_Reactor.mp4" text="ReactorUseInstructions"/>
-    </Segment>
-    
-    <Segment id="EnemyOnSonar" objective="EnemyOnSonarObjective" contenttype="video" istriggered="false">
-      <Text tag="EnemyOnSonarText" width="450" height="80" anchor="Center"/>
-      <Video file="5_EnemyOnSonar/BaroTutorial_EnemyOnSonar.mp4" text="EnemyOnSonarInstructions"/>
-    </Segment>
-    
-    <Segment id="Degrading" objective="DegradingObjective" contenttype="video" istriggered="false">
-      <Text tag="DegradingText" width="450" height="80" anchor="Center"/>
-      <Video file="6_Degrading2/BaroTutorial_Degrading.mp4" text="DegradingInstructions"/>
-    </Segment>
-    
-    <Segment id="Medical" objective="MedicalObjective" contenttype="video" istriggered="false">
-      <Text tag="MedicalText" width="450" height="80" anchor="Center"/>
-      <Video file="7_Medical/BaroTutorial_Medical.mp4" text="MedicalInstructions"/>
-    </Segment>
-    
-    <Segment id="Approach1" objective="Approach1Objective" contenttype="video" istriggered="false">
-      <Text tag="Approach1Text" width="450" height="80" anchor="Center"/>
-      <Video animationspeed="0.1" file="8_Approach1/BaroTutorial_Approach.mp4" text="Approach1Instructions"/>
-    </Segment>
-    
-    <Segment id="Approach2" contenttype="textonly" istriggered="false">
-      <Text tag="Approach2Text" width="450" height="80" anchor="Center"/>
-    </Segment>
-  </ContextualTutorial>
-
-  <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <MechanicTutorial name="Mechanic training" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job identifier="mechanic">
         <Skill identifier="electrical" level="20"/>
@@ -73,12 +17,12 @@
 
     <Segment id="Mechanic.Equipment" objective="Mechanic.EquipmentObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Mechanic.EquipmentText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_inventory.mp4" text="Mechanic.EquipmentText" width="450"/>
+      <Video file="tutorial_inventory.mp4" text="Mechanic.EquipmentText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.Welding" objective="Mechanic.WeldingObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Mechanic.WeldingText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_leaks.mp4" text="Mechanic.WeldingText" width="450"/>
+      <Video file="tutorial_leaks.mp4" text="Mechanic.WeldingText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.Drain" objective="Mechanic.DrainObjective" contenttype="textonly" istriggered="false">
@@ -87,22 +31,21 @@
 
     <Segment id="Mechanic.Deconstruct" objective="Mechanic.DeconstructObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Mechanic.DeconstructText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_deconstruct.mp4" text="Mechanic.DeconstructText" width="450"/>
+      <Video file="tutorial_deconstruct.mp4" text="Mechanic.DeconstructText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.Fabricate" objective="Mechanic.FabricateObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Mechanic.FabricateText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_fabricate.mp4" text="Mechanic.FabricateText" width="450"/>
+      <Video file="tutorial_fabricate.mp4" text="Mechanic.FabricateText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.Extinguisher" objective="Mechanic.ExtinguisherObjective" contenttype="textonly" istriggered="false">
       <Text tag="Mechanic.ExtinguisherText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Mechanic.ExtinguisherText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.DropExtinguisher" objective="Mechanic.DropExtinguisherObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Mechanic.DropExtinguisherText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_unequip.mp4" text="Mechanic.DropExtinguisherText" width="450"/>
+      <Video file="tutorial_unequip.mp4" text="Mechanic.DropExtinguisherText" width="450"/>
     </Segment>
 
     <Segment id="Mechanic.Diving" objective="Mechanic.DivingObjective" contenttype="textonly" istriggered="false">
@@ -123,7 +66,7 @@
 
   </MechanicTutorial>
 
-  <EngineerTutorial name="Engineer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <EngineerTutorial name="Engineer training" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job identifier="engineer">
         <Skill identifier="electrical" level="50"/>
@@ -140,7 +83,7 @@
 
     <Segment id="Engineer.Reactor" objective="Engineer.ReactorObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Engineer.ReactorText" width="700" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_reactor.mp4" text="Engineer.ReactorText" width="450"/>
+      <Video file="tutorial_reactor.mp4" text="Engineer.ReactorText" width="450"/>
     </Segment>
 
     <Segment id="Engineer.RepairJunctionBox" objective="Engineer.RepairJunctionBoxObjective" contenttype="textonly" istriggered="false">
@@ -149,12 +92,11 @@
 
     <Segment id="Engineer.WireJunctionBoxes" objective="Engineer.WireJunctionBoxesObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Engineer.WireJunctionBoxesText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_wiring.mp4" text="Engineer.WireJunctionBoxesText" width="450"/>
+      <Video file="tutorial_wiring.mp4" text="Engineer.WireJunctionBoxesText" width="450"/>
     </Segment>
 
     <Segment id="Engineer.RepairElectricalRoom" objective="Engineer.RepairElectricalRoomObjective" contenttype="textonly" istriggered="false">
       <Text tag="Engineer.RepairElectricalRoomText" width="450" anchor="Center"/>
-      <Video file="1_CommandReactor/BaroTutorial_CommandReactor.mp4" text="Engineer.RepairElectricalRoomText" width="450"/>
     </Segment>
 
     <Segment id="Engineer.PowerUpReactor" objective="Engineer.PowerUpReactorObjective" contenttype="textonly" istriggered="false">
@@ -163,7 +105,7 @@
   </EngineerTutorial>
 
 
-  <DoctorTutorial name="Medical training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <DoctorTutorial name="Medical training" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Medical Doctor">
         <Skill identifier="medical" level="70"/>
@@ -180,27 +122,27 @@
 
     <Segment id="Doctor.OpenMedicalInterface" objective="Doctor.OpenMedicalInterfaceObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.OpenMedicalInterfaceText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_medinterface1.mp4" text="Doctor.OpenMedicalInterfaceText" width="450"/>
+      <Video file="tutorial_medinterface1.mp4" text="Doctor.OpenMedicalInterfaceText" width="450"/>
     </Segment>
     
     <Segment id="Doctor.FirstAidSelf" objective="Doctor.FirstAidSelfObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.FirstAidSelfText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_medinterface1.mp4" text="Doctor.FirstAidSelfText" width="450"/>
+      <Video file="tutorial_medinterface1.mp4" text="Doctor.FirstAidSelfText" width="450"/>
     </Segment>
     
     <Segment id="Doctor.Medbay" objective="Doctor.MedbayObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.MedbayText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_command.mp4" text="Doctor.MedbayText" width="450"/>
+      <Video file="tutorial_command.mp4" text="Doctor.MedbayText" width="450"/>
     </Segment>
     
     <Segment id="Doctor.TreatBurns" objective="Doctor.TreatBurnsObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.TreatBurnsText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_medinterface2.mp4" text="Doctor.TreatBurnsText" width="450"/>
+      <Video file="tutorial_medinterface2.mp4" text="Doctor.TreatBurnsText" width="450"/>
     </Segment>
 
     <Segment id="Doctor.CPR" objective="Doctor.CPRObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Doctor.CPRText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_cpr.mp4" text="Doctor.CPRText" width="450"/>
+      <Video file="tutorial_cpr.mp4" text="Doctor.CPRText" width="450"/>
     </Segment>
 
     <Segment id="Doctor.Submarine" objective="Doctor.SubmarineObjective" contenttype="textonly" istriggered="false">
@@ -208,7 +150,7 @@
     </Segment>
   </DoctorTutorial>
 
-  <OfficerTutorial name="Security Officer training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <OfficerTutorial name="Security Officer training" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job identifier="securityofficer">
         <Skill identifier="medical" level="20"/>
@@ -233,7 +175,7 @@
 
     <Segment id="Officer.SomethingBig" objective="Officer.SomethingBigObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Officer.SomethingBigText" width="700" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_loaders.mp4" text="Officer.SomethingBigText" width="450"/>
+      <Video file="tutorial_loaders.mp4" text="Officer.SomethingBigText" width="450"/>
     </Segment>
     
     <Segment id="Officer.Hammerhead" objective="Officer.HammerheadObjective" contenttype="textonly" istriggered="false">
@@ -242,7 +184,7 @@
 
     <Segment id="Officer.RangedWeapon" objective="Officer.RangedWeaponObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Officer.RangedWeaponText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_ranged.mp4" text="Officer.RangedWeaponText" width="450"/>
+      <Video file="tutorial_ranged.mp4" text="Officer.RangedWeaponText" width="450"/>
     </Segment>
 
     <Segment id="Officer.Mudraptor" objective="Officer.MudraptorObjective" contenttype="textonly" istriggered="false">
@@ -254,7 +196,7 @@
     </Segment>
   </OfficerTutorial>
 
-  <CaptainTutorial name="Captain training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <CaptainTutorial name="Captain training" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job identifier="captain">
         <Skill identifier="medical" level="20"/>
@@ -267,32 +209,32 @@
 
     <Segment id="Captain.CommandMedic" objective="Captain.CommandMedicObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandMedicText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandMedicText" width="450"/>
+      <Video file="tutorial_command.mp4" text="Captain.CommandMedicText" width="450"/>
     </Segment>
 
     <Segment id="Captain.CommandMechanic" objective="Captain.CommandMechanicObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandMechanicText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandMechanicText" width="450"/>
+      <Video file="tutorial_command.mp4" text="Captain.CommandMechanicText" width="450"/>
     </Segment>
 
     <Segment id="Captain.CommandSecurity" objective="Captain.CommandSecurityObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandSecurityText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandSecurityText" width="450"/>
+      <Video file="tutorial_command.mp4" text="Captain.CommandSecurityText" width="450"/>
     </Segment>
 
     <Segment id="Captain.CommandEngineer" objective="Captain.CommandEngineerObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.CommandEngineerText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_command.mp4" text="Captain.CommandEngineerText" width="450"/>
+      <Video file="tutorial_command.mp4" text="Captain.CommandEngineerText" width="450"/>
     </Segment>
 
     <Segment id="Captain.Undock" objective="Captain.UndockObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.UndockText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_undock.mp4" text="Captain.UndockText" width="450"/>
+      <Video file="tutorial_undock.mp4" text="Captain.UndockText" width="450"/>
     </Segment>
 
     <Segment id="Captain.Navigate" objective="Captain.NavigateObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.NavigateText" width="450" anchor="Center"/>
-      <Video file="../TutorialVideos/tutorial_navigation.mp4" text="Captain.NavigateText" width="450"/>
+      <Video file="tutorial_navigation.mp4" text="Captain.NavigateText" width="450"/>
     </Segment>
 
     <Segment id="Captain.Dock" objective="Captain.DockObjective" contenttype="textonly" istriggered="false">
