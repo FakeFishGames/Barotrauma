@@ -105,7 +105,7 @@
   </EngineerTutorial>
 
 
-  <DoctorTutorial name="Medical training" playablecontentpath="Content/Tutorials/ContextualTutorial/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
+  <DoctorTutorial name="Medical training" playablecontentpath="Content/Tutorials/TutorialVideos/" tutorialtype="scenario" submarinepath="Content/Tutorials/Dugong_Tutorial.sub" startoutpostpath="Content/Tutorials/TutorialOutpost.sub" levelseed="nLoZLLtza" levelparams="ColdCavernsTutorial" spawnpointtype="human" spawnsub="startoutpost">
     <Character file="Content/Characters/Human/Human.xml">
       <Job name="Medical Doctor">
         <Skill identifier="medical" level="70"/>
