@@ -30,13 +30,15 @@ namespace Barotrauma
         
         //the position and dimensions of the entity
         protected Rectangle rect;
-        
+
+        public bool ExternalHighlight = false;
+
         //is the mouse inside the rect
-        protected bool isHighlighted;
+        private bool isHighlighted;
 
         public bool IsHighlighted
         {
-            get { return isHighlighted; }
+            get { return isHighlighted || ExternalHighlight; }
             set { isHighlighted = value; }
         }
                 

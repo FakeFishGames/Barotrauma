@@ -292,12 +292,12 @@ namespace Barotrauma
                 }*/
             }
 
-            if ((IsSelected || isHighlighted) && editing)
+            if ((IsSelected || IsHighlighted) && editing)
             {
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),
                     new Vector2(rect.Width - 10, rect.Height - 10),
-                    isHighlighted ? Color.LightBlue * 0.5f : Color.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                    IsHighlighted ? Color.LightBlue * 0.5f : Color.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
 
             foreach (MapEntity e in linkedTo)

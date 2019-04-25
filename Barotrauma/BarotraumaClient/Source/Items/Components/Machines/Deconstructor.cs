@@ -9,6 +9,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
+        public GUIButton ActivateButton
+        {
+            get { return activateButton; }
+        }
         private GUIButton activateButton;
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
         private GUICustomComponent inputInventoryOverlay;
@@ -44,7 +48,6 @@ namespace Barotrauma.Items.Components
                 Visible = false,
                 CanBeFocused = false
             };
-
             outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.3f), paddedFrame.RectTransform), style: null);
         }
 
@@ -71,7 +74,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
-            activateButton.Enabled = !inSufficientPowerWarning.Visible;
+            //activateButton.Enabled = !inSufficientPowerWarning.Visible;
         }
 
         private bool ToggleActive(GUIButton button, object obj)
