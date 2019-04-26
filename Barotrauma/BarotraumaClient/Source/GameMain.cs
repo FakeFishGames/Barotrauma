@@ -717,7 +717,7 @@ namespace Barotrauma
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
         }
 
-        public void ShowCampaignDisclaimer(Action onContinue)
+        public void ShowCampaignDisclaimer()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"), 
                 new string[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
@@ -726,15 +726,13 @@ namespace Barotrauma
             {
                 var roadMap = new GUIMessageBox(TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("CampaignRoadMapText"),
                                 new string[] { TextManager.Get("Back"), TextManager.Get("OK") });
+                roadMap.Buttons[0].OnClicked = (_, __) => { ShowCampaignDisclaimer(); return true; };
                 roadMap.Buttons[0].OnClicked += roadMap.Close;
-                roadMap.Buttons[0].OnClicked += (_, __) => { ShowCampaignDisclaimer(onContinue); return true; };
                 roadMap.Buttons[1].OnClicked += roadMap.Close;
-                roadMap.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
                 return true;
             };
             msgBox.Buttons[0].OnClicked += msgBox.Close;
             msgBox.Buttons[1].OnClicked += msgBox.Close;
-            msgBox.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
 
             Config.CampaignDisclaimerShown = true;
             Config.SaveNewPlayerConfig();

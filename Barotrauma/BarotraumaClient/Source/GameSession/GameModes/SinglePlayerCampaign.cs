@@ -65,6 +65,11 @@ namespace Barotrauma
             endTimer = 5.0f;
             isRunning = true;
             CrewManager.InitSinglePlayerRound();
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Start();
+            }
         }
 
         public bool TryHireCharacter(Location location, CharacterInfo characterInfo)
@@ -169,6 +174,11 @@ namespace Barotrauma
             if (!isRunning) { return; }
 
             base.Update(deltaTime);
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.Update(deltaTime);
+            }
 
             if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
             {
@@ -430,6 +440,12 @@ namespace Barotrauma
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
+
+            if (ContextualTutorial.Initialized)
+            {
+                ContextualTutorial.SavePartiallyComplete(modeElement);
+            }
+
             element.Add(modeElement);
         }
     }

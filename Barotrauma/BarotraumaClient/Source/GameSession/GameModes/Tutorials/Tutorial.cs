@@ -22,6 +22,9 @@ namespace Barotrauma.Tutorials
         private Action infoBoxClosedCallback;
         protected XElement configElement;
 
+        private enum TutorialType { None, Scenario, Contextual };
+        private TutorialType tutorialType = TutorialType.None;
+
         protected VideoPlayer videoPlayer;
         protected enum TutorialContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
         protected string playableContentPath;
@@ -161,6 +164,7 @@ namespace Barotrauma.Tutorials
             configElement = element;
             Name = element.GetAttributeString("name", "Unnamed");
             completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
+            Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
             playableContentPath = element.GetAttributeString("playablecontentpath", "");
 
             segments = new List<TutorialSegment>();
@@ -514,12 +518,12 @@ namespace Barotrauma.Tutorials
 
             if (title.Length > 0)
             {
-                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
+                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform), 
                     title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
                 titleBlock.TextScale = textScale;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), infoContent.RectTransform), text, wrap: true);
 
             infoBoxClosedCallback = callback;
 
