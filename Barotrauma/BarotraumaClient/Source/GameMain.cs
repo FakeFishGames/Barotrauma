@@ -717,7 +717,7 @@ namespace Barotrauma
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
         }
 
-        public void ShowCampaignDisclaimer()
+        public void ShowCampaignDisclaimer(Action onContinue)
         {
             var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"), 
                 new string[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
@@ -726,13 +726,15 @@ namespace Barotrauma
             {
                 var roadMap = new GUIMessageBox(TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("CampaignRoadMapText"),
                                 new string[] { TextManager.Get("Back"), TextManager.Get("OK") });
-                roadMap.Buttons[0].OnClicked = (_, __) => { ShowCampaignDisclaimer(); return true; };
                 roadMap.Buttons[0].OnClicked += roadMap.Close;
+                roadMap.Buttons[0].OnClicked += (_, __) => { ShowCampaignDisclaimer(onContinue); return true; };
                 roadMap.Buttons[1].OnClicked += roadMap.Close;
+                roadMap.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
                 return true;
             };
             msgBox.Buttons[0].OnClicked += msgBox.Close;
             msgBox.Buttons[1].OnClicked += msgBox.Close;
+            msgBox.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
 
             Config.CampaignDisclaimerShown = true;
             Config.SaveNewPlayerConfig();
@@ -742,12 +744,13 @@ namespace Barotrauma
         {
             var msgBox = new GUIMessageBox(TextManager.Get("EditorDisclaimerTitle"), TextManager.Get("EditorDisclaimerText"));
             var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
+            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
             List<Pair<string, string>> links = new List<Pair<string, string>>()
-                {
-                    new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"),TextManager.Get("EditorDisclaimerWikiUrl")),
-                    new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"),TextManager.Get("EditorDisclaimerDiscordUrl")),
-                    new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"),TextManager.Get("EditorDisclaimerForumUrl")),
-                };
+            {
+                new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"),TextManager.Get("EditorDisclaimerWikiUrl")),
+                new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"),TextManager.Get("EditorDisclaimerDiscordUrl")),
+                new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"),TextManager.Get("EditorDisclaimerForumUrl")),
+            };
             foreach (var link in links)
             {
                 new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
@@ -763,19 +766,6 @@ namespace Barotrauma
             
             msgBox.InnerFrame.RectTransform.MinSize = new Point(0, 
                 msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + 10);
-            Config.EditorDisclaimerShown = true;
-            Config.SaveNewPlayerConfig();
-        }
-
-        // ToDo: Move texts/links to localization, when possible.
-        public void ShowBugReporter()
-        {
-            var msgBox = new GUIMessageBox("", "");
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
-
-            msgBox.Text.RectTransform.MaxSize = new Point(int.MaxValue, msgBox.Text.Rect.Height);
-            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
-            msgBox.RectTransform.MinSize = new Point(0, msgBox.Rect.Height + linkHolder.Rect.Height + msgBox.Buttons.First().Rect.Height * 8);
             Config.EditorDisclaimerShown = true;
             Config.SaveNewPlayerConfig();
         }

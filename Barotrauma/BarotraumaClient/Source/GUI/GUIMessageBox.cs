@@ -41,33 +41,22 @@ namespace Barotrauma
             InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { IsFixedSize = false }, style: null);
             GUI.Style.Apply(InnerFrame, "", this);
 
-            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { IsFixedSize = false }, style: null);
-            GUI.Style.Apply(InnerFrame, "", this);
-
             Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
             Tag = tag;
-
-            if (height == 0)
-            {
-                string wrappedText = ToolBox.WrapText(text, Content.Rect.Width, GUI.Font);
-                string[] lines = wrappedText.Split('\n');
-                foreach (string line in lines)
-                {
-                    height += (int)GUI.Font.MeasureString(line).Y;
-                }
-                height += string.IsNullOrWhiteSpace(headerText) ? 220 : 220 - headerHeight;
-            }
-            InnerFrame.RectTransform.NonScaledSize = new Point(InnerFrame.Rect.Width, height);
-
+            
             Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                 headerText, textAlignment: Alignment.Center, wrap: true);
-            GUI.Style.Apply(Header, "", this);            
+            GUI.Style.Apply(Header, "", this);
+            Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-            if (height == 0)
+            if (!string.IsNullOrWhiteSpace(text))
             {
                 Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                     text, textAlignment: textAlignment, wrap: true);
                 GUI.Style.Apply(Text, "", this);
+                Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize = 
+                    new Point(Text.Rect.Width, Text.Rect.Height);
+                Text.RectTransform.IsFixedSize = true;
             }
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter, maxSize: new Point(1000, 50)),
@@ -76,7 +65,22 @@ namespace Barotrauma
                 AbsoluteSpacing = 5,
                 IgnoreLayoutGroups = true
             };
-            
+            buttonContainer.RectTransform.NonScaledSize = buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.MaxSize = 
+                new Point(buttonContainer.Rect.Width, (int)(30 * GUI.Scale));
+            buttonContainer.RectTransform.IsFixedSize = true;
+
+            if (height == 0)
+            {
+                height += Header.Rect.Height + Content.AbsoluteSpacing;
+                height += (Text == null ? 0 : Text.Rect.Height) + Content.AbsoluteSpacing;
+                height += buttonContainer.Rect.Height;
+                
+                InnerFrame.RectTransform.NonScaledSize = 
+                    new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + 50));
+                Content.RectTransform.NonScaledSize =
+                    new Point(Content.Rect.Width, height);
+            }
+
             Buttons = new List<GUIButton>(buttons.Length);
             for (int i = 0; i < buttons.Length; i++)
             {
