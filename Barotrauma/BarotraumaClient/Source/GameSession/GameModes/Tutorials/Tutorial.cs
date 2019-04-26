@@ -484,11 +484,10 @@ namespace Barotrauma.Tutorials
         protected GUIComponent CreateInfoFrame(string title, string text, int width = 300, int height = 80, string anchorStr = "", bool hasButton = false, Action callback = null, Action showVideo = null)
         {
             if (hasButton) height += 60;
+            
+            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);          
 
-            float textScale = GUI.Scale;
-            string wrappedText = ToolBox.WrapText(text, width, GUI.Font, textScale);          
-
-            height += (int)(GUI.Font.MeasureString(wrappedText).Y * textScale + 50);
+            height += (int)(GUI.Font.MeasureString(wrappedText).Y + 50);
             if (title.Length > 0)
             {
                 height += 35;
@@ -509,17 +508,18 @@ namespace Barotrauma.Tutorials
             var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), infoBlock.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                AbsoluteSpacing = 5
             };
 
             if (title.Length > 0)
             {
                 var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
                     title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
-                titleBlock.TextScale = textScale;
+                titleBlock.RectTransform.IsFixedSize = true;
             }
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
+            textBlock.RectTransform.IsFixedSize = true;
 
             infoBoxClosedCallback = callback;
 
@@ -530,6 +530,7 @@ namespace Barotrauma.Tutorials
                     Stretch = true,
                     RelativeSpacing = 0.1f
                 };
+                buttonContainer.RectTransform.IsFixedSize = true;
 
                 if (showVideo != null)
                 {
@@ -551,6 +552,8 @@ namespace Barotrauma.Tutorials
                 };
             }
 
+            infoBlock.RectTransform.NonScaledSize = new Point(infoBlock.Rect.Width, (int)(infoContent.Children.Sum(c => c.Rect.Height + infoContent.AbsoluteSpacing) / infoContent.RectTransform.RelativeSize.Y));
+            
             GUI.PlayUISound(GUISoundType.UIMessage);
 
             return background;

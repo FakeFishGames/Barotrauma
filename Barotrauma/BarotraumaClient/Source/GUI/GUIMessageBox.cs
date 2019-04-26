@@ -46,15 +46,17 @@ namespace Barotrauma
             
             Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                 headerText, textAlignment: Alignment.Center, wrap: true);
+            GUI.Style.Apply(Header, "", this);
             Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
-            GUI.Style.Apply(Header, "", this);            
 
             if (!string.IsNullOrWhiteSpace(text))
             {
                 Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                     text, textAlignment: textAlignment, wrap: true);
-                Text.RectTransform.MinSize = new Point(0, Text.Rect.Height);
                 GUI.Style.Apply(Text, "", this);
+                Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize = 
+                    new Point(Text.Rect.Width, Text.Rect.Height);
+                Text.RectTransform.IsFixedSize = true;
             }
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter, maxSize: new Point(1000, 50)),
@@ -65,14 +67,18 @@ namespace Barotrauma
             };
             buttonContainer.RectTransform.NonScaledSize = buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.MaxSize = 
                 new Point(buttonContainer.Rect.Width, (int)(30 * GUI.Scale));
+            buttonContainer.RectTransform.IsFixedSize = true;
 
             if (height == 0)
             {
                 height += Header.Rect.Height + Content.AbsoluteSpacing;
                 height += (Text == null ? 0 : Text.Rect.Height) + Content.AbsoluteSpacing;
                 height += buttonContainer.Rect.Height;
-
-                InnerFrame.RectTransform.NonScaledSize = new Point(InnerFrame.Rect.Width, (int)(height / Content.RectTransform.RelativeSize.Y));
+                
+                InnerFrame.RectTransform.NonScaledSize = 
+                    new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + 50));
+                Content.RectTransform.NonScaledSize =
+                    new Point(Content.Rect.Width, height);
             }
 
             Buttons = new List<GUIButton>(buttons.Length);
