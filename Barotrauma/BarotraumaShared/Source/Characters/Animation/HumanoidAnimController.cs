@@ -379,12 +379,19 @@ namespace Barotrauma
                 {
                     //rotate collider back upright
                     Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 10.0f;
-
                     Collider.FarseerBody.FixedRotation = false;
                 }
                 else
                 {
                     Collider.FarseerBody.FixedRotation = true;
+                }
+            }
+            else
+            {
+                float angleDiff = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f);
+                if (Math.Abs(angleDiff) > 0.001f)
+                {
+                    Collider.SetTransform(Collider.SimPosition, Collider.Rotation + angleDiff);
                 }
             }
 
