@@ -368,11 +368,15 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-            
-            SwarmBehavior?.Update(deltaTime);
 
             LatchOntoAI?.Update(this, deltaTime);
             IsSteeringThroughGap = false;
+            if (SwarmBehavior != null)
+            {
+                SwarmBehavior.IsActive = State == AIState.Idle && Character.CurrentHull == null;
+                SwarmBehavior.Refresh();
+                SwarmBehavior.UpdateSteering(deltaTime);
+            }
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
         }
 
