@@ -26,6 +26,7 @@ namespace Barotrauma.Networking
         //TODO: move these to NetLobbyScreen
         public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
+        private GUIComponent buttonContainer;
 
         private NetStats netStats;
 
@@ -129,7 +130,7 @@ namespace Barotrauma.Networking
             chatBox.OnEnterMessage += EnterChatMessage;
             chatBox.InputBox.OnTextChanged += TypingChatMessage;
 
-            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
+            buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 AbsoluteSpacing = 5,
@@ -630,12 +631,10 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(myClient);
+                        GameMain.GameSession?.CrewManager?.SetClientSpeaking(myClient);
                     }
                 }
             }
-
-            if (gameStarted) SetRadioButtonColor();
 
             if (ShowNetStats && client?.ServerConnection != null)
             {
@@ -1114,7 +1113,9 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
+                GameMain.GameSession = missionIndex < 0 ?
+                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
+                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);
                 GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else
@@ -1124,6 +1125,18 @@ namespace Barotrauma.Networking
                     reloadSub: true,
                     loadSecondSub: false,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
+            }
+
+            for (int i = 0; i < Submarine.MainSubs.Length; i++)
+            {
+                if (!loadSecondSub && i > 0) { break; }
+
+                var teamID = i == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
+                Submarine.MainSubs[i].TeamID = teamID;
+                foreach (Submarine sub in Submarine.MainSubs[i].DockedTo)
+                {
+                    sub.TeamID = teamID;
+                }
             }
 
             if (Level.Loaded.EqualityCheckVal != levelEqualityCheckVal)
@@ -2110,9 +2123,7 @@ namespace Barotrauma.Networking
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
         public GUIButton ShowLogButton; //TODO: move to NetLobbyScreen
-
-        private float myCharacterFrameOpenState;
-
+        
         public GUIFrame InGameHUD
         {
             get { return inGameHUD; }
@@ -2122,22 +2133,7 @@ namespace Barotrauma.Networking
         {
             get { return chatBox; }
         }
-
-        protected void SetRadioButtonColor()
-        {
-            if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f)
-            {
-                chatBox.RadioButton.GetChild<GUIImage>().Color = new Color(60, 60, 60, 255);
-            }
-            else
-            {
-                var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                chatBox.RadioButton.GetChild<GUIImage>().Color =
-                    (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
-                    Color.White : new Color(60, 60, 60, 255);
-            }
-        }
-
+        
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
             return chatBox.TypingChatMessage(textBox, text);
@@ -2169,11 +2165,6 @@ namespace Barotrauma.Networking
                 Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.AddToGUIUpdateList();
-
-                if (Character.Controlled == null)
-                {
-                    GameMain.NetLobbyScreen.MyCharacterFrame.AddToGUIUpdateList();
-                }
             }
         }
 
@@ -2192,24 +2183,17 @@ namespace Barotrauma.Networking
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
+                bool disableButtons =
+                    Character.Controlled != null &&
+                    Character.Controlled.SelectedConstruction?.GetComponent<Controller>() != null;
+                buttonContainer.Visible = !disableButtons;
+                
                 if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
 
                     cameraFollowsSub.Visible = Character.Controlled == null;
-
-                    if (Character.Controlled == null)
-                    {
-                        myCharacterFrameOpenState = GameMain.NetLobbyScreen.MyCharacterFrameOpen ? myCharacterFrameOpenState + deltaTime * 5 : myCharacterFrameOpenState - deltaTime * 5;
-                        myCharacterFrameOpenState = MathHelper.Clamp(myCharacterFrameOpenState, 0.0f, 1.0f);
-
-                        var myCharFrame = GameMain.NetLobbyScreen.MyCharacterFrame;
-                        int padding = GameMain.GraphicsWidth - myCharFrame.Parent.Rect.Right;
-
-                        myCharFrame.RectTransform.AbsoluteOffset =
-                            Vector2.SmoothStep(new Vector2(-myCharFrame.Rect.Width - padding, 0.0f), new Vector2(-padding, 0), myCharacterFrameOpenState).ToPoint();
-                    }
                 }
                 if (Character.Controlled == null || Character.Controlled.IsDead)
                 {
@@ -2246,7 +2230,47 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD || GUI.DisableUpperHUD) return;
+            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
+            
+            if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
+            {
+                Vector2 downloadBarSize = new Vector2(250, 35) * GUI.Scale;
+                Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - downloadBarSize.Y - 5);
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle(
+                    (int)pos.X,
+                    (int)pos.Y,
+                    (int)(fileReceiver.ActiveTransfers.Count * (downloadBarSize.X + 10)),
+                    (int)downloadBarSize.Y),
+                    Color.Black * 0.8f, true);
+
+                for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
+                {
+                    var transfer = fileReceiver.ActiveTransfers[i];
+
+                    GUI.DrawString(spriteBatch,
+                        pos,
+                        ToolBox.LimitString(TextManager.Get("DownloadingFile").Replace("[filename]", transfer.FileName), GUI.SmallFont, (int)downloadBarSize.X),
+                        Color.White, null, 0, GUI.SmallFont);
+                    GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - downloadBarSize.Y / 2), new Vector2(downloadBarSize.X * 0.7f, downloadBarSize.Y / 2), transfer.Progress, Color.Green);
+                    GUI.DrawString(spriteBatch, pos + new Vector2(5, downloadBarSize.Y / 2),
+                        MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
+                        Color.White, null, 0, GUI.SmallFont);
+
+                    if (GUI.DrawButton(spriteBatch, new Rectangle(
+                            (int)(pos.X + downloadBarSize.X * 0.7f), (int)(pos.Y + downloadBarSize.Y / 2),
+                            (int)(downloadBarSize.X * 0.3f), (int)(downloadBarSize.Y / 2)), 
+                        TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
+                    {
+                        CancelFileTransfer(transfer);
+                        fileReceiver.StopTransfer(transfer);
+                    }
+
+                    pos.X += (downloadBarSize.X + 10);
+                }
+            }
+            
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen) return;
 
             inGameHUD.DrawManually(spriteBatch);
 
@@ -2294,40 +2318,6 @@ namespace Barotrauma.Networking
                     GUI.DrawString(spriteBatch,
                         new Vector2(120.0f, 10),
                         respawnInfo, Color.White, null, 0, GUI.SmallFont);
-                }
-            }
-
-            if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
-            {
-                Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - 35);
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle(
-                    (int)pos.X,
-                    (int)pos.Y,
-                    fileReceiver.ActiveTransfers.Count * 210 + 10,
-                    32),
-                    Color.Black * 0.8f, true);
-
-                for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
-                {
-                    var transfer = fileReceiver.ActiveTransfers[i];
-
-                    GUI.DrawString(spriteBatch,
-                        pos,
-                        ToolBox.LimitString(TextManager.Get("DownloadingFile").Replace("[filename]", transfer.FileName), GUI.SmallFont, 200),
-                        Color.White, null, 0, GUI.SmallFont);
-                    GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 15), new Vector2(135, 15), transfer.Progress, Color.Green);
-                    GUI.DrawString(spriteBatch, pos + new Vector2(5, 15),
-                        MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
-                        Color.White, null, 0, GUI.SmallFont);
-
-                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
-                    {
-                        CancelFileTransfer(transfer);
-                        fileReceiver.StopTransfer(transfer);
-                    }
-
-                    pos.X += 210;
                 }
             }
 

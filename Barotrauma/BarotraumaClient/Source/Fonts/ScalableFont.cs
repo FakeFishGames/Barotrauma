@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public class ScalableFont
+    public class ScalableFont : IDisposable
     {
         private static List<ScalableFont> FontList = new List<ScalableFont>();
         private static Library Lib = null;
@@ -30,7 +30,7 @@ namespace Barotrauma
             set
             {
                 size = value;
-                if (graphicsDevice!=null) RenderAtlas(graphicsDevice, charRanges, texDims, baseChar);
+                if (graphicsDevice != null) RenderAtlas(graphicsDevice, charRanges, texDims, baseChar);
             }
         }
 
@@ -279,7 +279,7 @@ namespace Barotrauma
                 if (text[i] == '\n')
                 {
                     currentLineX = 0.0f;
-                    retVal.Y += baseHeight * 18 / 10;
+                    retVal.Y += baseHeight * 1.8f;
                     continue;
                 }
                 uint charIndex = text[i];
@@ -301,6 +301,16 @@ namespace Barotrauma
                 retVal.X = gd.advance;
             }
             return retVal;
+        }
+
+        public void Dispose()
+        {
+            FontList.Remove(this);
+            foreach (Texture2D texture in textures)
+            {
+                texture.Dispose();
+            }
+            textures.Clear();
         }
     }
 }

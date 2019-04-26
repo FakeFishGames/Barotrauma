@@ -154,11 +154,22 @@ namespace Barotrauma.Items.Components
 
                     Vector2 nodeWorldPos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - sub.HiddenSubPosition - sub.Position;// Nodes[(int)selectedNodeIndex];
 
-                    nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
-                    nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
+                    if (selectedNodeIndex.HasValue)
+                    {
+                        nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
+                        nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
 
-                    draggingWire.nodes[(int)selectedNodeIndex] = nodeWorldPos;
-                    draggingWire.UpdateSections();
+                        draggingWire.nodes[(int)selectedNodeIndex] = nodeWorldPos;
+                        draggingWire.UpdateSections();
+                    }
+                    else
+                    {
+                        if (Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X)
+                        {
+                            selectedNodeIndex = highlightedNodeIndex;
+                        }
+                    }
+
 
                     MapEntity.SelectEntity(draggingWire.item);
                 }
@@ -213,7 +224,8 @@ namespace Barotrauma.Items.Components
                                     Character.Controlled.ClearInputs();
                                 }
                                 draggingWire = selectedWire;
-                                selectedNodeIndex = closestIndex;
+                                //selectedNodeIndex = closestIndex;
+                                return;
                             }
                             //remove the node
                             else if (PlayerInput.RightButtonClicked() && closestIndex > 0 && closestIndex < selectedWire.nodes.Count - 1)
@@ -259,19 +271,11 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }            
+            }
 
             if (highlighted != null)
             {
                 highlighted.item.IsHighlighted = true;
-
-                if (Character.Controlled != null)
-                {
-                    Character.Controlled.FocusedItem = null;
-                    Character.Controlled.ResetInteract = true;
-                    Character.Controlled.ClearInputs();
-                }
-
                 if (PlayerInput.LeftButtonClicked())
                 {
                     MapEntity.DisableSelect = true;

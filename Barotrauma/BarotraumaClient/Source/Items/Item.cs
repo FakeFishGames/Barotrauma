@@ -101,9 +101,22 @@ namespace Barotrauma
             return color;
         }
 
-        partial void SetActiveSprite()
+        partial void SetActiveSpriteProjSpecific()
         {
             activeSprite = prefab.sprite;
+            Holdable holdable = GetComponent<Holdable>();
+            if (holdable != null && holdable.Attached)
+            {
+                foreach (ContainedItemSprite containedSprite in Prefab.ContainedSprites)
+                {
+                    if (containedSprite.UseWhenAttached)
+                    {
+                        activeSprite = containedSprite.Sprite;
+                        return;
+                    }
+                }
+            }
+
             if (Container != null)
             {
                 foreach (ContainedItemSprite containedSprite in Prefab.ContainedSprites)
@@ -171,10 +184,9 @@ namespace Barotrauma
             if (!Visible || (!editing && hiddenInGame)) return;
             if (editing && !ShowItems) return;
             
-            Color color = isHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? Color.Orange : GetSpriteColor();
+            Color color = IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? Color.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
-
-            Sprite activeSprite = prefab.sprite;
+            
             BrokenItemSprite fadeInBrokenSprite = null;
             float fadeInBrokenSpriteAlpha = 0.0f;
             if (condition < Prefab.Health)
@@ -372,7 +384,7 @@ namespace Barotrauma
                 Timing.TotalTime > LastImpactSoundTime + ImpactSoundInterval)
             {
                 LastImpactSoundTime = (float)Timing.TotalTime;
-                SoundPlayer.PlaySound(Prefab.ImpactSoundTag, 1.0f, 500.0f, WorldPosition, CurrentHull);
+                SoundPlayer.PlaySound(Prefab.ImpactSoundTag, WorldPosition, hullGuess: CurrentHull);
             }
         }
 
@@ -565,8 +577,13 @@ namespace Barotrauma
                 }
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
-                
-                if (inGame) continue;
+
+                if (inGame)
+                {
+                    ic.CreateEditingHUD(componentEditor);
+                    componentEditor.Recalculate();
+                    continue;
+                }
 
                 foreach (var kvp in ic.requiredItems)
                 {
@@ -599,6 +616,9 @@ namespace Barotrauma
                         };
                     }
                 }
+
+                ic.CreateEditingHUD(componentEditor);
+                componentEditor.Recalculate();
             }
 
             PositionEditingHUD();
@@ -783,7 +803,7 @@ namespace Barotrauma
             {
                 if (!ic.CanBeSelected) { continue; }
 
-                bool useAlternativeLayout = ic.Item != this;
+                bool useAlternativeLayout = activeHUDs.Count > 1;
                 bool wasUsingAlternativeLayout = ic.UseAlternativeLayout;
                 ic.UseAlternativeLayout = useAlternativeLayout;
                 needsLayoutUpdate |= ic.UseAlternativeLayout != wasUsingAlternativeLayout;
@@ -817,14 +837,28 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ComponentState:
                     {
                         int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                        (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
+                        if (components[componentIndex] is IServerSerializable serverSerializable)
+                        {
+                            serverSerializable.ClientRead(type, msg, sendingTime);
+                        }
+                        else
+                        {
+                            throw new Exception("Failed to read component state - " + components[componentIndex].GetType() + " is not IServerSerializable.");
+                        }
                     }
                     break;
-                    
+
                 case NetEntityEvent.Type.InventoryState:
-                    { 
+                    {
                         int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                        (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
+                        if (components[containerIndex] is ItemContainer container)
+                        {
+                            container.Inventory.ClientRead(type, msg, sendingTime);
+                        }
+                        else
+                        {
+                            throw new Exception("Failed to read inventory state - " + components[containerIndex].GetType() + " is not an ItemContainer.");
+                        }
                     }
                     break;
                 case NetEntityEvent.Type.Status:

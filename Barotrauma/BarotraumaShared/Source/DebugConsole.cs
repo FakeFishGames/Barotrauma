@@ -228,7 +228,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
                     ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
                 }
             },
             () =>
@@ -255,8 +255,10 @@ namespace Barotrauma
 
             commands.Add(new Command("disablecrewai", "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
             {
-                ThrowError("Karma has not been fully implemented yet, and is disabled in this version of Barotrauma.");
-                return;
+                HumanAIController.DisableCrewAI = true;
+                NewMessage("Crew AI disabled", Color.Red);
+                // This is probably not where it should be?
+                //ThrowError("Karma has not been fully implemented yet, and is disabled in this version of Barotrauma.");
                 /*if (GameMain.Server == null) return;
                 GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;*/
             }));
@@ -264,7 +266,19 @@ namespace Barotrauma
             commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
             {
                 HumanAIController.DisableCrewAI = false;
-                NewMessage("Crew AI enabled", Color.White);
+                NewMessage("Crew AI enabled", Color.Green);
+            }, isCheat: true));
+
+            commands.Add(new Command("disableenemyai", "disableenemyai: Disable the AI of the Enemy characters (monsters).", (string[] args) =>
+            {
+                EnemyAIController.DisableEnemyAI = true;
+                NewMessage("Enemy AI disabled", Color.Red);
+            }, isCheat: true));
+
+            commands.Add(new Command("enableenemyai", "enableenemyai: Enable the AI of the Enemy characters (monsters).", (string[] args) =>
+            {
+                EnemyAIController.DisableEnemyAI = false;
+                NewMessage("Enemy AI enabled", Color.Green);
             }, isCheat: true));
 
             commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", null));
@@ -1447,12 +1461,26 @@ namespace Barotrauma
 
             if (spawnPos != null)
             {
-                Entity.Spawner.AddToSpawnQueue(itemPrefab, (Vector2)spawnPos);
-
+                if (Entity.Spawner == null)
+                {
+                    new Item(itemPrefab, spawnPos.Value, null);
+                }
+                else
+                {
+                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnPos.Value);
+                }
             }
             else if (spawnInventory != null)
             {
-                Entity.Spawner.AddToSpawnQueue(itemPrefab, spawnInventory);
+                if (Entity.Spawner == null)
+                {
+                    var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
+                    spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
+                }
+                else
+                {
+                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory);
+                }
             }
         }
 

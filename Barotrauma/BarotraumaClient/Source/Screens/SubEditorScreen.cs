@@ -183,6 +183,12 @@ namespace Barotrauma
                 TextGetter = GetSubName
             };
 
+            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), paddedTopPanel.RectTransform, Anchor.CenterRight), style: "GUINotificationButton")
+            {
+                OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
+            };
+            disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
+
             linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform) { RelativeOffset = new Vector2(0.385f, 0.0f) },
                 TextManager.Get("AddSubButton"), elementCount: 20)
             {
@@ -310,6 +316,12 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f,
                 Stretch = true
             };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
+            {
+                OnClicked = (btn, userdata) => { ClearFilter(); return true; }
+            };
+
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
                 entityCategoryButtons.Add(new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform),
@@ -446,9 +458,10 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), showEntitiesHolder.RectTransform) { MinSize = new Point(0, 3) }, style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("PreviouslyUsedLabel"));
-            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) })
+            new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.025f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("PreviouslyUsedLabel"));
+            previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform, Anchor.BottomCenter))
             {
+                ScrollBarVisible = true,
                 OnSelected = SelectPrefab
             };
 
@@ -620,6 +633,10 @@ namespace Barotrauma
             cam.UpdateTransform();
 
             GameAnalyticsManager.SetCustomDimension01("editor");
+            if (!GameMain.Config.EditorDisclaimerShown)
+            {
+                GameMain.Instance.ShowEditorDisclaimer();
+            }
         }
 
         public override void Deselect()
@@ -832,8 +849,10 @@ namespace Barotrauma
             }
             
             string savePath = nameBox.Text + ".sub";
+            string prevSavePath = null;
             if (Submarine.MainSub != null)
             {
+                prevSavePath = Submarine.MainSub.FilePath;
                 savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.FilePath), savePath);
             }
             else
@@ -872,6 +891,10 @@ namespace Barotrauma
             GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
 
             Submarine.RefreshSavedSub(savePath);
+            if (prevSavePath != null && prevSavePath != savePath)
+            {
+                Submarine.RefreshSavedSub(prevSavePath);
+            }
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -1011,7 +1034,7 @@ namespace Barotrauma
 
             var previewImageButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), rightColumn.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
 
-            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageGenerate"))
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageCreate"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -1263,9 +1286,8 @@ namespace Barotrauma
         {
             if (CharacterMode) SetCharacterMode(false);
             if (WiringMode) SetWiringMode(false);
-
-            Submarine.RefreshSavedSubs();
-
+            
+            
             loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
@@ -1273,9 +1295,14 @@ namespace Barotrauma
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
 
-            var paddedLoadFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.05f };
+            var paddedLoadFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.02f };
 
             var deleteButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform, Anchor.Center));
+
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
 
             var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLoadFrame.RectTransform))
             {
@@ -1285,6 +1312,17 @@ namespace Barotrauma
                     if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
                     return true;
                 }
+            };
+
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+
+            searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterContainer.RectTransform), "x")
+            {
+                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
             };
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -1345,6 +1383,16 @@ namespace Barotrauma
 
 
             return true;
+        }
+
+        private void FilterSubs(GUIListBox subList, string filter)
+        {
+            foreach (GUIComponent child in subList.Content.Children)
+            {
+                var sub = child.UserData as Submarine;
+                if (sub == null) { return; }
+                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.Name.ToLower().Contains(filter.ToLower());
+            }
         }
 
         private bool LoadSub(GUIButton button, object obj)
@@ -1415,6 +1463,7 @@ namespace Barotrauma
                 {
                     sub.Remove();
                     File.Delete(sub.FilePath);
+                    Submarine.RefreshSavedSubs();
                     CreateLoadScreen();
                 }
                 catch (Exception e)

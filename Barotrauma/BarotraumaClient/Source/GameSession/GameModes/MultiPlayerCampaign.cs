@@ -135,6 +135,8 @@ namespace Barotrauma
 
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
             msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
+            msg.Write(PurchasedHullRepairs);
+            msg.Write(PurchasedItemRepairs);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
@@ -159,6 +161,8 @@ namespace Barotrauma
             UInt16 endWatchmanID = msg.ReadUInt16();
 
             int money = msg.ReadInt32();
+            bool purchasedHullRepairs = msg.ReadBoolean();
+            bool purchasedItemRepairs = msg.ReadBoolean();
 
             UInt16 purchasedItemCount = msg.ReadUInt16();
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
@@ -217,6 +221,8 @@ namespace Barotrauma
                 campaign.endWatchmanID = endWatchmanID;
 
                 campaign.Money = money;
+                campaign.PurchasedHullRepairs = purchasedHullRepairs;
+                campaign.PurchasedItemRepairs = purchasedItemRepairs;
                 campaign.CargoManager.SetPurchasedItems(purchasedItems);
 
                 if (myCharacterInfo != null)

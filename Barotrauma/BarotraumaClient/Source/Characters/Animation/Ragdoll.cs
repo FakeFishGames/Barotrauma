@@ -264,40 +264,45 @@ namespace Barotrauma
         
         partial void ImpactProjSpecific(float impact, Body body)
         {
-            float volume = Math.Min(impact - 3.0f, 1.0f);
+            float volume = MathHelper.Clamp(impact - 3.0f, 0.5f, 1.0f);
 
-            if (body.UserData is Limb && character.Stun <= 0f)
+            if (body.UserData is Limb limb && character.Stun <= 0f)
             {
-                Limb limb = (Limb)body.UserData;
-                if (impact > 3.0f && limb.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
-                {
-                    limb.LastImpactSoundTime = (float)Timing.TotalTime;
-                    if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
-                    {
-                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
-                    }
-                    foreach (WearableSprite wearable in limb.WearingItems)
-                    {
-                        if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
-                        {
-                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
-                        }
-                    }
-                }
+                if (impact > 3.0f) { PlayImpactSound(limb); }
             }
             else if (body.UserData is Limb || body == Collider.FarseerBody)
             {
-                if (!character.IsRemotePlayer)
+                if (!character.IsRemotePlayer && impact > ImpactTolerance)
                 {
-                    if (impact > ImpactTolerance)
-                    {
-                        SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
-                    }
+                    SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                 }
             }
             if (Character.Controlled == character)
             {
                 GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
+            }
+        }
+
+        public void PlayImpactSound(Limb limb)
+        {
+            limb.LastImpactSoundTime = (float)Timing.TotalTime;
+            if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
+            {
+                bool inWater = limb.inWater;
+                if (character.CurrentHull != null &&
+                    character.CurrentHull.Surface > character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height &&
+                    limb.SimPosition.Y < ConvertUnits.ToSimUnits(character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height) + limb.body.GetMaxExtent())
+                {
+                    inWater = true;
+                }
+                SoundPlayer.PlaySound(inWater ? "footstep_water" : limb.HitSoundTag, limb.WorldPosition, hullGuess: character.CurrentHull);
+            }
+            foreach (WearableSprite wearable in limb.WearingItems)
+            {
+                if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
+                {
+                    SoundPlayer.PlaySound(wearable.Sound, limb.WorldPosition, hullGuess: character.CurrentHull);
+                }
             }
         }
 
@@ -363,6 +368,8 @@ namespace Barotrauma
         
         partial void UpdateProjSpecific(float deltaTime)
         {
+            if (!character.Enabled || SimplePhysicsEnabled) { return; }
+
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             foreach (var deformation in SpriteDeformations)
             {
@@ -393,7 +400,7 @@ namespace Barotrauma
             }
         }
 
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint)
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound = true)
         {
             foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
             {
@@ -410,6 +417,11 @@ namespace Barotrauma
                 {
                     character.CurrentHull?.AddDecal(character.BloodDecalName, limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
                 }
+            }
+
+            if (playSound)
+            {
+                SoundPlayer.PlayDamageSound("Gore", 1.0f, limbJoint.LimbA.body);
             }
         }
 
@@ -428,14 +440,15 @@ namespace Barotrauma
                 return;
             }
 
-            //foreach (Limb limb in Limbs)
-            //{
-            //    limb.Draw(spriteBatch, cam);
-            //}
+            Color? color = null;
+            if (character.ExternalHighlight)
+            {
+                color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
+            }
 
             for (int i = 0; i < limbs.Length; i++)
             {
-                inversedLimbDrawOrder[i].Draw(spriteBatch, cam);
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }

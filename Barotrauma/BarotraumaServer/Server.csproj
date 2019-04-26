@@ -215,9 +215,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>  
-  <ItemGroup Condition="'$(DefineConstants)' == 'LINUX' ">
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)' == 'DebugLinux|x64'">
     <None Include="Launch_BarotraumaServer">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DedicatedServer">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DedicatedServer.bin.x86">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DedicatedServer.bin.x86_64">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="DedicatedServer.bin.osx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

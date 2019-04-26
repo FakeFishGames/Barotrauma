@@ -62,7 +62,7 @@ namespace Barotrauma
                     {
                         foreach (RoundSound sound in sounds)
                         {
-                            soundChannel = SoundPlayer.PlaySound(sound.Sound, sound.Volume, sound.Range, entity.WorldPosition, hull);
+                            soundChannel = SoundPlayer.PlaySound(sound.Sound, entity.WorldPosition, sound.Volume, sound.Range, hull);
                             if (soundChannel != null) soundChannel.Looping = loopSound;
                         }
                     }
@@ -82,7 +82,7 @@ namespace Barotrauma
                             selectedSoundIndex = Rand.Int(sounds.Count);
                         }
                         var selectedSound = sounds[selectedSoundIndex];
-                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, selectedSound.Volume, selectedSound.Range, entity.WorldPosition, hull);
+                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, entity.WorldPosition, selectedSound.Volume, selectedSound.Range, hull);
                         if (soundChannel != null) soundChannel.Looping = loopSound;
                     }
                 }

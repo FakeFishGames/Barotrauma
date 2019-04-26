@@ -293,10 +293,35 @@ namespace Barotrauma.Items.Components
             //steer closer if almost in range
             if (dist > Range)
             {
-                Vector2 standPos = leak.IsHorizontal ? new Vector2(Math.Sign(-fromItemToLeak.X), 0.0f) : new Vector2(0.0f, Math.Sign(-fromItemToLeak.Y) * 0.5f);
-                standPos = leak.WorldPosition + standPos * Range;
-                Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
-                character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
+                Vector2 standPos = new Vector2(Math.Sign(-fromItemToLeak.X), Math.Sign(-fromItemToLeak.Y)) / 2;
+                if (!character.AnimController.InWater)
+                {
+                    if (leak.IsHorizontal)
+                    {
+                        standPos.X *= 2;
+                        standPos.Y = 0;
+                    }
+                    else
+                    {
+                        standPos.X = 0;
+                    }
+                }
+                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                {
+                    if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && indoorSteering.CurrentPath.Unreachable)
+                    {
+                        Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
+                    }
+                    else
+                    {
+                        character.AIController.SteeringManager.SteeringSeek(standPos);
+                    }
+                }
+                else
+                {
+                    character.AIController.SteeringManager.SteeringSeek(standPos);
+                }
             }
             else
             {
@@ -305,28 +330,28 @@ namespace Barotrauma.Items.Components
                     // Too close -> steer away
                     character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition) / 2);
                 }
-                else
+                else if (dist <= Range)
                 {
+                    // In range
                     character.AIController.SteeringManager.Reset();
                 }
+                else
+                {
+                    return false;
+                }
             }
-
             sinTime += deltaTime;
             character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             if (item.RequireAimToUse)
             {
                 character.SetInput(InputType.Aim, false, true);
             }
-
             // Press the trigger only when the tool is approximately facing the target.
-            // If the character is climbing, ignore the check, because we cannot aim while climbing.
-            if (VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
+            var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
+            if (angle < MathHelper.PiOver4)
             {
+                character.SetInput(InputType.Shoot, false, true);
                 Use(deltaTime, character);
-            }
-            else
-            {
-                sinTime -= deltaTime * 2;
             }
 
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
@@ -337,11 +362,11 @@ namespace Barotrauma.Items.Components
                 sinTime = 0;
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
                 {
-                    character.Speak(TextManager.Get("DialogLeaksFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leaksfixed", 10.0f);
+                    character.Speak(TextManager.Get("DialogLeaksFixed").Replace("[roomname]", leak.FlowTargetHull.DisplayName), null, 0.0f, "leaksfixed", 10.0f);
                 }
                 else
                 {
-                    character.Speak(TextManager.Get("DialogLeakFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leakfixed", 10.0f);
+                    character.Speak(TextManager.Get("DialogLeakFixed").Replace("[roomname]", leak.FlowTargetHull.DisplayName), null, 0.0f, "leakfixed", 10.0f);
                 }
             }
 
@@ -360,6 +385,27 @@ namespace Barotrauma.Items.Components
                 {
                     effect.Apply(actionType, deltaTime, item, targets);
                 }
+#if CLIENT
+                // Hard-coded progress bars for welding doors stuck.
+                // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
+                foreach (ISerializableEntity target in targets)
+                {
+                    if (target is Door door)
+                    {
+                        for (int i = 0; i < effect.propertyNames.Length; i++)
+                        {
+                            string propertyName = effect.propertyNames[i];
+                            if (propertyName != "stuck") { continue; }
+                            if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
+                            object value = property.GetValue(target);
+                            if (value.GetType() == typeof(float))
+                            {
+                                user.UpdateHUDProgressBar(door, door.Item.WorldPosition, (float)value / 100, Color.DarkGray * 0.5f, Color.White);
+                            }
+                        }
+                    }
+                }
+#endif    
             }
         }
     }

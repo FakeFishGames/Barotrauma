@@ -83,7 +83,7 @@ namespace Barotrauma
                 if (character.SelectedCharacter == null)
                 {
                     character?.Speak(TextManager.Get("DialogFoundUnconsciousTarget")
-                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", character.CurrentHull.RoomName),
+                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", character.CurrentHull.DisplayName),
                         null, 1.0f,
                         "foundunconscioustarget" + targetCharacter.Name, 60.0f);
                 }

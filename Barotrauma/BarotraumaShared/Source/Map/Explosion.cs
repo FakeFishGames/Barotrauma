@@ -40,7 +40,7 @@ namespace Barotrauma
             flames = true;
             underwaterBubble = true;
         }
-
+        
         public Explosion(XElement element, string parentDebugName)
         {
             attack = new Attack(element, parentDebugName + ", Explosion");
@@ -60,6 +60,16 @@ namespace Barotrauma
             decalSize   = element.GetAttributeFloat("decalSize", 1.0f);
 
             CameraShake = element.GetAttributeFloat("camerashake", attack.Range * 0.1f);
+        }
+
+        public void DisableParticles()
+        {
+            sparks = false;
+            shockwave = false;
+            smoke = false;
+            flash = false;
+            flames = false;
+            underwaterBubble = false;
         }
 
         public List<Triplet<Explosion, Vector2, float>> GetRecentExplosions(float maxSecondsAgo)

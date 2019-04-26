@@ -16,7 +16,6 @@ namespace Barotrauma
         private GUIListBox saveList;
 
         private GUITextBox saveNameBox, seedBox;
-        private GUITickBox contextualTutorialBox;
 
         private GUILayoutGroup subPreviewContainer;
 
@@ -24,14 +23,6 @@ namespace Barotrauma
         
         public Action<Submarine, string, string> StartNewGame;
         public Action<string> LoadGame;
-        public bool TutorialSelected
-        {
-            get
-            {
-                if (contextualTutorialBox == null) return false;
-                return contextualTutorialBox.Selected;
-            }
-        }
 
         private readonly bool isMultiplayer;
 
@@ -68,14 +59,23 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed") + ":");
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
 
-            if (!isMultiplayer)
-            {
-                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("TutorialActive"));
-                UpdateTutorialSelection();
-            }
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub") + ":");
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
+            
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+
+            searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.075f, 1.0f), filterContainer.RectTransform), "x")
+            {
+                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
+            };
 
             if (!isMultiplayer) { subList.OnSelected = OnSubSelected; }
 
@@ -184,6 +184,16 @@ namespace Barotrauma
         public void RandomizeSeed()
         {
             seedBox.Text = ToolBox.RandomSeed(8);
+        }
+
+        private void FilterSubs(GUIListBox subList, string filter)
+        {
+            foreach (GUIComponent child in subList.Content.Children)
+            {
+                var sub = child.UserData as Submarine;
+                if (sub == null) { return; }
+                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.Name.ToLower().Contains(filter.ToLower());
+            }
         }
 
         private bool OnSubSelected(GUIComponent component, object obj)
@@ -375,14 +385,7 @@ namespace Barotrauma
                 },
                 Enabled = false
             };
-        }
-
-        public void UpdateTutorialSelection()
-        {
-            if (isMultiplayer) return;
-            Tutorial contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial);
-            contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
-        }
+        }       
         
         private bool SelectSaveFile(GUIComponent component, object obj)
         {

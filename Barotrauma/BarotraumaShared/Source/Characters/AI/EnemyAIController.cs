@@ -12,6 +12,13 @@ namespace Barotrauma
 {
     partial class EnemyAIController : AIController
     {
+        public static bool DisableEnemyAI;
+
+        /// <summary>
+        /// Enable the character to attack the outposts and the characters inside them. Disabled by default.
+        /// </summary>
+        public bool TargetOutposts;
+
         class WallTarget
         {
             public Vector2 Position;
@@ -115,6 +122,7 @@ namespace Barotrauma
         private readonly float memoryFadeTime = 0.5f;
 
         public LatchOntoAI LatchOntoAI { get; private set; }
+        public SwarmBehavior SwarmBehavior { get; private set; }
 
         public bool AttackHumans
         {
@@ -208,6 +216,10 @@ namespace Barotrauma
                     case "latchonto":
                         LatchOntoAI = new LatchOntoAI(subElement, this);
                         break;
+                    case "swarm":
+                    case "swarmbehavior":
+                        SwarmBehavior = new SwarmBehavior(subElement, this);
+                        break;
                     case "targetpriority":
                         targetingPriorities.Add(subElement.GetAttributeString("tag", "").ToLowerInvariant(), new TargetingPriority(subElement));
                         break;
@@ -249,7 +261,7 @@ namespace Barotrauma
             }
         }
         
-        public TargetingPriority GetTargetingPriority(string targetTag)
+        private TargetingPriority GetTargetingPriority(string targetTag)
         {
             if (targetingPriorities.TryGetValue(targetTag, out TargetingPriority priority))
             {
@@ -267,6 +279,7 @@ namespace Barotrauma
         
         public override void Update(float deltaTime)
         {
+            if (DisableEnemyAI) { return; }
             bool ignorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
             if (steeringManager is IndoorsSteeringManager)
@@ -356,12 +369,8 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-
-            // Just some debug code that makes the characters to follow the mouse cursor 
-            //run = true;
-            //Vector2 mousePos = ConvertUnits.ToSimUnits(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
-            //steeringManager.SteeringSeek(mousePos, Character.AnimController.GetCurrentSpeed(run));
-
+            
+            SwarmBehavior?.Update(deltaTime);
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
         }
 
@@ -484,7 +493,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!IsProperlyLatched)
+                if (!IsProperlyLatchedOnSub)
                 {
                     UpdateWallTarget();
                 }
@@ -1000,11 +1009,12 @@ namespace Barotrauma
 
         private void UpdateEating(float deltaTime)
         {
-            if (SelectedAiTarget == null)
+            if (SelectedAiTarget == null)   //SelectedAiTarget.Entity is Character c && !c.IsDead
             {
                 State = AIState.Idle;
                 return;
             }
+            Character targetChar = SelectedAiTarget.Entity as Character;
 
             Limb mouthLimb = Array.Find(Character.AnimController.Limbs, l => l != null && l.MouthPos.HasValue);
             if (mouthLimb == null) mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
@@ -1036,14 +1046,14 @@ namespace Barotrauma
 
         #region Targeting
 
-        private bool IsProperlyLatched => LatchOntoAI != null && LatchOntoAI.IsAttached && SelectedAiTarget?.Entity == wallTarget?.Structure;
+        private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
         public AITarget UpdateTargets(Character character, out TargetingPriority priority)
         {
-            if (IsProperlyLatched)
+            if (IsProperlyLatchedOnSub)
             {
                 // If attached to a valid target, just keep the target.
                 // Priority not used in this case.
@@ -1063,11 +1073,11 @@ namespace Barotrauma
                     continue;
                 }
                 if (target.Type == AITarget.TargetType.HumanOnly) { continue; }
-                // Don't attack outposts.
-                if (target.Entity.Submarine != null && target.Entity.Submarine.IsOutpost) { continue; }
-
+                if (!TargetOutposts)
+                {
+                    if (target.Entity.Submarine != null && target.Entity.Submarine.IsOutpost) { continue; }
+                }
                 Character targetCharacter = target.Entity as Character;
-
                 //ignore the aitarget if it is the Character itself
                 if (targetCharacter == character) continue;
 

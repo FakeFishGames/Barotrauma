@@ -21,9 +21,9 @@ namespace Barotrauma
         {
             if (!Enabled) { return 1000.0f; }
 
-            if (recipient.Character == null)
+            if (recipient.Character == null || recipient.Character.IsDead)
             {
-                return 0.1f;
+                return 0.2f;
             }
             else
             {
@@ -360,7 +360,7 @@ namespace Barotrauma
                         Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                         tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
-                    tempBuffer.Write(IsRagdolled);
+                    tempBuffer.Write(IsRagdolled || IsUnconscious || Stun > 0.0f || IsDead);
 
                     tempBuffer.Write(AnimController.Dir > 0.0f);
                 }

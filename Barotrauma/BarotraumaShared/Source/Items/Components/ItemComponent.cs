@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
         
-        [Editable, Serialize("", true)]
+        [Editable, Serialize("", true, translationTextTag: "ItemMsg")]
         public string Msg
         {
             get;
@@ -219,6 +219,7 @@ namespace Barotrauma.Items.Components
             requiredSkills = new List<Skill>();
 
 #if CLIENT
+            hasSoundsOfType = new bool[Enum.GetValues(typeof(ActionType)).Length];
             sounds = new Dictionary<ActionType, List<ItemSound>>();
 #endif
 
@@ -554,7 +555,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool HasRequiredContainedItems(bool addMessage)
+        public bool HasRequiredContainedItems(bool addMessage, string msg = null)
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
@@ -564,7 +565,11 @@ namespace Barotrauma.Items.Components
                 if (!item.OwnInventory.Items.Any(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)))
                 {
 #if CLIENT
-                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+                    msg = msg ?? ri.Msg;
+                    if (addMessage && !string.IsNullOrEmpty(msg))
+                    {
+                        GUI.AddMessage(msg, Color.Red);
+                    }
 #endif
                     return false;
                 }
@@ -573,39 +578,67 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public virtual bool HasRequiredItems(Character character, bool addMessage)
+        public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (!requiredItems.Any()) return true;
             if (character.Inventory == null) return false;
-                       
+            bool hasRequiredItems = false;
+            bool canContinue = true;
             if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
             {
                 foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
                 {
-                    if (character.SelectedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
-                    {
-#if CLIENT
-                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
-#endif
-                        return false;
-                    }
+                    canContinue = CheckItems(ri, character.SelectedItems);
+                    if (!canContinue) { break; }
                 }
             }
-            if (requiredItems.ContainsKey(RelatedItem.RelationType.Picked))
+            if (canContinue)
             {
-                foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
+                if (requiredItems.ContainsKey(RelatedItem.RelationType.Picked))
                 {
-                    if (character.Inventory.Items.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) == null)
+                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
                     {
-#if CLIENT
-                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
-#endif
-                        return false;
+                        if (!CheckItems(ri, character.Inventory.Items)) { break; }
                     }
                 }
             }
-            
-            return true;
+
+#if CLIENT
+            if (!hasRequiredItems && addMessage && !string.IsNullOrEmpty(msg))
+            {
+                GUI.AddMessage(msg, Color.Red);
+            }
+#endif
+            return hasRequiredItems;
+
+            bool CheckItems(RelatedItem relatedItem, IEnumerable<Item> itemList)
+            {
+                bool Predicate(Item it) => it != null && it.Condition > 0.0f && relatedItem.MatchesItem(it);
+                bool shouldBreak = false;
+                if (relatedItem.IsOptional)
+                {
+                    if (!hasRequiredItems)
+                    {
+                        hasRequiredItems = itemList.Any(Predicate);
+                    }
+                }
+                else
+                {
+                    hasRequiredItems = itemList.Any(Predicate);
+                    if (!hasRequiredItems)
+                    {
+                        shouldBreak = true;
+                    }
+                }
+                if (!hasRequiredItems)
+                {
+                    if (msg == null && !string.IsNullOrEmpty(relatedItem.Msg))
+                    {
+                        msg = relatedItem.Msg;
+                    }
+                }
+                return !shouldBreak;
+            }
         }
         
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Character user = null)
@@ -750,6 +783,7 @@ namespace Barotrauma.Items.Components
                         {
                             newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
                             newRequiredItem.Msg = prevRequiredItem.Msg;
+                            newRequiredItem.IsOptional = prevRequiredItem.IsOptional;
                         }
 
                         if (!requiredItems.ContainsKey(newRequiredItem.Type))
@@ -767,10 +801,7 @@ namespace Barotrauma.Items.Components
             string msg = TextManager.Get(Msg, true);
             if (msg != null)
             {
-                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-                {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
-                }
+                msg = TextManager.ParseInputTypes(msg);
                 DisplayMsg = msg;
             }
             else

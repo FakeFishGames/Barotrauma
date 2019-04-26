@@ -118,6 +118,16 @@ namespace Barotrauma
             }
         }
 
+        public static string ParseInputTypes(string text)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
+            }
+            return text;
+        }
+
         public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)
         {
             string text = Get(textTag, returnNull);
@@ -250,6 +260,28 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        public static List<KeyValuePair<string, string>> GetAllTagTextPairs()
+        {
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            List<KeyValuePair<string, string>> allText = new List<KeyValuePair<string, string>>();
+
+            foreach (TextPack textPack in textPacks[Language])
+            {
+                allText.AddRange(textPack.GetAllTagTextPairs());
+            }
+
+            return allText;
         }
 
         public static string ReplaceGenderPronouns(string text, Gender gender)

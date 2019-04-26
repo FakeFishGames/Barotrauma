@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -16,16 +17,22 @@ namespace Barotrauma.Items.Components
         {
             uiElements.Clear();
 
+            var visibleElements = customInterfaceElementList.Where(ciElement => !string.IsNullOrEmpty(ciElement.Label));
+
             GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center),
                 childAnchor: customInterfaceElementList.Count > 1 ? Anchor.TopCenter : Anchor.Center)
-                { RelativeSpacing = 0.05f };
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = visibleElements.Count() > 2
+            };
 
-            float elementSize = Math.Min(1.0f / customInterfaceElementList.Count, 0.5f);
-            foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
+            float elementSize = Math.Min(1.0f / visibleElements.Count(), 0.5f);
+            foreach (CustomInterfaceElement ciElement in visibleElements)
             {
                 if (ciElement.ContinuousSignal)
                 {
-                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform), ciElement.Label)
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform),
+                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label)
                     {
                         UserData = ciElement
                     };
@@ -45,7 +52,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform), ciElement.Label, style: "GUIButtonLarge")
+                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform), 
+                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label, style: "GUIButtonLarge")
                     {
                         UserData = ciElement
                     };
@@ -62,6 +70,43 @@ namespace Barotrauma.Items.Components
                         return true;
                     };
                     uiElements.Add(btn);
+                }
+            }
+        }
+
+        public override void CreateEditingHUD(SerializableEntityEditor editor)
+        {
+            base.CreateEditingHUD(editor);
+
+            PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(customInterfaceElementList[0]);
+            PropertyDescriptor labelProperty = properties.Find("Label", false);
+            PropertyDescriptor signalProperty = properties.Find("Signal", false);
+            for (int i = 0; i< customInterfaceElementList.Count; i++)
+            {
+                editor.CreateStringField(customInterfaceElementList[i],
+                    new SerializableProperty(labelProperty, customInterfaceElementList[i]),
+                    customInterfaceElementList[i].Label, "Label #" + (i + 1), "");
+                editor.CreateStringField(customInterfaceElementList[i],
+                    new SerializableProperty(signalProperty, customInterfaceElementList[i]),
+                    customInterfaceElementList[i].Signal, "Signal #" + (i + 1), "");
+            }
+        }
+
+        public void HighlightElement(int index, Color color, float duration, float pulsateAmount = 0.0f)
+        {
+            if (index < 0 || index >= uiElements.Count) { return; }
+            uiElements[index].Flash(color, duration);
+
+            if (pulsateAmount > 0.0f)
+            {
+                if (uiElements[index] is GUIButton button)
+                {
+                    button.Frame.Pulsate(Vector2.One, Vector2.One * (1.0f + pulsateAmount), duration);
+                    button.Frame.RectTransform.SetPosition(Anchor.Center);
+                }
+                else
+                {
+                    uiElements[index].Pulsate(Vector2.One, Vector2.One * (1.0f + pulsateAmount), duration);
                 }
             }
         }

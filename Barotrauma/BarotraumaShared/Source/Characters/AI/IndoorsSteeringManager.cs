@@ -218,13 +218,13 @@ namespace Barotrauma
                     }
                     else if (character.Submarine != currentPath.CurrentNode.Submarine)
                     {
-                        pos -= FarseerPhysics.ConvertUnits.ToSimUnits(currentPath.CurrentNode.Submarine.Position-character.Submarine.Position);
+                        pos -= FarseerPhysics.ConvertUnits.ToSimUnits(currentPath.CurrentNode.Submarine.Position - character.Submarine.Position);
                     }
                 }
             }
 
             //only humanoids can climb ladders
-            if (character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
+            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
                     currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
@@ -234,7 +234,7 @@ namespace Barotrauma
             }
             
             var collider = character.AnimController.Collider;
-            if (character.IsClimbing)
+            if (character.IsClimbing && !character.AnimController.InWater)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
@@ -278,6 +278,12 @@ namespace Barotrauma
             }
             else if (character.AnimController.InWater)
             {
+                // If the character is underwater, we don't need the ladders anymore
+                if (character.IsClimbing)
+                {
+                    character.AnimController.Anim = AnimController.Animation.None;
+                    character.SelectedConstruction = null;
+                }
                 if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 3, 2))
                 {
                     currentPath.SkipToNextNode();
@@ -388,13 +394,25 @@ namespace Barotrauma
                         buttonPressCooldown = ButtonPressInterval;
                         break;
                     }
+                    else
+                    {
+                        if (!door.HasRequiredItems(character, false) && shouldBeOpen)
+                        {
+                            currentPath.Unreachable = true;
+                            return;
+                        }
+
+                        door.Item.TryInteract(character, false, true, true);
+                        buttonPressCooldown = ButtonPressInterval;
+                        break;
+                    }
                 }
             }
         }
 
         private float? GetNodePenalty(PathNode node, PathNode nextNode)
         {
-            if (character == null) return 0.0f;
+            if (character == null) { return 0.0f; }
             
             float penalty = 0.0f;
             if (nextNode.Waypoint.ConnectedGap != null && nextNode.Waypoint.ConnectedGap.Open < 0.9f)
@@ -403,21 +421,23 @@ namespace Barotrauma
                 {
                     penalty = 100.0f;
                 }
-
-                if (!canBreakDoors)
+                else if (!canBreakDoors)
                 {
                     //door closed and the character can't open doors -> node can't be traversed
-                    if (!canOpenDoors || character.LockHands) return null;
+                    if (!canOpenDoors || character.LockHands) { return null; }
 
                     var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
-                    if (!doorButtons.Any()) return null;
+                    if (!doorButtons.Any())
+                    {
+                        if (!nextNode.Waypoint.ConnectedDoor.HasRequiredItems(character, false)) { return null; }
+                    }
 
                     foreach (Controller button in doorButtons)
                     {
                         if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=
-                            Math.Sign(node.Position.X - nextNode.Position.X)) continue;
+                            Math.Sign(node.Position.X - nextNode.Position.X)) { continue; }
 
-                        if (!button.HasRequiredItems(character, false)) return null;
+                        if (!button.HasRequiredItems(character, false)) { return null; }
                     }
                 }
             }

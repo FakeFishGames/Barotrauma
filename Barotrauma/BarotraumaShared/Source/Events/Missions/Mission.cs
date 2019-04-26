@@ -55,9 +55,9 @@ namespace Barotrauma
             get { return true; }
         }
 
-        public virtual Vector2 SonarPosition
+        public virtual IEnumerable<Vector2> SonarPositions
         {
-            get { return Vector2.Zero; }
+            get { return Enumerable.Empty<Vector2>(); }
         }
         
         public string SonarLabel
@@ -90,6 +90,13 @@ namespace Barotrauma
                 {
                     Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
                 }
+            }
+            if (description != null) description = description.Replace("[reward]", Reward.ToString("N0"));
+            if (successMessage != null) successMessage = successMessage.Replace("[reward]", Reward.ToString("N0"));
+            if (failureMessage != null) failureMessage = failureMessage.Replace("[reward]", Reward.ToString("N0"));
+            for (int m = 0; m < Messages.Count; m++)
+            {
+                Messages[m] = Messages[m].Replace("[reward]", Reward.ToString("N0"));
             }
         }
         public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)

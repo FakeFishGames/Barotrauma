@@ -53,6 +53,21 @@ namespace Barotrauma
             get { return Config.SelectedContentPackages; }
         }
 
+
+        private static ContentPackage vanillaContent;
+        public static ContentPackage VanillaContent
+        {
+            get
+            {
+                if (vanillaContent == null)
+                {
+                    // TODO: Dynamic method for defining and finding the vanilla content package.
+                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
+                }
+                return vanillaContent;
+            }
+        }
+
         public readonly string[] CommandLineArgs;
 
         public GameMain(string[] args)
@@ -83,6 +98,7 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
@@ -90,7 +106,6 @@ namespace Barotrauma
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
-            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
             LocationType.Init();

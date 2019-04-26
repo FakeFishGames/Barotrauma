@@ -27,6 +27,11 @@ namespace Barotrauma
         private bool overflowClipActive;
         public bool OverflowClip;
 
+        public bool OverflowClipActive
+        {
+            get { return overflowClipActive; }
+        }
+
         private float textDepth;
 
         public Vector2 TextOffset { get; set; }
@@ -88,6 +93,7 @@ namespace Barotrauma
         public Vector2 TextPos
         {
             get { return textPos; }
+            set { textPos = value; }
         }
 
         public float TextScale
@@ -327,7 +333,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred);
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);

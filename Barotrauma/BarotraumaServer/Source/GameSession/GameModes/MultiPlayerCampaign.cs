@@ -168,6 +168,8 @@ namespace Barotrauma
             msg.Write(isRunning && endWatchman != null ? endWatchman.ID : (UInt16)0);
 
             msg.Write(Money);
+            msg.Write(PurchasedHullRepairs);
+            msg.Write(PurchasedItemRepairs);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
@@ -192,6 +194,8 @@ namespace Barotrauma
         {
             UInt16 selectedLocIndex = msg.ReadUInt16();
             byte selectedMissionIndex = msg.ReadByte();
+            bool purchasedHullRepairs = msg.ReadBoolean();
+            bool purchasedItemRepairs = msg.ReadBoolean();
             UInt16 purchasedItemCount = msg.ReadUInt16();
 
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
@@ -206,6 +210,33 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Client \"" + sender.Name + "\" does not have a permission to manage the campaign");
                 return;
+            }
+
+            if (purchasedHullRepairs != this.PurchasedHullRepairs)
+            {
+                if (purchasedHullRepairs && Money >= HullRepairCost)
+                {
+                    this.PurchasedHullRepairs = true;
+                    Money -= HullRepairCost;
+                }
+                else if (!purchasedHullRepairs)
+                {
+                    this.PurchasedHullRepairs = false;
+                    Money += HullRepairCost;
+                }
+            }
+            if (purchasedItemRepairs != this.PurchasedItemRepairs)
+            {
+                if (purchasedItemRepairs && Money >= ItemRepairCost)
+                {
+                    this.PurchasedItemRepairs = true;
+                    Money -= ItemRepairCost;
+                }
+                else if (!purchasedItemRepairs)
+                {
+                    this.PurchasedItemRepairs = false;
+                    Money += ItemRepairCost;
+                }
             }
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);

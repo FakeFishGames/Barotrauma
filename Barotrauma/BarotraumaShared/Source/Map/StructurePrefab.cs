@@ -194,7 +194,14 @@ namespace Barotrauma
                         break;
                     case "backgroundsprite":
                         sp.BackgroundSprite = new Sprite(subElement, lazyLoad: true);
-
+                        if (subElement.Attribute("sourcerect") == null && sp.sprite != null)
+                        {
+                            sp.BackgroundSprite.SourceRect = sp.sprite.SourceRect;
+                            sp.BackgroundSprite.size = sp.sprite.size;
+                            sp.BackgroundSprite.size.X *= sp.sprite.SourceRect.Width;
+                            sp.BackgroundSprite.size.Y *= sp.sprite.SourceRect.Height;
+                            sp.BackgroundSprite.RelativeOrigin = subElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
+                        }
                         if (subElement.GetAttributeBool("fliphorizontal", false)) 
                             sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally;
                         if (subElement.GetAttributeBool("flipvertical", false)) 

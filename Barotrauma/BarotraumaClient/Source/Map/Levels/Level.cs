@@ -105,7 +105,7 @@ namespace Barotrauma
 
                 if (Vector2.DistanceSquared(bodyPos, levelWall.Body.Position) > 0.5f)
                 {
-                    levelWall.Body.SetTransform(bodyPos, levelWall.Body.Rotation);
+                    levelWall.Body.SetTransformIgnoreContacts(ref bodyPos, levelWall.Body.Rotation);
                 }
             }
         }

@@ -1,4 +1,63 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.10.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Completely remade tutorials (separate tutorial for each job).
+- Added a door and hatch variants with integrated buttons.
+- New outpost graphics.
+- Added swarm behavior to crawlers.
+- Added a new mission where you have to kill a swarm of crawlers.
+- Numerous crew AI improvements.
+- Balanced item deterioration values.
+- Mineral sprites change when collected from the environment.
+- Added an option to disable directional voice chat.
+- Added automatic submarine repair option to the campaign.
+- Added "all" tab to the entity list in the submarine editor.
+- Hide the crew area, chat box and server buttons when operating a turret or searchlight.
+- Doors can be repaired with a wrench.
+- Some new lamp variants.
+- Display a progress bar when welding doors shut.
+- Items that don't give any materials when deconstructed cannot be deconstructed.
+- Added a console command that resets selected items and structures to prefab values ("resetselected").
+- Option to toggle structure drop shadows and edit the position of the shadow in the sub editor.
+- Minor physics optimizations.
+- Disable background music & ambience in the character editor.
+- More pronounced limping animation when a character's legs are injured.
+- The inventory slots next to the character portrait (ID card, uniform, etc) can be hidden.
+- Some new sound effects and background music.
+- All walls can be scaled in the submarine editor.
+- Structure damage is visualized when using debugdraw.
+- Improved font scaling on different resolutions.
+- Added Steam overlay support to Workshop.
+- Server list shows which servers have voice chat enabled.
+- Show a message box notifying respawning traitors that they're no longer a traitor.
+- Added a search bar to the store menu.
+- Added search bars to sub lists in campaign setup UI and sub editor.
+
+Bugfixes:
+- Don't allow rewiring and deattaching an item at the same time (happened when interacting with an item
+while holding both a screwdriver and a wrench).
+- Fixed bots being unable to complete almost any task in the multiplayer due to a bug that caused
+them to interpret the sub as another crew's submarine.
+- When spawning multiple monsters at the same time, spread them around a bit to prevent the players
+from getting attacked by a ball of overlapping crawlers.
+- Fixed huge lag spikes when a character tries to escape from an enemy but can't find a path away from it.
+- Fixed file transfer progress bars not being visible in the server lobby.
+- Fixed crashing when attempting to start a mission round with mission type set to None.
+- Fixed ElectricalDischarger electricity effect staying visible if the item breaks or the component 
+is deactivated from outside (e.g. via a StatusEffect or the parent component).
+- Fixed specular maps being rendered on top of characters when outside the sub.
+- Fixed excessively bright lights around sonar flora and lava vents.
+- Fixes to item collider sizes.
+- Fixed inability to scroll through long texts in the sub editor's textboxes.
+- Fixed clients not being able to see other characters in spectator if they've died far away from the sub.
+- Fixed non-latin characters not being displayed correctly in Workshop item texts.
+- Don't prevent selecting items in the sub editor when the cursor is on a wire node, because it makes it 
+very difficult (or impossible) to select small items in the wiring mode.
+- Fixed crashing when attempting to use the "spawnitem" command when a round is not running.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.9.10
 ---------------------------------------------------------------------------------------------------------
 

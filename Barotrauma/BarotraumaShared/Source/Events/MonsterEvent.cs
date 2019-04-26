@@ -13,7 +13,7 @@ namespace Barotrauma
 
         private int minAmount, maxAmount;
 
-        private Character[] monsters;
+        private List<Character> monsters;
 
         private bool spawnDeep;
 
@@ -209,6 +209,7 @@ namespace Barotrauma
 
             //isActive = false;
 
+            bool spawnReady = false;
             if (spawnPending)
             {
                 //wait until there are no submarines at the spawnpos
@@ -219,24 +220,30 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos) < minDist * minDist) return;
                 }
 
+                spawnPending = false;
+
                 //+1 because Range returns an integer less than the max value
                 int amount = Rand.Range(minAmount, maxAmount + 1, Rand.RandSync.Server);
-                monsters = new Character[amount];
-
+                monsters = new List<Character>();
+                float offsetAmount = spawnPosType == Level.PositionType.MainPath ? 1000 : 100;
                 for (int i = 0; i < amount; i++)
                 {
-                    bool isClient = false;
-#if CLIENT
-                    isClient = GameMain.Client != null;
-#endif
-
-                    monsters[i] = Character.Create(
-                        characterFile, spawnPos + Rand.Vector(100.0f, Rand.RandSync.Server), 
-                        i.ToString(), null, isClient, true, true);
+                    CoroutineManager.InvokeAfter(() =>
+                    {
+                        bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+                        monsters.Add(Character.Create(characterFile, spawnPos + Rand.Vector(offsetAmount, Rand.RandSync.Server), i.ToString(), null, isClient, true, true));
+                        if (monsters.Count == amount)
+                        {
+                            spawnReady = true;
+                            //this will do nothing if the monsters have no swarm behavior defined, 
+                            //otherwise it'll make the spawned characters act as a swarm
+                            SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
+                        }
+                    }, Rand.Range(0f, amount / 2, Rand.RandSync.Server));
                 }
-
-                spawnPending = false;
             }
+
+            if (!spawnReady) { return; }
 
             Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
 #if CLIENT

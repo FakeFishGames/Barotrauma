@@ -76,6 +76,7 @@ namespace Barotrauma
         private List<Repairable> repairables;
 
         //a dictionary containing lists of the status effects in all the components of the item
+        private bool[] hasStatusEffectsOfType;
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
         
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
@@ -177,7 +178,7 @@ namespace Barotrauma
         {
             get
             {
-                return (body == null) ? base.Position : ConvertUnits.ToDisplayUnits(SimPosition);
+                return (body == null) ? base.Position : body.Position;
             }
         }
 
@@ -185,7 +186,7 @@ namespace Barotrauma
         {
             get
             {
-                return (body == null) ? base.SimPosition : body.SimPosition;
+                return (body == null) ? ConvertUnits.ToSimUnits(base.Position) : body.SimPosition;
             }
         }
 
@@ -557,12 +558,15 @@ namespace Barotrauma
                 }
             }
 
+            hasStatusEffectsOfType = new bool[Enum.GetValues(typeof(ActionType)).Length];
             foreach (ItemComponent ic in components)
             {
                 if (ic.statusEffectLists == null) continue;
 
                 if (statusEffectLists == null)
+                {
                     statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+                }
 
                 //go through all the status effects of the component 
                 //and add them to the corresponding statuseffect list
@@ -573,6 +577,7 @@ namespace Barotrauma
                     {
                         statusEffectList = new List<StatusEffect>();
                         statusEffectLists.Add(actionType, statusEffectList);
+                        hasStatusEffectsOfType[(int)actionType] = true;
                     }
 
                     foreach (StatusEffect effect in componentEffectList)
@@ -801,7 +806,12 @@ namespace Barotrauma
             if (findNewHull) FindHull();
         }
 
-        partial void SetActiveSprite();
+        public void SetActiveSprite()
+        {
+            SetActiveSpriteProjSpecific();
+        }
+
+        partial void SetActiveSpriteProjSpecific();
 
         public override void Move(Vector2 amount)
         {
@@ -823,16 +833,16 @@ namespace Barotrauma
         {
             return world ? 
                 new Rectangle(
-                    WorldRect.X + trigger.X,
-                    WorldRect.Y + trigger.Y,
-                    (trigger.Width == 0) ? Rect.Width : trigger.Width,
-                    (trigger.Height == 0) ? Rect.Height : trigger.Height)
+                    (int)(WorldRect.X + trigger.X * Scale),
+                    (int)(WorldRect.Y + trigger.Y * Scale),
+                    (trigger.Width == 0) ? Rect.Width : (int)(trigger.Width * Scale),
+                    (trigger.Height == 0) ? Rect.Height : (int)(trigger.Height * Scale))
                     :
                 new Rectangle(
-                    Rect.X + trigger.X,
-                    Rect.Y + trigger.Y,
-                    (trigger.Width == 0) ? Rect.Width : trigger.Width,
-                    (trigger.Height == 0) ? Rect.Height : trigger.Height);
+                    (int)(Rect.X + trigger.X * Scale),
+                    (int)(Rect.Y + trigger.Y * Scale),
+                    (trigger.Width == 0) ? Rect.Width : (int)(trigger.Width * Scale),
+                    (trigger.Height == 0) ? Rect.Height : (int)(trigger.Height * Scale));
         }
 
         /// <summary>
@@ -918,14 +928,9 @@ namespace Barotrauma
         
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
-            if (statusEffectLists == null) return;
-
-            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
-
-            bool broken = condition <= 0.0f;
-            foreach (StatusEffect effect in statusEffects)
+            if (!hasStatusEffectsOfType[(int)type]) { return; }
+            foreach (StatusEffect effect in statusEffectLists[type])
             {
-                if (broken && effect.type != ActionType.OnBroken) continue;
                 ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
             }
         }
@@ -1042,6 +1047,8 @@ namespace Barotrauma
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
+            bool broken = condition <= 0.0f;
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 sendConditionUpdateTimer -= deltaTime;
@@ -1076,17 +1083,16 @@ namespace Barotrauma
 
                 if (!ic.IsActive) continue;
 
-                if (condition > 0.0f)
+                if (broken)
                 {
-                    ic.Update(deltaTime, cam);
-
-#if CLIENT
-                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);
-#endif
+                    ic.UpdateBroken(deltaTime, cam);
                 }
                 else
                 {
-                    ic.UpdateBroken(deltaTime, cam);
+                    ic.Update(deltaTime, cam);
+#if CLIENT
+                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);
+#endif
                 }
             }
 
@@ -1118,7 +1124,10 @@ namespace Barotrauma
                     container = container.Container;
                 }
             }
-            ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            if (!broken)
+            {
+                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            }
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
@@ -1197,7 +1206,7 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return true; }
 
-            if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
+            if (ImpactTolerance > 0.0f && condition > 0.0f && impact > ImpactTolerance)
             {
                 ApplyStatusEffects(ActionType.OnImpact, 1.0f);
 #if SERVER
@@ -1432,13 +1441,13 @@ namespace Barotrauma
                             selectHit = picker.IsKeyHit(ic.SelectKey);
 
 #if CLIENT
-                        //if the cursor is on a UI component, disable interaction with the left mouse button
-                        //to prevent accidentally selecting items when clicking UI elements
-                        if (picker == Character.Controlled && GUI.MouseOn != null)
-                        {
-                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
-                        }
+                            //if the cursor is on a UI component, disable interaction with the left mouse button
+                            //to prevent accidentally selecting items when clicking UI elements
+                            if (picker == Character.Controlled && GUI.MouseOn != null)
+                            {
+                                if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
+                                if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
+                            }
 #endif
                         }
                     }
@@ -1608,18 +1617,22 @@ namespace Barotrauma
             if (remove) { Spawner?.AddToRemoveQueue(this); }
         }
 
+        List<ColoredText> texts = new List<ColoredText>();
         public List<ColoredText> GetHUDTexts(Character character)
         {
-            List<ColoredText> texts = new List<ColoredText>();
-            
+            texts.Clear();
             foreach (ItemComponent ic in components)
             {
                 if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
-               
-                Color color = Color.Red;
-                if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
+
+                Color color = Color.Gray;
+                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
+                if (hasRequiredSkillsAndItems)
+                {
+                    color = Color.Cyan;
+                }
 
                 texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }
@@ -2058,6 +2071,8 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+            Sprite.ReloadXML();
+            SpriteDepth = Sprite.Depth;
             components.ForEach(c => c.Reset());
         }
 

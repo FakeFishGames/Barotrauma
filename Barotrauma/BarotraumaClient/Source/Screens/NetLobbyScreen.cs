@@ -158,14 +158,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        public GUIFrame MyCharacterFrame
-        {
-            get { return myCharacterFrame; }
-        }
-
-        public bool MyCharacterFrameOpen;
-
+        
         public GUIFrame InfoFrame
         {
             get { return infoFrame; }
@@ -261,7 +254,7 @@ namespace Barotrauma
 
         public NetLobbyScreen()
         {
-            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center), style: null);
+            defaultModeContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), Frame.RectTransform, Anchor.Center) { MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 100) }, style: null);
             campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.75f), Frame.RectTransform, Anchor.TopCenter), style: null)
             {
                 Visible = false
@@ -300,18 +293,7 @@ namespace Barotrauma
                 OnSelected = TogglePlayYourself,
                 UserData = "playyourself"
             };
-
-            var toggleMyPlayerFrame = new GUIButton(new RectTransform(new Point(25, 70), myCharacterFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight), "", style: "GUIButtonHorizontalArrow");
-            toggleMyPlayerFrame.OnClicked += (GUIButton btn, object userdata) =>
-            {
-                MyCharacterFrameOpen = !MyCharacterFrameOpen;
-                foreach (GUIComponent child in btn.Children)
-                {
-                    child.SpriteEffects = MyCharacterFrameOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                }
-                return true;
-            };
-
+            
             //player list ------------------------------------------------------------------
 
             playerListFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.35f - panelSpacing), defaultModeContainer.RectTransform, Anchor.BottomRight));
@@ -698,7 +680,6 @@ namespace Barotrauma
         public override void Deselect()
         {
             textBox.Deselect();
-            myCharacterFrame.GetChild<GUIButton>().Visible = true;
             CampaignCharacterDiscarded = false;
         }
 
@@ -713,10 +694,7 @@ namespace Barotrauma
             textBox.Select();
             textBox.OnEnterPressed = GameMain.Client.EnterChatMessage;
             textBox.OnTextChanged += GameMain.Client.TypingChatMessage;
-
-            myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
-            myCharacterFrame.GetChild<GUIButton>().Visible = false;
-
+            
             subList.Enabled = AllowSubSelection;// || GameMain.Server != null;
             shuttleList.Enabled = AllowSubSelection;// || GameMain.Server != null;
 
@@ -737,11 +715,15 @@ namespace Barotrauma
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;
-                if (campaignUI?.StartButton != null)
+                if (campaignUI != null)
                 {
-                    campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
-                        (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
-                        GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                    //SelectTab(Tab.Map);
+                    if (campaignUI.StartButton != null)
+                    {
+                        campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
+                            (GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
+                            GameMain.Client.HasPermission(ClientPermissions.ManageCampaign));
+                    }
                 }
                 GameMain.Client.SetReadyToStart(ReadyToStartBox);
             }

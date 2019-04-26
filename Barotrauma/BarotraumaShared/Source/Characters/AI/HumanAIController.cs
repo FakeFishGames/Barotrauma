@@ -267,7 +267,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
+                        newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
                 }
             }
         }
@@ -286,18 +286,18 @@ namespace Barotrauma
 
             if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
             {
-                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.RoomName), null, 0, "pressure", 30.0f);
+                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.DisplayName), null, 0, "pressure", 30.0f);
             }
         }
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            // Damage from falling etc.
-            if (Character.LastDamageSource == null) { return; }
             float damage = attackResult.Damage;
             if (damage <= 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
+                // Ignore damage from falling etc that we shouldn't react to.
+                if (Character.LastDamageSource == null) { return; }
                 AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
             }
             else if (IsFriendly(attacker))

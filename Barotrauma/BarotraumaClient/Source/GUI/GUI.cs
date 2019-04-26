@@ -129,6 +129,8 @@ namespace Barotrauma
             get { return pauseMenuOpen; }
         }
 
+        public static bool PreventPauseMenuToggle = false;
+
         public static Color ScreenOverlayColor
         {
             get;
@@ -1413,6 +1415,7 @@ namespace Barotrauma
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) return;
+            if (PreventPauseMenuToggle) return;
 
             settingsMenuOpen = false;
 
@@ -1546,9 +1549,9 @@ namespace Barotrauma
             
             if (GameMain.GameSession != null)
             {
-                if (ContextualTutorial.Initialized && GameMain.GameSession.GameMode is SinglePlayerCampaign)
+                if (Tutorial.Initialized)
                 {
-                    ((SinglePlayerCampaign)GameMain.GameSession.GameMode).ContextualTutorial.Stop();
+                    ((TutorialMode)GameMain.GameSession.GameMode).Tutorial.Stop();
                 }
 
                 if (GameSettings.SendUserStatistics)
@@ -1559,6 +1562,8 @@ namespace Barotrauma
                 }
                 GameMain.GameSession = null;
             }
+
+            GUIMessageBox.CloseAll();
             
             GameMain.MainMenuScreen.Select();
 
@@ -1566,7 +1571,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
+        /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages. TODO: Allow to show messages at the middle of the screen (instead of the top center).
         /// </summary>
         public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, ScalableFont font = null)
         {

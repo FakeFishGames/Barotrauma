@@ -22,7 +22,7 @@ namespace Barotrauma
                 drawRect = new Rectangle(
                     (int)(drawRect.X * scale) + drawArea.Center.X, -((int)((drawRect.Y - drawRect.Height) * scale) + drawArea.Center.Y), 
                     (int)(drawRect.Width * scale), (int)(drawRect.Height * scale));
-                entity.First.DrawPlacing(spriteBatch, drawRect, scale);
+                entity.First.DrawPlacing(spriteBatch, drawRect, entity.First.Scale * scale);
             }
         }
 
@@ -34,7 +34,7 @@ namespace Barotrauma
             {
                 Rectangle drawRect = entity.Second;
                 drawRect.Location += Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
-                entity.First.DrawPlacing(spriteBatch, drawRect);
+                entity.First.DrawPlacing(spriteBatch, drawRect, entity.First.Scale);
             }
         }
 
