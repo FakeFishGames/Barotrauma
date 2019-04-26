@@ -2534,7 +2534,7 @@ namespace Barotrauma
                 GameMain.GameSession.ReviveCharacter(this);
             }
         }
-        
+
         public override void Remove()
         {
             if (Removed)
@@ -2546,16 +2546,18 @@ namespace Barotrauma
 
             base.Remove();
 
-            if (selectedItems[0] != null) selectedItems[0].Drop(this);
-            if (selectedItems[1] != null) selectedItems[1].Drop(this);
+            if (selectedItems[0] != null) { selectedItems[0].Drop(this); }
+            if (selectedItems[1] != null) { selectedItems[1].Drop(this); }
 
-            if (info != null) info.Remove();
+            if (info != null) { info.Remove(); }
 
 #if CLIENT
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
 #endif
 
             CharacterList.Remove(this);
+
+            if (Controlled == this) { Controlled = null; }
 
             if (Inventory != null)
             {
@@ -2576,8 +2578,8 @@ namespace Barotrauma
 
             foreach (Character c in CharacterList)
             {
-                if (c.focusedCharacter == this) c.focusedCharacter = null;
-                if (c.SelectedCharacter == this) c.SelectedCharacter = null;
+                if (c.focusedCharacter == this) { c.focusedCharacter = null; }
+                if (c.SelectedCharacter == this) { c.SelectedCharacter = null; }
             }
         }
         partial void DisposeProjSpecific();
