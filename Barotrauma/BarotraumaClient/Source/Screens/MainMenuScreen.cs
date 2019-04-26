@@ -324,7 +324,6 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
-                if (tutorial is ContextualTutorial) continue;
                 var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
