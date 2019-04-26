@@ -1,6 +1,9 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Lights;
 using Barotrauma.Networking;
+using FarseerPhysics;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -157,6 +160,26 @@ namespace Barotrauma
             PositionEditingHUD();
 
             return editingHUD;
+        }
+        
+        partial void OnImpactProjSpecific(Fixture f1, Fixture f2, Contact contact)
+        {
+            if (!Prefab.Platform && Prefab.StairDirection == Direction.None)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
+
+                int section = FindSectionIndex(pos);
+                if (section > -1)
+                {
+                    Vector2 normal = contact.Manifold.LocalNormal;
+
+                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal) * f2.Body.Mass * 0.1f;
+                    if (impact > 10.0f)
+                    {
+                        SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: Tags);
+                    }
+                }
+            }
         }
 
         public override bool IsVisible(Rectangle worldView)

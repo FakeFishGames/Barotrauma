@@ -872,6 +872,7 @@ namespace Barotrauma
                             ic.PlaySound(ActionType.OnBroken, WorldPosition);
                         }
                     }
+                    SetActiveSprite();
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     {

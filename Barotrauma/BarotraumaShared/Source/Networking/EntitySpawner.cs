@@ -90,6 +90,11 @@ namespace Barotrauma
             removeQueue = new Queue<Entity>();
         }
 
+        public override string ToString()
+        {
+            return "EntitySpawner";
+        }
+
         public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
@@ -97,7 +102,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue1:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, condition));
@@ -110,7 +115,7 @@ namespace Barotrauma
             {
                 string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue2:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, condition));
