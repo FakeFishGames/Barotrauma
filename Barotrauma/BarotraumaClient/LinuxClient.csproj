@@ -192,6 +192,9 @@
     <None Include="libsteam_api64.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="libvlc.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Barotrauma">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
