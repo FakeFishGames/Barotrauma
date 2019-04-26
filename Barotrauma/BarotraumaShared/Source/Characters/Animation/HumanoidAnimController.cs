@@ -379,12 +379,19 @@ namespace Barotrauma
                 {
                     //rotate collider back upright
                     Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 10.0f;
-
                     Collider.FarseerBody.FixedRotation = false;
                 }
                 else
                 {
                     Collider.FarseerBody.FixedRotation = true;
+                }
+            }
+            else
+            {
+                float angleDiff = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f);
+                if (Math.Abs(angleDiff) > 0.001f)
+                {
+                    Collider.SetTransform(Collider.SimPosition, Collider.Rotation + angleDiff);
                 }
             }
 
@@ -550,9 +557,11 @@ namespace Barotrauma
                 float slowdownAmount = 0.0f;
                 if (currentHull != null)
                 {
+                    //TODO: take into account that the feet aren't necessarily in CurrentHull
                     //full slowdown (1.5f) when water is up to the torso
                     surfaceY = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / TorsoPosition.Value, 0.0f, 1.0f) * 1.5f;
+                    float bottomPos = Math.Max(colliderPos.Y, currentHull.Rect.Y - currentHull.Rect.Height);
+                    slowdownAmount = MathHelper.Clamp((surfaceY - bottomPos) / TorsoPosition.Value, 0.0f, 1.0f) * 1.5f;
                 }
 
                 float maxSpeed = Math.Max(TargetMovement.Length() - slowdownAmount, 1.0f);
