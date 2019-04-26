@@ -1,4 +1,4 @@
-/*using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Xml.Linq;
 using System;
 using Microsoft.Xna.Framework;
@@ -9,11 +9,6 @@ namespace Barotrauma.Tutorials
 {
     class ContextualTutorial : Tutorial
     {
-        public ContextualTutorial(XElement element) : base(element)
-        {
-            //Name = "ContextualTutorial";
-        }
-
         public static bool Selected = false;
 
         private Steering navConsole;
@@ -36,6 +31,11 @@ namespace Barotrauma.Tutorials
         private const float floodTutorialDelay = 2.0f;
         private float medicalTutorialTimer = 0.0f;
         private const float medicalTutorialDelay = 2.0f;
+
+        public ContextualTutorial(XElement element) : base(element)
+        {
+            Name = "ContextualTutorial";
+        }
 
         public override void Initialize()
         {
@@ -517,4 +517,4 @@ namespace Barotrauma.Tutorials
             Stop();
         }
     }
-}*/
+}
