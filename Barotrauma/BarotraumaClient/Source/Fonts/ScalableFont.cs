@@ -279,7 +279,7 @@ namespace Barotrauma
                 if (text[i] == '\n')
                 {
                     currentLineX = 0.0f;
-                    retVal.Y += baseHeight * 18 / 10;
+                    retVal.Y += baseHeight * 1.8f;
                     continue;
                 }
                 uint charIndex = text[i];

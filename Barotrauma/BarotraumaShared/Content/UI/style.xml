@@ -37,8 +37,8 @@
     <Size size="44"/>
   </LargeFont>
   <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28">
-    <Size maxresolution="1024,768" size="11"/>
-    <Size maxresolution="1280,800" size="12"/>
+    <Size maxresolution="1024,768" size="20"/>
+    <Size maxresolution="1280,800" size="25"/>
     <Size maxresolution="1920,1080" size="28"/>
     <Size maxresolution="2048,1080" size="30"/>
     <Size maxresolution="2560,1600" size="38"/>
@@ -53,8 +53,8 @@
     <Size size="24"/>    
   </ObjectiveTitle>
   <ObjectiveName file="Content/Fonts/BebasNeue-Regular.otf" size="22">
-    <Size maxresolution="1024,768" size="10"/>
-    <Size maxresolution="1280,800" size="12"/>
+    <Size maxresolution="1024,768" size="15"/>
+    <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
     <Size maxresolution="2048,1080" size="24"/>
     <Size maxresolution="2560,1600" size="26"/>
