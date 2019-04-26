@@ -514,12 +514,12 @@ namespace Barotrauma.Tutorials
 
             if (title.Length > 0)
             {
-                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform), 
+                var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
                     title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
                 titleBlock.TextScale = textScale;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), infoContent.RectTransform), text, wrap: true);
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
 
             infoBoxClosedCallback = callback;
 
