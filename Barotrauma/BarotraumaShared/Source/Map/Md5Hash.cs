@@ -8,44 +8,28 @@ namespace Barotrauma
 {
     public class Md5Hash
     {
-        private string hash;
-        private string shortHash;
+        public string Hash { get; private set; }
 
-        public string Hash
-        {
-            get 
-            {
-                return hash;
-            }  
-        }
-
-        public string ShortHash
-        {
-            get 
-            { 
-                return shortHash;
-            }
-        }
+        public string ShortHash { get; private set; }
 
         public Md5Hash(string md5Hash)
         {
-            this.hash = md5Hash;
-
-            shortHash = GetShortHash(md5Hash);
+            this.Hash = md5Hash;
+            ShortHash = GetShortHash(md5Hash);
         }
 
         public Md5Hash(byte[] bytes)
         {
-            hash = CalculateHash(bytes);
+            Hash = CalculateHash(bytes);
 
-            shortHash = GetShortHash(hash);
+            ShortHash = GetShortHash(Hash);
         }
 
         public Md5Hash(FileStream fileStream)
         {
-            hash = CalculateHash(fileStream);
+            Hash = CalculateHash(fileStream);
 
-            shortHash = GetShortHash(hash);
+            ShortHash = GetShortHash(Hash);
         }
 
         public Md5Hash(XDocument doc)
@@ -56,14 +40,14 @@ namespace Barotrauma
 
             byte[] inputBytes = Encoding.ASCII.GetBytes(docString);
 
-            hash = CalculateHash(inputBytes);
+            Hash = CalculateHash(inputBytes);
 
-            shortHash = GetShortHash(hash);
+            ShortHash = GetShortHash(Hash);
         }
 
         public override string ToString()
         {
-            return hash;
+            return Hash;
         }
 
         private string CalculateHash(FileStream stream)
