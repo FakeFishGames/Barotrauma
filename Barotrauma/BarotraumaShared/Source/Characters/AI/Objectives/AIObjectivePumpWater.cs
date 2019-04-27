@@ -34,12 +34,12 @@ namespace Barotrauma
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
             if (Option == "stoppumping")
             {
-                if (!pump.IsActive || pump.FlowPercentage == 0.0f) { return false; }
+                if (!pump.IsActive || MathUtils.NearlyEqual(pump.FlowPercentage, 0)) { return false; }
             }
             else
             {
                 if (!pump.Item.InWater) { return false; }
-                if (pump.IsActive && pump.FlowPercentage <= -100.0f) { return false; }
+                if (pump.IsActive && pump.FlowPercentage <= -99.9f) { return false; }
             }
             return true;
         }
