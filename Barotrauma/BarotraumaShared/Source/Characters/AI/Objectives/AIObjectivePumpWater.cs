@@ -42,7 +42,6 @@ namespace Barotrauma
             }
             return true;
         }
-        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = true };
         protected override float TargetEvaluation() => targets.Max(t => MathHelper.Lerp(100, 0, t.CurrFlow / t.MaxFlow));
         protected override IEnumerable<Pump> GetList()
         {
@@ -52,5 +51,7 @@ namespace Barotrauma
             }
             return pumpList;
         }
+
+        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = false };
     }
 }
