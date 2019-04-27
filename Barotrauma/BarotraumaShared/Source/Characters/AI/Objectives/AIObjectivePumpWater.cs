@@ -10,17 +10,6 @@ namespace Barotrauma
         public override string DebugTag => "pump water";
         public override bool KeepDivingGearOn => true;
         private IEnumerable<Pump> pumpList;
-        private IEnumerable<Pump> PumpList
-        {
-            get
-            {
-                if (pumpList == null)
-                {
-                    pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
-                }
-                return pumpList;
-            }
-        }
 
         public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier, option) { }
@@ -52,8 +41,15 @@ namespace Barotrauma
             }
             return true;
         }
-        protected override IEnumerable<Pump> GetList() => PumpList;
         protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = true };
         protected override float TargetEvaluation() => targets.Max(t => MathHelper.Lerp(100, 0, t.CurrFlow / t.MaxFlow));
+        protected override IEnumerable<Pump> GetList()
+        {
+            if (pumpList == null)
+            {
+                pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
+            }
+            return pumpList;
+        }
     }
 }

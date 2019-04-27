@@ -9,17 +9,6 @@ namespace Barotrauma
     {
         public override string DebugTag => "charge batteries";
         private IEnumerable<PowerContainer> batteryList;
-        private IEnumerable<PowerContainer> BatteryList
-        {
-            get
-            {
-                if (batteryList == null)
-                {
-                    batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
-                }
-                return batteryList;
-            }
-        }
 
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
             : base(character, objectiveManager, priorityModifier, option) { }
@@ -48,7 +37,14 @@ namespace Barotrauma
         }
 
         protected override float TargetEvaluation() => targets.Max(t => 100 - t.ChargePercentage);
-        protected override IEnumerable<PowerContainer> GetList() => BatteryList;
+        protected override IEnumerable<PowerContainer> GetList()
+        {
+            if (batteryList == null)
+            {
+                batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
+            }
+            return batteryList;
+        }
 
         protected override AIObjective ObjectiveConstructor(PowerContainer battery) 
             => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier) { IsLoop = true };
