@@ -8,13 +8,21 @@ namespace Barotrauma
     class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
         public override string DebugTag => "charge batteries";
-        private readonly IEnumerable<PowerContainer> batteryList;
+        private IEnumerable<PowerContainer> batteryList;
+        private IEnumerable<PowerContainer> BatteryList
+        {
+            get
+            {
+                if (batteryList == null)
+                {
+                    batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
+                }
+                return batteryList;
+            }
+        }
 
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
-            : base(character, objectiveManager, priorityModifier, option)
-        {
-            batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
-        }
+            : base(character, objectiveManager, priorityModifier, option) { }
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
@@ -40,7 +48,7 @@ namespace Barotrauma
         }
 
         protected override float TargetEvaluation() => targets.Max(t => 100 - t.ChargePercentage);
-        protected override IEnumerable<PowerContainer> GetList() => batteryList;
+        protected override IEnumerable<PowerContainer> GetList() => BatteryList;
 
         protected override AIObjective ObjectiveConstructor(PowerContainer battery) 
             => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier) { IsLoop = true };
