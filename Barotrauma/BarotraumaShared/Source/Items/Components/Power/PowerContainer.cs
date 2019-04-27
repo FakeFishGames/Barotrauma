@@ -113,6 +113,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
+
+        public const float aiRechargeTargetRatio = 0.5f;
+
         public PowerContainer(Item item, XElement element)
             : base(item, element)
         {
@@ -231,12 +235,12 @@ namespace Barotrauma.Items.Components
 
             if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
-                if (Math.Abs(rechargeSpeed - maxRechargeSpeed * 0.5f) > 0.05f)
+                if (Math.Abs(rechargeSpeed - maxRechargeSpeed * aiRechargeTargetRatio) > 0.05f)
                 {
 #if SERVER
                     item.CreateServerEvent(this);
 #endif
-                    RechargeSpeed = maxRechargeSpeed * 0.5f;
+                    RechargeSpeed = maxRechargeSpeed * aiRechargeTargetRatio;
 #if CLIENT
                     rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
 #endif
