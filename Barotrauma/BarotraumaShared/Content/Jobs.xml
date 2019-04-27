@@ -30,11 +30,11 @@
     <AutomaticOrders>
       <!--TODO: change to maintainposition-->
       <Order aitag="steer" option="navigatetodestination" prioritymodifier="1"/>
-      <Order aitag="extinguishfires" prioritymodifier ="0.5"/>
-      <Order aitag="fixleaks" prioritymodifier="0.25"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.25"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.1"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.1"/>
+      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
+      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.2"/>
+      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.2"/>
+      <Order aitag="fixleaks" prioritymodifier="0.1"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.1"/>
     </AutomaticOrders>
   </Job>
   
@@ -68,12 +68,11 @@
     </PortraitClothing>
     <AutomaticOrders>
       <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
-      <Order aitag="operatereactor" option="powerup" prioritymodifier="1"/>
-      <!--TODO: priority 0.25?-->
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="1"/>
-      <Order aitag="extinguishfires" prioritymodifier ="0.5"/>
+      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
+      <Order aitag="operatereactor" option="powerup" prioritymodifier="0.5"/>
       <Order aitag="fixleaks" prioritymodifier="0.5"/>
       <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
     </AutomaticOrders>
   </Job>
@@ -107,12 +106,11 @@
       <sprite name="Portrait Clothing Mechanic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,0"/>
     </PortraitClothing>
     <AutomaticOrders>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
       <Order aitag="fixleaks" prioritymodifier="1"/>
       <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
       <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
-      <!--TODO: change priority to 0.25-->
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="1"/>
+      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.5"/>
       <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
     </AutomaticOrders>
   </Job>
@@ -145,13 +143,12 @@
       <sprite name="Portrait Clothing Security Officer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
     </PortraitClothing>
     <AutomaticOrders>
-      <!--TODO: change to hold fire-->
-      <Order aitag="operateweapons" option="fireatwill" prioritymodifier="1"/>
-      <Order aitag="extinguishfires" prioritymodifier ="0.5"/>
-      <Order aitag="fixleaks" prioritymodifier="0.25"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.25"/>
+      <Order aitag="operateweapons" option="holdfire" prioritymodifier="1"/>
+      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
       <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
       <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order aitag="fixleaks" prioritymodifier="0.2"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
     </AutomaticOrders>
   </Job>
 
@@ -180,10 +177,10 @@
     <AutomaticOrders>
       <Order aitag="rescue" prioritymodifier="1"/>
       <Order aitag="extinguishfires" prioritymodifier ="0.5"/>
-      <Order aitag="fixleaks" prioritymodifier="0.25"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.25"/>
       <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
       <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order aitag="fixleaks" prioritymodifier="0.2"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
     </AutomaticOrders>
   </Job>
 
@@ -213,8 +210,8 @@
       <Order aitag="extinguishfires" prioritymodifier ="1"/>
       <Order aitag="chargebatteries" option="charge" prioritymodifier="1"/>
       <Order aitag="pumpwater" option="pumpout" prioritymodifier="1"/>
-      <Order aitag="fixleaks" prioritymodifier="0.5"/>
       <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order aitag="fixleaks" prioritymodifier="0.5"/>
     </AutomaticOrders>
   </Job>
 
