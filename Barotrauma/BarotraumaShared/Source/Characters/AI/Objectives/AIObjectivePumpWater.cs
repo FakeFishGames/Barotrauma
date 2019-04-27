@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -38,11 +39,10 @@ namespace Barotrauma
             else
             {
                 if (!pump.Item.InWater) { return false; }
-                if (pump.IsActive && pump.FlowPercentage <= -90.0f) { return false; }
+                if (pump.IsActive && pump.FlowPercentage <= -100.0f) { return false; }
             }
             return true;
         }
-        protected override float TargetEvaluation() => targets.Max(t => MathHelper.Lerp(100, 0, t.CurrFlow / t.MaxFlow));
         protected override IEnumerable<Pump> GetList()
         {
             if (pumpList == null)
@@ -53,5 +53,16 @@ namespace Barotrauma
         }
 
         protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = false };
+        protected override float TargetEvaluation()
+        {
+            if (Option == "stoppumping")
+            {
+                return targets.Max(t => MathHelper.Lerp(0, 100, Math.Abs(t.FlowPercentage / 100)));
+            }
+            else
+            {
+                return targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(-t.FlowPercentage / 100)));
+            }
+        }
     }
 }
