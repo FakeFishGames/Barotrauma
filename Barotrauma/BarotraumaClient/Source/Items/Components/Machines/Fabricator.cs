@@ -164,13 +164,15 @@ namespace Barotrauma.Items.Components
                 return string.Compare(item1.DisplayName, item2.DisplayName);
             });
 
-            var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Sufficient skills to fabricate:", textColor: Color.LightGreen)
+            var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
+                TextManager.Get("fabricatorsufficientskills", returnNull: true) ?? "Sufficient skills to fabricate", textColor: Color.LightGreen)
             {
                 CanBeFocused = false
             };
             sufficientSkillsText.RectTransform.SetAsFirstChild();
 
-            var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Insufficient skills to fabricate:", textColor: Color.Orange)
+            var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
+                TextManager.Get("fabricatorinsufficientskills", returnNull: true) ?? "Insufficient skills to fabricate", textColor: Color.Orange)
             {
                 CanBeFocused = false
             };
