@@ -432,7 +432,7 @@ namespace Barotrauma
                         {
                             //prevent picking up (or deattaching) items
 #if CLIENT
-                            if (GameMain.GameSession.GameMode is TutorialMode)
+                            if (GameMain.GameSession?.GameMode is TutorialMode)
                             {
                                 continue;
                             }
