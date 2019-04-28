@@ -190,6 +190,7 @@ namespace Barotrauma
             XElement jobElement = new XElement("job");
 
             jobElement.Add(new XAttribute("name", Name));
+            jobElement.Add(new XAttribute("identifier", prefab.Identifier));
 
             foreach (KeyValuePair<string, Skill> skill in skills)
             {
