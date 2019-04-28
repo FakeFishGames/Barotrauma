@@ -344,6 +344,14 @@ namespace Barotrauma
         /// <summary>
         /// Set the text scale of the GUITextBlocks so that they all use the same scale and can fit the text within the block.
         /// </summary>
+        public static void AutoScaleAndNormalize(params GUITextBlock[] textBlocks)
+        {
+            AutoScaleAndNormalize(textBlocks.AsEnumerable<GUITextBlock>());
+        }
+
+        /// <summary>
+        /// Set the text scale of the GUITextBlocks so that they all use the same scale and can fit the text within the block.
+        /// </summary>
         public static void AutoScaleAndNormalize(IEnumerable<GUITextBlock> textBlocks)
         {
             if (!textBlocks.Any()) { return; }
