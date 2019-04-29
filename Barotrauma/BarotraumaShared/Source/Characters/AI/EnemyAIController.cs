@@ -493,7 +493,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!IsLatchedOnSub)
+                if (!IsProperlyLatchedOnSub)
                 {
                     UpdateWallTarget();
                 }
@@ -552,7 +552,7 @@ namespace Barotrauma
                 {
                     WallSection section = wallTarget.Structure.GetSection(wallTarget.SectionIndex);
                     Vector2 targetPos = wallTarget.Structure.SectionPosition(wallTarget.SectionIndex, true);
-                    if (section?.gap != null && SteerThroughGap(wallTarget.Structure, section, targetPos, deltaTime))
+                    if (section?.gap != null && section.gap.IsRoomToRoom && SteerThroughGap(wallTarget.Structure, section, targetPos, deltaTime))
                     {
                         return;
                     }
@@ -791,6 +791,7 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
+            return false;
         }
 
         private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
@@ -1049,38 +1050,19 @@ namespace Barotrauma
 
         private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
+        private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
+
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
         public AITarget UpdateTargets(Character character, out TargetingPriority priority)
         {
-            if (IsLatchedOnSub)
+            if (IsProperlyLatchedOnSub)
             {
-                var wall = SelectedAiTarget.Entity as Structure;
-                // The target is not a wall or it's not the same as we are attached to -> release
-                bool releaseTarget = wall == null || !wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB);
-                if (!releaseTarget)
-                {
-                    for (int i = 0; i < wall.Sections.Length; i++)
-                    {
-                        if (CanPassThroughHole(wall, i))
-                        {
-                            releaseTarget = true;
-                        }
-                    }
-                }
-                if (releaseTarget)
-                {
-                    SelectedAiTarget = null;
-                    LatchOntoAI.DeattachFromBody();
-                }
-                else if (SelectedAiTarget.Entity == wallTarget?.Structure)
-                {
-                    // If attached to a valid target, just keep the target.
-                    // Priority not used in this case.
-                    priority = null;
-                    return SelectedAiTarget;
-                }
+                // If attached to a valid target, just keep the target.
+                // Priority not used in this case.
+                priority = null;
+                return SelectedAiTarget;
             }
             AITarget newTarget = null;
             priority = null;
@@ -1163,7 +1145,7 @@ namespace Barotrauma
                 else if (target.Entity != null)
                 {
                     //skip the target if it's a room and the character is already inside a sub
-                    if (character.CurrentHull != null && target.Entity is Hull) { continue; }
+                    if (character.CurrentHull != null && target.Entity is Hull) continue;
                     
                     Door door = null;
                     if (target.Entity is Item item)
@@ -1192,13 +1174,6 @@ namespace Barotrauma
                             // Ignore structures that doesn't have a body (not walls)
                             continue;
                         }
-                        if (s.IsPlatform)
-                        {
-                            continue;
-                        }
-                        float wallMaxHealth = 400;  // Anything more than this is ignored -> 200 = 1
-                        // Prefer weaker targets.
-                        valueModifier = MathHelper.Lerp(2, 0, MathHelper.Clamp(s.Health / wallMaxHealth, 0, 1));
                         // Ignore walls when inside.
                         valueModifier = character.CurrentHull == null ? 1 : 0;
                         if (aggressiveBoarding)
