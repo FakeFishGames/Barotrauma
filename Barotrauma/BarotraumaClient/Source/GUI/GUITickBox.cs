@@ -76,6 +76,11 @@ namespace Barotrauma
             get { return box; }
         }
 
+        public GUITextBlock TextBlock
+        {
+            get { return text; }
+        }
+
         public override string ToolTip
         {
             get { return base.ToolTip; }
@@ -123,6 +128,7 @@ namespace Barotrauma
         private void ResizeBox()
         {
             box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
+            text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
             text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         

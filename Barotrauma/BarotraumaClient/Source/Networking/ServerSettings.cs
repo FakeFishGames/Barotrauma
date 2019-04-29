@@ -504,6 +504,8 @@ namespace Barotrauma.Networking
                 return true;
             };
 
+            GUITextBlock.AutoScaleAndNormalize(buttonHolder.Children.Select(c => ((GUIButton)c).TextBlock));
+
             foreach (ItemPrefab ip in MapEntityPrefab.List.Where(p => p is ItemPrefab).Select(p => p as ItemPrefab))
             {
                 if (!ip.CanBeBought && !ip.Tags.Contains("smallitem")) continue;
