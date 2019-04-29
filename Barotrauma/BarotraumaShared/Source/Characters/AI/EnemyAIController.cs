@@ -373,6 +373,12 @@ namespace Barotrauma
 
             LatchOntoAI?.Update(this, deltaTime);
             IsSteeringThroughGap = false;
+            if (SwarmBehavior != null)
+            {
+                SwarmBehavior.IsActive = State == AIState.Idle && Character.CurrentHull == null;
+                SwarmBehavior.Refresh();
+                SwarmBehavior.UpdateSteering(deltaTime);
+            }
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
         }
 
@@ -793,6 +799,7 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
+            return false;
         }
 
         public bool IsSteeringThroughGap { get; private set; }
