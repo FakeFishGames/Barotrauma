@@ -295,7 +295,7 @@ namespace Barotrauma.Networking
                     OnClicked = SelectSettingsTab
                 };
             }
-
+            GUITextBlock.AutoScaleAndNormalize(tabButtons.Select(b => b.TextBlock));
             SelectSettingsTab(tabButtons[0], 0);
 
             //"Close"
