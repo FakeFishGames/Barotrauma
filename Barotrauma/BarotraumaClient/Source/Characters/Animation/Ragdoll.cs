@@ -150,62 +150,33 @@ namespace Barotrauma
                         }
                     }
 
-                    if (localPos.Animation != serverPos.Animation)
-                    {
-                        if (serverPos.Animation == AnimController.Animation.CPR)
-                        {
-                            character.AnimController.Anim = AnimController.Animation.CPR;
-                        }
-                        else if (character.AnimController.Anim == AnimController.Animation.CPR) 
-                        {
-                            character.AnimController.Anim = AnimController.Animation.None;
-                        }
-                    }
-
-                    Hull serverHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(serverPos.Position), character.CurrentHull, serverPos.Position.Y < lowestSubPos);
-                    Hull clientHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(localPos.Position), serverHull, localPos.Position.Y < lowestSubPos);
-                    
-                    if (serverHull != null && clientHull != null && serverHull.Submarine != clientHull.Submarine)
-                    {
-                        //hull subs don't match => teleport the camera to the other sub
-                        character.Submarine = serverHull.Submarine;
-                        character.CurrentHull = currentHull = serverHull;
-                        SetPosition(serverPos.Position);
-                        character.MemLocalState.Clear();
-                    }
-                    else
-                    {
-                        Vector2 positionError = serverPos.Position - localPos.Position;
-                        float rotationError = serverPos.Rotation.HasValue && localPos.Rotation.HasValue ?
-                            serverPos.Rotation.Value - localPos.Rotation.Value :
-                            0.0f;
-
-                        for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
-                        {
-                            Hull pointHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(character.MemLocalState[i].Position), clientHull, character.MemLocalState[i].Position.Y < lowestSubPos);
-                            if (pointHull != clientHull && ((pointHull == null) || (clientHull == null) || (pointHull.Submarine == clientHull.Submarine))) break;
-                            character.MemLocalState[i].Translate(positionError, rotationError);
-                        }
-
-                        float errorMagnitude = positionError.Length();
-                        if (errorMagnitude > 0.01f)
-                        {
-                            Collider.TargetPosition = Collider.SimPosition + positionError;
-                            Collider.TargetRotation = Collider.Rotation + rotationError;
-                            Collider.MoveToTargetPosition(lerp: true);
-                            if (errorMagnitude > 0.5f)
-                            {
-                                character.MemLocalState.Clear();                 
-                                foreach (Limb limb in Limbs)
-                                {
-                                    limb.body.TargetPosition = limb.body.SimPosition + positionError;
-                                    limb.body.MoveToTargetPosition(lerp: true);
-                                }
-                            }
-                        }
-                    }
-
                 }
+
+                if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
+                character.MemState.Clear();
+            }
+        }
+        
+        partial void ImpactProjSpecific(float impact, Body body)
+        {
+            float volume = MathHelper.Clamp(impact - 3.0f, 0.5f, 1.0f);
+
+            if (body.UserData is Limb limb && character.Stun <= 0f)
+            {
+                if (impact > 3.0f) { PlayImpactSound(limb); }
+            }
+            else if (body.UserData is Limb || body == Collider.FarseerBody)
+            {
+                if (!character.IsRemotePlayer && impact > ImpactTolerance)
+                {
+                    SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
+                }
+            }
+            if (Character.Controlled == character)
+            {
+                GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
+            }
+        }
 
                 if (character.MemState.Count < 1) return;
 
