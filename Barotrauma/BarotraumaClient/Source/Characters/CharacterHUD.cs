@@ -366,12 +366,20 @@ namespace Barotrauma
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
         {
-            if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) return;
+            if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) { return; }
 
             Entity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetEntity;
-            if (target == null) return;
+            if (target == null) { return; }
 
-            if (!orderIndicatorCount.ContainsKey(target)) orderIndicatorCount.Add(target, 0);
+            //don't show the indicator if far away and not inside the same sub
+            //prevents exploiting the indicators in locating the sub
+            if (character.Submarine != target.Submarine && 
+                Vector2.DistanceSquared(character.WorldPosition, target.WorldPosition) > 1000.0f * 1000.0f)
+            {
+                return;
+            }
+
+            if (!orderIndicatorCount.ContainsKey(target)) { orderIndicatorCount.Add(target, 0); }
 
             Vector2 drawPos = target.WorldPosition + Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
