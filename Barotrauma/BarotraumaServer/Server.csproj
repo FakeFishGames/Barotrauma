@@ -216,7 +216,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup Condition="$(Configuration.EndsWith('Linux'))">
+  <ItemGroup Condition="'$(Configuration)|$(Platform)' == 'DebugLinux|x64'">
     <None Include="Launch_BarotraumaServer">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
