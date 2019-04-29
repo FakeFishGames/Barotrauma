@@ -1069,7 +1069,7 @@ namespace Barotrauma
                 var wall = SelectedAiTarget.Entity as Structure;
                 if (wall == null)
                 {
-                    wall = wallTarget.Structure;
+                    wall = wallTarget?.Structure;
                 }
                 // The target is not a wall or it's not the same as we are attached to -> release
                 bool releaseTarget = wall == null || !wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB);
