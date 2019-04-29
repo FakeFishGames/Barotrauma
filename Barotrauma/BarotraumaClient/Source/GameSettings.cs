@@ -657,13 +657,15 @@ namespace Barotrauma
                 { Stretch = true, RelativeSpacing = 0.02f };
 
             var inputNames = Enum.GetValues(typeof(InputType));
+            var inputNameBlocks = new List<GUITextBlock>();
             for (int i = 0; i < inputNames.Length; i++)
             {
                 var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2.2f) ? inputColumnLeft : inputColumnRight).RectTransform))
                     { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
+                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
                     TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform),
+                inputNameBlocks.Add(inputName);
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), inputContainer.RectTransform),
                     text: keyMapping[i].ToString(), font: GUI.SmallFont)
                 {
                     UserData = i
@@ -672,12 +674,14 @@ namespace Barotrauma
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
 
+            GUITextBlock.AutoScaleAndNormalize(inputNameBlocks);
+
             var resetControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), isHorizontal: true)
             {
                 RelativeSpacing = 0.02f
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetDefaultBindings"))
+            var defaultBindingsButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetDefaultBindings"))
             {
                 ToolTip = TextManager.Get("SetDefaultBindingsToolTip"),
                 OnClicked = (button, data) =>
@@ -687,7 +691,7 @@ namespace Barotrauma
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetLegacyBindings"))
+            var legacyBindingsButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetLegacyBindings"))
             {
                 ToolTip = TextManager.Get("SetLegacyBindingsToolTip"),
                 OnClicked = (button, data) =>
@@ -696,6 +700,8 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
