@@ -111,21 +111,38 @@ namespace Barotrauma
             }
         }
 
+        private HashSet<RangedWeapon> rangedWeapons = new HashSet<RangedWeapon>();
+        private HashSet<MeleeWeapon> meleeWeapons = new HashSet<MeleeWeapon>();
+        private readonly HashSet<Item> adHocWeapons = new HashSet<Item>();
         private Item GetWeapon()
         {
+            rangedWeapons.Clear();
+            meleeWeapons.Clear();
+            adHocWeapons.Clear();
+            Item weapon = null;
             _weaponComponent = null;
-            var weapon = character.Inventory.FindItemByTag("weapon");
-            if (weapon == null)
+
+            foreach (var item in character.Inventory.Items)
             {
-                foreach (var item in character.Inventory.Items)
+                if (item == null) { continue; }
+                foreach (var component in item.Components)
                 {
-                    if (item == null) { continue; }
-                    foreach (var component in item.Components)
+                    if (component is RangedWeapon rw)
                     {
-                        if (component is MeleeWeapon || component is RangedWeapon)
+                        if (rw.HasRequiredContainedItems(false))
                         {
-                            return item;
+                            rangedWeapons.Add(rw);
                         }
+                    }
+                    else if (component is MeleeWeapon mw)
+                    {
+                        if (mw.HasRequiredContainedItems(false))
+                        {
+                            meleeWeapons.Add(mw);
+                        }
+                    }
+                    else
+                    {
                         var effects = component.statusEffectLists;
                         if (effects != null)
                         {
@@ -135,13 +152,30 @@ namespace Barotrauma
                                 {
                                     if (statusEffect.Afflictions.Any())
                                     {
-                                        return item;
+                                        if (component.HasRequiredContainedItems(false))
+                                        {
+                                            adHocWeapons.Add(item);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+            var rangedWeapon = rangedWeapons.OrderByDescending(w => w.CombatPriority).FirstOrDefault();
+            var meleeWeapon = meleeWeapons.OrderByDescending(w => w.CombatPriority).FirstOrDefault();
+            if (rangedWeapon != null)
+            {
+                weapon = rangedWeapon.Item;
+            }
+            else if (meleeWeapon != null)
+            {
+                weapon = meleeWeapon.Item;
+            }
+            if (weapon == null)
+            {
+                weapon = adHocWeapons.GetRandom(Rand.RandSync.Server);
             }
             return weapon;
         }
