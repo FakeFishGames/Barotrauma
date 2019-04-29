@@ -601,7 +601,7 @@ namespace Barotrauma.Steam
             {
                 // TODO: If you create a new mod via the workshop interface and enable it, it will show the error msg, but still allows you to enable the content.
 
-                if (File.Exists(newContentPackagePath))
+                if (File.Exists(newContentPackagePath) && !CheckFileEquality(newContentPackagePath, metaDataFilePath))
                 {
                     errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
                         .Replace("[itemname]", item.Title)
@@ -613,7 +613,7 @@ namespace Barotrauma.Steam
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
-                    if (File.Exists(sourceFile) && File.Exists(contentFile.Path))
+                    if (File.Exists(sourceFile) && File.Exists(contentFile.Path) && !CheckFileEquality(sourceFile, contentFile.Path))
                     {
                         errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
                             .Replace("[itemname]", item.Title)
@@ -683,6 +683,22 @@ namespace Barotrauma.Steam
 
             errorMsg = "";
             return true;
+        }
+
+        private static bool CheckFileEquality(string filePath1, string filePath2)
+        {
+            if (filePath1 == filePath2)
+            {
+                return true;
+            }
+
+            using (FileStream fs1 = File.OpenRead(filePath1))
+            using (FileStream fs2 = File.OpenRead(filePath2))
+            {
+                Md5Hash hash1 = new Md5Hash(fs1);
+                Md5Hash hash2 = new Md5Hash(fs2);
+                return hash1.Hash == hash2.Hash;
+            }
         }
 
         /// <summary>
