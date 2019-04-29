@@ -46,7 +46,8 @@ namespace Barotrauma
                 if (controlled == value) return;
                 controlled = value;
                 if (controlled != null) controlled.Enabled = true;
-                CharacterHealth.OpenHealthWindow = null;                
+                CharacterHealth.OpenHealthWindow = null;
+                
             }
         }
         

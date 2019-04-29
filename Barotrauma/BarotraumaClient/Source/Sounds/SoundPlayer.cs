@@ -238,7 +238,7 @@ namespace Barotrauma
             }
 
             float ambienceVolume = 0.8f;
-            if (Character.Controlled != null && !Character.Controlled.Removed)
+            if (Character.Controlled != null)
             {
                 AnimController animController = Character.Controlled.AnimController;
                 if (animController.HeadInWater)
