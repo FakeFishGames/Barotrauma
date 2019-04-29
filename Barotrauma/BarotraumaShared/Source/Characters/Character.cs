@@ -2555,27 +2555,9 @@ namespace Barotrauma
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
 #endif
 
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
             CharacterList.Remove(this);
+
+            if (Controlled == this) { Controlled = null; }
 
             if (Inventory != null)
             {
