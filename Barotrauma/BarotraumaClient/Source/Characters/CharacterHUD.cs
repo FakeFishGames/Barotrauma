@@ -85,8 +85,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f && 
-                        (character.SelectedConstruction == null || character.SelectedConstruction.GetComponent<Controller>() == null))
+                    if (!character.LockHands && character.Stun < 0.1f)
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
@@ -321,7 +320,6 @@ namespace Barotrauma
                 }
                 if (character.Inventory != null && !character.LockHands)
                 {
-                    character.Inventory.Locked = (character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null);
                     character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
