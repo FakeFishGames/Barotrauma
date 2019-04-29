@@ -27,6 +27,7 @@ namespace Barotrauma
             if (target.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.TeamID) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target, true)) { return false; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == target && !HumanAIController.IsFriendly(c))) { return false; }
             return true;
         }
 

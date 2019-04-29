@@ -208,6 +208,10 @@ namespace Barotrauma
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
 
+                // Don't allow to get items in rooms that have a fire (except fire extinguishers) or an enemy inside (except weapons)
+                if (!itemIdentifiers.Contains("extinguisher") && item.CurrentHull.FireSources.Count > 0 || 
+                    item.GetComponent<MeleeWeapon>() == null && item.GetComponent<RangedWeapon>() == null && Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { continue; }
+
                 //if the item is inside a character's inventory, don't steal it unless the character is dead
                 if (item.ParentInventory is CharacterInventory)
                 {
