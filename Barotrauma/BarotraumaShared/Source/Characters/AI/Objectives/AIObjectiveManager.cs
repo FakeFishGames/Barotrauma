@@ -174,6 +174,8 @@ namespace Barotrauma
             }
         }
 
+        // TODO: attack enemies : new AIObjectiveCombat(Character, attacker, AIObjectiveCombat.CombatMode.Offensive, objectiveManager);
+
         public AIObjective CreateObjective(Order order, string option, Character orderGiver, float priorityModifier = 1)
         {
             if (order == null) { return null; }
