@@ -98,7 +98,7 @@ namespace Barotrauma
                         if (distSqrd > 10.0f || !character.AllowInput)
                         {
                             Collider.TargetRotation = newRotation;
-                            SetPosition(newPosition, lerp: distSqrd < 5.0f);
+                            SetPosition(newPosition, lerp: distSqrd < 5.0f, ignorePlatforms: false);
                         }
                         else
                         {
@@ -238,30 +238,20 @@ namespace Barotrauma
                         }
 
                         float errorMagnitude = positionError.Length();
-                        if (errorMagnitude > 0.01f)
+                        if (errorMagnitude > 0.5f)
+                        {
+                            character.MemLocalState.Clear();
+                            SetPosition(serverPos.Position, lerp: true, ignorePlatforms: false);
+                        }
+                        else if (errorMagnitude > 0.01f)
                         {
                             Collider.TargetPosition = Collider.SimPosition + positionError;
                             Collider.TargetRotation = Collider.Rotation + rotationError;
                             Collider.MoveToTargetPosition(lerp: true);
-                            if (errorMagnitude > 0.5f)
-                            {
-                                character.MemLocalState.Clear();                 
-                                foreach (Limb limb in Limbs)
-                                {
-                                    limb.body.TargetPosition = limb.body.SimPosition + positionError;
-                                    limb.body.MoveToTargetPosition(lerp: true);
-                                }
-                            }
                         }
                     }
 
                 }
-            }
-            if (Character.Controlled == character)
-            {
-                GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
-            }
-        }
 
                 if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
                 character.MemState.Clear();
