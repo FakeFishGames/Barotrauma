@@ -28,7 +28,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
         
     
@@ -63,7 +62,7 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
+
     <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
@@ -97,7 +96,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
@@ -131,7 +129,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
@@ -165,7 +162,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
@@ -188,7 +184,6 @@
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Mine"/>
-    <LocationType from="City" to="Ruins"/>
     <LocationType from="City" to="Lair"/>
         
     <LocationType from="Outpost" to="None"/>
@@ -197,7 +192,6 @@
     <LocationType from="Outpost" to="Military"/>
     <LocationType from="Outpost" to="Research"/>
     <LocationType from="Outpost" to="Mine"/>
-    <LocationType from="Outpost" to="Ruins"/>
     <LocationType from="Outpost" to="Lair"/>
     
     <LocationType from="Military" to="None"/>
@@ -206,7 +200,6 @@
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Mine"/>
-    <LocationType from="Military" to="Ruins"/>
     <LocationType from="Military" to="Lair"/>
     
     <LocationType from="Research" to="None"/>
@@ -215,7 +208,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <LocationType from="Mine" to="None"/>
@@ -224,7 +216,6 @@
     <LocationType from="Mine" to="Military"/>
     <LocationType from="Mine" to="Research"/>
     <LocationType from="Mine" to="Mine"/>
-    <LocationType from="Mine" to="Ruins"/> 
     <LocationType from="Mine" to="Lair"/>
     
     
@@ -249,7 +240,6 @@
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Mine"/>
-    <LocationType from="City" to="Ruins"/>
     <LocationType from="City" to="Lair"/>
         
     <LocationType from="Outpost" to="None"/>
@@ -258,7 +248,6 @@
     <LocationType from="Outpost" to="Military"/>
     <LocationType from="Outpost" to="Research"/>
     <LocationType from="Outpost" to="Mine"/>
-    <LocationType from="Outpost" to="Ruins"/>
     <LocationType from="Outpost" to="Lair"/>
     
     <LocationType from="Military" to="None"/>
@@ -267,7 +256,6 @@
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Mine"/>
-    <LocationType from="Military" to="Ruins"/>
     <LocationType from="Military" to="Lair"/>
     
     <LocationType from="Research" to="None"/>
@@ -276,7 +264,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <LocationType from="Mine" to="None"/>
@@ -285,7 +272,6 @@
     <LocationType from="Mine" to="Military"/>
     <LocationType from="Mine" to="Research"/>
     <LocationType from="Mine" to="Mine"/>
-    <LocationType from="Mine" to="Ruins"/> 
     <LocationType from="Mine" to="Lair"/> 
     
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
@@ -311,7 +297,6 @@
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Mine"/>
-    <LocationType from="City" to="Ruins"/>
     <LocationType from="City" to="Lair"/>
         
     <LocationType from="Outpost" to="None"/>
@@ -320,7 +305,6 @@
     <LocationType from="Outpost" to="Military"/>
     <LocationType from="Outpost" to="Research"/>
     <LocationType from="Outpost" to="Mine"/>
-    <LocationType from="Outpost" to="Ruins"/>
     <LocationType from="Outpost" to="Lair"/>
     
     <LocationType from="Military" to="None"/>
@@ -329,7 +313,6 @@
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Mine"/>
-    <LocationType from="Military" to="Ruins"/>
     <LocationType from="Military" to="Lair"/>
     
     <LocationType from="Research" to="None"/>
@@ -338,7 +321,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <LocationType from="Mine" to="None"/>
@@ -347,7 +329,6 @@
     <LocationType from="Mine" to="Military"/>
     <LocationType from="Mine" to="Research"/>
     <LocationType from="Mine" to="Mine"/>
-    <LocationType from="Mine" to="Ruins"/> 
     <LocationType from="Mine" to="Lair"/>  
     
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
@@ -373,7 +354,6 @@
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Mine"/>
-    <LocationType from="City" to="Ruins"/>
     <LocationType from="City" to="Lair"/>
         
     <LocationType from="Outpost" to="None"/>
@@ -382,7 +362,6 @@
     <LocationType from="Outpost" to="Military"/>
     <LocationType from="Outpost" to="Research"/>
     <LocationType from="Outpost" to="Mine"/>
-    <LocationType from="Outpost" to="Ruins"/>
     <LocationType from="Outpost" to="Lair"/>
     
     <LocationType from="Military" to="None"/>
@@ -391,7 +370,6 @@
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Mine"/>
-    <LocationType from="Military" to="Ruins"/>
     <LocationType from="Military" to="Lair"/>
     
     <LocationType from="Research" to="None"/>
@@ -400,7 +378,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <LocationType from="Mine" to="None"/>
@@ -409,7 +386,6 @@
     <LocationType from="Mine" to="Military"/>
     <LocationType from="Mine" to="Research"/>
     <LocationType from="Mine" to="Mine"/>
-    <LocationType from="Mine" to="Ruins"/> 
     <LocationType from="Mine" to="Lair"/> 
 
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
@@ -435,7 +411,6 @@
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Mine"/>
-    <LocationType from="City" to="Ruins"/>
     <LocationType from="City" to="Lair"/>
         
     <LocationType from="Outpost" to="None"/>
@@ -444,7 +419,6 @@
     <LocationType from="Outpost" to="Military"/>
     <LocationType from="Outpost" to="Research"/>
     <LocationType from="Outpost" to="Mine"/>
-    <LocationType from="Outpost" to="Ruins"/>
     <LocationType from="Outpost" to="Lair"/>
     
     <LocationType from="Military" to="None"/>
@@ -453,7 +427,6 @@
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
     <LocationType from="Military" to="Mine"/>
-    <LocationType from="Military" to="Ruins"/>
     <LocationType from="Military" to="Lair"/>
     
     <LocationType from="Research" to="None"/>
@@ -462,7 +435,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
     
     <LocationType from="Mine" to="None"/>
@@ -471,7 +443,6 @@
     <LocationType from="Mine" to="Military"/>
     <LocationType from="Mine" to="Research"/>
     <LocationType from="Mine" to="Mine"/>
-    <LocationType from="Mine" to="Ruins"/> 
     <LocationType from="Mine" to="Lair"/> 
 
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
@@ -524,7 +495,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/>
   
   </MonsterMission>
@@ -554,7 +524,6 @@
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
     <LocationType from="Research" to="Mine"/>
-    <LocationType from="Research" to="Ruins"/>
     <LocationType from="Research" to="Lair"/> 
   
     <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>
