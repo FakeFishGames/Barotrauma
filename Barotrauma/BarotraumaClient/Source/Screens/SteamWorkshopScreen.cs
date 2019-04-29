@@ -383,6 +383,7 @@ namespace Barotrauma
 
             var titleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), rightColumn.RectTransform), EnsureUTF8(item.Title), textAlignment: Alignment.CenterLeft, wrap: true)
             {
+                UserData = "titletext",
                 CanBeFocused = false
             };
 
@@ -575,8 +576,7 @@ namespace Barotrauma
 
         private bool ToggleItemEnabled(GUITickBox tickBox)
         {
-            Facepunch.Steamworks.Workshop.Item item = tickBox.UserData as Facepunch.Steamworks.Workshop.Item;
-            if (item == null) { return false; }
+            if (!(tickBox.UserData is Facepunch.Steamworks.Workshop.Item item)) { return false; }
 
             var updateButton = tickBox.Parent.FindChild("updatebutton");
 
@@ -585,7 +585,9 @@ namespace Barotrauma
             {
                 if (!SteamManager.EnableWorkShopItem(item, false, out errorMsg))
                 {
-                    tickBox.Enabled = false;
+                    tickBox.Visible = false;
+                    tickBox.Selected = false;
+                    if (tickBox.Parent.GetChildByUserData("titletext") is GUITextBlock titleText) { titleText.TextColor = Color.Red; }
                 }
             }
             else
