@@ -149,7 +149,6 @@ namespace Barotrauma
                             character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);
                         }
                     }
-
                 }
 
                 if (character.MemState.Count < 1) return;

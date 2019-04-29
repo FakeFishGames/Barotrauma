@@ -368,8 +368,6 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-            
-            SwarmBehavior?.Update(deltaTime);
 
             LatchOntoAI?.Update(this, deltaTime);
             IsSteeringThroughGap = false;
@@ -799,7 +797,6 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
-            return false;
         }
 
         public bool IsSteeringThroughGap { get; private set; }
