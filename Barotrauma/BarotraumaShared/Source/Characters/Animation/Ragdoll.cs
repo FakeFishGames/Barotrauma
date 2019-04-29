@@ -1450,7 +1450,7 @@ namespace Barotrauma
             }
         }
 
-        public void SetPosition(Vector2 simPosition, bool lerp = false)
+        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
         {
             if (!MathUtils.IsValid(simPosition))
             {
@@ -1481,18 +1481,18 @@ namespace Barotrauma
                 //check visibility from the new position of the collider to the new position of this limb
                 Vector2 movePos = limb.SimPosition + limbMoveAmount;
 
-                TrySetLimbPosition(limb, simPosition, movePos, lerp);
+                TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
             }
         }
 
-        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false)
+        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
         {
             Vector2 movePos = simPosition;
 
             if (Vector2.DistanceSquared(original, simPosition) > 0.0001f)
             {
                 Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
-                //if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
+                if (!ignorePlatforms) { collisionCategory |= Physics.CollisionPlatform; }
 
                 Body body = Submarine.PickBody(original, simPosition, null, collisionCategory);
             
