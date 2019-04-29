@@ -293,6 +293,27 @@ namespace Barotrauma
                 return;
             }
 
+            if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+            {
+                //stop dragging if there's something between the pull limb and the target
+                Vector2 sourceSimPos = mouthLimb.SimPosition;
+                Vector2 targetSimPos = target.SimPosition;
+                if (character.Submarine != null && character.SelectedCharacter.Submarine == null)
+                {
+                    targetSimPos -= character.Submarine.SimPosition;
+                }
+                else if (character.Submarine == null && character.SelectedCharacter.Submarine != null)
+                {
+                    sourceSimPos -= character.SelectedCharacter.Submarine.SimPosition;
+                }
+                var body = Submarine.CheckVisibility(sourceSimPos, targetSimPos, ignoreSubs: true);
+                if (body != null)
+                {
+                    character.DeselectCharacter();
+                    return;
+                }
+            }
+
             Character targetCharacter = target;
             float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
             eatTimer += deltaTime * eatSpeed;
@@ -712,6 +733,12 @@ namespace Barotrauma
 
                 limb.body.ApplyForce(diff * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 30.0f * animStrength, maxVelocity: 10.0f);
             }
+            while (referenceLimb.Rotation - angle < -MathHelper.TwoPi)
+            {
+                angle -= MathHelper.TwoPi;
+            }
+
+            limb?.body.SmoothRotate(angle, torque, wrapAngle: false);
         }
 
         private void SmoothRotateWithoutWrapping(Limb limb, float angle, Limb referenceLimb, float torque)
