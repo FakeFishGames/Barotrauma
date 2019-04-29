@@ -820,9 +820,8 @@ namespace Barotrauma
             else
             {
                 Sprite slotSprite = slot.SlotSprite ?? slotSpriteSmall;
-                Color slotColor = slot.IsHighlighted ? Color.White : Color.White * 0.8f;
-                if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
-                spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
+
+                spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slot.IsHighlighted ? Color.White : Color.White * 0.8f);
 
                 if (item != null && drawItem)
                 {
@@ -874,17 +873,14 @@ namespace Barotrauma
                             }
 
                             indicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
-                                (inventory != null && inventory.Locked) ? Color.DarkGray * 0.5f : Color.DarkGray * 0.9f, 
+                                Color.DarkGray * 0.9f, 
                                 origin: indicatorSprite.size / 2,
                                 rotate: 0.0f,
                                 scale: indicatorScale);
-
-                            Color indicatorColor = ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.Green);
-                            if (inventory != null && inventory.Locked) { indicatorColor *= 0.5f; }
-
+                     
                             spriteBatch.Draw(indicatorSprite.Texture, containedIndicatorArea.Center.ToVector2(),
                                 sourceRectangle: new Rectangle(indicatorSprite.SourceRect.Location, new Point((int)(indicatorSprite.SourceRect.Width * containedState), indicatorSprite.SourceRect.Height)),
-                                color: indicatorColor,
+                                color: ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.Green),
                                 rotation: 0.0f,
                                 origin: indicatorSprite.size / 2,
                                 scale: indicatorScale,
@@ -924,7 +920,6 @@ namespace Barotrauma
                 }
 
                 Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
-                if (inventory != null && inventory.Locked) { spriteColor *= 0.5f; }
                 if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
@@ -936,10 +931,7 @@ namespace Barotrauma
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
             }
 
-            if (inventory != null && 
-                !inventory.Locked &&
-                Character.Controlled?.Inventory == inventory && 
-                slot.QuickUseKey != Keys.None)
+            if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)
             {
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2(), 
                     slot.QuickUseKey.ToString().Substring(1, 1), 

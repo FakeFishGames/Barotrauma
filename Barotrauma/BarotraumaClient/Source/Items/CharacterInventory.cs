@@ -793,7 +793,7 @@ namespace Barotrauma
 
             base.Draw(spriteBatch);
             
-            if (hideButton != null && hideButton.Visible && !Locked)
+            if (hideButton != null && hideButton.Visible)
             {
                 hideButton.DrawManually(spriteBatch, alsoChildren: true);
             }
@@ -835,7 +835,6 @@ namespace Barotrauma
                     color = Color.White;
                     highlightedQuickUseSlot = slots[i];
                 }
-                if (Locked) { color *= 0.3f; }
 
                 var quickUseIndicator = Items[i].AllowedSlots.Any(a => a == InvSlotType.Any) ?
                     EquipIndicator : DropIndicator;
