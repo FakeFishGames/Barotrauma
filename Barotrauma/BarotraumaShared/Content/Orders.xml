@@ -45,6 +45,11 @@
   </Order>
 
   <Order name="Charge Batteries" aitag="chargebatteries" doingtext="Charging Batteries"
+  <Order name="Fight Intruders" aitag="fightintruders" color="1, 1, 1, 0.85">
+    <!--TODO: add a proper icon-->
+    <Sprite texture="Content/UI/IconAtlas.png" sourcerect="640,640,128,128"/>
+  </Order>
+
          options="charge,stopcharging" optionnames="Charge, Stop charging"
          color="0.7,0.9,1.0,0.85"
          appropriatejobs="engineer">

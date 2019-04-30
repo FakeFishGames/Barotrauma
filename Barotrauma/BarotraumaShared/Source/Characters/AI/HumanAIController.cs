@@ -189,7 +189,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (!(ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires) && !(ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFires) && !(ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire))
+            if (!ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() && !ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFire>())
             {
                 var extinguisherItem = Character.Inventory.FindItemByIdentifier("extinguisher") ?? Character.Inventory.FindItemByTag("extinguisher");
                 if (extinguisherItem != null && Character.HasEquippedItem(extinguisherItem))
@@ -206,7 +206,7 @@ namespace Barotrauma
                 {
                     unequip = item.AllowedSlots.Contains(InvSlotType.RightHand | InvSlotType.LeftHand);
                 }
-                else if (!(ObjectiveManager.CurrentObjective is AIObjectiveCombat))
+                else if (!ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>() && !ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
                 {
                     unequip = item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
                 }
@@ -315,6 +315,7 @@ namespace Barotrauma
         {
             float damage = attackResult.Damage;
             if (damage <= 0) { return; }
+            if (ObjectiveManager.CurrentObjective is AIObjectiveFightIntruders) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
                 // Ignore damage from falling etc that we shouldn't react to.
@@ -468,10 +469,10 @@ namespace Barotrauma
         public float GetHullSafety(Hull hull)
         {
             if (hull == null) { return 0; }
-            bool ignoreFire = ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFires || ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
+            bool ignoreFire = ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() || ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(Character);
             bool ignoreOxygen = ignoreWater || HasDivingGear(Character);
-            bool ignoreEnemies = ObjectiveManager.CurrentObjective is AIObjectiveCombat || ObjectiveManager.CurrentOrder is AIObjectiveCombat;
+            bool ignoreEnemies = !ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             return GetHullSafety(hull, Character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
         }
 

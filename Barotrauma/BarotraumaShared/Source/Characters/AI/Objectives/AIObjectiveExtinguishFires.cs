@@ -31,7 +31,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected override float TargetEvaluation() => (objectiveManager.CurrentObjective == this || objectiveManager.CurrentOrder == this) ? 100 : targets.Sum(t => GetFireSeverity(t));
+        protected override float TargetEvaluation() => objectiveManager.CurrentObjective == this ? 100 : targets.Sum(t => GetFireSeverity(t));
 
         public static float GetFireSeverity(Hull hull) => hull.FireSources.Sum(fs => fs.Size.X);
 

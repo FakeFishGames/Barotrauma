@@ -143,8 +143,9 @@
       <sprite name="Portrait Clothing Security Officer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
     </PortraitClothing>
     <AutomaticOrders>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="operateweapons" option="holdfire" prioritymodifier="1"/>
+      <Order aitag="fightintruders" prioritymodifier="1"/>
+      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
+      <Order aitag="operateweapons" option="holdfire" prioritymodifier="0.5"/>
       <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
       <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order aitag="fixleaks" prioritymodifier="0.2"/>
