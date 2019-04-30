@@ -146,12 +146,7 @@ namespace Barotrauma.Networking
             }
 
             string fileName = ServerName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm") + ".txt";
-
-            var invalidChars = Path.GetInvalidFileNameChars();
-            foreach (char invalidChar in invalidChars)
-            {
-                fileName = fileName.Replace(invalidChar.ToString(), "");
-            }
+            fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
             string filePath = Path.Combine(SavePath, fileName);
 
