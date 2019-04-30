@@ -20,11 +20,12 @@ namespace Barotrauma
 
         private bool getDivingGearIfNeeded;
 
-        public float CloseEnough = 0.5f;
+        public float CloseEnough { get; set; } = 0.5f;
 
-        public bool IgnoreIfTargetDead;
+        public bool IgnoreIfTargetDead { get; set; }
 
-        public bool AllowGoingOutside = false;
+        public bool AllowGoingOutside { get; set; }
+        public bool CheckVisibility { get; set; }
 
         public override float GetPriority()
         {
@@ -147,7 +148,12 @@ namespace Barotrauma
                 }
             }
 
-            if (Vector2.DistanceSquared(currTargetPos, character.SimPosition) < CloseEnough * CloseEnough)
+            bool sightCheck = true;
+            if (CheckVisibility && Target != null)
+            {
+                sightCheck = Target is Character ch ? character.CanSeeCharacter(ch) : character.CanSeeTarget(Target);
+            }
+            if (sightCheck && Vector2.DistanceSquared(currTargetPos, character.SimPosition) < CloseEnough * CloseEnough)
             {
                 character.AIController.SteeringManager.Reset();
                 character.AnimController.TargetDir = currTargetPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
