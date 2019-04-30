@@ -320,7 +320,7 @@ namespace Barotrauma
             entityCategoryButtons.Add(
                 new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
                 {
-                    OnClicked = (btn, userdata) => { ClearFilter(); return true; }
+                    OnClicked = (btn, userdata) => { entityCategoryButtons.ForEach(b => b.Selected = b == btn); ClearFilter(); return true; }
                 });
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
@@ -1492,7 +1492,9 @@ namespace Barotrauma
             ClearFilter();
             foreach (GUIButton button in entityCategoryButtons)
             {
-                button.Selected = (MapEntityCategory)button.UserData == selectedCategory;
+                button.Selected = 
+                    button.UserData != null &&
+                    (MapEntityCategory)button.UserData == selectedCategory;
             }
             
             foreach (GUIComponent child in toggleEntityMenuButton.Children)
