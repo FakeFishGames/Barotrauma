@@ -1188,7 +1188,8 @@ namespace Barotrauma
                     isClimbing = false;
                 }
             }
-            else if (character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right))
+            else if ((character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right)) &&
+                    (!character.IsKeyDown(InputType.Up) && !character.IsKeyDown(InputType.Down)))
             {
                 isClimbing = false;
             }

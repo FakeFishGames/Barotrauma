@@ -1079,6 +1079,8 @@ namespace Barotrauma.Networking
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
+            bool allowRagdollButton = inc.ReadBoolean();
+
             serverSettings.ReadMonsterEnabled(inc);
 
             GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
@@ -1095,6 +1097,7 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
             serverSettings.AllowDisguises = disguisesAllowed;
+            serverSettings.AllowRagdollButton = allowRagdollButton;
 
             if (campaign == null)
             {

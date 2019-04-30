@@ -3034,5 +3034,8 @@
 
 
   <!-- New additions -->
+  <fabricatorsufficientskills>Sufficient skills to fabricate</fabricatorsufficientskills>
+  <fabricatorinsufficientskills>Insufficient skills to fabricate</fabricatorinsufficientskills>
+  <VoipCaptureDeviceNotFound>Could not start voice capture, suitable capture device not found.</VoipCaptureDeviceNotFound>
 
 </infotexts>

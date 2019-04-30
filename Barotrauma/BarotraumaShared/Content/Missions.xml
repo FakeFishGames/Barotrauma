@@ -5,7 +5,7 @@
     identifier="salvageskyholderartifactruins"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="5"
+    commonness="25"
     reward="1000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -14,18 +14,22 @@
     spawntype="ruin"
     itemidentifier="skyholderartifact">
 
-    <LocationType from="City" to="None"/>
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
-    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="None"/> 
+    <LocationType from="Outpost" to="Lair"/>
+      
     <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Ruins"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+        
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
@@ -35,7 +39,7 @@
     identifier="salvagethermalartifactruins"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="5"
+    commonness="25"
     reward="2000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -44,18 +48,22 @@
     spawntype="ruin"
     itemidentifier="thermalartifact">
 
-    <LocationType from="City" to="None"/>
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
-    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="None"/> 
+    <LocationType from="Outpost" to="Lair"/> 
+      
     <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Ruins"/>
+    <LocationType from="Research" to="Mine"/>
+
+    <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
@@ -65,8 +73,8 @@
     identifier="salvagethermalartifactcave"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="2"
-    reward="1500"
+    commonness="33"
+    reward="2000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
@@ -74,15 +82,21 @@
     spawntype="cave"
     itemidentifier="thermalartifact">
 
-    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="None"/> 
+    <LocationType from="Outpost" to="Lair"/>
+      
     <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Ruins"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
@@ -92,7 +106,7 @@
     identifier="salvagenasonovartifactruin"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="5"
+    commonness="25"
     reward="2000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
@@ -101,17 +115,21 @@
     spawntype="ruin"
     itemidentifier="nasonovartifact">
 
-    <LocationType from="City" to="City"/>
-    <LocationType from="City" to="Outpost"/>
-    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="None"/> 
+    <LocationType from="Outpost" to="Lair"/>
+      
     <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Ruins"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
@@ -121,8 +139,8 @@
     identifier="salvagenasonovartifactcave"
     type="Salvage"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="2"
-    reward="1500"
+    commonness="33"
+    reward="2000"
     achievementidentifier="artifactmission"
     sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
@@ -131,13 +149,20 @@
     itemidentifier="nasonovartifact">
 
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="None"/> 
+    <LocationType from="Outpost" to="Lair"/>
+      
     <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Ruins"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
     
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
@@ -147,25 +172,52 @@
     identifier="killmoloch"
     type="Monster"
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
-    commonness="5"
+    commonness="25"
     reward="5000"
     sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/Molochboss/Molochboss.xml">
 
+    <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="Mine"/>
     <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="None"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Lair"/>
+    
     <LocationType from="Military" to="None"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
-    <LocationType from="Military" to="Ruins"/>
+    <LocationType from="Military" to="Mine"/>
     <LocationType from="Military" to="Lair"/>
+    
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+    
+    <LocationType from="Mine" to="None"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+    <LocationType from="Mine" to="Lair"/>
+    
     
     <message header="Target terminated" text="The moloch is dead. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterMission>
@@ -175,26 +227,52 @@
     identifier="killtigerthresher"
     type="Monster"
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
-    commonness="7"
+    commonness="45"
     reward="1000"
     sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/Tigerthresherboss/Tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
+    <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="Mine"/>
     <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="None"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Lair"/>
+    
     <LocationType from="Military" to="None"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
-    <LocationType from="Military" to="Ruins"/>
+    <LocationType from="Military" to="Mine"/>
     <LocationType from="Military" to="Lair"/>
+    
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+    
+    <LocationType from="Mine" to="None"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+    <LocationType from="Mine" to="Lair"/> 
     
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
@@ -206,27 +284,53 @@
     identifier="killhammerhead"
     type="Monster"
     description="A particularly aggressive Hammerhead has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to those who kill the creature."
-    commonness="7"
-    reward="1000"
+    commonness="35"
+    reward="2000"
     sonarlabel="Hammerhead"
     successmessage="The Hammerhead has been killed."
     monsterfile="Content/Characters/Hammerhead/Hammerhead.xml">
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
+    <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="Mine"/>
     <LocationType from="City" to="Lair"/>
+        
+    <LocationType from="Outpost" to="None"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Lair"/>
+    
     <LocationType from="Military" to="None"/>
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
-    <LocationType from="Military" to="Ruins"/>
+    <LocationType from="Military" to="Mine"/>
     <LocationType from="Military" to="Lair"/>
-
+    
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+    
+    <LocationType from="Mine" to="None"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+    <LocationType from="Mine" to="Lair"/>  
+    
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
   </MonsterMission>
@@ -236,7 +340,7 @@
     identifier="killcrawlerswarm"
     type="Monster"
     description="A small swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it."
-    commonness="2"
+    commonness="45"
     reward="1000"
     sonarlabel="Swarm"
     successmessage="The swarm has been terminated."
@@ -245,9 +349,44 @@
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <LocationType from="City" to="None"/>
-    <LocationType from="Military" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    <LocationType from="City" to="Lair"/>
+        
     <LocationType from="Outpost" to="None"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Lair"/>
+    
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Mine"/>
+    <LocationType from="Military" to="Lair"/>
+    
     <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+    
+    <LocationType from="Mine" to="None"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+    <LocationType from="Mine" to="Lair"/> 
 
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
@@ -255,10 +394,10 @@
 
   <MonsterMission
     name="Terminate a Swarm"
-    identifier="killcrawlerswarm"
+    identifier="killcrawlerswarm2"
     type="Monster"
     description="A large swarm of crawlers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it."
-    commonness="1"
+    commonness="35"
     reward="2000"
     sonarlabel="Swarm"
     successmessage="The swarm has been terminated."
@@ -267,9 +406,44 @@
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <LocationType from="City" to="None"/>
-    <LocationType from="Military" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    <LocationType from="City" to="Lair"/>
+        
     <LocationType from="Outpost" to="None"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Lair"/>
+    
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Mine"/>
+    <LocationType from="Military" to="Lair"/>
+    
     <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+    
+    <LocationType from="Mine" to="None"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+    <LocationType from="Mine" to="Lair"/> 
 
     <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
@@ -301,21 +475,28 @@
     identifier="salvagekillmoloch"
     type="Monster"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
-    commonness="2"
-    reward="5000"
+    commonness="15"
+    reward="2000"
     sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/Moloch.xml">
     
-    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
-    <LocationType from="City" to="Ruins"/>
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="Lair"/>
+    
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="None"/> 
+    <LocationType from="Outpost" to="Lair"/>
+    
     <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Ruins"/>    
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+  
   </MonsterMission>
 
   <MonsterMission
@@ -323,17 +504,27 @@
     identifier="salvagekillcarrier"
     type="Monster"
     description="A small cargo vessel went missing approximately two months ago when transporting xenomaterials from [location1] to [location2]. The vessel was presumed to be taken by the abyss, but now its emergency beacon seems to have been activated near [location2]. Find the vessel and recover the cargo."
-    commonness="5"
-    reward="1000"
+    commonness="15"
+    reward="2000"
     sonarlabel="Emergency Signal"
-    successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
+    successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 2000 credits as &quot;reimbursement for your troubles&quot;."
     monsterfile="Content/Characters/Carrier/Carrier.xml">
-    <LocationType from="City" to="Military"/>
+    
     <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="Lair"/>
+    
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="None"/> 
+    <LocationType from="Outpost" to="Lair"/>
+    
+    <LocationType from="Research" to="None"/>
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/> 
   
     <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>
 
@@ -344,7 +535,7 @@
     identifier="cargocompoundn"
     type="Cargo"
     description="A local arms dealer is offering 500 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
-    commonness="5"
+    commonness="45"
     reward="500"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
@@ -360,16 +551,20 @@
     </Items>
 
     <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="City"/>
+            
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
-    <LocationType from="Research" to="City"/>
-    <LocationType from="Research" to="Outpost"/>
-    <LocationType from="Research" to="Military"/>
-    <LocationType from="Research" to="Research"/>
+    <LocationType from="Military" to="Mine"/> 
     
   </CargoMission>
 
@@ -378,7 +573,7 @@
     identifier="cargovolatilecompoundn"
     type="Cargo"
     description="A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2]."
-    commonness="2"
+    commonness="15"
     reward="500"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
@@ -397,19 +592,16 @@
     </Items>
 
     <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
     <LocationType from="City" to="Mine"/>
-    <LocationType from="Military" to="Mine"/>
+            
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
-    <LocationType from="Research" to="City"/>
-    <LocationType from="Research" to="Outpost"/>
-    <LocationType from="Research" to="Military"/>
-    <LocationType from="Research" to="Research"/>
-    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Military" to="Mine"/>
 
   </CargoMission>
 
@@ -417,8 +609,8 @@
     name="Chemical shipment"
     identifier="cargochemicals"
     type="Cargo"
-    description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits."
-    commonness="6"
+    description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits."
+    commonness="50"
     reward="250"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered."
@@ -439,10 +631,20 @@
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>     
+  
 
   </CargoMission>
 
@@ -451,8 +653,8 @@
     identifier="cargohuskeggs"
     type="Cargo"
     description="Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2]."
-    commonness="5"
-    reward="250"
+    commonness="33"
+    reward="350"
     achievementidentifier="cargomission"
     successmessage="The husk eggs have been successfully delivered.">
     <Items>
@@ -462,11 +664,22 @@
     </Items>
     
     <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>       
+    
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Mine"/>
+    
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>    
     
   </CargoMission>
 
@@ -474,8 +687,8 @@
     name="Handle with care"
     identifier="cargonitroglycerin"
     type="Cargo"
-    description="Local researchers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
-    commonness="6"
+    description="Local researchers are offering [reward] credits for delivering a large amount of nitroglycerin to [location2]."
+    commonness="25"
     reward="2000"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered.">
@@ -492,14 +705,25 @@
     <LocationType from="City" to="Outpost"/>
     <LocationType from="City" to="Military"/>
     <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    
     <LocationType from="Military" to="City"/>
     <LocationType from="Military" to="Outpost"/>
     <LocationType from="Military" to="Military"/>
     <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Mine"/>
+    
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>  
     
   </CargoMission>
 
@@ -508,8 +732,8 @@
     identifier="cargoclowngear"
     type="Cargo"
     description="A local clown syndicate is offering [reward] credits for delivering a shipment of clowning supplies to [location2]."
-    commonness="1"
-    reward="100"
+    commonness="5"
+    reward="1000"
     achievementidentifier="cargomission"
     successmessage="The clown gear has been successfully delivered."
     requireddeliveryamount="35">
@@ -525,9 +749,34 @@
     
     <LocationType from="City" to="City"/>
     <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    
     <LocationType from="Outpost" to="City"/>
     <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
     
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Mine"/>
+    
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>    
+
   </CargoMission>
 
 
@@ -536,8 +785,8 @@
     identifier="cargoconstructionminerals"
     type="Cargo"
     description="A consignment of materials for construction needs to be transported to [location2] and the crew chief here is prepared to pay [reward] credits for your trouble."
-    commonness="10"
-    reward="150"
+    commonness="50"
+    reward="250"
     achievementidentifier="cargomission"
     successmessage="The materials have been successfully delivered."
     requireddeliveryamount="40">
@@ -552,11 +801,14 @@
         <Item identifier="titanium" amount="10"/>
       </Item>
     </Items>
-
+      
+    <LocationType from="City" to="Outpost"/>
     <LocationType from="Mine" to="City"/>
     <LocationType from="Mine" to="Outpost"/>
-    <LocationType from="Mine" to="Mine"/>
-
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>   
+    
   </CargoMission>
 
 
@@ -565,8 +817,8 @@
     identifier="cargosecurityminerals"
     type="Cargo"
     description="The security team at [location2] needs to be resupplied with materials for weapon fabrication. There's [reward] credits for you if you get these supplies to them."
-    commonness="5"
-    reward="150"
+    commonness="50"
+    reward="250"
     achievementidentifier="cargomission"
     successmessage="The materials have been successfully delivered."
     requireddeliveryamount="40">
@@ -585,7 +837,13 @@
       </Item>
     </Items>
 
+    <LocationType from="City" to="Military"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
     <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+     
 
   </CargoMission>
 
@@ -594,8 +852,8 @@
     identifier="cargomeditems"
     type="Cargo"
     description="A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there."
-    commonness="10"
-    reward="150"
+    commonness="50"
+    reward="250"
     achievementidentifier="cargomission"
     successmessage="The materials have been successfully delivered."
     requireddeliveryamount="40">
@@ -613,10 +871,18 @@
       </Item>
     </Items>
 
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+                
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
     <LocationType from="Research" to="Research"/>
-
+    <LocationType from="Research" to="Mine"/> 
+    
   </CargoMission>
   
 
@@ -625,8 +891,8 @@
     identifier="cargomedemergency"
     type="Cargo"
     description="A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid [reward] credits on delivery."
-    commonness="5"
-    reward="300"
+    commonness="50"
+    reward="350"
     achievementidentifier="cargomission"
     successmessage="The antidote has been successfully delivered."
     requireddeliveryamount="5">
@@ -637,10 +903,17 @@
 
     </Items>
 
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+
     <LocationType from="Research" to="City"/>
     <LocationType from="Research" to="Outpost"/>
     <LocationType from="Research" to="Military"/>
-    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>    
 
   </CargoMission>
 

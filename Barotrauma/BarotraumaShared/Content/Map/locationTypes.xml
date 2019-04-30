@@ -8,16 +8,8 @@
     <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.png" premultiplyalpha="false"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
-    <ChangeTo type="Outpost" probability="0.5" requiredduration="3"
-              requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
-
-    <ChangeTo type="Military" probability="0.25" requiredduration="3"
-              requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
-
-    <ChangeTo type="Research" probability="0.25" requiredduration="3"
-              requiredadjacentlocations="Outpost,Military,Research,City"
+    <ChangeTo type="Outpost" probability="0.75" requiredduration="2"
+              requiredadjacentlocations="Outpost,Military,Research,City,Mine"
               disallowedadjacentlocations="Lair"/>
   </None>
 
@@ -54,8 +46,18 @@
     <Hireable identifier="securityofficer" commonness="1"/>
     <Hireable identifier="captain" commonness="1"/>
 
-    <!-- can become a city if there are no adjacent lairs -->
-    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair"/>
+    <!-- can become a specialized outpost if there are no adjacent lairs -->
+    <ChangeTo type="Military" probability="0.5" requiredduration="3"
+          requiredadjacentlocations="Outpost,Military,Research,City,Mine"
+          disallowedadjacentlocations="Lair"/>
+
+    <ChangeTo type="Research" probability="0.5" requiredduration="3"
+              requiredadjacentlocations="Outpost,Military,Research,City,Mine"
+              disallowedadjacentlocations="Lair"/>
+    
+    <ChangeTo type="Mine" probability="0.5" requiredduration="3"
+          requiredadjacentlocations="Outpost,Military,Research,City,Mine"
+          disallowedadjacentlocations="Lair"/>
   </Outpost>
   
   <Military
@@ -74,6 +76,11 @@
     <Hireable identifier="engineer" commonness="2"/>
     <Hireable identifier="mechanic" commonness="2"/>
     <Hireable identifier="medicaldoctor" commonness="2"/>
+    
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City" probability="0.5" requiredduration="5"
+          requiredadjacentlocations="Outpost,Military,Research,City"
+          disallowedadjacentlocations="Lair"/>
   </Military>
 
   <Research
@@ -93,6 +100,12 @@
     <Hireable identifier="assistant" commonness="3"/>
     <Hireable identifier="securityofficer" commonness="1"/>
     <Hireable identifier="captain" commonness="1"/>
+
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City" probability="0.5" requiredduration="5"
+          requiredadjacentlocations="Outpost,Military,Research,City"
+          disallowedadjacentlocations="Lair"/>
+    
   </Research>
   
   <Mine
@@ -110,12 +123,17 @@
     <Hireable identifier="engineer" commonness="5"/>
     <Hireable identifier="mechanic" commonness="5"/>
     <Hireable identifier="assistant" commonness="3"/>
+
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City" probability="0.5" requiredduration="5"
+          requiredadjacentlocations="Outpost,Military,Research,City"
+          disallowedadjacentlocations="Lair"/>
   </Mine>
 
   <Lair
     identifier="Lair"
     namefile="Content/Map/alienNames.txt"
-    commonnessperzone="1: 0.5, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
+    commonnessperzone="1: 0.25, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
     halo="1,0,0,0.4">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="794,23,208,204" color="216,91,80,255"/>
@@ -124,7 +142,7 @@
     <!-- becomes an empty natural formation after being discovered (todo: require killing the monster(s) in the location) -->
     <ChangeTo type="None" probability="1.0"/>
   </Lair>
-
+  <!--
   <Ruins
     identifier="Ruins"
     namefile="Content/Map/alienNames.txt"
@@ -138,5 +156,5 @@
     <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
     <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
     <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair"/>
-  </Ruins>
+  </Ruins>-->
 </locationtypes>

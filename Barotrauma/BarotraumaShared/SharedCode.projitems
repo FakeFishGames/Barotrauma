@@ -186,6 +186,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Hull.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\IDamageable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ISpatialEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Level.cs" />

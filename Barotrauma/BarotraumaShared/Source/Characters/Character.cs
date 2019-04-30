@@ -14,7 +14,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable, ISpatialEntity
     {
         public static List<Character> CharacterList = new List<Character>();
 
@@ -1336,72 +1336,82 @@ namespace Barotrauma
             }
         }
 
-        public bool CanSeeCharacter(Character character)
+        public bool CanSeeCharacter(Character target)
         {
-            Limb selfLimb = AnimController.GetLimb(LimbType.Head);
-            if (selfLimb == null) selfLimb = AnimController.GetLimb(LimbType.Torso);
-            if (selfLimb == null) selfLimb = AnimController.Limbs[0];
-
-            Limb targetLimb = character.AnimController.GetLimb(LimbType.Head);
-            if (targetLimb == null) targetLimb = character.AnimController.GetLimb(LimbType.Torso);
-            if (targetLimb == null) targetLimb = character.AnimController.Limbs[0];
-
-            if (selfLimb != null && targetLimb != null)
+            Limb seeingLimb = GetSeeingLimb();
+            foreach (var targetLimb in target.AnimController.Limbs)
             {
-                Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - selfLimb.WorldPosition);
-                
-                Body closestBody = null;
-                //both inside the same sub (or both outside)
-                //OR the we're inside, the other character outside
-                if (character.Submarine == Submarine || character.Submarine == null)
+                if (CanSeeTarget(targetLimb, seeingLimb))
                 {
-                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
-                    if (closestBody == null) return true;
+                    return true;
                 }
-                //we're outside, the other character inside
-                else if (Submarine == null)
-                {
-                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
-                    if (closestBody == null) return true;
-                }
-                //both inside different subs
-                else
-                {
-                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
-                    if (closestBody != null && closestBody.UserData is Structure)
-                    {
-                        if (((Structure)closestBody.UserData).CastShadow) return false;
-                    }
-                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
-                    if (closestBody == null) return true;
-
-                }
-                
-                Structure wall = closestBody.UserData as Structure;
-                return wall == null || !wall.CastShadow;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
-        public bool CanSeeCharacter(Character character, Vector2 sourceWorldPos)
+        private Limb GetSeeingLimb()
         {
-            Vector2 diff = ConvertUnits.ToSimUnits(character.WorldPosition - sourceWorldPos);
+            Limb selfLimb = AnimController.GetLimb(LimbType.Head);
+            if (selfLimb == null) { selfLimb = AnimController.GetLimb(LimbType.Torso); }
+            if (selfLimb == null) { selfLimb = AnimController.Limbs.FirstOrDefault(); }
+            return selfLimb;
+        }
 
-            Body closestBody = null;
-            if (character.Submarine == null)
+        public bool CanSeeTarget(ISpatialEntity target, Limb seeingLimb = null)
+        {
+            seeingLimb = seeingLimb ?? GetSeeingLimb();
+            if (seeingLimb == null) { return false; }
+            // TODO: Could we just use the method below? If not, let's refactor it so that we can.
+            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - seeingLimb.WorldPosition);
+            Body closestBody;
+            //both inside the same sub (or both outside)
+            //OR the we're inside, the other character outside
+            if (target.Submarine == Submarine || target.Submarine == null)
+            {
+                closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
+            }
+            //we're outside, the other character inside
+            else if (Submarine == null)
+            {
+                closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
+            }
+            //both inside different subs
+            else
+            {
+                closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
+                if (closestBody != null)
+                {
+                    if (closestBody.UserData is Structure wall && wall.CastShadow)
+                    {
+                        return false;
+                    }
+                }
+                closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
+            }
+            if (closestBody != null)
+            {
+                if (closestBody.UserData is Structure wall && wall.CastShadow)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool CanSeeCharacter(Character target, Vector2 sourceWorldPos)
+        {
+            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceWorldPos);
+            Body closestBody;
+            if (target.Submarine == null)
             {
                 closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
                 if (closestBody == null) return true;
             }
             else
             {
-                closestBody = Submarine.CheckVisibility(character.WorldPosition, character.WorldPosition - diff);
+                closestBody = Submarine.CheckVisibility(target.WorldPosition, target.WorldPosition - diff);
                 if (closestBody == null) return true;
             }
-
             Structure wall = closestBody.UserData as Structure;
             return wall == null || !wall.CastShadow;
         }
