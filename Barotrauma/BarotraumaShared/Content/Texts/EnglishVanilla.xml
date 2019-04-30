@@ -1945,6 +1945,8 @@
   <orderdialog.reportbrokendevices>Need someone to repair devices in [roomname]!</orderdialog.reportbrokendevices>
   <orderdialog.requestfirstaid>Need a medic in [roomname]!</orderdialog.requestfirstaid>
   <orderdialog.requestfirstaid>Need medical assistance in [roomname]!</orderdialog.requestfirstaid>
+  <!--TODO: add missing ai dialogs-->
+  <!--TODO: add order names OrderName.aitag?-->
 
   <!-- Status -->
   <deceased>Deceased</deceased>
