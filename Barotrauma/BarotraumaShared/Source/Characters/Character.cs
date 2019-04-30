@@ -14,7 +14,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable, ISpatialEntity
     {
         public static List<Character> CharacterList = new List<Character>();
 
