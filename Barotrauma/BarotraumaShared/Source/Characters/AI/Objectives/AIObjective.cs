@@ -146,7 +146,11 @@ namespace Barotrauma
         }
 
         protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
-        public virtual void OnSelected() { }
+        public virtual void OnSelected()
+        {
+            SteeringManager.Reset();
+        }
+
         public virtual void Reset() { }
 
         protected abstract void Act(float deltaTime);
