@@ -3038,4 +3038,8 @@
   <fabricatorinsufficientskills>Insufficient skills to fabricate</fabricatorinsufficientskills>
   <VoipCaptureDeviceNotFound>Could not start voice capture, suitable capture device not found.</VoipCaptureDeviceNotFound>
 
+  <bugreportbutton>Report a bug</bugreportbutton>
+  <bugreportfeedbackform>Barotrauma Feedback Form</bugreportfeedbackform>
+  <bugreportgithubform>GitHub issue form</bugreportgithubform>
+
 </infotexts>
