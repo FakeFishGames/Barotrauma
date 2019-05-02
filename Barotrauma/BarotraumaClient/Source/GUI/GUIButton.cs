@@ -105,6 +105,12 @@ namespace Barotrauma
             set { textBlock.TextColor = value; }
         }
 
+
+        public override float FlashTimer
+        {
+            get { return Frame.FlashTimer; }
+        }
+
         public override ScalableFont Font
         {
             get
