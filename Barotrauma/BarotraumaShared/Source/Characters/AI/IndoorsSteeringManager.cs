@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -368,11 +367,7 @@ namespace Barotrauma
                 //toggle the door if it's the previous node and open, or if it's current node and closed
                 if (door.IsOpen != shouldBeOpen)
                 {
-                    var buttons = door.Item.GetComponents<Controller>();
-                    if (buttons.None())
-                    {
-                        buttons = door.Item.GetConnectedComponents<Controller>(true);
-                    }
+                    var buttons = door.Item.GetConnectedComponents<Controller>(true);
 
                     Controller closestButton = null;
                     float closestDist = 0.0f;
@@ -433,12 +428,8 @@ namespace Barotrauma
                     //door closed and the character can't open doors -> node can't be traversed
                     if (!canOpenDoors || character.LockHands) { return null; }
 
-                    var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetComponents<Controller>();
-                    if (doorButtons.None())
-                    {
-                        doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
-                    }
-                    if (doorButtons.None())
+                    var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
+                    if (!doorButtons.Any())
                     {
                         if (!nextNode.Waypoint.ConnectedDoor.HasRequiredItems(character, false)) { return null; }
                     }
