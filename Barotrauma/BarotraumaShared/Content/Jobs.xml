@@ -10,6 +10,10 @@
       <Skill identifier="mechanical" level="20,30"/>
       <Skill identifier="electrical" level="20,30"/>
       <Skill identifier="medical" level="10,30"/>
+      <!--
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="intiative" level="20,100"/>
+      -->
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -48,6 +52,10 @@
       <Skill identifier="weapons" level="10,30"/>
       <Skill identifier="medical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <!--
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="intiative" level="20,100"/>
+      -->
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -87,6 +95,10 @@
       <Skill identifier="weapons" level="10,30"/>
       <Skill identifier="medical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <!--
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="intiative" level="20,100"/>
+      -->
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -125,6 +137,10 @@
       <Skill identifier="mechanical" level="10,20"/>
       <Skill identifier="electrical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <!--
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="intiative" level="20,100"/>
+      -->
     </Skills>
     <Items>
       <Item identifier="securityuniform" equip="true"/>
@@ -163,6 +179,10 @@
       <Skill identifier="mechanical" level="10,20"/>
       <Skill identifier="electrical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <!--
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="intiative" level="20,100"/>
+      -->
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -194,6 +214,10 @@
       <Skill identifier="electrical" level="20,32"/>
       <Skill identifier="medical" level="10,22"/>
       <Skill identifier="helm" level="10,20"/>
+      <!--
+      <Skill identifier="courage" level="0,60"/>
+      <Skill identifier="intiative" level="0,60"/>
+      -->
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
