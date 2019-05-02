@@ -3,6 +3,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -95,7 +96,24 @@ namespace Barotrauma
                     character.CursorPosition = fs.Position;
                     if (extinguisher.Item.RequireAimToUse)
                     {
-                        character.SetInput(InputType.Aim, false, true);
+                        bool isOperatingButtons = false;
+                        if (SteeringManager == PathSteering)
+                        {
+                            var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
+                            if (door != null && !door.IsOpen)
+                            {
+                                var buttons = door.Item.GetComponents<Controller>();
+                                if (buttons.None())
+                                {
+                                    buttons = door.Item.GetConnectedComponents<Controller>(true);
+                                }
+                                isOperatingButtons = buttons.Any();
+                            }
+                        }
+                        if (!isOperatingButtons)
+                        {
+                            character.SetInput(InputType.Aim, false, true);
+                        }
                     }
                     Limb sightLimb = null;
                     if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.RightHand))
