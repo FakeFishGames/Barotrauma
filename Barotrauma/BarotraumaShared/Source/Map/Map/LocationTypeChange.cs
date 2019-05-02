@@ -28,6 +28,10 @@ namespace Barotrauma
             RequiredAdjacentLocations = element.GetAttributeStringArray("requiredadjacentlocations", new string[0]).ToList();
 
             Messages = TextManager.GetAll("LocationChange." + currentType + ".ChangeTo." + ChangeToType);
+            if (Messages == null)
+            {
+                DebugConsole.ThrowError("No messages defined for the location type change " + currentType + " -> " + ChangeToType);
+            }
         }
     }
 }

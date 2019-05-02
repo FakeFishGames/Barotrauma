@@ -255,9 +255,9 @@ namespace Barotrauma
                 Duration = CurrentLocation == location ? 1.0f : 2.0f,
                 StartDelay = 1.0f
             };
-            if (change.Messages.Count > 0)
+            if (change.Messages != null && change.Messages.Count > 0)
             {
-                mapAnim.EndMessage = change.Messages[Rand.Range(0,change.Messages.Count)]
+                mapAnim.EndMessage = change.Messages[Rand.Range(0, change.Messages.Count)]
                     .Replace("[previousname]", prevName)
                     .Replace("[name]", location.Name);
             }
