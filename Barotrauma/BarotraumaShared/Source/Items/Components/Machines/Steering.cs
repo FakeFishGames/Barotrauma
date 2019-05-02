@@ -154,10 +154,10 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
 
         public override void OnItemLoaded()
         {
@@ -474,7 +474,9 @@ namespace Barotrauma.Items.Components
                     if (!posToMaintain.HasValue)
                     {
                         unsentChanges = true;
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
+                        posToMaintain = controlledSub != null ?
+                            controlledSub.WorldPosition :
+                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
                     }
 
                     if (!AutoPilot || !MaintainPos) unsentChanges = true;
