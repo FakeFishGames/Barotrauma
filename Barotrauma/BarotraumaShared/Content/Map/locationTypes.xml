@@ -17,8 +17,7 @@
   <City
     identifier="City"
     namefile="Content/Map/cityNames.txt"
-    commonnessperzone="1: 5.0"
-    halo="0,1,0,0.3">
+    commonnessperzone="1: 5.0">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="520,527,244,228" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/Colony.png" premultiplyalpha="false"/>
@@ -34,8 +33,7 @@
   <Outpost
     identifier="Outpost"
     namefile="Content/Map/cityNames.txt"
-    commonnessperzone="2: 5.0, 3: 2.5"
-    halo="0,1,0,0.2">
+    commonnessperzone="2: 5.0, 3: 2.5">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="545,275,181,220" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost.png" premultiplyalpha="false"/>
@@ -68,7 +66,6 @@
     identifier="Military"
     namefile="Content/Map/locationNames.txt"
     commonnessperzone="1: 1.25, 2: 2.5, 3: 1.25"
-    halo="0,1,0,0.4"
     useinmainmenu="true">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,512,256,256" color="198,252,222,255"/>
@@ -92,8 +89,7 @@
     identifier="Research"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    commonnessperzone="2: 1.25, 3: 2.5"
-    halo="0,1,0,0.2">
+    commonnessperzone="2: 1.25, 3: 2.5">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="803,265,190,241" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility1.png" premultiplyalpha="false"/>
@@ -117,8 +113,7 @@
     identifier="Mine"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    commonnessperzone="2: 1.25, 3: 2.5"
-    halo="0,1,0,0.2">
+    commonnessperzone="2: 1.25, 3: 2.5">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="284,773,220,244" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/WorkCampMining1.png" premultiplyalpha="false"/>
@@ -139,8 +134,7 @@
   <Lair
     identifier="Lair"
     namefile="Content/Map/alienNames.txt"
-    commonnessperzone="1: 0.25, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
-    halo="1,0,0,0.4">
+    commonnessperzone="1: 0.25, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="794,23,208,204" color="216,91,80,255"/>
     <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.png" premultiplyalpha="false"/>
