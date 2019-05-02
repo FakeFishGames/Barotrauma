@@ -5,13 +5,13 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    public class AutomaticOrder
+    public class AutonomousObjective
     {
         public string aiTag;
         public string option;
         public float priorityModifier;
 
-        public AutomaticOrder(XElement element)
+        public AutonomousObjective(XElement element)
         {
             aiTag = element.GetAttributeString("aitag", null);
             option = element.GetAttributeString("option", null);
@@ -27,7 +27,7 @@ namespace Barotrauma
         public readonly XElement Items;
         public readonly List<string> ItemNames = new List<string>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
-        public readonly List<AutomaticOrder> AutomaticOrders = new List<AutomaticOrder>();
+        public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
         
         [Serialize("1,1,1,1", false)]
         public Color UIColor
@@ -169,8 +169,8 @@ namespace Barotrauma
                             Skills.Add(new SkillPrefab(skillElement));
                         }
                         break;
-                    case "automaticorders":
-                        subElement.Elements().ForEach(order => AutomaticOrders.Add(new AutomaticOrder(order)));
+                    case "autonomousobjectives":
+                        subElement.Elements().ForEach(order => AutomaticOrders.Add(new AutonomousObjective(order)));
                         break;
                 }
             }
