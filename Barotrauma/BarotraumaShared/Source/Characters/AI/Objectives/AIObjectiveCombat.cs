@@ -330,24 +330,22 @@ namespace Barotrauma
         {
             float squaredDistance = Vector2.DistanceSquared(character.Position, Enemy.Position);
             character.CursorPosition = Enemy.Position;
+            float engageDistance = 500;
+            if (squaredDistance > engageDistance * engageDistance) { return; }
+            bool canSeeTarget = character.CanSeeCharacter(Enemy);
+            if (!canSeeTarget && character.CurrentHull != Enemy.CurrentHull) { return; }
             if (Weapon.RequireAimToUse)
             {
                 bool isOperatingButtons = false;
-                float engageDistance = 500;
                 if (SteeringManager == PathSteering)
                 {
                     var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
                     if (door != null && !door.IsOpen)
                     {
-                        var buttons = door.Item.GetComponents<Controller>();
-                        if (buttons.None())
-                        {
-                            buttons = door.Item.GetConnectedComponents<Controller>(true);
-                        }
-                        isOperatingButtons = buttons.Any();
+                        isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
                     }
                 }
-                if (!isOperatingButtons && character.SelectedConstruction == null && (Enemy.CurrentHull == character.CurrentHull || squaredDistance < engageDistance * engageDistance))
+                if (!isOperatingButtons && character.SelectedConstruction == null)
                 {
                     character.SetInput(InputType.Aim, false, true);
                 }

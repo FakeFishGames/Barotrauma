@@ -102,12 +102,7 @@ namespace Barotrauma
                             var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
                             if (door != null && !door.IsOpen)
                             {
-                                var buttons = door.Item.GetComponents<Controller>();
-                                if (buttons.None())
-                                {
-                                    buttons = door.Item.GetConnectedComponents<Controller>(true);
-                                }
-                                isOperatingButtons = buttons.Any();
+                                isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
                             }
                         }
                         if (!isOperatingButtons)
