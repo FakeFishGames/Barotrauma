@@ -170,5 +170,12 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        public override XElement Save(XElement parentElement)
+        {
+            labels = customInterfaceElementList.Select(ci => ci.Label).ToArray();
+            signals = customInterfaceElementList.Select(ci => ci.Signal).ToArray();
+            return base.Save(parentElement);
+        }
     }
 }
