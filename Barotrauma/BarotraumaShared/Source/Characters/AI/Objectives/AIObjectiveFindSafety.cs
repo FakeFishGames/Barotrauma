@@ -204,6 +204,7 @@ namespace Barotrauma
                         unreachable.Add(hull);
                         continue;
                     }
+                    if (!PathSteering.HasAccessToPath(path)) { continue; }
                     int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
                     hullSafety /= 1 + unsafeNodes;
                     // If the target is not inside a friendly submarine, considerably reduce the hull safety.

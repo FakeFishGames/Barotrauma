@@ -312,6 +312,39 @@ namespace Barotrauma
             return currentPath.CurrentNode.SimPosition - pos;
         }
 
+        public bool HasAccessToPath(SteeringPath path)
+        {
+            foreach (var node in path.Nodes)
+            {
+                var door = node.ConnectedDoor;
+                if (door != null)
+                {
+                    if (door.HasIntegratedButtons)
+                    {
+                        if (!door.HasRequiredItems(character, false))
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            foreach (var button in door.Item.GetConnectedComponents<Controller>(true))
+                            {
+                                if (!button.HasRequiredItems(character, false))
+                                {
+                                    return false;
+                                }
+                                else if (Vector2.DistanceSquared(button.Item.WorldPosition, door.Item.WorldPosition) > button.Item.InteractDistance * button.Item.InteractDistance)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
         private void CheckDoorsInPath()
         {
             for (int i = 0; i < 2; i++)

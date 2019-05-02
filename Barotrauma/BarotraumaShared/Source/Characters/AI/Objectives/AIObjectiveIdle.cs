@@ -111,8 +111,10 @@ namespace Barotrauma
                         // Check that there is no unsafe or forbidden hulls on the way to the target
                         // Only do this when the current hull is ok, because otherwise would block all paths from the current hull to the target hull.
                         var path = PathSteering.PathFinder.FindPath(character.SimPosition, randomHull.SimPosition);
-                        if (path.Unreachable ||
-                            path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull)))
+                        if (path.Unreachable || 
+                            path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || 
+                            IsForbidden(n.CurrentHull)) ||
+                            !PathSteering.HasAccessToPath(path))
                         {
                             //can't go to this room, remove it from the list and try another room next frame
                             int index = targetHulls.IndexOf(randomHull);
