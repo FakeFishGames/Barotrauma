@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -63,15 +62,8 @@ namespace Barotrauma
 
             if (useController)
             {
-                var controllers = component.Item.GetComponents<Controller>();
-                if (controllers.None())
-                {
-                    controllers = component.Item.GetConnectedComponents<Controller>();
-                }
-                if (controllers.Any())
-                {
-                    controller = controllers.First();
-                }
+                var controllers = component.Item.GetConnectedComponents<Controller>();
+                if (controllers.Any()) controller = controllers[0];
             }
 
             canBeCompleted = true;
