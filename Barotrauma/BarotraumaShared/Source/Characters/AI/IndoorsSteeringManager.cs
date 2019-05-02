@@ -147,7 +147,7 @@ namespace Barotrauma
         protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
         {
             //find a new path if one hasn't been found yet or the target is different from the current target
-            if (currentPath == null || Vector2.Distance(target, currentTarget) > 1.0f || findPathTimer < -1.0f)
+            if (currentPath == null || Vector2.DistanceSquared(target, currentTarget) > 1.0f || findPathTimer < -1.0f)
             {
                 IsPathDirty = true;
 
@@ -286,7 +286,7 @@ namespace Barotrauma
                     character.AnimController.Anim = AnimController.Animation.None;
                     character.SelectedConstruction = null;
                 }
-                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 3, 2))
+                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 4, 2))
                 {
                     currentPath.SkipToNextNode();
                 }
@@ -301,7 +301,7 @@ namespace Barotrauma
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
                 
-                if (horizontalDistance < collider.radius * 3 && isAboveFeet && isNotTooHigh)
+                if (horizontalDistance < collider.radius * 4 && isAboveFeet && isNotTooHigh)
                 {
                     currentPath.SkipToNextNode();
                 }
@@ -374,8 +374,8 @@ namespace Barotrauma
 
                     foreach (Controller controller in buttons)
                     {
-                        float dist = Vector2.Distance(controller.Item.WorldPosition, character.WorldPosition);
-                        if (dist > controller.Item.InteractDistance * 2.0f) continue;
+                        float dist = Vector2.DistanceSquared(controller.Item.WorldPosition, character.WorldPosition);
+                        if (dist > controller.Item.InteractDistance * controller.Item.InteractDistance * 2.0f) continue;
 
                         if (dist < closestDist || closestButton == null)
                         {
