@@ -398,6 +398,10 @@ namespace Barotrauma
             bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (useCoolDown && coolDownTimer <= 0);
             if (completed)
             {
+                if (objectiveManager.CurrentOrder == this && Enemy != null && Enemy.IsDead)
+                {
+                    character.Speak(TextManager.Get("DialogTargetDown"), null, 3.0f, "targetdown", 30.0f);
+                }
                 if (Weapon != null)
                 {
                     Unequip();

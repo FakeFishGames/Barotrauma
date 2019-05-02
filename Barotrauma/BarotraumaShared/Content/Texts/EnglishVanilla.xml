@@ -1945,8 +1945,6 @@
   <orderdialog.reportbrokendevices>Need someone to repair devices in [roomname]!</orderdialog.reportbrokendevices>
   <orderdialog.requestfirstaid>Need a medic in [roomname]!</orderdialog.requestfirstaid>
   <orderdialog.requestfirstaid>Need medical assistance in [roomname]!</orderdialog.requestfirstaid>
-  <!--TODO: add missing ai dialogs-->
-  <!--TODO: add order names OrderName.aitag?-->
 
   <!-- Status -->
   <deceased>Deceased</deceased>
@@ -3043,5 +3041,61 @@
   <bugreportbutton>Report a bug</bugreportbutton>
   <bugreportfeedbackform>Barotrauma Feedback Form</bugreportfeedbackform>
   <bugreportgithubform>GitHub issue form</bugreportgithubform>
+
+  <dialognoleaks>What leaks?</dialognoleaks>
+  <dialognoleaks>Cannot find any leaks.</dialognoleaks>
+  <dialognoenemies>Enemies? Where?</dialognoenemies>
+  <dialognoenemies>Can't see any intruders onboard.</dialognoenemies>
+  <dialognopumps>None of the pumps require attention at the moment.</dialognopumps>
+  <dialognopumps>The pumps are OK, aren't they?</dialognopumps>
+  <dialognorepairtargets>What do you mean? Everything is working alright.</dialognorepairtargets>
+  <dialognorepairtargets>There's nothing to repair.</dialognorepairtargets>
+
+  <dialogcannotrepair>Cannot repair [itemname]!</dialogcannotrepair>
+  <dialogenemydown>Enemy down!</dialogenemydown>
+  <dialogenemydown>Another one eliminated.</dialogenemydown>
+
+  <orderdialog.fightintruders>[name], eliminate all intruders!</orderdialog.fightintruders>
+  <orderdialog.fightintruders>[name], defend the crew!</orderdialog.fightintruders>
+  <orderdialogself.fightintruders>Taking care of the intruders!</orderdialogself.fightintruders>
+  <orderdialogself.fightintruders>Fighting the enemy!</orderdialogself.fightintruders>
+
+  <ordername.dismissed>Dismissed</ordername.dismissed>
+  <ordername.follow>Follow</ordername.follow>
+  <ordername.wait>Wait</ordername.wait>
+  <ordername.operatereactor>Operate Reactor</ordername.operatereactor>
+  <ordername.operateweapons>Operate Weapons</ordername.operateweapons>
+  <ordername.steer>Steer</ordername.steer>
+  <ordername.fixleaks>Fix Leaks</ordername.fixleaks>
+  <ordername.extinguishfires>Extinguish Fires</ordername.extinguishfires>
+  <ordername.fightintruders>Fight Intruders</ordername.fightintruders>
+  <ordername.chargebatteries>Charge Batteries</ordername.chargebatteries>
+  <ordername.pumpwater>Operate Pumps</ordername.pumpwater>
+  <ordername.rescue>Heal and Rescue</ordername.rescue>
+  <ordername.repairsystems>Repair Damaged Systems</ordername.repairsystems>
+  <ordername.reportfire>Report Fire</ordername.reportfire>
+  <ordername.reportbreach>Report Hull Breach</ordername.reportbreach>
+  <ordername.reportintruders>Report Intruders</ordername.reportintruders>
+  <ordername.reportbrokendevices>Report Broken Devices</ordername.reportbrokendevices>
+  <ordername.requiestfirstaid>Request First Aid</ordername.requiestfirstaid>
+
+  <orderoptions.dismissed>TODO</orderoptions.dismissed>
+  <orderoptions.follow>TODO</orderoptions.follow>
+  <orderoptions.wait>TODO</orderoptions.wait>
+  <orderoptions.operatereactor>TODO</orderoptions.operatereactor>
+  <orderoptions.operateweapons>TODO</orderoptions.operateweapons>
+  <orderoptions.steer>TODO</orderoptions.steer>
+  <orderoptions.fixleaks>TODO</orderoptions.fixleaks>
+  <orderoptions.extinguishfires>TODO</orderoptions.extinguishfires>
+  <orderoptions.fightintruders>TODO</orderoptions.fightintruders>
+  <orderoptions.chargebatteries>TODO</orderoptions.chargebatteries>
+  <orderoptions.pumpwater>TODO</orderoptions.pumpwater>
+  <orderoptions.rescue>TODO</orderoptions.rescue>
+  <orderoptions.repairsystems>TODO</orderoptions.repairsystems>
+  <orderoptions.reportfire>TODO</orderoptions.reportfire>
+  <orderoptions.reportbreach>TODO</orderoptions.reportbreach>
+  <orderoptions.reportintruders>TODO</orderoptions.reportintruders>
+  <orderoptions.reportbrokendevices>TODO</orderoptions.reportbrokendevices>
+  <orderoptions.requiestfirstaid>TODO</orderoptions.requiestfirstaid>
 
 </infotexts>

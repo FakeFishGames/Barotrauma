@@ -17,7 +17,10 @@ namespace Barotrauma
         protected override void FindTargets()
         {
             base.FindTargets();
-            // TODO: Add a dialog when no leaks are found and the objective is an order
+            if (targets.None() && objectiveManager.CurrentOrder == this)
+            {
+                character.Speak(TextManager.Get("DialogNoLeaks"), null, 3.0f, "noleaks", 30.0f);
+            }
         }
 
         protected override bool Filter(Gap gap)
