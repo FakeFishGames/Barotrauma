@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -87,7 +88,7 @@ namespace Barotrauma
 
         public override bool Equals(object obj)
         {
-            if (obj is KeyOrMouse keyOrMouse )
+            if (obj is KeyOrMouse keyOrMouse)
             {
                 if (MouseButton.HasValue)
                 {
@@ -127,6 +128,14 @@ namespace Barotrauma
             }
 
             return "None";
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = int.MinValue;
+            hashCode = hashCode * -1521134295 + Key.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(MouseButton);
+            return hashCode;
         }
     }
 
