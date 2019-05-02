@@ -90,16 +90,18 @@ namespace Barotrauma
                 if (Vector2.Distance(character.Position, target.Item.Position) < target.Item.InteractDistance
                     || target.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    if (character.SelectedConstruction != target.Item && target.CanBeSelected)
+                    if (character.CurrentHull == target.Item.CurrentHull)
                     {
-                        target.Item.TryInteract(character, false, true);
+                        if (character.SelectedConstruction != target.Item)
+                        {
+                            target.Item.TryInteract(character, false, true);
+                        }
+                        if (component.AIOperate(deltaTime, character, this))
+                        {
+                            isCompleted = true;
+                        }
+                        return;
                     }
-
-                    if (component.AIOperate(deltaTime, character, this))
-                    {
-                        isCompleted = true;
-                    }
-                    return;
                 }
 
                 AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character, objectiveManager));

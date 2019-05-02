@@ -95,7 +95,7 @@ namespace Barotrauma
             {
                 FindRepairTool();
             }
-            if (character.CanInteractWith(Item))
+            if (character.CurrentHull == Item.CurrentHull && character.CanInteractWith(Item))
             {
                 if (repairTool != null)
                 {

@@ -102,10 +102,22 @@ namespace Barotrauma
                 HumanAIController.AnimController.Crouching = true;
             }
 
-            //float reach = HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range);
             float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool cannotReach = ConvertUnits.ToSimUnits(gapDiff.Length()) > reach;
-            if (cannotReach)
+            bool canReach = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
+            if (canReach)
+            {
+                Limb sightLimb = null;
+                if (character.Inventory.IsInLimbSlot(repairTool.Item, InvSlotType.RightHand))
+                {
+                    sightLimb = character.AnimController.GetLimb(LimbType.RightHand);
+                }
+                else if (character.Inventory.IsInLimbSlot(repairTool.Item, InvSlotType.LeftHand))
+                {
+                    sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
+                }
+                canReach = character.CanSeeTarget(leak, sightLimb);
+            }
+            else
             {
                 if (gotoObjective != null)
                 {

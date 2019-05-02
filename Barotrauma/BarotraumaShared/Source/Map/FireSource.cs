@@ -7,10 +7,11 @@ using Barotrauma.Sounds;
 using Barotrauma.Lights;
 using Barotrauma.Particles;
 #endif
+using FarseerPhysics;
 
 namespace Barotrauma
 {
-    partial class FireSource
+    partial class FireSource : ISpatialEntity
     {
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 5.0f;
@@ -20,7 +21,8 @@ namespace Barotrauma
         protected Vector2 position;
         protected Vector2 size;
 
-        private Entity Submarine;
+        private readonly Submarine submarine;
+        public Submarine Submarine => submarine;
 
         protected bool removed;
 
@@ -43,6 +45,8 @@ namespace Barotrauma
         {
             get { return Submarine == null ? position : Submarine.Position + position; }
         }
+
+        public Vector2 SimPosition => ConvertUnits.ToSimUnits(Position);
 
         public Vector2 Size
         {
@@ -83,7 +87,7 @@ namespace Barotrauma
             position = worldPosition - new Vector2(-5.0f, 5.0f);
             if (hull.Submarine != null)
             {
-                Submarine = hull.Submarine;
+                submarine = hull.Submarine;
                 position -= Submarine.Position;
             }
 
