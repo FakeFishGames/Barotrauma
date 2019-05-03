@@ -662,13 +662,20 @@ namespace Barotrauma
         {
             if (character.DisableImpactDamageTimer > 0.0f) return;
 
-            Vector2 normal = contact.Manifold.LocalNormal;            
-            Vector2 velocity = f1.Body.LinearVelocity;
+            //using the velocity of the limb would make the impact damage more realistic,
+            //but would also make it harder to edit the animations because the forces/torques
+            //would all have to be balanced in a way that prevents the character from doing
+            //impact damage to itself
+            Vector2 velocity = Collider.LinearVelocity;
+            Vector2 normal = contact.Manifold.LocalNormal;
 
-            if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
+            if (character.Submarine == null && f2.Body.UserData is Submarine)
+            {
+                velocity -= ((Submarine)f2.Body.UserData).Velocity;
+            }
 
             float impact = Vector2.Dot(velocity, -normal);
-            if (f1.Body == Collider.FarseerBody)
+            if (f1.Body == Collider.FarseerBody || !Collider.Enabled)
             {
                 bool isNotRemote = true;
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
@@ -685,6 +692,7 @@ namespace Barotrauma
                         character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                         character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+                        character.DisableImpactDamageTimer = 0.25f;
                     }
                 }
             }
