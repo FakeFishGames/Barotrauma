@@ -3042,4 +3042,60 @@
   <bugreportfeedbackform>Barotrauma Feedback Form</bugreportfeedbackform>
   <bugreportgithubform>GitHub issue form</bugreportgithubform>
 
+  <dialognoleaks>What leaks?</dialognoleaks>
+  <dialognoleaks>Cannot find any leaks.</dialognoleaks>
+  <dialognoenemies>Enemies? Where?</dialognoenemies>
+  <dialognoenemies>Can't see any intruders onboard.</dialognoenemies>
+  <dialognopumps>None of the pumps require attention at the moment.</dialognopumps>
+  <dialognopumps>The pumps are OK, aren't they?</dialognopumps>
+  <dialognorepairtargets>What do you mean? Everything is working alright.</dialognorepairtargets>
+  <dialognorepairtargets>There's nothing to repair.</dialognorepairtargets>
+
+  <dialogcannotrepair>Cannot repair [itemname]!</dialogcannotrepair>
+  <dialogenemydown>Enemy down!</dialogenemydown>
+  <dialogenemydown>Another one eliminated.</dialogenemydown>
+
+  <orderdialog.fightintruders>[name], eliminate all intruders!</orderdialog.fightintruders>
+  <orderdialog.fightintruders>[name], defend the crew!</orderdialog.fightintruders>
+  <orderdialogself.fightintruders>Taking care of the intruders!</orderdialogself.fightintruders>
+  <orderdialogself.fightintruders>Fighting the enemy!</orderdialogself.fightintruders>
+
+  <ordername.dismissed>Dismissed</ordername.dismissed>
+  <ordername.follow>Follow</ordername.follow>
+  <ordername.wait>Wait</ordername.wait>
+  <ordername.operatereactor>Operate Reactor</ordername.operatereactor>
+  <ordername.operateweapons>Operate Weapons</ordername.operateweapons>
+  <ordername.steer>Steer</ordername.steer>
+  <ordername.fixleaks>Fix Leaks</ordername.fixleaks>
+  <ordername.extinguishfires>Extinguish Fires</ordername.extinguishfires>
+  <ordername.fightintruders>Fight Intruders</ordername.fightintruders>
+  <ordername.chargebatteries>Charge Batteries</ordername.chargebatteries>
+  <ordername.pumpwater>Operate Pumps</ordername.pumpwater>
+  <ordername.rescue>Heal and Rescue</ordername.rescue>
+  <ordername.repairsystems>Repair Damaged Systems</ordername.repairsystems>
+  <ordername.reportfire>Report Fire</ordername.reportfire>
+  <ordername.reportbreach>Report Hull Breach</ordername.reportbreach>
+  <ordername.reportintruders>Report Intruders</ordername.reportintruders>
+  <ordername.reportbrokendevices>Report Broken Devices</ordername.reportbrokendevices>
+  <ordername.requestfirstaid>Request First Aid</ordername.requestfirstaid>
+
+  <orderoptions.dismissed></orderoptions.dismissed>
+  <orderoptions.follow></orderoptions.follow>
+  <orderoptions.wait></orderoptions.wait>
+  <orderoptions.operatereactor>Power up, Shutdown</orderoptions.operatereactor>
+  <orderoptions.operateweapons>Turret, Railgun, Coilgun</orderoptions.operateweapons>
+  <orderoptions.steer>Maintain position, Navigate back, Navigate to destination</orderoptions.steer>
+  <orderoptions.fixleaks></orderoptions.fixleaks>
+  <orderoptions.extinguishfires></orderoptions.extinguishfires>
+  <orderoptions.fightintruders></orderoptions.fightintruders>
+  <orderoptions.chargebatteries>Charge, Stop charging</orderoptions.chargebatteries>
+  <orderoptions.pumpwater>Pump out, Stop pumping</orderoptions.pumpwater>
+  <orderoptions.rescue></orderoptions.rescue>
+  <orderoptions.repairsystems>Repair job specific, Repair everything</orderoptions.repairsystems>
+  <orderoptions.reportfire></orderoptions.reportfire>
+  <orderoptions.reportbreach></orderoptions.reportbreach>
+  <orderoptions.reportintruders></orderoptions.reportintruders>
+  <orderoptions.reportbrokendevices></orderoptions.reportbrokendevices>
+  <orderoptions.requestfirstaid></orderoptions.requestfirstaid>
+
 </infotexts>
