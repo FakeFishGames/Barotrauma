@@ -1983,6 +1983,8 @@
   <skillname.mechanical>Mechanical Engineering</skillname.mechanical>
   <skillname.electrical>Electrical Engineering</skillname.electrical>
   <skillname.medical>Medical</skillname.medical>
+  <skillname.initiative>Initiative</skillname.initiative>
+  <skillname.courage>Courage</skillname.courage>
 
   <!-- Item messages -->
   <itemmsginteractselect>[[select]] Interact</itemmsginteractselect>
