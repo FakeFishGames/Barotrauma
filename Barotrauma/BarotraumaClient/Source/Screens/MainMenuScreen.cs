@@ -4,9 +4,7 @@ using Barotrauma.Tutorials;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,7 +18,7 @@ namespace Barotrauma
 
         private GUIComponent buttonsParent;
 
-        private GUIFrame[] menuTabs;
+        private readonly GUIFrame[] menuTabs;
 
         private CampaignSetupUI campaignSetupUI;
 
@@ -789,9 +787,9 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(saveName)) return;
 
-            string[] existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
+            var existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
 
-            if (Array.Find(existingSaveFiles, s => s == saveName) != null)
+            if (existingSaveFiles.Any(s => s == saveName))
             {
                 new GUIMessageBox(TextManager.Get("SaveNameInUseHeader"), TextManager.Get("SaveNameInUseText"));
                 return;

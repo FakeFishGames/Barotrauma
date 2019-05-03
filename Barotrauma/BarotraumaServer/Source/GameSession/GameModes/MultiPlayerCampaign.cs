@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -55,7 +56,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
+                    var saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer).ToArray();
                     DebugConsole.NewMessage("Saved campaigns:", Color.White);
                     for (int i = 0; i < saveFiles.Length; i++)
                     {

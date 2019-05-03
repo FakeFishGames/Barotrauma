@@ -1126,7 +1126,7 @@ namespace Barotrauma.Networking
                     UInt16 modeIndex = inc.ReadUInt16();
                     if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.ToLowerInvariant() == "multiplayercampaign")
                     {
-                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
+                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer).ToArray();
                         for (int i = 0; i < saveFiles.Length; i++)
                         {
                             XDocument doc = SaveUtil.LoadGameSessionDoc(saveFiles[i]);
