@@ -47,8 +47,9 @@ namespace Barotrauma.Items.Components
         //was the last ping sent with directional pinging
         private bool isLastPingDirectional;
 
-        private readonly Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
-        private readonly Sprite sonarBlip;
+        private Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
+        private Sprite sonarBlip;
+        private Sprite lineSprite;
 
         private bool aiPingCheckPending;
 
@@ -121,29 +122,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             connectedTransducers = new List<ConnectedTransducer>();
-
-            foreach (XElement subElement in element.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "pingcircle":
-                        pingCircle = new Sprite(subElement);
-                        break;
-                    case "directionalpingcircle":
-                        directionalPingCircle = new Sprite(subElement);
-                        break;
-                    case "screenoverlay":
-                        screenOverlay = new Sprite(subElement);
-                        break;
-                    case "screenbackground":
-                        screenBackground = new Sprite(subElement);
-                        break;
-                    case "blip":
-                        sonarBlip = new Sprite(subElement);
-                        break;
-                }
-            }
-            
+                        
             IsActive = false;
             InitProjSpecific(element);
         }
@@ -215,6 +194,7 @@ namespace Barotrauma.Items.Components
             directionalPingCircle?.Remove();
             screenOverlay?.Remove();
             screenBackground?.Remove();
+            lineSprite?.Remove();
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

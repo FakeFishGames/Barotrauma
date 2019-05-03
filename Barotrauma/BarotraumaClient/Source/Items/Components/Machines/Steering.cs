@@ -97,20 +97,6 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.03f,
                 Stretch = true
             };
-            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
-                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
-            {
-                OnSelected = (GUITickBox box) =>
-                {
-                    AutoPilot = box.Selected;
-                    if (AutoPilot && MaintainPos)
-                    {
-                        posToMaintain = controlledSub != null ?
-                            controlledSub.WorldPosition :
-                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
-                    }
-                    unsentChanges = true;
-                    user = Character.Controlled;
 
             manualTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
                 TextManager.Get("SteeringManual"), style: "GUIRadioButton")
@@ -143,6 +129,20 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
+                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
+            {
+                OnSelected = (GUITickBox box) =>
+                {
+                    AutoPilot = box.Selected;
+                    if (AutoPilot && MaintainPos)
+                    {
+                        posToMaintain = controlledSub != null ?
+                            controlledSub.WorldPosition :
+                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                    }
+                    unsentChanges = true;
+                    user = Character.Controlled;
 
             GUIRadioButtonGroup modes = new GUIRadioButtonGroup();
             modes.AddRadioButton(Mode.AutoPilot, autopilotTickBox);
@@ -747,6 +747,13 @@ namespace Barotrauma.Items.Components
                 PosToMaintain += nudgeAmount;
             }
             return true;
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            maintainPosIndicator?.Remove();
+            maintainPosOriginIndicator?.Remove();
+            steeringIndicator?.Remove();
         }
 
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
