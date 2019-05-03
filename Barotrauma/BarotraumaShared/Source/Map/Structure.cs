@@ -118,7 +118,7 @@ namespace Barotrauma
         {
             get
             {
-                return Sprite == null || SpriteDepth <= 0.5f;
+                return (Sprite == null || SpriteDepth <= 0.5f) && !DrawDamageEffect;
             }
         }
 
