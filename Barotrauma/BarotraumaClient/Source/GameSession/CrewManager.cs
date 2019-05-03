@@ -114,41 +114,6 @@ namespace Barotrauma
             };
             scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
 
-            if (isSinglePlayer)
-            {
-                ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
-                {
-                    OnEnterMessage = (textbox, text) =>
-                    {
-                        if (Character.Controlled?.Info == null)
-                        {
-                            textbox.Deselect();
-                            textbox.Text = "";
-                            return true;
-                        }
-
-                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-
-                        if (!string.IsNullOrWhiteSpace(text))
-                        {
-                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
-                            AddSinglePlayerChatMessage(
-                                Character.Controlled.Info.Name,
-                                msg,
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
-                                Character.Controlled);
-                            var headset = GetHeadset(Character.Controlled, true);
-                            if (headset != null && headset.CanTransmit())
-                            {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
-                            }
-                        }
-                        textbox.Deselect();
-                        textbox.Text = "";
-                        return true;
-                    }
-                };
-
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -159,55 +124,21 @@ namespace Barotrauma
                 }
             }
 
-            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
-            reportButtonFrame = new GUILayoutGroup(new RectTransform(
-                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
-            {
-                AbsoluteSpacing = (int)(5 * GUI.Scale),
-                UserData = "reportbuttons",
-                CanBeFocused = false
-            };
-
-            //report buttons
-            foreach (Order order in reports)
-            {
-                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
-                var btn = new GUIButton(new RectTransform(new Point(reportButtonFrame.Rect.Width), reportButtonFrame.RectTransform), style: null)
-                {
-                    OnClicked = (GUIButton button, object userData) =>
-                    {
-                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
-                        SetCharacterOrder(null, order, null, Character.Controlled);
-                        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
-                        return true;
-                    },
-                    UserData = order,
-                    ToolTip = order.Name
-                };
-
-                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
-                {
-                    Color = Color.Red * 0.8f,
-                    HoverColor = Color.Red * 1.0f,
-                    PressedColor = Color.Red * 0.6f,
-                    UserData = "highlighted",
-                    CanBeFocused = false,
-                    Visible = false
-                };
-
-                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite, scaleToFit: true)
-                {
-                    Color = order.Color,
-                    HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
-                    ToolTip = order.Name
-                };
-            }
-
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
 
             ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
+        }
+
+
+        #endregion
+
+        #region Character list management
+
+        public Rectangle GetCharacterListArea()
+        {
+            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
@@ -888,6 +819,12 @@ namespace Barotrauma
                 }
                 return;
             }
+            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
+                c.AIController is HumanAIController &&
+                !c.IsDead &&
+                c.SpeechImpediment <= 100.0f);
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+        }
 
             character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
             if (IsSinglePlayer)
@@ -943,21 +880,6 @@ namespace Barotrauma
                     {
                         selectedIndicator.Visible = (order != null && ((Order)button.UserData).Prefab == order.Prefab);
                     }
-                }
-            }
-
-            character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
-            if (IsSinglePlayer)
-            {
-                orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
-            }
-            else if (orderGiver != null)
-            {
-                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
-                if (GameMain.Client != null)
-                {
-                    GameMain.Client.SendChatMessage(msg);
                 }
             }
             DisplayCharacterOrder(character, order);

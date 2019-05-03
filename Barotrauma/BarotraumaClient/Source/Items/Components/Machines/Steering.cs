@@ -366,7 +366,7 @@ namespace Barotrauma.Items.Components
                     Vector2 displayPosToMaintain = ((posToMaintain.Value - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
-                    displayPosToMaintain = velRect.Center.ToVector2() + displayPosToMaintain;
+                    displayPosToMaintain = steerArea.Rect.Center.ToVector2() + displayPosToMaintain;
 
                     float crossHairSize = 8.0f;
                     Color crosshairColor = Color.Orange * (0.5f + ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 4.0f);
@@ -374,11 +374,7 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitY * crossHairSize, displayPosToMaintain - Vector2.UnitY * crossHairSize, crosshairColor, width: 3);
                     GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitX * crossHairSize, displayPosToMaintain - Vector2.UnitX * crossHairSize, crosshairColor, width: 3);
                     
-                    Vector2 neutralPos = ((controlledSub.WorldPosition - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
-
-                    neutralPos.Y = -neutralPos.Y;
-                    neutralPos = neutralPos.ClampLength(velRect.Width / 2);
-                    neutralPos = velRect.Center.ToVector2() + neutralPos;
+                    Vector2 neutralPos = displaySubPos;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)neutralPos.X - 5, (int)neutralPos.Y - 5, 10, 10), Color.Orange);
                 }
             }
@@ -469,7 +465,11 @@ namespace Barotrauma.Items.Components
                 if (Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X &&
                     Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X)
                 {
-                    //TODO: flash docking button
+                    if (dockingButton.FlashTimer <= 0.0f)
+                    {
+                        dockingButton.Flash(Color.LightGreen);
+                        dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
+                    }
                 }
             }
 
@@ -519,7 +519,7 @@ namespace Barotrauma.Items.Components
                     if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
                         posToMaintain = controlledSub != null ? 
-                            controlledSub.WorldPosition + (sonar.DisplayOffset * sonar.Zoom) + inputPos / sonar.DisplayRadius * sonar.Range / sonar.Zoom :
+                            controlledSub.WorldPosition + inputPos / sonar.DisplayRadius * sonar.Range / sonar.Zoom :
                             item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
                     }
                     else
