@@ -79,26 +79,44 @@ namespace Barotrauma
             foreach (FireSource fs in targetHull.FireSources)
             {
                 bool inRange = fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range));
-                if (targetHull == character.CurrentHull && (inRange || useExtinquisherTimer > 0.0f))
+                bool move = !inRange;
+                if (inRange || useExtinquisherTimer > 0.0f)
                 {
                     useExtinquisherTimer += deltaTime;
-                    if (useExtinquisherTimer > 2.0f) useExtinquisherTimer = 0.0f;
-
+                    if (useExtinquisherTimer > 2.0f)
+                    {
+                        useExtinquisherTimer = 0.0f;
+                    }
                     character.AIController.SteeringManager.Reset();
                     character.CursorPosition = fs.Position;
                     if (extinguisher.Item.RequireAimToUse)
                     {
                         character.SetInput(InputType.Aim, false, true);
                     }
-                    extinguisher.Use(deltaTime, character);
-
-                    if (!targetHull.FireSources.Contains(fs))
+                    Limb sightLimb = null;
+                    if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.RightHand))
                     {
-                        character.Speak(TextManager.Get("DialogPutOutFire").Replace("[roomname]", targetHull.Name), null, 0, "putoutfire", 10.0f);
+                        sightLimb = character.AnimController.GetLimb(LimbType.RightHand);
                     }
-                    return;
+                    else if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.LeftHand))
+                    {
+                        sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
+                    }
+                    if (!character.CanSeeTarget(fs, sightLimb))
+                    {
+                        move = true;
+                    }
+                    else
+                    {
+                        move = false;
+                        extinguisher.Use(deltaTime, character);
+                        if (!targetHull.FireSources.Contains(fs))
+                        {
+                            character.Speak(TextManager.Get("DialogPutOutFire").Replace("[roomname]", targetHull.Name), null, 0, "putoutfire", 10.0f);
+                        }
+                    }
                 }
-                else
+                if (move)
                 {
                     //go to the first firesource
                     if (gotoObjective == null || !gotoObjective.CanBeCompleted || gotoObjective.IsCompleted())
@@ -109,8 +127,8 @@ namespace Barotrauma
                     {
                         gotoObjective.TryComplete(deltaTime);
                     }
-                    break;
                 }
+                break;
             }
         }
     }
