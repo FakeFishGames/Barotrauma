@@ -431,6 +431,12 @@ namespace Barotrauma
                         else if (ic is Pickable pickable)
                         {
                             //prevent picking up (or deattaching) items
+#if CLIENT
+                            if (GameMain.GameSession.GameMode is TutorialMode)
+                            {
+                                continue;
+                            }
+#endif
                             pickable.CanBePicked = false;
                             pickable.CanBeSelected = false;
                         }
@@ -1426,7 +1432,7 @@ namespace Barotrauma
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
             if (previewImage != null)
             {
-                doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
+                //doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }
 
             try

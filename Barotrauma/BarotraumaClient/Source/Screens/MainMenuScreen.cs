@@ -59,10 +59,10 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-            
+
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
-
+       
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
             {
                 CanBeFocused = false
@@ -82,6 +82,17 @@ namespace Barotrauma
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), "Tutorial", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = true,
+                UserData = Tab.Tutorials,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -309,6 +320,7 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
+                if (tutorial is ContextualTutorial) continue;
                 var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
@@ -319,8 +331,6 @@ namespace Barotrauma
                 TutorialMode.StartTutorial(obj as Tutorial);
                 return true;
             };
-
-            UpdateTutorialList();
 
             this.game = game;
         }
@@ -338,10 +348,6 @@ namespace Barotrauma
             }
 
             Submarine.Unload();
-            
-            ResetButtonStates(null);
-
-            UpdateTutorialList();
             
             ResetButtonStates(null);
 
@@ -390,7 +396,6 @@ namespace Barotrauma
                     case Tab.NewGame:
                         campaignSetupUI.CreateDefaultSaveName();
                         campaignSetupUI.RandomizeSeed();
-                        campaignSetupUI.UpdateTutorialSelection();
                         campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
                         break;
                     case Tab.LoadGame:
@@ -407,6 +412,7 @@ namespace Barotrauma
                     case Tab.HostServer:
                         break;
                     case Tab.Tutorials:
+                        UpdateTutorialList();
                         break;
                     case Tab.CharacterEditor:
                         Submarine.MainSub = null;
@@ -437,6 +443,8 @@ namespace Barotrauma
 
         public bool ReturnToMainMenu(GUIButton button, object obj)
         {
+            GUI.PreventPauseMenuToggle = false;
+
             if (Selected != this)
             {
                 Select();
@@ -772,8 +780,7 @@ namespace Barotrauma
             }
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
-
-            ContextualTutorial.Selected = campaignSetupUI.TutorialSelected;
+            
             GameMain.GameSession = new GameSession(selectedSub, saveName,
                 GameModePreset.List.Find(g => g.Identifier == "singleplayercampaign"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);

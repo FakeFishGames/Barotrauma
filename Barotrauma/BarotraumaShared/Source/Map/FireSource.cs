@@ -14,15 +14,15 @@ namespace Barotrauma
     {
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 5.0f;
-        
-        private Hull hull;
 
-        private Vector2 position;
-        private Vector2 size;
+        protected Hull hull;
+
+        protected Vector2 position;
+        protected Vector2 size;
 
         private Entity Submarine;
 
-        private bool removed;
+        protected bool removed;
 
 #if CLIENT
         private List<Decal> burnDecals = new List<Decal>();
@@ -180,6 +180,16 @@ namespace Barotrauma
             {
                 Remove();
             }
+        }
+
+        protected virtual void ReduceOxygen(float deltaTime)
+        {
+            hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
+        }
+
+        protected virtual void AdjustXPos(float growModifier, float deltaTime)
+        {
+            position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
         }
 
         partial void UpdateProjSpecific(float growModifier);

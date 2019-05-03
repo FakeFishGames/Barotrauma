@@ -89,6 +89,40 @@ namespace Barotrauma
                     throw new Exception("No text packs available in English!");
                 }
             }
+        }
+
+        public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)
+        {
+            string text = Get(textTag, returnNull);
+
+            if (text == null || text.Length == 0)
+            {
+                if (returnNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
+                    return textTag;
+                }
+            }
+
+            return string.Format(text, args);     
+        }
+
+        // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
+        public static string GetServerMessage(string serverMessage)
+        {
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
 
             foreach (TextPack textPack in textPacks[Language])
             {
@@ -116,6 +150,16 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
                 return textTag;
             }
+        }
+
+        public static string ParseInputTypes(string text)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
+            }
+            return text;
         }
 
         public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)

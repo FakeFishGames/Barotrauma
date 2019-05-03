@@ -20,6 +20,8 @@ namespace Barotrauma
 
         private GUILayoutGroup subPreviewContainer;
 
+        private GUILayoutGroup subPreviewContainer;
+
         private GUIButton loadGameButton;
         
         public Action<Submarine, string, string> StartNewGame;
@@ -67,12 +69,6 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed") + ":");
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
-
-            if (!isMultiplayer)
-            {
-                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("TutorialActive"));
-                UpdateTutorialSelection();
-            }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub") + ":");
             var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
@@ -400,14 +396,7 @@ namespace Barotrauma
                 },
                 Enabled = false
             };
-        }
-
-        public void UpdateTutorialSelection()
-        {
-            if (isMultiplayer) return;
-            Tutorial contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial);
-            contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
-        }
+        }       
         
         private bool SelectSaveFile(GUIComponent component, object obj)
         {

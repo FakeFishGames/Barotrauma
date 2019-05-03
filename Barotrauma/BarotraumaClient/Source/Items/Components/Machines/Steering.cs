@@ -329,10 +329,7 @@ namespace Barotrauma.Items.Components
             int x = rect.X;
             int y = rect.Y;
 
-            //docking interface ----------------------------------------------------
-            dockingContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
-            { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, style: null);
-            var paddedDockingContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), dockingContainer.RectTransform, Anchor.Center), style: null);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
@@ -393,15 +390,6 @@ namespace Barotrauma.Items.Components
                 -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
             steeringPos += displaySubPos;
 
-        public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
-        {
-            int width = rect.Width, height = rect.Height;
-            int x = rect.X;
-            int y = rect.Y;
-            
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
-
-            Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);            
             GUI.DrawLine(spriteBatch,
                 displaySubPos,
                 steeringPos,
