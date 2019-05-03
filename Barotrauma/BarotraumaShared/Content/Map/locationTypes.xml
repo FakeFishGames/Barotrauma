@@ -10,14 +10,14 @@
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
     <ChangeTo type="Outpost" probability="0.75" requiredduration="2"
               requiredadjacentlocations="Outpost,Military,Research,City,Mine"
-              disallowedadjacentlocations="Lair"/>
+              disallowedadjacentlocations="Lair"
+              messagetag="locationchange.none.changeto.outpost"/>
   </None>
 
   <City
     identifier="City"
     namefile="Content/Map/cityNames.txt"
-    commonnessperzone="1: 5.0"
-    halo="0,1,0,0.3">
+    commonnessperzone="1: 5.0">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="520,527,244,228" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/Colony.png" premultiplyalpha="false"/>
@@ -33,8 +33,7 @@
   <Outpost
     identifier="Outpost"
     namefile="Content/Map/cityNames.txt"
-    commonnessperzone="2: 5.0, 3: 2.5"
-    halo="0,1,0,0.2">
+    commonnessperzone="2: 5.0, 3: 2.5">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="545,275,181,220" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/HabitationOutpost.png" premultiplyalpha="false"/>
@@ -49,22 +48,24 @@
     <!-- can become a specialized outpost if there are no adjacent lairs -->
     <ChangeTo type="Military" probability="0.5" requiredduration="3"
           requiredadjacentlocations="Outpost,Military,Research,City,Mine"
-          disallowedadjacentlocations="Lair"/>
+          disallowedadjacentlocations="Lair"
+          messagetag="locationchange.ruins.changeto.military"/>
 
     <ChangeTo type="Research" probability="0.5" requiredduration="3"
-              requiredadjacentlocations="Outpost,Military,Research,City,Mine"
-              disallowedadjacentlocations="Lair"/>
+          requiredadjacentlocations="Outpost,Military,Research,City,Mine"
+          disallowedadjacentlocations="Lair"
+          messagetag="locationchange.ruins.changeto.military"/>
     
     <ChangeTo type="Mine" probability="0.5" requiredduration="3"
           requiredadjacentlocations="Outpost,Military,Research,City,Mine"
-          disallowedadjacentlocations="Lair"/>
+          disallowedadjacentlocations="Lair"
+          messagetag="locationchange.ruins.changeto.military"/>
   </Outpost>
   
   <Military
     identifier="Military"
     namefile="Content/Map/locationNames.txt"
     commonnessperzone="1: 1.25, 2: 2.5, 3: 1.25"
-    halo="0,1,0,0.4"
     useinmainmenu="true">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="768,512,256,256" color="198,252,222,255"/>
@@ -80,15 +81,15 @@
     <!-- can become a city if there are no adjacent lairs -->
     <ChangeTo type="City" probability="0.5" requiredduration="5"
           requiredadjacentlocations="Outpost,Military,Research,City"
-          disallowedadjacentlocations="Lair"/>
+          disallowedadjacentlocations="Lair"
+          messagetag="locationchange.outpost.changeto.city"/>
   </Military>
 
   <Research
     identifier="Research"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    commonnessperzone="2: 1.25, 3: 2.5"
-    halo="0,1,0,0.2">
+    commonnessperzone="2: 1.25, 3: 2.5">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="803,265,190,241" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/WorkCampResearchFacility1.png" premultiplyalpha="false"/>
@@ -104,16 +105,15 @@
     <!-- can become a city if there are no adjacent lairs -->
     <ChangeTo type="City" probability="0.5" requiredduration="5"
           requiredadjacentlocations="Outpost,Military,Research,City"
-          disallowedadjacentlocations="Lair"/>
-    
+          disallowedadjacentlocations="Lair"
+          messagetag="locationchange.outpost.changeto.city"/>    
   </Research>
   
   <Mine
     identifier="Mine"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    commonnessperzone="2: 1.25, 3: 2.5"
-    halo="0,1,0,0.2">
+    commonnessperzone="2: 1.25, 3: 2.5">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="284,773,220,244" color="198,252,222,255"/>
     <Portrait texture="Content/Map/LocationPortraits/WorkCampMining1.png" premultiplyalpha="false"/>
@@ -127,20 +127,21 @@
     <!-- can become a city if there are no adjacent lairs -->
     <ChangeTo type="City" probability="0.5" requiredduration="5"
           requiredadjacentlocations="Outpost,Military,Research,City"
-          disallowedadjacentlocations="Lair"/>
+          disallowedadjacentlocations="Lair"
+          messagetag="locationchange.outpost.changeto.city"/>
   </Mine>
 
   <Lair
     identifier="Lair"
     namefile="Content/Map/alienNames.txt"
-    commonnessperzone="1: 0.25, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0"
-    halo="1,0,0,0.4">
+    commonnessperzone="1: 0.25, 2: 1.0, 3: 1.25, 4: 2.5, 5: 3.5, 6: 5.0, 7: 5.0, 8: 5.0, 9: 5.0">
 
     <Symbol texture="Content/Map/MapIconAtlas.png" sourcerect="794,23,208,204" color="216,91,80,255"/>
     <Portrait texture="Content/Map/LocationPortraits/NaturalFormations.png" premultiplyalpha="false"/>
     
     <!-- becomes an empty natural formation after being discovered (todo: require killing the monster(s) in the location) -->
-    <ChangeTo type="None" probability="1.0"/>
+    <ChangeTo type="None" probability="1.0"
+              messagetag="locationchange.lair.changeto.none"/>
   </Lair>
   <!--
   <Ruins

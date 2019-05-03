@@ -2276,6 +2276,11 @@ namespace Barotrauma
                 GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
             }
 
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                sub.UpdateTransform();
+            }
+
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend,
                 null, null, null, null,

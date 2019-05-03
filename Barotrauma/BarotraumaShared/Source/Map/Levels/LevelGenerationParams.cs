@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -368,7 +369,7 @@ namespace Barotrauma
 
             if (biome == null)
             {
-                return levelParams[Rand.Range(0, levelParams.Count, Rand.RandSync.Server)];
+                return levelParams.GetRandom(lp => lp.allowedBiomes.Count > 0, Rand.RandSync.Server);
             }
 
             var matchingLevelParams = levelParams.FindAll(lp => lp.allowedBiomes.Contains(biome));
@@ -397,6 +398,8 @@ namespace Barotrauma
                 for (int i = 0; i < biomeNames.Length; i++)
                 {
                     string biomeName = biomeNames[i].Trim().ToLowerInvariant();
+                    if (biomeName == "none") { continue; }
+
                     Biome matchingBiome = biomes.Find(b => b.Name.ToLowerInvariant() == biomeName);
                     if (matchingBiome == null)
                     {
