@@ -579,7 +579,7 @@ namespace Barotrauma
             if (limpAmount > 0.0f)
             {
                 //make the footpos oscillate when limping
-                footMid += ((float)Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * 0.3f);
+                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f));
             }
 
             movement = overrideTargetMovement == Vector2.Zero ?
@@ -788,13 +788,19 @@ namespace Barotrauma
 
                     //get the upper arm to point downwards
                     var arm = GetLimb(armType);
-                    arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.1f, 0.1f), arm.Mass * 10.0f);
+                    if (Math.Abs(arm.body.AngularVelocity) < 10.0f)
+                    {
+                        arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.1f, 0.1f), arm.Mass * 10.0f);
+                    }
 
                     //get the elbow to a neutral rotation
-                    LimbJoint elbow =
+                    if (Math.Abs(hand.body.AngularVelocity) < 10.0f)
+                    {
+                        LimbJoint elbow =
                         GetJointBetweenLimbs(armType, hand.type) ??
                         GetJointBetweenLimbs(armType, foreArmType);
-                    hand.body.ApplyTorque(-elbow.JointAngle * hand.Mass * 10.0f);
+                        hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                    }
                 }
             }
         }
