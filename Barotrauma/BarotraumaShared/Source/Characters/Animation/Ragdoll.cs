@@ -692,6 +692,10 @@ namespace Barotrauma
                         character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                         character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+                        //briefly disable impact damage
+                        //otherwise the character will take damage multiple times when for example falling, 
+                        //because we use the velocity of the collider to determine the impact
+                        //(i.e. the character would take damage until the collider hits the floor and stops)
                         character.DisableImpactDamageTimer = 0.25f;
                     }
                 }
