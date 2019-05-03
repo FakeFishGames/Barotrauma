@@ -58,9 +58,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Concentus, Version=1.1.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\Concentus.1.1.7\lib\portable-net45+win+wpa81+wp80\Concentus.dll</HintPath>
-    </Reference>
     <Reference Include="GameAnalytics.Mono, Version=1.0.6710.29255, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\lib\net45\GameAnalytics.Mono.dll</HintPath>
     </Reference>
@@ -215,6 +212,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.csproj">
+      <Project>{0e7fee6a-15e5-4a4e-943c-80276003478c}</Project>
+      <Name>Concentus</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
       <Project>{3af0347c-5a9b-4421-868c-8ee3dbfaebc6}</Project>
       <Name>Facepunch.Steamworks</Name>

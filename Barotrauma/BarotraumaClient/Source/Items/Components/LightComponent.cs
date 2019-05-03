@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
         {
             if (light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f)
             {
-                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, 0.0f, 1.0f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, item.SpriteDepth - 0.0001f);
+                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, 0.0f, item.Scale, SpriteEffects.None, item.SpriteDepth - 0.0001f);
             }
         }
 

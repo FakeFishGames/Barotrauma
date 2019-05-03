@@ -853,7 +853,7 @@ namespace Barotrauma
             {
                 if (characterConfigFiles == null)
                 {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true);
                 }
                 return characterConfigFiles;
             }
@@ -2555,59 +2555,9 @@ namespace Barotrauma
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
 #endif
 
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
-#endif
-
             CharacterList.Remove(this);
+
+            if (Controlled == this) { Controlled = null; }
 
             if (Inventory != null)
             {

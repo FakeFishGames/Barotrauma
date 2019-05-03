@@ -295,7 +295,7 @@ namespace Barotrauma.Networking
                     OnClicked = SelectSettingsTab
                 };
             }
-
+            GUITextBlock.AutoScaleAndNormalize(tabButtons.Select(b => b.TextBlock));
             SelectSettingsTab(tabButtons[0], 0);
 
             //"Close"
@@ -503,6 +503,8 @@ namespace Barotrauma.Networking
                 ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
                 return true;
             };
+
+            GUITextBlock.AutoScaleAndNormalize(buttonHolder.Children.Select(c => ((GUIButton)c).TextBlock));
 
             foreach (ItemPrefab ip in MapEntityPrefab.List.Where(p => p is ItemPrefab).Select(p => p as ItemPrefab))
             {

@@ -401,7 +401,7 @@ namespace Barotrauma.Networking
         public bool AllowRagdollButton
         {
             get;
-            private set;
+            set;
         }
 
         [Serialize(true, true)]

@@ -108,18 +108,18 @@ namespace Barotrauma
                     {
                         float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
                         spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
-                            Scale * scale, SpriteEffects, 0.0f);
+                            Scale * scale, SpriteEffects.None, 0.0f);
                     }
                     else
                     {
-                        uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects);
+                        uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects.None);
                     }
                 }
             }
             else if (sprite?.Texture != null)
             {
                 spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
-                    Scale, SpriteEffects, 0.0f);
+                    Scale, SpriteEffects.None, 0.0f);
             }
         }
 

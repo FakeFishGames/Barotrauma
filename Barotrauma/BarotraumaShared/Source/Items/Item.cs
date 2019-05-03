@@ -1149,6 +1149,10 @@ namespace Barotrauma
             {
                 body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
             }
+            else if (Submarine != null && prevSub != null && Submarine != prevSub)
+            {
+                body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
@@ -1265,7 +1269,7 @@ namespace Barotrauma
 
             if (recursive)
             {
-                HashSet<Connection> alreadySearched = new HashSet<Connection>();
+                List<Item> alreadySearched = new List<Item>() { this };
                 GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
 
                 return connectedComponents;
@@ -1287,7 +1291,7 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
             if (connectionPanel == null) { return; }
@@ -1332,14 +1336,28 @@ namespace Barotrauma
             new Pair<string, string>("signal_in2", "signal_out")
         };
 
-        private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
+                }
+            }
+        }
+
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
-            alreadySearched.Add(c);
+            List<T> connectedComponents = new List<T>();            
+            List<Item> alreadySearched = new List<Item>() { this };
+            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
+
+            return connectedComponents;
+        }
+
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        {
+            alreadySearched.Add(this);
                         
             var recipients = c.Recipients;
             foreach (Connection recipient in recipients)
             {
-                if (alreadySearched.Contains(recipient)) { continue; }
+                if (alreadySearched.Contains(recipient.Item)) continue;
 
                 var component = recipient.Item.GetComponent<T>();                    
                 if (component != null)
@@ -1348,29 +1366,7 @@ namespace Barotrauma
                 }
 
                 recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
-            }
-
-            foreach (Pair<string, string> connectionPair in connectionPairs)
-            {
-                if (connectionPair.First == c.Name)
-                {
-                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.Second);
-                    if (pairedConnection != null)
-                    {
-                        if (alreadySearched.Contains(pairedConnection)) { continue; }
-                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
-                    }
-                }
-                else if (connectionPair.Second == c.Name)
-                {
-                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.First);
-                    if (pairedConnection != null)
-                    {
-                        if (alreadySearched.Contains(pairedConnection)) { continue; }
-                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
-                    }
-                }
-            }
+            }            
         }
 
 

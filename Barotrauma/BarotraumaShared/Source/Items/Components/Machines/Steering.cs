@@ -172,6 +172,19 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override void OnItemLoaded()
+        {
+            sonar = item.GetComponent<Sonar>();
+        }
+
+        public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+            user = character;
+            return true;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             networkUpdateTimer -= deltaTime;
@@ -474,9 +487,7 @@ namespace Barotrauma.Items.Components
                     if (!posToMaintain.HasValue)
                     {
                         unsentChanges = true;
-                        posToMaintain = controlledSub != null ?
-                            controlledSub.WorldPosition :
-                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
                     }
 
                     if (!AutoPilot || !MaintainPos) unsentChanges = true;

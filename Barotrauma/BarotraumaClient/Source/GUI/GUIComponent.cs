@@ -128,7 +128,7 @@ namespace Barotrauma
         protected Color flashColor;
         protected float flashDuration = 1.5f;
         private bool useRectangleFlash;
-        public virtual float FlashTimer
+        public float FlashTimer
         {
             get { return flashTimer; }
         }

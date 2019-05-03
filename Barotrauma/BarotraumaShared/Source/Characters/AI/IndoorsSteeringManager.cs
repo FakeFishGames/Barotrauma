@@ -223,8 +223,10 @@ namespace Barotrauma
                 }
             }
 
+            bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
+
             //only humanoids can climb ladders
-            if (character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
+            if (!isDiving && character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
                     currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
@@ -234,7 +236,7 @@ namespace Barotrauma
             }
             
             var collider = character.AnimController.Collider;
-            if (character.IsClimbing)
+            if (character.IsClimbing && !isDiving)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
@@ -278,6 +280,12 @@ namespace Barotrauma
             }
             else if (character.AnimController.InWater)
             {
+                // If the character is underwater, we don't need the ladders anymore
+                if (character.IsClimbing && isDiving)
+                {
+                    character.AnimController.Anim = AnimController.Animation.None;
+                    character.SelectedConstruction = null;
+                }
                 if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 3, 2))
                 {
                     currentPath.SkipToNextNode();

@@ -57,20 +57,28 @@ namespace Barotrauma
             }
         }
 
-        public override string ToolTip
+        public override ScalableFont Font
         {
-            get { return base.ToolTip; }
+            get
+            {
+                return base.Font;
+            }
+
             set
             {
-                base.ToolTip = value;
-                box.ToolTip = value;
-                text.ToolTip = value;
+                base.Font = value;
+                if (text != null) text.Font = value;
             }
         }
 
         public GUIFrame Box
         {
             get { return box; }
+        }
+
+        public GUITextBlock TextBlock
+        {
+            get { return text; }
         }
 
         public override string ToolTip
@@ -120,6 +128,7 @@ namespace Barotrauma
         private void ResizeBox()
         {
             box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
+            text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
             text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         

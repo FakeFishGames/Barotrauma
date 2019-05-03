@@ -22,9 +22,6 @@ namespace Barotrauma.Tutorials
         private Action infoBoxClosedCallback;
         protected XElement configElement;
 
-        private enum TutorialType { None, Scenario, Contextual };
-        private TutorialType tutorialType = TutorialType.None;
-
         protected VideoPlayer videoPlayer;
         protected enum TutorialContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
         protected string playableContentPath;
@@ -164,7 +161,6 @@ namespace Barotrauma.Tutorials
             configElement = element;
             Name = element.GetAttributeString("name", "Unnamed");
             completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
-            Enum.TryParse(element.GetAttributeString("tutorialtype", "Scenario"), true, out tutorialType);
             playableContentPath = element.GetAttributeString("playablecontentpath", "");
 
             segments = new List<TutorialSegment>();
@@ -386,14 +382,12 @@ namespace Barotrauma.Tutorials
             };
 
             string objectiveText = TextManager.ParseInputTypes(objectiveTranslated);
-            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveText).Y / 2f + 5) * GUI.Scale);
+            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveText).Y / 2f + 5));
             segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveNameFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.BottomRight) { AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) },
                 objectiveText, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
             segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, 
                 TextManager.ParseInputTypes(segment.Objective), textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
-
-            segment.LinkedTitle.TextScale = segment.LinkedText.TextScale = GUI.Scale;
-
+            
             segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
             segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;
             segment.ReplayButton.Color = segment.ReplayButton.HoverColor = segment.ReplayButton.PressedColor = segment.ReplayButton.SelectedColor = Color.Transparent;
@@ -488,11 +482,10 @@ namespace Barotrauma.Tutorials
         protected GUIComponent CreateInfoFrame(string title, string text, int width = 300, int height = 80, string anchorStr = "", bool hasButton = false, Action callback = null, Action showVideo = null)
         {
             if (hasButton) height += 60;
+            
+            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);          
 
-            float textScale = GUI.Scale;
-            string wrappedText = ToolBox.WrapText(text, width, GUI.Font, textScale);          
-
-            height += (int)(GUI.Font.MeasureString(wrappedText).Y * textScale + 50);
+            height += (int)(GUI.Font.MeasureString(wrappedText).Y + 50);
             if (title.Length > 0)
             {
                 height += 35;
@@ -505,35 +498,37 @@ namespace Barotrauma.Tutorials
                 Enum.TryParse(anchorStr, out anchor);
             }
 
-            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), GUI.Canvas, anchor) { AbsoluteOffset = new Point(20) });
+            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", new Color(0, 0, 0, 1f));
+
+            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), background.RectTransform, anchor) { AbsoluteOffset = new Point(20) });
             infoBlock.Flash(Color.Green);
 
             var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), infoBlock.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                AbsoluteSpacing = 5
             };
 
             if (title.Length > 0)
             {
                 var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
                     title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
-                titleBlock.TextScale = textScale;
+                titleBlock.RectTransform.IsFixedSize = true;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform),
-                text, wrap: true);
-            textBlock.TextScale = textScale;
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
+            textBlock.RectTransform.IsFixedSize = true;
 
             infoBoxClosedCallback = callback;
 
             if (hasButton)
             {
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), infoContent.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform) { MinSize = new Point(0, 30), MaxSize = new Point((int) infoContent.Rect.X, 60) }, isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.1f
                 };
+                buttonContainer.RectTransform.IsFixedSize = true;
 
                 if (showVideo != null)
                 {
@@ -555,9 +550,11 @@ namespace Barotrauma.Tutorials
                 };
             }
 
+            infoBlock.RectTransform.NonScaledSize = new Point(infoBlock.Rect.Width, (int)(infoContent.Children.Sum(c => c.Rect.Height + infoContent.AbsoluteSpacing) / infoContent.RectTransform.RelativeSize.Y));
+            
             GUI.PlayUISound(GUISoundType.UIMessage);
 
-            return infoBlock;
+            return background;
         }
         #endregion
 

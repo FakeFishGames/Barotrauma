@@ -195,6 +195,10 @@ namespace Barotrauma
                     UserData = Tab.SteamWorkshop,
                     OnClicked = SelectTab
                 };
+
+#if OSX && !DEBUG
+                steamWorkshopButton.Text += " (Not yet available on MacOS)";
+#endif
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -320,7 +324,6 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
-                if (tutorial is ContextualTutorial) continue;
                 var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
@@ -334,9 +337,9 @@ namespace Barotrauma
 
             this.game = game;
         }
-        #endregion
+#endregion
 
-        #region Selection
+#region Selection
         public override void Select()
         {
             base.Select();
@@ -394,6 +397,12 @@ namespace Barotrauma
                 switch (selectedTab)
                 {
                     case Tab.NewGame:
+                        if (!GameMain.Config.CampaignDisclaimerShown)
+                        {
+                            selectedTab = 0;
+                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
+                            return true;
+                        }
                         campaignSetupUI.CreateDefaultSaveName();
                         campaignSetupUI.RandomizeSeed();
                         campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
@@ -412,6 +421,12 @@ namespace Barotrauma
                     case Tab.HostServer:
                         break;
                     case Tab.Tutorials:
+                        if (!GameMain.Config.CampaignDisclaimerShown)
+                        {
+                            selectedTab = 0;
+                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
+                            return true;
+                        }
                         UpdateTutorialList();
                         break;
                     case Tab.CharacterEditor:
@@ -469,7 +484,7 @@ namespace Barotrauma
                 otherButton.Selected = false;
             }
         }
-        #endregion
+#endregion
 
         private void QuickStart()
         {
@@ -687,6 +702,7 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 #if !DEBUG
+#if !OSX
             if (Steam.SteamManager.USE_STEAM)
             {
                 if (GameMain.Config.UseSteamMatchmaking)
@@ -696,6 +712,16 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+#else
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                }
+            }
+#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
@@ -807,7 +833,7 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
-        #region UI Methods      
+#region UI Methods      
         private void CreateHostServerFields()
         {
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
@@ -888,7 +914,7 @@ namespace Barotrauma
                 OnClicked = HostServerClicked
             };
         }
-        #endregion
+#endregion
 
     }
 }
