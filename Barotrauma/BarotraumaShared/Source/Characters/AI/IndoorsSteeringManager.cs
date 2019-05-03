@@ -433,12 +433,8 @@ namespace Barotrauma
                     //door closed and the character can't open doors -> node can't be traversed
                     if (!canOpenDoors || character.LockHands) { return null; }
 
-                    var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetComponents<Controller>();
-                    if (doorButtons.None())
-                    {
-                        doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
-                    }
-                    if (doorButtons.None())
+                    var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
+                    if (!doorButtons.Any())
                     {
                         if (!nextNode.Waypoint.ConnectedDoor.HasRequiredItems(character, false)) { return null; }
                     }
