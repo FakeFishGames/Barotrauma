@@ -4,7 +4,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -28,6 +30,7 @@ namespace Barotrauma.Items.Components
         private GUIComponent statusContainer, dockingContainer;
 
         private GUIButton dockingButton;
+        private string dockText, undockText;
 
         private GUIFrame autoPilotControlsDisabler;
 
@@ -38,6 +41,9 @@ namespace Barotrauma.Items.Components
         private GUITextBlock tipContainer;
 
         private string noPowerTip, autoPilotMaintainPosTip, autoPilotLevelStartTip, autoPilotLevelEndTip;
+
+        private Sprite maintainPosIndicator, maintainPosOriginIndicator;
+        private Sprite steeringIndicator;
 
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
@@ -68,10 +74,12 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
+        
         public DockingPort DockingSource, DockingTarget;
 
-        partial void InitProjSpecific()
+        private bool searchedConnectedDockingPort;
+
+        partial void InitProjSpecific(XElement element)
         {
             int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
             var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.CenterLeft)
@@ -89,6 +97,20 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.03f,
                 Stretch = true
             };
+            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
+                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
+            {
+                OnSelected = (GUITickBox box) =>
+                {
+                    AutoPilot = box.Selected;
+                    if (AutoPilot && MaintainPos)
+                    {
+                        posToMaintain = controlledSub != null ?
+                            controlledSub.WorldPosition :
+                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                    }
+                    unsentChanges = true;
+                    user = Character.Controlled;
 
             manualTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
                 TextManager.Get("SteeringManual"), style: "GUIRadioButton")
@@ -290,7 +312,18 @@ namespace Barotrauma.Items.Components
             { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, style: null);
             var paddedDockingContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), dockingContainer.RectTransform, Anchor.Center), style: null);
 
-            dockingButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.Center), "Dock");
+            //TODO: add new texts for these ("Dock" & "Undock")
+            dockText = TextManager.Get("captain.dock");
+            undockText = TextManager.Get("captain.undock");
+            dockingButton = new GUIButton(new RectTransform(new Vector2(0.35f, 0.35f), paddedDockingContainer.RectTransform, Anchor.Center), dockText)
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
+                    return true;
+                }
+            };
+            dockingButton.Font = GUI.SmallFont;
 
             new GUIButton(new RectTransform(new Vector2(0.3f, 0.3f), paddedDockingContainer.RectTransform, Anchor.CenterLeft), "<")
             {
@@ -312,6 +345,37 @@ namespace Barotrauma.Items.Components
                 OnClicked = NudgeButtonClicked,
                 UserData = -Vector2.UnitY
             };
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "steeringindicator":
+                        steeringIndicator = new Sprite(subElement);
+                        break;
+                    case "maintainposindicator":
+                        maintainPosIndicator = new Sprite(subElement);
+                        break;
+                    case "maintainposoriginindicator":
+                        maintainPosOriginIndicator = new Sprite(subElement);
+                        break;
+                }
+            }
+        }
+
+        private void FindConnectedDockingPort()
+        {
+            DockingSource =
+                (item.linkedTo.FirstOrDefault(l => l is Item item && item.GetComponent<DockingPort>() != null) as Item)?.GetComponent<DockingPort>();
+            if (DockingSource == null)
+            {
+                var dockingConnection = item.Connections.FirstOrDefault(c => c.Name == "toggle_docking");
+                if (dockingConnection != null)
+                {
+                    var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                    DockingSource = connectedPorts.Find(p => p.Item.Submarine == item.Submarine);
+                }
+            }
         }
 
         /// <summary>
@@ -336,12 +400,7 @@ namespace Barotrauma.Items.Components
             displaySubPos.Y = -displaySubPos.Y;
             displaySubPos = displaySubPos.ClampLength(velRect.Width / 2);
             displaySubPos = steerArea.Rect.Center.ToVector2() + displaySubPos;
-
-            GUI.DrawLine(spriteBatch,
-                displaySubPos,
-                new Vector2(displaySubPos.X + currVelocity.X, displaySubPos.Y - currVelocity.Y),
-                Color.Gray);
-
+            
             if (!AutoPilot)
             {
                 Vector2 unitSteeringInput = steeringInput / 100.0f;
@@ -351,11 +410,22 @@ namespace Barotrauma.Items.Components
                     -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
                 steeringInputPos += displaySubPos;
 
-                GUI.DrawLine(spriteBatch, displaySubPos, steeringInputPos, Color.LightGray);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
+                if (steeringIndicator != null)
+                {
+                    Vector2 dir = steeringInputPos - displaySubPos;
+                    float angle = (float)Math.Atan2(dir.Y, dir.X);
+                    steeringIndicator.Draw(spriteBatch, displaySubPos, Color.White, origin: steeringIndicator.Origin, rotate: angle,
+                        scale: new Vector2(dir.Length() / steeringIndicator.size.X, 1.0f));
+                }
+                else
+                {
+                    GUI.DrawLine(spriteBatch, displaySubPos, steeringInputPos, Color.LightGray);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
+                }
+
                 if (velRect.Contains(PlayerInput.MousePosition))
                 {
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 4, (int)steeringInputPos.Y - 4, 8, 8), Color.Red, thickness: 2);
                 }
             }
             else if (posToMaintain.HasValue && !LevelStartSelected && !LevelEndSelected)
@@ -368,14 +438,26 @@ namespace Barotrauma.Items.Components
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
                     displayPosToMaintain = steerArea.Rect.Center.ToVector2() + displayPosToMaintain;
 
-                    float crossHairSize = 8.0f;
                     Color crosshairColor = Color.Orange * (0.5f + ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 4.0f);
+                    if (maintainPosIndicator != null)
+                    {
+                        maintainPosIndicator.Draw(spriteBatch, displayPosToMaintain, crosshairColor, scale: 0.5f * sonar.Zoom);
+                    }
+                    else
+                    {
+                        float crossHairSize = 8.0f;
+                        GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitY * crossHairSize, displayPosToMaintain - Vector2.UnitY * crossHairSize, crosshairColor, width: 3);
+                        GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitX * crossHairSize, displayPosToMaintain - Vector2.UnitX * crossHairSize, crosshairColor, width: 3);
+                    }
 
-                    GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitY * crossHairSize, displayPosToMaintain - Vector2.UnitY * crossHairSize, crosshairColor, width: 3);
-                    GUI.DrawLine(spriteBatch, displayPosToMaintain + Vector2.UnitX * crossHairSize, displayPosToMaintain - Vector2.UnitX * crossHairSize, crosshairColor, width: 3);
-                    
-                    Vector2 neutralPos = displaySubPos;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)neutralPos.X - 5, (int)neutralPos.Y - 5, 10, 10), Color.Orange);
+                    if (maintainPosOriginIndicator != null)
+                    {
+                        maintainPosOriginIndicator.Draw(spriteBatch, displaySubPos, Color.Orange, scale: 0.5f * sonar.Zoom);
+                    }
+                    else
+                    {
+                        GUI.DrawRectangle(spriteBatch, new Rectangle((int)displaySubPos.X - 5, (int)displaySubPos.Y - 5, 10, 10), Color.Orange);
+                    }
                 }
             }
             
@@ -386,10 +468,21 @@ namespace Barotrauma.Items.Components
                 -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
             steeringPos += displaySubPos;
 
-            GUI.DrawLine(spriteBatch,
-                displaySubPos,
-                steeringPos,
-                Color.CadetBlue, 0, 2);            
+
+            if (steeringIndicator != null)
+            {
+                Vector2 dir = steeringPos - displaySubPos;
+                float angle = (float)Math.Atan2(dir.Y, dir.X);
+                steeringIndicator.Draw(spriteBatch, displaySubPos, Color.Gray, origin: steeringIndicator.Origin, rotate: angle,
+                    scale: new Vector2(dir.Length() / steeringIndicator.size.X, 0.7f));
+            }
+            else
+            {
+                GUI.DrawLine(spriteBatch,
+                    displaySubPos,
+                    steeringPos,
+                    Color.CadetBlue, 0, 2);
+            }           
         }
 
         public void DebugDrawHUD(SpriteBatch spriteBatch, Vector2 transducerCenter, float displayScale, float displayRadius, Vector2 center)
@@ -449,6 +542,12 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (!searchedConnectedDockingPort)
+            {
+                FindConnectedDockingPort();
+                searchedConnectedDockingPort = true;
+            }
+
             if (steerArea.Rect.Contains(PlayerInput.MousePosition))
             {
                 if (!PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
@@ -463,14 +562,30 @@ namespace Barotrauma.Items.Components
             if (DockingModeEnabled)
             {
                 if (Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X &&
-                    Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X)
+                    Math.Abs(DockingSource.Item.WorldPosition.Y - DockingTarget.Item.WorldPosition.Y) < DockingSource.DistanceTolerance.X)
                 {
+                    dockingButton.Text = dockText;
                     if (dockingButton.FlashTimer <= 0.0f)
                     {
                         dockingButton.Flash(Color.LightGreen);
                         dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
                     }
                 }
+            }
+            else if (DockingSource != null && DockingSource.Docked)
+            {
+                dockingButton.Text = undockText;
+                dockingContainer.Visible = true;
+                statusContainer.Visible = false;
+                if (dockingButton.FlashTimer <= 0.0f)
+                {
+                    dockingButton.Flash(Color.LightGreen);
+                    dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
+                }
+            }
+            else
+            {
+                dockingButton.Text = dockText;
             }
 
             autoPilotControlsDisabler.Visible = !AutoPilot;
@@ -581,8 +696,6 @@ namespace Barotrauma.Items.Components
             
             float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;
-            DockingSource = null;
-            DockingTarget = null;
             foreach (DockingPort sourcePort in DockingPort.List)
             {
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
@@ -617,8 +730,9 @@ namespace Barotrauma.Items.Components
 
         private bool NudgeButtonClicked(GUIButton btn, object userdata)
         {
-            if (!MaintainPos)
+            if (!MaintainPos || !AutoPilot)
             {
+                AutoPilot = true;
                 posToMaintain = item.Submarine.WorldPosition;
             }
             MaintainPos = true;

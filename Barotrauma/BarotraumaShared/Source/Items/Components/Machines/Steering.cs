@@ -154,10 +154,23 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
+
+        public override void OnItemLoaded()
+        {
+            sonar = item.GetComponent<Sonar>();
+        }
+
+        public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+            user = character;
+            return true;
+        }
 
         public override void OnItemLoaded()
         {

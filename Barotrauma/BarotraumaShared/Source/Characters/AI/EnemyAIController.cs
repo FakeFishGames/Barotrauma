@@ -791,6 +791,7 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
+            return false;
         }
 
         private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
@@ -1046,6 +1047,8 @@ namespace Barotrauma
 
         #region Targeting
         private bool IsLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub;
+
+        private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
         private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
