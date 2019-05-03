@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    class Entity
+    class Entity : ISpatialEntity
     {
         public const ushort NullEntityID = 0;
 

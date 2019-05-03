@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
+    partial class Character
     {
         public static bool DisableControls;
 
