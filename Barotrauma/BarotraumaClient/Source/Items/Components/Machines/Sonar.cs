@@ -601,54 +601,55 @@ namespace Barotrauma.Items.Components
             Vector2 midPos = (sourcePortPos + targetPortPos) / 2.0f;
 
             System.Diagnostics.Debug.Assert(steering.DockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
-            float dist = Vector2.Distance(steering.DockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
-            dist *= Physics.DisplayToRealWorldRatio;
-            
-            Vector2 dockingDir = Vector2.Normalize(sourcePortPos - targetPortPos);
+            Vector2 diff = steering.DockingTarget.Item.WorldPosition - steering.DockingSource.Item.WorldPosition;
+            float dist = diff.Length();
+
+            Vector2 dockingDir = sourcePortPos - targetPortPos;
+            Vector2 normalizedDockingDir = Vector2.Normalize(dockingDir);
             if (steering.DockingSource.IsHorizontal)
             {
-                dockingDir = new Vector2(Math.Sign(dockingDir.X), 0.0f);
+                normalizedDockingDir = new Vector2(Math.Sign(normalizedDockingDir.X), 0.0f);
             }
             else
             {
-                dockingDir = new Vector2(0.0f, Math.Sign(dockingDir.Y));
+                normalizedDockingDir = new Vector2(0.0f, Math.Sign(normalizedDockingDir.Y));
             }
 
             Color staticLineColor = Color.White * 0.8f;
 
-            float sector = MathHelper.ToRadians(MathHelper.Lerp(10.0f, 45.0f, MathHelper.Clamp(dist / 20.0f, 0.0f, 1.0f)));
+            float sector = MathHelper.ToRadians(MathHelper.Lerp(10.0f, 45.0f, MathHelper.Clamp(dist / steering.DockingAssistThreshold, 0.0f, 1.0f)));
             float sectorLength = DisplayRadius;
             //use law of cosines to calculate the length of the center line
             float midLength = (float)(Math.Cos(sector) * sectorLength);
 
-            Vector2 midNormal = new Vector2(-dockingDir.Y, dockingDir.X);
+            Vector2 midNormal = new Vector2(-normalizedDockingDir.Y, normalizedDockingDir.X);
 
-            DrawLine(spriteBatch, targetPortPos, targetPortPos + dockingDir * midLength, staticLineColor, width: 2);
+            DrawLine(spriteBatch, targetPortPos, targetPortPos + normalizedDockingDir * midLength, staticLineColor, width: 2);
             DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(dockingDir, sector) * sectorLength, staticLineColor, width: 2);
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, sector) * sectorLength, staticLineColor, width: 2);
             DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(dockingDir, -sector) * sectorLength, staticLineColor, width: 2);
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -sector) * sectorLength, staticLineColor, width: 2);
 
             for (float z = 0; z < 1.0f; z += 0.1f * zoom)
             {
-                Vector2 linePos = targetPortPos + dockingDir * midLength * z;
+                Vector2 linePos = targetPortPos + normalizedDockingDir * midLength * z;
                 DrawLine(spriteBatch, linePos + midNormal * 3.0f, linePos - midNormal * 3.0f, staticLineColor, width: 2);
             }
-
 
             float indicatorSector = sector * 0.75f;
             float indicatorSectorLength = (float)(midLength / Math.Cos(indicatorSector));
 
             bool withinSector =
-                Vector2.Dot(dockingDir, MathUtils.RotatePoint(dockingDir, indicatorSector)) <
-                Vector2.Dot(dockingDir, Vector2.Normalize(steering.DockingSource.Item.WorldPosition - steering.DockingTarget.Item.WorldPosition));
+                (Math.Abs(diff.X) < steering.DockingSource.DistanceTolerance.X && Math.Abs(diff.Y) < steering.DockingSource.DistanceTolerance.Y) ||
+                Vector2.Dot(normalizedDockingDir, MathUtils.RotatePoint(normalizedDockingDir, indicatorSector)) <
+                Vector2.Dot(normalizedDockingDir, Vector2.Normalize(dockingDir));
 
             Color indicatorColor = withinSector ? Color.LightGreen * 0.9f : Color.Red * 0.9f;
 
             DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(dockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 2);
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 2);
             DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(dockingDir, -indicatorSector) * indicatorSectorLength, indicatorColor, width: 2);
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -indicatorSector) * indicatorSectorLength, indicatorColor, width: 2);
 
             /*if (steering.DockingSource.IsHorizontal)
             {

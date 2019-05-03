@@ -132,6 +132,8 @@ namespace Barotrauma
 
         public bool IgnoreLayoutGroups;
 
+        public bool IgnoreLayoutGroups;
+
         public virtual ScalableFont Font
         {
             get;
@@ -515,6 +517,7 @@ namespace Barotrauma
 
                 yield return CoroutineStatus.Running;
             }
+            toolTipBlock.SetTextPos();
 
             SetAlpha(to);
 
@@ -540,11 +543,9 @@ namespace Barotrauma
 
             OutlineColor = style.OutlineColor;
 
-        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectInflate = null)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f)
         {
             flashTimer = flashDuration;
-            this.flashRectInflate = flashRectInflate ?? Vector2.Zero;            
-            this.useRectangleFlash = useRectangleFlash;
             this.flashDuration = flashDuration;
             flashColor = (color == null) ? Color.Red : (Color)color;
         }

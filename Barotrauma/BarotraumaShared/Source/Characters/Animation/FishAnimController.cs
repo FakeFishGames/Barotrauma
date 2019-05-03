@@ -730,22 +730,6 @@ namespace Barotrauma
             limb?.body.SmoothRotate(angle, torque, wrapAngle: false);
         }
 
-        private void SmoothRotateWithoutWrapping(Limb limb, float angle, Limb referenceLimb, float torque)
-        {
-            //make sure the angle "has the same number of revolutions" as the reference limb
-            //(e.g. we don't want to rotate the legs to 0 if the torso is at 360, because that'd blow up the hip joints) 
-            while (referenceLimb.Rotation - angle > MathHelper.TwoPi)
-            {
-                angle += MathHelper.TwoPi;
-            }
-            while (referenceLimb.Rotation - angle < -MathHelper.TwoPi)
-            {
-                angle -= MathHelper.TwoPi;
-            }
-
-            limb?.body.SmoothRotate(angle, torque, wrapAngle: false);
-        }
-
         public override void Flip()
         {
             base.Flip();

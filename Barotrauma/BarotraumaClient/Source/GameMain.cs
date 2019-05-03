@@ -180,6 +180,10 @@ namespace Barotrauma
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
+            GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
+
+
+            PerformanceCounter = new PerformanceCounter();
 
             PerformanceCounter = new PerformanceCounter();
 
@@ -766,12 +770,6 @@ namespace Barotrauma
             Config.EditorDisclaimerShown = true;
             Config.SaveNewPlayerConfig();
         }
-
-        // ToDo: Move texts/links to localization, when possible.
-        public void ShowBugReporter()
-        {
-            var msgBox = new GUIMessageBox("", "");
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
 
             msgBox.Text.RectTransform.MaxSize = new Point(int.MaxValue, msgBox.Text.Rect.Height);
             linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
