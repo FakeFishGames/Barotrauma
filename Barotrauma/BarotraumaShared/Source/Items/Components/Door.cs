@@ -227,9 +227,8 @@ namespace Barotrauma.Items.Components
             {
                 msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
             }
-            if (item.Condition <= RepairThreshold) { return true; }
-            //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
-            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg) : canBePicked;
+            if (isBroken) { return true; }
+            return base.HasRequiredItems(character, addMessage, msg);
         }
 
         public override bool Pick(Character picker)
