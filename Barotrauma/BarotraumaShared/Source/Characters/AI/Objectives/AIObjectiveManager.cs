@@ -31,7 +31,7 @@ namespace Barotrauma
         public AIObjectiveManager(Character character)
         {
             this.character = character;
-            CreateAutomaticObjectives();
+            CreateAutonomousObjectives();
         }
 
         public void AddObjective(AIObjective objective)
@@ -49,7 +49,7 @@ namespace Barotrauma
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
 
-        public void CreateAutomaticObjectives()
+        public void CreateAutonomousObjectives()
         {
             Objectives.Clear();
             AddObjective(new AIObjectiveFindSafety(character, this));
@@ -172,7 +172,7 @@ namespace Barotrauma
             if (CurrentOrder == null)
             {
                 // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
-                CreateAutomaticObjectives();
+                CreateAutonomousObjectives();
             }
         }
 
