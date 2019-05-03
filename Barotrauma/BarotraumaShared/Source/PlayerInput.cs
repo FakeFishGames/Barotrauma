@@ -156,57 +156,6 @@ namespace Barotrauma
         {
             get { return GameMain.Config.KeyBind(inputType); }
         }
-#if CLIENT
-        private KeyOrMouse binding
-        {
-            get { return GameMain.Config.KeyBind(inputType); }
-        }
-#endif
-
-        public KeyOrMouse State
-        {
-            get { return binding; }
-        }
-
-        public void SetState()
-        {
-            hit = binding.IsHit();
-            if (hit) hitQueue = true;
-
-            held = binding.IsDown();
-            if (held) heldQueue = true;
-        }
-#endif
-
-        public KeyOrMouse State
-        {
-            get { return binding; }
-        }
-
-        public void SetState()
-        {
-            hit = binding.IsHit();
-            if (hit) hitQueue = true;
-
-            held = binding.IsDown();
-            if (held) heldQueue = true;
-        }
-#endif
-
-        public KeyOrMouse State
-        {
-            get { return binding; }
-        }
-
-        public void SetState()
-        {
-            hit = binding.IsHit();
-            if (hit) hitQueue = true;
-
-            held = binding.IsDown();
-            if (held) heldQueue = true;
-        }
-#endif
 
         public KeyOrMouse State
         {
