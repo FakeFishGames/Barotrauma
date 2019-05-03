@@ -192,8 +192,9 @@ namespace Barotrauma
         
         public static string CreateSavePath(SaveType saveType, string fileName = "Save_Default")
         {
-            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
+            fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
+            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             if (fileName == "Save_Default")
             {
                 fileName = TextManager.Get("SaveFile.DefaultName", true);
@@ -205,7 +206,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Save folder \"" + folder + "\" not found. Created new folder");
                 Directory.CreateDirectory(folder);
             }
-
+            
             string extension = ".save";
             string pathWithoutExtension = Path.Combine(folder, fileName);
 

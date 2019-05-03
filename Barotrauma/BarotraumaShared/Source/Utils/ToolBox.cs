@@ -119,6 +119,16 @@ namespace Barotrauma
             return true;
         }
 
+        public static string RemoveInvalidFileNameChars(string fileName)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                fileName = fileName.Replace(invalidChar.ToString(), "");
+            }
+            return fileName;
+        }
+
         public static string LimitString(string str, int maxCharacters)
         {
             if (str == null || maxCharacters < 0) return null;
