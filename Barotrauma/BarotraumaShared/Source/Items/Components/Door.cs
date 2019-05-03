@@ -219,6 +219,8 @@ namespace Barotrauma.Items.Components
         private bool hasValidIdCard;
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
+            if (item.Condition <= RepairThreshold) return true; //For repairing
+
             var idCard = character.Inventory.FindItemByIdentifier("idcard");
             hasValidIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
             Msg = requiredItems.None() || hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
@@ -227,7 +229,7 @@ namespace Barotrauma.Items.Components
             {
                 msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
             }
-            if (item.Condition <= RepairThreshold) { return true; }
+
             //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
             return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg) : canBePicked;
         }
@@ -242,7 +244,7 @@ namespace Barotrauma.Items.Components
 
         public override bool OnPicked(Character picker)
         {
-            if (item.Condition <= RepairThreshold) { return true; }
+            if (item.Condition <= RepairThreshold) return true; //repairs
             if (requiredItems.Any() && !hasValidIdCard)
             {
                 ForceOpen(ActionType.OnPicked);
@@ -260,24 +262,23 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-            if (!isBroken)
+            //can only be selected if the item is broken
+            if (item.Condition <= RepairThreshold) return true; //repairs
+            bool hasRequiredItems = HasRequiredItems(character, false);
+            if (requiredItems.None() || hasRequiredItems && hasValidIdCard)
             {
-                bool hasRequiredItems = HasRequiredItems(character, false);
-                if (requiredItems.None() || hasRequiredItems && hasValidIdCard)
-                {
-                    float originalPickingTime = PickingTime;
-                    PickingTime = 0;
-                    ForceOpen(ActionType.OnUse);
-                    PickingTime = originalPickingTime;
-                }
-                else if (hasRequiredItems)
-                {
-#if CLIENT
-                    GUI.AddMessage(accessDeniedTxt, Color.Red);
-#endif
-                }
+                float originalPickingTime = PickingTime;
+                PickingTime = 0;
+                ForceOpen(ActionType.OnUse);
+                PickingTime = originalPickingTime;
             }
-            return item.Condition <= RepairThreshold;
+            else if (hasRequiredItems)
+            {
+#if CLIENT
+                GUI.AddMessage(accessDeniedTxt, Color.Red);
+#endif
+            }
+            return false;
         }
 
         public override void Update(float deltaTime, Camera cam)
