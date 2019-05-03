@@ -751,11 +751,11 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        readonly string[] legalCrap = new string[] 
+        readonly string[] legalCrap = new string[]
         {
             "Privacy policy: privacypolicy.daedalic.com",
-            "© 2019 Undertow Games & FakeFish. All rights reserved.",
-            "© 2019 Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
+            "© " + DateTime.Now.Year + " Undertow Games & FakeFish. All rights reserved.",
+            "© " + DateTime.Now.Year + " Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
         };
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
