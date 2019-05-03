@@ -428,17 +428,17 @@ namespace Barotrauma
                             //prevent rewiring
                             connectionPanel.Locked = true;
                         }
-                        else if (ic is Pickable pickable)
+                        else if (ic is Holdable holdable && holdable.Attached)
                         {
-                            //prevent picking up (or deattaching) items
+                            //prevent deattaching items from walls
 #if CLIENT
                             if (GameMain.GameSession?.GameMode is TutorialMode)
                             {
                                 continue;
                             }
 #endif
-                            pickable.CanBePicked = false;
-                            pickable.CanBeSelected = false;
+                            holdable.CanBePicked = false;
+                            holdable.CanBeSelected = false;
                         }
                     }
                 }
