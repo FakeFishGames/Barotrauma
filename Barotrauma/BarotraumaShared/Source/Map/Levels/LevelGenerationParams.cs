@@ -398,6 +398,8 @@ namespace Barotrauma
                 for (int i = 0; i < biomeNames.Length; i++)
                 {
                     string biomeName = biomeNames[i].Trim().ToLowerInvariant();
+                    if (biomeName == "none") { continue; }
+
                     Biome matchingBiome = biomes.Find(b => b.Name.ToLowerInvariant() == biomeName);
                     if (matchingBiome == null)
                     {
