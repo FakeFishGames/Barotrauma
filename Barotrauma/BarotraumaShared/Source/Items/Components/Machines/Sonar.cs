@@ -86,17 +86,7 @@ namespace Barotrauma.Items.Components
         {
             get { return zoom; }
         }
-
-        //TODO: remove, only for testing
-#if DEBUG
-        [Serialize(false, false), Editable]
-        public bool DynamicDockingIndicator
-        {
-            get;
-            set;
-        }
-#endif
-
+        
         public override bool IsActive
         {
             get
