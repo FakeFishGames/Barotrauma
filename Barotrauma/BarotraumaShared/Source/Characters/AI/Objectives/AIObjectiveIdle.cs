@@ -40,8 +40,12 @@ namespace Barotrauma
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
-        // TODO: take the initiative into account
-        public override float GetPriority() => 1;
+        public override float GetPriority()
+        {
+            float max = Math.Min(AIObjectiveManager.OrderPriority - 1, 100);
+            Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, character.GetSkillLevel("initiative")));
+            return Priority;
+        }
 
         protected override void Act(float deltaTime)
         {
