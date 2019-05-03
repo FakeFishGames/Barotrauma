@@ -184,6 +184,10 @@ namespace Barotrauma
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
+            GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
+
+
+            PerformanceCounter = new PerformanceCounter();
 
             PerformanceCounter = new PerformanceCounter();
 
@@ -771,6 +775,13 @@ namespace Barotrauma
             
             msgBox.InnerFrame.RectTransform.MinSize = new Point(0, 
                 msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + 10);
+            Config.EditorDisclaimerShown = true;
+            Config.SaveNewPlayerConfig();
+        }
+
+            msgBox.Text.RectTransform.MaxSize = new Point(int.MaxValue, msgBox.Text.Rect.Height);
+            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
+            msgBox.RectTransform.MinSize = new Point(0, msgBox.Rect.Height + linkHolder.Rect.Height + msgBox.Buttons.First().Rect.Height * 8);
             Config.EditorDisclaimerShown = true;
             Config.SaveNewPlayerConfig();
         }
