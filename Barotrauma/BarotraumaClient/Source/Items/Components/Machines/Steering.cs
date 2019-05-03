@@ -602,13 +602,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected override void RemoveComponentSpecific()
-        {
-            maintainPosIndicator?.Remove();
-            maintainPosOriginIndicator?.Remove();
-            steeringIndicator?.Remove();
-        }
-
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             msg.Write(autoPilot);

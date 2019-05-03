@@ -1315,27 +1315,6 @@ namespace Barotrauma
             }
         }
 
-        public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
-        {
-            List<T> connectedComponents = new List<T>();
-            HashSet<Connection> alreadySearched = new HashSet<Connection>();
-            GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
-
-            return connectedComponents;
-        }
-        
-        private static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
-        {
-            new Pair<string, string>("power_in", "power_out"),
-            new Pair<string, string>("signal_in1", "signal_out1"),
-            new Pair<string, string>("signal_in2", "signal_out2"),
-            new Pair<string, string>("signal_in3", "signal_out3"),
-            new Pair<string, string>("signal_in4", "signal_out4"),
-            new Pair<string, string>("signal_in", "signal_out"),
-            new Pair<string, string>("signal_in1", "signal_out"),
-            new Pair<string, string>("signal_in2", "signal_out")
-        };
-
                     recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
                 }
             }
