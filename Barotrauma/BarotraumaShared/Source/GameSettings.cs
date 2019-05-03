@@ -604,14 +604,13 @@ namespace Barotrauma
             }
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
-                {
-                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
-                    continue;
-                }
                 foreach (ContentFile file in contentPackage.Files)
                 {
+                    if (!System.IO.File.Exists(file.Path))
+                    {
+                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
+                        continue;
+                    }
                     ToolBox.IsProperFilenameCase(file.Path);
                 }
             }
@@ -971,14 +970,13 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
-                {
-                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
-                    continue;
-                }
                 foreach (ContentFile file in contentPackage.Files)
                 {
+                    if (!System.IO.File.Exists(file.Path))
+                    {
+                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
+                        continue;
+                    }
                     ToolBox.IsProperFilenameCase(file.Path);
                 }
             }

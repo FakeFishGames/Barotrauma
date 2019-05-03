@@ -184,7 +184,7 @@ namespace Barotrauma
             if (!Visible || (!editing && hiddenInGame)) return;
             if (editing && !ShowItems) return;
             
-            Color color = IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? Color.Orange : GetSpriteColor();
+            Color color = isHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? Color.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
             
             BrokenItemSprite fadeInBrokenSprite = null;

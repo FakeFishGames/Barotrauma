@@ -76,8 +76,7 @@ namespace Barotrauma.Networking
                 if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
                 {
                     GUI.SettingsMenuOpen = false;
-                    new GUIMessageBox(TextManager.Get("Error"), 
-                        TextManager.Get("VoipCaptureDeviceNotFound", returnNull: true) ?? "Could not start voice capture, suitable capture device not found.")
+                    new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("VoipCaptureDeviceNotFound"))
                     {
                         UserData = "capturedevicenotfound"
                     };

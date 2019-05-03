@@ -129,8 +129,6 @@ namespace Barotrauma
             get { return pauseMenuOpen; }
         }
 
-        public static bool PreventPauseMenuToggle = false;
-
         public static Color ScreenOverlayColor
         {
             get;
@@ -1415,7 +1413,6 @@ namespace Barotrauma
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) return;
-            if (PreventPauseMenuToggle) return;
 
             settingsMenuOpen = false;
 
@@ -1549,9 +1546,9 @@ namespace Barotrauma
             
             if (GameMain.GameSession != null)
             {
-                if (Tutorial.Initialized)
+                if (ContextualTutorial.Initialized && GameMain.GameSession.GameMode is SinglePlayerCampaign)
                 {
-                    ((TutorialMode)GameMain.GameSession.GameMode).Tutorial.Stop();
+                    ((SinglePlayerCampaign)GameMain.GameSession.GameMode).ContextualTutorial.Stop();
                 }
 
                 if (GameSettings.SendUserStatistics)

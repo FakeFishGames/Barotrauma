@@ -59,10 +59,10 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-
+            
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
-       
+
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
             {
                 CanBeFocused = false
@@ -82,17 +82,6 @@ namespace Barotrauma
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
-            };
-
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), "Tutorial", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-            {
-                ForceUpperCase = true,
-                UserData = Tab.Tutorials,
-                OnClicked = (tb, userdata) =>
-                {
-                    SelectTab(tb, userdata);
-                    return true;
-                }
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -195,10 +184,6 @@ namespace Barotrauma
                     UserData = Tab.SteamWorkshop,
                     OnClicked = SelectTab
                 };
-
-#if OSX && !DEBUG
-                steamWorkshopButton.Text += " (Not yet available on MacOS)";
-#endif
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -335,11 +320,13 @@ namespace Barotrauma
                 return true;
             };
 
+            UpdateTutorialList();
+
             this.game = game;
         }
-#endregion
+        #endregion
 
-#region Selection
+        #region Selection
         public override void Select()
         {
             base.Select();
@@ -351,6 +338,10 @@ namespace Barotrauma
             }
 
             Submarine.Unload();
+            
+            ResetButtonStates(null);
+
+            UpdateTutorialList();
             
             ResetButtonStates(null);
 
@@ -397,14 +388,9 @@ namespace Barotrauma
                 switch (selectedTab)
                 {
                     case Tab.NewGame:
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
-                            return true;
-                        }
                         campaignSetupUI.CreateDefaultSaveName();
                         campaignSetupUI.RandomizeSeed();
+                        campaignSetupUI.UpdateTutorialSelection();
                         campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
                         break;
                     case Tab.LoadGame:
@@ -421,13 +407,6 @@ namespace Barotrauma
                     case Tab.HostServer:
                         break;
                     case Tab.Tutorials:
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
-                            return true;
-                        }
-                        UpdateTutorialList();
                         break;
                     case Tab.CharacterEditor:
                         Submarine.MainSub = null;
@@ -458,8 +437,6 @@ namespace Barotrauma
 
         public bool ReturnToMainMenu(GUIButton button, object obj)
         {
-            GUI.PreventPauseMenuToggle = false;
-
             if (Selected != this)
             {
                 Select();
@@ -484,7 +461,7 @@ namespace Barotrauma
                 otherButton.Selected = false;
             }
         }
-#endregion
+        #endregion
 
         private void QuickStart()
         {
@@ -702,7 +679,6 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 #if !DEBUG
-#if !OSX
             if (Steam.SteamManager.USE_STEAM)
             {
                 if (GameMain.Config.UseSteamMatchmaking)
@@ -712,16 +688,6 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
-#else
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                }
-            }
-#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
@@ -806,10 +772,12 @@ namespace Barotrauma
             }
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
-            
+
+            ContextualTutorial.Selected = campaignSetupUI.TutorialSelected;
             GameMain.GameSession = new GameSession(selectedSub, saveName,
                 GameModePreset.List.Find(g => g.Identifier == "singleplayercampaign"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
+
 
             GameMain.LobbyScreen.Select();
         }
@@ -832,7 +800,7 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
-#region UI Methods      
+        #region UI Methods      
         private void CreateHostServerFields()
         {
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
@@ -913,7 +881,7 @@ namespace Barotrauma
                 OnClicked = HostServerClicked
             };
         }
-#endregion
+        #endregion
 
     }
 }

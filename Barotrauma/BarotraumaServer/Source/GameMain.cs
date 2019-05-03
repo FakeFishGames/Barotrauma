@@ -146,20 +146,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns the file paths of all files of the given type in the content packages.
+        /// Returns the file paths of all files of the given type in the currently selected content packages.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
-        public IEnumerable<string> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
+        public IEnumerable<string> GetFilesOfType(ContentType type)
         {
-            if (searchAllContentPackages)
-            {
-                return ContentPackage.GetFilesOfType(ContentPackage.List, type);
-            }
-            else
-            {
-                return ContentPackage.GetFilesOfType(SelectedPackages, type);
-            }
+            return ContentPackage.GetFilesOfType(SelectedPackages, type);
         }
 
         public void StartServer()

@@ -426,7 +426,7 @@ namespace Barotrauma
             }
         }
 
-        public bool CanSpeak;
+        private bool canSpeak;
 
         private bool speechImpedimentSet;
 
@@ -436,7 +436,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!CanSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
+                if (!canSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
                 return speechImpediment;
             }
             set
@@ -710,7 +710,7 @@ namespace Barotrauma
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
+            canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
             Noise = doc.Root.GetAttributeFloat("noise", 100f);
 
@@ -853,7 +853,7 @@ namespace Barotrauma
             {
                 if (characterConfigFiles == null)
                 {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true);
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
                 }
                 return characterConfigFiles;
             }
@@ -2555,9 +2555,11 @@ namespace Barotrauma
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
 #endif
 
-            CharacterList.Remove(this);
+#if CLIENT
+            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+#endif
 
-            if (Controlled == this) { Controlled = null; }
+            CharacterList.Remove(this);
 
             if (Inventory != null)
             {

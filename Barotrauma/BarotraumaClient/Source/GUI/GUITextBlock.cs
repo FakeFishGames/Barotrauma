@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -249,7 +247,7 @@ namespace Barotrauma
                 return;
             }
 
-            textPos = new Vector2(padding.X + (rect.Width - padding.Z - padding.X) / 2.0f, padding.Y + (rect.Height - padding.Y - padding.W) / 2.0f);
+            textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
             origin = TextSize * 0.5f;
 
             if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)

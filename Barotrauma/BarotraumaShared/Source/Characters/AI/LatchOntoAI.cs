@@ -54,7 +54,7 @@ namespace Barotrauma
             get { return attachJoints.Count > 0; }
         }
 
-        public bool IsAttachedToSub => IsAttached && (attachTargetBody?.UserData is Submarine || attachTargetBody?.UserData is Entity entity && entity.Submarine != null);
+        public bool IsAttachedToSub => IsAttached && attachTargetBody?.UserData is Entity entity && (entity is Submarine sub || entity?.Submarine != null);
 
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
         {
@@ -190,7 +190,7 @@ namespace Barotrauma
                 case AIController.AIState.Attack:
                     if (enemyAI.AttackingLimb != null)
                     {
-                        if (attachToSub && !enemyAI.IsSteeringThroughGap && wallAttachPos != Vector2.Zero && attachTargetBody != null)
+                        if (attachToSub && wallAttachPos != Vector2.Zero && attachTargetBody != null)
                         {
                             // is not attached or is attached to something else
                             if (!IsAttached || IsAttached && attachJoints[0].BodyB == attachTargetBody)

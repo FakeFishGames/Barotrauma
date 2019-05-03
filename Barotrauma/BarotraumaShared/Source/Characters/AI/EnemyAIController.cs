@@ -320,9 +320,8 @@ namespace Barotrauma
                 {
                     State = AIState.Idle;
                 }
-                else if (Character.Health < fleeHealthThreshold && SwarmBehavior == null)
+                else if (Character.Health < fleeHealthThreshold)
                 {
-                    // Don't flee from damage if in a swarm.
                     State = AIState.Escape;
                 }
                 else if (targetingPriority != null)
@@ -330,6 +329,8 @@ namespace Barotrauma
                     State = targetingPriority.State;
                 }
             }
+
+            LatchOntoAI?.Update(this, deltaTime);
 
             if (SelectedAiTarget != null && (SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed))
             {
@@ -368,15 +369,8 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-
-            LatchOntoAI?.Update(this, deltaTime);
-            IsSteeringThroughGap = false;
-            if (SwarmBehavior != null)
-            {
-                SwarmBehavior.IsActive = State == AIState.Idle && Character.CurrentHull == null;
-                SwarmBehavior.Refresh();
-                SwarmBehavior.UpdateSteering(deltaTime);
-            }
+            
+            SwarmBehavior?.Update(deltaTime);
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
         }
 
@@ -499,7 +493,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!IsLatchedOnSub)
+                if (!IsProperlyLatchedOnSub)
                 {
                     UpdateWallTarget();
                 }
@@ -558,7 +552,7 @@ namespace Barotrauma
                 {
                     WallSection section = wallTarget.Structure.GetSection(wallTarget.SectionIndex);
                     Vector2 targetPos = wallTarget.Structure.SectionPosition(wallTarget.SectionIndex, true);
-                    if (section?.gap != null && SteerThroughGap(wallTarget.Structure, section, targetPos, deltaTime))
+                    if (section?.gap != null && section.gap.IsRoomToRoom && SteerThroughGap(wallTarget.Structure, section, targetPos, deltaTime))
                     {
                         return;
                     }
@@ -799,21 +793,9 @@ namespace Barotrauma
             }
         }
 
-        public bool IsSteeringThroughGap { get; private set; }
         private bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
         {
-            IsSteeringThroughGap = true;
-            SelectedAiTarget = wall.AiTarget;
-            wallTarget = null;
-            LatchOntoAI?.DeattachFromBody();
-            Character.AnimController.ReleaseStuckLimbs();
             Hull targetHull = section.gap?.FlowTargetHull;
-            float distance = Vector2.Distance(Character.WorldPosition, targetWorldPos);
-            float maxDistance = Math.Min(wall.Rect.Width, wall.Rect.Height);
-            if (distance > maxDistance)
-            {
-                return false;
-            }
             if (targetHull != null)
             {
                 if (wall.IsHorizontal)
@@ -824,7 +806,16 @@ namespace Barotrauma
                 {
                     targetWorldPos.X = targetHull.WorldRect.Center.X;
                 }
-                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetWorldPos - Character.WorldPosition));
+                LatchOntoAI?.DeattachFromBody();
+                Character.AnimController.ReleaseStuckLimbs();
+                if (steeringManager is IndoorsSteeringManager)
+                {
+                    steeringManager.SteeringManual(deltaTime, Vector2.Normalize(targetWorldPos - Character.WorldPosition));
+                }
+                else
+                {
+                    steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetWorldPos));
+                }
                 return true;
             }
             return false;
@@ -1056,43 +1047,19 @@ namespace Barotrauma
         #region Targeting
         private bool IsLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub;
 
+        private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
+
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
         public AITarget UpdateTargets(Character character, out TargetingPriority priority)
         {
-            if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
+            if (IsProperlyLatchedOnSub)
             {
-                var wall = SelectedAiTarget.Entity as Structure;
-                if (wall == null)
-                {
-                    wall = wallTarget?.Structure;
-                }
-                // The target is not a wall or it's not the same as we are attached to -> release
-                bool releaseTarget = wall == null || !wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB);
-                if (!releaseTarget)
-                {
-                    for (int i = 0; i < wall.Sections.Length; i++)
-                    {
-                        if (CanPassThroughHole(wall, i))
-                        {
-                            releaseTarget = true;
-                        }
-                    }
-                }
-                if (releaseTarget)
-                {
-                    SelectedAiTarget = null;
-                    wallTarget = null;
-                    LatchOntoAI.DeattachFromBody();
-                }
-                else if (SelectedAiTarget?.Entity == wallTarget?.Structure)
-                {
-                    // If attached to a valid target, just keep the target.
-                    // Priority not used in this case.
-                    priority = null;
-                    return SelectedAiTarget;
-                }
+                // If attached to a valid target, just keep the target.
+                // Priority not used in this case.
+                priority = null;
+                return SelectedAiTarget;
             }
             AITarget newTarget = null;
             priority = null;
@@ -1175,7 +1142,7 @@ namespace Barotrauma
                 else if (target.Entity != null)
                 {
                     //skip the target if it's a room and the character is already inside a sub
-                    if (character.CurrentHull != null && target.Entity is Hull) { continue; }
+                    if (character.CurrentHull != null && target.Entity is Hull) continue;
                     
                     Door door = null;
                     if (target.Entity is Item item)
@@ -1204,37 +1171,23 @@ namespace Barotrauma
                             // Ignore structures that doesn't have a body (not walls)
                             continue;
                         }
-                        if (s.IsPlatform)
-                        {
-                            continue;
-                        }
-                        if (character.CurrentHull != null)
-                        {
-                            // Ignore walls when inside.
-                            continue;
-                        }
-                        valueModifier = 1;
-                        float wallMaxHealth = 400;  // Anything more than this is ignored -> 200 = 1
-                        // Prefer weaker targets.
-                        valueModifier *= MathHelper.Lerp(1.5f, 0.5f, MathUtils.InverseLerp(0, 1, s.Health / wallMaxHealth));
+                        // Ignore walls when inside.
+                        valueModifier = character.CurrentHull == null ? 1 : 0;
                         if (aggressiveBoarding)
                         {
-                            var hulls = s.Submarine.GetHulls(false);
                             for (int i = 0; i < s.Sections.Length; i++)
                             {
                                 var section = s.Sections[i];
-                                if (section.gap != null)
+                                if (CanPassThroughHole(s, i))
                                 {
-                                    if (CanPassThroughHole(s, i))
-                                    {
-                                        bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null && hulls.Any(h => h.Rect.Intersects(section.rect));
-                                        valueModifier *= leadsInside ? 5 : 0;
-                                    }
-                                    else
-                                    {
-                                        // up to 100% priority increase for every gap in the wall
-                                        valueModifier *= 1 + section.gap.Open;
-                                    }
+                                    // Ignore walls that can be passed through
+                                    valueModifier = 0;
+                                    break;
+                                }
+                                else if (section.gap != null)
+                                {
+                                    // up to 100% priority increase for every gap in the wall
+                                    valueModifier *= 1 + section.gap.Open;
                                 }
                             }
                         }

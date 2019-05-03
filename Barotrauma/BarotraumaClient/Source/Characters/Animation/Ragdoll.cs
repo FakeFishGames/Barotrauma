@@ -98,7 +98,7 @@ namespace Barotrauma
                         if (distSqrd > 10.0f || !character.AllowInput)
                         {
                             Collider.TargetRotation = newRotation;
-                            SetPosition(newPosition, lerp: distSqrd < 5.0f, ignorePlatforms: false);
+                            SetPosition(newPosition, lerp: distSqrd < 5.0f);
                         }
                         else
                         {
@@ -238,16 +238,20 @@ namespace Barotrauma
                         }
 
                         float errorMagnitude = positionError.Length();
-                        if (errorMagnitude > 0.5f)
-                        {
-                            character.MemLocalState.Clear();
-                            SetPosition(serverPos.Position, lerp: true, ignorePlatforms: false);
-                        }
-                        else if (errorMagnitude > 0.01f)
+                        if (errorMagnitude > 0.01f)
                         {
                             Collider.TargetPosition = Collider.SimPosition + positionError;
                             Collider.TargetRotation = Collider.Rotation + rotationError;
                             Collider.MoveToTargetPosition(lerp: true);
+                            if (errorMagnitude > 0.5f)
+                            {
+                                character.MemLocalState.Clear();                 
+                                foreach (Limb limb in Limbs)
+                                {
+                                    limb.body.TargetPosition = limb.body.SimPosition + positionError;
+                                    limb.body.MoveToTargetPosition(lerp: true);
+                                }
+                            }
                         }
                     }
 
@@ -436,15 +440,14 @@ namespace Barotrauma
                 return;
             }
 
-            Color? color = null;
-            if (character.ExternalHighlight)
-            {
-                color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
-            }
+            //foreach (Limb limb in Limbs)
+            //{
+            //    limb.Draw(spriteBatch, cam);
+            //}
 
             for (int i = 0; i < limbs.Length; i++)
             {
-                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam);
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }

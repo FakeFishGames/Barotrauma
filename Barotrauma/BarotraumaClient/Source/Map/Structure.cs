@@ -1,9 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Lights;
 using Barotrauma.Networking;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -45,21 +42,7 @@ namespace Barotrauma
                     MathHelper.Clamp(value.Y, 0.01f, 10));
             }
         }
-
-        private string specialTag;
-        [Editable, Serialize("", true)]
-        public string SpecialTag
-        {
-            get { return specialTag; }
-            set { specialTag = value; }
-        }
-
-        // Only for testing in the debug build. Not saved.
-#if DEBUG
-        [Editable, Serialize(true, false)]
-#endif
-        public bool DrawTiled { get; protected set; } = true;
-        
+                
         protected Vector2 textureOffset = Vector2.Zero;
         [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
         public Vector2 TextureOffset
@@ -168,20 +151,6 @@ namespace Barotrauma
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
 
-                int section = FindSectionIndex(pos);
-                if (section > -1)
-                {
-                    Vector2 normal = contact.Manifold.LocalNormal;
-
-                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal) * f2.Body.Mass * 0.1f;
-                    if (impact > 10.0f)
-                    {
-                        SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: Tags);
-                    }
-                }
-            }
-        }
-
         public override bool IsVisible(Rectangle worldView)
         {
             Rectangle worldRect = WorldRect;
@@ -218,7 +187,7 @@ namespace Barotrauma
                 if (HasBody && !ShowWalls) return;
             }
 
-            Color color = IsHighlighted ? Color.Orange : spriteColor;
+            Color color = isHighlighted ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);

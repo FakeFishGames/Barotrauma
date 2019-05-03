@@ -1960,8 +1960,6 @@ namespace Barotrauma.Networking
                 msg.Write(false);
             }
 
-            msg.Write(serverSettings.AllowRagdollButton);
-
             serverSettings.WriteMonsterEnabled(msg);
 
             CompressOutgoingMessage(msg);

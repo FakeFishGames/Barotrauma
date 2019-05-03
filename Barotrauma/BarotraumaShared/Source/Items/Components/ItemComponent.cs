@@ -801,7 +801,10 @@ namespace Barotrauma.Items.Components
             string msg = TextManager.Get(Msg, true);
             if (msg != null)
             {
-                msg = TextManager.ParseInputTypes(msg);
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
                 DisplayMsg = msg;
             }
             else

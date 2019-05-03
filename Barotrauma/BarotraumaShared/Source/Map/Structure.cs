@@ -635,6 +635,24 @@ namespace Barotrauma
                 var character = ((Limb)f2.Body.UserData).character;
                 if (character.DisableImpactDamageTimer > 0.0f || ((Limb)f2.Body.UserData).Mass < 100.0f) return true;
             }
+            
+            if (!Prefab.Platform && Prefab.StairDirection == Direction.None)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
+
+                int section = FindSectionIndex(pos);
+                if (section > -1)
+                {
+                    Vector2 normal = contact.Manifold.LocalNormal;
+
+                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal) * f2.Body.Mass * 0.1f;
+                    if (impact < 10.0f) return true;
+#if CLIENT
+                    SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: Tags);                    
+#endif
+                    AddDamage(section, impact);                 
+                }
+            }
 
             OnImpactProjSpecific(f1, f2, contact);
 

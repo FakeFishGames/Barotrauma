@@ -309,23 +309,14 @@ namespace Barotrauma
                 return;
             }
 
-            int prevIndex = -1;
             var existingFrame = listBox.Content.FindChild(item);
-            if (existingFrame != null)
-            {
-                prevIndex = listBox.Content.GetChildIndex(existingFrame);
-                listBox.Content.RemoveChild(existingFrame);
-            }
+            if (existingFrame != null) { listBox.Content.RemoveChild(existingFrame); }
 
             var itemFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform, minSize: new Point(0, 80)),
                     style: "ListBoxElement")
             {
                 UserData = item
             };
-            if (prevIndex > -1)
-            {
-                itemFrame.RectTransform.RepositionChildInHierarchy(prevIndex);
-            }
 
             var innerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), itemFrame.RectTransform, Anchor.Center), isHorizontal: true)
             {
@@ -338,7 +329,6 @@ namespace Barotrauma
             {
                 new GUIImage(new RectTransform(new Point(iconSize), innerFrame.RectTransform), itemPreviewSprites[item.PreviewImageUrl], scaleToFit: true)
                 {
-                    UserData = "previewimage",
                     CanBeFocused = false
                 };
             }
@@ -346,7 +336,6 @@ namespace Barotrauma
             {
                 new GUIImage(new RectTransform(new Point(iconSize), innerFrame.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true)
                 {
-                    UserData = "previewimage",
                     CanBeFocused = false
                 };
                 try
@@ -394,7 +383,6 @@ namespace Barotrauma
 
             var titleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), rightColumn.RectTransform), EnsureUTF8(item.Title), textAlignment: Alignment.CenterLeft, wrap: true)
             {
-                UserData = "titletext",
                 CanBeFocused = false
             };
 
@@ -559,17 +547,7 @@ namespace Barotrauma
                     itemPreviewSprites.Add(item.PreviewImageUrl, newSprite);
                 }
 
-
-                var previewImage = listBox.Content.FindChild(item)?.GetChildByUserData("previewimage") as GUIImage;
-                if (previewImage != null)
-                {
-                    previewImage.Sprite = newSprite;
-                }
-                else
-                {
-                    CreateWorkshopItemFrame(item, listBox);
-                }
-
+                CreateWorkshopItemFrame(item, listBox);
                 if (modsPreviewFrame.FindChild(item) != null)
                 {
                     ShowItemPreview(item, modsPreviewFrame);
@@ -597,7 +575,8 @@ namespace Barotrauma
 
         private bool ToggleItemEnabled(GUITickBox tickBox)
         {
-            if (!(tickBox.UserData is Facepunch.Steamworks.Workshop.Item item)) { return false; }
+            Facepunch.Steamworks.Workshop.Item item = tickBox.UserData as Facepunch.Steamworks.Workshop.Item;
+            if (item == null) { return false; }
 
             var updateButton = tickBox.Parent.FindChild("updatebutton");
 
@@ -606,9 +585,7 @@ namespace Barotrauma
             {
                 if (!SteamManager.EnableWorkShopItem(item, false, out errorMsg))
                 {
-                    tickBox.Visible = false;
-                    tickBox.Selected = false;
-                    if (tickBox.Parent.GetChildByUserData("titletext") is GUITextBlock titleText) { titleText.TextColor = Color.Red; }
+                    tickBox.Enabled = false;
                 }
             }
             else

@@ -431,12 +431,6 @@ namespace Barotrauma
                         else if (ic is Pickable pickable)
                         {
                             //prevent picking up (or deattaching) items
-#if CLIENT
-                            if (GameMain.GameSession?.GameMode is TutorialMode)
-                            {
-                                continue;
-                            }
-#endif
                             pickable.CanBePicked = false;
                             pickable.CanBeSelected = false;
                         }
@@ -542,6 +536,20 @@ namespace Barotrauma
                 {
                     maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
                 }
+                else
+                {
+                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                }
+            }
+            
+            if (minX < 0.0f && maxX > Level.Loaded.Size.X)
+            {
+                //no walls found at either side, just use the initial spawnpos and hope for the best
+            }
+            else if (minX < 0)
+            {
+                //no wall found at the left side, spawn to the left from the right-side wall
+                spawnPos.X = maxX - minWidth - 100.0f + subDockingPortOffset;
             }
             
             if (minX < 0.0f && maxX > Level.Loaded.Size.X)

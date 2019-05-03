@@ -46,15 +46,7 @@ namespace Barotrauma
 
             if (File.Exists(filePath))
             {
-                try
-                {
-                    doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
-                }
-                catch
-                {
-                    return null;
-                }
-
+                doc = XDocument.Load(filePath, LoadOptions.SetBaseUri);
                 if (doc.Root == null) return null;
             }
 

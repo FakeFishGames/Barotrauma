@@ -317,11 +317,10 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            entityCategoryButtons.Add(
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
-                {
-                    OnClicked = (btn, userdata) => { ClearFilter(); return true; }
-                });
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
+            {
+                OnClicked = (btn, userdata) => { ClearFilter(); return true; }
+            };
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
@@ -337,8 +336,6 @@ namespace Barotrauma
                     }
                 });
             }
-
-            GUITextBlock.AutoScaleAndNormalize(entityCategoryButtons.Select(b => b.TextBlock));
 
             entityList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), entityListHolder.RectTransform, Anchor.BottomCenter))
             {

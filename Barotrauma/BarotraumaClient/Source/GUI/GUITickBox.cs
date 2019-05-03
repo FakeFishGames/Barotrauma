@@ -44,11 +44,10 @@ namespace Barotrauma
         
         public Color TextColor
         {
-            get { return text.TextColor; }
-            set { text.TextColor = value; }
+            get { return box; }
         }
 
-        public override Rectangle MouseRect
+        public GUITextBlock TextBlock
         {
             get
             {
@@ -57,28 +56,20 @@ namespace Barotrauma
             }
         }
 
-        public override ScalableFont Font
+        public override string ToolTip
         {
-            get
-            {
-                return base.Font;
-            }
-
+            get { return base.ToolTip; }
             set
             {
-                base.Font = value;
-                if (text != null) text.Font = value;
+                base.ToolTip = value;
+                box.ToolTip = value;
+                text.ToolTip = value;
             }
         }
 
         public GUIFrame Box
         {
             get { return box; }
-        }
-
-        public GUITextBlock TextBlock
-        {
-            get { return text; }
         }
 
         public override string ToolTip
@@ -128,7 +119,6 @@ namespace Barotrauma
         private void ResizeBox()
         {
             box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
-            text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
             text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
         }
         
