@@ -2023,6 +2023,10 @@ namespace Barotrauma
             {
                 IsRagdolled = IsForceRagdolled;
             }
+            else if (IsRemotePlayer)
+            {
+                IsRagdolled = IsKeyDown(InputType.Ragdoll);
+            }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
             else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f))
             {
