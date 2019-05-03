@@ -1072,6 +1072,8 @@ namespace Barotrauma
 
         private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
+        private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
+
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range

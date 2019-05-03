@@ -650,7 +650,7 @@ namespace Barotrauma.Items.Components
             bool readyToDock = 
                 Math.Abs(diff.X) < steering.DockingTarget.DistanceTolerance.X &&
                 Math.Abs(diff.Y) < steering.DockingTarget.DistanceTolerance.Y;
-
+                       
             Vector2 dockingDir = sourcePortPos - targetPortPos;
             Vector2 normalizedDockingDir = Vector2.Normalize(dockingDir);
             if (!DynamicDockingIndicator)
@@ -686,20 +686,38 @@ namespace Barotrauma.Items.Components
                 DrawLine(spriteBatch, linePos + midNormal * 3.0f, linePos - midNormal * 3.0f, staticLineColor, width: 3);
             }
 
-            float indicatorSector = sector * 0.75f;
-            float indicatorSectorLength = (float)(midLength / Math.Cos(indicatorSector));
+            if (readyToDock)
+            {
+                Color indicatorColor = Color.LightGreen * 0.8f;
 
-            bool withinSector =
-                (Math.Abs(diff.X) < steering.DockingSource.DistanceTolerance.X && Math.Abs(diff.Y) < steering.DockingSource.DistanceTolerance.Y) ||
-                Vector2.Dot(normalizedDockingDir, MathUtils.RotatePoint(normalizedDockingDir, indicatorSector)) <
-                Vector2.Dot(normalizedDockingDir, Vector2.Normalize(dockingDir));
+                float indicatorSize = (float)Math.Sin((float)Timing.TotalTime * 5.0f) * DisplayRadius * 0.75f;
+                Vector2 midPoint = (sourcePortPos + targetPortPos) / 2.0f;
+                DrawLine(spriteBatch, 
+                    midPoint + Vector2.UnitY * indicatorSize,
+                    midPoint - Vector2.UnitY * indicatorSize, 
+                    indicatorColor, width: 3);
+                DrawLine(spriteBatch,
+                    midPoint + Vector2.UnitX * indicatorSize,
+                    midPoint - Vector2.UnitX * indicatorSize,
+                    indicatorColor, width: 3);
+            }
+            else
+            {
+                float indicatorSector = sector * 0.75f;
+                float indicatorSectorLength = (float)(midLength / Math.Cos(indicatorSector));
 
-            Color indicatorColor = withinSector ? Color.LightGreen * 0.8f : Color.Red * 0.8f;
+                    bool withinSector =
+                    (Math.Abs(diff.X) < steering.DockingSource.DistanceTolerance.X && Math.Abs(diff.Y) < steering.DockingSource.DistanceTolerance.Y) ||
+                    Vector2.Dot(normalizedDockingDir, MathUtils.RotatePoint(normalizedDockingDir, indicatorSector)) <
+                    Vector2.Dot(normalizedDockingDir, Vector2.Normalize(dockingDir));
 
-            DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
-            DrawLine(spriteBatch, targetPortPos,
-                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
+                Color indicatorColor = withinSector ? Color.LightGreen * 0.8f : Color.Red * 0.8f;
+
+                DrawLine(spriteBatch, targetPortPos,
+                    targetPortPos + MathUtils.RotatePoint(normalizedDockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
+                DrawLine(spriteBatch, targetPortPos,
+                    targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
+            }
             
         }
 
