@@ -281,7 +281,7 @@ namespace Barotrauma.Items.Components
             float dist = fromItemToLeak.Length();
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
-            if (dist > Range * 5.0f) return true;
+            if (dist > Range * 3.0f) { return true; }
 
             // TODO: use the collider size?
             if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
