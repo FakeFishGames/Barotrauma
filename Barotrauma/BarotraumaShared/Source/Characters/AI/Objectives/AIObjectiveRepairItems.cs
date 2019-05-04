@@ -47,34 +47,26 @@ namespace Barotrauma
 
         protected override bool Filter(Item item)
         {
-            bool ignore = item.IsFullCondition;
-            if (!ignore)
+            if (item == null) { return false; }
+            if (item.IsFullCondition) { return false; }
+            if (item.CurrentHull == null) { return false; }
+            if (item.Submarine == null) { return false; }
+            if (item.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+            if (item.Repairables.None()) { return false; }
+            if (item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
+            foreach (Repairable repairable in item.Repairables)
             {
-                if (item.Submarine == null) { ignore = true; }
-                else if (item.Submarine.TeamID != character.TeamID) { ignore = true; }
-                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { ignore = true; }
-                else
+                if (!objectives.ContainsKey(item) && item.Condition > repairable.ShowRepairUIThreshold)
                 {
-                    if (item.Repairables.None()) { ignore = true; }
-                    else if (item.CurrentHull != null || item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { ignore = true; }
-                    else
-                    {
-                        foreach (Repairable repairable in item.Repairables)
-                        {
-                            if (!objectives.ContainsKey(item) && item.Condition > repairable.ShowRepairUIThreshold)
-                            {
-                                ignore = true;
-                            }
-                            else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character))
-                            {
-                                ignore = true;
-                            }
-                            if (ignore) { break; }
-                        }
-                    }
+                    return false;
+                }
+                else if (RequireAdequateSkills && !repairable.HasRequiredSkills(character))
+                {
+                    return false;
                 }
             }
-            return !ignore;
+            return true;
         }
 
         protected override float TargetEvaluation() => targets.Max(t => 100 - t.ConditionPercentage);

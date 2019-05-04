@@ -254,41 +254,56 @@ namespace Barotrauma
             Order newOrder = null;
             if (Character.CurrentHull != null)
             {
-                if (Character.CurrentHull.FireSources.Count > 0)
+                if (AIObjectiveExtinguishFires.IsValidTarget(Character.CurrentHull))
                 {
                     var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
                     newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                    AddTargets<AIObjectiveExtinguishFires, Hull>(Character, Character.CurrentHull);
                 }
 
-                if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
+                foreach (var gap in Character.CurrentHull.ConnectedGaps)
                 {
-                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                    if (AIObjectiveFixLeaks.IsValidTarget(gap))
+                    {
+                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                        AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
+                    }
+                }
+
+                foreach (Item item in Item.ItemList)
+                {
+                    if (AIObjectiveRepairItems.IsValidTarget(item))
+                    {
+                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
+                        newOrder = new Order(orderPrefab, Character.CurrentHull, item.Repairables?.FirstOrDefault());
+                        AddTargets<AIObjectiveRepairItems, Item>(Character, item);
+                    }
                 }
 
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
-                        (c.AIController is EnemyAIController || (c.TeamID != Character.TeamID && Character.TeamID != Character.TeamType.FriendlyNPC && c.TeamID != Character.TeamType.FriendlyNPC)))
+                    if (AIObjectiveFightIntruders.IsValidTarget(c))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
                         newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                        AddTargets<AIObjectiveFightIntruders, Character>(Character, c);
                     }
                 }
-            }
 
-            if (Character.CurrentHull != null && (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f))
-            {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                // TODO: the objective needs to inherit AIObjectiveLoop<T>
+                if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
+                {
+                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                }
             }
 
             if (newOrder != null)
             {
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
-                    Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+                    Character.Speak(newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
                 }
             }
         }
@@ -445,12 +460,9 @@ namespace Barotrauma
         {
             foreach (var c in Character.CharacterList)
             {
-                if (c.TeamID == character.TeamID)
+                if (c.AIController is HumanAIController humanAi && humanAi.IsFriendly(character))
                 {
-                    if (c.AIController is HumanAIController humanAi)
-                    {
-                        humanAi.RefreshHullSafety(hull);
-                    }
+                    humanAi.RefreshHullSafety(hull);
                 }
             }
         }
@@ -464,6 +476,62 @@ namespace Barotrauma
             else
             {
                 UnsafeHulls.Add(hull);
+            }
+        }
+
+        public static void RefreshTargets(Character character, Order order, Hull hull)
+        {
+            switch (order.AITag)
+            {
+                case "reportfire":
+                    AddTargets<AIObjectiveExtinguishFires, Hull>(character, hull);
+                    break;
+                case "reportbreach":
+                    foreach (var gap in hull.ConnectedGaps)
+                    {
+                        if (AIObjectiveFixLeaks.IsValidTarget(gap))
+                        {
+                            AddTargets<AIObjectiveFixLeaks, Gap>(character, gap);
+                        }
+                    }
+                    break;
+                case "reportbrokendevices":
+                    foreach (var item in Item.ItemList)
+                    {
+                        if (AIObjectiveRepairItems.IsValidTarget(item))
+                        {
+                            AddTargets<AIObjectiveRepairItems, Item>(character, item);
+                        }
+                    }
+                    break;
+                case "reportintruders":
+                    foreach (var enemy in Character.CharacterList)
+                    {
+                        if (AIObjectiveFightIntruders.IsValidTarget(enemy))
+                        {
+                            AddTargets<AIObjectiveFightIntruders, Character>(character, enemy);
+                        }
+                    }
+                    break;
+                case "requestfirstaid":
+                    // TODO
+                default:
+                    break;
+            }
+        }
+
+        private static void AddTargets<T1, T2>(Character caller, T2 target) where T1 : AIObjectiveLoop<T2>
+        {
+            foreach (var c in Character.CharacterList)
+            {
+                if (IsFriendly(caller, c) && c.AIController is HumanAIController humanAI)
+                {
+                    var objective = humanAI.ObjectiveManager.GetObjective<T1>();
+                    if (objective != null)
+                    {
+                        objective.AddTarget(target);
+                    }
+                }
             }
         }
 
@@ -500,7 +568,8 @@ namespace Barotrauma
             return MathHelper.Clamp(safety * 100, 0, 100);
         }
 
+        public bool IsFriendly(Character other) => IsFriendly(Character, other);
         // TODO: If the aliens are quaranteed to be in another team than the player, we wouldn't need to check the species.
-        public bool IsFriendly(Character other) => other.TeamID == Character.TeamID && other.SpeciesName == Character.SpeciesName;
+        public static bool IsFriendly(Character me, Character other) => other.TeamID == me.TeamID && other.SpeciesName == me.SpeciesName;
     }
 }

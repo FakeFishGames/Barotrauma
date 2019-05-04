@@ -191,6 +191,7 @@ namespace Barotrauma
                         if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
                         SetCharacterOrder(null, order, null, Character.Controlled);
                         HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
+                        HumanAIController.RefreshTargets(Character.Controlled, order, Character.Controlled.CurrentHull);
                         return true;
                     },
                     UserData = order,
