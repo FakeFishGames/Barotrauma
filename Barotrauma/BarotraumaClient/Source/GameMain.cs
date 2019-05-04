@@ -643,6 +643,13 @@ namespace Barotrauma
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
+#if !DEBUG
+                    if (NetworkMember == null && !WindowActive && Config.PauseOnFocusLost)
+                    {
+                        paused = true;
+                    }
+#endif
+
                     Screen.Selected.AddToGUIUpdateList();
 
                     if (Client != null)

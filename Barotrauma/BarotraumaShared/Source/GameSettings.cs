@@ -43,6 +43,7 @@ namespace Barotrauma
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
+        public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
@@ -850,6 +851,7 @@ namespace Barotrauma
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
 
+            PauseOnFocusLost = doc.Root.GetAttributeBool("pauseonfocuslost", PauseOnFocusLost);
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
             EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
@@ -1047,6 +1049,7 @@ namespace Barotrauma
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
+                new XAttribute("pauseonfocuslost", PauseOnFocusLost),
                 new XAttribute("aimassistamount", aimAssistAmount),
                 new XAttribute("enablemouselook", EnableMouseLook),
                 new XAttribute("chatopen", ChatOpen),
