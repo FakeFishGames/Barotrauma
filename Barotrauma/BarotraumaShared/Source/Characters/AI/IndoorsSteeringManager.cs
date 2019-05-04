@@ -319,6 +319,8 @@ namespace Barotrauma
                 var door = node.ConnectedDoor;
                 if (door != null)
                 {
+                    if (door.IsOpen) { return true; }
+                    if (door.IsStuck) { return false; }
                     if (door.HasIntegratedButtons)
                     {
                         if (!door.HasRequiredItems(character, false))
@@ -395,13 +397,18 @@ namespace Barotrauma
                     }
                 }
 
-                if (door == null) return;
+                if (door == null) { return; }
                 
                 //toggle the door if it's the previous node and open, or if it's current node and closed
                 if (door.IsOpen != shouldBeOpen)
                 {
-                    var buttons = door.Item.GetConnectedComponents<Controller>(true);
+                    if (door.IsStuck && shouldBeOpen)
+                    {
+                        currentPath.Unreachable = true;
+                        return;
+                    }
 
+                    var buttons = door.Item.GetConnectedComponents<Controller>(true);
                     Controller closestButton = null;
                     float closestDist = 0.0f;
 

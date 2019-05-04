@@ -1113,7 +1113,7 @@ namespace Barotrauma
                 ChatBox.Update(deltaTime);
                 ChatBox.InputBox.Visible = Character.Controlled != null;
 
-                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible)
+                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible && GUI.KeyboardDispatcher.Subscriber == null)
                 {
                     if (PlayerInput.KeyHit(InputType.Chat) && !ChatBox.InputBox.Selected)
                     {

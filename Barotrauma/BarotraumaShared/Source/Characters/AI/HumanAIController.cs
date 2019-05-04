@@ -391,6 +391,7 @@ namespace Barotrauma
             }
             SetOrderProjSpecific(order);
         }
+
         partial void SetOrderProjSpecific(Order order);
 
         public override void SelectTarget(AITarget target)

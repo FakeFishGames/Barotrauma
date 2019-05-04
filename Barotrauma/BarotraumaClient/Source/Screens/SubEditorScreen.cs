@@ -815,7 +815,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "");
+            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "", hasAi: false);
 
             //make space for the entity menu
             for (int i = 0; i < dummyCharacter.Inventory.SlotPositions.Length; i++)
@@ -2274,6 +2274,11 @@ namespace Barotrauma
             if (lightingEnabled)
             {
                 GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+            }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                sub.UpdateTransform();
             }
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
