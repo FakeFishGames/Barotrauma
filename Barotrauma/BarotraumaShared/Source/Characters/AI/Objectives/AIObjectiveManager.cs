@@ -170,7 +170,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    WaitTimer -= deltaTime;
                     if (character.AIController is HumanAIController humanAI && humanAI.SteeringManager != null)
                     {
                         if (!character.AnimController.InWater &&
@@ -178,7 +177,12 @@ namespace Barotrauma
                             !humanAI.UnsafeHulls.Contains(character.CurrentHull) && 
                             !AIObjectiveIdle.IsForbidden(character.CurrentHull))
                         {
+                            WaitTimer -= deltaTime;
                             humanAI.SteeringManager.Reset();
+                        }
+                        else
+                        {
+                            CurrentObjective?.TryComplete(deltaTime);
                         }
                     }
                 }
