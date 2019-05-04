@@ -1,15 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-  
+  <PropertyGroup>  
     <TargetFrameworks>net45</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>Facepunch.Steamworks</AssemblyName>
-	
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-	
+    <AssemblyName>Facepunch.Steamworks</AssemblyName>	
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions> 
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -65,5 +63,5 @@
    <DebugType>full</DebugType>
    <DebugSymbols>true</DebugSymbols>
  </PropertyGroup>
-
+  
 </Project>
