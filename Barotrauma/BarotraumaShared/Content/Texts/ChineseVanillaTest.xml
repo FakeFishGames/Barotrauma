@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<infotexts language="Chinese">
+<infotexts language="Chinese" nowhitespace="true">
   <!-- Loading Screen -->
   <loading>载入中...</loading>
   <pressanykey>按任意键继续</pressanykey>
