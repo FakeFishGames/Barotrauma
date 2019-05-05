@@ -7,15 +7,7 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-#if DEBUG
-        public static bool USE_STEAM
-        {
-            get { return GameMain.Config.UseSteam; }
-        }
-#else
-        //cannot enable/disable steam in release builds
         public const bool USE_STEAM = true;
-#endif
 
         public const uint AppID = 602960;
         
