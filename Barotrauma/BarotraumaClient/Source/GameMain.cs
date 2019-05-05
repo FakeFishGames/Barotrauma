@@ -340,7 +340,6 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            SteamManager.Initialize();
             if (Config.AutoUpdateWorkshopItems)
             {
                 if (SteamManager.AutoUpdateWorkshopItems())
@@ -474,6 +473,11 @@ namespace Barotrauma
             MainMenuScreen.Select();
 
             CheckContentPackage();
+
+            foreach (string steamError in SteamManager.InitializationErrors)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
+            }
 
             TitleScreen.LoadState = 100.0f;
             hasLoaded = true;
@@ -643,9 +647,10 @@ namespace Barotrauma
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
-#if !DEBUG
-                    if (NetworkMember == null && !WindowActive && Config.PauseOnFocusLost)
+#if !DEBUG || true
+                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen)
                     {
+                        GUI.TogglePauseMenu();
                         paused = true;
                     }
 #endif
