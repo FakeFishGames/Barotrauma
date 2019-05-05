@@ -16,8 +16,8 @@ namespace Barotrauma
         public Item Item { get; private set; }
 
         private AIObjectiveGoTo goToObjective;
-
         private float previousCondition = -1;
+        private RepairTool repairTool;
 
         public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
@@ -42,8 +42,6 @@ namespace Barotrauma
             return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + damagePriority * distanceFactor * successFactor * PriorityModifier, 0, 1));
         }
 
-        public override bool CanBeCompleted => !abandon;
-
         public override bool IsCompleted()
         {
             bool isCompleted = Item.IsFullCondition;
@@ -61,19 +59,10 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (goToObjective != null && !subObjectives.Contains(goToObjective))
+            // Don't allow to repair items in rooms that have a fire or an enemies inside or if outside the sub
+            if (Item.CurrentHull == null || Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == Item.CurrentHull && !HumanAIController.IsFriendly(c)))
             {
-                if (!goToObjective.IsCompleted() && !goToObjective.CanBeCompleted)
-                {
-                    abandon = true;
-                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
-                }
-                goToObjective = null;
-            }
-            if (!abandon)
-            {
-                // Don't allow to repair items in rooms that have a fire or an enemy inside
-                abandon = Item.CurrentHull != null && (Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == Item.CurrentHull && !HumanAIController.IsFriendly(c)));
+                abandon = true;
             }
             foreach (Repairable repairable in Item.Repairables)
             {
@@ -90,6 +79,8 @@ namespace Barotrauma
                     return;
                 }
             }
+            // Only continue when the get item sub objectives have been completed.
+            if (subObjectives.Any(so => so is AIObjectiveGetItem)) { return; }
             if (repairTool == null)
             {
                 FindRepairTool();
@@ -128,24 +119,24 @@ namespace Barotrauma
                     break;
                 }
             }
-            else if (goToObjective == null || goToObjective.Target != Item)
+            else
             {
-                previousCondition = -1;
-                if (goToObjective != null)
-                {
-                    subObjectives.Remove(goToObjective);
-                }
-                goToObjective = new AIObjectiveGoTo(Item, character, objectiveManager);
-                if (repairTool != null)
-                {
-                    //goToObjective.CloseEnough = (HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range)) * 0.75f;
-                    goToObjective.CloseEnough = ConvertUnits.ToSimUnits(repairTool.Range);
-                }
-                AddSubObjective(goToObjective);
+                // If cannot reach the item, approach it.
+                TryAddSubObjective(ref goToObjective,
+                    constructor: () =>
+                    {
+                        previousCondition = -1;
+                        var objective = new AIObjectiveGoTo(Item, character, objectiveManager);
+                        if (repairTool != null)
+                        {
+                            objective.CloseEnough = ConvertUnits.ToSimUnits(repairTool.Range);
+                        }
+                        return objective;
+                    },
+                    onAbandon: () => character.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f));
             }
         }
 
-        private RepairTool repairTool;
         private void FindRepairTool()
         {
             foreach (Repairable repairable in Item.Repairables)

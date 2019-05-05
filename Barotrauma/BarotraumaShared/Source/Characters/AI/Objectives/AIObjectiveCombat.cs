@@ -44,12 +44,17 @@ namespace Barotrauma
                 return _weaponComponent;
             }
         }
+
+        private readonly AIObjectiveFindSafety findSafety;
+        private readonly HashSet<RangedWeapon> rangedWeapons = new HashSet<RangedWeapon>();
+        private readonly HashSet<MeleeWeapon> meleeWeapons = new HashSet<MeleeWeapon>();
+        private readonly HashSet<Item> adHocWeapons = new HashSet<Item>();
+
         private AIObjectiveContainItem reloadWeaponObjective;
-        private Hull retreatTarget;
         private AIObjectiveGoTo retreatObjective;
-        private AIObjectiveFindSafety findSafety;
         private AIObjectiveGoTo followTargetObjective;
 
+        private Hull retreatTarget;
         private float coolDownTimer;
 
         public enum CombatMode
@@ -105,16 +110,12 @@ namespace Barotrauma
                     {
                         Mode = CombatMode.Retreat;
                     }
-                    else if (Equip(deltaTime))
+                    if (Equip())
                     {
                         if (Reload(deltaTime))
                         {
                             Attack(deltaTime);
                         }
-                    }
-                    else
-                    {
-                        Mode = CombatMode.Retreat;
                     }
                     break;
                 case CombatMode.Retreat:
@@ -140,9 +141,6 @@ namespace Barotrauma
             }
         }
 
-        private HashSet<RangedWeapon> rangedWeapons = new HashSet<RangedWeapon>();
-        private HashSet<MeleeWeapon> meleeWeapons = new HashSet<MeleeWeapon>();
-        private readonly HashSet<Item> adHocWeapons = new HashSet<Item>();
         private Item GetWeapon()
         {
             rangedWeapons.Clear();
@@ -150,7 +148,6 @@ namespace Barotrauma
             adHocWeapons.Clear();
             Item weapon = null;
             _weaponComponent = null;
-
             foreach (var item in character.Inventory.Items)
             {
                 if (item == null) { continue; }
@@ -220,7 +217,7 @@ namespace Barotrauma
             }
         }
 
-        private bool Equip(float deltaTime)
+        private bool Equip()
         {
             if (!character.SelectedItems.Contains(Weapon))
             {
@@ -231,7 +228,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    //couldn't equip the item -> escape
+                    Mode = CombatMode.Retreat;
                     return false;
                 }
             }
@@ -370,7 +367,7 @@ namespace Barotrauma
                     {
                         myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     }
-                    var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
+                    var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall;
                     var pickedBody = Submarine.PickBody(character.SimPosition, Enemy.SimPosition, myBodies, collisionCategories);
                     if (pickedBody != null)
                     {
@@ -410,7 +407,11 @@ namespace Barotrauma
             return completed;
         }
 
-        public override bool CanBeCompleted => !abandon && (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && (retreatObjective == null || retreatObjective.CanBeCompleted);
+        public override bool CanBeCompleted => !abandon && 
+            (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && 
+            (retreatObjective == null || retreatObjective.CanBeCompleted) &&
+            (followTargetObjective == null || followTargetObjective.CanBeCompleted);
+
         public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
 
         public override bool IsDuplicate(AIObjective otherObjective)

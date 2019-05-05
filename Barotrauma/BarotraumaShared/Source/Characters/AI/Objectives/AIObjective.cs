@@ -104,6 +104,7 @@ namespace Barotrauma
             }
         }
 
+        // TODO: go through AIOperate methods where subobjectives are added and ensure that they add the subobjectives correctly -> use TryAddSubObjective method instead?
         public void AddSubObjective(AIObjective objective)
         {
             if (subObjectives.Any(o => o.IsDuplicate(objective))) { return; }
@@ -156,10 +157,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Checks if the objective already is created and added in subobjectives. If not, creates it. Handles objectives that cannot be completed.
+        /// Checks if the objective already is created and added in subobjectives. If not, creates it.
+        /// Handles objectives that cannot be completed. If the objective has been removed form the subobjectives, a null value is assigned to the reference.
         /// Returns true if the objective was created.
         /// </summary>
-        protected bool TryAddSubObjective<T>(T objective, Func<T> constructor, Action onAbandon = null) where T : AIObjective
+        protected bool TryAddSubObjective<T>(ref T objective, Func<T> constructor, Action onAbandon = null) where T : AIObjective
         {
             if (objective != null)
             {

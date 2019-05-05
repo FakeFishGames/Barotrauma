@@ -9,21 +9,14 @@ namespace Barotrauma
         public override string DebugTag => "go to";
 
         private AIObjectiveFindDivingGear findDivingGear;
-
         private Vector2 targetPos;
-
         private bool repeat;
-        private bool cannotReach;
-
         //how long until the path to the target is declared unreachable
         private float waitUntilPathUnreachable;
-
         private bool getDivingGearIfNeeded;
 
         public float CloseEnough { get; set; } = 0.5f;
-
         public bool IgnoreIfTargetDead { get; set; }
-
         public bool AllowGoingOutside { get; set; }
         public bool CheckVisibility { get; set; }
 
@@ -31,13 +24,11 @@ namespace Barotrauma
         {
             if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
             if (Target != null && Target.Removed) { return 0.0f; }
-            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }
-                        
+            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }                     
             if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
             return 1.0f;
         }
 
@@ -45,26 +36,25 @@ namespace Barotrauma
         {
             get
             {
-                bool canComplete = !cannotReach && !abandon;
-                if (canComplete)
+                if (!abandon)
                 {
                     if (FollowControlledCharacter && Character.Controlled == null)
                     {
-                        canComplete = false;
+                        abandon = true;
                     }
                     else if (Target != null && Target.Removed)
                     {
-                        canComplete = false;
+                        abandon = true;
                     }
                     else if (!repeat && waitUntilPathUnreachable < 0)
                     {
                         if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
                         {
-                            canComplete = !PathSteering.CurrentPath.Unreachable;
+                            abandon = PathSteering.CurrentPath.Unreachable;
                         }
                     }
                 }
-                if (!canComplete)
+                if (abandon)
                 {
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {(Target != null ? Target.ToString() : TargetPos.ToString())}", Color.Yellow);
@@ -75,7 +65,7 @@ namespace Barotrauma
                     }
                     character.AIController.SteeringManager.Reset();
                 }
-                return canComplete;
+                return base.CanBeCompleted;
             }
         }
 
@@ -115,24 +105,18 @@ namespace Barotrauma
                 if (Character.Controlled == null) { return; }
                 Target = Character.Controlled;
             }
-
             if (Target == character)
             {
                 character.AIController.SteeringManager.Reset();
                 return;
-            }
-            
+            }           
             waitUntilPathUnreachable -= deltaTime;
-
             if (!character.IsClimbing)
             {
                 character.SelectedConstruction = null;
             }
-
             if (Target != null) { character.AIController.SelectTarget(Target.AiTarget); }
-
             Vector2 currTargetPos = Vector2.Zero;
-
             if (Target == null)
             {
                 currTargetPos = targetPos;
@@ -147,7 +131,6 @@ namespace Barotrauma
                     currTargetPos -= character.Submarine.SimPosition;
                 }
             }
-
             bool sightCheck = true;
             if (CheckVisibility && Target != null)
             {
@@ -165,12 +148,12 @@ namespace Barotrauma
                 bool targetIsOutside = (Target != null && Target.Submarine == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
                 if (isInside && targetIsOutside && !AllowGoingOutside)
                 {
-                    cannotReach = true;
+                    abandon = true;
                     return;
                 }
                 if (insideSteering && !PathSteering.HasAccessToPath(PathSteering.CurrentPath))
                 {
-                    cannotReach = true;
+                    abandon = true;
                     return;
                 }
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos);
@@ -181,15 +164,7 @@ namespace Barotrauma
                         Target is Item i && HumanAIController.NeedsDivingGear(i.CurrentHull) ||
                         Target is Character c && HumanAIController.NeedsDivingGear(c.CurrentHull))
                     {
-                        if (findDivingGear == null)
-                        {
-                            findDivingGear = new AIObjectiveFindDivingGear(character, true, objectiveManager);
-                            AddSubObjective(findDivingGear);
-                        }
-                        else if (!findDivingGear.CanBeCompleted)
-                        {
-                            abandon = true;
-                        }
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, true, objectiveManager));
                     }
                 }
             }
@@ -198,33 +173,25 @@ namespace Barotrauma
         public override bool IsCompleted()
         {
             if (repeat) { return false; }
-
             bool completed = false;
-
             if (Target is Item item)
             {
-                if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
+                if (item.IsInsideTrigger(character.WorldPosition)) { completed = true; }
             }
             else if (Target is Character targetCharacter)
             {
-                if (character.CanInteractWith(targetCharacter)) completed = true;
+                if (character.CanInteractWith(targetCharacter)) { completed = true; }
             }
-
             completed = completed || Vector2.DistanceSquared(Target != null ? Target.SimPosition : targetPos, character.SimPosition) < CloseEnough * CloseEnough;
-
-            if (completed) character.AIController.SteeringManager.Reset();
-
+            if (completed) { character.AIController.SteeringManager.Reset(); }
             return completed;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            AIObjectiveGoTo objective = otherObjective as AIObjectiveGoTo;
-            if (objective == null) return false;
-
-            if (objective.Target == Target) return true;
-
-            return (objective.targetPos == targetPos);
+            if (!(otherObjective is AIObjectiveGoTo objective)) { return false; }
+            if (objective.Target == Target) { return true; }
+            return objective.targetPos == targetPos;
         }
 
         private void CalculateCloseEnough()
