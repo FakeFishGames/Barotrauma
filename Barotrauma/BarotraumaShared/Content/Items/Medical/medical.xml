@@ -9,6 +9,7 @@
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
+    <Price locationtype="Mine" buyprice="40" />
     
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="772,771,52,59" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="223,149,118,136" depth="0.6" origin="0.5,0.5" />
@@ -30,6 +31,7 @@
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
+    <Price locationtype="Mine" buyprice="40" />
 
     <SuitableTreatment identifier="damage" suitability="50" />
     <SuitableTreatment identifier="burn" suitability="50" />
@@ -78,6 +80,7 @@
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
+    <Price locationtype="Mine" buyprice="40" />
     
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,704,64,64" />
     <Sprite texture="Medicines.png" sourcerect="436,234,63,115" depth="0.6" origin="0.5,0.5" />
@@ -123,6 +126,7 @@
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="30" />
+    <Price locationtype="Mine" buyprice="40" />
     
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,640,64,64" />
     <Sprite texture="Medicines.png" sourcerect="435,122,62,115" depth="0.6" origin="0.5,0.5" />
@@ -173,6 +177,7 @@
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="20" />
     <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="Mine" buyprice="60" />
     
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,768,64,64" />
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" sourcerect="162,0,75,143" depth="0.6" origin="0.5,0.5" />
@@ -248,10 +253,11 @@
   <Bandage name="Bandage" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="Basic bandages, useful in the treatment of bleeding wounds and burns." scale="0.3" impactsoundtag="impact_soft">
     
     <!-- TODO: adjust prices -->
-    <Price locationtype="Military" buyprice="50" />
-    <Price locationtype="Research" buyprice="40" />
-    <Price locationtype="City" buyprice="40" />
-    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="20" />
+    <Price locationtype="City" buyprice="30" />
+    <Price locationtype="Outpost" buyprice="30" />
+    <Price locationtype="Mine" buyprice="40" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="30"/>
@@ -292,10 +298,11 @@
   <Plastiseal name="Plastiseal" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="A synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_soft">
     
     <!-- TODO: adjust prices -->
-    <Price locationtype="Military" buyprice="60" />
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="City" buyprice="70" />
-    <Price locationtype="Outpost" buyprice="70" />
+    <Price locationtype="Research" buyprice="30" />
+    <Price locationtype="Military" buyprice="40" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="Mine" buyprice="60" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="50"/>
@@ -342,6 +349,7 @@
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
+    <Price locationtype="Mine" buyprice="60" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="70"/>
@@ -388,6 +396,7 @@
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="120" />
+    <Price locationtype="Mine" buyprice="130" />
 
     <SuitableTreatment identifier="damage" suitability="75" />
     <SuitableTreatment identifier="burn" suitability="75" />
@@ -456,6 +465,7 @@
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="130" />
     <Price locationtype="Outpost" buyprice="150" />
+    <Price locationtype="Mine" buyprice="160" />
 
     <SuitableTreatment identifier="damage" suitability="100" />
     <SuitableTreatment identifier="burn" suitability="100" />
@@ -520,10 +530,11 @@
   <Saline name="Saline" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A sodium chloride infusion mildly useful in the treatment of blood loss." scale="0.3" impactsoundtag="impact_metal_light"> 
     
     <!-- TODO: adjust prices -->
-    <Price locationtype="Research" buyprice="50" />
-    <Price locationtype="Military" buyprice="80" />
-    <Price locationtype="City" buyprice="80" />
-    <Price locationtype="Outpost" buyprice="80" />
+    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="Military" buyprice="30" />
+    <Price locationtype="City" buyprice="40" />
+    <Price locationtype="Outpost" buyprice="40" />
+    <Price locationtype="Mine" buyprice="50" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="30"/>
@@ -562,6 +573,7 @@
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="150" />
+    <Price locationtype="Mine" buyprice="160" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="60"/>
@@ -729,6 +741,7 @@
     <Price locationtype="Military" buyprice="250" />
     <Price locationtype="City" buyprice="250" />
     <Price locationtype="Outpost" buyprice="250" />
+    <Price locationtype="Mine" buyprice="260" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="40"/>
@@ -778,6 +791,7 @@
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="120" />
+    <Price locationtype="Mine" buyprice="130" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
       <RequiredSkill identifier="medical" level="50"/>
@@ -835,7 +849,6 @@
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
-    <Price locationtype="Outpost" buyprice="150" />
     
     <Fabricate suitablefabricators="medicalfabricator" outcondition="0.25" requiredtime="10">
       <RequiredSkill identifier="medical" level="60"/>
@@ -878,7 +891,6 @@
     <Price locationtype="Research" buyprice="130" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
-    <Price locationtype="Outpost" buyprice="150" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="30"/>
@@ -921,7 +933,6 @@
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="Military" buyprice="250" />
     <Price locationtype="City" buyprice="250" />
-    <Price locationtype="Outpost" buyprice="250" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="30"/>
@@ -964,7 +975,6 @@
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="450" />
     <Price locationtype="City" buyprice="450" />
-    <Price locationtype="Outpost" buyprice="450" />
     
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="30"/>
