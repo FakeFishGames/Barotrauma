@@ -257,12 +257,12 @@ namespace Barotrauma
 
 
             saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft)
-            { MinSize = new Point(180, 40), AbsoluteOffset = new Point(LeftPanel.Rect.Width + hullVolumeFrame.Rect.Width, 0) }, "InnerFrame")
+            { MinSize = new Point(200, 40), AbsoluteOffset = new Point(LeftPanel.Rect.Width + hullVolumeFrame.Rect.Width, 0) }, "InnerFrame")
             {
                 Visible = false
             };
             var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
-            saveAssemblyFrame.Font = GUI.SmallFont;
+            saveAssemblyButton.TextBlock.AutoScale = true;
             saveAssemblyButton.OnClicked += (btn, userdata) =>
             {
                 CreateSaveAssemblyScreen();
