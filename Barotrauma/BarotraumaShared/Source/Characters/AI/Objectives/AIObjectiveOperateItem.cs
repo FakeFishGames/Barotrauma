@@ -48,8 +48,7 @@ namespace Barotrauma
             this.useController = useController;
             if (useController)
             {
-                var controllers = component.Item.GetConnectedComponents<Controller>();
-                if (controllers.Any()) controller = controllers[0];
+                controller = component.Item.GetConnectedComponents<Controller>().FirstOrDefault();
             }
         }
 
@@ -59,6 +58,7 @@ namespace Barotrauma
             if (useController && controller == null)
             {
                 character.Speak(TextManager.Get("DialogCantFindController").Replace("[item]", component.Item.Name), null, 2.0f, "cantfindcontroller", 30.0f);
+                abandon = true;
                 return;
             }
             if (target.CanBeSelected)
