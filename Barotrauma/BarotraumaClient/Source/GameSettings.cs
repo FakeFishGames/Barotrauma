@@ -714,7 +714,10 @@ namespace Barotrauma
                 }
             };
 
-            GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
+            legacyBindingsButton.TextBlock.RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
+            };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);

@@ -4,7 +4,6 @@ using Barotrauma.Tutorials;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -765,8 +764,6 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            GUI.Draw(Cam, spriteBatch);
-            
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
 #else
@@ -841,7 +838,6 @@ namespace Barotrauma
             GameMain.GameSession = new GameSession(selectedSub, saveName,
                 GameModePreset.List.Find(g => g.Identifier == "singleplayercampaign"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
-
 
             GameMain.LobbyScreen.Select();
         }

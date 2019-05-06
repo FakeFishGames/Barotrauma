@@ -385,7 +385,7 @@ namespace Barotrauma.Items.Components
             int x = rect.X;
             int y = rect.Y;
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
+            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
@@ -531,6 +531,7 @@ namespace Barotrauma.Items.Components
                         Color.Lerp(Color.Green, Color.Orange, obstacle.Dot), width: 2);
                 }
             }
+        }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {

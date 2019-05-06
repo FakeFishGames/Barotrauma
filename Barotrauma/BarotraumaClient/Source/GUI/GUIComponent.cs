@@ -484,7 +484,6 @@ namespace Barotrauma
                     toolTipBlock.WrappedText.Split('\n').Length * 18 + 7);
                 toolTipBlock.userData = toolTip;
             }
-            toolTipBlock.SetTextPos();
 
             toolTipBlock.RectTransform.AbsoluteOffset = new Point(targetElement.Center.X, targetElement.Bottom);
             if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
@@ -565,7 +564,6 @@ namespace Barotrauma
             RectTransform.LocalScale = startScale;
             yield return CoroutineStatus.Success;
         }
-        #endregion
 
         public virtual void ApplyStyle(GUIComponentStyle style)
         {
