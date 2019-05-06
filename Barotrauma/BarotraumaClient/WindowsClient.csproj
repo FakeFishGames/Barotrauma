@@ -149,11 +149,17 @@
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
           <TargetPath>freetype6.dll</TargetPath>
         </ContentWithTargetPath>
+        <Content Include="steam_api.dll">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
       </ItemGroup>
     </When>
     <Otherwise>
       <ItemGroup>
         <Content Include="freetype6.dll">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="steam_api64.dll">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
       </ItemGroup>
@@ -206,9 +212,6 @@
     <Content Include="Shaders\losshader.fx" />
     <Content Include="Shaders\postprocess.fx" />
     <Content Include="Shaders\watershader.fx" />
-    <Content Include="steam_api64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="wrap_oal.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
