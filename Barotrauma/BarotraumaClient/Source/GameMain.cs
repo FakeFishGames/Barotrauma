@@ -742,7 +742,7 @@ namespace Barotrauma
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
         }
 
-        public void ShowCampaignDisclaimer(Action onContinue)
+        public void ShowCampaignDisclaimer(Action onContinue = null)
         {
             var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"), 
                 new string[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
