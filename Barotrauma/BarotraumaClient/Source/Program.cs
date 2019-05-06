@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using GameAnalyticsSDK.Net;
+using Barotrauma.Steam;
 
 #if WINDOWS
 using System.Windows.Forms;
@@ -29,6 +30,7 @@ namespace Barotrauma
         [STAThread]
         static void Main()
         {
+            SteamManager.Initialize();
             GameMain game = null;
 #if !DEBUG
             try

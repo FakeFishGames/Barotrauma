@@ -340,7 +340,6 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            SteamManager.Initialize();
             if (Config.AutoUpdateWorkshopItems)
             {
                 if (SteamManager.AutoUpdateWorkshopItems())
@@ -474,6 +473,11 @@ namespace Barotrauma
             MainMenuScreen.Select();
 
             CheckContentPackage();
+
+            foreach (string steamError in SteamManager.InitializationErrors)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
+            }
 
             TitleScreen.LoadState = 100.0f;
             hasLoaded = true;
