@@ -752,7 +752,7 @@ namespace Barotrauma
 
         readonly string[] legalCrap = new string[]
         {
-            "Privacy policy: privacypolicy.daedalic.com",
+            "Privacy policy",
             "© " + DateTime.Now.Year + " Undertow Games & FakeFish. All rights reserved.",
             "© " + DateTime.Now.Year + " Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
         };
@@ -777,9 +777,22 @@ namespace Barotrauma
             for (int i = legalCrap.Length - 1; i >= 0; i--)
             {
                 Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
+                bool mouseOn = i == 0 &&
+                    PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
+                    PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
+
                 GUI.SmallFont.DrawString(spriteBatch,
                     legalCrap[i], textPos - textSize,
-                    Color.White * 0.7f);
+                    mouseOn ? Color.White : Color.White * 0.7f);
+
+                if (i == 0)
+                {
+                    GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
+                    if (mouseOn && PlayerInput.LeftButtonClicked())
+                    {
+                        Process.Start("http://privacypolicy.daedalic.com");
+                    }
+                }
                 textPos.Y -= textSize.Y;
             }
 
