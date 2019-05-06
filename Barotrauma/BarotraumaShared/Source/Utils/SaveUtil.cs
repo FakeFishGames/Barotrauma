@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
@@ -10,6 +12,9 @@ namespace Barotrauma
 {
     partial class SaveUtil
     {
+        private static string LegacySaveFolder = Path.Combine("Data", "Saves");
+        private static string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
+
 #if OSX
         //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
         public static string SaveFolder = Path.Combine(
@@ -176,15 +181,13 @@ namespace Barotrauma
 
         public static string GetSavePath(SaveType saveType, string saveName)
         {
-
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             return Path.Combine(folder, saveName);
         }
 
-        public static string[] GetSaveFiles(SaveType saveType)
+        public static IEnumerable<string> GetSaveFiles(SaveType saveType)
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
-
             if (!Directory.Exists(folder))
             {
                 DebugConsole.Log("Save folder \"" + folder + " not found! Attempting to create a new folder...");
@@ -198,12 +201,12 @@ namespace Barotrauma
                 }
             }
 
-            string[] files = Directory.GetFiles(folder, "*.save");
-
-            /*for (int i = 0; i < files.Length; i++)
+            List<string> files = Directory.GetFiles(folder, "*.save").ToList();
+            string legacyFolder = saveType == SaveType.Singleplayer ? LegacySaveFolder : LegacyMultiplayerSaveFolder;
+            if (Directory.Exists(legacyFolder))
             {
-                files[i] = Path.GetFileNameWithoutExtension(files[i]);
-            }*/
+                files.AddRange(Directory.GetFiles(legacyFolder, "*.save"));
+            }            
 
             return files;
         }

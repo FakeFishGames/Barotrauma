@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,7 +19,7 @@ namespace Barotrauma
 
         private GUIComponent buttonsParent;
 
-        private GUIFrame[] menuTabs;
+        private readonly GUIFrame[] menuTabs;
 
         private CampaignSetupUI campaignSetupUI;
 
@@ -751,11 +750,20 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
+        readonly string[] legalCrap = new string[]
+        {
+            "Privacy policy: privacypolicy.daedalic.com",
+            "© " + DateTime.Now.Year + " Undertow Games & FakeFish. All rights reserved.",
+            "© " + DateTime.Now.Year + " Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
+        };
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             DrawBackground(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
+
+            GUI.Draw(Cam, spriteBatch);
 
             GUI.Draw(Cam, spriteBatch);
             
@@ -782,9 +790,9 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(saveName)) return;
 
-            string[] existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
+            var existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
 
-            if (Array.Find(existingSaveFiles, s => s == saveName) != null)
+            if (existingSaveFiles.Any(s => s == saveName))
             {
                 new GUIMessageBox(TextManager.Get("SaveNameInUseHeader"), TextManager.Get("SaveNameInUseText"));
                 return;
