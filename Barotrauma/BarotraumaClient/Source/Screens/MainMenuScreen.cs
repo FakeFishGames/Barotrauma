@@ -751,6 +751,13 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
+        readonly string[] legalCrap = new string[] 
+        {
+            "Privacy policy: privacypolicy.daedalic.com",
+            "© 2019 Undertow Games & FakeFish. All rights reserved.",
+            "© 2019 Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
+        };
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             DrawBackground(graphics, spriteBatch);
@@ -758,12 +765,24 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 
             GUI.Draw(Cam, spriteBatch);
+
+            GUI.Draw(Cam, spriteBatch);
             
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
 #else
-            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White * 0.7f);
 #endif
+
+            Vector2 textPos = new Vector2(GameMain.GraphicsWidth - 10, GameMain.GraphicsHeight - 10);
+            for (int i = legalCrap.Length - 1; i >= 0; i--)
+            {
+                Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
+                GUI.SmallFont.DrawString(spriteBatch,
+                    legalCrap[i], textPos - textSize,
+                    Color.White * 0.7f);
+                textPos.Y -= textSize.Y;
+            }
 
             spriteBatch.End();
         }
