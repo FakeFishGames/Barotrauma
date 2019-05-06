@@ -54,7 +54,9 @@ namespace Barotrauma
             if (item.Submarine.TeamID != character.TeamID) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
             if (item.Repairables.None()) { return false; }
-            if (item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
+            if (item.CurrentHull.FireSources.Count > 0) { return false; }
+            // Don't repair items in rooms that have enemies inside.
+            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
             foreach (Repairable repairable in item.Repairables)
             {
                 if (!objectives.ContainsKey(item) && item.Condition > repairable.ShowRepairUIThreshold)
