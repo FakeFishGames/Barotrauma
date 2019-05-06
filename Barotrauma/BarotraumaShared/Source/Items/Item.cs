@@ -1263,6 +1263,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
+        /// </summary>
         public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
@@ -1315,6 +1318,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
+        /// </summary>
         public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();

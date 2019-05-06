@@ -8,6 +8,9 @@ namespace Barotrauma
     {
         public override string DebugTag => "go to";
 
+        const float checkAccessInterval = 1;
+        private float accessCheckTimer;
+
         private AIObjectiveFindDivingGear findDivingGear;
         private Vector2 targetPos;
         private bool repeat;
@@ -153,10 +156,18 @@ namespace Barotrauma
                     abandon = true;
                     return;
                 }
-                if (insideSteering && !PathSteering.HasAccessToPath(PathSteering.CurrentPath))
+                if (accessCheckTimer <= 0)
                 {
-                    abandon = true;
-                    return;
+                    accessCheckTimer = checkAccessInterval;
+                    if (insideSteering && !PathSteering.HasAccessToPath(PathSteering.CurrentPath))
+                    {
+                        abandon = true;
+                        return;
+                    }
+                }
+                else
+                {
+                    accessCheckTimer -= deltaTime;
                 }
                 character.AIController.SteeringManager.SteeringSeek(currTargetPos);
                 if (getDivingGearIfNeeded)

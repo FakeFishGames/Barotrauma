@@ -312,6 +312,9 @@ namespace Barotrauma
             return currentPath.CurrentNode.SimPosition - pos;
         }
 
+        /// <summary>
+        /// This method generates some garbage and is a bit expensive since it uses the recursive Item.GetConnectedComponents() method.
+        /// </summary>
         public bool HasAccessToPath(SteeringPath path)
         {
             foreach (var node in path.Nodes)
