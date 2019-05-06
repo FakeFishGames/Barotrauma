@@ -151,32 +151,6 @@ namespace Barotrauma
             return style;
         }
 
-        private ScalableFont LoadFont(XElement element, GraphicsDevice graphicsDevice)
-        {
-            string file = element.GetAttributeString("file", "");
-            uint size   = GetFontSize(element);
-            return new ScalableFont(file, size, graphicsDevice);
-        }
-
-        private uint GetFontSize(XElement element)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
-                if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
-                {
-                    return (uint)subElement.GetAttributeInt("size", 14);
-                }
-            }
-            return 14;
-        }
-
-        public GUIComponentStyle GetComponentStyle(string name)
-        {
-            componentStyles.TryGetValue(name.ToLowerInvariant(), out GUIComponentStyle style);
-            return style;
-        }
-
         public void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {
             GUIComponentStyle componentStyle = null;  
