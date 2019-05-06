@@ -12,7 +12,9 @@ namespace Barotrauma
 
         private Dictionary<string, List<string>> texts;
 
-        private string filePath;
+        public readonly bool NoWhiteSpace;
+
+        private readonly string filePath;
 
         public TextPack(string filePath)
         {
@@ -23,6 +25,7 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return;
 
             Language = doc.Root.GetAttributeString("language", "Unknown");
+            NoWhiteSpace = doc.Root.GetAttributeBool("nowhitespace", false);
 
             foreach (XElement subElement in doc.Root.Elements())
             {

@@ -17,8 +17,8 @@ namespace Barotrauma
         }
 
         public bool IsOptional { get; set; }
-
-        private string[] identifiers;
+        
+        public bool IgnoreInEditor { get; set; }
 
         private string[] excludedIdentifiers;
 
@@ -35,23 +35,20 @@ namespace Barotrauma
 
         public string JoinedIdentifiers
         {
-            get { return string.Join(",", identifiers); }
+            get { return string.Join(",", Identifiers); }
             set
             {
                 if (value == null) return;
 
-                identifiers = value.Split(',');
-                for (int i = 0; i < identifiers.Length; i++)
+                Identifiers = value.Split(',');
+                for (int i = 0; i < Identifiers.Length; i++)
                 {
-                    identifiers[i] = identifiers[i].Trim().ToLowerInvariant();
+                    Identifiers[i] = Identifiers[i].Trim().ToLowerInvariant();
                 }
             }
         }
-        
-        public string[] Identifiers
-        {
-            get { return identifiers; }
-        }
+
+        public string[] Identifiers { get; private set; }
 
         public string JoinedExcludedIdentifiers
         {
@@ -72,7 +69,7 @@ namespace Barotrauma
         {
             if (item == null) return false;
             if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) return false;
-            return identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
         }
 
         public RelatedItem(string[] identifiers, string[] excludedIdentifiers)
@@ -81,7 +78,7 @@ namespace Barotrauma
             {
                 identifiers[i] = identifiers[i].Trim().ToLowerInvariant();
             }
-            this.identifiers = identifiers;
+            this.Identifiers = identifiers;
 
             for (int i = 0; i < excludedIdentifiers.Length; i++)
             {
@@ -141,7 +138,8 @@ namespace Barotrauma
             element.Add(
                 new XAttribute("identifiers", JoinedIdentifiers),
                 new XAttribute("type", type.ToString()),
-                new XAttribute("optional", IsOptional));
+                new XAttribute("optional", IsOptional),
+                new XAttribute("ignoreineditor", IgnoreInEditor));
 
             if (excludedIdentifiers.Length > 0)
             {
@@ -223,6 +221,7 @@ namespace Barotrauma
             }
 
             ri.IsOptional = element.GetAttributeBool("optional", false);
+            ri.IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
             return ri;
         }
     }

@@ -81,6 +81,7 @@
     <Price locationtype="Research" buyprice="100"/>
     <Price locationtype="City" buyprice="150"/>
     <Price locationtype="Outpost" buyprice="200"/>
+    <Price locationtype="Mine" buyprice="200" />
     
     <Deconstruct time="10">
       <Item identifier="steel"/>

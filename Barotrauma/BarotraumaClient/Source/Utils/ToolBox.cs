@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma
@@ -104,7 +105,19 @@ namespace Barotrauma
 
             text = text.Replace("\n", " \n ");
 
-            string[] words = text.Split(' ');
+            string[] words;
+            if (TextManager.NoWhiteSpace)
+            {
+                words = new string[text.Length];
+                for (int i = 0; i < text.Length; i++)
+                {
+                    words[i] = text[i].ToString();
+                }
+            }
+            else
+            {
+                words = text.Split(' ');
+            }
 
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;

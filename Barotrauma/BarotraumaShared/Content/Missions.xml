@@ -536,7 +536,7 @@
     type="Cargo"
     description="A local arms dealer is offering 500 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="45"
-    reward="500"
+    reward="1000"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
@@ -574,7 +574,7 @@
     type="Cargo"
     description="A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="15"
-    reward="500"
+    reward="1000"
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
@@ -611,7 +611,7 @@
     type="Cargo"
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits."
     commonness="50"
-    reward="250"
+    reward="500"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered."
     requireddeliveryamount="20">
@@ -654,7 +654,7 @@
     type="Cargo"
     description="Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2]."
     commonness="33"
-    reward="350"
+    reward="700"
     achievementidentifier="cargomission"
     successmessage="The husk eggs have been successfully delivered.">
     <Items>
@@ -689,7 +689,7 @@
     type="Cargo"
     description="Local researchers are offering [reward] credits for delivering a large amount of nitroglycerin to [location2]."
     commonness="25"
-    reward="2000"
+    reward="1500"
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered.">
     <Items>
@@ -786,7 +786,7 @@
     type="Cargo"
     description="A consignment of materials for construction needs to be transported to [location2] and the crew chief here is prepared to pay [reward] credits for your trouble."
     commonness="50"
-    reward="250"
+    reward="500"
     achievementidentifier="cargomission"
     successmessage="The materials have been successfully delivered."
     requireddeliveryamount="40">
@@ -818,7 +818,7 @@
     type="Cargo"
     description="The security team at [location2] needs to be resupplied with materials for weapon fabrication. There's [reward] credits for you if you get these supplies to them."
     commonness="50"
-    reward="250"
+    reward="500"
     achievementidentifier="cargomission"
     successmessage="The materials have been successfully delivered."
     requireddeliveryamount="40">
@@ -853,7 +853,7 @@
     type="Cargo"
     description="A consignment of medical items needs to be transported to [location2]. There's [reward] credits if you can get them there."
     commonness="50"
-    reward="250"
+    reward="500"
     achievementidentifier="cargomission"
     successmessage="The materials have been successfully delivered."
     requireddeliveryamount="40">
@@ -892,7 +892,7 @@
     type="Cargo"
     description="A crew member over at [location2] has gone and get themselves a nasty case of morbusine poisoning. They might stand a chance of survival if you can get a shipment of antidote to them ASAP... You'll be paid [reward] credits on delivery."
     commonness="50"
-    reward="350"
+    reward="700"
     achievementidentifier="cargomission"
     successmessage="The antidote has been successfully delivered."
     requireddeliveryamount="5">

@@ -4,9 +4,7 @@ using Barotrauma.Tutorials;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,7 +18,7 @@ namespace Barotrauma
 
         private GUIComponent buttonsParent;
 
-        private GUIFrame[] menuTabs;
+        private readonly GUIFrame[] menuTabs;
 
         private CampaignSetupUI campaignSetupUI;
 
@@ -84,7 +82,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), "Tutorial", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("TutorialButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
                 UserData = Tab.Tutorials,
@@ -324,7 +322,7 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
-                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
+                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.DisplayName, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
                 };
@@ -751,6 +749,13 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
+        readonly string[] legalCrap = new string[]
+        {
+            "Privacy policy",
+            "© " + DateTime.Now.Year + " Undertow Games & FakeFish. All rights reserved.",
+            "© " + DateTime.Now.Year + " Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
+        };
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             DrawBackground(graphics, spriteBatch);
@@ -758,12 +763,35 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 
             GUI.Draw(Cam, spriteBatch);
-            
+
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
 #else
-            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White * 0.7f);
 #endif
+
+            Vector2 textPos = new Vector2(GameMain.GraphicsWidth - 10, GameMain.GraphicsHeight - 10);
+            for (int i = legalCrap.Length - 1; i >= 0; i--)
+            {
+                Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
+                bool mouseOn = i == 0 &&
+                    PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
+                    PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
+
+                GUI.SmallFont.DrawString(spriteBatch,
+                    legalCrap[i], textPos - textSize,
+                    mouseOn ? Color.White : Color.White * 0.7f);
+
+                if (i == 0)
+                {
+                    GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
+                    if (mouseOn && PlayerInput.LeftButtonClicked())
+                    {
+                        Process.Start("http://privacypolicy.daedalic.com");
+                    }
+                }
+                textPos.Y -= textSize.Y;
+            }
 
             spriteBatch.End();
         }
@@ -772,9 +800,9 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(saveName)) return;
 
-            string[] existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
+            var existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
 
-            if (Array.Find(existingSaveFiles, s => s == saveName) != null)
+            if (existingSaveFiles.Any(s => s == saveName))
             {
                 new GUIMessageBox(TextManager.Get("SaveNameInUseHeader"), TextManager.Get("SaveNameInUseText"));
                 return;

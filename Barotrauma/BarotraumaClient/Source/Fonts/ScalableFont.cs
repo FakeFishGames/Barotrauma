@@ -214,8 +214,7 @@ namespace Barotrauma
                     continue;
                 }
                 uint charIndex = text[i];
-                GlyphData gd;
-                if (texCoords.TryGetValue(charIndex, out gd))
+                if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
                 {
                     if (gd.texIndex >= 0)
                     {
@@ -250,9 +249,8 @@ namespace Barotrauma
                     currentPos.Y += baseHeight * 1.8f;
                     continue;
                 }
-                uint charIndex = text[i];
-                GlyphData gd;
-                if (texCoords.TryGetValue(charIndex, out gd))
+                uint charIndex = text[i];                
+                if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
                 {
                     if (gd.texIndex >= 0)
                     {
