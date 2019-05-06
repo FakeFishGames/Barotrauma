@@ -184,7 +184,7 @@ namespace Barotrauma
             if (CheatsEnabled)
             {
                 DebugConsole.CheatsEnabled = true;
-                if (Steam.SteamManager.USE_STEAM && !SteamAchievementManager.CheatsEnabled)
+                if (GameMain.Config.UseSteam && !SteamAchievementManager.CheatsEnabled)
                 {
                     SteamAchievementManager.CheatsEnabled = true;
 #if CLIENT

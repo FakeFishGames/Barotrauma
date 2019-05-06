@@ -30,7 +30,6 @@ namespace Barotrauma
         [STAThread]
         static void Main()
         {
-            SteamManager.Initialize();
             GameMain game = null;
 #if !DEBUG
             try

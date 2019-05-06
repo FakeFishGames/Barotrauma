@@ -11,12 +11,6 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-        private static List<string> initializationErrors = new List<string>();
-        public static IEnumerable<string> InitializationErrors
-        {
-            get { return initializationErrors; }
-        }
-
         private SteamManager()
         {
             try
@@ -32,12 +26,12 @@ namespace Barotrauma.Steam
             catch (DllNotFoundException)
             {
                 isInitialized = false;
-                initializationErrors.Add("SteamDllNotFound");
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamDllNotFound"));
             }
             catch (Exception)
             {
                 isInitialized = false;
-                initializationErrors.Add("SteamClientInitFailed");
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("SteamClientInitFailed"));
             }
 
             if (!isInitialized)

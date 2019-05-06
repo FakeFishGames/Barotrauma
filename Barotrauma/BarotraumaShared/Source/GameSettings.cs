@@ -78,17 +78,24 @@ namespace Barotrauma
 
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
+        public bool UseSteam;
         public bool RequireSteamAuthentication
         {
-            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
+            get { return requireSteamAuthentication && UseSteam; }
             set { requireSteamAuthentication = value; }
         }
         public bool UseSteamMatchmaking
         {
-            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
+            get { return useSteamMatchmaking && UseSteam; }
             set { useSteamMatchmaking = value; }
         }
+
 #else
+        //steam functionality determined at compile time
+        public bool UseSteam
+        {
+            get { return Steam.SteamManager.USE_STEAM; }
+        }
         public bool RequireSteamAuthentication
         {
             get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
@@ -432,6 +439,9 @@ namespace Barotrauma
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
 
+#if DEBUG
+            UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+#endif
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (doc == null)
