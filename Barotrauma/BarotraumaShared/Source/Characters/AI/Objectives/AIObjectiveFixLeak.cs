@@ -54,14 +54,17 @@ namespace Barotrauma
         {
             if (!Leak.IsRoomToRoom)
             {
-                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, true, objectiveManager));
-                if (findDivingGear != null) { return; }
+                if (!HumanAIController.HasDivingSuit(character))
+                {
+                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, true, objectiveManager));
+                    return;
+                }
             }
             var weldingTool = character.Inventory.FindItemByTag("weldingtool");
             if (weldingTool == null)
             {
                 TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true));
-                if (getWeldingTool != null) { return; }
+                return;
             }
             else
             {
@@ -86,7 +89,7 @@ namespace Barotrauma
                 if (containedItems.None(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f))
                 {
                     TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager));
-                    if (refuelObjective != null) { return; }
+                    return;
                 }
             }
             var repairTool = weldingTool.GetComponent<RepairTool>();
@@ -105,26 +108,15 @@ namespace Barotrauma
                 HumanAIController.AnimController.Crouching = true;
             }
             float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canReach = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canReach)
+            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
+            if (canOperate)
             {
-                Limb sightLimb = null;
-                if (character.Inventory.IsInLimbSlot(repairTool.Item, InvSlotType.RightHand))
-                {
-                    sightLimb = character.AnimController.GetLimb(LimbType.RightHand);
-                }
-                else if (character.Inventory.IsInLimbSlot(repairTool.Item, InvSlotType.LeftHand))
-                {
-                    sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
-                }
-                canReach = character.CanSeeTarget(Leak, sightLimb);
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
             }
-            if (!canReach)
+            else
             {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach });
+                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
             }
-            if (gotoObjective != null) { return; }
-            TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
         }
 
         private Vector2 GetStandPosition()

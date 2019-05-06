@@ -70,89 +70,101 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            var currentHull = character.AnimController.CurrentHull;           
-            if (HumanAIController.NeedsDivingGear(currentHull) && divingGearObjective == null)
+            var currentHull = character.AnimController.CurrentHull;
+            bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull);
+            bool needsDivingSuit = needsDivingGear && (currentHull == null || currentHull.WaterPercentage > 90);
+            bool needsEquipment = false;
+            if (needsDivingSuit)
             {
-                bool needsDivingSuit = currentHull == null || currentHull.WaterPercentage > 90;
-                bool hasEquipment = needsDivingSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingGear(character);
-                if (!hasEquipment)
-                {
-                    TryAddSubObjective(ref divingGearObjective, 
-                        () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager), 
-                        onAbandon: () => searchHullTimer = Math.Min(1, searchHullTimer));
-                }
+                needsEquipment = !HumanAIController.HasDivingSuit(character);
             }
-            if (divingGearObjective != null) { return; }
-            // Reset the devotion.
-            Priority = 0;
-            if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
+            else if (needsDivingGear)
             {
-                searchHullTimer = Math.Min(1, searchHullTimer);
+                needsEquipment = !HumanAIController.HasDivingGear(character);
             }
-            if (searchHullTimer > 0.0f)
+            if (needsEquipment)
             {
-                searchHullTimer -= deltaTime;
+                TryAddSubObjective(ref divingGearObjective,
+                    () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
+                    onAbandon: () => searchHullTimer = Math.Min(1, searchHullTimer));
             }
             else
             {
-                searchHullTimer = SearchHullInterval;
-                var bestHull = FindBestHull();
-                if (bestHull != null && bestHull != currentHull)
+                if (divingGearObjective != null && divingGearObjective.IsCompleted())
                 {
-                    if (goToObjective?.Target != bestHull)
-                    {
-                        goToObjective = null;
-                    }
-                    TryAddSubObjective(ref goToObjective, () =>
-                        new AIObjectiveGoTo(bestHull, character, objectiveManager, getDivingGearIfNeeded: false)
-                        {
-                            // If we need diving gear, we should already have it, if possible.
-                            AllowGoingOutside = HumanAIController.HasDivingSuit(character)
-                        }, onAbandon: () => unreachable.Add(goToObjective.Target as Hull));
+                    // Reset the devotion.
+                    Priority = 0;
+                    divingGearObjective = null;
                 }
-            }
-            if (goToObjective != null) { return; }
-            if (currentHull == null) { return; }
-            //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
-            // -> attempt to manually steer away from hazards
-            Vector2 escapeVel = Vector2.Zero;
-            foreach (FireSource fireSource in currentHull.FireSources)
-            {
-                Vector2 dir = character.Position - fireSource.Position;
-                float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
-                escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);                                      
-            }
-            foreach (Character enemy in Character.CharacterList)
-            {
-                //don't run from friendly NPCs
-                if (enemy.TeamID == Character.TeamType.FriendlyNPC) { continue; }
-                //friendly NPCs don't run away from anything but characters controlled by EnemyAIController (= monsters)
-                if (character.TeamID == Character.TeamType.FriendlyNPC && !(enemy.AIController is EnemyAIController)) { continue; }
-                if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious && 
-                    (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
+                if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
                 {
-                    Vector2 dir = character.Position - enemy.Position;
-                    float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
-                    escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                    searchHullTimer = Math.Min(1, searchHullTimer);
                 }
-            }
-            if (escapeVel != Vector2.Zero)
-            {
-                //only move if we haven't reached the edge of the room
-                if ((escapeVel.X < 0 && character.Position.X > currentHull.Rect.X + 50) ||
-                    (escapeVel.X > 0 && character.Position.X < currentHull.Rect.Right - 50))
+                if (searchHullTimer > 0.0f)
                 {
-                    character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                    searchHullTimer -= deltaTime;
                 }
                 else
                 {
-                    character.AnimController.TargetDir = escapeVel.X < 0.0f ? Direction.Right : Direction.Left;
+                    searchHullTimer = SearchHullInterval;
+                    var bestHull = FindBestHull();
+                    if (bestHull != null && bestHull != currentHull)
+                    {
+                        if (goToObjective?.Target != bestHull)
+                        {
+                            goToObjective = null;
+                        }
+                        TryAddSubObjective(ref goToObjective, () =>
+                            new AIObjectiveGoTo(bestHull, character, objectiveManager, getDivingGearIfNeeded: false)
+                            {
+                            // If we need diving gear, we should already have it, if possible.
+                            AllowGoingOutside = HumanAIController.HasDivingSuit(character)
+                            }, onAbandon: () => unreachable.Add(goToObjective.Target as Hull));
+                    }
+                }
+                if (goToObjective != null) { return; }
+                if (currentHull == null) { return; }
+                //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
+                // -> attempt to manually steer away from hazards
+                Vector2 escapeVel = Vector2.Zero;
+                foreach (FireSource fireSource in currentHull.FireSources)
+                {
+                    Vector2 dir = character.Position - fireSource.Position;
+                    float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
+                    escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                }
+                foreach (Character enemy in Character.CharacterList)
+                {
+                    //don't run from friendly NPCs
+                    if (enemy.TeamID == Character.TeamType.FriendlyNPC) { continue; }
+                    //friendly NPCs don't run away from anything but characters controlled by EnemyAIController (= monsters)
+                    if (character.TeamID == Character.TeamType.FriendlyNPC && !(enemy.AIController is EnemyAIController)) { continue; }
+                    if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious &&
+                        (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
+                    {
+                        Vector2 dir = character.Position - enemy.Position;
+                        float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
+                        escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                    }
+                }
+                if (escapeVel != Vector2.Zero)
+                {
+                    //only move if we haven't reached the edge of the room
+                    if ((escapeVel.X < 0 && character.Position.X > currentHull.Rect.X + 50) ||
+                        (escapeVel.X > 0 && character.Position.X < currentHull.Rect.Right - 50))
+                    {
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                    }
+                    else
+                    {
+                        character.AnimController.TargetDir = escapeVel.X < 0.0f ? Direction.Right : Direction.Left;
+                        character.AIController.SteeringManager.Reset();
+                    }
+                }
+                else
+                {
                     character.AIController.SteeringManager.Reset();
                 }
-            }
-            else
-            {
-                character.AIController.SteeringManager.Reset();
             }
         }
 
