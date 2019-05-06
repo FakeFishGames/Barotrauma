@@ -263,6 +263,18 @@ namespace Barotrauma
                 Selected = VSyncEnabled
             };
 
+            //TODO: remove hardcoded texts after the texts have been added to localization
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), 
+                TextManager.Get("PauseOnFocusLost", returnNull: true) ?? "Pause on focus lost");
+            pauseOnFocusLostBox.Selected = PauseOnFocusLost;
+            pauseOnFocusLostBox.ToolTip = TextManager.Get("PauseOnFocusLostToolTip", returnNull: true) ?? "Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.";
+            pauseOnFocusLostBox.OnSelected = (tickBox) =>
+            {
+                PauseOnFocusLost = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
+            };
+
             GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));
             GUIScrollBar particleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
