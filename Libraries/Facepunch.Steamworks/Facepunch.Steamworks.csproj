@@ -8,9 +8,15 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions> 
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <NoWarn>1701;1702;1705;618;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <NoWarn>1701;1702;1705;618;1591</NoWarn>
   </PropertyGroup>
@@ -20,12 +26,17 @@
     <NoWarn>1701;1702;1705;618;1591</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
+    <NoWarn>1701;1702;1705;618;1591</NoWarn>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>$(DefineConstants);NET_CORE</DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>
-	<Compile Remove="*AssemblyInfo.cs" />
+    <Compile Remove="*AssemblyInfo.cs" />
   </ItemGroup>
   
   <ItemGroup>
@@ -64,4 +75,9 @@
    <DebugSymbols>true</DebugSymbols>
  </PropertyGroup>
   
+ <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|x86'">
+   <DebugType>full</DebugType>
+   <DebugSymbols>true</DebugSymbols>
+ </PropertyGroup>
+
 </Project>
