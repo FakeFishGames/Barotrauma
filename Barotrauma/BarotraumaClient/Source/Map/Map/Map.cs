@@ -380,7 +380,10 @@ namespace Barotrauma
                 zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
                 zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
 
-                if (PlayerInput.MidButtonHeld()) { drawOffset += PlayerInput.MouseSpeed / zoom; }
+                if (PlayerInput.MidButtonHeld() || (highlightedLocation == null && PlayerInput.LeftButtonHeld()))
+                {
+                    drawOffset += PlayerInput.MouseSpeed / zoom;
+                }
 #if DEBUG
                 if (PlayerInput.DoubleClicked() && highlightedLocation != null)
                 {
