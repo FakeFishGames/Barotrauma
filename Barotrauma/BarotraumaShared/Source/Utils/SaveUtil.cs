@@ -10,8 +10,26 @@ namespace Barotrauma
 {
     partial class SaveUtil
     {
-        public static string SaveFolder = "Data" + Path.DirectorySeparatorChar + "Saves";
-        public static string MultiplayerSaveFolder = "Data" + Path.DirectorySeparatorChar + "Saves" + Path.DirectorySeparatorChar + "Multiplayer";
+#if OSX
+        //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
+        public static string SaveFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
+            "Library",
+            "Application Support",
+            "Daedalic Entertainment GmbH",
+            "Barotrauma");
+#else
+        //"C:/Users/*user*/AppData/Local/Daedalic Entertainment GmbH/" on Windows
+        //"/home/*user*/.local/share/Daedalic Entertainment GmbH/" on Linux
+        public static string SaveFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Daedalic Entertainment GmbH",
+            "Barotrauma");
+#endif
+
+        public static string MultiplayerSaveFolder = Path.Combine(
+            SaveFolder, 
+            "Multiplayer");
 
         public delegate void ProgressDelegate(string sMessage);
 
