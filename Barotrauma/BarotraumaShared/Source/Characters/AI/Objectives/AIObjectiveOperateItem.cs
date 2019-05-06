@@ -30,7 +30,9 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-            if (component.Item.CurrentHull != null && (component.Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c)))) { return 0; }
+            if (component.Item.CurrentHull == null) { return 0; }
+            if (component.Item.CurrentHull.FireSources.Count > 0) { return 0; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c))) { return 0; }
             float devotion = MathHelper.Min(10, Priority);
             float value = devotion + AIObjectiveManager.OrderPriority * PriorityModifier;
             float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
