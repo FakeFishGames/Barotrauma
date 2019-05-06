@@ -20,6 +20,8 @@ namespace Barotrauma
         public bool AllowGoingOutside { get; set; }
         public bool CheckVisibility { get; set; }
 
+        public override bool KeepDivingGearOn => findDivingGear != null;
+
         public override float GetPriority()
         {
             if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
