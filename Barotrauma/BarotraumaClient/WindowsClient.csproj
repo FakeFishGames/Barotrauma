@@ -31,6 +31,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions> 
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
@@ -53,6 +54,8 @@
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -285,8 +288,9 @@
   <Target Name="AfterBuild">
     <!-- Write version number to a "Version.txt" file in the output folder -->
     <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
-        <Output TaskParameter="Assemblies" ItemName="CurrentAssembly" />
+      <Output TaskParameter="Assemblies" ItemName="CurrentAssembly" />
     </GetAssemblyIdentity>
-    <Exec Command="echo v%(CurrentAssembly.Version) > $(TargetDir)Version.txt"></Exec>
+    <Exec Command="echo v%(CurrentAssembly.Version) &gt; $(TargetDir)Version.txt">
+    </Exec>
   </Target>
 </Project>
