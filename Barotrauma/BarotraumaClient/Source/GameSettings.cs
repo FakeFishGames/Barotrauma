@@ -132,7 +132,7 @@ namespace Barotrauma
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
             {
-                languageDD.AddItem(TextManager.Get("Language." + language, returnNull: true) ?? Language, language);
+                languageDD.AddItem(TextManager.Get("Language." + language, returnNull: true) ?? language, language);
             }
             languageDD.SelectItem(TextManager.Language);
             languageDD.OnSelected = (guiComponent, obj) =>
@@ -142,6 +142,7 @@ namespace Barotrauma
 
                 UnsavedSettings = true;
                 Language = newLanguage;
+                ApplySettings();
 
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
 
