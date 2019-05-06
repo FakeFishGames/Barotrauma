@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -139,8 +140,7 @@ namespace Barotrauma
             {
                 if (UseController)
                 {
-                    var controllers = targetItem.Item.GetConnectedComponents<Controller>();
-                    if (controllers.Count > 0) ConnectedController = controllers[0];
+                    ConnectedController = targetItem.Item.GetConnectedComponents<Controller>().FirstOrDefault();
                 }
                 TargetEntity = targetItem.Item;
                 TargetItemComponent = targetItem;
