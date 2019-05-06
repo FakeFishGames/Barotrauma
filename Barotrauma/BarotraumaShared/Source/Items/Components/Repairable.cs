@@ -241,5 +241,12 @@ namespace Barotrauma.Items.Components
         {
             character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / item.MaxCondition) % 0.1f));
         }
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        {
+            //do nothing
+            //Repairables should always stay active, so we don't want to use the default behavior 
+            //where set_active/set_state signals can disable the component
+        }
     }
 }
