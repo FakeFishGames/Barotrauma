@@ -16,14 +16,6 @@ namespace Barotrauma
         private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
         public static string Language;
-        public static bool NoWhiteSpace
-        {
-            get
-            {
-                if (!textPacks.ContainsKey(Language)) { return false; }
-                return textPacks[Language].Any(t => t.NoWhiteSpace);
-            }
-        }
 
         private static HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
