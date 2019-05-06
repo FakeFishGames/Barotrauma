@@ -52,8 +52,9 @@ namespace Barotrauma
         public void CreateAutonomousObjectives()
         {
             Objectives.Clear();
-            AddObjective(new AIObjectiveFindSafety(character, this));
-            AddObjective(new AIObjectiveIdle(character, this));
+            AddObjective(new AIObjectiveFindSafety(character, this), delay: Rand.Value() / 2);
+            AddObjective(new AIObjectiveIdle(character, this), delay: Rand.Value() / 2);
+            int objectiveCount = Objectives.Count;
             foreach (var automaticOrder in character.Info.Job.Prefab.AutomaticOrders)
             {
                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
@@ -65,8 +66,10 @@ namespace Barotrauma
                 matchingItems.RemoveAll(it => it.Submarine != character.Submarine);
                 var item = matchingItems.GetRandom();
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType));
-                AddObjective(CreateObjective(order, automaticOrder.option, character, automaticOrder.priorityModifier));
+                AddObjective(CreateObjective(order, automaticOrder.option, character, automaticOrder.priorityModifier), delay: Rand.Value() / 2);
+                objectiveCount++;
             }
+            WaitTimer = Math.Max(WaitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
 
         public void AddObjective(AIObjective objective, float delay, Action callback = null)
@@ -109,7 +112,7 @@ namespace Barotrauma
             if (previousObjective != CurrentObjective)
             {
                 CurrentObjective?.OnSelected();
-                GetObjective<AIObjectiveIdle>().SetRandom();
+                GetObjective<AIObjectiveIdle>()?.SetRandom();
             }
             return CurrentObjective;
         }
@@ -122,6 +125,11 @@ namespace Barotrauma
         public void UpdateObjectives(float deltaTime)
         {
             CurrentOrder?.Update(deltaTime);
+            if (WaitTimer > 0)
+            {
+                WaitTimer -= deltaTime;
+                return;
+            }
             for (int i = 0; i < Objectives.Count; i++)
             {
                 var objective = Objectives[i];
@@ -177,7 +185,6 @@ namespace Barotrauma
                             !humanAI.UnsafeHulls.Contains(character.CurrentHull) && 
                             !AIObjectiveIdle.IsForbidden(character.CurrentHull))
                         {
-                            WaitTimer -= deltaTime;
                             humanAI.SteeringManager.Reset();
                         }
                         else
