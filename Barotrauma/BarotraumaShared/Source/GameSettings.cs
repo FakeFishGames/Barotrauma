@@ -1148,9 +1148,9 @@ namespace Barotrauma
             {
                 foreach (Tutorial tutorial in Tutorial.Tutorials)
                 {
-                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Identifier))
                     {
-                        CompletedTutorialNames.Add(tutorial.Name);
+                        CompletedTutorialNames.Add(tutorial.Identifier);
                     }
                 }
             }
