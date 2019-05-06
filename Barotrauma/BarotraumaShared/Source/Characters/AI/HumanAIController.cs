@@ -201,18 +201,9 @@ namespace Barotrauma
             foreach (var item in Character.Inventory.Items)
             {
                 if (item == null) { continue; }
-                bool unequip = false;
                 if (ObjectiveManager.CurrentObjective is AIObjectiveIdle)
                 {
-                    unequip = item.AllowedSlots.Contains(InvSlotType.RightHand | InvSlotType.LeftHand);
-                }
-                else if (!ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>() && !ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
-                {
-                    unequip = item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
-                }
-                if (unequip)
-                {
-                    if (Character.HasEquippedItem(item))
+                    if (item.AllowedSlots.Contains(InvSlotType.RightHand | InvSlotType.LeftHand) && Character.HasEquippedItem(item))
                     {
                         // Try to put the weapon in an Any slot, and drop it if that fails
                         if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
