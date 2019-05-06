@@ -34,6 +34,8 @@ namespace Barotrauma
         private Sprite backgroundSprite;
         private Sprite backgroundVignette;
 
+        private GUIComponent titleText;
+
         private CreditsPlayer creditsPlayer;
         
         #region Creation
@@ -48,10 +50,10 @@ namespace Barotrauma
                 Color = Color.Black * 0.5f,
                 CanBeFocused = false
             };
-            new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f, 0.05f) },
+            titleText = new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f, 0.05f) },
                 style: "TitleText");
 
-            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft)
+            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
             {
                 AbsoluteOffset = new Point(50, 0)
             })
@@ -224,7 +226,7 @@ namespace Barotrauma
             };
 
             // === OPTION
-            var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);
+            var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), parent: buttonsParent.RectTransform), isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.15f, 0.6f), optionHolder.RectTransform), "MainMenuOptionIcon")
             {
@@ -236,7 +238,7 @@ namespace Barotrauma
 
             var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) });
 
-            var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.35f), parent: optionButtons.RectTransform))
+            var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.25f), parent: optionButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -263,9 +265,9 @@ namespace Barotrauma
 
             //debug button for quickly starting a new round
 #if DEBUG
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), buttonsParent.RectTransform, Anchor.TopLeft, Pivot.BottomLeft) { AbsoluteOffset = new Point(0, -40) },
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 40) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
-            { 
+            {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.QuickStartDev,
                 OnClicked = (tb, userdata) =>
@@ -344,7 +346,7 @@ namespace Barotrauma
 
             this.game = game;
 
-            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, anchor, pivot, minSize, maxSize), style: "InnerGlow", color: Color.Black * 0.8f)
+            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f)
             {
                 CanBeFocused = false
             };
@@ -381,6 +383,8 @@ namespace Barotrauma
         {
             if (obj is Tab)
             {
+                titleText.Visible = true;
+
                 if (GameMain.Config.UnsavedSettings)
                 {
                     var applyBox = new GUIMessageBox(
@@ -458,7 +462,7 @@ namespace Barotrauma
                         GameMain.SteamWorkshopScreen.Select();
                         break;
                     case Tab.Credits:
-                        //wat do
+                        titleText.Visible = false;
                         break;
                 }
             }

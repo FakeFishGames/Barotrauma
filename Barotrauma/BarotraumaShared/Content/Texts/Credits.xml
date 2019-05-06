@@ -1,33 +1,49 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Credits scrollspeed="50.0" spacing="10">
   <spacing relativeheight="1.0"/>
+
+  <Image texture="Content/UI/titleText.png" sourcerect="0,0,1684,248" relativeheight="0.1"/>
+  
+  <spacing relativeheight="0.1"/>
   
   <Text font="VideoTitleFont" color="255,255,255,255">Development</Text>
   
   <spacing relativeheight="0.1"/>
   
   <Text font="LargeFont" color="255,255,255,255">Programming</Text>
-  <Text font="Font" color="150,150,150,255">Joonas Rikkonen\nEetu Pitkänen\nLauri Härkänen\nJuan Pablo Arce\nRoni Kovaniemi</Text>
+  <Text font="Font" color="150,150,150,255">Joonas Rikkonen</Text>
+  <Text font="Font" color="150,150,150,255">Eetu Pitkänen</Text>
+  <Text font="Font" color="150,150,150,255">Lauri Härkänen</Text>
+  <Text font="Font" color="150,150,150,255">Juan Pablo Arce</Text>
+  <Text font="Font" color="150,150,150,255">Roni Kovaniemi</Text>
   
   <spacing relativeheight="0.1"/>
 
   <Text font="LargeFont" color="255,255,255,255">Game Design</Text>
-  <Text font="Font" color="150,150,150,255">Ez Jämsen\nDaniel Asteljoki\nJoonas Rikkonen</Text>
+  <Text font="Font" color="150,150,150,255">Ez Jämsen</Text>
+  <Text font="Font" color="150,150,150,255">Daniel Asteljoki</Text>
+  <Text font="Font" color="150,150,150,255">Joonas Rikkonen</Text>
 
   <spacing relativeheight="0.1"/>
 
   <Text font="LargeFont" color="255,255,255,255">Art</Text>
-  <Text font="Font" color="150,150,150,255">Pekka Saari\nIiro Enges\nDinh Tuan Anh\nNam-Anh Lê\nOskari Lemmetyinen\nJames Bear</Text>
+  <Text font="Font" color="150,150,150,255">Pekka Saari</Text>
+  <Text font="Font" color="150,150,150,255">Iiro Enges</Text>
+  <Text font="Font" color="150,150,150,255">Dinh Tuan Anh</Text>
+  <Text font="Font" color="150,150,150,255">Nam-Anh Lê</Text>
+  <Text font="Font" color="150,150,150,255">James Bear</Text>
 
   <spacing relativeheight="0.1"/>
 
-  <Text font="LargeFont" color="255,255,255,255">Producers</Text>
-  <Text font="Font" color="150,150,150,255">Aku Jauhiainen\nKimmo Kari</Text>
+  <Text font="LargeFont" color="255,255,255,255">Producing</Text>
+  <Text font="Font" color="150,150,150,255">Aku Jauhiainen</Text>
+  <Text font="Font" color="150,150,150,255">Kimmo Kari</Text>
 
   <spacing relativeheight="0.1"/>
 
   <Text font="LargeFont" color="255,255,255,255">Audio</Text>
-  <Text font="Font" color="150,150,150,255">Jussi Elsilä\nTomi Reunanen</Text>
+  <Text font="Font" color="150,150,150,255">Jussi Elsilä</Text>
+  <Text font="Font" color="150,150,150,255">Tomi Reunanen</Text>
 
   <spacing relativeheight="0.1"/>
 
