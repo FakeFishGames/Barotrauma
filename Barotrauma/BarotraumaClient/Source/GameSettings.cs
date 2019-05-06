@@ -132,7 +132,7 @@ namespace Barotrauma
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
             {
-                languageDD.AddItem(TextManager.Get("Language." + language, returnNull: true) ?? Language, language);
+                languageDD.AddItem(TextManager.Get("Language." + language, returnNull: true) ?? language, language);
             }
             languageDD.SelectItem(TextManager.Language);
             languageDD.OnSelected = (guiComponent, obj) =>
@@ -142,6 +142,7 @@ namespace Barotrauma
 
                 UnsavedSettings = true;
                 Language = newLanguage;
+                ApplySettings();
 
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
 
@@ -674,10 +675,10 @@ namespace Barotrauma
             {
                 var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2.2f) ? inputColumnLeft : inputColumnRight).RectTransform))
                     { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
-                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
+                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
                     TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
                 inputNameBlocks.Add(inputName);
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), inputContainer.RectTransform),
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform),
                     text: keyMapping[i].ToString(), font: GUI.SmallFont)
                 {
                     UserData = i
@@ -713,7 +714,10 @@ namespace Barotrauma
                 }
             };
 
-            GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
+            legacyBindingsButton.TextBlock.RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
+            };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);

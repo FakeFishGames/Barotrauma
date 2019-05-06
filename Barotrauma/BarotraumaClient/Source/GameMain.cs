@@ -633,10 +633,14 @@ namespace Barotrauma
                         }
                         else if (Tutorial.Initialized && Tutorial.ContentRunning)
                         {
-                            (GameMain.GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+                            (GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+                        }
+                        else if (GUI.PauseMenuOpen)
+                        {
+                            GUI.TogglePauseMenu();
                         }
                         else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
-                        && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -647,7 +651,7 @@ namespace Barotrauma
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
-#if !DEBUG || true
+#if !DEBUG
                     if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen)
                     {
                         GUI.TogglePauseMenu();
@@ -738,7 +742,7 @@ namespace Barotrauma
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
         }
 
-        public void ShowCampaignDisclaimer(Action onContinue)
+        public void ShowCampaignDisclaimer(Action onContinue = null)
         {
             var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"), 
                 new string[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
