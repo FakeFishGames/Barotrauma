@@ -6,11 +6,13 @@
   
   <spacing relativeheight="0.1"/>
   
-  <Text font="VideoTitleFont" color="255,255,255,255">Development</Text>
+  <!-- ******************************************************* -->
   
-  <spacing relativeheight="0.1"/>
+  <Text font="LargeFont" color="44,207,150,255" scale="1.5">Development</Text>
   
-  <Text font="LargeFont" color="255,255,255,255">Programming</Text>
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Programming</Text>
   <Text font="Font" color="150,150,150,255">Joonas Rikkonen</Text>
   <Text font="Font" color="150,150,150,255">Eetu Pitkänen</Text>
   <Text font="Font" color="150,150,150,255">Lauri Härkänen</Text>
@@ -19,37 +21,130 @@
   
   <spacing relativeheight="0.1"/>
 
-  <Text font="LargeFont" color="255,255,255,255">Game Design</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255">Game Design</Text>
   <Text font="Font" color="150,150,150,255">Ez Jämsen</Text>
   <Text font="Font" color="150,150,150,255">Daniel Asteljoki</Text>
   <Text font="Font" color="150,150,150,255">Joonas Rikkonen</Text>
 
   <spacing relativeheight="0.1"/>
 
-  <Text font="LargeFont" color="255,255,255,255">Art</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255">Art</Text>
   <Text font="Font" color="150,150,150,255">Pekka Saari</Text>
   <Text font="Font" color="150,150,150,255">Iiro Enges</Text>
   <Text font="Font" color="150,150,150,255">Dinh Tuan Anh</Text>
   <Text font="Font" color="150,150,150,255">Nam-Anh Lê</Text>
+  <Text font="Font" color="150,150,150,255">Oskari Lemmetyinen</Text>
   <Text font="Font" color="150,150,150,255">James Bear</Text>
 
   <spacing relativeheight="0.1"/>
 
-  <Text font="LargeFont" color="255,255,255,255">Producing</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255">Producing</Text>
   <Text font="Font" color="150,150,150,255">Aku Jauhiainen</Text>
   <Text font="Font" color="150,150,150,255">Kimmo Kari</Text>
 
   <spacing relativeheight="0.1"/>
 
-  <Text font="LargeFont" color="255,255,255,255">Audio</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255">Audio</Text>
   <Text font="Font" color="150,150,150,255">Jussi Elsilä</Text>
   <Text font="Font" color="150,150,150,255">Tomi Reunanen</Text>
 
   <spacing relativeheight="0.1"/>
 
-  <Text font="LargeFont" color="255,255,255,255">Community Management</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255">Community Management</Text>
   <Text font="Font" color="150,150,150,255">Vilma Savolainen</Text>
+
+  <spacing relativeheight="0.2"/>
+
+  <!-- ******************************************************* -->
+
+  <Text font="LargeFont" color="44,207,150,255" scale="1.5">Publishing</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+
+  <spacing relativeheight="0.2"/>
   
-  <spacing relativeheight="1.0"/>  
+  <!-- ******************************************************* -->
   
+  <Text font="LargeFont" color="44,207,150,255" scale="1.5">GitHub contributors and community actives</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+
+  <spacing relativeheight="0.2"/>
+
+  <!-- ******************************************************* -->
+  
+  <Text font="LargeFont" color="44,207,150,255" scale="1.5">External libraries and content</Text>
+  
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">MonoGame</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2009-2019 The MonoGame Team. Released under ﻿Microsoft Public License (Ms-PL).</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Lidgren.Network networking library</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2015 Michael Lidgren. Released under the MIT license.</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Farseer Physics Engine</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2017 Ian Qvist. Released under the MIT license.</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Facepunch.Steamworks</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2016 Facepunch Studios LTD. Released under the MIT license.</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">MonoKickstart</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2012 Edward Rudd. Released under the zlib license.</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">SharpDX</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2010-2014 SharpDX - Alexandre Mutel. Released under the MIT license.</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">NVorbis</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2015 Andrew Ward. Released under ﻿Microsoft Public License (Ms-PL).</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Concentus</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">See Concentus_LICENSE for the full license.</Text>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">HyperDescriptor</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2014 Pavel Nosovich. Released under the MIT license.</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">PK01, PK02 and Ancient Collection Texture packages</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Textures by Philip Klevestav are used in some of the sprites in the game.\nLicensed under Creative Commons Attribution 3.0 Unported \nhttps://creativecommons.org/licenses/by/3.0/</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">"Road to Hell"</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 3.0\nhttp://creativecommons.org/licenses/by/3.0/</Text>
+
+  <spacing relativeheight="0.2"/>
+
+
+  <!-- ******************************************************* -->
+
+  <Text font="LargeFont" color="44,207,150,255" scale="1.5">Special thanks</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Regalis would like to thank</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Exadv1 and everyone else who's worked on Space Station 13. Barotrauma would have never come to exist if it wasn't for SS13.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">/v/ for coming up with the game concept called Pressure, and all the wonderful anons who took part in those early threads and play sessions back in the early years of Barotrauma/Subsurface.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Celia for being so understanding when I've been busy with baro, and for listening to my work rants and helping me stay sane. The inventors of caffeine and nicotine for helping me get through this. Aku and everyone at FF for helping me take my hobby (and this particular hobby project) to the next level.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">All the Barotrauma/SCP/UTG fans who've been following and supporting the development through all these years, playing the old versions of the game, giving us feedback and ideas, reporting bugs, and being awesome in general. We wouldn't have gotten this far if it wasn't for you!</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Ez is particularly thankful to</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Marianna Jämsen, for putting up with the long hours and the frequently absent husband during this production, the hard times were easier because you were there.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The Pegasus team @ Next Games for the hospitality and inspiration.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Mikko Tyni for the rather good advice regarding certain beer related things.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The fantastic people from Daedalic, AtomicTorch, Caligari Games, Indoor Astronaut, Kong Orange, and Unfrozen for the excellent company and companionship during our American adventure.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The Barotrauma community, for whom making this game has been a real joy.</Text>
+  
+  <spacing relativeheight="1.0"/>
 </Credits>
