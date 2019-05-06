@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Credits scrollspeed="50.0" spacing="10">
+  <spacing relativeheight="1.0"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Development</Text>
+  
+  <spacing relativeheight="0.1"/>
+  
+  <Text font="LargeFont" color="255,255,255,255">Programming</Text>
+  <Text font="Font" color="150,150,150,255">Joonas Rikkonen\nEetu Pitkänen\nLauri Härkänen\nJuan Pablo Arce\nRoni Kovaniemi</Text>
+  
+  <spacing relativeheight="0.1"/>
+
+  <Text font="LargeFont" color="255,255,255,255">Game Design</Text>
+  <Text font="Font" color="150,150,150,255">Ez Jämsen\nDaniel Asteljoki\nJoonas Rikkonen</Text>
+
+  <spacing relativeheight="0.1"/>
+
+  <Text font="LargeFont" color="255,255,255,255">Art</Text>
+  <Text font="Font" color="150,150,150,255">Pekka Saari\nIiro Enges\nDinh Tuan Anh\nNam-Anh Lê\nOskari Lemmetyinen\nJames Bear</Text>
+
+  <spacing relativeheight="0.1"/>
+
+  <Text font="LargeFont" color="255,255,255,255">Producers</Text>
+  <Text font="Font" color="150,150,150,255">Aku Jauhiainen\nKimmo Kari</Text>
+
+  <spacing relativeheight="0.1"/>
+
+  <Text font="LargeFont" color="255,255,255,255">Audio</Text>
+  <Text font="Font" color="150,150,150,255">Jussi Elsilä\nTomi Reunanen</Text>
+
+  <spacing relativeheight="0.1"/>
+
+  <Text font="LargeFont" color="255,255,255,255">Community Management</Text>
+  <Text font="Font" color="150,150,150,255">Vilma Savolainen</Text>
+  
+  <spacing relativeheight="1.0"/>  
+  
+</Credits>

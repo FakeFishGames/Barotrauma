@@ -109,7 +109,7 @@ namespace Barotrauma
 
             List<string> words = new List<string>();
             string currWord = "";
-            for (int i = 0; i<text.Length; i++)
+            for (int i = 0; i < text.Length; i++)
             {
                 if (isCJK.IsMatch(text[i].ToString()))
                 {
