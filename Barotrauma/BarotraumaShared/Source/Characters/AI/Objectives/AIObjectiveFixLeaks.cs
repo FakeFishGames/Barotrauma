@@ -22,15 +22,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Filter(Gap gap)
-        {
-            if (gap == null) { return false; }
-            if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
-            if (gap.Submarine == null) { return false; }
-            if (gap.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { return false; }
-            return true;
-        }
+        protected override bool Filter(Gap gap) => IsValidTarget(gap, character);
 
         public static float GetLeakSeverity(Gap leak)
         {
@@ -45,5 +37,15 @@ namespace Barotrauma
         protected override float TargetEvaluation() => targets.Max(t => GetLeakSeverity(t));
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character, objectiveManager, PriorityModifier);
+
+        public static bool IsValidTarget(Gap gap, Character character)
+        {
+            if (gap == null) { return false; }
+            if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
+            if (gap.Submarine == null) { return false; }
+            if (gap.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { return false; }
+            return true;
+        }
     }
 }

@@ -25,25 +25,26 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Filter(Character target)
-        {
-            if (target == null || target.IsDead || target.Removed) { return false; }
-            if (target == character) { return false; }
-            if (target.Submarine != character.Submarine) { return false; }
-            if (target.CurrentHull == null && character.Submarine != null) { return false; }
-            if (target.Vitality / target.MaxVitality > VitalityThreshold) { return false; }
-            if (HumanAIController == null || !HumanAIController.IsFriendly(target)) { return false; }
-            return true;
-        }
+        protected override bool Filter(Character target) => IsValidTarget(target, character);
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
         protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
 
-        protected override float TargetEvaluation()
+        protected override float TargetEvaluation() => GetVitalityFactor(character) * 100;
+
+        public static float GetVitalityFactor(Character character) => (character.MaxVitality - character.Vitality) / character.MaxVitality;
+
+        public static bool IsValidTarget(Character target, Character character)
         {
-            // TODO: sorting criteria
-            return 100;
+            if (target == null || target.IsDead || target.Removed) { return false; }
+            if (!HumanAIController.IsFriendly(character, target)) { return false; }
+            if (target.Vitality / target.MaxVitality > VitalityThreshold) { return false; }
+            if (target.Submarine == null) { return false; }
+            if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
+            if (target.CurrentHull == null) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+            return true;
         }
     }
 }
