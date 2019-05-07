@@ -73,7 +73,6 @@
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
-  <Outpost file="Content/Map/Outposts/Outpost2.sub" />
   <Submarine file="Submarines/Orca.sub" />
   <Submarine file="Submarines/Typhon.sub" />
   <Submarine file="Submarines/Selkie.sub" />
@@ -103,7 +102,13 @@
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
-  <NPCConversations file="Content/NPCConversations/NpcConversations.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_English.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_German.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_French.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_Russian.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_BrazilianPortuguese.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_SimplifiedChinese.xml"/>
+  <NPCConversations file="Content/NPCConversations/NpcConversations_TraditionalChinese.xml"/>
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />

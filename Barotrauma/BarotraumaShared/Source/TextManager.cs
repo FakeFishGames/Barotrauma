@@ -79,7 +79,7 @@ namespace Barotrauma
             }
         }
 
-        public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
+        public static string Get(string textTag, bool returnNull = false)
         {
             if (!textPacks.ContainsKey(Language))
             {
@@ -94,16 +94,7 @@ namespace Barotrauma
             foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
-                if (text != null) { return text; }
-            }
-
-            if (!string.IsNullOrEmpty(fallBackTag))
-            {
-                foreach (TextPack textPack in textPacks[Language])
-                {
-                    string text = textPack.Get(fallBackTag);
-                    if (text != null) { return text; }
-                }
+                if (text != null) return text;
             }
 
             //if text was not found and we're using a language other than English, see if we can find an English version
