@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -312,46 +313,61 @@ namespace Barotrauma
             return currentPath.CurrentNode.SimPosition - pos;
         }
 
-        /// <summary>
-        /// This method generates some garbage and is a bit expensive since it uses the recursive Item.GetConnectedComponents() method.
-        /// </summary>
-        public bool HasAccessToPath(SteeringPath path)
+        private bool CanAccessThroughDoor(WayPoint currentNode, WayPoint nextNode, out Controller closestButton)
         {
-            foreach (var node in path.Nodes)
+            closestButton = null;
+            if (currentNode == null) { return false; }
+            if (nextNode == null) { return false; }
+            var door = nextNode.ConnectedDoor;
+            if (door == null) { return true; }
+            if (door.IsOpen) { return true; }
+            if (canBreakDoors) { return true; }
+            if (door.IsStuck) { return false; }
+            if (!canOpenDoors || character.LockHands) { return false; }
+            if (door.HasIntegratedButtons)
             {
-                var door = node.ConnectedDoor;
-                if (door != null)
-                {
-                    if (door.IsOpen) { return true; }
-                    if (door.IsStuck) { return false; }
-                    if (door.HasIntegratedButtons)
-                    {
-                        if (!door.HasRequiredItems(character, false))
-                        {
-                            return false;
-                        }
-                        else
-                        {
-                            foreach (var button in door.Item.GetConnectedComponents<Controller>(true))
-                            {
-                                if (!button.HasRequiredItems(character, false))
-                                {
-                                    return false;
-                                }
-                                else if (Vector2.DistanceSquared(button.Item.WorldPosition, door.Item.WorldPosition) > button.Item.InteractDistance * button.Item.InteractDistance)
-                                {
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                }
+                return door.HasRequiredItems(character, false);
             }
-            return true;
+            else
+            {
+                bool canUseButton = false;
+                float closestDistance = 0;
+                foreach (var button in door.Item.GetConnectedComponents<Controller>(true))
+                {
+                    if (!button.HasRequiredItems(character, false))
+                    {
+                        continue;
+                    }
+                    // Ignore buttons that are on the wrong side of the door
+                    if (door.IsHorizontal)
+                    {
+                        if (Math.Sign(button.Item.Position.Y - nextNode.Position.Y) != Math.Sign(currentNode.Position.Y - nextNode.Position.Y)) { continue; }
+                    }
+                    else
+                    {
+                        if (Math.Sign(button.Item.Position.X - nextNode.Position.X) != Math.Sign(currentNode.Position.X - nextNode.Position.X)) { continue; }
+                    }
+                    float distance = Vector2.DistanceSquared(button.Item.WorldPosition, currentNode.WorldPosition);
+                    // Too far from the current node (can't reach)
+                    if (distance > button.Item.InteractDistance * button.Item.InteractDistance)
+                    {
+                        continue;
+                    }
+                    else if (closestButton == null || distance < closestDistance)
+                    {
+                        closestButton = button;
+                        closestDistance = distance;
+                    }
+                    canUseButton = true;
+                }
+                return canUseButton;
+            }
         }
 
+        // TODO: use the CanAccessThroughDoor method. 
         private void CheckDoorsInPath()
         {
+            // TODO: if no doors was found, seek more nodes?
             for (int i = 0; i < 2; i++)
             {
                 Door door = null;
@@ -418,7 +434,7 @@ namespace Barotrauma
                     foreach (Controller controller in buttons)
                     {
                         float dist = Vector2.DistanceSquared(controller.Item.WorldPosition, character.WorldPosition);
-                        if (dist > controller.Item.InteractDistance * controller.Item.InteractDistance * 2.0f) continue;
+                        if (dist > controller.Item.InteractDistance * controller.Item.InteractDistance) { continue; }
 
                         if (dist < closestDist || closestButton == null)
                         {
@@ -466,24 +482,9 @@ namespace Barotrauma
                 {
                     penalty = 100.0f;
                 }
-                else if (!canBreakDoors)
+                if (!CanAccessThroughDoor(node.Waypoint, nextNode.Waypoint, out _))
                 {
-                    //door closed and the character can't open doors -> node can't be traversed
-                    if (!canOpenDoors || character.LockHands) { return null; }
-
-                    var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
-                    if (!doorButtons.Any())
-                    {
-                        if (!nextNode.Waypoint.ConnectedDoor.HasRequiredItems(character, false)) { return null; }
-                    }
-
-                    foreach (Controller button in doorButtons)
-                    {
-                        if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=
-                            Math.Sign(node.Position.X - nextNode.Position.X)) { continue; }
-
-                        if (!button.HasRequiredItems(character, false)) { return null; }
-                    }
+                    return null;
                 }
             }
 
