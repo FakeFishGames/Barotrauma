@@ -10,7 +10,6 @@ namespace Barotrauma
     class AIObjectiveFightIntruders : AIObjectiveLoop<Character>
     {
         public override string DebugTag => "fight intruders";
-        public override bool KeepDivingGearOn => true;
 
         public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }

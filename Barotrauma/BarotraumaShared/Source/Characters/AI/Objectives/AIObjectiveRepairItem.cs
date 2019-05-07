@@ -11,8 +11,6 @@ namespace Barotrauma
     {
         public override string DebugTag => "repair item";
 
-        public override bool KeepDivingGearOn => true;
-
         public Item Item { get; private set; }
 
         private AIObjectiveGoTo goToObjective;

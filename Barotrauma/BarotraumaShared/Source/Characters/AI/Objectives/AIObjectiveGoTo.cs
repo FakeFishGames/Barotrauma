@@ -1,6 +1,7 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -22,8 +23,6 @@ namespace Barotrauma
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
         public bool CheckVisibility { get; set; }
-
-        public override bool KeepDivingGearOn => findDivingGear != null;
 
         public override float GetPriority()
         {

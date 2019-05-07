@@ -11,7 +11,6 @@ namespace Barotrauma
     {
         public override string DebugTag => "extinguish fire";
         public override bool ForceRun => true;
-        public override bool KeepDivingGearOn => true;
         public override bool ConcurrentObjectives => true;
 
         private readonly Hull targetHull;

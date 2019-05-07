@@ -11,7 +11,6 @@ namespace Barotrauma
     class AIObjectiveCombat : AIObjective
     {
         public override string DebugTag => "combat";
-        public override bool KeepDivingGearOn => true;
         public bool useCoolDown = true;
 
         const float CoolDown = 10.0f;
