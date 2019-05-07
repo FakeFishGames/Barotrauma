@@ -47,7 +47,10 @@ namespace Barotrauma
             this.useController = useController;
             if (useController)
             {
-                controller = component.Item.GetConnectedComponents<Controller>().FirstOrDefault();
+                //try finding the controller with the simpler non-recursive method first
+                controller =
+                        component.Item.GetConnectedComponents<Controller>().FirstOrDefault() ??
+                        component.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
             }
         }
 
