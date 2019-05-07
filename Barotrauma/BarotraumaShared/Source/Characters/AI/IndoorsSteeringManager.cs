@@ -301,8 +301,9 @@ namespace Barotrauma
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
-                
-                if (horizontalDistance < collider.radius * 4 && isAboveFeet && isNotTooHigh)
+
+                float multiplier = InStairs ? 1 : 4;
+                if (horizontalDistance < collider.radius * multiplier && isAboveFeet && isNotTooHigh)
                 {
                     currentPath.SkipToNextNode();
                 }
