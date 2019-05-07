@@ -39,6 +39,7 @@ namespace Barotrauma
             private set;
         }
 
+        //TODO: translate mission descriptions
         public string Description
         {
             get;

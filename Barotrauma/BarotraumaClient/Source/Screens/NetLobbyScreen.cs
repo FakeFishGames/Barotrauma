@@ -437,9 +437,13 @@ namespace Barotrauma
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), modeList.Content.RectTransform),
                     mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
                 {
-                    ToolTip = mode.Description,
                     UserData = mode
                 };
+                //TODO: translate mission descriptions
+                if (TextManager.Language == "English")
+                {
+                    textBlock.ToolTip = mode.Description;
+                }
             }
 
             //mission type ------------------------------------------------------------------
