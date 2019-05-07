@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         private static Regex csvSplit = new Regex("(?:^|,)(\"(?:[^\"])*\"|[^,]*)", RegexOptions.Compiled); // Handling commas inside data fields surrounded by ""
         private static List<int> conversationClosingIndent = new List<int>();
-        private static char[] separator = new char[1] { ',' };
+        private static char[] separator = new char[1] { '|' };
 
         private const string conversationsPath = "Content/NPCConversations";
         private const string infoTextPath = "Content/Texts";
@@ -151,7 +151,7 @@ namespace Barotrauma
 
             for (int i = traitStart + NPCPersonalityTrait.List.Count; i < csvContent.Length; i++) // Conversations
             {
-                string[] presplit = csvContent[i].Split(','); // Handling speaker index fetching, somehow doesn't work with the regex
+                string[] presplit = csvContent[i].Split(separator); // Handling speaker index fetching, somehow doesn't work with the regex
                 string[] split = SplitCSV(csvContent[i]);
 
                 int emptyFields = 0;
@@ -257,7 +257,7 @@ namespace Barotrauma
                     list.Add("");
                 }
 
-                list.Add(curr.TrimStart(','));
+                list.Add(curr.TrimStart(separator));
             }
 
             return list.ToArray();
