@@ -3061,6 +3061,13 @@
   <orderdialogself.fightintruders>Taking care of the intruders!</orderdialogself.fightintruders>
   <orderdialogself.fightintruders>Fighting the enemy!</orderdialogself.fightintruders>
 
+  <orderdialog.rescue>[name], Check if anyone needs medical attention!</orderdialog.rescue>
+  <orderdialog.rescue>[name], Heal the wounded!</orderdialog.rescue>
+  <orderdialogself.rescue>Medical aid on the way!</orderdialogself.rescue>
+  <orderdialogself.rescue>Healing the wounded!</orderdialogself.rescue>
+  <dialognorescuetargets>Everyone seems healthy enough.</dialognorescuetargets>
+  <dialognorescuetargets>Nobody needs healing right now.</dialognorescuetargets>
+
   <ordername.dismissed>Dismissed</ordername.dismissed>
   <ordername.follow>Follow</ordername.follow>
   <ordername.wait>Wait</ordername.wait>
