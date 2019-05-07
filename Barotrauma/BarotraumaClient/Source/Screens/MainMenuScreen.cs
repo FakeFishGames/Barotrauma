@@ -14,7 +14,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11 }
 
         private GUIComponent buttonsParent;
 
@@ -34,6 +34,8 @@ namespace Barotrauma
         private Sprite backgroundSprite;
         private Sprite backgroundVignette;
 
+        private CreditsPlayer creditsPlayer;
+        
         #region Creation
         public MainMenuScreen(GameMain game)
         {
@@ -232,9 +234,9 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.0f), optionHolder.RectTransform), style: null);
 
-            var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.05f) });
+            var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) });
 
-            var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.3f), parent: optionButtons.RectTransform))
+            var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.35f), parent: optionButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -244,6 +246,13 @@ namespace Barotrauma
             {
                 ForceUpperCase = true,
                 UserData = Tab.Settings,
+                OnClicked = SelectTab
+            };
+            //TODO: translate
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), "Credits", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = true,
+                UserData = Tab.Credits,
                 OnClicked = SelectTab
             };
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("QuitButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -334,6 +343,13 @@ namespace Barotrauma
             };
 
             this.game = game;
+
+            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, anchor, pivot, minSize, maxSize), style: "InnerGlow", color: Color.Black * 0.8f)
+            {
+                CanBeFocused = false
+            };
+            var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
+            creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
         }
 #endregion
 
@@ -440,6 +456,9 @@ namespace Barotrauma
                     case Tab.SteamWorkshop:
                         if (!Steam.SteamManager.IsInitialized) return false;
                         GameMain.SteamWorkshopScreen.Select();
+                        break;
+                    case Tab.Credits:
+                        //wat do
                         break;
                 }
             }
@@ -770,27 +789,30 @@ namespace Barotrauma
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White * 0.7f);
 #endif
 
-            Vector2 textPos = new Vector2(GameMain.GraphicsWidth - 10, GameMain.GraphicsHeight - 10);
-            for (int i = legalCrap.Length - 1; i >= 0; i--)
+            if (selectedTab != Tab.Credits)
             {
-                Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
-                bool mouseOn = i == 0 &&
-                    PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
-                    PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
-
-                GUI.SmallFont.DrawString(spriteBatch,
-                    legalCrap[i], textPos - textSize,
-                    mouseOn ? Color.White : Color.White * 0.7f);
-
-                if (i == 0)
+                Vector2 textPos = new Vector2(GameMain.GraphicsWidth - 10, GameMain.GraphicsHeight - 10);
+                for (int i = legalCrap.Length - 1; i >= 0; i--)
                 {
-                    GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
-                    if (mouseOn && PlayerInput.LeftButtonClicked())
+                    Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
+                    bool mouseOn = i == 0 &&
+                        PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
+                        PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
+
+                    GUI.SmallFont.DrawString(spriteBatch,
+                        legalCrap[i], textPos - textSize,
+                        mouseOn ? Color.White : Color.White * 0.7f);
+
+                    if (i == 0)
                     {
-                        Process.Start("http://privacypolicy.daedalic.com");
+                        GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
+                        if (mouseOn && PlayerInput.LeftButtonClicked())
+                        {
+                            Process.Start("http://privacypolicy.daedalic.com");
+                        }
                     }
+                    textPos.Y -= textSize.Y;
                 }
-                textPos.Y -= textSize.Y;
             }
 
             spriteBatch.End();
