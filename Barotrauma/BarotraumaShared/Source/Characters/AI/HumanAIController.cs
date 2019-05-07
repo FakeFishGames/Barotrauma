@@ -269,6 +269,7 @@ namespace Barotrauma
                     if (item.CurrentHull != Character.CurrentHull) { continue; }
                     if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                     {
+                        if (item.Repairables.All(r => item.Condition > r.ShowRepairUIThreshold)) { continue; }
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
                         newOrder = new Order(orderPrefab, Character.CurrentHull, item.Repairables?.FirstOrDefault());
                         AddTargets<AIObjectiveRepairItems, Item>(Character, item);
@@ -496,6 +497,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, character))
                         {
+                            if (item.Repairables.All(r => item.Condition > r.ShowRepairUIThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
                         }
                     }
