@@ -265,6 +265,7 @@ namespace Barotrauma
 
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.CurrentHull != Character.CurrentHull) { continue; }
                     if (AIObjectiveRepairItems.IsValidTarget(item))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
@@ -275,6 +276,7 @@ namespace Barotrauma
 
                 foreach (Character c in Character.CharacterList)
                 {
+                    if (c.CurrentHull != Character.CurrentHull) { continue; }
                     if (AIObjectiveFightIntruders.IsValidTarget(c))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
@@ -283,11 +285,11 @@ namespace Barotrauma
                     }
                 }
 
-                // TODO: the objective needs to inherit AIObjectiveLoop<T>
                 if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
                 {
                     var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
                     newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                    AddTargets<AIObjectiveRescueAll, Character>(Character, Character);
                 }
             }
 
@@ -490,6 +492,7 @@ namespace Barotrauma
                 case "reportbrokendevices":
                     foreach (var item in Item.ItemList)
                     {
+                        if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item))
                         {
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
@@ -499,6 +502,7 @@ namespace Barotrauma
                 case "reportintruders":
                     foreach (var enemy in Character.CharacterList)
                     {
+                        if (enemy.CurrentHull != hull) { continue; }
                         if (AIObjectiveFightIntruders.IsValidTarget(enemy))
                         {
                             AddTargets<AIObjectiveFightIntruders, Character>(character, enemy);
@@ -506,8 +510,19 @@ namespace Barotrauma
                     }
                     break;
                 case "requestfirstaid":
-                    // TODO
+                    foreach (var c in Character.CharacterList)
+                    {
+                        if (c.CurrentHull != hull) { continue; }
+                        if (AIObjectiveRescueAll.IsValidTarget(c))
+                        {
+                            AddTargets<AIObjectiveRescueAll, Character>(character, c);
+                        }
+                    }
+                    break;
                 default:
+#if DEBUG
+                    DebugConsole.ThrowError(order.AITag + " not implemented!");
+#endif
                     break;
             }
         }
