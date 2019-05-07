@@ -216,6 +216,7 @@ namespace Barotrauma
             {
                 this.texDims = texDims;
                 this.baseChar = baseChar;
+                face.SetPixelSizes(0, size);
                 face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
                 baseHeight = face.Glyph.Metrics.Height.ToInt32();
                 textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
