@@ -432,7 +432,7 @@ namespace Barotrauma
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingGear(Character character) => HasItem(character, "diving", "oxygensource");
+        public static bool HasDivingMask(Character character) => HasItem(character, "diving", "oxygensource");
 
         public static bool HasItem(Character character, string tag, string containedTag, float conditionPercentage = 0)
         {
@@ -528,7 +528,7 @@ namespace Barotrauma
             if (hull == null) { return 0; }
             bool ignoreFire = ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() || ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(Character);
-            bool ignoreOxygen = ignoreWater || HasDivingGear(Character);
+            bool ignoreOxygen = ignoreWater || HasDivingMask(Character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             return GetHullSafety(hull, Character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
         }

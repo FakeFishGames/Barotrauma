@@ -38,7 +38,6 @@ namespace Barotrauma
         /// </summary>
         public virtual bool IsLoop { get; set; }
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
-        public AIObjective CurrentSubObjective { get; private set; }
 
         public event Action Completed;
 
@@ -90,11 +89,6 @@ namespace Barotrauma
                 }
             }
 
-            if (!subObjectives.Contains(CurrentSubObjective))
-            {
-                CurrentSubObjective = null;
-            }
-
             foreach (AIObjective objective in subObjectives)
             {
                 objective.TryComplete(deltaTime);
@@ -123,8 +117,14 @@ namespace Barotrauma
         {
             if (subObjectives.None()) { return; }
             subObjectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
-            CurrentSubObjective = SubObjectives.First();
-            CurrentSubObjective.SortSubObjectives();
+            if (ConcurrentObjectives)
+            {
+                subObjectives.ForEach(so => SortSubObjectives());
+            }
+            else
+            {
+                subObjectives.First().SortSubObjectives();
+            }
         }
 
         public virtual float GetPriority() => Priority * PriorityModifier;
@@ -137,10 +137,12 @@ namespace Barotrauma
             }
             else if (objectiveManager.WaitTimer <= 0)
             {
-                var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
-                if ((objectiveManager.CurrentObjective == this || subObjective == this))
+                if (objectiveManager.CurrentObjective != null)
                 {
-                    Priority += Devotion * PriorityModifier * deltaTime;
+                    if (objectiveManager.CurrentObjective == this || objectiveManager.CurrentObjective.subObjectives.Any(so => so == this))
+                    {
+                        Priority += Devotion * PriorityModifier * deltaTime;
+                    }
                 }
                 Priority = MathHelper.Clamp(Priority, 0, 100);
                 subObjectives.ForEach(so => so.Update(deltaTime));
@@ -202,7 +204,11 @@ namespace Barotrauma
 
         public virtual void OnSelected()
         {
-            //SteeringManager.Reset();
+            // Should we reset steering here?
+            //if (!ConcurrentObjectives)
+            //{
+            //    SteeringManager.Reset();
+            //}
         }
 
         public virtual void Reset() { }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using FarseerPhysics;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -47,7 +48,7 @@ namespace Barotrauma
                 if (currentObjective != null)
                 {
                     GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
-                    var subObjective = currentObjective.CurrentSubObjective;
+                    var subObjective = currentObjective.SubObjectives.FirstOrDefault();
                     if (subObjective != null)
                     {
                         GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
