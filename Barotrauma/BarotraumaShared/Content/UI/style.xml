@@ -77,8 +77,10 @@
     color="255,255,255,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
-    pressedcolor="255,255,255,255">    
-    <Sprite texture="Content/UI/titleText.png" sourcerect ="0,0,1684,248" tile="false" maintainaspectratio="true"/>
+    pressedcolor="255,255,255,255">
+    <Sprite texture="Content/UI/titleText.png" sourcerect="0,520,1024,328" tile="false" maintainaspectratio="true">
+      <override language="Chinese" texture="Content/UI/titleText.png" sourcerect="0,176,1024,343"/>
+    </Sprite>
   </TitleText>
 
   <InnerGlow
