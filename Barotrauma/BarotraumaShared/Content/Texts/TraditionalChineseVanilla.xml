@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<infotexts language="Traditional Chinese">
+<infotexts language="Traditional Chinese" nowhitespace="true">
 
 <!-- Loading Screen -->
 <loading>載入中…</loading>
