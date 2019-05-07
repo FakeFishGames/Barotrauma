@@ -249,15 +249,7 @@ namespace Barotrauma
             {
                 throw new Exception(filename + ", " + size.ToString() + ", " + (char)character + "; Glyph dimensions exceed texture atlas dimensions");
             }
-
-            //no more room in current texture atlas, create a new one
-            if (currentDynamicAtlasCoords.Y + glyphHeight + 2 > texDims - 1)
-            {
-                currentDynamicAtlasCoords.X = 0;
-                currentDynamicAtlasCoords.Y = 0;
-                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
-            }
-
+            
             currentDynamicAtlasNextY = Math.Max(currentDynamicAtlasNextY, glyphHeight + 2);
             if (currentDynamicAtlasCoords.X + glyphWidth + 2 > texDims - 1)
             {
@@ -270,6 +262,7 @@ namespace Barotrauma
             {
                 currentDynamicAtlasCoords.X = 0;
                 currentDynamicAtlasCoords.Y = 0;
+                currentDynamicAtlasNextY = 0;
                 textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
             }
 
