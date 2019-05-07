@@ -25,7 +25,6 @@ namespace Barotrauma
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
-            Debug.Assert(character != targetCharacter);
             this.targetCharacter = targetCharacter;
         }
 
