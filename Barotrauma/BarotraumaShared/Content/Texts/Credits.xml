@@ -46,7 +46,8 @@
 
   <Text font="VideoTitleFont" color="255,255,255,255">Audio</Text>
   <Text font="Font" color="150,150,150,255">Jussi Elsilä</Text>
-  <Text font="Font" color="150,150,150,255">Tomi Reunanen</Text>
+  <Text font="Font" color="150,150,150,255">Tomi Reunanen (Guitars)</Text>
+  <Text font="Font" color="150,150,150,255">Audire Sound (audiresound.com)</Text>
 
   <spacing relativeheight="0.1"/>
 
