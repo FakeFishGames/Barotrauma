@@ -141,7 +141,7 @@ namespace Barotrauma
             }
 
             currentVideo = CreateVideo(scaledVideoResolution);
-            title.Text = TextManager.Get(contentId);
+            title.Text = textSettings != null ? TextManager.Get(contentId) : string.Empty;
             textContent.Text = textSettings != null ? textSettings.Text : string.Empty;
             objectiveText.Text = objective;
 
