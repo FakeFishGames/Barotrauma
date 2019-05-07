@@ -35,6 +35,7 @@ namespace Barotrauma
                         AddSpacingElement(subElement, listBox.Content.RectTransform);
                         break;
                     case "image":
+                        AddImageElement(subElement, listBox.Content.RectTransform);
                         break;
                 }
             }
@@ -91,6 +92,22 @@ namespace Barotrauma
             {
                 float relativeHeight = element.GetAttributeFloat("relativeheight", 0.0f);
                 var textHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, relativeHeight), parent), style: null);
+            }
+        }
+
+        private void AddImageElement(XElement element, RectTransform parent)
+        {
+            Sprite sprite = new Sprite(element);
+
+            if (element.Attribute("absoluteheight") != null)
+            {
+                int absoluteHeight = element.GetAttributeInt("absoluteheight", 10);
+                new GUIImage(new RectTransform(new Point(parent.NonScaledSize.X, absoluteHeight), parent), sprite, scaleToFit: true);
+            }
+            else
+            {
+                float relativeHeight = element.GetAttributeFloat("relativeheight", 0.0f);
+                new GUIImage(new RectTransform(new Vector2(1.0f, relativeHeight), parent), sprite, scaleToFit: true);
             }
         }
 
