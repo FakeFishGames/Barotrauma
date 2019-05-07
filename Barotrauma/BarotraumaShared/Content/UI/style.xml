@@ -13,8 +13,8 @@
   -->
 
   <Font file="Content/Fonts/Exo2-Medium.otf">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf"/>
     <Size maxresolution="1024,768" size="11"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -23,8 +23,8 @@
     <Size size="24"/>
   </Font>
   <SmallFont file="Content/Fonts/Exo2-Medium.otf">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf"/>
     <Size maxresolution="1024,768" size="9"/>
     <Size maxresolution="1280,800" size="10"/>
     <Size maxresolution="1920,1080" size="12"/>
@@ -34,7 +34,7 @@
   </SmallFont>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
@@ -44,7 +44,7 @@
   </LargeFont>
   <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
     <Size maxresolution="1024,768" size="20"/>
     <Size maxresolution="1280,800" size="25"/>
     <Size maxresolution="1920,1080" size="28"/>
@@ -54,7 +54,7 @@
   </VideoTitle>
   <ObjectiveTitle file="Content/Fonts/Code Pro Bold.otf" size="14">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
     <Size maxresolution="1024,768" size="10"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -64,7 +64,7 @@
   </ObjectiveTitle>
   <ObjectiveName file="Content/Fonts/BebasNeue-Regular.otf" size="22">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
