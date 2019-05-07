@@ -1429,8 +1429,8 @@ namespace Barotrauma
             if (subList.SelectedComponent == null) { return false; }
             if (!(subList.SelectedComponent.UserData is Submarine selectedSub)) { return false; }
 
-            Submarine.MainSub = selectedSub;
             selectedSub.Load(true);
+            Submarine.MainSub = selectedSub;
 
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
