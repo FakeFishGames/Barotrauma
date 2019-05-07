@@ -46,6 +46,9 @@ namespace Barotrauma
         {
             var text = element.ElementInnerText().Replace(@"\n", "\n");
             Color color = element.GetAttributeColor("color", Color.White);
+            float scale = element.GetAttributeFloat("scale", 1.0f);
+            Alignment alignment = Alignment.Center;
+            Enum.TryParse(element.GetAttributeString("alignment", "Center"), out alignment);
             ScalableFont font = GUI.Font;
             switch (element.GetAttributeString("font", "Font").ToLowerInvariant())
             {
@@ -70,12 +73,15 @@ namespace Barotrauma
             }
 
             var textHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), parent), style: null);
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), textHolder.RectTransform, Anchor.Center), 
-                text, 
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), textHolder.RectTransform, Anchor.Center),
+                text,
                 color,
                 font,
-                Alignment.Center,
-                wrap: true);
+                alignment,
+                wrap: true)
+            {
+                TextScale = scale
+            };
             textBlock.RectTransform.IsFixedSize = textHolder.RectTransform.IsFixedSize = true;
             textBlock.RectTransform.NonScaledSize = new Point(textBlock.Rect.Width, textBlock.Rect.Height);
             textHolder.RectTransform.NonScaledSize = new Point(textHolder.Rect.Width, textBlock.Rect.Height);
