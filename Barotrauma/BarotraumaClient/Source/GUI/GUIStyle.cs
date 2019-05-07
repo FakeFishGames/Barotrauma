@@ -12,6 +12,10 @@ namespace Barotrauma
 
         private XElement configElement;
 
+        private GraphicsDevice graphicsDevice;
+
+        private ScalableFont defaultFont;
+
         public ScalableFont Font { get; private set; }
         public ScalableFont SmallFont { get; private set; }
         public ScalableFont LargeFont { get; private set; }
@@ -27,6 +31,7 @@ namespace Barotrauma
             
         public GUIStyle(string file, GraphicsDevice graphicsDevice)
         {
+            this.graphicsDevice = graphicsDevice;
             componentStyles = new Dictionary<string, GUIComponentStyle>();
 
             GameMain.Instance.OnResolutionChanged += () => { RescaleFonts(); };
@@ -81,6 +86,26 @@ namespace Barotrauma
                 }
             }
         }
+
+        /// <summary>
+        /// Returns the default font of the currently selected language
+        /// </summary>
+        public ScalableFont LoadCurrentDefaultFont()
+        {
+            defaultFont?.Dispose();
+            defaultFont = null;
+            foreach (XElement subElement in configElement.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "font":
+                        defaultFont = LoadFont(subElement, graphicsDevice);
+                        break;
+                }
+            }
+            return defaultFont;
+        }
+
 
         private void RescaleFonts()
         {
