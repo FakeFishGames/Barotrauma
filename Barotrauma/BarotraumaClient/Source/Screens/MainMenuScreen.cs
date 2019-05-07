@@ -44,13 +44,14 @@ namespace Barotrauma
             backgroundVignette = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
 
             new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.05f, 0.05f), AbsoluteOffset = new Point(-5, -5) },
+            { RelativeOffset = new Vector2(0.05f, 0.1f), AbsoluteOffset = new Point(-8, -8) },
                 style: "TitleText")
             {
                 Color = Color.Black * 0.5f,
                 CanBeFocused = false
             };
-            titleText = new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f, 0.05f) },
+            titleText = new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.05f, 0.1f) },
                 style: "TitleText");
 
             buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
@@ -717,11 +718,6 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            GameMain.TitleScreen.TitlePosition =
-                Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
-                    GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
-                    GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
-                    0.1f);
 #if !DEBUG
 #if !OSX
             if (Steam.SteamManager.USE_STEAM)
