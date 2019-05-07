@@ -627,6 +627,8 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
+                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+                Submarine.MainSub.UpdateTransform();
                 cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
             }
             else
@@ -1431,6 +1433,8 @@ namespace Barotrauma
 
             selectedSub.Load(true);
             Submarine.MainSub = selectedSub;
+            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+            Submarine.MainSub.UpdateTransform();
 
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 

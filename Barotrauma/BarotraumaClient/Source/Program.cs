@@ -171,12 +171,32 @@ namespace Barotrauma
 
             DebugConsole.DequeueMessages();
 
+            string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
+            var md5 = System.Security.Cryptography.MD5.Create();
+            Md5Hash exeHash = null;
+            try
+            {
+                using (var stream = File.OpenRead(exePath))
+                {
+                    exeHash = new Md5Hash(stream);
+                }
+            }
+            catch
+            {
+                //gotta catch them all, we don't want to throw an exception while writing a crash report
+            }
+
             StreamWriter sw = new StreamWriter(filePath);
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Barotrauma Client crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
+            sb.AppendLine("\n");
+            if (exeHash?.Hash != null)
+            {
+                sb.AppendLine(exeHash.Hash);
+            }
             sb.AppendLine("\n");
 #if DEBUG
             sb.AppendLine("Game version " + GameMain.Version + " (debug build)");
@@ -194,6 +214,10 @@ namespace Barotrauma
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
+            if (SteamManager.IsInitialized)
+            {
+                sb.AppendLine("SteamManager initialized");
+            }
 
             if (GameMain.Client != null)
             {

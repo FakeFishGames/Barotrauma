@@ -3102,4 +3102,7 @@
   <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
   <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
 
+  <mutedbyserver>You have been muted by the server.</mutedbyserver>
+  <unmutedbyserver>You have been unmuted by the server.</unmutedbyserver>
+  
 </infotexts>
