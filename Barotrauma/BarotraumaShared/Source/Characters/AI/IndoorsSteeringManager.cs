@@ -389,11 +389,7 @@ namespace Barotrauma
                     bool canAccess = CanAccessDoor(door, button =>
                     {
                         if (currentWaypoint == null) { return true; }
-                        float distance = Vector2.DistanceSquared(button.Item.WorldPosition, currentWaypoint.WorldPosition);
-                        if (distance > Math.Pow(button.Item.InteractDistance, 2))
-                        {
-                            return false;
-                        }
+                        float distance = Vector2.DistanceSquared(button.Item.WorldPosition, door.Item.WorldPosition);
                         if (closestButton == null || distance < closestDist)
                         {
                             closestButton = button;
@@ -411,9 +407,12 @@ namespace Barotrauma
                         }
                         else if (closestButton != null)
                         {
-                            closestButton.Item.TryInteract(character, false, true, false);
-                            buttonPressCooldown = ButtonPressInterval;
-                            break;
+                            if (Vector2.DistanceSquared(closestButton.Item.WorldPosition, character.WorldPosition) < MathUtils.Pow(closestButton.Item.InteractDistance * 2, 2))
+                            {
+                                closestButton.Item.TryInteract(character, false, true, false);
+                                buttonPressCooldown = ButtonPressInterval;
+                                break;
+                            }
                         }
                     }
                     else if (shouldBeOpen)
@@ -440,11 +439,6 @@ namespace Barotrauma
                 {
                     if (!CanAccessDoor(door, button =>
                         {
-                            float distance = Vector2.DistanceSquared(button.Item.WorldPosition, nextNode.Waypoint.WorldPosition);
-                            if (distance > Math.Pow(button.Item.InteractDistance, 2))
-                            {
-                                return false;
-                            }
                             // Ignore buttons that are on the wrong side of the door
                             if (door.IsHorizontal)
                             {
