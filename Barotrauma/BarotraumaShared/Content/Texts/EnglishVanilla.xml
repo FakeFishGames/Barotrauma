@@ -1983,8 +1983,6 @@
   <skillname.mechanical>Mechanical Engineering</skillname.mechanical>
   <skillname.electrical>Electrical Engineering</skillname.electrical>
   <skillname.medical>Medical</skillname.medical>
-  <skillname.initiative>Initiative</skillname.initiative>
-  <skillname.courage>Courage</skillname.courage>
 
   <!-- Item messages -->
   <itemmsginteractselect>[[select]] Interact</itemmsginteractselect>
@@ -3108,5 +3106,8 @@
 
   <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
   <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
+
+  <skillname.initiative>Initiative</skillname.initiative>
+  <skillname.courage>Courage</skillname.courage>
 
 </infotexts>
