@@ -15,6 +15,9 @@ namespace Barotrauma
 
         private RenderTarget2D renderTarget;
 
+        private Sprite languageSelectionCursor;
+        private ScalableFont languageSelectionFont;
+
         private Video splashScreen;
         public Video SplashScreen
         {
@@ -70,12 +73,18 @@ namespace Barotrauma
             set;
         }
 
+        public bool WaitForLanguageSelection
+        {
+            get;
+            set;
+        }
+
         public LoadingScreen(GraphicsDevice graphics)
         {
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
 
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            GameMain.Instance.OnResolutionChanged += () => 
+            GameMain.Instance.OnResolutionChanged += () =>
             {
                 renderTarget?.Dispose();
                 renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
@@ -84,7 +93,6 @@ namespace Barotrauma
             DrawLoadingText = true;
             selectedTip = TextManager.Get("LoadingScreenTip", true);
         }
-
 
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
@@ -101,10 +109,10 @@ namespace Barotrauma
                     GameMain.Config.EnableSplashScreen = false;
                 }
             }
-
+                        
             var titleStyle = GUI.Style?.GetComponentStyle("TitleText");
             Sprite titleSprite = null;
-            if (titleStyle != null && titleStyle.Sprites.ContainsKey(GUIComponent.ComponentState.None))
+            if (!WaitForLanguageSelection && titleStyle != null && titleStyle.Sprites.ContainsKey(GUIComponent.ComponentState.None))
             {
                 titleSprite = titleStyle.Sprites[GUIComponent.ComponentState.None].First()?.Sprite;
             }
@@ -147,7 +155,11 @@ namespace Barotrauma
 
             titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
 
-            if (DrawLoadingText)
+            if (WaitForLanguageSelection)
+            {
+                DrawLanguageSelectionPrompt(spriteBatch, graphics);
+            }
+            else if (DrawLoadingText)
             {
                 string loadText = "";
                 if (LoadState == 100.0f)
@@ -183,7 +195,28 @@ namespace Barotrauma
 
             }
             spriteBatch.End();
+        }
 
+        private void DrawLanguageSelectionPrompt(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
+        {
+            if (languageSelectionFont == null)
+            {
+                languageSelectionFont = new ScalableFont("Content/Fonts/BebasNeue-Regular.otf", 28, graphicsDevice);
+            }
+            if (languageSelectionCursor == null)
+            {
+                languageSelectionCursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
+            }
+
+            Vector2 textPos = new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight * 0.25f);
+            Vector2 textSpacing = new Vector2(0.0f, (GameMain.GraphicsHeight * 0.5f) / TextManager.AvailableLanguages.Count());
+            foreach (string language in TextManager.AvailableLanguages)
+            {
+                languageSelectionFont.DrawString(spriteBatch, language, textPos - languageSelectionFont.MeasureString(language) / 2, Color.White * 0.8f);
+                textPos += textSpacing;
+            }
+
+            languageSelectionCursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
         }
 
         private void DrawSplashScreen(SpriteBatch spriteBatch)
