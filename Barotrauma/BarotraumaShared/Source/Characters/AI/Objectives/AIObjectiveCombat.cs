@@ -25,7 +25,14 @@ namespace Barotrauma
             {
                 _weapon = value;
                 _weaponComponent = null;
-                reloadWeaponObjective = null;
+                if (reloadWeaponObjective != null)
+                {
+                    if (subObjectives.Contains(reloadWeaponObjective))
+                    {
+                        subObjectives.Remove(reloadWeaponObjective);
+                    }
+                    reloadWeaponObjective = null;
+                }
             }
         }
         private ItemComponent _weaponComponent;
@@ -43,6 +50,8 @@ namespace Barotrauma
                 return _weaponComponent;
             }
         }
+
+        public override bool ConcurrentObjectives => true;
 
         private readonly AIObjectiveFindSafety findSafety;
         private readonly HashSet<RangedWeapon> rangedWeapons = new HashSet<RangedWeapon>();
@@ -81,6 +90,33 @@ namespace Barotrauma
             {
                 Mode = CombatMode.Retreat;
             }
+        }
+
+        public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
+
+        public override bool IsDuplicate(AIObjective otherObjective)
+        {
+            if (!(otherObjective is AIObjectiveCombat objective)) return false;
+            return objective.Enemy == Enemy;
+        }
+
+        public override void OnSelected() => Weapon = null;
+
+        public override bool IsCompleted()
+        {
+            bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (useCoolDown && coolDownTimer <= 0);
+            if (completed)
+            {
+                if (objectiveManager.CurrentOrder == this && Enemy != null && Enemy.IsDead)
+                {
+                    character.Speak(TextManager.Get("DialogTargetDown"), null, 3.0f, "targetdown", 30.0f);
+                }
+                if (Weapon != null)
+                {
+                    Unequip();
+                }
+            }
+            return completed;
         }
 
         protected override void Act(float deltaTime)
@@ -239,52 +275,52 @@ namespace Barotrauma
 
         private void Retreat(float deltaTime)
         {
-            followTargetObjective = null;
+            if (followTargetObjective != null)
+            {
+                if (subObjectives.Contains(followTargetObjective))
+                {
+                    subObjectives.Remove(followTargetObjective);
+                }
+                followTargetObjective = null;
+            }
+            if (retreatObjective != null && retreatObjective.Target != retreatTarget)
+            {
+                retreatObjective = null;
+            }
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
                 retreatTarget = findSafety.FindBestHull(new List<Hull>() { character.CurrentHull });
             }
-            if (retreatTarget != null)
-            {
-                if (retreatObjective == null || retreatObjective.Target != retreatTarget)
-                {
-                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true);
-                }
-                retreatObjective.TryComplete(deltaTime);
-            }
+            TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
         }
 
         private void Engage(float deltaTime)
         {
             retreatTarget = null;
-            retreatObjective = null;
-            if (followTargetObjective == null)
+            if (retreatObjective != null)
             {
-                followTargetObjective = new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
+                if (subObjectives.Contains(retreatObjective))
+                {
+                    subObjectives.Remove(retreatObjective);
+                }
+                retreatObjective = null;
+            }
+            TryAddSubObjective(ref followTargetObjective,
+                constructor: () => new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
                 {
                     AllowGoingOutside = true,
                     IgnoreIfTargetDead = true,
-                    CheckVisibility = true
-                };
-            }
-            if (WeaponComponent is RangedWeapon)
-            {
-                followTargetObjective.CloseEnough = 3;
-            }
-            else if (WeaponComponent is MeleeWeapon mw)
-            {
-                followTargetObjective.CloseEnough = ConvertUnits.ToSimUnits(mw.Range);
-            }
-            else if (WeaponComponent is RepairTool rt)
-            {
-                followTargetObjective.CloseEnough = ConvertUnits.ToSimUnits(rt.Range);
-            }
-            else
-            {
-                SteeringManager.Reset();
-                Mode = CombatMode.Retreat;
-            }
-            followTargetObjective.TryComplete(deltaTime);
+                    CheckVisibility = true,
+                    CloseEnough =
+                        WeaponComponent is RangedWeapon ? 3 :
+                        WeaponComponent is MeleeWeapon mw ? ConvertUnits.ToSimUnits(mw.Range) :
+                        WeaponComponent is RepairTool rt ? ConvertUnits.ToSimUnits(rt.Range) : 0.5f
+                },
+                onAbandon: () =>
+                {
+                    SteeringManager.Reset();
+                    Mode = CombatMode.Retreat;
+                });
         }
 
         private bool Reload(float deltaTime)
@@ -297,31 +333,17 @@ namespace Barotrauma
                     Item containedItem = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
                     if (containedItem == null)
                     {
-                        if (reloadWeaponObjective == null)
-                        {
-                            reloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, Weapon.GetComponent<ItemContainer>(), objectiveManager);
-                        }
+                        TryAddSubObjective(ref reloadWeaponObjective, 
+                            constructor: () => new AIObjectiveContainItem(character, requiredItem.Identifiers, Weapon.GetComponent<ItemContainer>(), objectiveManager),
+                            onAbandon: () => 
+                            {
+                                SteeringManager.Reset();
+                                Mode = CombatMode.Retreat;
+                            });
                     }
                 }
             }
-            if (reloadWeaponObjective != null)
-            {
-                if (reloadWeaponObjective.IsCompleted())
-                {
-                    reloadWeaponObjective = null;
-                }
-                else if (!reloadWeaponObjective.CanBeCompleted)
-                {
-                    SteeringManager.Reset();
-                    Mode = CombatMode.Retreat;
-                }
-                else
-                {
-                    reloadWeaponObjective.TryComplete(deltaTime);
-                }
-                return false;
-            }
-            return true;
+            return reloadWeaponObjective == null || reloadWeaponObjective.IsCompleted();
         }
 
         private IEnumerable<FarseerPhysics.Dynamics.Body> myBodies;
@@ -390,36 +412,6 @@ namespace Barotrauma
                     }
                 }
             }
-        }
-
-        public override bool IsCompleted()
-        {
-            bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (useCoolDown && coolDownTimer <= 0);
-            if (completed)
-            {
-                if (objectiveManager.CurrentOrder == this && Enemy != null && Enemy.IsDead)
-                {
-                    character.Speak(TextManager.Get("DialogTargetDown"), null, 3.0f, "targetdown", 30.0f);
-                }
-                if (Weapon != null)
-                {
-                    Unequip();
-                }
-            }
-            return completed;
-        }
-
-        public override bool CanBeCompleted => !abandon && 
-            (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && 
-            (retreatObjective == null || retreatObjective.CanBeCompleted) &&
-            (followTargetObjective == null || followTargetObjective.CanBeCompleted);
-
-        public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveCombat objective)) return false;
-            return objective.Enemy == Enemy;
         }
 
         //private float CalculateEnemyStrength()
