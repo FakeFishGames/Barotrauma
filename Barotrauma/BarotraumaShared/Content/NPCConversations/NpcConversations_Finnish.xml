@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Conversations identifier="vanillaconversations" Language="Finnish (Google Translate)">
+  <PersonalityTrait name="Ammattimainen" alloweddialogtags="professional,none" commonness="1"/>
+  <PersonalityTrait name="Rento" alloweddialogtags="laid-back,none" commonness="1"/>
+  <PersonalityTrait name="Töykeä" alloweddialogtags="rude,none" commonness="1"/>
+  <PersonalityTrait name="Kova" alloweddialogtags="tough,none" commonness="1"/>
+  <PersonalityTrait name="Vitsailija" alloweddialogtags="joker,none" commonness="0.5"/>
+  <PersonalityTrait name="Huono suomi" alloweddialogtags="brokenenglish" commonness="0.5"/>
+  <PersonalityTrait name="Pelokas" alloweddialogtags="fearful,none" commonness="0.5"/>
+  <PersonalityTrait name="Hullu" alloweddialogtags="crazy,none" commonness="0.5"/>
+  
+  <Conversation line="Ovatko ihmiset, ottakaamme hänet pyörimään!" flags="Initial" allowedjobs="captain" speaker="0">
+    <Conversation line=""/>
+    <Conversation line="Joo joo!" speaker="1">
+    </Conversation>
+  </Conversation>
+  
+  <Conversation line="Katsotaan, mitä Ocean on tallentanut meille tällä kertaa!" flags="Initial" allowedjobs="captain" speaker="0"/>
+    
+  <Conversation line="Mulla on kylmä." maxintensity="0.4" speaker="0"/>
+  
+  <Conversation line="Joko ollaan perillä?" maxintensity="0.2" speakertags="joker" speaker="0">
+    <Conversation line="" flags="Casual"/>
+    <Conversation line="Turpa kiinni." speakertags="rude" speaker="1"/>
+    <Conversation line="Ei hassua." speakertags="brokenenglish" speaker="1"/>
+  </Conversation>
+
+  <Conversation line="Kuulitko tuon?" maxintensity="0.4" speaker="0">
+    <Conversation line="Minkä?" speaker="1">
+      <Conversation line="Kuten jotain, joka on rungolla." speaker="0">
+        <Conversation line="Luultavasti vain mielikuvitukseni." speaker="0"/>
+      </Conversation>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="Alkaa jo vähän kuumottaa." minintensity="0.3" maxintensity="0.6"/>
+  <Conversation line="Voi perse." minintensity="0.5"/>
+  <Conversation line="En halua kuolla!" minintensity="0.6" speakertags="fearful"/>
+  <Conversation line="Vituikshan se meni." minintensity="0.8"/>
+</Conversations>

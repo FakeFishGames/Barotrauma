@@ -1,0 +1,660 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Conversations identifier="vanillaconversations" Language="Brazilian Portuguese">
+
+<!-- Personality traits -->
+<PersonalityTrait name="Professional" alloweddialogtags="professional,none" commonness="1" />
+<PersonalityTrait name="Laid-back" alloweddialogtags="laid-back,none" commonness="1" />
+<PersonalityTrait name="Rude" alloweddialogtags="rude,none" commonness="1" />
+<PersonalityTrait name="Tough" alloweddialogtags="tough,none" commonness="1" />
+<PersonalityTrait name="Joker" alloweddialogtags="joker,none" commonness="1" />
+<PersonalityTrait name="Broken English" alloweddialogtags="brokenenglish" commonness="1" />
+<PersonalityTrait name="Fearful" alloweddialogtags="fearful,none" commonness="1" />
+<PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="1" />
+
+<!-- Generic conversation -->
+<Conversation line="Certo, marujos, vamos levar essa belezinha para dar uma volta!" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Afirmativo, senhor." speaker="1">
+		<Conversation line="Sim, senhor!" speaker="2"/>
+		<Conversation line="Sim, capitão!" speaker="2" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Os que descem ao mar em navios;" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Os que fazem comércio nas grandes águas;" speaker="0">
+		<Conversation line="Esses veem as obras do Senhor, e as Suas maravilhas no abismo." speaker="0">
+			<Conversation line="Lá vamos nós! Boa sorte, tripulação!" speaker="0"/>
+			<Conversation line="O Senhor não tem obras aqui embaixo." speaker="1" speakertags="joker,tough,professional"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Preparem-se... temos uma longa jornada à frente!" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Sim, senhor!" speaker="1"/>
+	<Conversation line="Afirmativo, senhor!" speaker="1"/>
+	<Conversation line="Boa sorte, pessoal!" speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="Boas-vindas a bordo! Mantenham mãos e braços dentro do veículo." speaker="0" flags="Initial" allowedjobs="captain" speakertags="joker">
+	<Conversation line="Sim, senhor!" speaker="1"/>
+	<Conversation line="Afirmativo, senhor!" speaker="1"/>
+</Conversation>
+
+<Conversation line="Tripulação preparar, o caminho ser longo!" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="Sim, senhor!" speaker="1"/>
+	<Conversation line="Afirmativo, senhor!" speaker="1"/>
+	<Conversation line="Que a Senhora das Buzinas tenha piedade das nossas almas." speaker="1" speakertags="crazy"/>
+	<Conversation line="Boa sorte, pessoal!" speaker="1" allowedjobs="watchman"/>
+</Conversation>
+
+<Conversation line="É o capitão falando! Tripulação, preparar para missão e boa sorte!" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
+	<Conversation line="Sim, senhor!" speaker="1"/>
+	<Conversation line="Afirmativo, senhor." speaker="1">
+		<Conversation line="Sim, senhor!" speaker="2"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Vejamos o que os oceanos reservaram para nós dessa vez!" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="Aposto que são monstros horripilantes, mortes terríveis e escuridão eterna." speaker="1" speakertags="joker,fearful">
+		<Conversation line="Fica quieto. Não precisamos do seu sarcasmo." speaker="0" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Todos prontos? Acho bom estarem. Não há mais volta." speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Sim, senhor!" speaker="1">
+		<Conversation line="Vamos nessa!" speaker="2"/>
+		<Conversation line="Sempre a postos!" speaker="2" speakertags="brokenenglish"/>
+		<Conversation line="Uuu! Todos nós vamos morrer!" speaker="2" speakertags="crazy"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Estou com frio." speaker="0" maxintensity="0.4"/>
+
+<Conversation line="Estou com um mau pressentimento..." speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="Eu conheci um capitão que costumava dizer..." speaker="1" speakertags="professional,tough">
+		<Conversation line="Ninguém pode acalmar a tempestade, pare de tentar." speaker="1">
+			<Conversation line="O que você pode fazer é se acalmar. A tempestade passará." speaker="1">
+				<Conversation line="Cara... para de falar besteira." speaker="0" speakertags="rude,fearful"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Todos nós estamos." speaker="1"/>
+	<Conversation line="Você está com gases de novo?" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="Posso ouvir o casco ranger." speaker="0" speakertags="fearful" maxintensity="0.4">
+	<Conversation line="Eu estar ouvindo também." speaker="1" speakertags="brokenenglish"/>
+	<Conversation line="" speaker="1" speakertags="joker"/>
+</Conversation>
+
+<Conversation line="Mal posso esperar pra voltar pra casa e abrir uma garrafa de Ol' Cadmus." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="Concentre-se no seu trabalho ou você e a garrafa vão pro mesmo caixão." speaker="1" speakertags="professional,tough,rude">
+		<Conversation line="Haha! Enterro com caixão! Nem lembro a última vez que isso aconteceu..." speaker="2" speakertags="laid-back,joker"/>
+	</Conversation>
+	<Conversation line="Agora não é hora de pensar na sua casa. Temos um longo caminho pela frente." speaker="1" speakertags="professional,tough"/>
+	<Conversation line="Cadmus ser xixi de peixe. Eu preferir mais forte." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Quando eu estava na Marinha da Terra, eles tinham um ditado..." speaker="0" allowedjobs="captain" speakertags="professional,tough" maxintensity="0.3">
+	<Conversation line="Há apenas duas maneiras de fazer as coisas: fazer direito ou refazer." speaker="0">
+		<Conversation line="Mas aqui não. Não existe segunda chance no Europa." speaker="0">
+			<Conversation line="Então, pessoal, concentrem-se na tarefa em questão." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Eu sou o marinheiro Popeye!" speaker="0" allowedjobs="medicaldoctor" speakertags="laid-back,joker" maxintensity="0.2">
+	<Conversation line="Sou forte até o fim, com espinafre pra mim!" speaker="0">
+		<Conversation line="Doutor, você voltou a cheirar etanol?" speaker="1">
+			<Conversation line="Tá bom, parei." speaker="0"/>
+			<Conversation line="Desculpa aí por tentar levantar o astral." speaker="0"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Nada de cantoria no meu navio." speaker="1" allowedjobs="captain" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Sinto falta do Sol." speaker="0" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Ouvi dizer que a luz do Sol dá câncer. Melhor ficar sem mesmo." speaker="1">
+		<Conversation line="Júpiter também dá câncer. E eu prefiro mil vezes o Sol." speaker="0">
+			<Conversation line="Para com isso." speaker="2" speakertags="professional,tough"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Para com isso." speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Eu tenho medo dos Parasitas-Carcaça." speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Eu também. Prometa que vai atravessar minha cabeça com uma lança se eu for infectado." speaker="1">
+		<Conversation line="Eu prefiro te dar uma dose de calixanida." speaker="2" allowedjobs="medicaldoctor"/>
+		<Conversation line="Eu preferia usar calixanida, mas uma lança serve." speaker="2" allowedjobs="medicaldoctor" speakertags="rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Alguém aqui já ouviu falar em sindicatos?" speaker="0" maxintensity="0.2">
+	<Conversation line="Uma troca, melhorando o aumento pela integridade da integridade de um monopólio da integridade de um monopólio de um monopólio da integridade." speaker="0" flags="Psychosis">
+		<Conversation line="Negociando padrões de segurança e aposentadoria e aposentadoria e aposentadoria e trabalhadores. Uma troca, melhorando os trabalhadores." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Isso é papo de comuna. A Coalizão é o único sindicato que a gente precisa." speaker="1" allowedjobs="captain" speakertags="professional,tough,rude"/>
+	<Conversation line="É, e daí?" speaker="1">
+		<Conversation line="Acho que a gente devia estabelecer um sindicato." speaker="0">
+			<Conversation line="Precisamos de padrões de segurança melhores, salários adequados, benefícios de aposentadoria..." speaker="0">
+				<Conversation line="Você acha que vai viver tempo suficiente pra se aposentar?" speaker="1">
+					<Conversation line="Bom, espero que sim." speaker="0"/>
+					<Conversation line="Justo." speaker="0"/>
+				</Conversation>
+				<Conversation line="Padrões de segurança? O sindicato vai rechaçar os Moloques ou segurar nossas mãos quando a gente estiver diante de um vazamento?" speaker="1" speakertags="rude,tough">
+					<Conversation line="Não foi isso que eu quis dizer." speaker="0"/>
+					<Conversation line="Acho que você tem razão." speaker="0"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Já viu o que acontece ao corpo humano ao ser exposto à pressão externa?" speaker="0" speakertags="fearful" maxintensity="0.2">
+	<Conversation line="Em breve você verá." speaker="0" flags="Psychosis">
+		<Conversation line="Sim, estou falando com você." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Posso imaginar." speaker="1">
+		<Conversation line="Ainda não consigo tirar essa imagem da cabeça." speaker="0">
+			<Conversation line="Um saco de ossos e carne sob uma prensa hidráulica, é a única forma de descrever." speaker="0"/>
+			<Conversation line="O abraço carinhoso de Europa." speaker="2" speakertags="crazy"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="O meu amor me deixou, levou minha identidade..." speaker="0" flags="Casual" speakertags="joker,laid-back" maxintensity="0.3">
+	<Conversation line="Não sei mais bem onde estou..." speaker="0">
+		<Conversation line="Nem onde a realidade..." speaker="0">
+			<Conversation line="Ah, se eu fosse marinheiro!" speaker="0">
+				<Conversation line="Nada de cantoria no meu navio." speaker="1" allowedjobs="captain" speakertags="professional,tough">
+					<Conversation line="" speaker="0"/>
+					<Conversation line="Tá bom, tá bom! Não vou mais tentar levantar o astral!" speaker="0"/>
+				</Conversation>
+				<Conversation line="Eu sei que essa é uma canção da Terra, mas ela é superapropriada!" speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Já chegamos?" speaker="0" speakertags="joker" maxintensity="0.2">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Cala a boca." speaker="1" speakertags="rude"/>
+	<Conversation line="Continua sem ter graça." speaker="1"/>
+	<Conversation line="Não ter graça." speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Algum de vocês lembra da Terra?" speaker="0" maxintensity="0.2">
+	<Conversation line="Terra, Terra, Terra. Uma pena que você nunca a verá." speaker="0" flags="Psychosis"/>
+	<Conversation line="Sou das antigas, mas nem tanto." speaker="1"/>
+	<Conversation line="Meu avô era um Terrano." speaker="1">
+		<Conversation line="Eu adorava ouvir as histórias dele, mas tenho certeza de que ele inventava a maioria." speaker="1">
+			<Conversation line="Pode imaginar sair da sua casa e ver o céu ao seu redor?" speaker="1">
+				<Conversation line="Parece incrível." speaker="0">
+					<Conversation line="Olhar para o céu sem se preocupar com um gigante de gás fritando você com radiação..." speaker="2"/>
+				</Conversation>
+			</Conversation>
+			<Conversation line="Eu adoraria ter visto pássaros." speaker="1">
+				<Conversation line="E cachorros. E elefantes." speaker="0"/>
+				<Conversation line="E rinossauros!" speaker="2" speakertags="brokenenglish"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Já pensou no que aconteceu com os responsáveis pela construção das ruínas?" speaker="0" maxintensity="0.2">
+	<Conversation line="Câmaras ocultas em imensuráveis o pesadelo continua. Incalculáveis e tão ao fim, tum, tum, tum!" speaker="0" flags="Psychosis"/>
+	<Conversation line="Quem nunca?" speaker="1"/>
+	<Conversation line="Prefiro deixar as divagações para os pesquisadores." speaker="1">
+		<Conversation line="Tenho coisas mais importantes pra fazer aqui embaixo." speaker="1"/>
+	</Conversation>
+	<Conversation line="Apenas o Abismo sabe." speaker="1" speakertags="crazy"/>
+	<Conversation line="Eu pensar nisso, mas achar que ninguém sabe." speaker="2" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Já viu uma daquelas coisas que guarda as ruínas?" speaker="0" maxintensity="0.2">
+	<Conversation line="Sim, mas eu queria conseguir esquecer." speaker="1" speakertags="fearful"/>
+	<Conversation line="Tem um deles no instituto." speaker="1">
+		<Conversation line="Dizem que não é orgânico... mas próximo de um robô do que de um animal." speaker="1">
+			<Conversation line="Eles não sangram, isso é certo." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Cigarros são tão caros hoje em dia." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="Nem me fala." speaker="1"/>
+	<Conversation line="Bom, claro, fazendas hidropônicas são caras." speaker="1">
+		<Conversation line="Faz mais sentido usar as fazendas pra coisas mais úteis do que tabaco." speaker="1"/>
+		<Conversation line="O que ser hidropônica?" speaker="2" speakertags="brokenenglish">
+			<Conversation line="Que cresce na água. Como tudo por aqui." speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Ouviu isso?" speaker="0" maxintensity="0.4">
+	<Conversation line="Ouviu o quê?" speaker="1">
+		<Conversation line="O som de alguma coisa arranhando o casco." speaker="0">
+			<Conversation line="Deve ser só a minha imaginação." speaker="0"/>
+		</Conversation>
+		<Conversation line="Um gemido profundo vindo lá de fora." speaker="0">
+			<Conversation line="Os Homens-Caranguejo. Eu te disse." speaker="1" speakertags="crazy"/>
+			<Conversation line="Deve ser só o casco. Relaxa." speaker="1"/>
+			<Conversation line="Você está com gases de novo?" speaker="1" speakertags="joker"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Outro dia eu li o manual de um marinheiro." speaker="0" maxintensity="0.2">
+	<Conversation line="Teve umas partes impossíveis de entender por conta da estranha terminologia antiga." speaker="0">
+		<Conversation line="Por exemplo, o que diabos é um estibordo?" speaker="0">
+			<Conversation line="Fiquei na mesma." speaker="1"/>
+			<Conversation line="A posição atual talvez? Sabe, este bordo?" speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Você alguma vez já sentiu como se a lua inteira estivesse contra a gente?" speaker="0" maxintensity="0.3">
+	<Conversation line="Como você." speaker="0" flags="Psychosis">
+		<Conversation line="Sim, estou falando com você." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Bom, não é o local mais acolhedor pra nos instalar." speaker="1">
+		<Conversation line="Dadas as circunstâncias, acho que é sim." speaker="2">
+			<Conversation line="Você entendeu..." speaker="1"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Você não pode parar as ondas, mas pode aprender a surfar." speaker="1"/>
+	<Conversation line="Não pertencemos a esse lugar... isso é fato." speaker="1">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="As coisas estão sempre dando errado, independentemente do que a gente faça." speaker="0">
+			<Conversation line="Chega. Tá começando a parecer balela de culto." speaker="2" speakertags="professional"/>
+		</Conversation>
+		<Conversation line="Chega. Tá começando a parecer balela de culto." speaker="2" speakertags="professional"/>
+	</Conversation>
+	<Conversation line="Chega dessa conversa." speaker="1" speakertags="professional,tough"/>
+</Conversation>
+
+<Conversation line="Ao Sol secundários, ao Sol secundários..." speaker="0" speakertags="laid-back,crazy" maxintensity="0.2">
+	<Conversation line="Como Júpiter, a ti somos solidários..." speaker="0">
+		<Conversation line="" speaker="0" flags="Casual"/>
+		<Conversation line="Se você vai cantar, pelo menos tira o headset." speaker="1" speakertags="professional"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Mas que droga!" speaker="0" speakertags="fearful">
+	<Conversation line="Quero ir pra casa!" speaker="0"/>
+</Conversation>
+
+<Conversation line="Quero ver ação!" speaker="0" speakertags="tough" maxintensity="0.2"/>
+
+<Conversation line="Mares calmos não fazem bons marinheiros." speaker="0" speakertags="tough">
+	<Conversation line="Mar agitado fazer marinheiros mortos!" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="A gente devia trazer uma cafeteira pra cá." speaker="0" speakertags="laid-back" maxintensity="0.2">
+	<Conversation line="Você acha que eu não sei o que você quis dizer?" speaker="1" flags="PsychosisSelf">
+		<Conversation line="Café? Tá bom, então..." speaker="1" flags="PsychosisSelf">
+			<Conversation line="Em breve, tudo chegará ao fim." speaker="1" flags="PsychosisSelf"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Concordo." speaker="1"/>
+	<Conversation line="Eu não bebo café." speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Eu vi um reptante outro dia. Criaturinhas terríveis." speaker="0" speakertags="joker,crazy" maxintensity="0.2"/>
+
+<Conversation line="Dê um peixe a um homem e você o alimentará por um dia;" speaker="0" speakertags="joker" maxintensity="0.4">
+	<Conversation line="Dê um homem a um peixe e você o alimentará por um dia." speaker="0" flags="Psychosis">
+		<Conversation line="Dê um peixe e você o alimentará por um homem." speaker="0" flags="Psychosis">
+			<Conversation line="Dê um peixe." speaker="0" flags="Psychosis">
+				<Conversation line="Dê um peixe." speaker="0" flags="Psychosis">
+					<Conversation line="Dê um peixe." speaker="0" flags="Psychosis">
+						<Conversation line="Não!" speaker="1" flags="PsychosisSelf"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Ensine um homem a pescar e ele provavelmente morrerá em um acidente horrível." speaker="0" speakertags="joker">
+		<Conversation line="Acho que não era assim não." speaker="1">
+			<Conversation line="Concordo, é exatamente assim." speaker="0"/>
+		</Conversation>
+		<Conversation line="Chega de brincadeira." speaker="0" speakertags="professional,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Sabe, tive uma ideia pra um negócio brilhante outro dia." speaker="0" speakertags="joker,laid-back" maxintensity="0.2">
+	<Conversation line="Mas não existem outros dias." speaker="0" flags="Psychosis">
+		<Conversation line="Nada disso faz sentido." speaker="0" flags="Psychosis"/>
+	</Conversation>
+	<Conversation line="Escuta o que eu tô dizendo. A gente podia ganhar muito dinheiro com isso." speaker="0">
+		<Conversation line="E se alguém começasse a criar tanques de oxigênio maiores?" speaker="0">
+			<Conversation line="Que durassem tipo, uma ou duas horas?" speaker="0">
+				<Conversation line="Não sou especialista, mas acho que seria tecnicamente possível." speaker="0">
+					<Conversation line="Ei, que tal se concentrar na tarefa em questão?" speaker="1" speakertags="professional"/>
+					<Conversation line="Sei não... deve ter uma razão técnica. Senão eles já estariam sendo produzidos." speaker="1"/>
+					<Conversation line="É boa ideia!" speaker="1" speakertags="brokenenglish">
+						<Conversation line="Ei, que tal se concentrar na tarefa em questão?" speaker="2" speakertags="professional"/>
+					</Conversation>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+		<Conversation line="Caixas de passagem à prova d'água." speaker="0">
+			<Conversation line="Genial, né não?" speaker="0">
+				<Conversation line="Ei, que tal se concentrar na tarefa em questão?" speaker="1" speakertags="professional"/>
+				<Conversation line="Deve ter um motivo pra terem buracos de ventilação." speaker="1">
+					<Conversation line="Senão elas já estariam sendo produzidas." speaker="1"/>
+				</Conversation>
+				<Conversation line="É ótima ideia!" speaker="1" speakertags="brokenenglish">
+					<Conversation line="Ei, que tal se concentrar na tarefa em questão?" speaker="2" speakertags="professional"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Tá bem calmo por aqui." speaker="0" maxintensity="0.3">
+	<Conversation line="AAAAAAAAAAAAAAAAAAAAAAAAAA!" speaker="0" flags="Psychosis">
+		<Conversation line="AAAAAAAAAAAAAAAAAAAAAAAAAA!" speaker="0" flags="Psychosis">
+			<Conversation line="AAAAAAAAAAAAAAAAAAAAAAAAAA!" speaker="0" flags="Psychosis"/>
+		</Conversation>
+	</Conversation>
+	<Conversation line="O meu headset tá funcionando?" speaker="0">
+		<Conversation line="Está. Mantenha as conversas a um mínimo." speaker="1" speakertags="professional"/>
+		<Conversation line="Estou ouvindo em alto e bom som." speaker="1"/>
+		<Conversation line="Sim, ouvir bem você!" speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Testando o rádio." speaker="0" speakertags="professional" maxintensity="0.3">
+	<Conversation line="Testando o rádio." speaker="1" flags="PsychosisSelf">
+		<Conversation line="Rádio testar." speaker="1" flags="PsychosisSelf">
+			<Conversation line="Ondas de rádio. Radiação. Radioação." speaker="1" flags="PsychosisSelf">
+				<Conversation line="Rádio!" speaker="1" flags="PsychosisSelf">
+					<Conversation line="Rádio." speaker="1" flags="PsychosisSelf"/>
+				</Conversation>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+	<Conversation line="Em alto e bom som." speaker="1" speakertags="professional"/>
+	<Conversation line="Bom e claro." speaker="1" speakertags="professional"/>
+	<Conversation line="Tudo certo!" speaker="1"/>
+	<Conversation line="Sim, ouvir bem você!" speaker="1" speakertags="brokenenglish"/>
+</Conversation>
+
+<Conversation line="Vocês estão ouvindo a canção dos Homens-Caranguejo?" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="" speaker="0"/>
+	<Conversation line="Não." speaker="1"/>
+	<Conversation line="Pela última vez, os Homens-Caranguejo não existem." speaker="1"/>
+</Conversation>
+
+<Conversation line="Mais adentro." speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="Mergulhando mais fundo? Não. Mergulhando mais adentro." speaker="0" speakertags="crazy" maxintensity="0.2">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="Você é uma causa perdida." speaker="1" speakertags="rude"/>
+		<Conversation line="Eu não entender." speaker="1" speakertags="brokenenglish"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Deus consegue enxergar através de léguas de gelo?" speaker="0" speakertags="crazy" maxintensity="0.2">
+	<Conversation line="Ou seria Júpiter?" speaker="0" speakertags="crazy">
+		<Conversation line="" speaker="0"/>
+		<Conversation line="Isso não faz nenhum sentido." speaker="1"/>
+	</Conversation>
+	<Conversation line="Ou talvez seria o Abismo, este olhar sobre nós." speaker="0" speakertags="crazy">
+		<Conversation line="O culto tinha razão sobre uma coisa... tem alguma coisa lá embaixo." speaker="0" speakertags="crazy">
+			<Conversation line="" speaker="0"/>
+			<Conversation line="Até parece." speaker="1"/>
+			<Conversation line="Talvez, quem sabe." speaker="1">
+				<Conversation line="Mas temos coisas mais importantes com que nos preocupar agora." speaker="1"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Em momentos como esse, não passamos de fantoches em cordas." speaker="0" speakertags="crazy" maxintensity="0.3">
+	<Conversation line="Dançando e morrendo para o entretenimento daquele por trás da cortina." speaker="0">
+		<Conversation line="" speaker="1"/>
+		<Conversation line="Por favor, nada de dançar e morrer no meu navio." speaker="1" allowedjobs="captain"/>
+		<Conversation line="Não estou nada entretido." speaker="1" speakertags="professional"/>
+		<Conversation line="*suspiro*" speaker="1"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Essa viagem vai ser longa." speaker="0" minintensity="0.3" maxintensity="0.5"/>
+
+<Conversation line="As coisas estão ficando tensas." speaker="0" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="Nós vamos conseguir." speaker="0" minintensity="0.3"/>
+
+<Conversation line="Finalmente, ação!" speaker="0" speakertags="tough" minintensity="0.3"/>
+
+<Conversation line="Seu trabalho se inicia!" speaker="0" speakertags="crazy" minintensity="0.3" maxintensity="0.6"/>
+
+<Conversation line="Oh-oh." speaker="0" minintensity="0.5"/>
+
+<Conversation line="É apenas um contratempo!" speaker="0" speakertags="tough" minintensity="0.5"/>
+
+<Conversation line="A velocidade em que a maré muda." speaker="0" minintensity="0.5"/>
+
+<Conversation line="Isso ruim!" speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="Não ser bom!" speaker="0" speakertags="brokenenglish" minintensity="0.5"/>
+
+<Conversation line="Junte-se à frota, disseram! Será uma experiência emocionante!" speaker="0" speakertags="joker" minintensity="0.5"/>
+
+<Conversation line="Vou precisar de um trago depois dessa!" speaker="0" speakertags="joker,laid-back" minintensity="0.5"/>
+
+<Conversation line="Certo, tripulação, mostrem do que são capazes!" speaker="0" allowedjobs="captain" speakertags="professional,tough,laid-back" minintensity="0.5"/>
+
+<Conversation line="Ainda não estamos em segurança!" speaker="0" allowedjobs="captain" minintensity="0.5"/>
+
+<Conversation line="Não quero morrer!" speaker="0" speakertags="fearful" minintensity="0.6"/>
+
+<Conversation line="Eu devia ter estudado pra ser botânico!" speaker="0" speakertags="joker" minintensity="0.6"/>
+
+<Conversation line="Se segurem, pessoal! Vamos ficar bem!" speaker="0" speakertags="tough" minintensity="0.6">
+	<Conversation line="Tem certeza?" speaker="1" speakertags="fearful"/>
+</Conversation>
+
+<Conversation line="Pra mim chega!" speaker="0" speakertags="rude" minintensity="0.6"/>
+
+<Conversation line="Se não sobrevivermos, digam pra minha mãe que eu a amo!" speaker="0" speakertags="fearful" minintensity="0.6">
+	<Conversation line="Cala essa boca!" speaker="1" speakertags="rude"/>
+	<Conversation line="Para com isso! Você vai sobreviver!" speaker="1" speakertags="professional"/>
+</Conversation>
+
+<Conversation line="Se sairmos dessa vivos, eu me demito!" speaker="0" speakertags="joker,laid-back" minintensity="0.6"/>
+
+<Conversation line="E então a vida reflui e sua sede é saciada..." speaker="0" speakertags="crazy" minintensity="0.7"/>
+
+<Conversation line="Parabéns aos envolvidos por esse desastre." speaker="0" speakertags="rude" minintensity="0.8"/>
+
+<Conversation line="Ai, Deus." speaker="0" minintensity="0.8"/>
+
+<Conversation line="Ai, não." speaker="0" speakertags="joker" minintensity="0.8"/>
+
+<Conversation line="Foi uma honra servir ao lado de vocês." speaker="0" speakertags="professional" minintensity="0.8"/>
+
+<Conversation line="Eu sempre fico meio apreensivo quando vamos tão fundo." speaker="0" flags="SubmarineDeep">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Vai ficar tudo bem. Já estivemos mais fundo." speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="Dar medo quando muito fundo assim." speaker="0" flags="SubmarineDeep" speakertags="brokenenglish">
+	<Conversation line="" speaker="0" flags="Casual"/>
+	<Conversation line="Isso foi o que a sua mãe me disse." speaker="1" speakertags="joker"/>
+	<Conversation line="Vai ficar tudo bem. Já estivemos mais fundo." speaker="1" speakertags="tough"/>
+</Conversation>
+
+<Conversation line="Vocês estão ouvindo o rangido do casco? Tem certeza de que é seguro?" speaker="0" flags="SubmarineDeep" speakertags="fearful">
+	<Conversation line="Você não deveria ter entrado pra frota se quisesse ficar seguro." speaker="1" speakertags="tough,rude"/>
+	<Conversation line="Vamos conseguir. Já estivemos mais fundo." speaker="1" speakertags="tough"/>
+	<Conversation line="Vai dar tudo certo. Mas mantenha os soldadores à mão." speaker="1"/>
+</Conversation>
+
+<!-- Afflictions -->
+<Conversation line="Acho que vou desmaiar." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Não estou me sentindo muito bem." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Acho que preciso de plasma sanguíneo." speaker="0" flags="Bloodloss"/>
+
+<Conversation line="Arroto" speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="Não é sempre que eu digo isso, mas vocêsh são demaish." speaker="0" flags="DrunkMedium">
+	<Conversation line="Tripulação melhor não há!" speaker="0" flags="DrunkMedium">
+		<Conversation line="Você bebeu?" speaker="1" flags="DrunkMedium">
+			<Conversation line="Calma, cara, tá tuto belezma!" speaker="2" flags="DrunkMedium"/>
+			<Conversation line="Nem, só unsh golesh." speaker="0" flags="DrunkMedium"/>
+			<Conversation line="Quéquifoi? Só queria dizê o quanto qui eu amo vocêsh!" speaker="0" flags="DrunkMedium"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Hehe..." speaker="0" flags="DrunkMedium"/>
+
+<Conversation line="Excutaqui... Vamo saí dessa!" speaker="0" flags="DrunkMedium" minintensity="0.5"/>
+
+<Conversation line="Axo melhó eu deitá um pôco..." speaker="0" flags="DrunkHigh">
+	<Conversation line="Ah, pelamor. Sai do caminho até passar a bebedeira." speaker="1" speakertags="professional,tough,rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="O que fazê comarinheiro bêbo, o que fazê comarinhero bêbo..." speaker="0" flags="DrunkHigh">
+	<Conversation line="Diash pra todosh!" speaker="0" flags="DrunkHigh">
+		<Conversation line="Você não está em condições de trabalhar, marujo. Fique sóbrio e conversamos." speaker="1" allowedjobs="captain" speakertags="professional,tough,rude">
+			<Conversation line="Maizá, eu dô conta!" speaker="0" flags="DrunkHigh"/>
+		</Conversation>
+		<Conversation line="Alguém está de bom humor!" speaker="1" speakertags="joker"/>
+		<Conversation line="Ah, pelamor. Sai do caminho até passar a bebedeira." speaker="1" speakertags="professional,tough,rude"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Pusquêqui tá o barco tá sacudino tanto ashim?" speaker="0" flags="DrunkHigh">
+	<Conversation line="Acho que é só você mesmo." speaker="1"/>
+	<Conversation line="Se recomponha!" speaker="1"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Não tô me sentindo bem." speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="Tô com enjoo..." speaker="0" flags="OpiateWithdrawalLow"/>
+
+<Conversation line="A minha perna tá me matando. Dá pra liberar uma morfina?" speaker="0" flags="OpiateWithdrawalMedium">
+	<Conversation line="Não tem nada de errado com a sua perna. Acho que é melhor parar de tomar morfina por um tempo." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Não tem nada de errado com a sua perna, seu viciado." speaker="1" speakertags="rude"/>
+</Conversation>
+
+<Conversation line="Eu não vou aguentar." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Acho que vou vomitar." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Eu não devia tá aqui. Quero ir pra casa." speaker="0" flags="OpiateWithdrawalMedium"/>
+
+<Conversation line="Parece que eu vou morrer! Eu não aguento!" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="Acho que você deveria tomar uma dose de naloxona." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Para com isso." speaker="1" speakertags="rude"/>
+	<Conversation line="" speaker="0"/>
+</Conversation>
+
+<Conversation line="Precisamos falar sobre o elefante na sala." speaker="0" flags="Psychosis">
+	<Conversation line="Vocês sabem do que eu estou falando." speaker="0">
+		<Conversation line="Isso não pode continuar ou alguém vai acabar morrendo." speaker="0">
+			<Conversation line="A menos que eliminemos o problema antes." speaker="1"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Precisamos sair daqui." speaker="0" flags="PsychosisSelf">
+	<Conversation line="Agora." speaker="0" flags="PsychosisSelf"/>
+</Conversation>
+
+<Conversation line="Ultrave suas correntes e cria enigmas que o sofre devoto seja o chicote e não mais dele somos." speaker="0" flags="Psychosis">
+	<Conversation line="Preste atenção, isso não é uma metáfora." speaker="0" flags="Psychosis">
+		<Conversation line="Mas ser a vontade força e então a fricção." speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="A realideza, mas um dia a perfuração juntos daqueles que levarão à realidade." speaker="0" flags="Psychosis">
+	<Conversation line="E segurança de revelados conhecimentos ao longe." speaker="0" flags="Psychosis">
+		<Conversation line="Vivemos no dia que há sua própria direção ou fugir da inabilidade." speaker="0" flags="Psychosis"/>
+		<Conversation line="E é destes mares sombrios próprios conhecimentos dissociados abrirão tão terrível arcolá gerados a nós." speaker="0" flags="Psychosis"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="BUMP! E então olhamos." speaker="0" flags="Psychosis">
+	<Conversation line="E nosso peixe também caiu. Junto com o barco." speaker="0" flags="Psychosis">
+		<Conversation line="Nem um pouquinho! E nosso peixe conforme disse e nosso tempo e o peixe veio." speaker="0" flags="Psychosis">
+			<Conversation line="Nem um pouquinho! Eu não gostei, nem um pouquinho. Não, senhor." speaker="0" flags="Psychosis"/>
+			<Conversation line="As coisas não deveriam estar! Essas coisas não deveriam estar, disse o peixe." speaker="0" flags="Psychosis">
+				<Conversation line="Mas não é certo e você sabe." speaker="1" flags="Psychosis"/>
+			</Conversation>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Cadê a porra da morfina?" speaker="0" flags="OpiateWithdrawalHigh">
+	<Conversation line="Você não precisa de mais morfina. Você precisa de naloxona." speaker="1" allowedjobs="medicaldoctor"/>
+	<Conversation line="Espero que em um lugar fora do seu alcance." speaker="1" speakertags="rude"/>
+	<Conversation line="O que está acontecendo? Você está ferido?" speaker="1">
+		<Conversation line="Parece que eu vou morrer. Eu não vou aguentar se não conseguir umazinha." speaker="0"/>
+		<Conversation line="Estou com câimbra e parece que meu coração vai explodir! Não aguento mais!" speaker="0"/>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Levei um tiro! Preciso de bandagens!" speaker="0" flags="GunshotWound"/>
+
+<Conversation line="Socorro, levei um tiro!" speaker="0" flags="GunshotWound"/>
+
+<!-- Outpost Watchmen -->
+<Conversation line="Olá, marujos!" speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="O resto do posto avançado ainda está em construção, mas volte em alguns meses!" speaker="0">
+		<Conversation line="No entanto, posso mostrar pra vocês uma lista de suprimentos em promoção e pessoas à procura de trabalho." speaker="0">
+			<Conversation line="E quando estiverem prontos, posso dar instruções de navegação para locais próximos." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Sempre bom ver um rosto conhecido! Não temos muitos visitantes por essas bandas." speaker="0" flags="EnterEndOutpost" allowedjobs="watchman">
+	<Conversation line="O resto do posto avançado ainda está em construção, mas volte em alguns meses!" speaker="0">
+		<Conversation line="Mas se precisar de suprimentos ou de mais tripulantes, é só falar." speaker="0">
+			<Conversation line="E quando estiverem prontos, posso dar instruções de navegação para locais próximos." speaker="0"/>
+		</Conversation>
+	</Conversation>
+</Conversation>
+
+<Conversation line="Já estão partindo?" speaker="0" flags="EnterStartOutpost" allowedjobs="watchman">
+	<Conversation line="Se precisar de mais suprimentos ou tripulantes, ou se quiser voltar para outro local, é só falar." speaker="0"/>
+</Conversation>
+
+<Conversation line="Certo, em que posso ajudar?" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Do que você precisa?" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Certo, vamos acabar logo com isso. Tenho trabalho a fazer." speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
+
+<Conversation line="Desculpe, preciso falar com alguém de patente mais alta. Tem alguém na sua tripulação com privilégios de gerenciamento de campanha?" speaker="0" flags="WatchmanInteractNotAllowed" allowedjobs="watchman"/>
+
+<Conversation line="Não posso deixar você entrar até a embarcação estar atracada corretamente. Ou pelo menos próxima o bastante do posto avançado." speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<Conversation line="Você quer abandonar seu submarino? Por favor, aproxime-o do posto avançado." speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
+
+<!-- Changed values -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- New additions -->
+</Conversations>

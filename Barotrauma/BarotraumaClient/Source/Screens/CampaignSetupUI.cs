@@ -280,7 +280,7 @@ namespace Barotrauma
                     {
                         IsFixedSize = false
                     },
-                        TextManager.Get("Shuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
+                        TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
                     {
                         TextColor = textBlock.TextColor * 0.8f,
                         ToolTip = textBlock.ToolTip

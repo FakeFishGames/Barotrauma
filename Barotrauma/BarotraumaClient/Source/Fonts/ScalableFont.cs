@@ -21,6 +21,15 @@ namespace Barotrauma
         private List<Texture2D> textures;
         private GraphicsDevice graphicsDevice;
 
+        private Vector2 currentDynamicAtlasCoords;
+        private int currentDynamicAtlasNextY;
+
+        public bool DynamicLoading
+        {
+            get;
+            private set;
+        }
+
         public uint Size
         {
             get
@@ -47,11 +56,11 @@ namespace Barotrauma
         }
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
-            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd)
+            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd, element.GetAttributeBool("dynamicloading", false))
         {            
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null)
+        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false)
         {
             if (Lib == null) Lib = new Library();
             this.filename = filename;
@@ -69,12 +78,15 @@ namespace Barotrauma
                 this.face = new Face(Lib, filename);
             }
             this.size = size;
-
             this.textures = new List<Texture2D>();
-
             this.texCoords = new Dictionary<uint, GlyphData>();
+            this.DynamicLoading = dynamicLoading;
+            this.graphicsDevice = gd;
 
-            if (gd != null) RenderAtlas(gd);
+            if (gd != null && !dynamicLoading)
+            {
+                RenderAtlas(gd);
+            }
 
             FontList.Add(this);
         }
@@ -87,8 +99,10 @@ namespace Barotrauma
         /// <param name="charRanges">Character ranges between each even element with their corresponding odd element. Default is 0x20 to 0xFFFF.</param>
         /// <param name="texDims">Texture dimensions. Default is 512x512.</param>
         /// <param name="baseChar">Base character used to shift all other characters downwards when rendering. Defaults to T.</param>
-        public void RenderAtlas(GraphicsDevice gd, uint[] charRanges = null, int texDims = 512, uint baseChar = 0x54)
+        public void RenderAtlas(GraphicsDevice gd, uint[] charRanges = null, int texDims = 1024, uint baseChar = 0x54)
         {
+            if (DynamicLoading) { return; }
+
             if (charRanges == null)
             {
                 charRanges = new uint[] { 0x20, 0xFFFF };
@@ -172,11 +186,13 @@ namespace Barotrauma
                         }
                     }
 
-                    GlyphData newData = new GlyphData();
-                    newData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
-                    newData.texIndex = texIndex;
-                    newData.texCoords = new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight);
-                    newData.drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight*14/10 - face.Glyph.BitmapTop);
+                    GlyphData newData = new GlyphData
+                    {
+                        advance = (float)face.Glyph.Metrics.HorizontalAdvance,
+                        texIndex = texIndex,
+                        texCoords = new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
+                        drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
+                    };
                     texCoords.Add(j, newData);
 
                     for (int y = 0; y < glyphHeight; y++)
@@ -192,14 +208,93 @@ namespace Barotrauma
                 }
                 textures[texIndex].SetData<uint>(pixelBuffer);
             }
-
-            graphicsDevice = gd;
         }
-        
+
+        public void DynamicRenderAtlas(GraphicsDevice gd, uint character, int texDims = 1024, uint baseChar = 0x54)
+        {
+            if (textures.Count == 0)
+            {
+                this.texDims = texDims;
+                this.baseChar = baseChar;
+                face.SetPixelSizes(0, size);
+                face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
+                baseHeight = face.Glyph.Metrics.Height.ToInt32();
+                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+            }
+
+            uint glyphIndex = face.GetCharIndex(character);
+            if (glyphIndex == 0) { return; }
+
+            face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+            if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
+            {
+                if (face.Glyph.Metrics.HorizontalAdvance > 0)
+                {
+                    //glyph is empty, but char still applies advance
+                    GlyphData blankData = new GlyphData();
+                    blankData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
+                    blankData.texIndex = -1; //indicates no texture because the glyph is empty
+                    texCoords.Add(character, blankData);
+                }
+                return;
+            }
+
+            //stacktrace doesn't really work that well when RenderGlyph throws an exception
+            face.Glyph.RenderGlyph(RenderMode.Normal);
+            byte[] bitmap = face.Glyph.Bitmap.BufferData;
+            int glyphWidth = face.Glyph.Bitmap.Width;
+            int glyphHeight = bitmap.Length / glyphWidth;
+
+            if (glyphWidth > texDims - 1 || glyphHeight > texDims - 1)
+            {
+                throw new Exception(filename + ", " + size.ToString() + ", " + (char)character + "; Glyph dimensions exceed texture atlas dimensions");
+            }
+            
+            currentDynamicAtlasNextY = Math.Max(currentDynamicAtlasNextY, glyphHeight + 2);
+            if (currentDynamicAtlasCoords.X + glyphWidth + 2 > texDims - 1)
+            {
+                currentDynamicAtlasCoords.X = 0;
+                currentDynamicAtlasCoords.Y += currentDynamicAtlasNextY;
+                currentDynamicAtlasNextY = 0;
+            }            
+            //no more room in current texture atlas, create a new one
+            if (currentDynamicAtlasCoords.Y + glyphHeight + 2 > texDims - 1)
+            {
+                currentDynamicAtlasCoords.X = 0;
+                currentDynamicAtlasCoords.Y = 0;
+                currentDynamicAtlasNextY = 0;
+                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+            }
+
+            GlyphData newData = new GlyphData
+            {
+                advance = (float)face.Glyph.Metrics.HorizontalAdvance,
+                texIndex = textures.Count - 1,
+                texCoords = new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
+                drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
+            };
+            texCoords.Add(character, newData);
+            
+            uint[] pixelBuffer = new uint[texDims * texDims];
+            textures[newData.texIndex].GetData<uint>(pixelBuffer, 0, texDims * texDims);
+            
+            for (int y = 0; y < glyphHeight; y++)
+            {
+                for (int x = 0; x < glyphWidth; x++)
+                {
+                    byte byteColor = bitmap[x + y * glyphWidth];
+                    pixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | byteColor << 16 | byteColor << 8 | byteColor);
+                }
+            }
+            textures[newData.texIndex].SetData<uint>(pixelBuffer);
+
+            currentDynamicAtlasCoords.X += glyphWidth + 2;
+        }
+
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)
         {
-            if (textures.Count == 0) return;
-            
+            if (textures.Count == 0 && !DynamicLoading) { return; }
+
             int lineNum = 0;
             Vector2 currentPos = position;
             Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
@@ -213,7 +308,13 @@ namespace Barotrauma
                     currentPos.Y += baseHeight * 1.8f * lineNum * advanceUnit.X * scale.Y;
                     continue;
                 }
+
                 uint charIndex = text[i];
+                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
+                {
+                    DynamicRenderAtlas(graphicsDevice, charIndex);
+                }
+
                 if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
                 {
                     if (gd.texIndex >= 0)
@@ -222,7 +323,6 @@ namespace Barotrauma
                         Vector2 drawOffset;
                         drawOffset.X = gd.drawOffset.X * advanceUnit.X * scale.X - gd.drawOffset.Y * advanceUnit.Y * scale.Y;
                         drawOffset.Y = gd.drawOffset.X * advanceUnit.Y * scale.Y + gd.drawOffset.Y * advanceUnit.X * scale.X;
-
 
                         sb.Draw(tex, currentPos + drawOffset, gd.texCoords, color, rotation, origin, scale, se, layerDepth);
                     }
@@ -238,7 +338,7 @@ namespace Barotrauma
 
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color)
         {
-            if (textures.Count == 0) return;
+            if (textures.Count == 0 && !DynamicLoading) { return; }
 
             Vector2 currentPos = position;
             for (int i = 0; i < text.Length; i++)
@@ -249,7 +349,13 @@ namespace Barotrauma
                     currentPos.Y += baseHeight * 1.8f;
                     continue;
                 }
-                uint charIndex = text[i];                
+
+                uint charIndex = text[i];
+                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
+                {
+                    DynamicRenderAtlas(graphicsDevice, charIndex);
+                }
+
                 if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
                 {
                     if (gd.texIndex >= 0)
@@ -281,6 +387,10 @@ namespace Barotrauma
                     continue;
                 }
                 uint charIndex = text[i];
+                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
+                {
+                    DynamicRenderAtlas(graphicsDevice, charIndex);
+                }
                 if (texCoords.TryGetValue(charIndex, out GlyphData gd))
                 {
                     currentLineX += gd.advance;
@@ -294,6 +404,10 @@ namespace Barotrauma
         {
             Vector2 retVal = Vector2.Zero;
             retVal.Y = baseHeight * 1.8f;
+            if (DynamicLoading && !texCoords.ContainsKey(c))
+            {
+                DynamicRenderAtlas(graphicsDevice, c);
+            }
             if (texCoords.TryGetValue(c, out GlyphData gd))
             {
                 retVal.X = gd.advance;

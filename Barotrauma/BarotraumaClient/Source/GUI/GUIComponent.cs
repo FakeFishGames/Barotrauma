@@ -166,9 +166,7 @@ namespace Barotrauma
             get { return enabled; }
             set { enabled = value; }
         }
-
-        public bool TileSprites;
-
+        
         private static GUITextBlock toolTipBlock;
 
         public Vector2 Center
@@ -297,8 +295,6 @@ namespace Barotrauma
         protected GUIComponent(string style)
         {
             Visible = true;
-
-            TileSprites = true;
 
             OutlineColor = Color.Transparent;
 

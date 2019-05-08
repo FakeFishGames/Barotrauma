@@ -627,6 +627,8 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
+                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+                Submarine.MainSub.UpdateTransform();
                 cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
             }
             else
@@ -1353,7 +1355,7 @@ namespace Barotrauma
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
                     var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
-                        TextManager.Get("Shuttle"), font: GUI.SmallFont)
+                        TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), font: GUI.SmallFont)
                         {
                             TextColor = textBlock.TextColor * 0.8f,
                             ToolTip = textBlock.ToolTip
@@ -1429,8 +1431,10 @@ namespace Barotrauma
             if (subList.SelectedComponent == null) { return false; }
             if (!(subList.SelectedComponent.UserData is Submarine selectedSub)) { return false; }
 
-            Submarine.MainSub = selectedSub;
             selectedSub.Load(true);
+            Submarine.MainSub = selectedSub;
+            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+            Submarine.MainSub.UpdateTransform();
 
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
