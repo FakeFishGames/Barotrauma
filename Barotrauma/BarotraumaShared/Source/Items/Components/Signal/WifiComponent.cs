@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -74,9 +75,9 @@ namespace Barotrauma.Items.Components
             return HasRequiredContainedItems(true);
         }
         
-        private List<WifiComponent> GetReceiversInRange()
+        public IEnumerable<WifiComponent> GetReceiversInRange()
         {
-            return list.FindAll(w => w != this && w.CanReceive(this));
+            return list.Where(w => w != this && w.CanReceive(this));
         }
 
         public bool CanReceive(WifiComponent sender)
