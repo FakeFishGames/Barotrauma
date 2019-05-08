@@ -7,9 +7,10 @@ namespace Barotrauma
     class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
         public override string DebugTag => "rescue all";
+        public override bool ForceRun => true;
 
-        //only treat characters whose vitality is below this (0.8 = 80% of max vitality)
-        public const float VitalityThreshold = 0.8f;
+        //only treat characters whose vitality is below this (0.9 = 90% of max vitality)
+        public const float VitalityThreshold = 0.9f;
         
         public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }

@@ -3106,6 +3106,9 @@
   <orderoptions.reportbrokendevices></orderoptions.reportbrokendevices>
   <orderoptions.requestfirstaid></orderoptions.requestfirstaid>
 
+  <dialogfoundwoundedtarget>Giving first aid to [targetname] in [roomname]!</dialogfoundwoundedtarget>
+  <dialogfoundwoundedtarget>Treating [targetname] in [roomname]!</dialogfoundwoundedtarget>
+
   <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
   <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
 

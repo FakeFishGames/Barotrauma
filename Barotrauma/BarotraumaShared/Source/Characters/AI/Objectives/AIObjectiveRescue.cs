@@ -20,8 +20,6 @@ namespace Barotrauma
 
         private float treatmentTimer;
 
-        public override bool CanBeCompleted => base.CanBeCompleted && AIObjectiveRescueAll.IsValidTarget(targetCharacter, character);
-
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
@@ -33,14 +31,19 @@ namespace Barotrauma
             AIObjectiveRescue rescueObjective = otherObjective as AIObjectiveRescue;
             return rescueObjective != null && rescueObjective.targetCharacter == targetCharacter;
         }
-
+        
         protected override void Act(float deltaTime)
         {
-            // Target is not in a safe place -> Move to a safe place first
-            if (HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
+            // Unconcious target is not in a safe place -> Move to a safe place first
+            if (targetCharacter.IsUnconscious && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 if (character.SelectedCharacter != targetCharacter)
                 {
+                    character.Speak(TextManager.Get("DialogFoundUnconsciousTarget")
+                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", character.CurrentHull.DisplayName),
+                        null, 1.0f,
+                        "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+
                     // Go to the target and select it
                     if (!character.CanInteractWith(targetCharacter))
                     {
@@ -68,28 +71,30 @@ namespace Barotrauma
                         // Ensure that we have the find safety objective (should always be the case)
                         objectiveManager.AddObjective(new AIObjectiveFindSafety(character, objectiveManager));
                     }
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(findSafety.FindBestHull(), character, objectiveManager));
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(findSafety.FindBestHull(new Hull[] { character.CurrentHull }), character, objectiveManager));
                 }
                 return;
             }
 
             if (subObjectives.Any()) { return; }
 
-            // We can start applying treatment
             if (!character.CanInteractWith(targetCharacter))
             {
+                // Go to the target and select it
                 TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
             }
             else
             {
-                if (character.SelectedCharacter == null)
+                // We can start applying treatment
+                if (character.SelectedCharacter != targetCharacter)
                 {
-                    character?.Speak(TextManager.Get("DialogFoundUnconsciousTarget")
+                    character.Speak(TextManager.Get("DialogFoundWoundedTarget")
                         .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", character.CurrentHull.DisplayName),
                         null, 1.0f,
-                        "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                        "foundwoundedtarget" + targetCharacter.Name, 60.0f);
+
+                    character.SelectCharacter(targetCharacter);
                 }
-                character.SelectCharacter(targetCharacter);
                 GiveTreatment(deltaTime);
             }
         }
@@ -160,7 +165,7 @@ namespace Barotrauma
                     {
                         itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
                     }
-                    character?.Speak(TextManager.Get("DialogListRequiredTreatments")
+                    character.Speak(TextManager.Get("DialogListRequiredTreatments")
                         .Replace("[targetname]", targetCharacter.Name)
                         .Replace("[treatmentlist]", itemListStr),
                         null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
@@ -199,7 +204,7 @@ namespace Barotrauma
             bool isCompleted = targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.VitalityThreshold;
             if (isCompleted)
             {
-                character?.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
+                character.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
                     null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
             }
             return isCompleted || targetCharacter.Removed || targetCharacter.IsDead;
@@ -207,12 +212,21 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (targetCharacter.CurrentHull == null || targetCharacter.IsDead) { return 0; ; }
+            if (targetCharacter == null) { return 0; }
+            if (targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
+            {
+                abandon = true;
+                return 0;
+            }
             // Don't go into rooms that have enemies
-            if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !HumanAIController.IsFriendly(c))) { return 0; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !HumanAIController.IsFriendly(c)))
+            {
+                abandon = true;
+                return 0;
+            }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - targetCharacter.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetCharacter.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
+            float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
             float vitalityFactor = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter);
             float devotion = Math.Max(Priority, 10) / 100;
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + vitalityFactor * distanceFactor, 0, 1));
