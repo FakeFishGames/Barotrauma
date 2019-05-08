@@ -305,8 +305,8 @@ namespace Barotrauma
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
                 if (InStairs)
                 {
-                    float multiplierX = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.X / 10, 0, 1));
-                    float multiplierY = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.Y / 10, 0, 1));
+                    float multiplierX = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
+                    float multiplierY = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.Y) / 10, 0, 1));
                     float verticalDistance = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
                     float targetDistX = collider.radius * multiplierX;
                     float targetDistY = collider.radius * multiplierY;
@@ -317,7 +317,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.X / 10, 0, 1));
+                    float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
                     float targetDistance = collider.radius * margin;
                     if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh)
                     {
