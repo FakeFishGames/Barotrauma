@@ -270,15 +270,17 @@ namespace Barotrauma
             WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
 
             loadingScreenOpen = true;
-            TitleScreen = new LoadingScreen(GraphicsDevice);
-            TitleScreen.WaitForLanguageSelection = Config.ShowLanguageSelectionPrompt;
+            TitleScreen = new LoadingScreen(GraphicsDevice)
+            {
+                WaitForLanguageSelection = Config.ShowLanguageSelectionPrompt
+            };
 
             bool canLoadInSeparateThread = false;
 #if WINDOWS
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(), "", canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
         }
         
         private void InitUserStats()
@@ -314,7 +316,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> Load()
+        private IEnumerable<object> Load(bool isSeparateThread)
         {
             if (GameSettings.VerboseLogging)
             {
@@ -334,10 +336,20 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
             if (Config.EnableSplashScreen)
             {
-                var pendingSplashScreens = (TitleScreen as LoadingScreen).PendingSplashScreens;
+                var pendingSplashScreens = TitleScreen.PendingSplashScreens;
                 pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_UTG.mp4", new Point(1280, 720)));
                 pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_FF.mp4", new Point(1280, 720)));
                 pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_Daedalic.mp4", new Point(1920, 1080)));
+            }
+
+            //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading
+            //otherwise the videos will look extremely choppy
+            if (!isSeparateThread)
+            {
+                while (TitleScreen.PlayingSplashScreen || TitleScreen.PendingSplashScreens.Count > 0)
+                {
+                    yield return CoroutineStatus.Running;
+                }
             }
 
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
