@@ -147,7 +147,7 @@ namespace Barotrauma
 #endif
                     Objectives.Remove(objective);
                 }
-                else
+                else if (objective != CurrentOrder)
                 {
                     objective.Update(deltaTime);
                 }
