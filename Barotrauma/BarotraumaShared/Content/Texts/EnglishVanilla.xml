@@ -1983,8 +1983,6 @@
   <skillname.mechanical>Mechanical Engineering</skillname.mechanical>
   <skillname.electrical>Electrical Engineering</skillname.electrical>
   <skillname.medical>Medical</skillname.medical>
-  <skillname.initiative>Initiative</skillname.initiative>
-  <skillname.courage>Courage</skillname.courage>
 
   <!-- Item messages -->
   <itemmsginteractselect>[[select]] Interact</itemmsginteractselect>
@@ -3063,6 +3061,13 @@
   <orderdialogself.fightintruders>Taking care of the intruders!</orderdialogself.fightintruders>
   <orderdialogself.fightintruders>Fighting the enemy!</orderdialogself.fightintruders>
 
+  <orderdialog.rescue>[name], Check if anyone needs medical attention!</orderdialog.rescue>
+  <orderdialog.rescue>[name], Heal the wounded!</orderdialog.rescue>
+  <orderdialogself.rescue>Medical aid on the way!</orderdialogself.rescue>
+  <orderdialogself.rescue>Healing the wounded!</orderdialogself.rescue>
+  <dialognorescuetargets>Everyone seems healthy enough.</dialognorescuetargets>
+  <dialognorescuetargets>Nobody needs healing right now.</dialognorescuetargets>
+
   <ordername.dismissed>Dismissed</ordername.dismissed>
   <ordername.follow>Follow</ordername.follow>
   <ordername.wait>Wait</ordername.wait>
@@ -3101,8 +3106,14 @@
   <orderoptions.reportbrokendevices></orderoptions.reportbrokendevices>
   <orderoptions.requestfirstaid></orderoptions.requestfirstaid>
 
+  <dialogfoundwoundedtarget>Giving first aid to [targetname] in [roomname]!</dialogfoundwoundedtarget>
+  <dialogfoundwoundedtarget>Treating [targetname] in [roomname]!</dialogfoundwoundedtarget>
+
   <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
   <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
+
+  <skillname.initiative>Initiative</skillname.initiative>
+  <skillname.courage>Courage</skillname.courage>
 
   <mutedbyserver>You have been muted by the server.</mutedbyserver>
   <unmutedbyserver>You have been unmuted by the server.</unmutedbyserver>
