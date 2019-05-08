@@ -15,7 +15,6 @@ namespace Barotrauma
 
         // By default, doesn't clear the list automatically
         protected virtual float IgnoreListClearInterval => 0;
-        protected virtual float TargetUpdateInterval => 2;
 
         public HashSet<T> ReportedTargets { get; private set; } = new HashSet<T>();
 
@@ -59,14 +58,13 @@ namespace Barotrauma
                     ignoreListTimer += deltaTime;
                 }
             }
-            if (targetUpdateTimer >= TargetUpdateInterval)
+            if (targetUpdateTimer < 0)
             {
-                targetUpdateTimer = 0;
                 UpdateTargets();
             }
             else
             {
-                targetUpdateTimer += deltaTime;
+                targetUpdateTimer -= deltaTime;
             }
             // Sync objectives, subobjectives and targets
             foreach (var objective in objectives)
@@ -75,7 +73,7 @@ namespace Barotrauma
                 if (!objective.Value.CanBeCompleted)
                 {
                     ignoreList.Add(target);
-                    targetUpdateTimer = TargetUpdateInterval;
+                    targetUpdateTimer = 0;
                 }
                 if (!targets.Contains(target))
                 {
@@ -88,6 +86,9 @@ namespace Barotrauma
                 CreateObjectives();
             }
         }
+
+        // the timer is set between 1 and 10 seconds, depending on the priority
+        private float SetTargetUpdateTimer() => targetUpdateTimer = 1 / MathHelper.Clamp(PriorityModifier * Rand.Range(0.75f, 1.25f), 0.1f, 1);
 
         public override void Reset()
         {
@@ -125,6 +126,7 @@ namespace Barotrauma
 
         protected void UpdateTargets()
         {
+            SetTargetUpdateTimer();
             targets.Clear();
             FindTargets();
             CreateObjectives();
