@@ -21,7 +21,7 @@ namespace Barotrauma
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         public float Priority { get; set; }
-        public float PriorityModifier { get; private set; }
+        public float PriorityModifier { get; private set; } = 1;
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
         public string Option { get; protected set; }
