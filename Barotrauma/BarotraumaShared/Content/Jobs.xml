@@ -30,13 +30,8 @@
       <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <!--TODO: change to maintainposition-->
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="steer" option="navigatetodestination" prioritymodifier="0.5"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.2"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.2"/>
-      <Order aitag="fixleaks" prioritymodifier="0.1"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.1"/>
+      <Order aitag="extinguishfires" prioritymodifier ="0.5"/>
+      <Order aitag="steer" option="maintainposition" prioritymodifier="0.5"/>
     </AutonomousObjectives>
   </Job>
   
@@ -74,7 +69,7 @@
       <Order aitag="extinguishfires" prioritymodifier ="1"/>
       <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
       <Order aitag="fixleaks" prioritymodifier="0.75"/>
-      <Order aitag="operatereactor" option="powerup" prioritymodifier="0.5"/>
+      <Order aitag="operatereactor" option="powerup" prioritymodifier="0.3"/>
       <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
       <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
@@ -153,11 +148,11 @@
     <AutonomousObjectives>
       <Order aitag="fightintruders" prioritymodifier="1"/>
       <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
-      <Order aitag="operateweapons" option="holdfire" prioritymodifier="0.5"/>
       <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
       <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
       <Order aitag="fixleaks" prioritymodifier="0.2"/>
       <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
+      <Order aitag="operateweapons" option="holdfire" prioritymodifier="0.1"/>
     </AutonomousObjectives>
   </Job>
 
