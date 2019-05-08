@@ -52,7 +52,6 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            return 1;
             float max = Math.Min(Math.Min(AIObjectiveManager.RunPriority, AIObjectiveManager.OrderPriority) - 1, 100);
             float initiative = character.GetSkillLevel("initiative");
             Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, initiative * Random));
