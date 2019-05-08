@@ -9,9 +9,11 @@ namespace Barotrauma
     public class GUIMessageBox : GUIFrame
     {
         public static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
+        private static int DefaultWidth
+        {
+            get { return Math.Max(400, 400 * (GameMain.GraphicsWidth / 1920)); }
+        }
 
-        public const int DefaultWidth = 400, DefaultHeight = 250;
-        
         public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
         //public GUIFrame BackgroundFrame { get; private set; }
         public GUILayoutGroup Content { get; private set; }
@@ -23,21 +25,32 @@ namespace Barotrauma
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
         
         public GUIMessageBox(string headerText, string text)
-            : this(headerText, text, new string[] {"OK"}, DefaultWidth, 0)
+            : this(headerText, text, new string[] {"OK"}, Vector2.Zero)
         {
             this.Buttons[0].OnClicked = Close;
         }
         
-        public GUIMessageBox(string headerText, string text, int width, int height)
-            : this(headerText, text, new string[] { "OK" }, width, height)
+        public GUIMessageBox(string headerText, string text, Vector2 relativeSize, Point? minSize = null)
+            : this(headerText, text, new string[] { "OK" }, relativeSize, minSize)
         {
             this.Buttons[0].OnClicked = Close;
         }
         
-        // TODO: allow to use a relative size.
-        public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft, string tag = "")
+        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, string tag = "")
             : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "")
         {
+            int width = DefaultWidth, height = 0;
+            if (relativeSize.HasValue)
+            {
+                width = (int)(GameMain.GraphicsWidth * relativeSize.Value.X);
+                height = (int)(GameMain.GraphicsHeight * relativeSize.Value.Y);
+            }
+            if (minSize.HasValue)
+            {
+                width = Math.Max(width, minSize.Value.X);
+                height = Math.Max(height, minSize.Value.Y);
+            }
+
             InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { IsFixedSize = false }, style: null);
             GUI.Style.Apply(InnerFrame, "", this);
 
