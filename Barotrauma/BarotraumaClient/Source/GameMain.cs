@@ -287,6 +287,7 @@ namespace Barotrauma
         {
             if (GameSettings.ShowUserStatisticsPrompt)
             {
+                //TODO: translate
                 var userStatsPrompt = new GUIMessageBox(
                     "Do you want to help us make Barotrauma better?",
                     "Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, " +

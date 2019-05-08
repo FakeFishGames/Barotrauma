@@ -353,6 +353,12 @@ namespace Barotrauma
             };
             var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
+
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.05f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.BottomLeft) { RelativeOffset = new Vector2(0.25f, 0.02f) },
+                TextManager.Get("Back"), style: "GUIButtonLarge")
+            {
+                OnClicked = SelectTab
+            };
         }
 #endregion
 
@@ -382,10 +388,9 @@ namespace Barotrauma
 
         private bool SelectTab(GUIButton button, object obj)
         {
+            titleText.Visible = true;
             if (obj is Tab)
             {
-                titleText.Visible = true;
-
                 if (GameMain.Config.UnsavedSettings)
                 {
                     var applyBox = new GUIMessageBox(
