@@ -179,9 +179,9 @@
     <WaterParticles
       texture="Content/Map/BackgroundColorful.png" />
     <Wall
-      texture="Content/Map/Zones/Tundra/Zone3BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/Zones/ThermalReefs/Zone2BaseTexture.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/Tundra/Zone3BaseTextureEdge.png" />
+      texture="Content/Map/Zones/ThermalReefs/Zone2BaseTextureEdge.png" />
   </RidgeBasic>
   <PlateauBasic
     biomes="The Aphotic Plateau"
@@ -219,9 +219,9 @@
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/Zones/ThermalReefs/Zone2BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/Zones/Tundra/Zone3BaseTexture.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/ThermalReefs/Zone2BaseTextureEdge.png" />
+      texture="Content/Map/Zones/Tundra/Zone3BaseTextureEdge.png" />
   </PlateauBasic>
   <VoidBasic
     biomes="The Great Void"

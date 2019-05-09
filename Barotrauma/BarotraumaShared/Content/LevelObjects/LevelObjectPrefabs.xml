@@ -575,7 +575,147 @@
     <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="38,374,499,355" origin="0.9,0.1" />
   </sonarflorabranch4>
   <!-- ice chunks-->
-  <icechunk1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+  <icechunk1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-20,20" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="100" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="100" leveltype="ColdCavernsMaze" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="0,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="256,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="512,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="768,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="0,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="256,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="512,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceCluster.png" sourcerect="768,128,256,128" origin="0.5,0.5" />
+  </icechunk1>
+  <icechunk2 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="100" leveltype="ColdCavernsBasic" />
+    <overridecommonness commonness="100" leveltype="ColdCavernsMaze" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="0,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="128,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="256,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="384,0,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="0,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="128,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="256,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="384,128,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="0,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="128,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="256,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="384,256,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="0,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="128,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="256,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Ice/Zone4SurfaceDetail.png" sourcerect="384,384,128,128" origin="0.5,0.5" />
+  </icechunk2>
+  <icechunk1tundra spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-20,20" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="100" leveltype="PlateauBasic" />
+    <overridecommonness commonness="100" leveltype="VoidBasic" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="0,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="256,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="512,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="768,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="0,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="256,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="512,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceCluster.png" sourcerect="768,128,256,128" origin="0.5,0.5" />
+  </icechunk1tundra>
+  <icechunk2tundra spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="100" leveltype="PlateauBasic" />
+    <overridecommonness commonness="100" leveltype="VoidBasic" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="0,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="128,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="256,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="384,0,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="0,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="128,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="256,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="384,128,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="0,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="128,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="256,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="384,256,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="0,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="128,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="256,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Tundra/Zone3SurfaceDetail.png" sourcerect="384,384,128,128" origin="0.5,0.5" />
+  </icechunk2tundra>
+  <icechunk1thermal spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-20,20" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="5" leveltype="PlateauBasic" />
+    <overridecommonness commonness="100" leveltype="RidgeBasic" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="0,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="256,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="512,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="768,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="0,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="256,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="512,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceCluster.png" sourcerect="768,128,256,128" origin="0.5,0.5" />
+  </icechunk1thermal>
+  <icechunk2thermal spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="5" leveltype="PlateauBasic" />
+    <overridecommonness commonness="100" leveltype="RidgeBasic" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="0,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="128,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="256,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="384,0,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="0,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="128,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="256,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="384,128,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="0,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="128,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="256,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="384,256,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="0,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="128,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="256,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/ThermalReefs/Zone2SurfaceDetail.png" sourcerect="384,384,128,128" origin="0.5,0.5" />
+  </icechunk2thermal>
+  <icechunk1volcanic spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-20,20" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="100" leveltype="WastesBasic" />
+    <overridecommonness commonness="5" leveltype="VoidBasic" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="0,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="256,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="512,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="768,0,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="0,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="256,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="512,128,256,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceCluster.png" sourcerect="768,128,256,128" origin="0.5,0.5" />
+  </icechunk1volcanic>
+  <icechunk2volcanic spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="1.0" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="True" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+    <overridecommonness commonness="100" leveltype="WastesBasic" />
+    <overridecommonness commonness="5" leveltype="VoidBasic" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="0,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="128,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="256,0,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="384,0,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="0,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="128,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="256,128,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="384,128,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="0,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="128,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="256,256,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="384,256,128,128" origin="0.5,0.5" />
+
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="0,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="128,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="256,384,128,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Map/Zones/Volcanic/Zone1SurfaceDetail.png" sourcerect="384,384,128,128" origin="0.5,0.5" />
+  </icechunk2volcanic>
+  <!-- <icechunk1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
     <overridecommonness commonness="100" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="100" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="100" leveltype="RidgeBasic" />
@@ -606,9 +746,9 @@
     <overridecommonness commonness="100" leveltype="VoidBasic" />
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/IceSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
-  </icechunk4>
+  </icechunk4>-->
   <!-- rocks chunks-->
-  <rock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+  <!--<rock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
     <overridecommonness commonness="100" leveltype="WastesBasic" />
     <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
@@ -627,9 +767,9 @@
     <overridecommonness commonness="100" leveltype="WastesBasic" />
     <Sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/RockSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
-  </rock4>
+  </rock4>-->
   <!-- mossy rocks chunks-->
-  <mossyrock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
+  <!--<mossyrock1 spawnpos="Wall, RuinWall" minsurfacewidth="0" minsize="0.5" maxsize="1.5" randomrotation="-180,180" commonness="0" depthrange="500,2000" alignment="TopLeft, BottomRight" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
     <overridecommonness commonness="100" leveltype="PlateauBasic" />
     <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="0,0,668,523" origin="0.5,0.5" />
@@ -648,7 +788,7 @@
     <overridecommonness commonness="100" leveltype="PlateauBasic" />
     <Sprite texture="Content/LevelObjects/MossyRock.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
     <SpecularSprite texture="Content/LevelObjects/MossyRockSpecular.png" sourcerect="702,513,322,511" origin="0.5,0.5" />
-  </mossyrock4>
+  </mossyrock4>-->
   <blacksmoker1 spawnpos="SeaFloor" alignment="Top" minsize="0.5" maxsize="1" randomrotation="-5,5" commonness="0" depthrange="0,1" clusteringamount="0" clusteringgroup="0" alignwithsurface="False" minsurfacewidth="546" swingamount="0" swingfrequency="0" scaleoscillation="0,0" scaleoscillationfrequency="0" sonardisruption="0">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
     <overridecommonness commonness="3" leveltype="RidgeBasic" />
@@ -756,4 +896,5 @@
     <PhysicsBody radius="330"/>
   </fallingicechunk>
   -->
+
 </levelobjects>

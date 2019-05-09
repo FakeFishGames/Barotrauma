@@ -20,6 +20,8 @@ namespace Barotrauma
 
         public float Rotation;
 
+        private int spriteIndex;
+
         public LevelObjectPrefab ActivePrefab;
 
         public PhysicsBody PhysicsBody
@@ -40,6 +42,15 @@ namespace Barotrauma
             set { Triggers.ForEach(t => t.NeedsNetworkSyncing = false); }
         }
 
+        public Sprite Sprite
+        {
+            get { return spriteIndex < 0 || Prefab.Sprites.Count == 0 ? null : Prefab.Sprites[spriteIndex % Prefab.Sprites.Count]; }
+        }
+        public Sprite SpecularSprite
+        {
+            get { return spriteIndex < 0 || Prefab.SpecularSprites.Count == 0 ? null : Prefab.SpecularSprites[spriteIndex % Prefab.SpecularSprites.Count]; }
+        }
+
         public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
         {
             Triggers = new List<LevelTrigger>();
@@ -48,6 +59,8 @@ namespace Barotrauma
             Position = position;
             Scale = scale;
             Rotation = rotation;
+
+            spriteIndex = ActivePrefab.Sprites.Any() ? Rand.Int(ActivePrefab.Sprites.Count, Rand.RandSync.Server) : -1;
 
             if (prefab.PhysicsBodyElement != null)
             {
