@@ -3155,7 +3155,7 @@
   <entityname.antirad>Antirad</entityname.antirad>
   <entitydescription.antirad>Slows down cellular degradation caused by radiation.</entitydescription.antirad>
 
-  <connection.powerin>powerin</connection.powerin>
+  <connection.power>power</connection.power>
   <connection.powerin>power_in</connection.powerin>
   <connection.powerout>power_out</connection.powerout>
   <connection.setstate>set_state</connection.setstate>
