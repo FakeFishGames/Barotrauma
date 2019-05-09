@@ -3140,4 +3140,19 @@
   <electricalrepairsheader>Electrical Repairs</electricalrepairsheader>
   <mechanicalrepairsheader>Mechanical Repairs</mechanicalrepairsheader>
   
+  <entityname.oxygentank>Oxygen Tank</entityname.oxygentank>
+  <entitydescription.oxygentank>Portable oxygen container.</entitydescription.oxygentank>
+
+  <entityname.cyanideantidote>Cyanide Antidote</entityname.cyanideantidote>
+  <entitydescription.cyanideantidote>An antidote for acute cyanide poisoning.</entitydescription.cyanideantidote>
+  
+  <entityname.sufforinantidote>Sufforin Antidote</entityname.sufforinantidote>
+  <entitydescription.sufforinantidote>An antidote for acute sufforin poisoning.</entitydescription.sufforinantidote>
+  
+  <entityname.deliriumineantidote>Deliriumine Antidote</entityname.deliriumineantidote>
+  <entitydescription.deliriumineantidote>An antidote for acute deliriumine poisoning.</entitydescription.deliriumineantidote>
+  
+  <entityname.antirad>Antirad</entityname.antirad>
+  <entitydescription.antirad>Slows down cellular degradation caused by radiation.</entitydescription.antirad>
+
 </infotexts>

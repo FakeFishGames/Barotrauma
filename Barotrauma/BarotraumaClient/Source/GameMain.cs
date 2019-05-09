@@ -758,7 +758,7 @@ namespace Barotrauma
 
         public void ShowCampaignDisclaimer(Action onContinue = null)
         {
-            var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"), 
+            var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"),
                 new string[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
