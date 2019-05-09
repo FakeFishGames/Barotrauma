@@ -3117,5 +3117,22 @@
 
   <mutedbyserver>You have been muted by the server.</mutedbyserver>
   <unmutedbyserver>You have been unmuted by the server.</unmutedbyserver>
-  
+
+  <EntityName.equalscomponent>Equals Component</EntityName.equalscomponent>
+  <EntityDescription.equalscomponent>Sends a signal when both inputs receive the same signal.</EntityDescription.equalscomponent>
+  <EntityName.greatercomponent>Greater Component</EntityName.greatercomponent>
+  <EntityDescription.greatercomponent>Sends a signal if the value the signal_in1 input is larger than the signal_in2 input.</EntityDescription.greatercomponent>
+  <EntityName.colorcomponent>Color Component</EntityName.colorcomponent>
+  <EntityDescription.colorcomponent>Outputs a combined color signal for light control.</EntityDescription.colorcomponent>
+  <EntityName.subtractcomponent>Subtract Component</EntityName.subtractcomponent>
+  <EntityDescription.subtractcomponent>Outputs the subtracted value of the received signals.</EntityDescription.subtractcomponent>
+  <EntityName.multiplycomponent>Multiply Component</EntityName.multiplycomponent>
+  <EntityDescription.multiplycomponent>Outputs the product of the received signals.</EntityDescription.multiplycomponent>
+  <EntityName.dividecomponent>Divide Component</EntityName.dividecomponent>
+  <EntityDescription.dividecomponent>Outputs the divided value of the received signals.</EntityDescription.dividecomponent>
+  <EntityName.xorcomponent>Xor Component</EntityName.xorcomponent>
+  <EntityDescription.xorcomponent>Sends a signal if either of the inputs, but not both, receives a signal.</EntityDescription.xorcomponent>
+  <EntityName.memorycomponent>Memory Component</EntityName.memorycomponent>
+  <EntityDescription.memorycomponent>Outputs a stored value that can be updated from other sources. Use the signal_in connection to set the stored value, and the signal_store input to toggle whether the received signals should be stored.</EntityDescription.memorycomponent>
+
 </infotexts>
