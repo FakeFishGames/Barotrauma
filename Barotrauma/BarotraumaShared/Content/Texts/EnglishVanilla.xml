@@ -3155,4 +3155,34 @@
   <entityname.antirad>Antirad</entityname.antirad>
   <entitydescription.antirad>Slows down cellular degradation caused by radiation.</entitydescription.antirad>
 
+  <connection.powerin>powerin</connection.powerin>
+  <connection.powerin>power_in</connection.powerin>
+  <connection.powerout>power_out</connection.powerout>
+  <connection.setstate>set_state</connection.setstate>
+  <connection.togglestate>toggle_state</connection.togglestate>
+  <connection.setpumpingspeed>set_speed</connection.setpumpingspeed>
+  <connection.settargetwaterlevel>set_targetlevel</connection.settargetwaterlevel>
+  <connection.signalin>signal_in</connection.signalin>
+  <connection.signalout>signal_out</connection.signalout>
+  <connection.signalinx>signal_in_[num]</connection.signalinx>
+  <connection.signaloutx>signal_out_[num]</connection.signaloutx>
+  <connection.turretaimingin>position_in</connection.turretaimingin>
+  <connection.turrettriggerin>trigger_in</connection.turrettriggerin>
+  <connection.togglelight>toggle_light</connection.togglelight>
+  <connection.setcolor>set_color</connection.setcolor>
+  <connection.shutdown>shutdown</connection.shutdown>
+  <connection.temperatureout>temperature_out</connection.temperatureout>
+  <connection.meltdownwarning>meltdown_warning</connection.meltdownwarning>
+  <connection.signalr>signal_r</connection.signalr>
+  <connection.signalg>signal_g</connection.signalg>
+  <connection.signalb>signal_b</connection.signalb>
+  <connection.signala>signal_a</connection.signala>
+  <connection.setoutput>set_output</connection.setoutput>
+  <connection.signalstore>signal_store</connection.signalstore>
+  <connection.settargetsignal>set_targetsignal</connection.settargetsignal>
+  <connection.setfrequency>set_frequency</connection.setfrequency>
+  <connection.setoutputtype>set_outputtype</connection.setoutputtype>
+  <connection.controlin>control_in</connection.controlin>
+  <connection.setforce>set_force</connection.setforce>
+
 </infotexts>
