@@ -3155,4 +3155,6 @@
   <entityname.antirad>Antirad</entityname.antirad>
   <entitydescription.antirad>Slows down cellular degradation caused by radiation.</entitydescription.antirad>
 
+  <label.power>power</label.power>
+  <label.signal>signal_[number]</label.signal>
 </infotexts>
