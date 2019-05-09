@@ -225,22 +225,22 @@
 
   <MainMenuCampaignIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="279,522,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="277,522,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuCampaignIcon>
 
   <MainMenuMultiplayerIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="279,266,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="277,266,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuMultiplayerIcon>
 
   <MainMenuCustomizeIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="27,776,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="26,776,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuCustomizeIcon>
 
   <MainMenuOptionIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="27,523,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="26,523,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuOptionIcon>
 
   <GUIButtonLarge
