@@ -2,13 +2,13 @@
 <Credits scrollspeed="50.0" spacing="10">
   <spacing relativeheight="1.0"/>
 
-  <Image texture="Content/UI/titleText.png" sourcerect="0,0,1684,248" relativeheight="0.1"/>
+  <Image texture="Content/UI/titleText.png" sourcerect="0,520,1024,328" relativeheight="0.1"/>
   
   <spacing relativeheight="0.1"/>
   
   <!-- ******************************************************* -->
   
-  <Text font="LargeFont" color="44,207,150,255" scale="1.5">Development</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">Development</Text>
   
   <spacing relativeheight="0.05"/>
   
@@ -58,7 +58,7 @@
 
   <!-- ******************************************************* -->
 
-  <Text font="LargeFont" color="44,207,150,255" scale="1.5">Publishing</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">Publishing</Text>
 
   <spacing relativeheight="0.05"/>
 
@@ -72,7 +72,7 @@
   
   <!-- ******************************************************* -->
   
-  <Text font="LargeFont" color="44,207,150,255" scale="1.5">GitHub contributors and community actives</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">GitHub contributors and community actives</Text>
 
   <spacing relativeheight="0.05"/>
   
@@ -86,7 +86,7 @@
 
   <!-- ******************************************************* -->
   
-  <Text font="LargeFont" color="44,207,150,255" scale="1.5">External libraries and content</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">External libraries and content</Text>
   
   <spacing relativeheight="0.05"/>
 
@@ -128,7 +128,7 @@
 
   <!-- ******************************************************* -->
 
-  <Text font="LargeFont" color="44,207,150,255" scale="1.5">Special thanks</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">Special thanks</Text>
 
   <spacing relativeheight="0.05"/>
 

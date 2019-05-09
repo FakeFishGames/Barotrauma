@@ -10,6 +10,8 @@
       <Skill identifier="mechanical" level="20,30"/>
       <Skill identifier="electrical" level="20,30"/>
       <Skill identifier="medical" level="10,30"/>
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="initiative" level="20,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -27,6 +29,10 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
+    <AutonomousObjectives>
+      <Order aitag="extinguishfires" prioritymodifier ="0.5"/>
+      <Order aitag="steer" option="maintainposition" prioritymodifier="0.5"/>
+    </AutonomousObjectives>
   </Job>
   
   <Job identifier="engineer"      
@@ -39,6 +45,8 @@
       <Skill identifier="weapons" level="10,30"/>
       <Skill identifier="medical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="initiative" level="20,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -57,6 +65,15 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Engineer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,0"/>
     </PortraitClothing>
+    <AutonomousObjectives>
+      <Order aitag="extinguishfires" prioritymodifier ="1"/>
+      <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order aitag="fixleaks" prioritymodifier="0.75"/>
+      <Order aitag="operatereactor" option="powerup" prioritymodifier="0.3"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+    </AutonomousObjectives>
   </Job>
 
   <Job identifier="mechanic"
@@ -69,6 +86,8 @@
       <Skill identifier="weapons" level="10,30"/>
       <Skill identifier="medical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="initiative" level="20,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -87,6 +106,14 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Mechanic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,0"/>
     </PortraitClothing>
+    <AutonomousObjectives>
+      <Order aitag="extinguishfires" prioritymodifier ="1"/>
+      <Order aitag="fixleaks" prioritymodifier="1"/>
+      <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.5"/>
+      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+    </AutonomousObjectives>
   </Job>
 
   <Job identifier="securityofficer"
@@ -99,6 +126,8 @@
       <Skill identifier="mechanical" level="10,20"/>
       <Skill identifier="electrical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="initiative" level="20,100"/>
     </Skills>
     <Items>
       <Item identifier="securityuniform" equip="true"/>
@@ -116,6 +145,15 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Security Officer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
     </PortraitClothing>
+    <AutonomousObjectives>
+      <Order aitag="fightintruders" prioritymodifier="1"/>
+      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
+      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order aitag="fixleaks" prioritymodifier="0.2"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
+      <Order aitag="operateweapons" option="holdfire" prioritymodifier="0.1"/>
+    </AutonomousObjectives>
   </Job>
 
   <Job identifier="medicaldoctor"
@@ -128,6 +166,8 @@
       <Skill identifier="mechanical" level="10,20"/>
       <Skill identifier="electrical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="courage" level="20,100"/>
+      <Skill identifier="initiative" level="20,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -140,6 +180,14 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Medic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,1"/>
     </PortraitClothing>
+    <AutonomousObjectives>
+      <Order aitag="extinguishfires" prioritymodifier ="1"/>
+      <Order aitag="rescue" prioritymodifier="1"/>
+      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order aitag="fixleaks" prioritymodifier="0.2"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
+    </AutonomousObjectives>
   </Job>
 
   <Job identifier="assistant"
@@ -151,6 +199,8 @@
       <Skill identifier="electrical" level="20,32"/>
       <Skill identifier="medical" level="10,22"/>
       <Skill identifier="helm" level="10,20"/>
+      <Skill identifier="courage" level="0,60"/>
+      <Skill identifier="initiative" level="0,60"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -164,6 +214,13 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Assistant" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,2"/>
     </PortraitClothing>
+    <AutonomousObjectives>
+      <Order aitag="extinguishfires" prioritymodifier ="1"/>
+      <Order aitag="chargebatteries" option="charge" prioritymodifier="1"/>
+      <Order aitag="pumpwater" option="pumpout" prioritymodifier="1"/>
+      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order aitag="fixleaks" prioritymodifier="0.5"/>
+    </AutonomousObjectives>
   </Job>
 
   <Job identifier="watchman"

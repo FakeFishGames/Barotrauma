@@ -109,7 +109,7 @@ namespace Barotrauma
                 Vector2 camDiff = new Vector2(obj.Position.X, obj.Position.Y) - cam.WorldViewCenter;
                 camDiff.Y = -camDiff.Y;
                 
-                Sprite activeSprite = specular ? obj.ActivePrefab.SpecularSprite : obj.ActivePrefab.Sprite;
+                Sprite activeSprite = specular ? obj.SpecularSprite : obj.Sprite;
                 activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,

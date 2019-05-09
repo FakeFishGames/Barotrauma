@@ -360,8 +360,25 @@ namespace Barotrauma
             if (!Directory.Exists(sFinalDir))
                 Directory.CreateDirectory(sFinalDir);
 
-            using (FileStream outFile = new FileStream(sFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
-                outFile.Write(bytes, 0, iFileLen);
+            int maxRetries = 4;
+            for (int i = 0; i <= maxRetries; i++)
+            {
+                try
+                {
+                    using (FileStream outFile = new FileStream(sFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        outFile.Write(bytes, 0, iFileLen);
+                    }
+                    break;
+                }
+                catch (IOException e)
+                {
+                    if (i >= maxRetries || !File.Exists(sFilePath)) { throw; }
+                    DebugConsole.NewMessage("Failed decompress file \"" + sFilePath + "\" {" + e.Message + "}, retrying in 250 ms...", Color.Red);
+                    Thread.Sleep(250);
+                }
+            }
+
 
             return true;
         }
@@ -376,7 +393,9 @@ namespace Barotrauma
                 {
                     using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
                     using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                        while (DecompressFile(sDir, zipStream, progress)) ;
+                        while (DecompressFile(sDir, zipStream, progress)) { };
+
+                    break;
                 }
                 catch (IOException e)
                 {

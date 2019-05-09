@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <sounds>
-  <startupsound file="Content/Sounds/StartDrone.ogg"/>
+  <!--<startupsound file="Content/Sounds/StartDrone.ogg"/>-->
   
   <damagesound file="Content/Sounds/Damage/StructureBlunt1.ogg" damagerange="0.0,30.0" damagesoundtype="StructureBlunt"/>
   <damagesound file="Content/Sounds/Damage/StructureBlunt2.ogg" damagerange="10.0,50.0" damagesoundtype="StructureBlunt"/>

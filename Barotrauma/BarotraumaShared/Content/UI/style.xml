@@ -13,8 +13,8 @@
   -->
 
   <Font file="Content/Fonts/Exo2-Medium.otf">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true"/>
     <Size maxresolution="1024,768" size="11"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -23,8 +23,8 @@
     <Size size="24"/>
   </Font>
   <SmallFont file="Content/Fonts/Exo2-Medium.otf">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true"/>
     <Size maxresolution="1024,768" size="9"/>
     <Size maxresolution="1280,800" size="10"/>
     <Size maxresolution="1920,1080" size="12"/>
@@ -33,8 +33,8 @@
     <Size size="24"/>
   </SmallFont>
   <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
@@ -43,8 +43,8 @@
     <Size size="44"/>
   </LargeFont>
   <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
     <Size maxresolution="1024,768" size="20"/>
     <Size maxresolution="1280,800" size="25"/>
     <Size maxresolution="1920,1080" size="28"/>
@@ -53,8 +53,8 @@
     <Size size="56"/>
   </VideoTitle>
   <ObjectiveTitle file="Content/Fonts/Code Pro Bold.otf" size="14">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
     <Size maxresolution="1024,768" size="10"/>
     <Size maxresolution="1280,800" size="12"/>
     <Size maxresolution="1920,1080" size="14"/>
@@ -63,8 +63,8 @@
     <Size size="24"/>    
   </ObjectiveTitle>
   <ObjectiveName file="Content/Fonts/BebasNeue-Regular.otf" size="22">
-    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf"/>
-    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"/>
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
@@ -225,22 +225,22 @@
 
   <MainMenuCampaignIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="279,522,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="277,522,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuCampaignIcon>
 
   <MainMenuMultiplayerIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="279,266,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="277,266,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuMultiplayerIcon>
 
   <MainMenuCustomizeIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="27,776,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="26,776,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuCustomizeIcon>
 
   <MainMenuOptionIcon
     color="44,208,150,255">
-    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="27,523,204,235" tile="false" maintainaspectratio="true"/>
+    <Sprite texture="Content/UI/UI_MainMenu.png" sourcerect="26,523,210,235" tile="false" maintainaspectratio="true"/>
   </MainMenuOptionIcon>
 
   <GUIButtonLarge
