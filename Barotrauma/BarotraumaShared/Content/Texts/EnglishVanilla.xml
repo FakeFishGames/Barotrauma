@@ -3135,4 +3135,9 @@
   <EntityName.memorycomponent>Memory Component</EntityName.memorycomponent>
   <EntityDescription.memorycomponent>Outputs a stored value that can be updated from other sources. Use the signal_in connection to set the stored value, and the signal_store input to toggle whether the received signals should be stored.</EntityDescription.memorycomponent>
 
+  <search>Search</search>
+
+  <electricalrepairsheader>Electrical Repairs</electricalrepairsheader>
+  <mechanicalrepairsheader>Mechanical Repairs</mechanicalrepairsheader>
+  
 </infotexts>
