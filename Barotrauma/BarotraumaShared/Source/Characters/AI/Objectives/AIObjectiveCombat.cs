@@ -398,14 +398,14 @@ namespace Barotrauma
                 {
                     if (squaredDistance > repairTool.Range * repairTool.Range) { return; }
                 }
-                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - character.Position) < MathHelper.PiOver4)
+                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - Weapon.Position) < MathHelper.PiOver4)
                 {
                     if (myBodies == null)
                     {
                         myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     }
                     var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall;
-                    var pickedBody = Submarine.PickBody(character.SimPosition, Enemy.SimPosition, myBodies, collisionCategories);
+                    var pickedBody = Submarine.PickBody(Weapon.SimPosition, Enemy.SimPosition, myBodies, collisionCategories);
                     if (pickedBody != null)
                     {
                         Character target = null;
