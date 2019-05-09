@@ -297,7 +297,6 @@ namespace Barotrauma
                 {
                     OnClicked = (btn, userdata) =>
                     {
-                        GameMain.SpriteEditorScreen.RefreshLists();
                         editingSprite = sprite;
                         GameMain.SpriteEditorScreen.SelectSprite(editingSprite);
                         return true;
