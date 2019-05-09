@@ -127,7 +127,7 @@ namespace Barotrauma
             }
             if (abandon) { return; }
             Arm(deltaTime);
-            Move(deltaTime);
+            Move();
         }
 
         private void Arm(float deltaTime)
@@ -150,7 +150,7 @@ namespace Barotrauma
                     }
                     if (Equip())
                     {
-                        if (Reload(deltaTime))
+                        if (Reload())
                         {
                             Attack(deltaTime);
                         }
@@ -163,16 +163,16 @@ namespace Barotrauma
             }
         }
 
-        private void Move(float deltaTime)
+        private void Move()
         {
             switch (Mode)
             {
                 case CombatMode.Offensive:
-                    Engage(deltaTime);
+                    Engage();
                     break;
                 case CombatMode.Defensive:
                 case CombatMode.Retreat:
-                    Retreat(deltaTime);
+                    Retreat();
                     break;
                 default:
                     throw new NotImplementedException();
@@ -273,7 +273,7 @@ namespace Barotrauma
             return true;
         }
 
-        private void Retreat(float deltaTime)
+        private void Retreat()
         {
             if (followTargetObjective != null)
             {
@@ -294,7 +294,7 @@ namespace Barotrauma
             TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
         }
 
-        private void Engage(float deltaTime)
+        private void Engage()
         {
             retreatTarget = null;
             if (retreatObjective != null)
@@ -323,7 +323,7 @@ namespace Barotrauma
                 });
         }
 
-        private bool Reload(float deltaTime)
+        private bool Reload()
         {
             if (WeaponComponent != null && WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
             {
