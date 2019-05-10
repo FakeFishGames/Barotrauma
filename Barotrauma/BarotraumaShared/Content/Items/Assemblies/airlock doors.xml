@@ -9,13 +9,13 @@
     </Repairable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <input name="toggle">
+      <input name="toggle" displayname="connection.togglestate">
         <link w="385" />
         <link w="386" />
         <link w="401" />
       </input>
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Custom Door" identifier="door" ID="333" rect="-119,96,49,208" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="door" displaysidebysidewhenlinked="False" spritedepth="0.51" scale="0.5">
@@ -27,13 +27,13 @@
     </Repairable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <input name="toggle">
+      <input name="toggle" displayname="connection.togglestate">
         <link w="344" />
         <link w="365" />
         <link w="395" />
       </input>
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Blue Wire" identifier="bluewire" ID="401" rect="48888,-9766,48,20" hiddeningame="False" spritecolor="51,121,173,255" inventoryiconcolor="51,121,173,255" containercolor="255,255,255,255" condition="100" tags="smallitem,wire" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
@@ -66,7 +66,7 @@
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="395" />
         <link w="401" />
       </output>
@@ -81,7 +81,7 @@
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="365" />
         <link w="386" />
       </output>
@@ -96,7 +96,7 @@
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="344" />
         <link w="385" />
       </output>

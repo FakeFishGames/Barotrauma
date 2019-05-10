@@ -5,12 +5,12 @@
       <requireditem identifiers="crowbar" type="Equipped" msg="" />
     </Door>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
-      <input name="toggle">
+      <input name="toggle" displayname="connection.togglestate">
         <link w="10" />
         <link w="11" />
       </input>
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Button" identifier="alienbutton" ID="9" rect="-1,-80,24,27" displaysidebysidewhenlinked="False" description="" spritecolor="1,1,1,1" inventoryiconcolor="1,1,1,1" containercolor="1,1,1,1" tags="smallitem" spritedepth="0.8" scale="1">
@@ -19,7 +19,7 @@
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="11" />
       </output>
     </ConnectionPanel>
@@ -30,7 +30,7 @@
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="10" />
       </output>
     </ConnectionPanel>

@@ -4,8 +4,8 @@
     <LightComponent range="80" castshadows="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,165" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" />
     </ConnectionPanel>
   </Item>

@@ -5,16 +5,16 @@
     <LightComponent range="2048" castshadows="True" ison="True" blinkfrequency="0" lightcolor="112,145,190,255" isactive="True" minvoltage="0.5" powerconsumption="50" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <Turret hudtint="0,0,0,0" reload="3" rotationlimits="0,360" springstiffnesslowskill="1" springstiffnesshighskill="1" springdampinglowskill="0.2" springdampinghighskill="0.2" rotationspeedlowskill="1" rotationspeedhighskill="1" baserotation="0" minvoltage="0.5" powerconsumption="10000" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <input name="power_in">
+      <input name="power_in" displayname="connection.powerin">
         <link w="11" />
       </input>
-      <input name="position_in">
+      <input name="position_in" displayname="connection.turretaimingin">
         <link w="12" />
         <link w="13" />
         <link w="14" />
         <link w="15" />
       </input>
-      <input name="trigger_in">
+      <input name="trigger_in" displayname="connection.turrettriggerin">
         <link w="16" />
         <link w="17" />
         <link w="18" />
@@ -26,7 +26,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="7" rect="176,112,81,103" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="150" rangey="150" detectoffset="0,0" output="1" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="12" />
         <link w="18" />
       </output>
@@ -35,7 +35,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="6" rect="-256,112,81,103" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="150" rangey="150" detectoffset="0,0" output="180" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="14" />
         <link w="16" />
       </output>
@@ -44,7 +44,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="5" rect="-48,-208,81,103" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="150" rangey="150" detectoffset="0,0" output="90" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="15" />
         <link w="24" />
       </output>
@@ -53,7 +53,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="4" rect="-48,320,81,103" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="150" rangey="150" detectoffset="0,0" output="270" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="13" />
         <link w="17" />
       </output>
@@ -69,8 +69,8 @@
     <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <input name="shutdown" />
-      <output name="power_out">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <output name="power_out" displayname="connection.powerout">
         <link w="11" />
       </output>
     </ConnectionPanel>

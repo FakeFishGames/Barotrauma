@@ -18,8 +18,8 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="set_force"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="set_force" displayname="connection.setforce"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="ItemMsgRepairWrench" hudpriority="10">
@@ -45,8 +45,8 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="set_force"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="set_force" displayname="connection.setforce"/>
     </ConnectionPanel>
     
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairWrench" hudpriority="10">

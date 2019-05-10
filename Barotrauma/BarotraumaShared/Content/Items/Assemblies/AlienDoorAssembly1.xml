@@ -5,18 +5,18 @@
       <requireditem identifiers="crowbar" type="Equipped" msg="" />
     </Door>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
-      <input name="toggle">
+      <input name="toggle" displayname="connection.togglestate">
         <link w="10" />
         <link w="11" />
       </input>
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Button" identifier="alienbutton" ID="9" rect="48,40,64,64" displaysidebysidewhenlinked="False" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" spritedepth="0.8" scale="1">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="11" />
       </output>
     </ConnectionPanel>
@@ -24,7 +24,7 @@
   <Item name="Alien Button" identifier="alienbutton" ID="6" rect="-128,40,64,64" displaysidebysidewhenlinked="False" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,alien" spritedepth="0.8" scale="1">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="10" />
       </output>
     </ConnectionPanel>

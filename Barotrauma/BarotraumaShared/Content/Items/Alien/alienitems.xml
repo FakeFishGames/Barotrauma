@@ -366,9 +366,9 @@
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <input name="toggle" />
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien">
@@ -381,9 +381,9 @@
     </Door>
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <input name="toggle" />
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien" scale="0.5">
@@ -395,7 +395,7 @@
     <MotionSensor range="300" output="0" onlyhumans="true" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <output name="state_out" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien,artifactholder">
@@ -414,7 +414,7 @@
     </LightComponent>
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0" />
     <ConnectionPanel canbeselected="false" hudpriority="10">
-      <output name="power_out" />
+      <output name="power_out" displayname="connection.powerout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Generator" identifier="aliengenerator" category="Alien" Tags="alien" scale="0.3">
@@ -433,10 +433,10 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <!-- break the item when a shutdown signal is received -->
-      <input name="shutdown">
+      <input name="shutdown" displayname="connection.shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
       </input>
-      <output name="power_out" />
+      <output name="power_out" displayname="connection.powerout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien, smallitem" scale="0.3" impactsoundtag="impact_metal_light">
@@ -461,11 +461,11 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <input name="power_in" />
-      <input name="toggle" />
-      <input name="set_active" />
-      <input name="set_speed" />
-      <input name="set_targetlevel" />
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_active" displayname="connection.setstate" />
+      <input name="set_speed" displayname="connection.setpumpingspeed" />
+      <input name="set_targetlevel" displayname="connection.settargetwaterlevel" />
     </ConnectionPanel>
     <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
@@ -481,7 +481,7 @@
     <ConnectionPanel canbeselected="true">
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <output name="signal_out" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien" scale="0.5">
@@ -503,9 +503,9 @@
     </Turret>
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <input name="power_in" />
-      <input name="position_in" />
-      <input name="trigger_in" />
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="position_in" displayname="connection.turretaimingin" />
+      <input name="trigger_in" displayname="connection.turrettriggerin" />
       <input name="toggle_light" />
     </ConnectionPanel>
   </Item>
@@ -551,10 +551,10 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <!-- break the item when a shutdown signal is received -->
       <input name="activate" />
-      <input name="shutdown">
+      <input name="shutdown" displayname="connection.shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
       </input>
-      <input name="power_in" />
+      <input name="power_in" displayname="connection.powerin" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Vent" identifier="alienvent" category="Alien" interactdistance="0" linkable="true">
@@ -588,8 +588,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" />
     </ConnectionPanel>
   </Item>
