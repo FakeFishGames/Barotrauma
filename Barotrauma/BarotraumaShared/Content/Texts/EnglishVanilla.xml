@@ -3192,4 +3192,5 @@
   <connection.toggledocking>toggle_docking</connection.toggledocking>
   <connection.waterdatain>water_data_in</connection.waterdatain>
   <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
+  <itemmsgoxygenrefill>Insert oxygen tank to refill</itemmsgoxygenrefill>
 </infotexts>

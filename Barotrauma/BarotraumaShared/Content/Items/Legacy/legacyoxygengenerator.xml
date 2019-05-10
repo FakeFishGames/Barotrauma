@@ -34,7 +34,7 @@
   
     <trigger/>
 
-    <ItemContainer capacity="5" canbeselected = "true" msg="Insert oxygen tank to refill it">
+    <ItemContainer capacity="5" canbeselected = "true" msg="ItemMsgOxygenRefill">
       <Containable identifiers="oxygentank,oxygenitetank"/>
     </ItemContainer>
 
