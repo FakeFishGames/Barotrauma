@@ -18,25 +18,16 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
 
-        protected override void FindTargets()
-        {
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
-            {
-                character.Speak(TextManager.Get("DialogNoRepairTargets"), null, 3.0f, "norepairtargets", 30.0f);
-            }
-        }
-
         protected override void CreateObjectives()
         {
-            foreach (var item in targets)
+            foreach (var item in Targets)
             {
                 foreach (Repairable repairable in item.Repairables)
                 {
-                    if (!objectives.TryGetValue(item, out AIObjective objective))
+                    if (!Objectives.TryGetValue(item, out AIObjective objective))
                     {
                         objective = ObjectiveConstructor(item);
-                        objectives.Add(item, objective);
+                        Objectives.Add(item, objective);
                         AddSubObjective(objective);
                     }
                     break;
@@ -50,7 +41,7 @@ namespace Barotrauma
             if (item.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
-            if (!objectives.ContainsKey(item))
+            if (!Objectives.ContainsKey(item))
             {
                 if (item.Repairables.All(r => item.Condition > r.ShowRepairUIThreshold)) { return false; }
             }
@@ -61,7 +52,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected override float TargetEvaluation() => targets.Max(t => 100 - t.ConditionPercentage);
+        protected override float TargetEvaluation() => Targets.Max(t => 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
         protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item, objectiveManager, PriorityModifier);
 

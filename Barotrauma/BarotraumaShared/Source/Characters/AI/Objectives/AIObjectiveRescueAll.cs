@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -9,22 +8,14 @@ namespace Barotrauma
         public override string DebugTag => "rescue all";
         public override bool ForceRun => true;
 
-        //only treat characters whose vitality is below this (0.9 = 90% of max vitality)
-        public const float VitalityThreshold = 0.9f;
+        private const float vitalityThreshold = 0.85f;
+        private const float vitalityThresholdForOrders = 0.95f;
+        public static float GetVitalityThreshold(AIObjectiveManager manager) => manager.CurrentOrder is AIObjectiveRescueAll ? vitalityThresholdForOrders : vitalityThreshold;
         
         public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRescueAll;
-
-        protected override void FindTargets()
-        {
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
-            {
-                character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets", 30.0f);
-            }
-        }
 
         protected override bool Filter(Character target) => IsValidTarget(target, character);
 
@@ -32,7 +23,7 @@ namespace Barotrauma
 
         protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
 
-        protected override float TargetEvaluation() => targets.Max(t => GetVitalityFactor(t)) * 100;
+        protected override float TargetEvaluation() => Targets.Max(t => GetVitalityFactor(t)) * 100;
 
         public static float GetVitalityFactor(Character character) => (character.MaxVitality - character.Vitality) / character.MaxVitality;
 
@@ -41,7 +32,8 @@ namespace Barotrauma
             if (target == null || target.IsDead || target.Removed) { return false; }
             if (target == character) { return false; } // TODO: enable healing self
             if (!HumanAIController.IsFriendly(character, target)) { return false; }
-            if (target.Vitality / target.MaxVitality > VitalityThreshold) { return false; }
+            if (!(character.AIController is HumanAIController humanAI)) { return false; }
+            if (target.Vitality / target.MaxVitality > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
             if (target.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }

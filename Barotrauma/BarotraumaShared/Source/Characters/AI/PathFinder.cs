@@ -49,7 +49,9 @@ namespace Barotrauma
                 if (wayPoint == null) continue;
                 if (nodes.ContainsKey(wayPoint.ID))
                 {
+#if DEBUG
                     DebugConsole.ThrowError("Error in PathFinder.GenerateNodes (duplicate ID \"" + wayPoint.ID + "\")");
+#endif
                     continue;
                 }
                 nodes.Add(wayPoint.ID, new PathNode(wayPoint));
@@ -201,7 +203,9 @@ namespace Barotrauma
 
             if (startNode == null)
             {
+#if DEBUG
                 DebugConsole.NewMessage("Pathfinding error, couldn't find a start node. "+ errorMsgStr, Color.DarkRed);
+#endif
 
                 return new SteeringPath(true);
             }
@@ -251,7 +255,9 @@ namespace Barotrauma
 
             if (endNode == null)
             {
+#if DEBUG
                 DebugConsole.NewMessage("Pathfinding error, couldn't find an end node. " + errorMsgStr, Color.DarkRed);
+#endif
                 return new SteeringPath(true);
             }
 
@@ -279,7 +285,9 @@ namespace Barotrauma
 
             if (startNode == null || endNode == null)
             {
+#if DEBUG
                 DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints.", Color.DarkRed);
+#endif
                 return new SteeringPath(true);
             }
 
@@ -395,7 +403,9 @@ namespace Barotrauma
                 //should be fixed now, was most likely caused by the parent fields of the nodes not being cleared before starting the pathfinding
                 if (finalPath.Count > nodes.Count)
                 {
+#if DEBUG
                     DebugConsole.ThrowError("Pathfinding error: constructing final path failed");
+#endif
                     return new SteeringPath(true);
                 }
 

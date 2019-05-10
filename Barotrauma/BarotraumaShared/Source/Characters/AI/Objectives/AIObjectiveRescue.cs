@@ -201,7 +201,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            bool isCompleted = targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.VitalityThreshold;
+            bool isCompleted = targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
             if (isCompleted)
             {
                 character.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
