@@ -7,8 +7,8 @@ namespace Barotrauma
 {
     abstract class AIObjectiveLoop<T> : AIObjective
     {
-        protected HashSet<T> targets = new HashSet<T>();
-        protected Dictionary<T, AIObjective> objectives = new Dictionary<T, AIObjective>();
+        public HashSet<T> Targets { get; private set; } = new HashSet<T>();
+        public Dictionary<T, AIObjective> Objectives { get; private set; } = new Dictionary<T, AIObjective>();
         protected HashSet<T> ignoreList = new HashSet<T>();
         private float ignoreListTimer;
         private float targetUpdateTimer;
@@ -67,7 +67,7 @@ namespace Barotrauma
                 targetUpdateTimer -= deltaTime;
             }
             // Sync objectives, subobjectives and targets
-            foreach (var objective in objectives)
+            foreach (var objective in Objectives)
             {
                 var target = objective.Key;
                 if (!objective.Value.CanBeCompleted)
@@ -75,13 +75,13 @@ namespace Barotrauma
                     ignoreList.Add(target);
                     targetUpdateTimer = 0;
                 }
-                if (!targets.Contains(target))
+                if (!Targets.Contains(target))
                 {
                     subObjectives.Remove(objective.Value);
                 }
             }
-            SyncRemovedObjectives(objectives, GetList());
-            if (objectives.None() && targets.Any())
+            SyncRemovedObjectives(Objectives, GetList());
+            if (Objectives.None() && Targets.Any())
             {
                 CreateObjectives();
             }
@@ -109,7 +109,7 @@ namespace Barotrauma
         public override float GetPriority()
         {
             if (character.Submarine == null) { return 0; }
-            if (targets.None()) { return 0; }
+            if (Targets.None()) { return 0; }
             // Allow the target value to be more than 100.
             float targetValue = TargetEvaluation();
             // If the target value is less than 1% of the max value, let's just treat it as zero.
@@ -127,7 +127,7 @@ namespace Barotrauma
         protected void UpdateTargets()
         {
             SetTargetUpdateTimer();
-            targets.Clear();
+            Targets.Clear();
             FindTargets();
             CreateObjectives();
         }
@@ -146,20 +146,20 @@ namespace Barotrauma
                 if (!Filter(target)) { continue; }
                 if (!ignoreList.Contains(target))
                 {
-                    targets.Add(target);
+                    Targets.Add(target);
                 }
             }
         }
 
         protected virtual void CreateObjectives()
         {
-            foreach (T target in targets)
+            foreach (T target in Targets)
             {
-                if (!objectives.TryGetValue(target, out AIObjective objective))
+                if (!Objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);
                     objective.Completed += () => ReportedTargets.Remove(target);
-                    objectives.Add(target, objective);
+                    Objectives.Add(target, objective);
                     AddSubObjective(objective);
                 }
             }

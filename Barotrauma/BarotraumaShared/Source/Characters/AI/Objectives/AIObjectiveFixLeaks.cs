@@ -13,15 +13,6 @@ namespace Barotrauma
 
         public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
-        protected override void FindTargets()
-        {
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
-            {
-                character.Speak(TextManager.Get("DialogNoLeaks"), null, 3.0f, "noleaks", 30.0f);
-            }
-        }
-
         protected override bool Filter(Gap gap) => IsValidTarget(gap, character);
 
         public static float GetLeakSeverity(Gap leak)
@@ -34,7 +25,7 @@ namespace Barotrauma
         }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
-        protected override float TargetEvaluation() => targets.Max(t => GetLeakSeverity(t));
+        protected override float TargetEvaluation() => Targets.Max(t => GetLeakSeverity(t));
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character, objectiveManager, PriorityModifier);
 

@@ -409,9 +409,40 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option, orderGiver);
-            if (speak && Character.SpeechImpediment < 100.0f)
+            if (ObjectiveManager.CurrentOrder != null && speak && Character.SpeechImpediment < 100.0f)
             {
-                Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+                if (ObjectiveManager.CurrentOrder is AIObjectiveRepairItems repairItems && repairItems.Targets.None())
+                {
+                    Character.Speak(TextManager.Get("DialogNoRepairTargets"), null, 3.0f, "norepairtargets");
+                }
+                else if (ObjectiveManager.CurrentOrder is AIObjectiveChargeBatteries chargeBatteries && chargeBatteries.Targets.None())
+                {
+                    Character.Speak(TextManager.Get("DialogNoBatteries"), null, 3.0f, "nobatteries");
+                }
+                else if (ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires extinguishFires && extinguishFires.Targets.None())
+                {
+                    Character.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire");
+                }
+                else if (ObjectiveManager.CurrentOrder is AIObjectiveFixLeaks fixLeaks && fixLeaks.Targets.None())
+                {
+                    Character.Speak(TextManager.Get("DialogNoLeaks"), null, 3.0f, "noleaks");
+                }
+                else if (ObjectiveManager.CurrentOrder is AIObjectiveFightIntruders fightIntruders && fightIntruders.Targets.None())
+                {
+                    Character.Speak(TextManager.Get("DialogNoEnemies"), null, 3.0f, "noenemies");
+                }
+                else if (ObjectiveManager.CurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
+                {
+                    Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                }
+                else if (ObjectiveManager.CurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
+                {
+                    Character.Speak(TextManager.Get("DialogNoPumps"), null, 3.0f, "nopumps");
+                }
+                else
+                {
+                    Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+                }
             }
             SetOrderProjSpecific(order);
         }

@@ -17,15 +17,6 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFightIntruders;
 
-        protected override void FindTargets()
-        {
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
-            {
-                character.Speak(TextManager.Get("DialogNoEnemies"), null, 3.0f, "noenemies", 30.0f);
-            }
-        }
-
         protected override bool Filter(Character target) => IsValidTarget(target, character);
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
