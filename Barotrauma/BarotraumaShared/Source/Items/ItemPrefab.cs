@@ -459,7 +459,9 @@ namespace Barotrauma
 
             DebugConsole.Log("    " + name);
 
-            Aliases = element.GetAttributeStringArray("aliases", new string[0], convertToLowerInvariant: true);
+            Aliases = 
+                element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
+                element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true);
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
