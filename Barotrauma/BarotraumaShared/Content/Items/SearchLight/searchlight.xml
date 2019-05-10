@@ -3,6 +3,7 @@
   <Item
     name="Searchlight"
     identifier="searchlight"
+    aliases="Searchlight"
     category="Machine"
     focusonselected="true"
     offsetonselected="515"
