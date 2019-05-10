@@ -36,6 +36,13 @@ namespace Barotrauma
 
         public void AddObjective(AIObjective objective)
         {
+            if (objective == null)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
+#endif
+                return;
+            }
             var duplicate = Objectives.Find(o => o.IsDuplicate(objective));
             if (duplicate != null)
             {
@@ -66,6 +73,7 @@ namespace Barotrauma
                 matchingItems.RemoveAll(it => it.Submarine != character.Submarine);
                 var item = matchingItems.GetRandom();
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType));
+                if (order == null) { continue; }
                 AddObjective(CreateObjective(order, automaticOrder.option, character, automaticOrder.priorityModifier), delay: Rand.Value() / 2);
                 objectiveCount++;
             }
@@ -74,6 +82,13 @@ namespace Barotrauma
 
         public void AddObjective(AIObjective objective, float delay, Action callback = null)
         {
+            if (objective == null)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
+#endif
+                return;
+            }
             if (DelayedObjectives.TryGetValue(objective, out CoroutineHandle coroutine))
             {
                 CoroutineManager.StopCoroutines(coroutine);
