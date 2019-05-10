@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
                 if (c.IsOutput)
                 {
                     c.Draw(spriteBatch, panel, rightPos,
-                        new Vector2(rightPos.X - GUI.SmallFont.MeasureString(c.Name).X - 20, rightPos.Y + 3),
+                        new Vector2(rightPos.X - GUI.SmallFont.MeasureString(c.DisplayName).X - 20, rightPos.Y + 3),
                         rightWirePos,
                         mouseInRect, equippedWire,
                         wireInterval);
