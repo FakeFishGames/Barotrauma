@@ -1,6 +1,8 @@
 ﻿<Items>
   <Item
     name="Pump"
+    nameidentifier="pump"
+    aliases="Pump"
     category="Legacy"
     linkable="true"
     allowedlinks="hull">
@@ -25,6 +27,8 @@
   
   <Item
     name="Small Pump"
+    nameidentifier="smallpump"
+    aliases="Small Pump"
     category="Legacy"
     linkable="true">
 

@@ -3,6 +3,8 @@
   <Item
     name="Navigation Terminal"
     category="Legacy"
+    nameidentifier="navterminal"
+    Aliases="Navigation Terminal"
     tags="command"
     linkable="true"
     allowedlinks="command">
@@ -51,6 +53,8 @@
   <Item
     name="Sonar Monitor"
     category="Legacy"
+    nameidentifier="sonarmonitor"
+    Aliases="Sonar Monitor"
     tags="command"
     linkable="true">
 
@@ -90,7 +94,8 @@
     name="Status Monitor"
     category="Legacy"
     tags="command"
-    aliases="MiniMap"
+    nameidentifier="statusmonitor"
+    aliases="MiniMap, Status Monitor"
     linkable="true"
     allowedlinks="command">
 

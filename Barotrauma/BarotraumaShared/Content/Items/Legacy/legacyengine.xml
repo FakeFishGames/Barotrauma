@@ -2,6 +2,8 @@
 <Items>
   <Item
     name="Engine"
+    nameidentifier="engine"
+    Aliases="Engine"
     category="Legacy"
     linkable="true">
 
@@ -31,6 +33,8 @@
 
   <Item
     name="Shuttle Engine"
+    nameidentifier="shuttleengine"
+    Aliases="Shuttle Engine"
     category="Legacy">
 
     <Sprite texture="Content/Items/Legacy/engine.png" depth="0.8" sourcerect="0,115,224,73" canflipx="true"/>

@@ -1,6 +1,8 @@
 ﻿<Items>
   <Item
     name="Oxygen Generator"
+    nameidentifier="oxygenerator"
+    aliases="Oxygen Generator"
     category="Legacy"
     linkable="true"
     allowedlinks="vent">

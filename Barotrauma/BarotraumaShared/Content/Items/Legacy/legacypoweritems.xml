@@ -2,6 +2,8 @@
 <Items>
   <Item
     name="Junction Box"
+    nameidentifier="junctionbox"
+    Aliases="Junction Box"
     category="Legacy"
     linkable="true"
     
