@@ -237,8 +237,9 @@
       <Video file="tutorial_navigation.mp4" text="Captain.NavigateText" width="450"/>
     </Segment>
 
-    <Segment id="Captain.Dock" objective="Captain.DockObjective" contenttype="textonly" istriggered="false">
+    <Segment id="Captain.Dock" objective="Captain.DockObjective" contenttype="manualvideo" istriggered="false">
       <Text tag="Captain.DockText" width="450" anchor="Center"/>
+      <Video file="tutorial_docking.mp4" text="Captain.DockText" width="450"/>
     </Segment>
   </CaptainTutorial>
 

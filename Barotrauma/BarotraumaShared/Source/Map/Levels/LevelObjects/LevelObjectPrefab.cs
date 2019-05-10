@@ -43,18 +43,18 @@ namespace Barotrauma
             SeaFloor = 4,
             MainPath = 8
         }
-        
-        public Sprite Sprite
-        {
-            get;
-            private set;
-        }
 
-        public Sprite SpecularSprite
+        public List<Sprite> Sprites
         {
             get;
             private set;
-        }
+        } = new List<Sprite>();
+
+        public List<Sprite> SpecularSprites
+        {
+            get;
+            private set;
+        } = new List<Sprite>();
 
         public DeformableSprite DeformableSprite
         {
@@ -319,7 +319,7 @@ namespace Barotrauma
             //use the maximum width of the sprite as the minimum surface width if no value is given
             if (element != null && !element.Attributes("minsurfacewidth").Any())
             {
-                if (Sprite != null) MinSurfaceWidth = Sprite.size.X * MaxSize;
+                if (Sprites.Any()) MinSurfaceWidth = Sprites[0].size.X * MaxSize;
                 if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * MaxSize);
             }
         }
@@ -331,10 +331,10 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        Sprite = new Sprite(subElement, lazyLoad: true);
+                        Sprites.Add( new Sprite(subElement, lazyLoad: true));
                         break;
                     case "specularsprite":
-                        SpecularSprite = new Sprite(subElement, lazyLoad: true);
+                        SpecularSprites.Add(new Sprite(subElement, lazyLoad: true));
                         break;
                     case "deformablesprite":
                         DeformableSprite = new DeformableSprite(subElement, lazyLoad: true);
@@ -358,9 +358,9 @@ namespace Barotrauma
                     case "overrideproperties":
                         var propertyOverride = new LevelObjectPrefab(subElement);
                         OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
-                        if (propertyOverride.Sprite == null && propertyOverride.DeformableSprite == null)
+                        if (!propertyOverride.Sprites.Any() && propertyOverride.DeformableSprite == null)
                         {
-                            propertyOverride.Sprite = Sprite;
+                            propertyOverride.Sprites = Sprites;
                             propertyOverride.DeformableSprite = DeformableSprite;
                         }
                         break;

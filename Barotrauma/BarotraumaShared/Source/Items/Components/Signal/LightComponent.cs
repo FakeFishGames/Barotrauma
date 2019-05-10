@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
         }
 
         public LightComponent(Item item, XElement element)
-            : base (item, element)
+            : base(item, element)
         {
 #if CLIENT
             light = new LightSource(element)
@@ -152,7 +152,8 @@ namespace Barotrauma.Items.Components
                 ParentSub = item.CurrentHull?.Submarine,
                 Position = item.Position,
                 CastShadows = castShadows,
-                IsBackground = drawBehindSubs
+                IsBackground = drawBehindSubs,
+                SpriteScale = Vector2.One * item.Scale
             };
 #endif
 

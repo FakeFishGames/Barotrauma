@@ -193,50 +193,7 @@ namespace Barotrauma
                 {
                     Sprite sprite = userData as Sprite;
                     if (sprite == null) return false;
-                    if (selectedSprites.Any(s => s.Texture != selectedTexture))
-                    {
-                        ResetWidgets();
-                    }
-                    if (Widget.EnableMultiSelect)
-                    {
-                        if (selectedSprites.Contains(sprite))
-                        {
-                            selectedSprites.Remove(sprite);
-                        }
-                        else
-                        {
-                            selectedSprites.Add(sprite);
-                            dirtySprites.Add(sprite);
-                            lastSelected = sprite;
-                        }
-                    }
-                    else
-                    {
-                        selectedSprites.Clear();
-                        selectedSprites.Add(sprite);
-                        dirtySprites.Add(sprite);
-                        lastSelected = sprite;
-                    }
-                    if (selectedTexture != sprite.Texture)
-                    {
-                        textureList.Select(sprite.Texture, autoScroll: false);
-                        UpdateScrollBar(textureList);
-                    }
-                    xmlPathText.Text = string.Empty;
-                    foreach (var s in selectedSprites)
-                    {
-                        texturePathText.Text = s.FilePath;
-                        var element = s.SourceElement;
-                        if (element != null)
-                        {
-                            string xmlPath = element.ParseContentPathFromUri();
-                            if (!xmlPathText.Text.Contains(xmlPath))
-                            {
-                                xmlPathText.Text += "\n" + xmlPath;
-                            }
-                        }
-                    }
-                    xmlPathText.TextColor = Color.LightGray;
+                    SelectSprite(sprite);
                     return true;
                 }
             };
@@ -610,11 +567,56 @@ namespace Barotrauma
 
         public void SelectSprite(Sprite sprite)
         {
-            ResetWidgets();
-            textureList.Select(sprite.Texture);
-            ResetZoom();
-            selectedSprites.Clear();
-            selectedSprites.Add(sprite);
+            if (!loadedSprites.Contains(sprite))
+            {
+                loadedSprites.Add(sprite);
+                RefreshLists();
+            }
+
+            if (selectedSprites.Any(s => s.Texture != selectedTexture))
+            {
+                ResetWidgets();
+            }
+            if (Widget.EnableMultiSelect)
+            {
+                if (selectedSprites.Contains(sprite))
+                {
+                    selectedSprites.Remove(sprite);
+                }
+                else
+                {
+                    selectedSprites.Add(sprite);
+                    dirtySprites.Add(sprite);
+                    lastSelected = sprite;
+                }
+            }
+            else
+            {
+                selectedSprites.Clear();
+                selectedSprites.Add(sprite);
+                dirtySprites.Add(sprite);
+                lastSelected = sprite;
+            }
+            if (selectedTexture != sprite.Texture)
+            {
+                textureList.Select(sprite.Texture, autoScroll: false);
+                UpdateScrollBar(textureList);
+            }
+            xmlPathText.Text = string.Empty;
+            foreach (var s in selectedSprites)
+            {
+                texturePathText.Text = s.FilePath;
+                var element = s.SourceElement;
+                if (element != null)
+                {
+                    string xmlPath = element.ParseContentPathFromUri();
+                    if (!xmlPathText.Text.Contains(xmlPath))
+                    {
+                        xmlPathText.Text += "\n" + xmlPath;
+                    }
+                }
+            }
+            xmlPathText.TextColor = Color.LightGray;
         }
 
         public void RefreshLists()
@@ -659,6 +661,7 @@ namespace Barotrauma
 
         public void ResetZoom()
         {
+            if (selectedTexture == null) { return; }
             var viewArea = GetViewArea;
             float width = viewArea.Width / (float)selectedTexture.Width;
             float height = viewArea.Height / (float)selectedTexture.Height;

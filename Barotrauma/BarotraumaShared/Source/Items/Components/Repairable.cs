@@ -93,7 +93,10 @@ namespace Barotrauma.Items.Components
             canBeSelected = true;
 
             this.item = item;
-            header = element.GetAttributeString("name", "");
+            header = 
+                TextManager.Get(element.GetAttributeString("header", ""), returnNull: true) ??
+                TextManager.Get(item.Prefab.ConfigElement.GetAttributeString("header", ""), returnNull: true) ??
+                element.GetAttributeString("name", "");
             InitProjSpecific(element);
         }
 

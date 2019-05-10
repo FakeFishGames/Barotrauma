@@ -3117,5 +3117,72 @@
 
   <mutedbyserver>You have been muted by the server.</mutedbyserver>
   <unmutedbyserver>You have been unmuted by the server.</unmutedbyserver>
+
+  <EntityName.equalscomponent>Equals Component</EntityName.equalscomponent>
+  <EntityDescription.equalscomponent>Sends a signal when both inputs receive the same signal.</EntityDescription.equalscomponent>
+  <EntityName.greatercomponent>Greater Component</EntityName.greatercomponent>
+  <EntityDescription.greatercomponent>Sends a signal if the value the signal_in1 input is larger than the signal_in2 input.</EntityDescription.greatercomponent>
+  <EntityName.colorcomponent>Color Component</EntityName.colorcomponent>
+  <EntityDescription.colorcomponent>Outputs a combined color signal for light control.</EntityDescription.colorcomponent>
+  <EntityName.subtractcomponent>Subtract Component</EntityName.subtractcomponent>
+  <EntityDescription.subtractcomponent>Outputs the subtracted value of the received signals.</EntityDescription.subtractcomponent>
+  <EntityName.multiplycomponent>Multiply Component</EntityName.multiplycomponent>
+  <EntityDescription.multiplycomponent>Outputs the product of the received signals.</EntityDescription.multiplycomponent>
+  <EntityName.dividecomponent>Divide Component</EntityName.dividecomponent>
+  <EntityDescription.dividecomponent>Outputs the divided value of the received signals.</EntityDescription.dividecomponent>
+  <EntityName.xorcomponent>Xor Component</EntityName.xorcomponent>
+  <EntityDescription.xorcomponent>Sends a signal if either of the inputs, but not both, receives a signal.</EntityDescription.xorcomponent>
+  <EntityName.memorycomponent>Memory Component</EntityName.memorycomponent>
+  <EntityDescription.memorycomponent>Outputs a stored value that can be updated from other sources. Use the signal_in connection to set the stored value, and the signal_store input to toggle whether the received signals should be stored.</EntityDescription.memorycomponent>
+
+  <search>Search</search>
+
+  <electricalrepairsheader>Electrical Repairs</electricalrepairsheader>
+  <mechanicalrepairsheader>Mechanical Repairs</mechanicalrepairsheader>
   
+  <entityname.oxygentank>Oxygen Tank</entityname.oxygentank>
+  <entitydescription.oxygentank>Portable oxygen container.</entitydescription.oxygentank>
+
+  <entityname.cyanideantidote>Cyanide Antidote</entityname.cyanideantidote>
+  <entitydescription.cyanideantidote>An antidote for acute cyanide poisoning.</entitydescription.cyanideantidote>
+  
+  <entityname.sufforinantidote>Sufforin Antidote</entityname.sufforinantidote>
+  <entitydescription.sufforinantidote>An antidote for acute sufforin poisoning.</entitydescription.sufforinantidote>
+  
+  <entityname.deliriumineantidote>Deliriumine Antidote</entityname.deliriumineantidote>
+  <entitydescription.deliriumineantidote>An antidote for acute deliriumine poisoning.</entitydescription.deliriumineantidote>
+  
+  <entityname.antirad>Antirad</entityname.antirad>
+  <entitydescription.antirad>Slows down cellular degradation caused by radiation.</entitydescription.antirad>
+
+  <connection.power>power</connection.power>
+  <connection.powerin>power_in</connection.powerin>
+  <connection.powerout>power_out</connection.powerout>
+  <connection.setstate>set_state</connection.setstate>
+  <connection.togglestate>toggle_state</connection.togglestate>
+  <connection.setpumpingspeed>set_speed</connection.setpumpingspeed>
+  <connection.settargetwaterlevel>set_targetlevel</connection.settargetwaterlevel>
+  <connection.signalin>signal_in</connection.signalin>
+  <connection.signalout>signal_out</connection.signalout>
+  <connection.signalinx>signal_in_[num]</connection.signalinx>
+  <connection.signaloutx>signal_out_[num]</connection.signaloutx>
+  <connection.turretaimingin>position_in</connection.turretaimingin>
+  <connection.turrettriggerin>trigger_in</connection.turrettriggerin>
+  <connection.togglelight>toggle_light</connection.togglelight>
+  <connection.setcolor>set_color</connection.setcolor>
+  <connection.shutdown>shutdown</connection.shutdown>
+  <connection.temperatureout>temperature_out</connection.temperatureout>
+  <connection.meltdownwarning>meltdown_warning</connection.meltdownwarning>
+  <connection.signalr>signal_r</connection.signalr>
+  <connection.signalg>signal_g</connection.signalg>
+  <connection.signalb>signal_b</connection.signalb>
+  <connection.signala>signal_a</connection.signala>
+  <connection.setoutput>set_output</connection.setoutput>
+  <connection.signalstore>signal_store</connection.signalstore>
+  <connection.settargetsignal>set_targetsignal</connection.settargetsignal>
+  <connection.setfrequency>set_frequency</connection.setfrequency>
+  <connection.setoutputtype>set_outputtype</connection.setoutputtype>
+  <connection.controlin>control_in</connection.controlin>
+  <connection.setforce>set_force</connection.setforce>
+
 </infotexts>

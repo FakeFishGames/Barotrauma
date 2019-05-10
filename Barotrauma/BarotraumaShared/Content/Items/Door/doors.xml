@@ -18,7 +18,7 @@
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
     <AiTarget sightrange="3000.0" />
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -48,7 +48,7 @@
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
     <AiTarget sightrange="3000.0" />
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -77,7 +77,7 @@
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
     <AiTarget sightrange="1500.0" />
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -111,7 +111,7 @@
     </Door>
     <trigger x="-60" y="-140" width="170" height="85" />
     <AiTarget sightrange="3000.0" />
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -143,7 +143,7 @@
     </Door>
     <trigger x="-60" y="-140" width="170" height="85" />
     <AiTarget sightrange="3000.0" />
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -175,7 +175,7 @@
     </Door>
     <trigger x="170" y="51" width="70" height="200" />
     <AiTarget sightrange="1500.0" />
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -207,7 +207,7 @@
     </DockingPort>
     <PowerTransfer CanBeOverloaded="false" FireProbability="0.0" />
     <Wire />
-    <!--<Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <!--<Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -240,7 +240,7 @@
     </DockingPort>
     <PowerTransfer CanBeOverloaded="false" FireProbability="0.0" />
     <Wire />
-    <!--<Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <!--<Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
@@ -268,7 +268,7 @@
       <sound file="Content/Items/Door/DuctBreak.ogg" type="OnBroken" range="2000" />
     </Door>
     <AiTarget sightrange="1500.0" />
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem identifier="wrench" type="equipped" />
