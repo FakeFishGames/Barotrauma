@@ -2,6 +2,8 @@
 <Items>
   <Item
     name="Searchlight"
+    nameidentifier="searchlight"
+    Aliases="Searchligh"
     category="Legacy"
     focusonselected="true"
     offsetonselected="515"

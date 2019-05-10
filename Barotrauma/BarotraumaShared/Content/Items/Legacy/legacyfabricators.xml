@@ -3,6 +3,8 @@
 	<Item
     name="Fabricator"
     tags="fabricator"
+    nameidentifier="fabricator"
+    aliases="Fabricator"
     category="Legacy"
     linkable="true"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
@@ -29,6 +31,8 @@
   <Item
     name="Medical Fabricator"
     tags="medicalfabricator"
+    nameidentifier="medicalfabricator"
+    aliases="Medical Fabricator"
     category="Legacy"
     linkable="true"
     description="A machine that can be used to manufacture various medicines.">
@@ -54,6 +58,8 @@
 
   <Item
     name="Deconstructor"
+    nameidentifier="deconstructor"
+    aliases="Deconstructor"
     category="Legacy"
     linkable="true"   
     description="Disassembles and breaks down items to reusable components and material bars.">
