@@ -30,7 +30,7 @@
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
       <input name="set_frequency" />
       <input name="set_outputtype" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="26" />
         <link w="28" />
       </output>
@@ -46,21 +46,21 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="power_in" />
-      <input name="signal_in1">
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1">
         <link w="25" />
       </input>
-      <input name="signal_in2" />
-      <input name="toggle" />
-      <input name="set_state">
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate">
         <link w="26" />
       </input>
-      <output name="power_out" />
-      <output name="signal_out1">
+      <output name="power_out" displayname="connection.powerout" />
+      <output name="signal_out1" displayname="connection.signaloutx~[num]=1">
         <link w="27" />
       </output>
-      <output name="signal_out2" />
-      <output name="state_out" />
+      <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Small Alien Chest" identifier="alienitemcontainersmall" ID="19" rect="-247,-1,76,32" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="cabinet,container0" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.5">
@@ -70,8 +70,8 @@
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="False" blinkfrequency="0" lightcolor="255,0,0,255" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="toggle" />
-      <input name="set_state">
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate">
         <link w="28" />
       </input>
       <input name="set_color" />
@@ -80,7 +80,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="21" rect="-240,64,55,56" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="100" rangey="100" detectoffset="0,0" output="0" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="25" />
       </output>
     </ConnectionPanel>
@@ -95,8 +95,8 @@
     <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <input name="shutdown" />
-      <output name="power_out">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <output name="power_out" displayname="connection.powerout">
         <link w="29" />
       </output>
     </ConnectionPanel>
@@ -108,8 +108,8 @@
       <input name="activate">
         <link w="27" />
       </input>
-      <input name="shutdown" />
-      <input name="power_in">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <input name="power_in" displayname="connection.powerin">
         <link w="29" />
       </input>
     </ConnectionPanel>

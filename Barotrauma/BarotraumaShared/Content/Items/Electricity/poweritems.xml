@@ -18,7 +18,7 @@
         <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <output name="power" />
+      <output name="power" displayname="connection.power"/>
       <output name="signal_0" />
       <output name="signal_1" />
       <output name="signal_2" />
@@ -53,7 +53,7 @@
         <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
       </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <output name="power" />
+      <output name="power" displayname="connection.power"/>
     </ConnectionPanel>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="720" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
@@ -84,8 +84,8 @@
         </Explosion>
       </StatusEffect>
       <requireditem identifier="Screwdriver" type="Equipped"/>
-      <input name="power_out"/>
-      <input name="power_in"/>
+      <input name="power_out" displayname="connection.powerout"/>
+      <input name="power_in" displayname="connection.powerin"/>
       <input name="set_rate"/>
       <output name="charge"/>
       <output name="charge_%"/>
@@ -121,8 +121,8 @@
         </Explosion>
       </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <input name="power_out"/>
-      <input name="power_in"/>
+      <input name="power_out" displayname="connection.powerout"/>
+      <input name="power_in" displayname="connection.powerin"/>
       <input name="set_rate"/>
       <output name="charge"/>
       <output name="charge_%"/>
@@ -150,8 +150,8 @@
         </Explosion>
       </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <input name="power_out" />
-      <input name="power_in" />
+      <input name="power_out" displayname="connection.powerout" />
+      <input name="power_in" displayname="connection.powerin" />
       <output name="charge"/>
       <output name="charge_%"/>
       <output name="charge_rate"/>
@@ -216,7 +216,7 @@
         </Explosion>
       </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <input name="power_in" />
+      <input name="power_in" displayname="connection.powerin" />
     </ConnectionPanel>
     <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="24,10" iteminterval="23,0" itemrotation="-90" uilabel="ChargingDock" containedspritedepth="0.81">
       <GuiFrame relativesize="0.25,0.15" anchor="Center" style="ItemUI" />

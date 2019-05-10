@@ -14,9 +14,9 @@
       <requireditem identifiers="crowbar" type="Equipped" msg="" />
     </Door>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
-      <input name="toggle" />
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
 </ItemAssembly>

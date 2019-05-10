@@ -14,9 +14,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M1" identifier="lightfluorescentm01" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -33,9 +33,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M2" identifier="lightfluorescentm02" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -52,9 +52,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M3" identifier="lightfluorescentm03" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -71,9 +71,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent M4" identifier="lightfluorescentm04" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -90,9 +90,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent L1" identifier="lightfluorescentl01" category="Electrical" Tags="largeitem,light" scale="0.5">
@@ -109,9 +109,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Fluorescent L2" identifier="lightfluorescentl02" category="Electrical" Tags="largeitem,light" scale="0.5">
@@ -128,9 +128,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M1" identifier="lighthalogenmm01" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -147,9 +147,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M2" identifier="lighthalogenmm02" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -166,9 +166,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M3" identifier="lighthalogenmm03" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -185,9 +185,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Halogen M4" identifier="lighthalogenm04" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -204,9 +204,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Led S1" identifier="lightleds01" category="Electrical" Tags="smallitem,light" scale="0.5">
@@ -223,9 +223,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="power" displayname="connection.power"/>
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Emergency Light" identifier="emergencylight" category="Electrical" Tags="smallitem,light" scale="1.0">
@@ -238,8 +238,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
 </Items>

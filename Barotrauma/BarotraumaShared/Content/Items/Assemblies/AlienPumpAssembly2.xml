@@ -4,18 +4,18 @@
     <Pump minvoltage="0.3" powerconsumption="300" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <input name="power_in">
+      <input name="power_in" displayname="connection.powerin">
         <link w="27" />
       </input>
-      <input name="toggle" />
-      <input name="set_active">
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_active" displayname="connection.setstate">
         <link w="28" />
       </input>
-      <input name="set_speed">
+      <input name="set_speed" displayname="connection.setpumpingspeed">
         <link w="29" />
         <link w="30" />
       </input>
-      <input name="set_targetlevel" />
+      <input name="set_targetlevel" displayname="connection.settargetwaterlevel" />
     </ConnectionPanel>
     <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Repair [Wrench]">
       <requireditem identifiers="wrench" type="Equipped" msg="" />
@@ -27,8 +27,8 @@
     <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <input name="shutdown" />
-      <output name="power_out">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <output name="power_out" displayname="connection.powerout">
         <link w="27" />
       </output>
     </ConnectionPanel>
@@ -87,21 +87,21 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="power_in" />
-      <input name="signal_in1">
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1">
         <link w="38" />
       </input>
-      <input name="signal_in2" />
-      <input name="toggle">
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="toggle" displayname="connection.togglestate">
         <link w="39" />
       </input>
-      <input name="set_state" />
-      <output name="power_out" />
-      <output name="signal_out1">
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="power_out" displayname="connection.powerout" />
+      <output name="signal_out1" displayname="connection.signaloutx~[num]=1">
         <link w="32" />
       </output>
-      <output name="signal_out2" />
-      <output name="state_out" />
+      <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Relay Component" identifier="relaycomponent" ID="23" rect="-207,16,16,16" description="When switched on, forwards all received signals from the input connections to the outputs." hiddeningame="True" spritecolor="0,0,0,0" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
@@ -114,21 +114,21 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="power_in" />
-      <input name="signal_in1">
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1">
         <link w="33" />
       </input>
-      <input name="signal_in2" />
-      <input name="toggle">
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="toggle" displayname="connection.togglestate">
         <link w="34" />
       </input>
-      <input name="set_state" />
-      <output name="power_out" />
-      <output name="signal_out1">
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="power_out" displayname="connection.powerout" />
+      <output name="signal_out1" displayname="connection.signaloutx~[num]=1">
         <link w="31" />
       </output>
-      <output name="signal_out2" />
-      <output name="state_out">
+      <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
+      <output name="state_out" displayname="connection.stateout">
         <link w="35" />
       </output>
     </ConnectionPanel>
@@ -140,12 +140,12 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="signal_in">
+      <input name="signal_in" displayname="connection.signalin">
         <link w="32" />
       </input>
-      <input name="set_output" />
+      <input name="set_output" displayname="connection.setoutput" />
       <input name="set_targetsignal" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="30" />
       </output>
     </ConnectionPanel>
@@ -157,12 +157,12 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="signal_in">
+      <input name="signal_in" displayname="connection.signalin">
         <link w="31" />
       </input>
-      <input name="set_output" />
+      <input name="set_output" displayname="connection.setoutput" />
       <input name="set_targetsignal" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="29" />
       </output>
     </ConnectionPanel>
@@ -171,7 +171,7 @@
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="28" />
         <link w="33" />
         <link w="34" />
@@ -184,8 +184,8 @@
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="toggle" />
-      <input name="set_state">
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate">
         <link w="35" />
       </input>
       <input name="set_color" />

@@ -19,12 +19,12 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" />
-      <input name="signal_in">
+      <input name="signal_in" displayname="connection.signalin">
         <link w="5" />
       </input>
-      <input name="set_output" />
+      <input name="set_output" displayname="connection.setoutput" />
       <input name="set_targetsignal" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="6" />
       </output>
     </ConnectionPanel>
@@ -36,7 +36,7 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="5" />
         <link w="7" />
       </output>
@@ -46,15 +46,15 @@
     <Pump minvoltage="0.3" powerconsumption="60" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgInteractSelect" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <input name="power_in" />
-      <input name="toggle" />
-      <input name="set_active">
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_active" displayname="connection.setstate">
         <link w="7" />
       </input>
-      <input name="set_speed">
+      <input name="set_speed" displayname="connection.setpumpingspeed">
         <link w="6" />
       </input>
-      <input name="set_targetlevel" />
+      <input name="set_targetlevel" displayname="connection.settargetwaterlevel" />
     </ConnectionPanel>
     <Repairable deteriorationspeed="0.1" mindeteriorationdelay="360" maxdeteriorationdelay="720" mindeteriorationcondition="10" showrepairuithreshold="50" fixdurationlowskill="20" fixdurationhighskill="5" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRepairWrench">
       <requireditem identifiers="wrench" type="Equipped" optional="false" />

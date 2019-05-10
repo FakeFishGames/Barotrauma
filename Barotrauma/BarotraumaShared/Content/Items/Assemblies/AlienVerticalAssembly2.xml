@@ -12,8 +12,8 @@
         <link w="27" />
         <link w="28" />
       </input>
-      <input name="shutdown" />
-      <input name="power_in">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <input name="power_in" displayname="connection.powerin">
         <link w="29" />
       </input>
     </ConnectionPanel>
@@ -21,7 +21,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="22" rect="111,112,55,56" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="100" rangey="100" detectoffset="0,0" output="1" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="27" />
       </output>
     </ConnectionPanel>
@@ -29,7 +29,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="21" rect="-97,384,55,56" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="100" rangey="100" detectoffset="0,0" output="1" falseoutput="" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="28" />
       </output>
     </ConnectionPanel>
@@ -39,9 +39,9 @@
       <requireditem identifiers="crowbar" type="Equipped" msg="" />
     </Door>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
-      <input name="toggle" />
-      <input name="set_state" />
-      <output name="state_out" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Generator" identifier="aliengenerator" ID="24" rect="-160,32,153,171" description="" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.3">
@@ -50,8 +50,8 @@
     <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <input name="shutdown" />
-      <output name="power_out">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <output name="power_out" displayname="connection.powerout">
         <link w="29" />
       </output>
     </ConnectionPanel>

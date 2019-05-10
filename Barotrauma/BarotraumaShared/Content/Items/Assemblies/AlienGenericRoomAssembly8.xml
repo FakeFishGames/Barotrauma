@@ -7,8 +7,8 @@
       <input name="activate">
         <link w="32" />
       </input>
-      <input name="shutdown" />
-      <input name="power_in">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <input name="power_in" displayname="connection.powerin">
         <link w="33" />
       </input>
     </ConnectionPanel>
@@ -38,7 +38,7 @@
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
       <input name="set_frequency" />
       <input name="set_outputtype" />
-      <output name="signal_out">
+      <output name="signal_out" displayname="connection.signalout">
         <link w="34" />
       </output>
     </ConnectionPanel>
@@ -53,21 +53,21 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
       <requireditem identifiers="screwdriver,wire" type="Equipped" msg="" />
-      <input name="power_in" />
-      <input name="signal_in1">
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1">
         <link w="34" />
       </input>
-      <input name="signal_in2" />
-      <input name="toggle" />
-      <input name="set_state">
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate">
         <link w="35" />
       </input>
-      <output name="power_out" />
-      <output name="signal_out1">
+      <output name="power_out" displayname="connection.powerout" />
+      <output name="signal_out1" displayname="connection.signaloutx~[num]=1">
         <link w="32" />
       </output>
-      <output name="signal_out2" />
-      <output name="state_out" />
+      <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Structure name="RuinWallVerticalSmall" identifier="RuinWallVerticalSmall" ID="25" rect="-224,256,54,176" texturescale="1,1" textureoffset="0,0" spritecolor="255,255,255,255" spritedepth="0.063" scale="1" />
@@ -80,7 +80,7 @@
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" ID="26" rect="-352,112,55,56" description="" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <MotionSensor onlyhumans="True" rangex="100" rangey="100" detectoffset="0,0" output="1" falseoutput="0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <output name="state_out">
+      <output name="state_out" displayname="connection.stateout">
         <link w="35" />
       </output>
     </ConnectionPanel>
@@ -95,8 +95,8 @@
     <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <input name="shutdown" />
-      <output name="power_out">
+      <input name="shutdown" displayname="connection.shutdown" />
+      <output name="power_out" displayname="connection.powerout">
         <link w="33" />
       </output>
     </ConnectionPanel>

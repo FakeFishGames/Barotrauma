@@ -3185,4 +3185,11 @@
   <connection.controlin>control_in</connection.controlin>
   <connection.setforce>set_force</connection.setforce>
 
+  <connection.sonartransducerin>transducer_in</connection.sonartransducerin>
+  <connection.steeringvelocityin>velocity_in</connection.steeringvelocityin>
+  <connection.velocityxout>velocity_x_out</connection.velocityxout>
+  <connection.velocityyout>velocity_y_out</connection.velocityyout>
+  <connection.toggledocking>toggle_docking</connection.toggledocking>
+  <connection.waterdatain>water_data_in</connection.waterdatain>
+  <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
 </infotexts>

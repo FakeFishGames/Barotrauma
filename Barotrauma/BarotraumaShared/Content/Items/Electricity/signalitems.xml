@@ -170,10 +170,10 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <input name="set_output" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="set_output" displayname="connection.setoutput" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Equals Component" identifier="equalscomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -199,9 +199,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Greater Component" identifier="greatercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -227,9 +227,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Adder Component" identifier="addercomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -255,9 +255,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Color Component" identifier="colorcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -283,11 +283,11 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_r" />
-      <input name="signal_g" />
-      <input name="signal_b" />
-      <input name="signal_a" />
-      <output name="signal_out" />
+      <input name="signal_r" displayname="connection.signalr" />
+      <input name="signal_g" displayname="connection.signalg" />
+      <input name="signal_b" displayname="connection.signalb" />
+      <input name="signal_a" displayname="connection.signala" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Subtract Component" identifier="subtractcomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -313,9 +313,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Multiply Component" identifier="multiplycomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -341,9 +341,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Divide Component" identifier="dividecomponent" category="Electrical" Tags="smallitem" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -369,9 +369,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal." scale="0.5" impactsoundtag="impact_metal_light">
@@ -397,10 +397,10 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <input name="set_output" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="set_output" displayname="connection.setoutput" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Xor Component" identifier="xorcomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -426,10 +426,10 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <input name="set_output" />
-      <output name="signal_out" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="set_output" displayname="connection.setoutput" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Not Component" identifier="notcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when the input is NOT receiving a signal." scale="0.5" impactsoundtag="impact_metal_light">
@@ -455,8 +455,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in" />
-      <output name="signal_out" />
+      <input name="signal_in" displayname="connection.signalin" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Relay Component" identifier="relaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="When switched on, forwards all received signals from the input connections to the outputs." scale="0.5" impactsoundtag="impact_metal_light">
@@ -484,15 +484,15 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="power_in" />
-      <input name="signal_in1" />
-      <input name="signal_in2" />
-      <input name="toggle" />
-      <input name="set_state" />
-      <output name="power_out" />
-      <output name="signal_out1" />
-      <output name="signal_out2" />
-      <output name="state_out" />
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="power_out" displayname="connection.powerout" />
+      <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />
+      <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Delay Component" identifier="delaycomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Delays all received signals for a specific amount of time." scale="0.5" impactsoundtag="impact_metal_light">
@@ -518,8 +518,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in" />
-      <output name="signal_out" />
+      <input name="signal_in" displayname="connection.signalin" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Memory Component" identifier="memorycomponent" category="Electrical" Tags="smallitem" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -545,9 +545,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
-      <input name="signal_in" />
+      <input name="signal_in" displayname="connection.signalin" />
       <input name="signal_store" />
-      <output name="signal_out" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Light Component" identifier="lightcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -576,8 +576,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" />
     </ConnectionPanel>
   </Item>
@@ -608,8 +608,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
       <input name="set_color" />
     </ConnectionPanel>
   </Item>
@@ -637,7 +637,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <output name="signal_out" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.16" impactsoundtag="impact_metal_light">
@@ -663,7 +663,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <output name="signal_out" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Smoke Detector" identifier="smokedetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it senses smoke." scale="0.16" impactsoundtag="impact_metal_light">
@@ -689,7 +689,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <output name="signal_out" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.16" impactsoundtag="impact_metal_light">
@@ -715,7 +715,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <output name="state_out" />
+      <output name="state_out" displayname="connection.stateout" />
     </ConnectionPanel>
   </Item>
   <Item name="Signal Check Component" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal when a signal matching a specific value is received." scale="0.5" impactsoundtag="impact_metal_light">
@@ -741,10 +741,10 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in" />
-      <input name="set_output" />
+      <input name="signal_in" displayname="connection.signalin" />
+      <input name="set_output" displayname="connection.setoutput" />
       <input name="set_targetsignal" />
-      <output name="signal_out" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="RegEx Find Component" identifier="regexcomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends a signal if the received signal matches a specific regular expression pattern." scale="0.5" impactsoundtag="impact_metal_light">
@@ -770,8 +770,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in" />
-      <output name="signal_out" />
+      <input name="signal_in" displayname="connection.signalin" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Oscillator" identifier="oscillator" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Sends out a periodic, oscillating signal." scale="0.5" impactsoundtag="impact_metal_light">
@@ -799,7 +799,7 @@
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="set_frequency" />
       <input name="set_outputtype" />
-      <output name="signal_out" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Wifi Component" identifier="wificomponent" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" description="Allows remote communication between other Wifi Components that are using the same channel." scale="0.5" impactsoundtag="impact_metal_light">
@@ -825,8 +825,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="signal_in" />
-      <output name="signal_out" />
+      <input name="signal_in" displayname="connection.signalin" />
+      <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Emergency Siren" identifier="emergencysiren" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -854,8 +854,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Alarm Buzzer" identifier="alarmbuzzer" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
@@ -883,8 +883,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="toggle" />
-      <input name="set_state" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
   <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.16">

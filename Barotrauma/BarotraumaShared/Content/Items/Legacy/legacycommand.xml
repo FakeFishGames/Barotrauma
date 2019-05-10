@@ -33,10 +33,10 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="velocity_in"/>
-      <output name="velocity_x_out"/>
-      <output name="velocity_y_out"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="velocity_in" displayname="connection.steeringvelocityin"/>
+      <output name="velocity_x_out" displayname="connection.velocityxout"/>
+      <output name="velocity_y_out" displayname="connection.velocityyout"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="electricalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
@@ -74,7 +74,7 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="power_in"/>
+      <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="electricalrepairsheader" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="ItemMsgRepairScrewdriver" hudpriority="10">
@@ -104,9 +104,9 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="water_data_in"/>
-      <input name="oxygen_data_in"/>
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="water_data_in" displayname="connection.waterdatain"/>
+      <input name="oxygen_data_in" displayname="connection.oxygendatain"/>
     </ConnectionPanel>
   </Item>
 </Items>
