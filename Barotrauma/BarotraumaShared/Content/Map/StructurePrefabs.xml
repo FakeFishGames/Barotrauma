@@ -168,7 +168,24 @@
   <label name="Label S Number 0" identifier="labelsnumber0" scale="0.75">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="383,511,122,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  
+  <label name="Label S Arrow Vertical A" identifier="labelsarroverticala" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,510,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label S Arrow Horizontal A" identifier="labelsarrowhorizontala" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,511,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label S Arrow Diagonal A" identifier="labelsarrowdiagonala" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,512,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label S Arrow Vertical B" identifier="labelsarroverticalb" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="894,511,131,130" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label S Arrow Horizontal B" identifier="labelsarrowhorizontalb" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,638,126,134" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label S Arrow Diagonal B" identifier="labelsarrowdiagonalb" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,640,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
   <!--LABELS START-->
   <label name="Label M Icon Medical " identifier="labelmiconmedical" scale="0.5">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,0,256,256" depth="0.85" origin="0.5,0.5" />
@@ -319,6 +336,24 @@
   </label>
   <label name="Label M Number 0" identifier="labelmnumber0" scale="0.75">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="383,511,122,133" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label M Arrow Vertical A" identifier="labelmarroverticala" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,512,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label M Arrow Horizontal A" identifier="labelmarrowhorizontala" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,512,131,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label M Arrow Diagonal A" identifier="labelmarrowdiagonala" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,510,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label M Arrow Vertical B" identifier="labelmarroverticalb" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="895,513,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label M Arrow Horizontal B" identifier="labelmarrowhorizontalb" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="1,641,128,128" depth="0.85" origin="0.5,0.5" />
+  </label>
+  <label name="Label M Arrow Diagonal B" identifier="labelmarrowdiagonalb" scale="0.75">
+    <sprite texture="Content/Map/LabelLetters.png" sourcerect="126,642,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
   <!--OLD LABELS-->
   <doorlabel identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5">
@@ -607,6 +642,12 @@
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,0,271,975" depth="0.01" origin="0.238248,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="292,0,271,975" depth="0.85" origin="0.5,0.5" />
   </Front>
+  <Front Name="Front C" identifier="subfrontc" description="Submarine front C temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="120" bodyheight="400" bodyoffset="0,0" castshadow="false" health="400">
+    <sprite texture="Content/Map/SubRearBow2.png" sourcerect="0,0,512,1332" depth="0.01" origin="0.5,0.5" />
+  </Front>
+  <TailFin name="Tail Fin E" identifier="tailfine" description="Submarine tail" scale="0.5" body="false" castshadow="false">
+    <sprite texture="Content/Map/SubRearBow2.png" sourcerect="522,0,891,1020" depth="0.9" origin="0.5,0.5" />
+  </TailFin>
   <!-- TAIL ENDS-->
   <!-- INTERIOR WALLS FF -->
   <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="75">
@@ -723,9 +764,7 @@
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
   <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">&gt;
-    <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="129,0,256,160" depth="0.1" origin="0.5,0.5" />
-    <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
-  </shellA>
+    <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="129,0,256,160" depth="0.1" origin="0.5,0.5" /><backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" /></shellA>
   <shellA name="Shell A 34 deg" identifier="shella34deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="116" bodyheight="60" bodyrotation="-34">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="864,117,98,156" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
