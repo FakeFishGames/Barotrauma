@@ -11,14 +11,14 @@ namespace Barotrauma
 
         public Func<Item, float> GetItemPriority;
 
-        public int MinContainedAmount = 1;
+        public int targetItemCount = 1;
         public string[] ignoredContainerIdentifiers;
+        public bool checkInventory = true;
 
         //can either be a tag or an identifier
-        private readonly string[] itemIdentifiers;
-        private readonly ItemContainer container;
+        public readonly string[] itemIdentifiers;
+        public readonly ItemContainer container;
 
-        private bool isCompleted;
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
 
@@ -39,7 +39,6 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            if (isCompleted) { return true; }
             int containedItemCount = 0;
             foreach (Item item in container.Inventory.Items)
             {
@@ -48,7 +47,7 @@ namespace Barotrauma
                     containedItemCount++;
                 }
             }
-            return containedItemCount >= MinContainedAmount;
+            return containedItemCount >= targetItemCount;
         }
 
         public override float GetPriority()
@@ -62,7 +61,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (isCompleted) { return; }
             //get the item that should be contained
             Item itemToContain = null;
             foreach (string identifier in itemIdentifiers)
@@ -72,8 +70,13 @@ namespace Barotrauma
             }            
             if (itemToContain == null)
             {
+                if (getItemObjective != null && getItemObjective.IsCompleted())
+                {
+                    getItemObjective = null;
+                    targetItemCount--;
+                }
                 TryAddSubObjective(ref getItemObjective, () =>
-                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager)
+                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, checkInventory: checkInventory)
                     {
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = ignoredContainerIdentifiers
@@ -81,14 +84,7 @@ namespace Barotrauma
                 return;
             }
             if (container.Item.ParentInventory == character.Inventory)
-            {
-                var containedItems = container.Inventory.Items;
-                //if there's already something in the mask (empty oxygen tank?), drop it
-                var existingItem = containedItems.FirstOrDefault(i => i != null);
-                if (existingItem != null)
-                {
-                    existingItem.Drop(character);
-                }              
+            {           
                 character.Inventory.RemoveItem(itemToContain);
                 container.Inventory.TryPutItem(itemToContain, null);
             }
@@ -102,7 +98,6 @@ namespace Barotrauma
                 }
                 container.Combine(itemToContain);
             }
-            isCompleted = true;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

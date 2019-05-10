@@ -41,10 +41,10 @@ namespace Barotrauma
             this.targetItem = targetItem;
         }
 
-        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = false, float priorityModifier = 1) 
-            : this(character, new string[] { itemIdentifier }, objectiveManager, equip, priorityModifier) { }
+        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = false, bool checkInventory = true, float priorityModifier = 1) 
+            : this(character, new string[] { itemIdentifier }, objectiveManager, equip, checkInventory, priorityModifier) { }
 
-        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = false, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = false, bool checkInventory = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
@@ -54,7 +54,10 @@ namespace Barotrauma
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
             }
-            CheckInventory();
+            if (checkInventory)
+            {
+                CheckInventory();
+            }
         }
 
         private void CheckInventory()
@@ -225,8 +228,7 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            AIObjectiveGetItem getItem = otherObjective as AIObjectiveGetItem;
-            if (getItem == null) { return false; }
+            if (!(otherObjective is AIObjectiveGetItem getItem)) { return false; }
             if (getItem.equip != equip) { return false; }
             if (getItem.itemIdentifiers != null && itemIdentifiers != null)
             {
@@ -246,7 +248,11 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            if (itemIdentifiers != null)
+            if (targetItem != null)
+            {
+                return HasItem(targetItem);
+            }
+            else if (itemIdentifiers != null)
             {
                 foreach (string itemName in itemIdentifiers)
                 {
@@ -258,14 +264,19 @@ namespace Barotrauma
                 }
                 return false;
             }
-            else if (targetItem != null)
+            return false;
+        }
+
+        private bool HasItem(Item item)
+        {
+            bool isEquipped = !equip || character.HasEquippedItem(item);
+            if (character.Inventory.Items.Contains(item) && isEquipped) { return true; }
+            Item rootContainer = item.GetRootContainer();
+            if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
             {
-                return character.Inventory.Items.Contains(targetItem) && (!equip || character.HasEquippedItem(targetItem));
+                return rootContainer.ParentInventory.Owner == character;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
     }
 }
