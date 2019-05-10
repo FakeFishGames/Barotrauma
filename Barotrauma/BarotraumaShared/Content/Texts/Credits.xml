@@ -76,11 +76,19 @@
 
   <spacing relativeheight="0.05"/>
   
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="Font" color="150,150,150,255">Aleksandr Varnavskii    -    Alfred_Donovan    -    Armadillo Sloth</Text>
+  <Text font="Font" color="150,150,150,255">"Bill Combs"    -    BillSoFat    -    Borna "Blue" Aberle</Text>
+  <Text font="Font" color="150,150,150,255">boynedmaster “boratboy12”    -    Caleb Yu    -    chesse20</Text>
+  <Text font="Font" color="150,150,150,255">Database    -    DataCrusader    -    David "Ol Stinky" Hockenbury</Text>
+  <Text font="Font" color="150,150,150,255">Eduardo "Chiko" Valenzuela    -    etet2    -    Fabevil</Text>
+  <Text font="Font" color="150,150,150,255">Faerdan    -    Garrett Brown    -    Glitch</Text>
+  <Text font="Font" color="150,150,150,255">Gramstaal    -    hubismal    -    Irontaco</Text>
+  <Text font="Font" color="150,150,150,255">JJRcop    -    Landon Strik    -    Mark Jarjour</Text>
+  <Text font="Font" color="150,150,150,255">Nathan "MR. NAIL BRAIN" S.    -    Nilanth Animosus    -    Pugie</Text>
+  <Text font="Font" color="150,150,150,255">Rico6822    -    Robert Sloan    -    Samuel Hammersberg</Text>
+  <Text font="Font" color="150,150,150,255">Sebastian Broberg    -    shoter    -    Sputnik</Text>
+  <Text font="Font" color="150,150,150,255">Trialtrex21    -    ursinewalrus    -    Weebyxanide Vendor</Text>
+  <Text font="Font" color="150,150,150,255">Zealan</Text>
 
   <spacing relativeheight="0.2"/>
 
@@ -129,6 +137,10 @@
   <!-- ******************************************************* -->
 
   <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">Special thanks</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">To all of out community members!</Text>
 
   <spacing relativeheight="0.05"/>
 
