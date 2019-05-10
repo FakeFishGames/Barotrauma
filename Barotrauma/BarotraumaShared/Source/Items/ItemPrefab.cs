@@ -443,8 +443,19 @@ namespace Barotrauma
 
             identifier = element.GetAttributeString("identifier", "");
 
-            name = TextManager.Get("EntityName." + identifier, true) ?? element.GetAttributeString("name", "");
-            if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
+            //nameidentifier can be used to make multiple items use the same names and descriptions
+            string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            if (string.IsNullOrEmpty(nameIdentifier))
+            {
+                name = TextManager.Get("EntityName." + identifier, true) ?? element.GetAttributeString("name", "");
+            }
+            else
+            {
+                name = TextManager.Get("EntityName." + nameIdentifier, true) ?? element.GetAttributeString("name", "");
+            }
+
+            if (name == "") { DebugConsole.ThrowError("Unnamed item in " + filePath + "!"); }
 
             DebugConsole.Log("    " + name);
 
@@ -474,7 +485,15 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, element);
 
-            string translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
+            string translatedDescription = "";
+            if (string.IsNullOrEmpty(nameIdentifier))
+            {
+                translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
+            }
+            else
+            {
+                translatedDescription = TextManager.Get("EntityDescription." + nameIdentifier, true);
+            }
             if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
             foreach (XElement subElement in element.Elements())
