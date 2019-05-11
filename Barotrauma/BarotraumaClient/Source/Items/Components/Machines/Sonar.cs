@@ -316,9 +316,9 @@ namespace Barotrauma.Items.Components
             }
 
             Steering steering = item.GetComponent<Steering>();
-            if (steering != null && steering.DockingModeEnabled)
+            if (steering != null && steering.DockingModeEnabled && steering.ActiveDockingSource != null)
             {
-                float dockingDist = Vector2.Distance(steering.DockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
+                float dockingDist = Vector2.Distance(steering.ActiveDockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
                 if (prevDockingDist > steering.DockingAssistThreshold && dockingDist <= steering.DockingAssistThreshold)
                 {
                     zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.25f));
@@ -599,7 +599,7 @@ namespace Barotrauma.Items.Components
             float scale = displayScale * zoom;
 
             Steering steering = item.GetComponent<Steering>();
-            if (steering != null && steering.DockingModeEnabled)
+            if (steering != null && steering.DockingModeEnabled && steering.ActiveDockingSource != null)
             {
                 DrawDockingIndicator(spriteBatch, steering, ref transducerCenter);
             }
@@ -633,21 +633,21 @@ namespace Barotrauma.Items.Components
         {
             float scale = displayScale * zoom;
             
-            Vector2 worldFocusPos = (steering.DockingSource.Item.WorldPosition + steering.DockingTarget.Item.WorldPosition) / 2.0f;
+            Vector2 worldFocusPos = (steering.ActiveDockingSource.Item.WorldPosition + steering.DockingTarget.Item.WorldPosition) / 2.0f;
             worldFocusPos.X = steering.DockingTarget.Item.WorldPosition.X;
 
             DisplayOffset = Vector2.Lerp(DisplayOffset, worldFocusPos - transducerCenter, 0.1f);
             transducerCenter += DisplayOffset;
 
-            Vector2 sourcePortDiff = (steering.DockingSource.Item.WorldPosition - transducerCenter) * scale;
+            Vector2 sourcePortDiff = (steering.ActiveDockingSource.Item.WorldPosition - transducerCenter) * scale;
             Vector2 sourcePortPos = new Vector2(sourcePortDiff.X, -sourcePortDiff.Y);
             Vector2 targetPortDiff = (steering.DockingTarget.Item.WorldPosition - transducerCenter) * scale;
             Vector2 targetPortPos = new Vector2(targetPortDiff.X, -targetPortDiff.Y);
 
             Vector2 midPos = (sourcePortPos + targetPortPos) / 2.0f;
 
-            System.Diagnostics.Debug.Assert(steering.DockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
-            Vector2 diff = steering.DockingTarget.Item.WorldPosition - steering.DockingSource.Item.WorldPosition;
+            System.Diagnostics.Debug.Assert(steering.ActiveDockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
+            Vector2 diff = steering.DockingTarget.Item.WorldPosition - steering.ActiveDockingSource.Item.WorldPosition;
             float dist = diff.Length();
             bool readyToDock = 
                 Math.Abs(diff.X) < steering.DockingTarget.DistanceTolerance.X &&
@@ -657,7 +657,7 @@ namespace Barotrauma.Items.Components
             Vector2 normalizedDockingDir = Vector2.Normalize(dockingDir);
             if (!dynamicDockingIndicator)
             {
-                if (steering.DockingSource.IsHorizontal)
+                if (steering.ActiveDockingSource.IsHorizontal)
                 {
                     normalizedDockingDir = new Vector2(Math.Sign(normalizedDockingDir.X), 0.0f);
                 }
@@ -709,7 +709,7 @@ namespace Barotrauma.Items.Components
                 float indicatorSectorLength = (float)(midLength / Math.Cos(indicatorSector));
 
                     bool withinSector =
-                    (Math.Abs(diff.X) < steering.DockingSource.DistanceTolerance.X && Math.Abs(diff.Y) < steering.DockingSource.DistanceTolerance.Y) ||
+                    (Math.Abs(diff.X) < steering.ActiveDockingSource.DistanceTolerance.X && Math.Abs(diff.Y) < steering.ActiveDockingSource.DistanceTolerance.Y) ||
                     Vector2.Dot(normalizedDockingDir, MathUtils.RotatePoint(normalizedDockingDir, indicatorSector)) <
                     Vector2.Dot(normalizedDockingDir, Vector2.Normalize(dockingDir));
 
