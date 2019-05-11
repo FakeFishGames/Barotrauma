@@ -90,6 +90,7 @@ namespace Barotrauma
                     return;
                 }
             }
+            if (subObjectives.Any()) { return; }
             var repairTool = weldingTool.GetComponent<RepairTool>();
             if (repairTool == null)
             {
@@ -106,7 +107,7 @@ namespace Barotrauma
                 HumanAIController.AnimController.Crouching = true;
             }
             float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
+            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach * 1.5f;
             if (canOperate)
             {
                 TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));

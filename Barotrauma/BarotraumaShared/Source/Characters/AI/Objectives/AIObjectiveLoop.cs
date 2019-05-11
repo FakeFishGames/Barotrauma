@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
@@ -87,7 +88,7 @@ namespace Barotrauma
             }
         }
 
-        // the timer is set between 1 and 10 seconds, depending on the priority
+        // the timer is set between 1 and 10 seconds, depending on the priority modifier and a random +-25%
         private float SetTargetUpdateTimer() => targetUpdateTimer = 1 / MathHelper.Clamp(PriorityModifier * Rand.Range(0.75f, 1.25f), 0.1f, 1);
 
         public override void Reset()
@@ -158,7 +159,7 @@ namespace Barotrauma
                 if (!Objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);
-                    objective.Completed += () => ReportedTargets.Remove(target);
+                    objective.Completed += () => OnObjectiveCompleted(objective, target);
                     Objectives.Add(target, objective);
                     if (!subObjectives.Contains(objective))
                     {
@@ -167,6 +168,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        protected abstract void OnObjectiveCompleted(AIObjective objective, T target);
 
         /// <summary>
         /// List of all possible items of the specified type. Used for filtering the removed objectives.

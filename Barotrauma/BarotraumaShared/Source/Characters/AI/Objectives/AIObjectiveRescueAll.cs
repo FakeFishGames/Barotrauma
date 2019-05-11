@@ -21,11 +21,15 @@ namespace Barotrauma
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-        protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
-
         protected override float TargetEvaluation() => Targets.Max(t => GetVitalityFactor(t)) * 100;
 
         public static float GetVitalityFactor(Character character) => (character.MaxVitality - character.Vitality) / character.MaxVitality;
+
+        protected override AIObjective ObjectiveConstructor(Character target)
+            => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
+
+        protected override void OnObjectiveCompleted(AIObjective objective, Character target)
+            => HumanAIController.RemoveTargets<AIObjectiveRescueAll, Character>(character, target);
 
         public static bool IsValidTarget(Character target, Character character)
         {
