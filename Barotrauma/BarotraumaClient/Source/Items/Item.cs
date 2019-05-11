@@ -486,6 +486,7 @@ namespace Barotrauma
         
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
+            int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
             {
@@ -497,8 +498,8 @@ namespace Barotrauma
             {
                 if (Linkable)
                 {
-                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
-                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("AllowedLinks") + ": ", font: GUI.SmallFont);
+                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
+                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("AllowedLinks") + ": ", font: GUI.SmallFont);
                     if (AllowedLinks.None())
                     {
                         itemsText.Text += TextManager.Get("None");
@@ -519,7 +520,7 @@ namespace Barotrauma
                     linkText.TextColor = Color.Yellow;
                     itemsText.TextColor = Color.Yellow;
                 }
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, 20)), isHorizontal: true)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.02f
@@ -590,7 +591,7 @@ namespace Barotrauma
                 {
                     foreach (RelatedItem relatedItem in kvp.Value)
                     {
-                        var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)),
+                        var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)),
                             relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
                         {
                             Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
