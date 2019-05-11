@@ -274,18 +274,18 @@ namespace Barotrauma
             return false;
         }
 
-        public static bool IsTakenBySomeone(Item item)
+        private bool IsTakenBySomeone(Item item)
         {
             //if the item is inside a character's inventory, don't steal it unless the character is dead
             if (item.ParentInventory is CharacterInventory)
             {
-                if (item.ParentInventory.Owner is Character owner && !owner.IsDead) { return true; }
+                if (item.ParentInventory.Owner is Character owner && owner != character && !owner.IsDead) { return true; }
             }
             //if the item is inside an item, which is inside a character's inventory, don't steal it unless the character is dead
             Item rootContainer = item.GetRootContainer();
             if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
             {
-                if (rootContainer.ParentInventory.Owner is Character owner && !owner.IsDead) { return true; }
+                if (rootContainer.ParentInventory.Owner is Character owner && owner != character && !owner.IsDead) { return true; }
             }
             return false;
         }
