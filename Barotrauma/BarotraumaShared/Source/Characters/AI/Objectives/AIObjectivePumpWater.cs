@@ -54,7 +54,6 @@ namespace Barotrauma
             return pumpList;
         }
 
-        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = false };
         protected override float TargetEvaluation()
         {
             if (Option == "stoppumping")
@@ -66,5 +65,11 @@ namespace Barotrauma
                 return Targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(-t.FlowPercentage / 100)));
             }
         }
+
+        protected override AIObjective ObjectiveConstructor(Pump pump)
+            => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = false };
+
+        protected override void OnObjectiveCompleted(AIObjective objective, Pump target)
+            => HumanAIController.RemoveTargets<AIObjectivePumpWater, Pump>(character, target);
     }
 }

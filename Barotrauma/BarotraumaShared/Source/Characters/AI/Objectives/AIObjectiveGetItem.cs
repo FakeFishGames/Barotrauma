@@ -103,37 +103,44 @@ namespace Barotrauma
             if (moveToTarget.CurrentHull == character.CurrentHull && 
                 Vector2.DistanceSquared(character.Position, moveToTarget.Position) < MathUtils.Pow(targetItem.InteractDistance, 2))
             {
-                int targetSlot = -1;
-                if (equip)
+                if (IsTakenBySomeone(targetItem))
                 {
-                    var pickable = targetItem.GetComponent<Pickable>();
-                    if (pickable == null)
+                    abandon = true;
+                }
+                else
+                {
+                    int targetSlot = -1;
+                    if (equip)
                     {
-                        abandon = true;
-                        return;
-                    }
-                    //check if all the slots required by the item are free
-                    foreach (InvSlotType slots in pickable.AllowedSlots)
-                    {
-                        if (slots.HasFlag(InvSlotType.Any)) { continue; }
-                        for (int i = 0; i < character.Inventory.Items.Length; i++)
+                        var pickable = targetItem.GetComponent<Pickable>();
+                        if (pickable == null)
                         {
-                            //slot not needed by the item, continue
-                            if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
-                            targetSlot = i;
-                            //slot free, continue
-                            if (character.Inventory.Items[i] == null) { continue; }
-                            //try to move the existing item to LimbSlot.Any and continue if successful
-                            if (character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
-                            //if everything else fails, simply drop the existing item
-                            character.Inventory.Items[i].Drop(character);
+                            abandon = true;
+                            return;
+                        }
+                        //check if all the slots required by the item are free
+                        foreach (InvSlotType slots in pickable.AllowedSlots)
+                        {
+                            if (slots.HasFlag(InvSlotType.Any)) { continue; }
+                            for (int i = 0; i < character.Inventory.Items.Length; i++)
+                            {
+                                //slot not needed by the item, continue
+                                if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
+                                targetSlot = i;
+                                //slot free, continue
+                                if (character.Inventory.Items[i] == null) { continue; }
+                                //try to move the existing item to LimbSlot.Any and continue if successful
+                                if (character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
+                                //if everything else fails, simply drop the existing item
+                                character.Inventory.Items[i].Drop(character);
+                            }
                         }
                     }
-                }
-                targetItem.TryInteract(character, false, true);
-                if (targetSlot > -1 && !character.HasEquippedItem(targetItem))
-                {
-                    character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
+                    targetItem.TryInteract(character, false, true);
+                    if (targetSlot > -1 && !character.HasEquippedItem(targetItem))
+                    {
+                        character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
+                    }
                 }
             }
             else
@@ -185,23 +192,7 @@ namespace Barotrauma
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
-
-                // TODO: need to exclude items that already are in the inventory?
-                //// Don't allow to get items in rooms that have a fire (except fire extinguishers) or an enemy inside (except weapons)
-                //if (!itemIdentifiers.Contains("extinguisher") && item.CurrentHull.FireSources.Count > 0 || 
-                //    item.GetComponent<MeleeWeapon>() == null && item.GetComponent<RangedWeapon>() == null && Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { continue; }
-
-                //if the item is inside a character's inventory, don't steal it unless the character is dead
-                if (item.ParentInventory is CharacterInventory)
-                {
-                    if (item.ParentInventory.Owner is Character owner && !owner.IsDead) { continue; }
-                }
-                //if the item is inside an item, which is inside a character's inventory, don't steal it
-                Item rootContainer = item.GetRootContainer();
-                if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
-                {
-                    if (rootContainer.ParentInventory.Owner is Character owner && !owner.IsDead) { continue; }
-                }
+                if (IsTakenBySomeone(item)) { continue; }
                 float itemPriority = 0.0f;
                 if (GetItemPriority != null)
                 {
@@ -209,6 +200,7 @@ namespace Barotrauma
                     itemPriority = GetItemPriority(item);
                     if (itemPriority <= 0.0f) { continue; }
                 }
+                Item rootContainer = item.GetRootContainer();
                 itemPriority -= Vector2.Distance((rootContainer ?? item).Position, character.Position) * 0.01f;
                 //ignore if the item has a lower priority than the currently selected one
                 if (moveToTarget != null && itemPriority < currItemPriority) { continue; }
@@ -271,10 +263,29 @@ namespace Barotrauma
         {
             bool isEquipped = !equip || character.HasEquippedItem(item);
             if (character.Inventory.Items.Contains(item) && isEquipped) { return true; }
+            if (!equip)
+            {
+                Item rootContainer = item.GetRootContainer();
+                if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
+                {
+                    return rootContainer.ParentInventory.Owner == character;
+                }
+            }
+            return false;
+        }
+
+        public static bool IsTakenBySomeone(Item item)
+        {
+            //if the item is inside a character's inventory, don't steal it unless the character is dead
+            if (item.ParentInventory is CharacterInventory)
+            {
+                if (item.ParentInventory.Owner is Character owner && !owner.IsDead) { return true; }
+            }
+            //if the item is inside an item, which is inside a character's inventory, don't steal it unless the character is dead
             Item rootContainer = item.GetRootContainer();
             if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
             {
-                return rootContainer.ParentInventory.Owner == character;
+                if (rootContainer.ParentInventory.Owner is Character owner && !owner.IsDead) { return true; }
             }
             return false;
         }
