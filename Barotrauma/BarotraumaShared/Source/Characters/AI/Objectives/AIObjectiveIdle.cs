@@ -293,15 +293,7 @@ namespace Barotrauma
         {
             if (hull == null) { return true; }
             string hullName = hull.RoomName?.ToLowerInvariant();
-            bool isForbidden = hullName == "ballast" || hullName == "airlock";
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.CurrentHull == hull && (item.HasTag("ballast") || item.HasTag("airlock")))
-                {
-                    isForbidden = true;
-                    break;
-                }
-            }
+            bool isForbidden = hullName.Contains("ballast") || hullName.Contains("airlock");
             return isForbidden;
         }
 
