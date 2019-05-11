@@ -293,8 +293,8 @@ namespace Barotrauma
         {
             if (hull == null) { return true; }
             string hullName = hull.RoomName?.ToLowerInvariant();
-            bool isForbidden = hullName.Contains("ballast") || hullName.Contains("airlock");
-            return isForbidden;
+            if (hullName == null) { return false; }
+            return hullName.Contains("ballast") || hullName.Contains("airlock");
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
