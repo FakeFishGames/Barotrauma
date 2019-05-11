@@ -21,6 +21,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
+            GuiFrame.RectTransform.RelativeOffset = new Vector2(0.4f, 0.0f);
             new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
                 DrawHUDBack, null);
             submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center), style: null);

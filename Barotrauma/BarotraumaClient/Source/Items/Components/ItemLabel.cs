@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
                 if (textBlock == null)
                 {
                     textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
-                        textColor: textColor, font: GUI.SmallFont, textAlignment: Alignment.Center, wrap: true, style: null)
+                        textColor: textColor, font: GUI.UnscaledSmallFont, textAlignment: Alignment.Center, wrap: true, style: null)
                     {
                         TextDepth = item.SpriteDepth - 0.0001f,
                         TextScale = TextScale
