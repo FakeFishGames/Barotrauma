@@ -203,10 +203,12 @@ namespace Barotrauma
                 {
                     string wrappedTip = ToolBox.WrapText(selectedTip, GameMain.GraphicsWidth * 0.5f, GUI.Font);
                     string[] lines = wrappedTip.Split('\n');
+                    float lineHeight = GUI.Font.MeasureString(selectedTip).Y;
+
                     for (int i = 0; i < lines.Length; i++)
                     {
                         GUI.Font.DrawString(spriteBatch, lines[i],
-                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f, GameMain.GraphicsHeight * 0.78f + i * (15 * GUI.Scale)), Color.White);
+                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f, GameMain.GraphicsHeight * 0.78f + i * lineHeight), Color.White);
                     }
                 }
 

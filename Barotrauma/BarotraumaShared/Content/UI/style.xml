@@ -22,6 +22,11 @@
     <Size maxresolution="2560,1600" size="16"/>
     <Size size="24"/>
   </Font>
+  <UnscaledSmallFont file="Content/Fonts/Exo2-Medium.otf">
+    <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true"/>
+    <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true"/>
+    <Size size="12"/>
+  </UnscaledSmallFont>
   <SmallFont file="Content/Fonts/Exo2-Medium.otf">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true"/>
