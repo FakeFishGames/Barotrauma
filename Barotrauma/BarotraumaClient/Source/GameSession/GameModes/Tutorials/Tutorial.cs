@@ -372,7 +372,7 @@ namespace Barotrauma.Tutorials
 
         private void CreateObjectiveGUI(TutorialSegment segment, int index, TutorialContentTypes type)
         {
-            Point replayButtonSize = new Point((int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).X * GUI.Scale), (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f * GUI.Scale));
+            Point replayButtonSize = new Point((int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).X), (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f));
 
             segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
@@ -390,7 +390,7 @@ namespace Barotrauma.Tutorials
 
             string objectiveTitleText = TextManager.ParseInputTypes(objectiveTranslated);
             int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveTitleText).Y / 2f + 5));
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveNameFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.BottomRight) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveTitleFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.BottomRight) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
                 objectiveTitleText, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
 
             string objectiveText = TextManager.ParseInputTypes(segment.Objective);
@@ -449,12 +449,12 @@ namespace Barotrauma.Tutorials
             if (objectiveTextWidth > objectiveTitleWidth)
             {
                 rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5, 0);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(10 * GUI.Scale), 0);
             }
             else
             {
                 rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5 - (objectiveTitleWidth), 0);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(10 * GUI.Scale) - (objectiveTitleWidth - objectiveTextWidth), 0);
             }
 
             GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
