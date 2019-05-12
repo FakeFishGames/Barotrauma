@@ -199,9 +199,9 @@ namespace Barotrauma
                     OnClicked = SelectTab
                 };
 
-#if OSX && !DEBUG
+/*#if OSX && !DEBUG
                 steamWorkshopButton.Text += " (Not yet available on MacOS)";
-#endif
+#endif*/
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -724,7 +724,6 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
 #if !DEBUG
-#if !OSX
             if (Steam.SteamManager.USE_STEAM)
             {
                 if (GameMain.Config.UseSteamMatchmaking)
@@ -734,16 +733,6 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
-#else
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                }
-            }
-#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
