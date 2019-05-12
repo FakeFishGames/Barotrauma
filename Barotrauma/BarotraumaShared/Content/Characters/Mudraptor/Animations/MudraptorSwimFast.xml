@@ -11,7 +11,7 @@
   tailtorque="15"
   footangles="17: -1.643941,26: 3.827566,22: -1.648597"
   steertorque="5"
-  movementspeed="6"
+  movementspeed="4.5"
   cyclespeed="1"
   headangle="95.38663"
   torsoangle="107.5668"
