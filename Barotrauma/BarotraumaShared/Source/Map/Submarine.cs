@@ -1364,7 +1364,7 @@ namespace Barotrauma
 
             foreach (Hull hull in matchingHulls)
             {
-                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.Contains("RoomName."))
+                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.ToLower().Contains("roomname."))
                 {
                     hull.RoomName = hull.CreateRoomName();
                 }
