@@ -318,7 +318,7 @@ namespace Barotrauma
             }
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
-                retreatTarget = findSafety.FindBestHull(new List<Hull>() { character.CurrentHull });
+                retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls);
             }
             TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
         }
@@ -438,8 +438,7 @@ namespace Barotrauma
             character.CursorPosition = Enemy.Position;
             float engageDistance = 500;
             if (squaredDistance > engageDistance * engageDistance) { return; }
-            bool canSeeTarget = character.CanSeeCharacter(Enemy);
-            if (!canSeeTarget && character.CurrentHull != Enemy.CurrentHull) { return; }
+            if (!character.CanSeeCharacter(Enemy)) { return; }
             if (Weapon.RequireAimToUse)
             {
                 bool isOperatingButtons = false;

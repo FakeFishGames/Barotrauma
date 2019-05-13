@@ -40,7 +40,7 @@ namespace Barotrauma
                 if (character.SelectedCharacter != targetCharacter)
                 {
                     character.Speak(TextManager.Get("DialogFoundUnconsciousTarget")
-                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", character.CurrentHull.DisplayName),
+                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", targetCharacter.CurrentHull.DisplayName),
                         null, 1.0f,
                         "foundunconscioustarget" + targetCharacter.Name, 60.0f);
 
@@ -71,7 +71,7 @@ namespace Barotrauma
                         // Ensure that we have the find safety objective (should always be the case)
                         objectiveManager.AddObjective(new AIObjectiveFindSafety(character, objectiveManager));
                     }
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(findSafety.FindBestHull(new Hull[] { character.CurrentHull }), character, objectiveManager));
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(findSafety.FindBestHull(HumanAIController.VisibleHulls), character, objectiveManager));
                 }
                 return;
             }
@@ -89,7 +89,7 @@ namespace Barotrauma
                 if (character.SelectedCharacter != targetCharacter)
                 {
                     character.Speak(TextManager.Get("DialogFoundWoundedTarget")
-                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", character.CurrentHull.DisplayName),
+                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", targetCharacter.CurrentHull.DisplayName),
                         null, 1.0f,
                         "foundwoundedtarget" + targetCharacter.Name, 60.0f);
 
