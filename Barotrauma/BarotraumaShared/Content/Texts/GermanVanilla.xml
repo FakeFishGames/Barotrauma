@@ -48,7 +48,7 @@
 <loadingscreentip>Die Verabreichung von Medikamenten ohne ausreichende medizinische Kenntnisse kann die Anzahl der Dosen reduzieren, die eine einzelne Spritze verabreichen kann, und auch den Wirkungsgrad des Medikaments beeinträchtigen.</loadingscreentip>
 <loadingscreentip>Viele Medikamente können unbeabsichtigte Nebenwirkungen haben. Behalte den Patienten im Auge und mach dich bereit, bei Bedarf zusätzliche Medikamente zu verabreichen, um diese Nebenwirkungen zu bekämpfen.</loadingscreentip>
 <loadingscreentip>Bei der Verwendung einer Tauchmaske musst du darauf achten, dass du Schweißgasflaschen und Sauerstoffflaschen nicht verwechselst.</loadingscreentip>
-<loadingscreentip>Mit den Tauchmasken kannst du unter Wasser atmen, aber sie bieten keinen Schutz vor dem knochenzermalmenden Druck außerhalb des U-Bootes. Wenn es ein katastrophales Rumpfversagen gibt, solltest du sofort einen Taucheranzug anziehen.</loadingscreentip>
+<loadingscreentip>Mit den Tauchmasken kannst du unter Wasser atmen, aber sie bieten keinen Schutz vor dem knochenzermalmenden Druck außerhalb des U-Bootes. Wenn es ein katastrophales Hüllenbruch gibt, solltest du sofort einen Taucheranzug anziehen.</loadingscreentip>
 <loadingscreentip>Im Falle eines Brandes sind Verbrennungen nicht das Einzige, wovor man sich hüten muss, denn ein Brand kann schnell den gesamten Sauerstoff im U-Boot verbrauchen.</loadingscreentip>
 <loadingscreentip>Das Manövrieren in der sogenannten Hydrothermalen Ödnis erfordert besondere Vorsicht. Sie besitzt nicht nur eine reiche Fauna, auch ist die Navigation durch die von Geothermik verursachten Wasserströmungen nicht ungefährlich.</loadingscreentip>
 <loadingscreentip>Einige der festsitzenden Lebensformen auf Europa senden niederfrequente Geräusche aus, die das Sonar des U-Bootes stören können.</loadingscreentip>
@@ -869,9 +869,9 @@
 <!-- Entity categories -->
 <mapentitycategory.all>Alle</mapentitycategory.all>
 <mapentitycategory.structure>Struktur</mapentitycategory.structure>
-<mapentitycategory.machine>Maschine</mapentitycategory.machine>
+<mapentitycategory.machine>Mechanik</mapentitycategory.machine>
 <mapentitycategory.equipment>Ausrüstung</mapentitycategory.equipment>
-<mapentitycategory.electrical>Elektrisch</mapentitycategory.electrical>
+<mapentitycategory.electrical>Elektrik</mapentitycategory.electrical>
 <mapentitycategory.material>Material</mapentitycategory.material>
 <mapentitycategory.misc>Div.</mapentitycategory.misc>
 <mapentitycategory.alien>Außerirdischer</mapentitycategory.alien>
@@ -934,7 +934,7 @@
 <entityname.reactor1>Kernreaktor</entityname.reactor1>
 <entitydescription.reactor1>Verwendbares Gerät zur Erzeugung elektrischer Energie.</entitydescription.reactor1>
 <entityname.coilgun>Gaußkanone</entityname.coilgun>
-<entitydescription.coilgun>Ein schnell feuernder Geschützturm, der Metallbolzen mit Elektromagneten auf hohe Geschwindigkeit beschleunigt. Im Allgemeinen nicht sehr effektiv gegen große oder stark gepanzerte Ziele, aber ideal für die Bekämpfung kleinerer Feinde.</entitydescription.coilgun>
+<entitydescription.coilgun>Ein schnell feuernder Geschützturm, der Metallbolzen mit Elektromagneten auf hohe Geschwindigkeit beschleunigt. Im Allgemeinen nicht sehr effektiv gegen große oder schwer gepanzerte Ziele, aber ideal für die Bekämpfung kleinerer Feinde.</entitydescription.coilgun>
 <entityname.coilgunloader>Gaußkanonen-Lader</entityname.coilgunloader>
 <entitydescription.coilgunloader>Lädt Gaußkanonen-Munition in eine verbundene Gaußkanone.</entitydescription.coilgunloader>
 <entityname.depthchargetube>Wasserbomben-Röhre</entityname.depthchargetube>
@@ -991,12 +991,12 @@
 <entitydescription.ballistichelmet>Zwar bietet der Helm keinen ausreichenden Schutz vor den meisten Bewohnern unter der Wasseroberfläche, er kann aber sehr nützlich sein, wenn sich Verräter an Bord befinden.</entitydescription.ballistichelmet>
 <entityname.handcuffs>Handschellen</entityname.handcuffs>
 <entitydescription.handcuffs>Nützlich zur Fixierung von Problemspielern.</entitydescription.handcuffs>
-<entityname.riotshield>Körperschild</entityname.riotshield>
+<entityname.riotshield>Schutzschild</entityname.riotshield>
 <entitydescription.riotshield>Widersteht Schäden.</entitydescription.riotshield>
 <entityname.divingmask>Tauchmaske</entityname.divingmask>
-<entitydescription.divingmask>Klein genug, um am Körper getragen zu werden, bietet aber keinen Schutz vor dem Wasserdruck im Falle eines kompletten Rumpfversagens.</entitydescription.divingmask>
+<entitydescription.divingmask>Klein genug, um am Körper getragen zu werden, bietet aber keinen Schutz vor dem Wasserdruck im Falle eines kompletten Hüllenbruchs.</entitydescription.divingmask>
 <entityname.divingsuit>Taucheranzug</entityname.divingsuit>
-<entitydescription.divingsuit>Ein Panzertauchanzug, der dem immensen Druck unter der Oberfläche Europas standhalten kann.</entitydescription.divingsuit>
+<entitydescription.divingsuit>Ein gepanzerter Anzug, der dem immensen Druck unter der Oberfläche Europas standhalten kann.</entitydescription.divingsuit>
 <entityname.underwaterscooter>Unterwasser-Scooter</entityname.underwaterscooter>
 <entitydescription.underwaterscooter>Ein batteriebetriebenes Unterwasser-Fortbewegungsmittel.</entitydescription.underwaterscooter>
 <entityname.antibleeding1>Bandagen</entityname.antibleeding1>
@@ -1052,21 +1052,21 @@
 <entityname.harpoongun>Harpunenkanone</entityname.harpoongun>
 <entitydescription.harpoongun>Verschießt Harpunen, Explosivharpunen und außerirdische Harpunen.</entitydescription.harpoongun>
 <entityname.syringegun>Spritzenpistole</entityname.syringegun>
-<entitydescription.syringegun>Verschießt Fertigspritzen mit Giften und Medikamenten.</entitydescription.syringegun>
+<entitydescription.syringegun>Verschießt Ampullen mit Giften und Medikamenten.</entitydescription.syringegun>
 <entityname.revolverround>Revolvermunition</entityname.revolverround>
-<entitydescription.revolverround>9 Millimeter. Hat wohl Mannstopwirkung.</entitydescription.revolverround>
+<entitydescription.revolverround>9 Millimeter. Sollte reichen…</entitydescription.revolverround>
 <entityname.revolver>Revolver</entityname.revolver>
 <entitydescription.revolver>9 Millimeter.</entitydescription.revolver>
 <entityname.stungrenade>Betäubungs-Granate</entityname.stungrenade>
 <entitydescription.stungrenade>Erzeugt bei der Explosion ein helles Licht und einen Knall, der alle Charaktere in der Nähe betäubt.</entitydescription.stungrenade>
 <entityname.empgrenade>EMP-Granate</entityname.empgrenade>
-<entitydescription.empgrenade>Beschädigt elektrische Ausrüstung.</entitydescription.empgrenade>
+<entitydescription.empgrenade>Beschädigt elektronische Ausrüstung.</entitydescription.empgrenade>
 <entityname.fraggrenade>Splittergranate</entityname.fraggrenade>
 <entitydescription.fraggrenade>Allzweck-Splittergranate. Vorsicht bei der Verwendung.</entitydescription.fraggrenade>
 <entityname.incendiumgrenade>Incendium-Granate</entityname.incendiumgrenade>
 <entitydescription.incendiumgrenade>Eine Brandgranate. Sehr vorsichtig verwenden.</entitydescription.incendiumgrenade>
-<entityname.stunbaton>Schockknüppel</entityname.stunbaton>
-<entitydescription.stunbaton>Wenn verbale Befehle nicht ausreichen, kann ein Hochspannungsschock von einem Schockknüppel ausreichen, um ein widerspenstiges Besatzungsmitglied gefügig zu machen.</entitydescription.stunbaton>
+<entityname.stunbaton>Elektroschlagstock</entityname.stunbaton>
+<entitydescription.stunbaton>Wenn verbale Befehle nicht ausreichen, kann ein Elektroschock widerspenstige Besatzungsmitglieder gefügig machen.</entitydescription.stunbaton>
 <entityname.divingknife>Tauchmesser</entityname.divingknife>
 <entitydescription.divingknife>Sticht, stochert, schneidet und schlitzt.</entitydescription.divingknife>
 <entityname.bikehorn>Fahrradhupe</entityname.bikehorn>
@@ -1652,7 +1652,7 @@
 <deconstructordeconstruct>Dekonstruieren</deconstructordeconstruct>
 <deconstructorcancel>Abbrechen</deconstructorcancel>
 <lvl>Lvl</lvl>
-<minimaphullbreach>Rumpfversagen</minimaphullbreach>
+<minimaphullbreach>Hüllenbruch</minimaphullbreach>
 <minimapwaterlevel>Wasserpegel</minimapwaterlevel>
 <minimapwaterlevelunavailable>Keine Daten zum Wasserpegel verfügbar</minimapwaterlevelunavailable>
 <minimapairquality>Luftqualität</minimapairquality>
@@ -1937,7 +1937,7 @@
 <orderdialogself.repairsystems.all>Ich kümmere mich um kaputte Geräte!</orderdialogself.repairsystems.all>
 <orderdialog.reportfire>Feuer! [roomname]!</orderdialog.reportfire>
 <orderdialog.reportfire>Es brennt! [roomname]!</orderdialog.reportfire>
-<orderdialog.reportbreach>Rumpfversagen! [roomname]!</orderdialog.reportbreach>
+<orderdialog.reportbreach>Hüllenbruch! [roomname]!</orderdialog.reportbreach>
 <orderdialog.reportbreach>Ein Leck! [roomname]!</orderdialog.reportbreach>
 <orderdialog.reportintruders>Eindringlinge! [roomname]!</orderdialog.reportintruders>
 <orderdialog.reportintruders>Feinde! [roomname]!</orderdialog.reportintruders>
@@ -2411,7 +2411,7 @@
 <captain.undocktext>Um dich in Bewegung zu setzen, musst du mit dem U-Boot erst vom Außenposten ausdocken. Öffne dazu die Navigationskonsole und drücke auf die Schaltfläche Andocken/Ausdocken.</captain.undocktext>
 <captain.navigate>Navigieren</captain.navigate>
 <captain.navigateobjective>Navigiere zum Zielort</captain.navigateobjective>
-<captain.navigatetext>Setze einen Kurs für das U-Boot, indem du auf das Sonardisplay klickst. Das Navigationsterminal passt den Ballast und die Motorleistung automatisch an.\n\nUm zu sehen, wohin das U-Boot fährt, aktiviere das aktive Sonar. Du findest die Sonareinstellungen neben dem Display. Wechsle von Passiv auf Aktiv.\n\nSei vorsichtig. Je schneller das U-Boot sich bewegt, desto schwerer ist es zu bremsen. Wenn du gegen die Höhlenwände stößt, wird der Rumpf beschädigt und es entstehen Lecks. Zu Lernzwecken ist das U-Boot in diesem Tutorial vor Rumpfversagen geschützt.</captain.navigatetext>
+<captain.navigatetext>Setze einen Kurs für das U-Boot, indem du auf das Sonardisplay klickst. Das Navigationsterminal passt den Ballast und die Motorleistung automatisch an.\n\nUm zu sehen, wohin das U-Boot fährt, aktiviere das aktive Sonar. Du findest die Sonareinstellungen neben dem Display. Wechsle von Passiv auf Aktiv.\n\nSei vorsichtig. Je schneller das U-Boot sich bewegt, desto schwerer ist es zu bremsen. Wenn du gegen die Höhlenwände stößt, wird der Rumpf beschädigt und es entstehen Lecks. Zu Lernzwecken ist das U-Boot in diesem Tutorial vor Hüllenbruch geschützt.</captain.navigatetext>
 <captain.dock>Andocken</captain.dock>
 <captain.dockobjective>Docke am Außenposten an</captain.dockobjective>
 <captain.docktext>Um das U-Boot anzudocken, manövriere die Andockschleusen des Schiffs und des Außenpostens nah aneinander heran und aktiviere die Andockklammern. Andockschleusen werden auf dem Sonardisplay in Grün angezeigt.\n\nWenn die Andockschleusen nah genug aneinander sind, erscheint auf dem Sonardisplay eine Linie. Nutze das zu deinem Vorteil. Wenn die Linie vollständig Grün ist, schließe die Andockklammern, indem du auf Andocken/Ausdocken klickst. Das U-Boot wird dann am Außenposten fixiert und die Andockluke bleibt so lange offen, wie die Andockklammern befestigt sind.\n\nWenn du das U-Boot für das Andocken in Position bringst, darfst du keine zu radikalen Bewegungen ausführen, sonst schießt du über das Ziel hinaus. Bewege dich langsam und vorsichtig, um nicht mit dem Außenposten zu kollidieren. Es ist hilfreich, den Autopiloten zu aktivieren und den Befehl Position beibehalten zu nutzen.</captain.docktext>
@@ -2444,58 +2444,139 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!-- New additions -->
+<creditsbutton>Credits</creditsbutton>
+<orderoptions.operatereactor>Einschalten, Herunterfahren</orderoptions.operatereactor>
+<orderoptions.operateweapons>Feuer frei, Feuer einstellen</orderoptions.operateweapons>
+<orderoptions.steer>Position beibehalten, Zurücknavigieren, Navigiere zum Zielort</orderoptions.steer>
+<orderoptions.chargebatteries>Laden, Nicht mehr laden</orderoptions.chargebatteries>
+<orderoptions.pumpwater>Auspumpen, Pumpen anhalten</orderoptions.pumpwater>
+<orderoptions.repairsystems>Bestimmte Reparatur, Alles reparieren</orderoptions.repairsystems>
 
+<ordername.dismissed>Weggetreten</ordername.dismissed>
+<ordername.follow>Folgen</ordername.follow>
+<ordername.wait>Warten</ordername.wait>
+<ordername.operatereactor>Reaktor bedienen</ordername.operatereactor>
+<ordername.operateweapons>Waffen bedienen</ordername.operateweapons>
+<ordername.steer>Steuern</ordername.steer>
+<ordername.fixleaks>Lecks stopfen</ordername.fixleaks>
+<ordername.extinguishfires>Feuer löschen</ordername.extinguishfires>
+<ordername.fightintruders>Eindringlinge bekämpfen</ordername.fightintruders>
+<ordername.chargebatteries>Batterien laden</ordername.chargebatteries>
+<ordername.pumpwater>Pumpen bedienen</ordername.pumpwater>
+<ordername.rescue>Heilen und retten</ordername.rescue>
+<ordername.repairsystems>Beschädigte Systeme reparieren</ordername.repairsystems>
+<ordername.reportfire>Feuer melden</ordername.reportfire>
+<ordername.reportbreach>Rumpfversagen melden</ordername.reportbreach>
+<ordername.reportintruders>Eindringlinge melden</ordername.reportintruders>
+<ordername.reportbrokendevices>Kaputte Geräte melden</ordername.reportbrokendevices>
+<ordername.requestfirstaid>Erste Hilfe anfordern</ordername.requestfirstaid>
 
+<pauseonfocuslost>Hintergrund-Pause</pauseonfocuslost>
+<pauseonfocuslosttooltip>Pausiert das Spiel, wenn sich sein Fenster nicht im Vordergrund befindet. Bitte beachte, dass das Spiel in einer Multiplayer-Sitzung nicht pausiert wird.</pauseonfocuslosttooltip>
 
+<mutedbyserver>Du wurdest vom Server stumm geschaltet.</mutedbyserver>
+<unmutedbyserver>Deine Stummschaltung wurde vom Server aufgehoben.</unmutedbyserver>
 
+<orderdialog.fightintruders>[name], eliminiere alle Eindringlinge!</orderdialog.fightintruders>
+<orderdialog.fightintruders>[name], verteidige die Besatzung!</orderdialog.fightintruders>
+<orderdialogself.fightintruders>Ich kümmere mich um die Eindringlinge!</orderdialogself.fightintruders>
+<orderdialogself.fightintruders>Bekämpfe den Feind!</orderdialogself.fightintruders>
 
+<dialogcannotrepair>Kann [itemname] nicht reparieren!</dialogcannotrepair>
+<dialogenemydown>Feind neutralisiert!</dialogenemydown>
+<dialogenemydown>Noch einen eliminiert.</dialogenemydown>
 
+<dialognorepairtargets>Es gibt nichts zu reparieren.</dialognorepairtargets>
+<dialognorepairtargets>Was meinst du? Alles funktioniert einwandfrei.</dialognorepairtargets>
+<dialognopumps>Die Pumpen sind in Ordnung, oder?</dialognopumps>
+<dialognopumps>Keine der Pumpen muss momentan gewartet werden.</dialognopumps>
+<dialognoenemies>Ich sehe keine Eindringlinge an Bord.</dialognoenemies>
+<dialognoenemies>Feinde? Wo?</dialognoenemies>
+<dialognoleaks>Ich finde keine Lecks.</dialognoleaks>
+<dialognoleaks>Welche Lecks?</dialognoleaks>
 
+<bugreportgithubform>GitHub-Formular</bugreportgithubform>
+<bugreportfeedbackform>Barotrauma-Feedbackformular</bugreportfeedbackform>
+<bugreportbutton>Fehler melden</bugreportbutton>
 
+<voipcapturedevicenotfound>Sprachaufnahme konnte nicht gestartet werden – kein geeignetes Aufnahmegerät gefunden.</voipcapturedevicenotfound>
 
+<fabricatorinsufficientskills>Fertigkeiten zur Herstellung nicht vorhanden</fabricatorinsufficientskills>
+<fabricatorsufficientskills>Fertigkeiten zur Herstellung vorhanden</fabricatorsufficientskills>
 
+<dialogfoundwoundedtarget>Ich leiste [targetname] hier Erste Hilfe: [roomname]!</dialogfoundwoundedtarget>
+<dialogfoundwoundedtarget>Behandle [targetname] hier: [roomname]!</dialogfoundwoundedtarget>
 
+<skillname.initiative>Initiative</skillname.initiative>
+<skillname.courage>Mut</skillname.courage>
 
+<entityname.equalscomponent>Istgleich-Komponente</entityname.equalscomponent>
+<entitydescription.equalscomponent>Sendet ein Signal, wenn beide Eingänge dasselbe Signal erhalten.</entitydescription.equalscomponent>
+<entityname.greatercomponent>Größer-Komponente</entityname.greatercomponent>
+<entitydescription.greatercomponent>Sendet ein Signal, wenn der signal_ein1-Eingang größer ist als der signal_ein2-Eingang.</entitydescription.greatercomponent>
+<entityname.colorcomponent>Farb-Komponente</entityname.colorcomponent>
+<entitydescription.colorcomponent>Gibt ein kombiniertes Farbsignal für Lichtsteuerung aus.</entitydescription.colorcomponent>
+<entityname.subtractcomponent>Subtraktionskomponente</entityname.subtractcomponent>
+<entitydescription.subtractcomponent>Gibt die Differenz der empfangenen Signale aus.</entitydescription.subtractcomponent>
+<entityname.multiplycomponent>Multiplikations-Komponente</entityname.multiplycomponent>
+<entitydescription.multiplycomponent>Gibt das Produkt der empfangenen Signale aus.</entitydescription.multiplycomponent>
+<entityname.dividecomponent>Divisions-Komponente</entityname.dividecomponent>
+<entitydescription.dividecomponent>Gibt den Quotienten der empfangenen Signale aus.</entitydescription.dividecomponent>
+<entityname.xorcomponent>XOder-Komponente</entityname.xorcomponent>
+<entitydescription.xorcomponent>Sendet ein Signal, wenn einer der Eingänge ein Signal empfängt, aber nicht beide.</entitydescription.xorcomponent>
+<entityname.memorycomponent>Speicher-Komponente</entityname.memorycomponent>
+<entitydescription.memorycomponent>Gibt einen gespeicherten Wert aus, der von anderen Quellen aktualisiert werden kann. Über die signal_ein-Verbindung kann der gespeicherte Wert eingestellt werden, die signal_speichern-Eingabe schaltet um, ob das empfangene Signal gespeichert werden soll.</entitydescription.memorycomponent>
+<entityname.oxygentank>Sauerstoff-Tank</entityname.oxygentank>
+<entitydescription.oxygentank>Tragbarer Sauerstoffbehälter.</entitydescription.oxygentank>
+<entityname.cyanideantidote>Zyanid-Gegengift</entityname.cyanideantidote>
+<entitydescription.cyanideantidote>Ein Gegengift bei akuter Zyanidvergiftung.</entitydescription.cyanideantidote>
+<entityname.sufforinantidote>Sufforin-Gegengift</entityname.sufforinantidote>
+<entitydescription.sufforinantidote>Ein Gegengift bei akuter Sufforinvergiftung.</entitydescription.sufforinantidote>
+<entityname.deliriumineantidote>Deliriumin-Gegengift</entityname.deliriumineantidote>
+<entitydescription.deliriumineantidote>Ein Gegengift bei akuter Deliriuminvergiftung.</entitydescription.deliriumineantidote>
+<entityname.antirad>Anti-Uran</entityname.antirad>
+<entitydescription.antirad>Verlangsamt den durch Strahlung ausgelösten Zellverfall.</entitydescription.antirad>
 
+<search>Suchen</search>
+<electricalrepairsheader>Elektrische Reparaturen</electricalrepairsheader>
+<mechanicalrepairsheader>Mechanische Reparaturen</mechanicalrepairsheader>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<connection.power>leistung</connection.power>
+<connection.powerin>leistung_ein</connection.powerin>
+<connection.powerout>leistung_aus</connection.powerout>
+<connection.setstate>status_festlegen</connection.setstate>
+<connection.togglestate>status_umschalten</connection.togglestate>
+<connection.setpumpingspeed>geschwindigkeit_festlegen</connection.setpumpingspeed>
+<connection.settargetwaterlevel>zielstufe_festlegen</connection.settargetwaterlevel>
+<connection.signalin>signal_ein</connection.signalin>
+<connection.signalout>signal_aus</connection.signalout>
+<connection.signalinx>signal_ein_[num]</connection.signalinx>
+<connection.signaloutx>signal_aus_[num]</connection.signaloutx>
+<connection.turretaimingin>position_ein</connection.turretaimingin>
+<connection.turrettriggerin>auslöser_ein</connection.turrettriggerin>
+<connection.togglelight>schalter_licht</connection.togglelight>
+<connection.setcolor>farbe_festlegen</connection.setcolor>
+<connection.shutdown>herunterfahren</connection.shutdown>
+<connection.temperatureout>temperatur_aus</connection.temperatureout>
+<connection.meltdownwarning>warnung_schmelze</connection.meltdownwarning>
+<connection.signalr>signal_r</connection.signalr>
+<connection.signalg>signal_g</connection.signalg>
+<connection.signalb>signal_b</connection.signalb>
+<connection.signala>signal_a</connection.signala>
+<connection.setoutput>ausgabe_festlegen</connection.setoutput>
+<connection.signalstore>signal_speichern</connection.signalstore>
+<connection.settargetsignal>zielsignal_festlegen</connection.settargetsignal>
+<connection.setfrequency>frequenz_festlegen</connection.setfrequency>
+<connection.setoutputtype>ausgabetyp_festlegen</connection.setoutputtype>
+<connection.controlin>steuerung_ein</connection.controlin>
+<connection.setforce>kraft_festlegen</connection.setforce>
+<connection.sonartransducerin>transducer_ein</connection.sonartransducerin>
+<connection.steeringvelocityin>geschwindigkeit_ein</connection.steeringvelocityin>
+<connection.velocityxout>geschwindigkeit_x_aus</connection.velocityxout>
+<connection.velocityyout>geschwindigkeit_y_aus</connection.velocityyout>
+<connection.toggledocking>docken_umschalten</connection.toggledocking>
+<connection.waterdatain>wasserdaten_ein</connection.waterdatain>
+<connection.oxygendatain>sauerstoffdaten_ein</connection.oxygendatain>
 
 </infotexts>

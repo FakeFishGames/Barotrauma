@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="Simplified Chinese" nowhitespace="true">
 
 <!-- Loading Screen -->
@@ -386,7 +386,7 @@
 <no>否</no>
 <notoall>全部反对</notoall>
 <maybe>也许</maybe>
-<ok>可以</ok>
+<ok>确定</ok>
 <skills>技能</skills>
 <personalitytrait>特性</personalitytrait>
 <male>男性</male>
@@ -2330,12 +2330,12 @@
 <officer.somethingbigtext>电磁枪是大多数潜艇的标配火力，它们需要短时高频电压和成箱的弹药。\n\n要使用电磁枪，先要确保超级电容器功率达标。设置足够高的充电率（通常50%就够了），然后将新的弹药箱插入电磁枪装弹器。\n\n现在电磁枪里的弹药箱应该是空的，你需要先将空弹匣从装弹器里卸载下来。装备好后，按住弹药箱上面的绿色箭头，将空弹匣弃置在地上。\n\n弹药箱又大又沉，你必须双手握持，且不可随身携带。若想放下弹药箱，请将其拖离开装备槽，或按下“解除装备”。</officer.somethingbigtext>
 <officer.hammerhead>电磁枪，第二课</officer.hammerhead>
 <officer.hammerheadobjective>杀死来袭的锤头煞</officer.hammerheadobjective>
-<officer.hammerheadtext>按\n\n与潜望镜交互，以使用电磁枪。在潜望镜视图下，用鼠标瞄准，按{1}开火，按{2}停止瞄准。\n\n这支武器耗电量较大，所以请谨慎开火，避免超级电容器功率不足。</officer.hammerheadtext>
+<officer.hammerheadtext>（{0}）与潜望镜交互，以使用电磁枪。在潜望镜视图下，用鼠标瞄准，按{1}开火，按{2}停止瞄准。\n\n这支武器耗电量较大，所以请谨慎开火，避免超级电容器功率不足。</officer.hammerheadtext>
 
 <!-- Room 5 -->
 <officer.rangedweapon>远程武器</officer.rangedweapon>
 <officer.rangedweaponobjective>拿取一些远程武器</officer.rangedweaponobjective>
-<officer.rangedweapontext>远程武器与近战武器大致相近，不过其准度更依赖于角色的武器操作水平。按瞄准，按射击。\n\n元整武器需要装填弹药，将鼠标光标悬停在远程武器上可查看当前装载的子弹/鱼叉等。将弹药拖动到弹匣或武器上以装填弹药。</officer.rangedweapontext>
+<officer.rangedweapontext>远程武器与近战武器大致相近，不过其准度更依赖于角色的武器操作水平。按瞄准，按射击。\n\n远程武器需要装填弹药，将鼠标光标悬停在远程武器上可查看当前装载的子弹/鱼叉等。将弹药拖动到弹匣或武器上以装填弹药。</officer.rangedweapontext>
 
 <!-- Room 6 -->
 <officer.mudraptor>泥偶迅猛龙</officer.mudraptor>
@@ -2444,58 +2444,139 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!-- New additions -->
+<creditsbutton>制作人员名单</creditsbutton>
+<orderoptions.operatereactor>开启，关停。</orderoptions.operatereactor>
+<orderoptions.operateweapons>开火，停火。</orderoptions.operateweapons>
+<orderoptions.steer>原地停留，返程，向目的地的进发。</orderoptions.steer>
+<orderoptions.chargebatteries>开始充电，停止充电。</orderoptions.chargebatteries>
+<orderoptions.pumpwater>开启泵机，关闭泵机。</orderoptions.pumpwater>
+<orderoptions.repairsystems>修理指定设备，修理全部设备。</orderoptions.repairsystems>
 
+<ordername.dismissed>已驳回</ordername.dismissed>
+<ordername.follow>跟随</ordername.follow>
+<ordername.wait>等待</ordername.wait>
+<ordername.operatereactor>操作反应堆</ordername.operatereactor>
+<ordername.operateweapons>武装待命</ordername.operateweapons>
+<ordername.steer>掌舵</ordername.steer>
+<ordername.fixleaks>修复漏洞</ordername.fixleaks>
+<ordername.extinguishfires>灭火</ordername.extinguishfires>
+<ordername.fightintruders>对抗入侵者</ordername.fightintruders>
+<ordername.chargebatteries>给电池充电</ordername.chargebatteries>
+<ordername.pumpwater>操作泵机抽水</ordername.pumpwater>
+<ordername.rescue>治疗救援</ordername.rescue>
+<ordername.repairsystems>修理所有受损系统</ordername.repairsystems>
+<ordername.reportfire>上报火灾</ordername.reportfire>
+<ordername.reportbreach>上报船体损失</ordername.reportbreach>
+<ordername.reportintruders>上报入侵者</ordername.reportintruders>
+<ordername.reportbrokendevices>上报受损设备</ordername.reportbrokendevices>
+<ordername.requestfirstaid>申请急救</ordername.requestfirstaid>
 
+<pauseonfocuslost>切出游戏后暂停</pauseonfocuslost>
+<pauseonfocuslosttooltip>当玩家切出游戏窗口后，游戏自动暂停。注意，处于多人游戏时，该功能无效。</pauseonfocuslosttooltip>
 
+<mutedbyserver>你已被禁言。</mutedbyserver>
+<unmutedbyserver>你已被解除禁言。</unmutedbyserver>
 
+<orderdialog.fightintruders>[name]，剿灭所有入侵者！</orderdialog.fightintruders>
+<orderdialog.fightintruders>[name]，保护手无寸铁的船员！</orderdialog.fightintruders>
+<orderdialogself.fightintruders>我会好好“招待”敌人的！</orderdialogself.fightintruders>
+<orderdialogself.fightintruders>见敌皆杀！</orderdialogself.fightintruders>
 
+<dialogcannotrepair>无法修理[itemname]！</dialogcannotrepair>
+<dialogenemydown>已击倒敌人！</dialogenemydown>
+<dialogenemydown>另一个也倒下了。</dialogenemydown>
 
+<dialognorepairtargets>没什么需要修理的。</dialognorepairtargets>
+<dialognorepairtargets>你说什么？所有设备运行正常。</dialognorepairtargets>
+<dialognopumps>泵机都没什么问题啊？</dialognopumps>
+<dialognopumps>目前泵机无需关注。</dialognopumps>
+<dialognoenemies>没找到入侵者的踪迹。</dialognoenemies>
+<dialognoenemies>敌人？在哪里？</dialognoenemies>
+<dialognoleaks>未找到泄漏点。</dialognoleaks>
+<dialognoleaks>哪里有漏洞？</dialognoleaks>
 
+<bugreportgithubform>在Github上提交issue</bugreportgithubform>
+<bugreportfeedbackform>直接反馈给制作组</bugreportfeedbackform>
+<bugreportbutton>上报一个程序漏洞</bugreportbutton>
 
+<voipcapturedevicenotfound>无法启动语音捕捉；无可用设备。</voipcapturedevicenotfound>
 
+<fabricatorinsufficientskills>未满足制作所需的技能条件</fabricatorinsufficientskills>
+<fabricatorsufficientskills>满足制作所需的技能条件</fabricatorsufficientskills>
 
+<dialogfoundwoundedtarget>对[roomname]的[targetname]进行急救！</dialogfoundwoundedtarget>
+<dialogfoundwoundedtarget>救援在[roomname]的 [targetname]！</dialogfoundwoundedtarget>
 
+<skillname.initiative>主动性</skillname.initiative>
+<skillname.courage>勇气</skillname.courage>
 
+<entityname.equalscomponent>等于组件</entityname.equalscomponent>
+<entitydescription.equalscomponent>输入端接收到相同信号时，输出一个信号。</entitydescription.equalscomponent>
+<entityname.greatercomponent>数值相比组件</entityname.greatercomponent>
+<entitydescription.greatercomponent>如果信号输入1的值大于信号输入2的值，输出一个信号。</entitydescription.greatercomponent>
+<entityname.colorcomponent>颜色组件</entityname.colorcomponent>
+<entitydescription.colorcomponent>输出颜色组合信号，以控制照明。</entitydescription.colorcomponent>
+<entityname.subtractcomponent>减法组件</entityname.subtractcomponent>
+<entitydescription.subtractcomponent>输出接收信号的差。</entitydescription.subtractcomponent>
+<entityname.multiplycomponent>乘法组件</entityname.multiplycomponent>
+<entitydescription.multiplycomponent>输出接收信号的积。</entitydescription.multiplycomponent>
+<entityname.dividecomponent>除法组件</entityname.dividecomponent>
+<entitydescription.dividecomponent>输出接收信号的商。</entitydescription.dividecomponent>
+<entityname.xorcomponent>异或组件</entityname.xorcomponent>
+<entitydescription.xorcomponent>如果输入端接收到一个信号（而非两个），则输出一个信号。</entitydescription.xorcomponent>
+<entityname.memorycomponent>内存组件</entityname.memorycomponent>
+<entitydescription.memorycomponent>可储存其他组件输出的信号，保证输出实时更新。通过signal_in设置存储值，通过signal_store设置是否储存输入的信号。</entitydescription.memorycomponent>
+<entityname.oxygentank>氧气罐</entityname.oxygentank>
+<entitydescription.oxygentank>便携氧气储存装置。</entitydescription.oxygentank>
+<entityname.cyanideantidote>氰化物解药</entityname.cyanideantidote>
+<entitydescription.cyanideantidote>用于解除氰化物中毒的解毒剂。</entitydescription.cyanideantidote>
+<entityname.sufforinantidote>升天解药</entityname.sufforinantidote>
+<entitydescription.sufforinantidote>用于解除升天毒剂中毒的解毒剂。</entitydescription.sufforinantidote>
+<entityname.deliriumineantidote>谵妄解药</entityname.deliriumineantidote>
+<entitydescription.deliriumineantidote>用于解除谵妄毒剂中毒的解毒剂。</entitydescription.deliriumineantidote>
+<entityname.antirad>消辐灵</entityname.antirad>
+<entitydescription.antirad>用于缓解辐射中毒的解毒剂。</entitydescription.antirad>
 
+<search>搜索</search>
+<electricalrepairsheader>电气维修</electricalrepairsheader>
+<mechanicalrepairsheader>机械维修</mechanicalrepairsheader>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<connection.power>能源</connection.power>
+<connection.powerin>能源输入</connection.powerin>
+<connection.powerout>能源输出</connection.powerout>
+<connection.setstate>设置状态</connection.setstate>
+<connection.togglestate>切换状态</connection.togglestate>
+<connection.setpumpingspeed>设置速度</connection.setpumpingspeed>
+<connection.settargetwaterlevel>设置目标水位</connection.settargetwaterlevel>
+<connection.signalin>输入信号</connection.signalin>
+<connection.signalout>输出信号</connection.signalout>
+<connection.signalinx>输入信号[num]</connection.signalinx>
+<connection.signaloutx>输出信号[num]</connection.signaloutx>
+<connection.turretaimingin>位置输入</connection.turretaimingin>
+<connection.turrettriggerin>触发输入</connection.turrettriggerin>
+<connection.togglelight>切换照明</connection.togglelight>
+<connection.setcolor>设置颜色</connection.setcolor>
+<connection.shutdown>关闭</connection.shutdown>
+<connection.temperatureout>温度输出</connection.temperatureout>
+<connection.meltdownwarning>炉心熔解警告</connection.meltdownwarning>
+<connection.signalr>红色信号</connection.signalr>
+<connection.signalg>绿色信号</connection.signalg>
+<connection.signalb>蓝色信号</connection.signalb>
+<connection.signala>全色信号</connection.signala>
+<connection.setoutput>设置输出</connection.setoutput>
+<connection.signalstore>信号储存</connection.signalstore>
+<connection.settargetsignal>设置目标信号</connection.settargetsignal>
+<connection.setfrequency>设置频率</connection.setfrequency>
+<connection.setoutputtype>设置输出类型</connection.setoutputtype>
+<connection.controlin>输入控制</connection.controlin>
+<connection.setforce>设置推力</connection.setforce>
+<connection.sonartransducerin>输入声呐换能器</connection.sonartransducerin>
+<connection.steeringvelocityin>输入速度</connection.steeringvelocityin>
+<connection.velocityxout>输出水平速度</connection.velocityxout>
+<connection.velocityyout>输出垂直速度</connection.velocityyout>
+<connection.toggledocking>切换对接状态</connection.toggledocking>
+<connection.waterdatain>水接触信息输入</connection.waterdatain>
+<connection.oxygendatain>氧含量信息输入</connection.oxygendatain>
 
 </infotexts>
