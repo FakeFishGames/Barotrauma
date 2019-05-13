@@ -502,29 +502,30 @@ namespace Barotrauma
         /// <summary>
         /// Gets all linked entities of specific type.
         /// </summary>
-        public HashSet<T> GetLinkedEntities<T>(HashSet<T> list = null, int? maxDepth = null) where T : MapEntity
+        public HashSet<T> GetLinkedEntities<T>(HashSet<T> list = null, int? maxDepth = null, Func<T, bool> filter = null) where T : MapEntity
         {
             list = list ?? new HashSet<T>();
             int startDepth = 0;
-            GetLinkedEntitiesRecursive<T>(this, list, ref startDepth, maxDepth);
+            GetLinkedEntitiesRecursive<T>(this, list, ref startDepth, maxDepth, filter);
             return list;
         }
 
         /// <summary>
         /// Gets all linked entities of specific type.
         /// </summary>
-        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null) where T : MapEntity
+        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null, Func<T, bool> filter = null) 
+            where T : MapEntity
         {
             if (depth > maxDepth) { return; }
             foreach (var linkedEntity in mapEntity.linkedTo)
             {
                 if (linkedEntity is T linkedTarget)
                 {
-                    if (!linkedTargets.Contains(linkedTarget))
+                    if (!linkedTargets.Contains(linkedTarget) && (filter == null || filter(linkedTarget)))
                     {
                         linkedTargets.Add(linkedTarget);
                         depth++;
-                        GetLinkedEntitiesRecursive(linkedEntity, linkedTargets, ref depth, maxDepth);
+                        GetLinkedEntitiesRecursive(linkedEntity, linkedTargets, ref depth, maxDepth, filter);
                     }
                 }
             }
