@@ -98,7 +98,7 @@
 <password>Пароль</password>
 <publicserver>Открытые сервера</publicserver>
 <publicservertooltip>Открытые сервера отображаются в списке доступных серверов на вкладке «Подключиться к серверу».</publicservertooltip>
-<attemptupnp>Попробовать пробросить порт через UPnP</attemptupnp>
+<attemptupnp>Направить порт через UPnP</attemptupnp>
 <attemptupnptooltip>UPnP позволяет перенаправлять порты на маршрутизаторе, чтобы игроки могли подключиться к вашему серверу. Однако не все маршрутизаторы поддерживают технологию UPnP, и, если игроки не смогут подключиться к вашему серверу, вам может потребоваться настроить перенаправление порта вручную (подробные инструкции в файле readme).</attemptupnptooltip>
 <startserverbutton>Начать</startserverbutton>
 <pleasewaitupnp>Пожалуйста, подождите...</pleasewaitupnp>
@@ -284,11 +284,11 @@
 <inputtype.grab>Взять</inputtype.grab>
 <inputtype.selectnextcharacter>Следующий персонаж</inputtype.selectnextcharacter>
 <inputtype.selectpreviouscharacter>Предыдущий персонаж</inputtype.selectpreviouscharacter>
-<inputtype.voice>Отправить голосовое сообщение</inputtype.voice>
-<setdefaultbindings>Использовать значения по умолчанию</setdefaultbindings>
+<inputtype.voice>Голосовое сообщение</inputtype.voice>
+<setdefaultbindings>По умолчанию</setdefaultbindings>
 <setdefaultbindingstooltip>Использовать рекомендуемую схему управления (ЛКМ - выбор предмета, ПКМ или ESC - отмена выбора)</setdefaultbindingstooltip>
-<setlegacybindings>Использовать классическое управление</setlegacybindings>
-<setlegacybindingstooltip>Использовать схему управления, которая применялась в старых пробных версиях Barotrauma (E - выбор предмета и отмена выбора, ЛКМ - использование предмета в руке).</setlegacybindingstooltip>
+<setlegacybindings>Классика</setlegacybindings>
+<setlegacybindingstooltip>Использовать схему управления из старых пробных версий Barotrauma (E - выбор предмета и отмена выбора, ЛКМ - использование предмета в руке).</setlegacybindingstooltip>
 
 <!-- Server settings -->
 <serversettingsroundstab>Раунды</serversettingsroundstab>
@@ -557,7 +557,7 @@
 <serverlistsubscribemissingpackagestooltipnosteam>Недостающие наборы контента можно найти в мастерской Steam, но если вы не покупали Barotrauma в Steam все функции Steam будут недоступны.</serverlistsubscribemissingpackagestooltipnosteam>
 <filterservers>Фильтр серверов</filterservers>
 <filterpassword>Пароль не требуется</filterpassword>
-<filterincompatibleservers>Скрыть несовместимые сервера</filterincompatibleservers>
+<filterincompatibleservers>Скрыть несовмест. сервера</filterincompatibleservers>
 <filterfullservers>Скрыть заполненные сервера</filterfullservers>
 <filteremptyservers>Скрыть пустые сервера</filteremptyservers>
 <nomatchingservers>Подходящие сервера не найдены.</nomatchingservers>
@@ -874,8 +874,8 @@
 <mapentitycategory.electrical>Электрика</mapentitycategory.electrical>
 <mapentitycategory.material>Материал</mapentitycategory.material>
 <mapentitycategory.misc>Разное</mapentitycategory.misc>
-<mapentitycategory.alien>Инопланетные</mapentitycategory.alien>
-<mapentitycategory.itemassembly>Предмет в сборе</mapentitycategory.itemassembly>
+<mapentitycategory.alien>Др. планеты</mapentitycategory.alien>
+<mapentitycategory.itemassembly>Сборка предмета</mapentitycategory.itemassembly>
 <mapentitycategory.legacy>Устаревшие</mapentitycategory.legacy>
 
 <!-- Display names -->
@@ -1599,9 +1599,9 @@
 <submarine.name.orca>Касатка</submarine.name.orca>
 <submarine.description.orca>Подлодки класса «Касатка» очень проворны: они обладают высокой скоростью, а 3 больших балластных бака обеспечивают высокую степень вертикальной подвижности. Среди минусов судна: слабое вооружение, ненадежный двигатель и прожорливый реактор.</submarine.description.orca>
 <submarine.name.remora>Ремора</submarine.name.remora>
-<submarine.description.remora>Ремора доступна в разных версия, которые различаются конфигурацией. В этой модели часть корпуса заменена отцепляемым балластом и дроном с дистанционным управлением. Для управления этой подводной лодкой требуется довольно большая команда.</submarine.description.remora>
+<submarine.description.remora>Ремора доступна в разных версиях, которые различаются конфигурацией. В этой модели часть корпуса заменена отцепляемым балластом и дроном с дистанционным управлением. Для управления этой подводной лодкой требуется довольно большая команда.</submarine.description.remora>
 <submarine.name.typhon>Тифон</submarine.name.typhon>
-<submarine.description.typhon>Подлодки класса «Тифон» считаются очень надежными - они очень грозно выглядят и весьма достойно вооружены. Однако любой капитан знает, что в вопросах подъема и максимальной скорости они оставляют желать лучшего.</submarine.description.typhon>
+<submarine.description.typhon>Подлодки класса «Тифон» считаются очень надежными - они грозно выглядят и весьма достойно вооружены. Однако любой капитан знает, что в вопросах подъема и максимальной скорости они оставляют желать лучшего.</submarine.description.typhon>
 <submarine.name.dugong>Дюгонь</submarine.name.dugong>
 <submarine.description.dugong>Дюгонь уступает более крупным судам во всех аспектах кроме одного: за такие деньги более надежную подлодку вам не найти. Из-за низкой огневой мощи судна и его невысокой скорости приходится уповать на маневренность.</submarine.description.dugong>
 <submarine.name.selkie>Шелки</submarine.name.selkie>
@@ -1643,7 +1643,7 @@
 <fabricatorrequireditems>Необходимые предметы</fabricatorrequireditems>
 <fabricatorrequiredtime>Необходимое время</fabricatorrequiredtime>
 <fabricatorrequiredcondition>Состояние</fabricatorrequiredcondition>
-<fabricatorrequiredskills>Навыки, необходимые для настройки</fabricatorrequiredskills>
+<fabricatorrequiredskills>Навыки, необходимые для калибровки</fabricatorrequiredskills>
 <fabricatorcreate>Создать</fabricatorcreate>
 <fabricatorcancel>Отмена</fabricatorcancel>
 <uilabel.input>Сырье</uilabel.input>
@@ -1692,12 +1692,12 @@
 <steeringdepth>Глубина: [m] м</steeringdepth>
 <steeringdepthwarning>ОПАСНОЕ ДАВЛЕНИЕ</steeringdepthwarning>
 <steeringnopowertip>ВНИМАНИЕ: недостаточно энергии</steeringnopowertip>
-<steeringautopilotmaintainpostip>АВТОПИЛОТ: ВКЛ.\nСохранение положения. Нажмите на экран, чтобы выбрать положение, которое вы хотите сохранить.</steeringautopilotmaintainpostip>
-<steeringautopilotlocationtip>АВТОПИЛОТ: ВКЛ.\nАвтопилот движется к пункту назначения: [locationname].</steeringautopilotlocationtip>
+<steeringautopilotmaintainpostip>АВТОПИЛОТ: ВКЛ.\nСохранение позиции. Выберите направление на экране.</steeringautopilotmaintainpostip>
+<steeringautopilotlocationtip>АВТОПИЛОТ: ВКЛ.\nДвижение в пункт назначения: [locationname].</steeringautopilotlocationtip>
 <sonaractive>Активный сонар</sonaractive>
 <sonarpassive>Пассивный сонар</sonarpassive>
-<sonarzoom>Гудение</sonarzoom>
-<sonardirectionalping>Направленный сигнал</sonardirectionalping>
+<sonarzoom>Размер</sonarzoom>
+<sonardirectionalping>Лучевой сигнал</sonardirectionalping>
 <sonarsignalweak>Слабый сигнал</sonarsignalweak>
 <sonarnosignal>Нет сигнала</sonarnosignal>
 <sonartipactive>Когда работает активный сонар, радиолокационные маяки отправляют звуковые сигналы, которые отражаются от ближайших препятствий. Эти сигналы могут услышать опасные обитатели глубин или вражеские подлодки.</sonartipactive>
@@ -1706,12 +1706,12 @@
 <powercontainerrechargerate>Скорость перезарядки: [rate] %</powercontainerrechargerate>
 <uilabel.chargingdock>Зарядная станция</uilabel.chargingdock>
 <powertransferpowered>Есть питание</powertransferpowered>
-<powertransferhighvoltage>Электрическое перенапряжение</powertransferhighvoltage>
-<powertransferlowvoltage>Низкое напряжение</powertransferlowvoltage>
+<powertransferhighvoltage>Перенапряжение</powertransferhighvoltage>
+<powertransferlowvoltage>Низк. напряжение</powertransferlowvoltage>
 <powertransferpowerlabel>Энергия</powertransferpowerlabel>
 <powertransferpower>[power] кВт</powertransferpower>
 <powertransferloadlabel>Загрузка</powertransferloadlabel>
-<powertransferload>[kw] кВт</powertransferload>
+<powertransferload>[load] кВт</powertransferload>
 <powertransfertipovervoltage>Когда электросеть получает больше энергии, чем расходуется, напряжение возрастает. Это может привести к поломке электроприборов.</powertransfertipovervoltage>
 <powertransfertiplowvoltage>Когда энергии недостаточно, напряжение падает. Это может привести к отключению оборудования.</powertransfertiplowvoltage>
 <powertransfertipload>Объем энергии, потребляемой устройствами, подключенными к электросети.</powertransfertipload>
@@ -1740,8 +1740,8 @@
 <fixheader>Попытка ремонта: [itemname]</fixheader>
 <fixbutton>Чинить</fixbutton>
 <repair>Ремонт</repair>
-<repairallwalls>Отремонтировать все стены</repairallwalls>
-<repairallitems>Отремонтировать все предметы</repairallitems>
+<repairallwalls>Ремонт всех стен</repairallwalls>
+<repairallitems>Ремонт предметов</repairallitems>
 
 <!-- Traitors -->
 <newtraitor>Новый предатель</newtraitor>
@@ -1992,7 +1992,7 @@
 <itemmsgpressselect>[[select]] Нажать</itemmsgpressselect>
 <itemmsgunauthorizedaccess>НЕСАНКЦИОНИРОВАННЫЙ ДОСТУП</itemmsgunauthorizedaccess>
 <accessdenied>НЕСАНКЦИОНИРОВАННЫЙ ДОСТУП</accessdenied>
-<itemmsgrewirescrewdriver>[[use]] Переподключить проводку (Отвертка)</itemmsgrewirescrewdriver>
+<itemmsgrewirescrewdriver>[[use]] Заменить проводку (Отвертка)</itemmsgrewirescrewdriver>
 <itemmsgdetachwrench>[[use]] Отсоединить (Гаечный ключ)</itemmsgdetachwrench>
 <itemmsgforceopencrowbar>[[use]] Вскрыть (Лом)</itemmsgforceopencrowbar>
 <itemmsgrepairscrewdriver>[[use]] Починить (Отвертка)</itemmsgrepairscrewdriver>
@@ -2014,7 +2014,7 @@
 
 <!-- Afflictions -->
 <afflictionname.internaldamage>Внутренняя травма</afflictionname.internaldamage>
-<afflictiondescription.internaldamage>Пораженный участок кожи имеет неприятный фиолетовый оттенок. Выглядит болезненно. Вы предполагает, что это может быть перелом.</afflictiondescription.internaldamage>
+<afflictiondescription.internaldamage>Пораженный участок кожи имеет неприятный фиолетовый оттенок. Выглядит болезненно. Вы предполагаете, что это перелом.</afflictiondescription.internaldamage>
 <afflictioncauseofdeath.internaldamage>Погибает от внутренних травм.</afflictioncauseofdeath.internaldamage>
 <afflictioncauseofdeathself.internaldamage>Вы погибли от внутренних травм.</afflictioncauseofdeathself.internaldamage>
 <afflictionname.bleeding>Кровотечение</afflictionname.bleeding>
@@ -2444,58 +2444,139 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!-- New additions -->
+<creditsbutton>Авторы</creditsbutton>
+<orderoptions.operatereactor>Запустить, выключить</orderoptions.operatereactor>
+<orderoptions.operateweapons>Огонь по готовности, Не стрелять</orderoptions.operateweapons>
+<orderoptions.steer>Сохранять позицию, Двигаться обратно, Двигаться к цели</orderoptions.steer>
+<orderoptions.chargebatteries>Зарядить, Прекратить заряд</orderoptions.chargebatteries>
+<orderoptions.pumpwater>Выкачать, прекратить качать</orderoptions.pumpwater>
+<orderoptions.repairsystems>Починить конкретное, починить все</orderoptions.repairsystems>
 
+<ordername.dismissed>Отпустить</ordername.dismissed>
+<ordername.follow>Сопровождать</ordername.follow>
+<ordername.wait>Ждать</ordername.wait>
+<ordername.operatereactor>Заняться реактором</ordername.operatereactor>
+<ordername.operateweapons>Встать за орудия</ordername.operateweapons>
+<ordername.steer>Управлять судном</ordername.steer>
+<ordername.fixleaks>Заделать течь</ordername.fixleaks>
+<ordername.extinguishfires>Потушить огонь</ordername.extinguishfires>
+<ordername.fightintruders>Сражаться с врагами</ordername.fightintruders>
+<ordername.chargebatteries>Зарядить батарейки</ordername.chargebatteries>
+<ordername.pumpwater>Заняться насосами</ordername.pumpwater>
+<ordername.rescue>Вылечить и спасти</ordername.rescue>
+<ordername.repairsystems>Починить поврежденные системы</ordername.repairsystems>
+<ordername.reportfire>Сообщить о пожаре</ordername.reportfire>
+<ordername.reportbreach>Сообщить о повреждении корпуса</ordername.reportbreach>
+<ordername.reportintruders>Сообщить о вторжении</ordername.reportintruders>
+<ordername.reportbrokendevices>Сообщить о неполадках</ordername.reportbrokendevices>
+<ordername.requestfirstaid>Запросить первую помощь</ordername.requestfirstaid>
 
+<pauseonfocuslost>Пауза при переключении окна</pauseonfocuslost>
+<pauseonfocuslosttooltip>Игра приостанавливается, когда ее окно не активно. Обратите внимание, что сетевая игра остается активна.</pauseonfocuslosttooltip>
 
+<mutedbyserver>Вы были заглушены сервером.</mutedbyserver>
+<unmutedbyserver>Заглушение сервера снято.</unmutedbyserver>
 
+<orderdialog.fightintruders>[name], уничтожь врагов!</orderdialog.fightintruders>
+<orderdialog.fightintruders>[name], защищай команду!</orderdialog.fightintruders>
+<orderdialogself.fightintruders>Разберись с незваными гостями!</orderdialogself.fightintruders>
+<orderdialogself.fightintruders>Уничтожь врагов!</orderdialogself.fightintruders>
 
+<dialogcannotrepair>[itemname] не поддается починке!</dialogcannotrepair>
+<dialogenemydown>Враг повержен!</dialogenemydown>
+<dialogenemydown>Еще один готов.</dialogenemydown>
 
+<dialognorepairtargets>Нечего чинить.</dialognorepairtargets>
+<dialognorepairtargets>Что вы имеете в виду? Все работает на ура.</dialognorepairtargets>
+<dialognopumps>Трубы в порядке, разве нет?</dialognopumps>
+<dialognopumps>С трубами пока что все нормально.</dialognopumps>
+<dialognoenemies>На борту только свои.</dialognoenemies>
+<dialognoenemies>Враги? Где?</dialognoenemies>
+<dialognoleaks>Не могу найти протечки.</dialognoleaks>
+<dialognoleaks>Какие протечки?</dialognoleaks>
 
+<bugreportgithubform>Форма GitHub для отчета о проблеме </bugreportgithubform>
+<bugreportfeedbackform>Форма для фидбека о Barotrauma</bugreportfeedbackform>
+<bugreportbutton>Сообщить об ошибке</bugreportbutton>
 
+<voipcapturedevicenotfound>Не удалось начать запись голоса, подходящее устройство не найдено.</voipcapturedevicenotfound>
 
+<fabricatorinsufficientskills>Недостаточные навыки для изготовления</fabricatorinsufficientskills>
+<fabricatorsufficientskills>Достаточные навыки для изготовления</fabricatorsufficientskills>
 
+<dialogfoundwoundedtarget>[targetname] получает первую помощь здесь: [roomname]!</dialogfoundwoundedtarget>
+<dialogfoundwoundedtarget>[targetname] проходит лечение здесь: [roomname]!</dialogfoundwoundedtarget>
 
+<skillname.initiative>Инициатива</skillname.initiative>
+<skillname.courage>Отвага</skillname.courage>
 
+<entityname.equalscomponent>Компонент равно</entityname.equalscomponent>
+<entitydescription.equalscomponent>Посылает сигнал, если оба приемника получают одинаковый сигнал.</entitydescription.equalscomponent>
+<entityname.greatercomponent>Компонент больше</entityname.greatercomponent>
+<entitydescription.greatercomponent>Посылает сигнал, если входящее значение сигнал_вкл1 больше, чем входящее значение сигнал_вкл2.</entitydescription.greatercomponent>
+<entityname.colorcomponent>Компонент цвет</entityname.colorcomponent>
+<entitydescription.colorcomponent>Выводит объединенный цветовой сигнал для управления светом.</entitydescription.colorcomponent>
+<entityname.subtractcomponent>Компонент вычесть</entityname.subtractcomponent>
+<entitydescription.subtractcomponent>Выводит вычтенное значение полученных сигналов.</entitydescription.subtractcomponent>
+<entityname.multiplycomponent>Компонент умножить</entityname.multiplycomponent>
+<entitydescription.multiplycomponent>Выводит перемноженное значение полученных сигналов.</entitydescription.multiplycomponent>
+<entityname.dividecomponent>Компонент разделить</entityname.dividecomponent>
+<entitydescription.dividecomponent>Выводит разделенное значение полученных сигналов.</entitydescription.dividecomponent>
+<entityname.xorcomponent>Компонент Х или</entityname.xorcomponent>
+<entitydescription.xorcomponent>Посылает сигнал, если один из приемников получает сигнал, но не оба.</entitydescription.xorcomponent>
+<entityname.memorycomponent>Компонент память</entityname.memorycomponent>
+<entitydescription.memorycomponent>Выводит записанное значение, которое можно обновлять из других источников. Используйте соединение сигнал_вкл, чтобы назначить записанное значение, и приемник сигнал_запись, чтобы выбрать, должны ли полученные сигналы записываться.</entitydescription.memorycomponent>
+<entityname.oxygentank>Кислородный баллон</entityname.oxygentank>
+<entitydescription.oxygentank>Портативный баллон кислорода.</entitydescription.oxygentank>
+<entityname.cyanideantidote>Антидот цианида</entityname.cyanideantidote>
+<entitydescription.cyanideantidote>Антидот для сильного отравления цианидом.</entitydescription.cyanideantidote>
+<entityname.sufforinantidote>Антидот страданита</entityname.sufforinantidote>
+<entitydescription.sufforinantidote>Антидот для сильного отравления страданитом.</entitydescription.sufforinantidote>
+<entityname.deliriumineantidote>Антидот бредогена</entityname.deliriumineantidote>
+<entitydescription.deliriumineantidote>Антидот для сильного отравления бредогеном.</entitydescription.deliriumineantidote>
+<entityname.antirad>Антирад</entityname.antirad>
+<entitydescription.antirad>Замедляет клеточную деградацию, вызванную радиацией.</entitydescription.antirad>
 
+<search>Поиск</search>
+<electricalrepairsheader>Ремонт электроники</electricalrepairsheader>
+<mechanicalrepairsheader>Ремонт механики</mechanicalrepairsheader>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<connection.power>энергия</connection.power>
+<connection.powerin>энергия_вкл</connection.powerin>
+<connection.powerout>энергия_выкл</connection.powerout>
+<connection.setstate>назначить_состояние</connection.setstate>
+<connection.togglestate>включить_состояние</connection.togglestate>
+<connection.setpumpingspeed>назначить_скорость</connection.setpumpingspeed>
+<connection.settargetwaterlevel>назначить_целевойуровень</connection.settargetwaterlevel>
+<connection.signalin>сигнал_вкл</connection.signalin>
+<connection.signalout>сигнал_выкл</connection.signalout>
+<connection.signalinx>сигнал_вкл_[num]</connection.signalinx>
+<connection.signaloutx>сигнал_выкл_[num]</connection.signaloutx>
+<connection.turretaimingin>позиция_вкл</connection.turretaimingin>
+<connection.turrettriggerin>вызвать_вкл</connection.turrettriggerin>
+<connection.togglelight>включить_свет</connection.togglelight>
+<connection.setcolor>назначить_цвет</connection.setcolor>
+<connection.shutdown>выключение</connection.shutdown>
+<connection.temperatureout>температура_выкл</connection.temperatureout>
+<connection.meltdownwarning>плавление_предупреждение</connection.meltdownwarning>
+<connection.signalr>сингал_r</connection.signalr>
+<connection.signalg>сингал_g</connection.signalg>
+<connection.signalb>сингал_b</connection.signalb>
+<connection.signala>сингал_a</connection.signala>
+<connection.setoutput>назначить_исходящеезначение</connection.setoutput>
+<connection.signalstore>сигнал_запись</connection.signalstore>
+<connection.settargetsignal>назначить_целевойсигнал</connection.settargetsignal>
+<connection.setfrequency>назначить_частоту</connection.setfrequency>
+<connection.setoutputtype>назначить_типисходящегозначения</connection.setoutputtype>
+<connection.controlin>управление_вкл</connection.controlin>
+<connection.setforce>назначить_силу</connection.setforce>
+<connection.sonartransducerin>преобразователь_вкл</connection.sonartransducerin>
+<connection.steeringvelocityin>скорость_вкл</connection.steeringvelocityin>
+<connection.velocityxout>скорость_х_вкл</connection.velocityxout>
+<connection.velocityyout>скорость_у_вкл</connection.velocityyout>
+<connection.toggledocking>включить_стыковку</connection.toggledocking>
+<connection.waterdatain>данные_воды_вкл</connection.waterdatain>
+<connection.oxygendatain>данные_воздуха_вкл</connection.oxygendatain>
 
 </infotexts>

@@ -99,7 +99,7 @@
 <publicserver>Serveur public</publicserver>
 <publicservertooltip>Les serveurs publics apparaissent dans la liste des serveurs disponibles de la fenêtre Rejoindre un serveur.</publicservertooltip>
 <attemptupnp>Tenter la redirection de port UPnP</attemptupnp>
-<attemptupnptooltip>Le protocole UPnP permet de rediriger les ports sur votre routeur pour permettre aux joueurs de rejoindre le serveur. Cependant, il n'est pas pris en charge par tous les routeurs. Vous devrez peut-être rediriger les ports manuellement si des joueurs ne parviennent pas à rejoindre le serveur (consultez le fichier LisezMoi pour en savoir plus).</attemptupnptooltip>
+<attemptupnptooltip>Le protocole UPnP permet de rediriger les ports sur votre routeur pour permettre aux joueurs de rejoindre le serveur. Cependant, il n'est pas pris en charge par tous les routeurs. Vous devrez peut-être rediriger les ports manuellement si des joueurs ne parviennent pas à rejoindre le serveur (consultez le fichier README pour en savoir plus).</attemptupnptooltip>
 <startserverbutton>Commencer</startserverbutton>
 <pleasewaitupnp>Veuillez patienter...</pleasewaitupnp>
 <attemptingupnp>Tentative de redirection de port UPnP.</attemptingupnp>
@@ -228,7 +228,7 @@
 <lightmapscale>Résolution d'éclairage</lightmapscale>
 <lightmapscaletooltip>Des valeurs faibles améliorent les performances, mais les ombres à l'écran apparaissent plus pixélisées.</lightmapscaletooltip>
 <specularlighting>Éclairage spéculaire</specularlighting>
-<specularlightingtooltip>Active l'éclairage spéculaire, un effet qui crée des taches de lumières plus prononcées sur les objets brillants.</specularlightingtooltip>
+<specularlightingtooltip>Active l'éclairage spéculaire, un effet qui crée des taches de lumière plus prononcées sur les objets brillants.</specularlightingtooltip>
 <chromaticaberration>Aberration chromatique</chromaticaberration>
 <chromaticaberrationtooltip>Active un subtil effet de distorsion des couleurs sur les bords de l'écran.</chromaticaberrationtooltip>
 <hudscale>Échelle d'ATH</hudscale>
@@ -285,10 +285,10 @@
 <inputtype.selectnextcharacter>Personnage suivant</inputtype.selectnextcharacter>
 <inputtype.selectpreviouscharacter>Personnage précédent</inputtype.selectpreviouscharacter>
 <inputtype.voice>Appuyer pour parler</inputtype.voice>
-<setdefaultbindings>Définir les raccourcis par défaut</setdefaultbindings>
-<setdefaultbindingstooltip>Définir les raccourcis clavier sur les paramètres recommandés par défaut (bouton gauche de la souris pour sélectionner des objets, bouton droit ou échap pour désélectionner).</setdefaultbindingstooltip>
-<setlegacybindings>Définir les raccourcis hérités</setlegacybindings>
-<setlegacybindingstooltip>Définir les raccourcis clavier sur ceux qui étaient utilisés dans les anciennes versions pre-alpha de Barotrauma (E pour sélectionner et désélectionner les objets, bouton gauche de la souris pour utiliser l'objet en main).</setlegacybindingstooltip>
+<setdefaultbindings>Utiliser les raccourcis par défaut</setdefaultbindings>
+<setdefaultbindingstooltip>Définit les raccourcis clavier sur les paramètres recommandés par défaut (bouton gauche de la souris pour sélectionner des objets, bouton droit ou échap pour désélectionner).</setdefaultbindingstooltip>
+<setlegacybindings>Utiliser les raccourcis hérités</setlegacybindings>
+<setlegacybindingstooltip>Définit les raccourcis clavier sur ceux qui étaient utilisés dans les anciennes versions pre-alpha de Barotrauma (E pour sélectionner et désélectionner les objets, bouton gauche de la souris pour utiliser l'objet en main).</setlegacybindingstooltip>
 
 <!-- Server settings -->
 <serversettingsroundstab>Manches</serversettingsroundstab>
@@ -470,7 +470,7 @@
 <savenameinuseheader>Le nom de sauvegarde est déjà utilisé</savenameinuseheader>
 <savenameinusetext>Veuillez choisir un autre nom pour le fichier de sauvegarde</savenameinusetext>
 <savename>Nom de sauvegarde</savename>
-<savefile.defaultname>Sauvegarder</savefile.defaultname>
+<savefile.defaultname>Sauvegarde</savefile.defaultname>
 <lastsaved>Dernière sauvegarde</lastsaved>
 <mapseed>Vecteur de carte</mapseed>
 <startcampaignbutton>Commencer</startcampaignbutton>
@@ -633,7 +633,7 @@
 <serverlog>Journal du serveur</serverlog>
 <campaignview>Vue campagne</campaignview>
 <createnew>Créer nouveau</createnew>
-<playyourself>Jouer vous-même</playyourself>
+<playyourself>No living players on the server and Jouer vous-même</playyourself>
 <startgamebutton>Commencer</startgamebutton>
 <readytostarttickbox>Prêt à commencer</readytostarttickbox>
 <roundstartingpleasewait>Veuillez patienter</roundstartingpleasewait>
@@ -730,7 +730,7 @@
 <clientpermission.managepermissions>Gestion des permissions</clientpermission.managepermissions>
 
 <!-- Mission types -->
-<missiontype.none>Aucun</missiontype.none>
+<missiontype.none>Aucune</missiontype.none>
 <missiontype.random>Aléatoire</missiontype.random>
 <missiontype.salvage>Récupération</missiontype.salvage>
 <missiontype.monster>Monstre</missiontype.monster>
@@ -1015,7 +1015,7 @@
 <entitydescription.extinguisher>Un extincteur au dioxyde de carbone portable.</entitydescription.extinguisher>
 <entityname.screwdriver>Tournevis</entityname.screwdriver>
 <entitydescription.screwdriver>Un outil qui permet les réparations électriques et les recâblages.</entitydescription.screwdriver>
-<entityname.wrench>Clef à molette</entityname.wrench>
+<entityname.wrench>Clé à molette</entityname.wrench>
 <entitydescription.wrench>Un outil qui permet les réparations mécaniques.</entitydescription.wrench>
 <entityname.crowbar>Pied de biche</entityname.crowbar>
 <entitydescription.crowbar>Permet de forcer les portes et les écoutilles. C'est aussi une arme contondante.</entitydescription.crowbar>
@@ -1643,7 +1643,7 @@
 <fabricatorrequireditems>Objets requis</fabricatorrequireditems>
 <fabricatorrequiredtime>Temps requis</fabricatorrequiredtime>
 <fabricatorrequiredcondition>État</fabricatorrequiredcondition>
-<fabricatorrequiredskills>Compétences requises pour calibrer</fabricatorrequiredskills>
+<fabricatorrequiredskills>Compétences requises :</fabricatorrequiredskills>
 <fabricatorcreate>Créer</fabricatorcreate>
 <fabricatorcancel>Annuler</fabricatorcancel>
 <uilabel.input>Matériaux</uilabel.input>
@@ -2233,10 +2233,10 @@
 <mechanic.draintext>Quand le sous-marin est inondé, utilisez les pompes pour vider l'eau. Généralement, les pompes reçoivent des signaux des détecteurs d'eau ou des terminaux de navigation proches, mais certaines sont dotées de commandes manuelles. Cette pompe est programmée uniquement pour vider l'eau. Interagissez avec elle ({0}) et placez l'interrupteur sur ON pour l'allumer.</mechanic.draintext>
 
 <!-- Room 4 -->
-<mechanic.deconstruct>Fabrication, 1re partie</mechanic.deconstruct>
+<mechanic.deconstruct>Fabrication, 1ère partie</mechanic.deconstruct>
 <mechanic.deconstructobjective>Désassembler une bouteille d'oxygène</mechanic.deconstructobjective>
 <mechanic.deconstructtext>Le fabricateur est un appareil qui produit des objets utiles à partir de divers matériaux. Si vous manquez de matériaux de fabrication, vous pouvez décomposer des objets à l'aide du désassembleur. Faites glisser l'objet dans l'un des emplacements du haut et appuyez sur le bouton Désassembler.\n\nDans le cas présent, la fabrication d'un extincteur nécessite de l'aluminium et du sel. Le sel est immédiatement disponible, mais l'aluminium s'obtient en désassemblant des bouteilles d'oxygène.</mechanic.deconstructtext>
-<mechanic.fabricate>Fabrication, 2e partie</mechanic.fabricate>
+<mechanic.fabricate>Fabrication, 2ème partie</mechanic.fabricate>
 <mechanic.fabricateobjective>Fabriquer un extincteur</mechanic.fabricateobjective>
 <mechanic.fabricatetext>Maintenant que vous avez tous les matériaux nécessaires, vous pouvez fabriquer un extincteur. Trouvez-le dans la liste, chargez les matériaux dans le fabricateur et appuyez sur le bouton pour lancer la production.\n\nVous pourrez ensuite récupérer l'objet fabriqué dans l'emplacement Production du fabricateur.</mechanic.fabricatetext>
 
@@ -2281,12 +2281,12 @@
 <!-- Room 3 -->
 <engineer.reactor>Réacteur</engineer.reactor>
 <engineer.reactorobjective>Allumez le réacteur</engineer.reactorobjective>
-<engineer.reactortext>Les réacteurs nucléaires fournissent de l'énergie aux sous-marins et avant-postes. Ils ont besoin de carburant pour générer de la chaleur et d'un équipage pour en réguler le rendement.\n\nTirez une barre de combustible vers l'emplacement d'objet du côté gauche. Plusieurs barres créent plus de chaleur, mais dans des circonstances normales, une seule suffit, en rajouter pourrait d'ailleurs créer une surchauffe.\n\nCommencez par définir le taux de fission pour que l'aiguille soit dans le vert, puis faites de même avec le rendement de la turbine. Vous pouvez voir les valeurs de charge et de production sur la droite. Essayez de garder les deux valeurs aussi proches que possible. Si la production est trop basse, cela peut conduire à des pannes de courant et inversement à des surtensions et des incendies si elle est trop haute.\n\nQuand l'opérateur du réacteur quitte l'interface, il est recommandé de passer les commandes en mode automatique. Il répondra aux fluctuations sur le réseau, mais bien plus lentement qu'un opérateur humain.</engineer.reactortext>
+<engineer.reactortext>Les réacteurs nucléaires fournissent de l'énergie aux sous-marins et avant-postes. Ils ont besoin de carburant pour générer de la chaleur et d'un équipage pour en réguler le rendement.\n\nFaites glisser une barre de combustible dans l'emplacement d'objet du côté gauche. Plusieurs barres créent plus de chaleur, mais dans des circonstances normales, une seule suffit, en rajouter pourrait d'ailleurs créer une surchauffe.\n\nCommencez par définir le taux de fission pour que l'aiguille soit dans le vert, puis faites de même avec le rendement de la turbine. Vous pouvez voir les valeurs de charge et de production sur la droite. Essayez de garder les deux valeurs aussi proches que possible. Si la production est trop basse, cela peut conduire à des pannes de courant et inversement à des surtensions et des incendies si elle est trop haute.\n\nQuand l'opérateur du réacteur quitte l'interface, il est recommandé de passer les commandes en mode automatique. Il répondra aux fluctuations sur le réseau, mais bien plus lentement qu'un opérateur humain.</engineer.reactortext>
 
 <!-- Room 4 -->
 <engineer.repairjunctionbox>Entretien</engineer.repairjunctionbox>
 <engineer.repairjunctionboxobjective>Réparez la boîte de raccordement défaillante</engineer.repairjunctionboxobjective>
-<engineer.repairjunctionboxtext>Tout comme les objets mécaniques, les boîtes de raccordement ont besoin d'être entretenues. En plus de l'usure naturelle, elles subissent des dégâts avec les inondations et les surtensions.\n\nElles sont réparées avec un tournevis, la clef à molette étant réservée aux objets mécaniques. À part ce petit détail, le processus est similaire. Équipez un tournevis et interagissez ({0}) avec le dispositif pour consulter l'interface de réparation.</engineer.repairjunctionboxtext>
+<engineer.repairjunctionboxtext>Tout comme les objets mécaniques, les boîtes de raccordement ont besoin d'être entretenues. En plus de l'usure naturelle, elles subissent des dégâts avec les inondations et les surtensions.\n\nElles sont réparées avec un tournevis, la clé à molette étant réservée aux objets mécaniques. À part ce petit détail, le processus est similaire. Équipez un tournevis et interagissez ({0}) avec le dispositif pour consulter l'interface de réparation.</engineer.repairjunctionboxtext>
 
 <!-- Room 5 -->
 <engineer.wirejunctionboxes>Câblage</engineer.wirejunctionboxes>
@@ -2299,7 +2299,7 @@
 <engineer.repairelectricalroomtext>Trouvez le local électrique du sous-marin et réparez les boîtes de raccordement en interagissant avec elles avec un tournevis en main, puis appuyez sur le bouton Réparer.</engineer.repairelectricalroomtext>
 <engineer.powerupreactor>Réacteur</engineer.powerupreactor>
 <engineer.powerupreactorobjective>Démarrez le réacteur du sous-marin</engineer.powerupreactorobjective>
-<engineer.powerupreactortext>Les réacteurs nucléaires fournissent de l'énergie aux sous-marins et avant-postes. Ils ont besoin de carburant pour générer de la chaleur et d'un équipage pour en réguler le rendement.\n\nTirez une barre de combustible vers l'emplacement d'objet du côté gauche. Plusieurs barres créent plus de chaleur, mais dans des circonstances normales, une seule suffit, en rajouter pourrait d'ailleurs créer une surchauffe.\n\nCommencez par définir le taux de fission pour que l'aiguille soit dans le vert, puis faites de même avec le rendement de la turbine. Vous pouvez voir les valeurs de charge et de production sur la droite. Essayez de garder les deux valeurs aussi proches que possible. Si la production est trop basse, cela peut conduire à des pannes de courant et inversement à des surtensions et des incendies si elle est trop haute.\n\nQuand l'opérateur du réacteur quitte l'interface, il est recommandé de passer les commandes en mode automatique. Il répondra aux fluctuations sur le réseau, mais bien plus lentement qu'un opérateur humain.</engineer.powerupreactortext>
+<engineer.powerupreactortext>Les réacteurs nucléaires fournissent de l'énergie aux sous-marins et avant-postes. Ils ont besoin de carburant pour générer de la chaleur et d'un équipage pour en réguler le rendement.\n\nFaites glisser une barre de combustible dans l'emplacement d'objet du côté gauche. Plusieurs barres créent plus de chaleur, mais dans des circonstances normales, une seule suffit, en rajouter pourrait d'ailleurs créer une surchauffe.\n\nCommencez par définir le taux de fission pour que l'aiguille soit dans le vert, puis faites de même avec le rendement de la turbine. Vous pouvez voir les valeurs de charge et de production sur la droite. Essayez de garder les deux valeurs aussi proches que possible. Si la production est trop basse, cela peut conduire à des pannes de courant et inversement à des surtensions et des incendies si elle est trop haute.\n\nQuand l'opérateur du réacteur quitte l'interface, il est recommandé de passer les commandes en mode automatique. Il répondra aux fluctuations sur le réseau, mais bien plus lentement qu'un opérateur humain.</engineer.powerupreactortext>
 
 <!-- Security officer tutorial -->
 <!-- Radio -->
@@ -2428,9 +2428,9 @@
 
 <!-- Disclaimers -->
 <campaigndisclaimertitle>Bienvenue dans Barotrauma !</campaigndisclaimertitle>
-<campaigndisclaimertext>Veuillez noter que Barotrauma reste en Accès anticipé et que de nombreux aspects du jeu sont incomplets et toujours en développement.\n\nDe nombreuses fonctionnalités prévues dans la version complète sont toujours absentes du mode Campagne et il n'est pas encore aussi amusant que le mode multijoueur. Dans la version actuelle, jouer en solitaire peut se révéler plus exigeant pour les nouveaux venus que de collaborer avec d'autres joueurs (même si l'équipage IA peut vous aider pour certaines tâches, il n'est généralement pas aussi utile que de véritables joueurs humains). Si vous désirez connaître les fonctionnalités à venir dans les futures mises à jour, cliquez sur le bouton Feuille de route Campagne ci-dessous.\n\nNous vous recommandons cependant de passer au minimum par le didacticiel un joueur avant de plonger dans les eaux du multijoueur. Bonne chance, matelot !</campaigndisclaimertext>
-<campaignroadmaptitle>Feuille de route Campagne</campaignroadmaptitle>
-<campaignroadmaptext>- Lieux à explorer : à ce jour, les emplacements sur la carte de la campagne sont essentiellement des menus où vous pouvez acheter du matériel et recruter des membres d'équipage. Ils deviendront cependant de véritables lieux physiques à explorer au cours de la période d'Accès anticipé.\n\n- Histoire élargie : vous pourrez en apprendre plus sur le monde de Barotrauma en interagissant avec des PNJ et en explorant des avant-postes et des lieux où l'homme n'avait encore jamais mis les pieds.\n\n- Nouveaux types de mission : nous avons prévu d'implémenter de nouvelles missions comme des tâches de transport de personnel et des missions de récupération sur des épaves.\n\nÉquilibrage : l'économie dans la campagne n'est actuellement pas équilibrée correctement, mais nous allons commencer à nous concentrer sur cet aspect à mesure que nous y ajouterons du contenu.\n\n- Objectif final : pour le moment, il n'est pas encore possible de terminer la campagne, mais dans les versions futures, l'emplacement mystérieux qui se trouve au milieu de la carte deviendra plus accessible...</campaignroadmaptext>
+<campaigndisclaimertext>Veuillez noter que Barotrauma reste en Accès anticipé et que de nombreux aspects du jeu sont incomplets et toujours en développement.\n\nDe nombreuses fonctionnalités prévues dans la version complète sont toujours absentes du mode Campagne et il n'est pas encore aussi amusant que le mode multijoueur. Dans la version actuelle, jouer en solitaire peut se révéler plus exigeant pour les nouveaux venus que de collaborer avec d'autres joueurs (même si l'équipage IA peut vous aider pour certaines tâches, il n'est généralement pas aussi utile que de véritables joueurs humains). Si vous désirez connaître les fonctionnalités à venir dans les futures mises à jour, cliquez sur le bouton Infos Campagne ci-dessous.\n\nNous vous recommandons cependant de passer au minimum par le didacticiel un joueur avant de plonger dans les eaux du multijoueur. Bonne chance, matelot !</campaigndisclaimertext>
+<campaignroadmaptitle>Infos Campagne</campaignroadmaptitle>
+<campaignroadmaptext>- Lieux à explorer : à ce jour, les emplacements sur la carte de la campagne sont essentiellement des menus où vous pouvez acheter du matériel et recruter des membres d'équipage. Ils deviendront cependant de véritables lieux physiques à explorer au cours de la période d'Accès anticipé.\n\n- Histoire élargie : vous pourrez en apprendre plus sur le monde de Barotrauma en interagissant avec des PNJ et en explorant des avant-postes et des lieux où l'homme n'avait encore jamais mis les pieds.\n\n- Nouveaux types de mission : nous avons prévu d'implémenter de nouvelles missions comme des tâches de transport de personnel et des missions de récupération sur des épaves.\n\n- Équilibrage : l'économie dans la campagne n'est actuellement pas équilibrée correctement, mais nous allons commencer à nous concentrer sur cet aspect à mesure que nous y ajouterons du contenu.\n\n- Objectif final : pour le moment, il n'est pas encore possible de terminer la campagne, mais dans les versions futures, l'emplacement mystérieux qui se trouve au milieu de la carte deviendra plus accessible...</campaignroadmaptext>
 <editordisclaimertitle>Éditeurs</editordisclaimertitle>
 <editordisclaimertext>Les éditeurs de sous-marin et de personnage sont des outils de modding qui peuvent être utilisés pour élargir les possibilités de jeu en créant votre propre sous-marin et vos monstres. Les créations personnalisées peuvent être partagées dans le Steam Workshop.\n\nPour le moment, les éditeurs ne sont disponibles qu'en anglais. Le processus pour construire un sous-marin jouable ou un monstre fonctionnel peut se révéler assez compliqué et nous n'offrons pas encore de didacticiels ou de documentations en jeu pour les éditeurs. Si vous désirez vous essayer à la création de contenu personnalisé via les éditeurs, vous pourrez trouver de l'aide et des informations utiles aux liens suivants :</editordisclaimertext>
 <editordisclaimerwikilink>Wiki Barotrauma</editordisclaimerwikilink>
@@ -2444,58 +2444,139 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!-- New additions -->
+<creditsbutton>Crédits</creditsbutton>
+<orderoptions.operatereactor>Allumer, Éteindre</orderoptions.operatereactor>
+<orderoptions.operateweapons>Feu à volonté, Cessez le feu</orderoptions.operateweapons>
+<orderoptions.steer>Maintenir la position, Retour, Naviguez vers votre destination</orderoptions.steer>
+<orderoptions.chargebatteries>Charger, Arrêter le chargement</orderoptions.chargebatteries>
+<orderoptions.pumpwater>Pomper, Arrêter de pomper</orderoptions.pumpwater>
+<orderoptions.repairsystems>Réparation spécifique, Tout réparer</orderoptions.repairsystems>
 
+<ordername.dismissed>Rompez</ordername.dismissed>
+<ordername.follow>Suivre</ordername.follow>
+<ordername.wait>Attendre</ordername.wait>
+<ordername.operatereactor>Faire fonctionner le réacteur</ordername.operatereactor>
+<ordername.operateweapons>Faire fonctionner les armes</ordername.operateweapons>
+<ordername.steer>Piloter</ordername.steer>
+<ordername.fixleaks>Colmater les fuites</ordername.fixleaks>
+<ordername.extinguishfires>Éteindre les incendies</ordername.extinguishfires>
+<ordername.fightintruders>Combattre les intrus</ordername.fightintruders>
+<ordername.chargebatteries>Charger les batteries</ordername.chargebatteries>
+<ordername.pumpwater>Faire fonctionner les pompes</ordername.pumpwater>
+<ordername.rescue>Soigner et secourir</ordername.rescue>
+<ordername.repairsystems>Réparer les systèmes endommagés</ordername.repairsystems>
+<ordername.reportfire>Signaler un incendie</ordername.reportfire>
+<ordername.reportbreach>Signaler une brèche de la coque</ordername.reportbreach>
+<ordername.reportintruders>Signaler des intrus</ordername.reportintruders>
+<ordername.reportbrokendevices>Signaler des appareils cassés</ordername.reportbrokendevices>
+<ordername.requestfirstaid>Demander les premiers secours</ordername.requestfirstaid>
 
+<pauseonfocuslost>Pause en arrière-plan</pauseonfocuslost>
+<pauseonfocuslosttooltip>Met le jeu en pause lorsque sa fenêtre n'est pas au premier plan. Veuillez noter que le jeu ne sera pas mis en pause si une session multijoueur est active.</pauseonfocuslosttooltip>
 
+<mutedbyserver>Le serveur a coupé votre connexion vocale.</mutedbyserver>
+<unmutedbyserver>Le serveur a rétabli votre connexion vocale.</unmutedbyserver>
 
+<orderdialog.fightintruders>[name], éliminez tous les intrus !</orderdialog.fightintruders>
+<orderdialog.fightintruders>[name], défendez l'équipage !</orderdialog.fightintruders>
+<orderdialogself.fightintruders>Je m'occupe des intrus !</orderdialogself.fightintruders>
+<orderdialogself.fightintruders>Je combats l'ennemi !</orderdialogself.fightintruders>
 
+<dialogcannotrepair>Impossible de réparer [itemname] !</dialogcannotrepair>
+<dialogenemydown>Ennemi abattu !</dialogenemydown>
+<dialogenemydown>Nouvelle cible éliminée.</dialogenemydown>
 
+<dialognorepairtargets>Il n'y a rien à réparer.</dialognorepairtargets>
+<dialognorepairtargets>Que voulez-vous dire ? Tout fonctionne correctement.</dialognorepairtargets>
+<dialognopumps>Les pompes sont en bon état, n'est-ce pas ?</dialognopumps>
+<dialognopumps>Aucune pompe n'a besoin d'être réparée actuellement.</dialognopumps>
+<dialognoenemies>Je ne vois pas d'intrus à bord.</dialognoenemies>
+<dialognoenemies>Des ennemis ? Où ça ?</dialognoenemies>
+<dialognoleaks>Les fuites sont introuvables.</dialognoleaks>
+<dialognoleaks>Quelles fuites ?</dialognoleaks>
 
+<bugreportgithubform>Formulaire de problème GitHub</bugreportgithubform>
+<bugreportfeedbackform>Formulaire de feedback Barotrauma</bugreportfeedbackform>
+<bugreportbutton>Signaler un bug</bugreportbutton>
 
+<voipcapturedevicenotfound>Impossible de démarrer la capture audio ; appareil de capture adéquat introuvable.</voipcapturedevicenotfound>
 
+<fabricatorinsufficientskills>Compétences insuffisantes pour fabriquer</fabricatorinsufficientskills>
+<fabricatorsufficientskills>Compétences suffisantes pour fabriquer</fabricatorsufficientskills>
 
+<dialogfoundwoundedtarget>Administre les premiers soins à [targetname] dans [roomname] !</dialogfoundwoundedtarget>
+<dialogfoundwoundedtarget>Soigne [targetname] dans [roomname] !</dialogfoundwoundedtarget>
 
+<skillname.initiative>Initiative</skillname.initiative>
+<skillname.courage>Courage</skillname.courage>
 
+<entityname.equalscomponent>Composant Égal à</entityname.equalscomponent>
+<entitydescription.equalscomponent>Envoie un signal quand les deux entrées reçoivent le même signal.</entitydescription.equalscomponent>
+<entityname.greatercomponent>Composant Supérieur à</entityname.greatercomponent>
+<entitydescription.greatercomponent>Envoie un signal si entrée_signal_1 est supérieure à entrée_signal_2.</entitydescription.greatercomponent>
+<entityname.colorcomponent>Composant Couleur</entityname.colorcomponent>
+<entitydescription.colorcomponent>Produit un signal de couleur combiné pour contrôler la lumière.</entitydescription.colorcomponent>
+<entityname.subtractcomponent>Composant Soustraction</entityname.subtractcomponent>
+<entitydescription.subtractcomponent>Produit la valeur obtenue par la soustraction des signaux reçus.</entitydescription.subtractcomponent>
+<entityname.multiplycomponent>Composant Multiplication</entityname.multiplycomponent>
+<entitydescription.multiplycomponent>Produit la valeur obtenue par le produit des signaux reçus.</entitydescription.multiplycomponent>
+<entityname.dividecomponent>Composant Division</entityname.dividecomponent>
+<entitydescription.dividecomponent>Produit la valeur obtenue par la division des signaux reçus.</entitydescription.dividecomponent>
+<entityname.xorcomponent>Composant OU exclusif</entityname.xorcomponent>
+<entitydescription.xorcomponent>Envoie un signal si l'une des deux entrées, mais pas les deux, reçoit un signal.</entitydescription.xorcomponent>
+<entityname.memorycomponent>Composant Mémoire</entityname.memorycomponent>
+<entitydescription.memorycomponent>Produit une valeur stockée qui peut être mise à jour depuis d'autres sources. Utilise la connexion entrée_signal pour stocker la valeur et l'entrée stocker_signal pour déterminer si les signaux reçus devraient être stockés.</entitydescription.memorycomponent>
+<entityname.oxygentank>Bouteille d'oxygène</entityname.oxygentank>
+<entitydescription.oxygentank>Un conteneur d'oxygène portable.</entitydescription.oxygentank>
+<entityname.cyanideantidote>Anticyanure</entityname.cyanideantidote>
+<entitydescription.cyanideantidote>Antidote soignant l'empoisonnement aigu au Cyanure.</entitydescription.cyanideantidote>
+<entityname.sufforinantidote>Antisufforine</entityname.sufforinantidote>
+<entitydescription.sufforinantidote>Antidote soignant l'empoisonnement aigu à la Sufforine.</entitydescription.sufforinantidote>
+<entityname.deliriumineantidote>Antideliriumine</entityname.deliriumineantidote>
+<entitydescription.deliriumineantidote>Antidote soignant l'empoisonnement aigu à la Deliriumine.</entitydescription.deliriumineantidote>
+<entityname.antirad>Antirad</entityname.antirad>
+<entitydescription.antirad>Ralentit la dégradation cellulaire causée par les radiations.</entitydescription.antirad>
 
+<search>Recherche</search>
+<electricalrepairsheader>Réparations électriques</electricalrepairsheader>
+<mechanicalrepairsheader>Réparations mécaniques</mechanicalrepairsheader>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<connection.power>énergie</connection.power>
+<connection.powerin>entrée_énergie</connection.powerin>
+<connection.powerout>sotie_énergie</connection.powerout>
+<connection.setstate>définir_état</connection.setstate>
+<connection.togglestate>changer_état</connection.togglestate>
+<connection.setpumpingspeed>définir_vitesse</connection.setpumpingspeed>
+<connection.settargetwaterlevel>définir_niveaucible</connection.settargetwaterlevel>
+<connection.signalin>entrée_signal</connection.signalin>
+<connection.signalout>sortie_signal</connection.signalout>
+<connection.signalinx>entrée_signal_[num]</connection.signalinx>
+<connection.signaloutx>sortie_signal_[num]</connection.signaloutx>
+<connection.turretaimingin>position_dans</connection.turretaimingin>
+<connection.turrettriggerin>déclencher_dans</connection.turrettriggerin>
+<connection.togglelight>dés/activer_lumière</connection.togglelight>
+<connection.setcolor>définir_couleur</connection.setcolor>
+<connection.shutdown>arrêt</connection.shutdown>
+<connection.temperatureout>sortie_température</connection.temperatureout>
+<connection.meltdownwarning>alerte_fusion</connection.meltdownwarning>
+<connection.signalr>signal_r</connection.signalr>
+<connection.signalg>signal_v</connection.signalg>
+<connection.signalb>signal_b</connection.signalb>
+<connection.signala>signal_a</connection.signala>
+<connection.setoutput>définir_production</connection.setoutput>
+<connection.signalstore>stocker_signal</connection.signalstore>
+<connection.settargetsignal>définir_signalcible</connection.settargetsignal>
+<connection.setfrequency>définir_fréquence</connection.setfrequency>
+<connection.setoutputtype>définir_typeproduction</connection.setoutputtype>
+<connection.controlin>entrée_commande</connection.controlin>
+<connection.setforce>définir_force</connection.setforce>
+<connection.sonartransducerin>entrée_transducteur</connection.sonartransducerin>
+<connection.steeringvelocityin>entrée_vélocité</connection.steeringvelocityin>
+<connection.velocityxout>sortie_vélocité_x</connection.velocityxout>
+<connection.velocityyout>sortie_vélocité_y</connection.velocityyout>
+<connection.toggledocking>dés/activer_amarrage</connection.toggledocking>
+<connection.waterdatain>entrée_données_eau</connection.waterdatain>
+<connection.oxygendatain>entrée_données_oxygène</connection.oxygendatain>
 
 </infotexts>

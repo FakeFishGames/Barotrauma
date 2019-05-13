@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="Brazilian Portuguese">
 
 <!-- Loading Screen -->
@@ -28,16 +28,16 @@
 <loadingscreentip>Se o reator em um submarino não produzir a energia necessária para executar todos os sistemas de bordo, tente reduzir a taxa de carga para as baterias e supercapacitores de bordo ou regule os períodos em que o submarino opera em velocidade total.</loadingscreentip>
 <loadingscreentip>Os sistemas elétricos e mecânicos em um submarino irão se deteriorar com o tempo devido às condições severas e ao uso constante. Faça com que os mecânicos e os engenheiros façam manutenções periódicas para evitar falhas em momentos inoportunos.</loadingscreentip>
 <loadingscreentip>Destruir artefatos alienígenas em um desconstrutor pode gerar matérias-primas exóticas.</loadingscreentip>
-<loadingscreentip>Algumas das estruturas alienígenas no Europa foram construídas com um metamaterial extremamente resistente a danos físicos. Por isso, ele se tornou um importante objeto de pesquisa dos cientistas europanos.</loadingscreentip>
+<loadingscreentip>Algumas das estruturas alienígenas na Europa foram construídas com um metamaterial extremamente resistente a danos físicos. Por isso, ele se tornou um importante objeto de pesquisa dos cientistas europanos.</loadingscreentip>
 <loadingscreentip>É preciso redobrar os cuidados ao trazer artefatos alienígenas a bordo do submarino.</loadingscreentip>
-<loadingscreentip>Pouco se sabe sobre a civilização alienígena supostamente extinta que construiu as ruínas espalhadas pelo Europa. A idade das ruínas também é desconhecida, já que as propriedades autorreparadoras das estruturas e dos dispositivos tornam os métodos de datação incrivelmente imprecisos.</loadingscreentip>
-<loadingscreentip>Nenhum vestígio dos alienígenas que construíram as ruínas no Europa foi descoberto. A única forma de vida encontrada dentro das estruturas são as entidades biomecânicas que as vigiam e as preservam.</loadingscreentip>
+<loadingscreentip>Pouco se sabe sobre a civilização alienígena supostamente extinta que construiu as ruínas espalhadas pela Europa. A idade das ruínas também é desconhecida, já que as propriedades autorreparadoras das estruturas e dos dispositivos tornam os métodos de datação incrivelmente imprecisos.</loadingscreentip>
+<loadingscreentip>Nenhum vestígio dos alienígenas que construíram as ruínas na Europa foi descoberto. A única forma de vida encontrada dentro das estruturas são as entidades biomecânicas que as vigiam e as preservam.</loadingscreentip>
 <loadingscreentip>Ao explorar ruínas ou cavernas, use sinalizadores sempre que possível para ajudar a indicar a saída caso precise sair depressa por algum motivo.</loadingscreentip>
 <loadingscreentip>As sentinelas cefalópodes costumam ser dóceis, mas podem atacar ao serem provocadas.</loadingscreentip>
 <loadingscreentip>O canibalismo é um comportamento muito comum entre os reptantes. Matar um deles em um bando pode distrair os demais ao lançá-los num frenesi alimentar.</loadingscreentip>
 <loadingscreentip>Os raptores de terra podem atravessar portas de metal facilmente com seus bicos afiados.</loadingscreentip>
 <loadingscreentip>Os parasitas-carcaças dominam e consomem lentamente o corpo do hospedeiro, transformando-o em nada além de um exoesqueleto vazio controlado pelo parasita.</loadingscreentip>
-<loadingscreentip>Muitas criaturas do Europa são protegidas por um casco grosso, difícil de ser atravessado por armas tradicionais. No entanto, essa armadura pode apresentar pontos fracos.</loadingscreentip>
+<loadingscreentip>Muitas criaturas da Europa são protegidas por um casco grosso, difícil de ser atravessado por armas tradicionais. No entanto, essa armadura pode apresentar pontos fracos.</loadingscreentip>
 <loadingscreentip>Os dispositivos sonoros e os pulsos de sonar podem alertar criaturas próximas.</loadingscreentip>
 <loadingscreentip>Realizar RCP sem as habilidades médicas apropriadas pode causar ferimentos internos ao paciente.</loadingscreentip>
 <loadingscreentip>Opiáceos, como morfina e fentanila, são eficazes para curar ferimentos numa emergência, mas seu uso frequente pode levar à dependência e provocar sintomas de abstinência perigosos.</loadingscreentip>
@@ -51,16 +51,16 @@
 <loadingscreentip>As máscaras de mergulho permitem respirar embaixo da água, mas não dispõem de proteção contra a pressão esmagadora fora do submarino. Se ocorrer uma grave ruptura no casco, procure um traje de mergulho imediatamente.</loadingscreentip>
 <loadingscreentip>Em caso de incêndio, as queimaduras não são o único problema a ser resolvido, já que o fogo pode consumir todo o oxigênio no submarino rapidamente.</loadingscreentip>
 <loadingscreentip>Atravessar os Depósitos Hidrotérmicos requer precaução extra. Além de estarem repletos de vida selvagem, as correntes aquáticas geradas pela atividade geotérmica deixam a navegação ainda mais perigosa.</loadingscreentip>
-<loadingscreentip>Alguns organismos sésseis no Europa emitem ruídos de baixa frequência que podem afetar o sonar do submarino.</loadingscreentip>
+<loadingscreentip>Alguns organismos sésseis na Europa emitem ruídos de baixa frequência que podem afetar o sonar do submarino.</loadingscreentip>
 <loadingscreentip>Cuidado para não descer muito fundo. A maioria dos cascos dos submarinos começará a ceder a cerca de 2.000 metros de profundidade.</loadingscreentip>
-<loadingscreentip>O Europa é rico em recursos naturais. Um capitão intrépido com uma visão aguçada e um cortador de plasma pode ganhar uma grana preta.</loadingscreentip>
+<loadingscreentip>A Europa é rico em recursos naturais. Um capitão intrépido com uma visão aguçada e um cortador de plasma pode ganhar uma grana preta.</loadingscreentip>
 <loadingscreentip>Você pode fingir ser outra pessoa ao usar o cartão de identificação dela e algo que cubra seu rosto.</loadingscreentip>
 <loadingscreentip>É possível construir sistemas controlados por voz ao vincular componentes wi-fi ao bate-papo de rádio no editor de submarinos.</loadingscreentip>
-<loadingscreentip>Os cinturões de radiação em volta de Júpiter impossibilitam o estabelecimento de colônias permanentes na superfície do Europa. Por isso, quase todos os postos avançados do satélite estão sob sua camada de gelo.</loadingscreentip>
-<loadingscreentip>Os processos do ecossistema subaquático do Europa ainda não foram totalmente compreendidos, mas acredita-se que quase toda a base da cadeia alimentar seja formada por bactérias que fazem quimiossíntese.</loadingscreentip>
+<loadingscreentip>Os cinturões de radiação em volta de Júpiter impossibilitam o estabelecimento de colônias permanentes na superfície da Europa. Por isso, quase todos os postos avançados do satélite estão sob sua camada de gelo.</loadingscreentip>
+<loadingscreentip>Os processos do ecossistema subaquático da Europa ainda não foram totalmente compreendidos, mas acredita-se que quase toda a base da cadeia alimentar seja formada por bactérias que fazem quimiossíntese.</loadingscreentip>
 <loadingscreentip>A Coalizão Europa foi iniciada com um acordo de cooperação e comércio entre as duas maiores colônias europanas e vários grupos paramilitares privados, mas aos poucos tornou-se o atual governo europano.</loadingscreentip>
 <loadingscreentip>A iniciativa ridicularizada de ajudar os submarinistas a lidar com ambientes estressantes ao integrar animadores profissionais às tripulações foi rapidamente considerada um fracasso e suspensa.</loadingscreentip>
-<loadingscreentip>A maioria das embarcações evita se aventurar além dos túneis e permanece sob a camada de gelo do Europa. O colossal e vazio abismo que fica entre as camadas da superfície e o interior rochoso abriga muitas das maiores e mais ameaçadoras criaturas do Europa.</loadingscreentip>
+<loadingscreentip>A maioria das embarcações evita se aventurar além dos túneis e permanece sob a camada de gelo da Europa. O colossal e vazio abismo que fica entre as camadas da superfície e o interior rochoso abriga muitas das maiores e mais ameaçadoras criaturas da Europa.</loadingscreentip>
 
 <!-- Main menu labels -->
 <campaignlabel>Campanha</campaignlabel>
@@ -470,7 +470,7 @@
 <savenameinuseheader>O nome de arquivo salvo já está em uso.</savenameinuseheader>
 <savenameinusetext>Escolha outro nome para o arquivo salvo.</savenameinusetext>
 <savename>Salvar nome</savename>
-<savefile.defaultname>Salvar</savefile.defaultname>
+<savefile.defaultname>Salvamento</savefile.defaultname>
 <lastsaved>Salvo pela última vez</lastsaved>
 <mapseed>Algoritmo do mapa</mapseed>
 <startcampaignbutton>Iniciar</startcampaignbutton>
@@ -479,7 +479,7 @@
 <campaignstartingpleasewait>Aguarde</campaignstartingpleasewait>
 <campaignstarting>Aguardando o inicio da campanha.</campaignstarting>
 <shuttleselected>Submersível selecionado</shuttleselected>
-<shuttlewarning>A maioria dos submersíveis não é bem equipada para encarar os perigos das profundezas do Europa. Quer mesmo escolher um submersível como embarcação?</shuttlewarning>
+<shuttlewarning>A maioria dos submersíveis não é bem equipada para encarar os perigos das profundezas da Europa. Quer mesmo escolher um submersível como embarcação?</shuttlewarning>
 <contentpackagemismatch>Pacote de conteúdo incompatível</contentpackagemismatch>
 <contentpackagemismatchwarning>O submarino pode ser incompatível com os pacotes de conteúdo selecionados porque ele exige os seguintes pacotes de conteúdo: [requiredcontentpackages]. Quer mesmo escolher o submarino?</contentpackagemismatchwarning>
 <campaignstartfailedsubnotfound>Falha ao iniciar a campanha. O submarino [subname] não foi encontrado.</campaignstartfailedsubnotfound>
@@ -730,8 +730,8 @@
 <clientpermission.managepermissions>Gerenciar permissões</clientpermission.managepermissions>
 
 <!-- Mission types -->
-<missiontype.none>Nenhum</missiontype.none>
-<missiontype.random>Aleatório</missiontype.random>
+<missiontype.none>Nenhuma</missiontype.none>
+<missiontype.random>Aleatória</missiontype.random>
 <missiontype.salvage>Recuperação</missiontype.salvage>
 <missiontype.monster>Monstro</missiontype.monster>
 <missiontype.cargo>Carga</missiontype.cargo>
@@ -742,28 +742,28 @@
 
 <!-- Mission descriptions -->
 <missionname.salvageskyholderartifactruins>Recuperar artefato</missionname.salvageskyholderartifactruins>
-<missiondescription.salvageskyholderartifactruins>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente no Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvageskyholderartifactruins>
+<missiondescription.salvageskyholderartifactruins>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente na Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvageskyholderartifactruins>
 <missionsonarlabel.salvageskyholderartifactruins>Sinal infrassônico</missionsonarlabel.salvageskyholderartifactruins>
 <missionsuccess.salvageskyholderartifactruins>O artefato foi recuperado.</missionsuccess.salvageskyholderartifactruins>
 <missionfailure.salvageskyholderartifactruins>Não foi possível recuperar o artefato.</missionfailure.salvageskyholderartifactruins>
 <missionheader0.salvageskyholderartifactruins>Artefato coletado</missionheader0.salvageskyholderartifactruins>
 <missionmessage0.salvageskyholderartifactruins>O artefato está a bordo. Conduza o submarino para fora caverna para resgatar a recompensa.</missionmessage0.salvageskyholderartifactruins>
 <missionname.salvagethermalartifactruins>Recuperar artefato</missionname.salvagethermalartifactruins>
-<missiondescription.salvagethermalartifactruins>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente no Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagethermalartifactruins>
+<missiondescription.salvagethermalartifactruins>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente na Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagethermalartifactruins>
 <missionsonarlabel.salvagethermalartifactruins>Sinal infrassônico</missionsonarlabel.salvagethermalartifactruins>
 <missionsuccess.salvagethermalartifactruins>O artefato foi recuperado.</missionsuccess.salvagethermalartifactruins>
 <missionfailure.salvagethermalartifactruins>Não foi possível recuperar o artefato.</missionfailure.salvagethermalartifactruins>
 <missionheader0.salvagethermalartifactruins>Artefato coletado</missionheader0.salvagethermalartifactruins>
 <missionmessage0.salvagethermalartifactruins>O artefato está a bordo. Conduza o submarino para fora caverna para resgatar a recompensa.</missionmessage0.salvagethermalartifactruins>
 <missionname.salvagethermalartifactcave>Recuperar artefato</missionname.salvagethermalartifactcave>
-<missiondescription.salvagethermalartifactcave>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente no Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagethermalartifactcave>
+<missiondescription.salvagethermalartifactcave>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente na Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagethermalartifactcave>
 <missionsonarlabel.salvagethermalartifactcave>Sinal infrassônico</missionsonarlabel.salvagethermalartifactcave>
 <missionsuccess.salvagethermalartifactcave>O artefato foi recuperado.</missionsuccess.salvagethermalartifactcave>
 <missionfailure.salvagethermalartifactcave>Não foi possível recuperar o artefato.</missionfailure.salvagethermalartifactcave>
 <missionheader0.salvagethermalartifactcave>Artefato coletado</missionheader0.salvagethermalartifactcave>
 <missionmessage0.salvagethermalartifactcave>O artefato está a bordo. Conduza o submarino para fora caverna para resgatar a recompensa.</missionmessage0.salvagethermalartifactcave>
 <missionname.salvagenasonovartifactcave>Recuperar artefato</missionname.salvagenasonovartifactcave>
-<missiondescription.salvagenasonovartifactcave>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente no Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagenasonovartifactcave>
+<missiondescription.salvagenasonovartifactcave>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente na Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagenasonovartifactcave>
 <missionsonarlabel.salvagenasonovartifactcave>Sinal infrassônico</missionsonarlabel.salvagenasonovartifactcave>
 <missionsuccess.salvagenasonovartifactcave>O artefato foi recuperado.</missionsuccess.salvagenasonovartifactcave>
 <missionfailure.salvagenasonovartifactcave>Não foi possível recuperar o artefato.</missionfailure.salvagenasonovartifactcave>
@@ -800,13 +800,13 @@
 <missionheader0.killcrawlerswarm2>Alvo eliminado</missionheader0.killcrawlerswarm2>
 <missionmessage0.killcrawlerswarm2>O bando foi eliminado. Conduza o submarino para fora caverna para resgatar a recompensa.</missionmessage0.killcrawlerswarm2>
 <missionname.killendworm>Monstro do Abismo</missionname.killendworm>
-<missiondescription.killendworm>Leituras sísmicas indicam que algo colossal emergiu das profundezas do Europa em uma passagem localizada entre [location1] e [location2]. Toda a navegação através da passagem foi suspensa e uma recompensa de [reward] créditos foi prometida para quem se livrar do fator responsável por causar a atividade sísmica.</missiondescription.killendworm>
+<missiondescription.killendworm>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente na Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.killendworm>
 <missionsonarlabel.killendworm>Alvo</missionsonarlabel.killendworm>
 <missionsuccess.killendworm>O Verme Mortífero foi eliminado e a passagem está aberta para navegação novamente.</missionsuccess.killendworm>
 <missionheader0.killendworm>Alvo eliminado</missionheader0.killendworm>
 <missionmessage0.killendworm>O monstro foi abatido. Conduza o submarino para fora caverna para resgatar a recompensa.</missionmessage0.killendworm>
 <missionname.salvagekillmoloch>Recuperar artefato</missionname.salvagekillmoloch>
-<missiondescription.salvagekillmoloch>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente no Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagekillmoloch>
+<missiondescription.salvagekillmoloch>Os pesquisadores de [location1] detectaram um sinal infrassônico muito parecido com os que são emitidos pelos artefatos alienígenas descobertos anteriormente na Europa. Investigue o sinal e recupere o possível artefato.</missiondescription.salvagekillmoloch>
 <missionsonarlabel.salvagekillmoloch>Sinal infrassônico</missionsonarlabel.salvagekillmoloch>
 <missionsuccess.salvagekillmoloch>No fim, o sinal foi emitido por um Moloque. Os pesquisadores de [location1] concordaram em pagar a recompensa para você por ter se livrado da criatura.</missionsuccess.salvagekillmoloch>
 <missionheader0.salvagekillmoloch>Alvo eliminado</missionheader0.salvagekillmoloch>
@@ -827,13 +827,13 @@
 <missiondescription.cargochemicals>Os pesquisadores de [location1] precisam de alguém para entregar produtos químicos perigosos para [location2] em troca de 250 créditos. </missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>Os produtos químicos foram entregues.</missionsuccess.cargochemicals>
 <missionname.cargohuskeggs>Perigo biológico</missionname.cargohuskeggs>
-<missiondescription.cargohuskeggs>Os pesquisadores da região estão oferecendo [reward] créditos pela a entrega de um contêiner de ovos de Parasita-Carcaça para [location2].</missiondescription.cargohuskeggs>
+<missiondescription.cargohuskeggs>Os pesquisadores da região estão oferecendo [reward] créditos pela entrega de um contêiner de ovos de Parasita-Carcaça para [location2].</missiondescription.cargohuskeggs>
 <missionsuccess.cargohuskeggs>Os ovos do Parasita-Carcaça foram entregues.</missionsuccess.cargohuskeggs>
 <missionname.cargonitroglycerin>Manusear com cuidado</missionname.cargonitroglycerin>
-<missiondescription.cargonitroglycerin>Os pesquisadores da região estão oferecendo [reward] créditos pela a entrega de uma grande quantidade de nitroglicerina para [location2].</missiondescription.cargonitroglycerin>
+<missiondescription.cargonitroglycerin>Os pesquisadores da região estão oferecendo [reward] créditos pela entrega de uma grande quantidade de nitroglicerina para [location2].</missiondescription.cargonitroglycerin>
 <missionsuccess.cargonitroglycerin>Os produtos químicos foram entregues.</missionsuccess.cargonitroglycerin>
 <missionname.cargoclowngear>Glória à Deusa Arlequina</missionname.cargoclowngear>
-<missiondescription.cargoclowngear>Um sindicato de palhaços da região está oferecendo [reward] créditos pela a entrega de uma remessa de suprimentos de circo para [location2].</missiondescription.cargoclowngear>
+<missiondescription.cargoclowngear>Um sindicato de palhaços da região está oferecendo [reward] créditos pela entrega de uma remessa de suprimentos de circo para [location2].</missiondescription.cargoclowngear>
 <missionsuccess.cargoclowngear>O equipamento de circo foi entregue.</missionsuccess.cargoclowngear>
 <missionname.cargoconstructionminerals>Remessa do Posto Avançado de Mineração</missionname.cargoconstructionminerals>
 <missiondescription.cargoconstructionminerals>Uma remessa de materiais de construção precisa ser transportada para [location2] e o líder da tripulação está pronto para pagar [reward] créditos pelo transtorno.</missiondescription.cargoconstructionminerals>
@@ -996,7 +996,7 @@
 <entityname.divingmask>Máscara de Mergulho</entityname.divingmask>
 <entitydescription.divingmask>Ela é pequena o suficiente para você carregar em caso de necessidade, mas não protege da pressão da água caso ocorra uma ruptura total do casco.</entitydescription.divingmask>
 <entityname.divingsuit>Traje de Mergulho</entityname.divingsuit>
-<entitydescription.divingsuit>Um traje de mergulho atmosférico capaz de suportar a pressão enorme sob a crosta do Europa.</entitydescription.divingsuit>
+<entitydescription.divingsuit>Um traje de mergulho atmosférico capaz de suportar a pressão enorme sob a crosta da Europa.</entitydescription.divingsuit>
 <entityname.underwaterscooter>Scooter Subaquática</entityname.underwaterscooter>
 <entitydescription.underwaterscooter>Um dispositivo de propulsão subaquático alimentado por baterias.</entitydescription.underwaterscooter>
 <entityname.antibleeding1>Bandagem</entityname.antibleeding1>
@@ -1054,7 +1054,7 @@
 <entityname.syringegun>Pistola de Seringa</entityname.syringegun>
 <entitydescription.syringegun>Dispara seringas que contêm remédios ou venenos.</entitydescription.syringegun>
 <entityname.revolverround>Bala de Revólver</entityname.revolverround>
-<entitydescription.revolverround>Calibre .38. Capaz de deter a pessoa...</entitydescription.revolverround>
+<entitydescription.revolverround>Calibre .38. Capaz de deter uma pessoa...</entitydescription.revolverround>
 <entityname.revolver>Revólver</entityname.revolver>
 <entitydescription.revolver>Calibre .38.</entitydescription.revolver>
 <entityname.stungrenade>Granada de Atordoamento</entityname.stungrenade>
@@ -1591,7 +1591,7 @@
 
 <!-- Submarine names & descriptions -->
 <submarine.name.humpback>Jubarte</submarine.name.humpback>
-<submarine.description.humpback>O WH4-L3 “Jubarte”, uma ex-embarcação militar, foi criado para encarar boa parte dos perigos nas profundezas do Europa. Sua velocidade relativamente alta se contrapõe à pouca manobrabilidade. Como ainda depende de um modelo de reator antigo, a energia deve ser complementada por uma matriz de baterias reserva ou a tripulação não conseguirá usar todos os equipamentos novos.</submarine.description.humpback>
+<submarine.description.humpback>O WH4-L3 “Jubarte”, uma ex-embarcação militar, foi criado para encarar boa parte dos perigos nas profundezas da Europa. Sua velocidade relativamente alta se contrapõe à pouca manobrabilidade. Como ainda depende de um modelo de reator antigo, a energia deve ser complementada por uma matriz de baterias reserva ou a tripulação não conseguirá usar todos os equipamentos novos.</submarine.description.humpback>
 <submarine.name.bunyip>Bunyip</submarine.name.bunyip>
 <submarine.description.bunyip>Bunyip, o modelo mais recente da linha de transportes pessoais, é capaz de levar tripulações entre submarinos e instalações. O raio de operação dele é bem menor do que as embarcações mais avançadas, e o fato de não possuir armas a bordo o torna vulnerável a ataques.</submarine.description.bunyip>
 <submarine.name.muikku>Muikku</submarine.name.muikku>
@@ -1643,7 +1643,7 @@
 <fabricatorrequireditems>Itens necessários</fabricatorrequireditems>
 <fabricatorrequiredtime>Tempo necessário</fabricatorrequiredtime>
 <fabricatorrequiredcondition>Estado</fabricatorrequiredcondition>
-<fabricatorrequiredskills>Habilidades necessárias para calibrar</fabricatorrequiredskills>
+<fabricatorrequiredskills>Habilidades necessárias</fabricatorrequiredskills>
 <fabricatorcreate>Criar</fabricatorcreate>
 <fabricatorcancel>Cancelar</fabricatorcancel>
 <uilabel.input>Entrada</uilabel.input>
@@ -2267,7 +2267,7 @@
 <!-- Radio -->
 <engineer.radio.wakeup>Hora de acordar! Precisamos de energia!</engineer.radio.wakeup>
 <engineer.radio.equipment>O último impacto cortou a energia de metade do posto avançado. Quero que você pegue o que precisa para nos reconectar.</engineer.radio.equipment>
-<engineer.radio.reactorstable>Parece que estabilizamos. Umas caixas de passagem está com os fusíveis queimados e as bombas não estão funcionando. Vá ver o que pode fazer a respeito. Lembre-se de mudar o reator para automático antes de ir.</engineer.radio.reactorstable>
+<engineer.radio.reactorstable>Parece que estabilizamos. Umas caixas de passagem estão com os fusíveis queimados e as bombas não estão funcionando. Vá ver o que pode fazer a respeito. Lembre-se de mudar o reator para automático antes de ir.</engineer.radio.reactorstable>
 <engineer.radio.faultywiring>Parece que estamos com problemas na fiação. Encontre alguns fios e faça um reparo rápido ou ficaremos sem energia.</engineer.radio.faultywiring>
 <engineer.radio.changeofplans>Mudança nos planos. Venha pro submarino. Precisamos dar o fora daqui.</engineer.radio.changeofplans>
 <engineer.radio.submarine>Parece que a sala de energia já viu dias melhores. Veja se consegue reconectá-la e então ligue o reator.</engineer.radio.submarine>
@@ -2281,7 +2281,7 @@
 <!-- Room 3 -->
 <engineer.reactor>Reator</engineer.reactor>
 <engineer.reactorobjective>Ligue o reator</engineer.reactorobjective>
-<engineer.reactortext>Reatores nucleares fornecem energia a submarinos e postos avançados. Eles precisam de combustível para gerar calor e de um tripulante para regular a potência.\n\nArraste uma vareta de combustível para o espaço de item no lado esquerdo. Múltiplas varetas de combustível geram mais calor, mas sob circunstâncias normais, uma é suficiente e mais do que uma pode gerar sobreaquecimento.\n\nComece definindo a taxa de fissão de forma que a agulha esteja no verde e então faça o mesmo para a potência da turbina. Os medidores das taxas de carga e potência ficam à direita. Tente manter a potência e a carga o mais próximas possível. Uma potência inferior à carga leva a cortes na energia, uma potência superior, à sobretensão e incêndios.\n\nRecomendamos ligar o controle automático ao fechar a interface. Ele responde a flutuações na carga da rede, mas é consideravelmente mais lento do que um operador humano.</engineer.reactortext>
+<engineer.reactortext>Reatores nucleares fornecem energia a submarinos e postos avançados. Eles precisam de combustível para gerar calor e de um tripulante para regular a potência.\n\nArraste uma vareta de combustível para o espaço de item no lado esquerdo. Múltiplas varetas de combustível geram mais calor, mas sob circunstâncias normais, uma é suficiente e mais do que uma pode gerar sobreaquecimento.\n\nComece definindo a taxa de fissão de forma que a agulha esteja no verde e então faça o mesmo para a potência da turbina. Os medidores das taxas de carga e potência ficam à direita. Tente manter a potência e a carga o mais próximas possível. Uma potência inferior à carga leva a cortes na energia, uma potência superior à sobretensão e incêndios.\n\nRecomendamos ligar o controle automático ao fechar a interface. Ele responde a flutuações na carga da rede, mas é consideravelmente mais lento do que um operador humano.</engineer.reactortext>
 
 <!-- Room 4 -->
 <engineer.repairjunctionbox>Manutenção</engineer.repairjunctionbox>
@@ -2299,7 +2299,7 @@
 <engineer.repairelectricalroomtext>Encontre a sala de energia do submarino e repare as caixas de passagem. Segurando uma chave de fenda, interaja com as caixas e então pressione o botão Reparar.</engineer.repairelectricalroomtext>
 <engineer.powerupreactor>Reator</engineer.powerupreactor>
 <engineer.powerupreactorobjective>Ligue o reator do submarino</engineer.powerupreactorobjective>
-<engineer.powerupreactortext>Reatores nucleares fornecem energia a submarinos e postos avançados. Eles precisam de combustível para gerar calor e de um tripulante para regular a potência.\n\nArraste uma vareta de combustível para o espaço de item no lado esquerdo. Múltiplas varetas de combustível geram mais calor, mas sob circunstâncias normais, uma é suficiente e mais do que uma pode gerar sobreaquecimento.\n\nComece definindo a taxa de fissão de forma que a agulha esteja no verde e então faça o mesmo para a potência da turbina. Os medidores das taxas de carga e potência ficam à direita. Tente manter a potência e a carga o mais próximas possível. Uma potência inferior à carga leva a cortes na energia, uma potência superior, à sobretensão e incêndios.\n\nRecomendamos ligar o controle automático ao fechar a interface. Ele responde a flutuações na carga da rede, mas é consideravelmente mais lento do que um operador humano.</engineer.powerupreactortext>
+<engineer.powerupreactortext>Reatores nucleares fornecem energia a submarinos e postos avançados. Eles precisam de combustível para gerar calor e de um tripulante para regular a potência.\n\nArraste uma vareta de combustível para o espaço de item no lado esquerdo. Múltiplas varetas de combustível geram mais calor, mas sob circunstâncias normais, uma é suficiente e mais do que uma pode gerar sobreaquecimento.\n\nComece definindo a taxa de fissão de forma que a agulha esteja no verde e então faça o mesmo para a potência da turbina. Os medidores das taxas de carga e potência ficam à direita. Tente manter a potência e a carga o mais próximas possível. Uma potência inferior à carga leva a cortes na energia, uma potência superior à sobretensão e incêndios.\n\nRecomendamos ligar o controle automático ao fechar a interface. Ele responde a flutuações na carga da rede, mas é consideravelmente mais lento do que um operador humano.</engineer.powerupreactortext>
 
 <!-- Security officer tutorial -->
 <!-- Radio -->
@@ -2406,15 +2406,15 @@
 <captain.commandengineer>Comandos, parte 4</captain.commandengineer>
 <captain.commandengineerobjective>Ordene que o engenheiro ligue o reator</captain.commandengineerobjective>
 <captain.commandengineertext>Para ordenar que alguém opere o reator, clique na interface de comandos e escolha Operar Reator e então Ligar. O personagem então cuidará do reator.</captain.commandengineertext>
-<captain.undock>Desacoplar</captain.undock>
-<captain.undockobjective>Desacople da estação</captain.undockobjective>
-<captain.undocktext>Para começar a viagem, é preciso desacoplar o submarino do posto avançado. Para fazer isso, acesse o console de navegação e pressione o botão Alternar Acoplagem.</captain.undocktext>
+<captain.undock>Desatracar</captain.undock>
+<captain.undockobjective>Desatraque da estação</captain.undockobjective>
+<captain.undocktext>Para começar a viagem, é preciso desatracar o submarino do posto avançado. Para fazer isso, acesse o console de navegação e pressione o botão Alternar Acoplagem.</captain.undocktext>
 <captain.navigate>Navegação</captain.navigate>
 <captain.navigateobjective>Navegue até o destino</captain.navigateobjective>
 <captain.navigatetext>Clique na tela do sonar para traçar o rumo do submarino. O terminal de navegação ajustará o lastro e a potência do motor automaticamente.\n\nPara ver a direção em que o submarino está indo, ligue o sonar ativo. Acesse as configurações de sonar próximas à tela e alterne de passivo para ativo.\n\nAcelere com cuidado. Quanto mais rápido submarinos se movem, mais difícil é desacelerar. Colidir com paredes de caverna causa vazamentos e danos no casco. Nesse tutorial, o submarino está protegido contra rupturas no casco.</captain.navigatetext>
-<captain.dock>Acoplar</captain.dock>
-<captain.dockobjective>Acople ao posto avançado do destino</captain.dockobjective>
-<captain.docktext>Para acoplar o submarino, alinhe as portas de acoplagem da embarcação e do posto avançado e alterne os ganchos de acoplagem. Portas são exibidas em verde na tela do sonar.\n\nQuando as portas estiverem próximas, a tela do sonar exibirá uma linha verde. Use-a a seu favor. Quando a linha estiver totalmente verde, pressione Alternar Acoplagem para fechar os ganchos. O submarino então estará na posição fixa e a escotilha de acoplagem estará aberta enquanto os ganchos de acoplagem estiverem acoplados.\n\nAo posicionar o submarino para a acoplagem, lembre-se que movimentos extremos podem facilmente fazer você errar o alvo. Mova-se lentamente e com cuidado para evitar colidir com o posto avançado. Usar o piloto automático e Manter posição é útil ao definir a posição final do submarino.</captain.docktext>
+<captain.dock>Atracar</captain.dock>
+<captain.dockobjective>Atraque ao posto avançado do destino</captain.dockobjective>
+<captain.docktext>Para atracar o submarino, alinhe as portas de acoplagem da embarcação e do posto avançado e alterne os ganchos de acoplagem. Portas são exibidas em verde na tela do sonar.\n\nQuando as portas estiverem próximas, a tela do sonar exibirá uma linha verde. Use-a a seu favor. Quando a linha estiver totalmente verde, pressione Alternar Acoplagem para fechar os ganchos. O submarino então estará na posição fixa e a escotilha de acoplagem estará aberta enquanto os ganchos de acoplagem estiverem acoplados.\n\nAo posicionar o submarino para atracar, lembre-se que movimentos extremos podem facilmente fazer você errar o alvo. Mova-se lentamente e com cuidado para evitar colidir com o posto avançado. Usar o piloto automático e Manter posição é útil ao definir a posição final do submarino.</captain.docktext>
 
 <!-- Karma system -->
 <karma>Carma</karma>
@@ -2444,58 +2444,139 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!-- New additions -->
+<creditsbutton>Créditos</creditsbutton>
+<orderoptions.operatereactor>Ligar, Desligar</orderoptions.operatereactor>
+<orderoptions.operateweapons>Disparar, Cessar fogo</orderoptions.operateweapons>
+<orderoptions.steer>Manter posição, Navegar de volta, Navegar até o destino</orderoptions.steer>
+<orderoptions.chargebatteries>Carregar, Parar de carregar</orderoptions.chargebatteries>
+<orderoptions.pumpwater>Bombear, Parar de bombear</orderoptions.pumpwater>
+<orderoptions.repairsystems>Reparar: específico à profissão, Reparar: tudo</orderoptions.repairsystems>
 
+<ordername.dismissed>Dispensado</ordername.dismissed>
+<ordername.follow>Seguir</ordername.follow>
+<ordername.wait>Esperar</ordername.wait>
+<ordername.operatereactor>Operar Reator</ordername.operatereactor>
+<ordername.operateweapons>Operar Armas</ordername.operateweapons>
+<ordername.steer>Conduzir</ordername.steer>
+<ordername.fixleaks>Corrigir Vazamentos</ordername.fixleaks>
+<ordername.extinguishfires>Apagar Incêndios</ordername.extinguishfires>
+<ordername.fightintruders>Enfrentar Intrusos</ordername.fightintruders>
+<ordername.chargebatteries>Carregar Baterias</ordername.chargebatteries>
+<ordername.pumpwater>Operar Bombas</ordername.pumpwater>
+<ordername.rescue>Curar e Resgatar</ordername.rescue>
+<ordername.repairsystems>Reparar Sistemas Danificados</ordername.repairsystems>
+<ordername.reportfire>Relatar Incêndio</ordername.reportfire>
+<ordername.reportbreach>Relatar Ruptura no Casco</ordername.reportbreach>
+<ordername.reportintruders>Relatar Intrusos</ordername.reportintruders>
+<ordername.reportbrokendevices>Relatar Dispositivos Quebrados</ordername.reportbrokendevices>
+<ordername.requestfirstaid>Solicitar Primeiros Socorros</ordername.requestfirstaid>
 
+<pauseonfocuslost>Pausar em segundo plano</pauseonfocuslost>
+<pauseonfocuslosttooltip>Pausa o jogo quando ele não está em primeiro plano. Observação: o jogo não será pausado se uma sessão multijogador estiver ativa.</pauseonfocuslosttooltip>
 
+<mutedbyserver>Você foi silenciado pelo servidor.</mutedbyserver>
+<unmutedbyserver>Você não está mais silenciado pelo servidor.</unmutedbyserver>
 
+<orderdialog.fightintruders>[name], eliminou todos os intrusos!</orderdialog.fightintruders>
+<orderdialog.fightintruders>[name], defendeu a tripulação!</orderdialog.fightintruders>
+<orderdialogself.fightintruders>Cuidando dos intrusos!</orderdialogself.fightintruders>
+<orderdialogself.fightintruders>Enfrentando o inimigo!</orderdialogself.fightintruders>
 
+<dialogcannotrepair>Não consigo reparar: [itemname]!</dialogcannotrepair>
+<dialogenemydown>Inimigo eliminado!</dialogenemydown>
+<dialogenemydown>Mais um eliminado.</dialogenemydown>
 
+<dialognorepairtargets>Não há nada para reparar.</dialognorepairtargets>
+<dialognorepairtargets>Como assim? Tudo está funcionando como deveria.</dialognorepairtargets>
+<dialognopumps>As bombas estão bem, não?</dialognopumps>
+<dialognopumps>No momento, nenhuma das bombas precisa de atenção.</dialognopumps>
+<dialognoenemies>Não estou vendo nenhum intruso a bordo.</dialognoenemies>
+<dialognoenemies>Inimigos? Onde?</dialognoenemies>
+<dialognoleaks>Não consigo encontrar vazamentos.</dialognoleaks>
+<dialognoleaks>Que vazamento?</dialognoleaks>
 
+<bugreportgithubform>Formulário de problemas GitHub</bugreportgithubform>
+<bugreportfeedbackform>Formulário de feedback Barotrauma</bugreportfeedbackform>
+<bugreportbutton>Denunciar erro</bugreportbutton>
 
+<voipcapturedevicenotfound>Não foi possível iniciar a captura de voz. Não encontramos um dispositivo de captura adequado.</voipcapturedevicenotfound>
 
+<fabricatorinsufficientskills>Habilidades para criação insuficientes</fabricatorinsufficientskills>
+<fabricatorsufficientskills>Habilidades para criação suficientes</fabricatorsufficientskills>
 
+<dialogfoundwoundedtarget>Aplicando primeiros socorros em [targetname]: [roomname]!</dialogfoundwoundedtarget>
+<dialogfoundwoundedtarget>Tratando [targetname]: [roomname]!</dialogfoundwoundedtarget>
 
+<skillname.initiative>Iniciativa</skillname.initiative>
+<skillname.courage>Coragem</skillname.courage>
 
+<entityname.equalscomponent>Componente de Igualdade</entityname.equalscomponent>
+<entitydescription.equalscomponent>Indica quando ambas as entradas recebem o mesmo sinal.</entitydescription.equalscomponent>
+<entityname.greatercomponent>Componente de Maior Que</entityname.greatercomponent>
+<entitydescription.greatercomponent>Indica se a entrada sinal_entr1 é maior que a entrada sinal_entr2.</entitydescription.greatercomponent>
+<entityname.colorcomponent>Componente de Cor</entityname.colorcomponent>
+<entitydescription.colorcomponent>Gera um sinal de cor combinada para controle de luz.</entitydescription.colorcomponent>
+<entityname.subtractcomponent>Componente de Subtração</entityname.subtractcomponent>
+<entitydescription.subtractcomponent>Gera a saída do valor subtraído dos sinais recebidos.</entitydescription.subtractcomponent>
+<entityname.multiplycomponent>Componente de Multiplicação</entityname.multiplycomponent>
+<entitydescription.multiplycomponent>Gera a saída do produto dos sinais recebidos.</entitydescription.multiplycomponent>
+<entityname.dividecomponent>Componente de Divisão</entityname.dividecomponent>
+<entitydescription.dividecomponent>Gera a saída do valor dividido dos sinais recebidos.</entitydescription.dividecomponent>
+<entityname.xorcomponent>Componente de Xor</entityname.xorcomponent>
+<entitydescription.xorcomponent>Indica se qualquer uma das entradas, mas não ambas, receber um sinal.</entitydescription.xorcomponent>
+<entityname.memorycomponent>Componente de Memória</entityname.memorycomponent>
+<entitydescription.memorycomponent>Gera a saída de um valor salvo que pode ser atualizado por outras fontes. Use a conexão sinal_entr para definir o valor salvo e a entrada sinal_loja para alternar se os sinais recebidos devem ser salvos.</entitydescription.memorycomponent>
+<entityname.oxygentank>Tanque de Oxigênio</entityname.oxygentank>
+<entitydescription.oxygentank>Contêiner portátil de oxigênio.</entitydescription.oxygentank>
+<entityname.cyanideantidote>Antídoto de Cianureto</entityname.cyanideantidote>
+<entitydescription.cyanideantidote>Um antídoto para um grave envenenamento por cianureto.</entitydescription.cyanideantidote>
+<entityname.sufforinantidote>Antídoto de Sofrina</entityname.sufforinantidote>
+<entitydescription.sufforinantidote>Um antídoto para um grave envenenamento por sofrina.</entitydescription.sufforinantidote>
+<entityname.deliriumineantidote>Antídoto de Deliriumina</entityname.deliriumineantidote>
+<entitydescription.deliriumineantidote>Um antídoto para um grave envenenamento por deliriumina.</entitydescription.deliriumineantidote>
+<entityname.antirad>Antirrad</entityname.antirad>
+<entitydescription.antirad>Desacelera a degradação celular causada pela radiação.</entitydescription.antirad>
 
+<search>Procurar</search>
+<electricalrepairsheader>Reparos Elétricos</electricalrepairsheader>
+<mechanicalrepairsheader>Reparos Mecânicos</mechanicalrepairsheader>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<connection.power>energia</connection.power>
+<connection.powerin>energia_entr</connection.powerin>
+<connection.powerout>energia_saída</connection.powerout>
+<connection.setstate>definir_estado</connection.setstate>
+<connection.togglestate>alternar_estado</connection.togglestate>
+<connection.setpumpingspeed>definir_velocidade</connection.setpumpingspeed>
+<connection.settargetwaterlevel>definir_nívelalvo</connection.settargetwaterlevel>
+<connection.signalin>sinal_entr</connection.signalin>
+<connection.signalout>sinal_saída</connection.signalout>
+<connection.signalinx>sinal_entr_[num]</connection.signalinx>
+<connection.signaloutx>sinal_entr_[num]</connection.signaloutx>
+<connection.turretaimingin>posição_entr</connection.turretaimingin>
+<connection.turrettriggerin>gatilho_entr</connection.turrettriggerin>
+<connection.togglelight>alternar_luz</connection.togglelight>
+<connection.setcolor>definir_cor</connection.setcolor>
+<connection.shutdown>desligar</connection.shutdown>
+<connection.temperatureout>temperatura_saída</connection.temperatureout>
+<connection.meltdownwarning>fusão_aviso</connection.meltdownwarning>
+<connection.signalr>sinal_verm</connection.signalr>
+<connection.signalg>sinal_verd</connection.signalg>
+<connection.signalb>sinal_azul</connection.signalb>
+<connection.signala>sinal_amar</connection.signala>
+<connection.setoutput>definir_saída</connection.setoutput>
+<connection.signalstore>sinal_loja</connection.signalstore>
+<connection.settargetsignal>definir_sinalalvo</connection.settargetsignal>
+<connection.setfrequency>definir_frequência</connection.setfrequency>
+<connection.setoutputtype>definir_tiposaída</connection.setoutputtype>
+<connection.controlin>controle_entr</connection.controlin>
+<connection.setforce>definir_potência</connection.setforce>
+<connection.sonartransducerin>transdutor_entr</connection.sonartransducerin>
+<connection.steeringvelocityin>velocidade_entr</connection.steeringvelocityin>
+<connection.velocityxout>velocidade_x_saída</connection.velocityxout>
+<connection.velocityyout>velocidade_y_saída</connection.velocityyout>
+<connection.toggledocking>alternar_acoplagem</connection.toggledocking>
+<connection.waterdatain>água_dados_entr</connection.waterdatain>
+<connection.oxygendatain>água_dados_entr</connection.oxygendatain>
 
 </infotexts>

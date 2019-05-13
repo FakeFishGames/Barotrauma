@@ -96,7 +96,7 @@ namespace Barotrauma
 
         //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.
         //(allows changing names while keeping backwards compatibility with older sub files)
-        public string[] Aliases
+        public HashSet<string> Aliases
         {
             get;
             protected set;
@@ -115,6 +115,7 @@ namespace Barotrauma
                 Linkable = true
             };
             ep.AllowedLinks.Add("hull");
+            ep.Aliases = new HashSet<string> { "hull" };
             List.Add(ep);
 
             ep = new MapEntityPrefab
@@ -127,6 +128,7 @@ namespace Barotrauma
                 ResizeVertical = true
             };
             List.Add(ep);
+            ep.Aliases = new HashSet<string> { "gap" };
 
             ep = new MapEntityPrefab
             {
@@ -136,6 +138,7 @@ namespace Barotrauma
                 constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
             };
             List.Add(ep);
+            ep.Aliases = new HashSet<string> { "waypoint" };
 
             ep = new MapEntityPrefab
             {
@@ -145,6 +148,7 @@ namespace Barotrauma
                 constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
             };
             List.Add(ep);
+            ep.Aliases = new HashSet<string> { "spawnpoint" };
         }
 
         public MapEntityPrefab()

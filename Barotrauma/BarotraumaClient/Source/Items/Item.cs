@@ -1114,8 +1114,10 @@ namespace Barotrauma
 
             //----------------------------------------
 
-            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
-            if (itemPrefab == null) return null;
+            var itemPrefab = string.IsNullOrEmpty(itemIdentifier) ?
+                MapEntityPrefab.Find(itemName, null, showErrorMessages: false) as ItemPrefab :
+                MapEntityPrefab.Find(itemName, itemIdentifier, showErrorMessages: false) as ItemPrefab;
+            if (itemPrefab == null) { return null; }
 
             Inventory inventory = null;
 

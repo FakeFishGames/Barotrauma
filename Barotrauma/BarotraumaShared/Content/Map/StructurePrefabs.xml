@@ -707,15 +707,15 @@
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="1,593,269,160" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p2>
-  <TailFinF1 name="Tail Fin F1" identifier="tailfinf1" description="Submarine tail" scale="1.5" body="true" bodywidth="260" bodyheight="60" bodyrotation="40" bodyoffset="-75,0" castshadow="false">
+  <TailFinF1 name="Tail Fin F1" identifier="tailfinf1" description="Submarine tail" scale="1.5" body="false" bodywidth="260" bodyheight="60" bodyrotation="40" bodyoffset="-75,0" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="375,1,541,216" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF1>
-  <TailFinF2 name="Tail Fin F2" identifier="tailfinf2" description="Submarine tail" scale="1.5" body="true" bodywidth="150" bodyheight="120" bodyrotation="-20" bodyoffset="-5,10" castshadow="false">
+  <TailFinF2 name="Tail Fin F2" identifier="tailfinf2" description="Submarine tail" scale="1.5" body="false" bodywidth="150" bodyheight="120" bodyrotation="-20" bodyoffset="-5,10" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="378,456,229,124" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF2>
-  <TailFinF3 name="Tail Fin F3" identifier="tailfinf3" description="Submarine tail" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="40" bodyoffset="0,0" castshadow="false">
+  <TailFinF3 name="Tail Fin F3" identifier="tailfinf3" description="Submarine tail" scale="1.5" body="false" bodywidth="200" bodyheight="60" bodyrotation="40" bodyoffset="0,0" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="355,608,326,174" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF3>
