@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -217,11 +218,12 @@ namespace Barotrauma
             }
             sp.Category = category;
 
-            string aliases = element.GetAttributeString("aliases", "");
-            if (!string.IsNullOrWhiteSpace(aliases))
-            {
-                sp.Aliases = aliases.Split(',');
-            }
+            sp.Aliases = 
+                (element.GetAttributeStringArray("aliases", null) ?? 
+                element.GetAttributeStringArray("Aliases", new string[0])).ToHashSet();
+
+            string nonTranslatedName = element.GetAttributeString("name", null) ?? element.Name.ToString();
+            sp.Aliases.Add(nonTranslatedName.ToLowerInvariant());
 
             SerializableProperty.DeserializeProperties(sp, element);
             if (sp.Body)
