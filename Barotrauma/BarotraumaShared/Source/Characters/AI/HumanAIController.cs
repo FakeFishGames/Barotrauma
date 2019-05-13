@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -126,6 +125,10 @@ namespace Barotrauma
             }
             else
             {
+                if (Character.CurrentHull != null)
+                {
+                    VisibleHulls.ForEach(h => PropagateHullSafety(Character.Controlled, h));
+                }
                 if (Character.SpeechImpediment < 100.0f)
                 {
                     ReportProblems();
@@ -274,11 +277,6 @@ namespace Barotrauma
             else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
             {
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
-            }
-
-            if (Character.CurrentHull != null)
-            {
-                Character.GetVisibleHulls().ForEach(h => PropagateHullSafety(Character.Controlled, h));
             }
         }
 
