@@ -746,42 +746,40 @@ namespace Barotrauma
             if (order != null && order.TargetAllCharacters)
             {
                 if (orderGiver == null || orderGiver.CurrentHull == null) { return; }
-                foreach (var hull in orderGiver.GetVisibleHulls())
+                var hull = orderGiver.CurrentHull;
+                AddOrder(new Order(order.Prefab, hull, null), order.Prefab.FadeOutTime);
+                if (IsSinglePlayer)
                 {
-                    if (hull == null) { return; }
-                    AddOrder(new Order(order.Prefab, hull, null), order.Prefab.FadeOutTime);
-                    if (IsSinglePlayer)
+                    orderGiver.Speak(
+                        order.GetChatMessage("", hull.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
+                }
+                else
+                {
+                    OrderChatMessage msg = new OrderChatMessage(order, "", hull, null, orderGiver);
+                    if (GameMain.Client != null)
                     {
-                        orderGiver.Speak(
-                            order.GetChatMessage("", hull.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
-                    }
-                    else
-                    {
-                        OrderChatMessage msg = new OrderChatMessage(order, "", hull, null, orderGiver);
-                        if (GameMain.Client != null)
-                        {
-                            GameMain.Client.SendChatMessage(msg);
-                        }
+                        GameMain.Client.SendChatMessage(msg);
                     }
                 }
-                return;
             }
-
-            character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
-            if (IsSinglePlayer)
+            else
             {
-                orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
-            }
-            else if (orderGiver != null)
-            {
-                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
-                if (GameMain.Client != null)
+                character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
+                if (IsSinglePlayer)
                 {
-                    GameMain.Client.SendChatMessage(msg);
+                    orderGiver?.Speak(
+                        order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
                 }
+                else if (orderGiver != null)
+                {
+                    OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
+                    if (GameMain.Client != null)
+                    {
+                        GameMain.Client.SendChatMessage(msg);
+                    }
+                }
+                DisplayCharacterOrder(character, order);
             }
-            DisplayCharacterOrder(character, order);
         }
 
         /// <summary>

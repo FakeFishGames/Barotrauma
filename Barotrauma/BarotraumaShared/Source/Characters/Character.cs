@@ -2656,8 +2656,8 @@ namespace Barotrauma
 
         public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
 
-        private List<Hull> visibleHulls = new List<Hull>();
-        private HashSet<Hull> tempList = new HashSet<Hull>();
+        private readonly List<Hull> visibleHulls = new List<Hull>();
+        private readonly HashSet<Hull> tempList = new HashSet<Hull>();
         /// <summary>
         /// Returns hulls that are visible to the player, including the current hull.
         /// Can be heavy if used every frame.
