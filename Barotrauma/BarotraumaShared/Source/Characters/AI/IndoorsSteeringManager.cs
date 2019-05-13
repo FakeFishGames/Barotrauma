@@ -53,12 +53,13 @@ namespace Barotrauma
             (currentPath.NextNode != null && currentPath.NextNode.Ladders != null));
 
         /// <summary>
-        /// Returns true if the current or the next node is in stairs.
+        /// Returns true if the previous, current or the next node is in stairs.
         /// </summary>
         public bool InStairs =>
-            currentPath != null &&
-            currentPath.CurrentNode != null && (currentPath.CurrentNode.Stairs != null ||
-            (currentPath.NextNode != null && currentPath.NextNode.Stairs != null));
+            currentPath != null && (
+            currentPath.PrevNode != null && currentPath.PrevNode.Stairs != null ||
+            currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null ||
+            currentPath.NextNode != null && currentPath.NextNode.Stairs != null);
 
         public bool IsNextNodeLadder
         {
