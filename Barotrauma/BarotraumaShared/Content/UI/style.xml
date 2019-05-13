@@ -50,6 +50,7 @@
   <VideoTitle file="Content/Fonts/BebasNeue-Regular.otf" size="28">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
+    <override language="Russian" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="false"/>
     <Size maxresolution="1024,768" size="20"/>
     <Size maxresolution="1280,800" size="25"/>
     <Size maxresolution="1920,1080" size="28"/>
@@ -70,6 +71,7 @@
   <ObjectiveName file="Content/Fonts/BebasNeue-Regular.otf" size="22">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Bold.otf" dynamicloading="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="true"/>
+    <override language="Russian" file="Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf" dynamicloading="false"/>
     <Size maxresolution="1024,768" size="15"/>
     <Size maxresolution="1280,800" size="16"/>
     <Size maxresolution="1920,1080" size="22"/>
