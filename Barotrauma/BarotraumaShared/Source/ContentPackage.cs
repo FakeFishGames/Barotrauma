@@ -491,6 +491,11 @@ namespace Barotrauma
         public ContentFile(string path, ContentType type, Workshop.Item workShopItem = null)
         {
             Path = path;
+
+#if OSX
+            Path = Path.Replace("\\", "/");
+#endif
+
             Type = type;
             WorkShopItem = workShopItem;
         }
