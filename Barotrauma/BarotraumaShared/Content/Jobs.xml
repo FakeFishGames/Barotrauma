@@ -30,7 +30,7 @@
       <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="0.5"/>
+      <Order aitag="extinguishfires" prioritymodifier ="1"/>
       <Order aitag="steer" option="maintainposition" prioritymodifier="0.5"/>
     </AutonomousObjectives>
   </Job>
