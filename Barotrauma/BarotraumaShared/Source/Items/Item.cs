@@ -495,7 +495,6 @@ namespace Barotrauma
         {
             spriteColor = prefab.SpriteColor;
 
-            linkedTo            = new ObservableCollection<MapEntity>();
             components          = new List<ItemComponent>();
             drawableComponents  = new List<IDrawableComponent>();
             tags                = new HashSet<string>();

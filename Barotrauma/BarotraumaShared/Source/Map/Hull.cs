@@ -53,8 +53,8 @@ namespace Barotrauma
 
         private float[] leftDelta;
         private float[] rightDelta;
-                
-        public List<Gap> ConnectedGaps;
+
+        public readonly List<Gap> ConnectedGaps = new List<Gap>();
 
         public override string Name
         {
@@ -217,9 +217,6 @@ namespace Barotrauma
             OxygenPercentage = 100.0f;
 
             FireSources = new List<FireSource>();
-            linkedTo = new System.Collections.ObjectModel.ObservableCollection<MapEntity>();
-
-            
 
             properties = SerializableProperty.GetProperties(this);
 
@@ -235,8 +232,6 @@ namespace Barotrauma
             aiTarget = new AITarget(this);
 
             hullList.Add(this);
-
-            ConnectedGaps = new List<Gap>();
 
             if (submarine == null || !submarine.Loading)
             {
@@ -586,7 +581,7 @@ namespace Barotrauma
             FireSources.Remove(fire);
         }
 
-        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
+        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth = null)
         {
             return GetAdjacentHulls(new HashSet<Hull>(), 0, searchDepth);
         }
