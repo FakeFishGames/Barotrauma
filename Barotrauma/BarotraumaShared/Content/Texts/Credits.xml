@@ -85,7 +85,7 @@
   <Text font="Font" color="150,150,150,255">Gramstaal    -    hubismal    -    Irontaco</Text>
   <Text font="Font" color="150,150,150,255">JJRcop    -    Just James    -    Landon Strik</Text>
   <Text font="Font" color="150,150,150,255">Mark Jarjour    -    Nathan "MR. NAIL BRAIN" S.    -    Nilanth Animosus</Text>
-  <Text font="Font" color="150,150,150,255">Pugie    -    Rico6822    -    Robert Sloan</Text>
+  <Text font="Font" color="150,150,150,255">Pugie    -    Redeloper “rico6822”    -    Robert Sloan</Text>
   <Text font="Font" color="150,150,150,255">Samuel Hammersberg    -    Sebastian Broberg    -    shoter</Text>
   <Text font="Font" color="150,150,150,255">Sputnik    -    Trialtrex21    -    ursinewalrus</Text>
   <Text font="Font" color="150,150,150,255">Weebyxanide Vendor    -    Zealan</Text>
@@ -147,7 +147,9 @@
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Regalis would like to thank</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Exadv1 and everyone else who's worked on Space Station 13. Barotrauma would have never come to exist if it wasn't for SS13.</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">/v/ for coming up with the game concept called Pressure, and all the wonderful anons who took part in those early threads and play sessions back in the early years of Barotrauma/Subsurface.</Text>
-  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Celia for being so understanding when I've been busy with baro, and for listening to my work rants and helping me stay sane. The inventors of caffeine and nicotine for helping me get through this. Aku and everyone at FF for helping me take my hobby (and this particular hobby project) to the next level.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Celia for being so understanding when I've been busy with baro, and for listening to my work rants and helping me stay sane. The inventors of caffeine and nicotine for helping me get through this. Aku and everyone at FF for helping me take my hobby (and this particular hobby project) to the next level.</Text> 
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Everyone in the Barotrauma community! During the early years of the project I often looked at the barely playable game that wasn't very fun to play and thought about the huge amount of work ahead. Knowing there were people out there already having fun with those bare-bones pre-pre-alpha versions, waiting for the eventual full release has really helped me keep going.</Text>
+ 
   <spacing relativeheight="0.05"/>
   
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Ez is particularly thankful to</Text>
