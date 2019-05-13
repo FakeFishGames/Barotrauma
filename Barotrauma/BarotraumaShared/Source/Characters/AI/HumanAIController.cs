@@ -248,7 +248,7 @@ namespace Barotrauma
 
             if (Character.CurrentHull != null)
             {
-                PropagateHullSafety(Character, Character.CurrentHull);
+                Character.GetVisibleHulls().ForEach(h => PropagateHullSafety(Character.Controlled, h));
             }
         }
 
