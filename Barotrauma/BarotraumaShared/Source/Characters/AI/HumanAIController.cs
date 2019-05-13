@@ -503,8 +503,10 @@ namespace Barotrauma
 
         public static void DoForEachCrewMember(Character character, Action<HumanAIController> action)
         {
+            if (character == null) { return; }
             foreach (var c in Character.CharacterList)
             {
+                if (c == null || c.IsDead || c.Removed) { continue; }
                 if (c.AIController is HumanAIController humanAi && humanAi.IsFriendly(character))
                 {
                     action(humanAi);
