@@ -131,7 +131,12 @@ namespace Barotrauma.Networking
             float dist = Vector2.Distance(listener.WorldPosition, sender.WorldPosition);
             if (dist > range) { return 1.0f; }
 
-            if (Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
+            Hull listenerHull = listener == null ? null : Hull.FindHull(listener.WorldPosition);
+            Hull sourceHull = sender == null ? null : Hull.FindHull(sender.WorldPosition);
+            if (sourceHull != listenerHull)
+            {
+                if (Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
+            }
             if (dist > range) { return 1.0f; }
 
             return dist / range;
