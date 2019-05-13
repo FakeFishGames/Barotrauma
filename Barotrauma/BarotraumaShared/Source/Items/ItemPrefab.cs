@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -478,7 +477,7 @@ namespace Barotrauma
             DeconstructTime     = 1.0f;
 
             Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
-            if (Tags.None())
+            if (!Tags.Any())
             {
                 Tags = new HashSet<string>(element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true));
             }
