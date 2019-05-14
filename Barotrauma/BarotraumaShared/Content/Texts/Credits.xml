@@ -58,15 +58,112 @@
 
   <!-- ******************************************************* -->
 
-  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">Publishing</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" scale="1.3">DAEDALIC ENTERTAINMENT</Text>
 
   <spacing relativeheight="0.05"/>
 
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
-  <Text font="Font" color="150,150,150,255">todo         todo         todo</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255">CEO</Text>
+  <Text font="Font" color="150,150,150,255">Carsten Fichtelmann</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">COO</Text>
+  <Text font="Font" color="150,150,150,255">Stephan Harms</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Creative Director</Text>
+  <Text font="Font" color="150,150,150,255">Jan Müller-Michaelis</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Technical Director</Text>
+  <Text font="Font" color="150,150,150,255">Nick Prühs</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Head of Production</Text>
+  <Text font="Font" color="150,150,150,255">Kai Fiebig</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Head of Communications</Text>
+  <Text font="Font" color="150,150,150,255">Sandra Hübner</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Marketing</Text>
+  <Text font="Font" color="150,150,150,255">Marie Müller</Text>
+  <Text font="Font" color="150,150,150,255">Mounir Aouina</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Community Management</Text>
+  <Text font="Font" color="150,150,150,255">Lisa Mallory</Text>
+  <Text font="Font" color="150,150,150,255">Steffen Slacki</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Sales and Product Management</Text>
+  <Text font="Font" color="150,150,150,255">Matthias Zorn</Text>
+  <Text font="Font" color="150,150,150,255">Stefan Hiller</Text>
+  <Text font="Font" color="150,150,150,255">Justus Jeromin</Text>
+  <Text font="Font" color="150,150,150,255">Maximilian Bernardi</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Business Development</Text>
+  <Text font="Font" color="150,150,150,255">Jonas Hüsges</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Lead Motion Designer</Text>
+  <Text font="Font" color="150,150,150,255">Alexander Junghans</Text>
+
+  <spacing relativeheight="0.05"/>
+  
+  <Text font="VideoTitleFont" color="255,255,255,255">Support</Text>
+  <Text font="Font" color="150,150,150,255">Maria Lesk</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255">Human Resources</Text>
+  <Text font="Font" color="150,150,150,255">Iris Wolfer</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255">Accounting</Text>
+  <Text font="Font" color="150,150,150,255">Nils Ball</Text>
+  <Text font="Font" color="150,150,150,255">Jessica Paulat</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255">IT Administration</Text>
+  <Text font="Font" color="150,150,150,255">Nils-Peter Brodersen</Text>
+  <Text font="Font" color="150,150,150,255">Filipe Alves</Text>
+
+  <Text font="VideoTitleFont" color="255,255,255,255">Localization</Text>
+  <Text font="Font" color="150,150,150,255">Maria Lesk</Text>
+  <Text font="Font" color="150,150,150,255">Benjamin Kuhn</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255">Mastering</Text>
+  <Text font="Font" color="150,150,150,255">Eduard Wolf</Text>
+  <Text font="Font" color="150,150,150,255">Robert Zillmer</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255">Head of QA</Text>
+  <Text font="Font" color="150,150,150,255">Maik Hildebrandt</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255">Quality Assurance</Text>
+  <Text font="Font" color="150,150,150,255">Sven Sauerhammer</Text>
+  <Text font="Font" color="150,150,150,255">Gunnar Götzfried</Text>
+  <Text font="Font" color="150,150,150,255">Saide Haberstroh</Text>
+  <Text font="Font" color="150,150,150,255">Sven Eimuth</Text>
 
   <spacing relativeheight="0.2"/>
   
