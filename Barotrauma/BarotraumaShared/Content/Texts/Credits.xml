@@ -142,6 +142,8 @@
   <Text font="Font" color="150,150,150,255">Nils-Peter Brodersen</Text>
   <Text font="Font" color="150,150,150,255">Filipe Alves</Text>
 
+  <spacing relativeheight="0.05"/>
+
   <Text font="VideoTitleFont" color="255,255,255,255">Localization</Text>
   <Text font="Font" color="150,150,150,255">Maria Lesk</Text>
   <Text font="Font" color="150,150,150,255">Benjamin Kuhn</Text>
