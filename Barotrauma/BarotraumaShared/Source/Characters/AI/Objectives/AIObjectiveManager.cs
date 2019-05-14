@@ -74,8 +74,12 @@ namespace Barotrauma
                 var item = matchingItems.GetRandom();
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType));
                 if (order == null) { continue; }
-                AddObjective(CreateObjective(order, automaticOrder.option, character, automaticOrder.priorityModifier), delay: Rand.Value() / 2);
-                objectiveCount++;
+                var objective = CreateObjective(order, automaticOrder.option, character, automaticOrder.priorityModifier);
+                if (objective != null)
+                {
+                    AddObjective(objective, delay: Rand.Value() / 2);
+                    objectiveCount++;
+                }
             }
             WaitTimer = Math.Max(WaitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
