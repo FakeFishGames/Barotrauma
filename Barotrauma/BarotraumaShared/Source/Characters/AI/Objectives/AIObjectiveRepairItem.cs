@@ -158,7 +158,7 @@ namespace Barotrauma
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager);
                         if (repairTool != null)
                         {
-                            objective.CloseEnough = ConvertUnits.ToSimUnits(repairTool.Range) * 0.75f;
+                            objective.CloseEnough = repairTool.Range * 0.75f;
                         }
                         return objective;
                     },

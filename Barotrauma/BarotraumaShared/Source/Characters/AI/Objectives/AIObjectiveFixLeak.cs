@@ -106,32 +106,20 @@ namespace Barotrauma
             {
                 HumanAIController.AnimController.Crouching = true;
             }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach * 1.5f;
+            // Use a greater reach, because the distance is calculated from the character to the leak, not from the item to the leak.
+            float reach = repairTool.Range + ((HumanoidAnimController)character.AnimController).ArmLength;
+            bool canOperate = gapDiff.LengthSquared() < reach * reach;
             if (canOperate)
             {
                 TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
             }
             else
             {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
+                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
+                {
+                    CloseEnough = reach
+                });
             }
-        }
-
-        private Vector2 GetStandPosition()
-        {
-            Vector2 standPos = Leak.Position;
-            var hull = Leak.FlowTargetHull;
-            if (hull == null) { return standPos; }
-            if (Leak.IsHorizontal)
-            {
-                standPos += Vector2.UnitX * Math.Sign(hull.Position.X - Leak.Position.X) * Leak.Rect.Width;
-            }
-            else
-            {
-                standPos += Vector2.UnitY * Math.Sign(hull.Position.Y - Leak.Position.Y) * Leak.Rect.Height;
-            }
-            return standPos;            
         }
     }
 }

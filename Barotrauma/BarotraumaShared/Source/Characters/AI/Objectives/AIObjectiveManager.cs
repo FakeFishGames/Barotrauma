@@ -260,7 +260,7 @@ namespace Barotrauma
                 case "follow":
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = 1.5f,
+                        CloseEnough = 150,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
                         FollowControlledCharacter = orderGiver == character

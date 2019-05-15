@@ -348,8 +348,8 @@ namespace Barotrauma
             {
                 followTargetObjective.CloseEnough =
                     WeaponComponent is RangedWeapon ? 3 :
-                    WeaponComponent is MeleeWeapon mw ? ConvertUnits.ToSimUnits(mw.Range) :
-                    WeaponComponent is RepairTool rt ? ConvertUnits.ToSimUnits(rt.Range) : 0.5f;
+                    WeaponComponent is MeleeWeapon mw ? mw.Range :
+                    WeaponComponent is RepairTool rt ? rt.Range : 50;
             }
         }
 
