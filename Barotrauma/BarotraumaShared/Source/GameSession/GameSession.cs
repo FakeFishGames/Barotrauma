@@ -351,7 +351,7 @@ namespace Barotrauma
                 new XElement("Gamesession"));
 
             var now = DateTime.Now;
-            doc.Root.Add(new XAttribute("savetime", now.ToShortTimeString() + ", " + now.ToShortDateString()));
+            doc.Root.Add(new XAttribute("savetime", ToolBox.Epoch.NowLocal));
             doc.Root.Add(new XAttribute("submarine", Submarine == null ? "" : Submarine.Name));
             doc.Root.Add(new XAttribute("mapseed", Map.Seed));
 

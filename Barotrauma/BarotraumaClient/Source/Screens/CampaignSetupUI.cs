@@ -336,6 +336,12 @@ namespace Barotrauma
                     }
                     subName =  doc.Root.GetAttributeString("submarine", "");
                     saveTime = doc.Root.GetAttributeString("savetime", "");
+
+                    if (long.TryParse(saveTime, out long unixTime))
+                    {
+                        DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
+                        saveTime = time.ToString();
+                    }
                 }
                 else
                 {
