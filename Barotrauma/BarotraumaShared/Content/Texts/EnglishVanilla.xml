@@ -3196,4 +3196,7 @@
   <!-- CHANGED VALUES -->
   <missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits. </missiondescription.cargochemicals>
 
+  <!-- NEW VALUES -->
+  <privacypolicy>Privacy policy</privacypolicy>
+  
 </infotexts>

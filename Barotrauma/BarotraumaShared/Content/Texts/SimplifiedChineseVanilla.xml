@@ -2579,4 +2579,7 @@
 <connection.waterdatain>水接触信息输入</connection.waterdatain>
 <connection.oxygendatain>氧含量信息输入</connection.oxygendatain>
 
+<!-- NEW VALUES -->
+<privacypolicy>隐私政策</privacypolicy>  
+
 </infotexts>

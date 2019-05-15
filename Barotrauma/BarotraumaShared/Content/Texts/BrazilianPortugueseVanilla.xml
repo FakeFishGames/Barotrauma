@@ -2579,4 +2579,7 @@
 <connection.waterdatain>água_dados_entr</connection.waterdatain>
 <connection.oxygendatain>água_dados_entr</connection.oxygendatain>
 
+<!-- NEW VALUES -->
+<privacypolicy>Política de privacidade</privacypolicy>
+  
 </infotexts>

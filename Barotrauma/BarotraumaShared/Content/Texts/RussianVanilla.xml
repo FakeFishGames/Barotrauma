@@ -2579,4 +2579,7 @@
 <connection.waterdatain>данные_воды_вкл</connection.waterdatain>
 <connection.oxygendatain>данные_воздуха_вкл</connection.oxygendatain>
 
+<!-- NEW VALUES -->
+<privacypolicy>Политика конфиденциальности</privacypolicy>
+  
 </infotexts>
