@@ -192,7 +192,7 @@ namespace Barotrauma
                     Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
                     startPos = cam.WorldToScreen(startPos);
 
-                    string focusName = character.FocusedCharacter.SpeciesName;
+                    string focusName = character.FocusedCharacter.DisplayName;
                     if (character.FocusedCharacter.Info != null)
                     {
                         focusName = character.FocusedCharacter.Info.DisplayName;
@@ -363,7 +363,7 @@ namespace Barotrauma
             {
                 GUIComponent.DrawToolTip(
                     spriteBatch,
-                    character.Info?.Job == null ? character.Name : character.Name + " (" + character.Info.Job.Name + ")",
+                    character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
         }
