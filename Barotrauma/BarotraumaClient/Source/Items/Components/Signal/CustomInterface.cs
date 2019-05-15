@@ -119,11 +119,15 @@ namespace Barotrauma.Items.Components
             {
                 if (uiElements[i] is GUIButton button)
                 {
-                    button.Text = customInterfaceElementList[i].Label;
+                    button.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
+                        TextManager.Get("connection.signaloutx").Replace("[num]", (i + 1).ToString()) :
+                        customInterfaceElementList[i].Label;
                 }
                 else if (uiElements[i] is GUITickBox tickBox)
                 {
-                    tickBox.Text = customInterfaceElementList[i].Label;
+                    tickBox.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
+                        TextManager.Get("connection.signaloutx").Replace("[num]", (i + 1).ToString()) :
+                        customInterfaceElementList[i].Label;
                 }
             }
         }
