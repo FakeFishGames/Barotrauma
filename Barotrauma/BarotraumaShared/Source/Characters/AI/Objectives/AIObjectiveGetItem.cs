@@ -12,13 +12,15 @@ namespace Barotrauma
         public override string DebugTag => "get item";
 
         private readonly bool equip;
-        private readonly HashSet<Item> ignoredItems = new HashSet<Item>();
+        public HashSet<Item> ignoredItems = new HashSet<Item>();
 
         public Func<Item, float> GetItemPriority;
 
         //can be either tags or identifiers
         private string[] itemIdentifiers;
+        public IEnumerable<string> Identifiers => itemIdentifiers;
         private Item targetItem, moveToTarget;
+        public Item TargetItem => targetItem;
         private int currSearchIndex;
         public string[] ignoredContainerIdentifiers;
         private AIObjectiveGoTo goToObjective;
