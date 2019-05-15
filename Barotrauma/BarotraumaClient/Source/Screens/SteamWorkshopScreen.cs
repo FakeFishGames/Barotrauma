@@ -652,9 +652,14 @@ namespace Barotrauma
 
             var creatorHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform)) { IsHorizontal = true, Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), creatorHolder.RectTransform), TextManager.Get("WorkshopItemCreator") + ": " + EnsureUTF8(item.OwnerName), textAlignment: Alignment.BottomLeft, wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.0f), creatorHolder.RectTransform), 
+                TextManager.Get("WorkshopItemCreator"), textAlignment: Alignment.TopLeft, wrap: true);
 
-            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), creatorHolder.RectTransform, Anchor.BottomRight), TextManager.Get("WorkshopShowItemInSteam"), style: null)
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.0f), creatorHolder.RectTransform), 
+                EnsureUTF8(item.OwnerName), textAlignment: Alignment.TopRight, wrap: true);
+
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), creatorHolder.RectTransform, Anchor.BottomRight), TextManager.Get("WorkshopShowItemInSteam"), style: null)
             {
                 Color = new Color(38, 86, 38, 75),
                 HoverColor = new Color(85, 203, 99, 50),
@@ -698,7 +703,7 @@ namespace Barotrauma
             {
                 RelativeSpacing = 0.02f
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemScore") + ": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemScore"));
             int starCount = (int)Math.Round(item.Score * 5);
             for (int i = 0; i < 5; i++)
             {
@@ -712,7 +717,7 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("WorkshopItemTags")+": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("WorkshopItemTags"));
             if (!item.Tags.Any(t => !string.IsNullOrEmpty(t)))
             {
                 new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("None"));
@@ -726,15 +731,15 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), tagContainer.RectTransform, Anchor.Center), tag, style: "ListBoxElement");
             }
 
-            var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize") + ": ");
+            var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize"));
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item.Installed ? (long)item.Size : item.DownloadSize), textAlignment: Alignment.TopRight);
 
             //var dateContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), isHorizontal: true);
 
-            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate") +": ");
+            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate"));
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), creationDate.RectTransform, Anchor.CenterRight), item.Created.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
 
-            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate") + ": ");
+            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate"));
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item.Modified.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
         }
 
