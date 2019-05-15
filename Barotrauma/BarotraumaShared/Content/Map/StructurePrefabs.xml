@@ -649,7 +649,7 @@
   <TailFinD3p1 name="Tail Fin D3 p1" identifier="tailfind3p1" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1021,537,285,490" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p1>
-  <TailFinD3p2 name="Tail Fin D3 p2" identifier="tailfind3p2" description="Submarine tail temp" scale="0.5" resizehorizontal="true" body="false" castshadow="false">
+  <TailFinD3p2 name="Tail Fin D3 p2" identifier="tailfind3p2" description="Submarine tail temp" scale="0.5" resizehorizontal="false" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1300,535,228,494" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p2>
   <TailFinD3p3 name="Tail Fin D3 p3" identifier="tailfind3p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
@@ -723,11 +723,11 @@
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="692,419,269,169" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF4>
-  <TailFin name="Front F Chain A1" identifier="frontfchaina1" description="Submarine tail" scale="1" resizehorizontal="true" body="true" castshadow="false">
+  <TailFin name="Front F Chain A1" identifier="frontfchaina1" description="Submarine tail" scale="1" resizehorizontal="true" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,815,744,46" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="Front F Chain A2" identifier="frontfchaina2" description="Submarine tail" scale="1" resizehorizontal="true" body="true" castshadow="false">
+  <TailFin name="Front F Chain A2" identifier="frontfchaina2" description="Submarine tail" scale="1" resizehorizontal="true" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,869,745,24" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
