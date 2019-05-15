@@ -151,7 +151,18 @@ namespace Barotrauma
                 }
                 if (escapeVel != Vector2.Zero)
                 {
-                    character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                    float left = currentHull.Rect.X + 50;
+                    float right = currentHull.Rect.Right - 50;
+                    //only move if we haven't reached the edge of the room
+                    if (escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right)
+                    {
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                    }
+                    else
+                    {
+                        character.AnimController.TargetDir = escapeVel.X < 0.0f ? Direction.Right : Direction.Left;
+                        character.AIController.SteeringManager.Reset();
+                    }
                 }
                 else
                 {
