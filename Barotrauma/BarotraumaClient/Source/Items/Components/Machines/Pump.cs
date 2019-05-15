@@ -81,7 +81,7 @@ namespace Barotrauma.Items.Components
             var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), rightArea.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) },
                 "", textAlignment: Alignment.BottomLeft, wrap: true);
             string pumpSpeedStr = TextManager.Get("PumpSpeed");
-            pumpSpeedText.TextGetter = () => { return pumpSpeedStr + ": " + (int)flowPercentage + " %"; };
+            pumpSpeedText.TextGetter = () => { return TextManager.AddPunctuation(':', pumpSpeedStr, (int)flowPercentage + " %"); };
 
             var sliderArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), rightArea.RectTransform, Anchor.CenterLeft), isHorizontal: true)
             {

@@ -83,12 +83,12 @@ namespace Barotrauma
 
         private string GetItemCount()
         {
-            return TextManager.Get("Items") + ": " + Item.ItemList.Count;
+            return TextManager.AddPunctuation(':', TextManager.Get("Items"), Item.ItemList.Count.ToString());
         }
 
         private string GetStructureCount()
         {
-            return TextManager.Get("Structures") + ": " + (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
+            return TextManager.AddPunctuation(':', TextManager.Get("Structures"), (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count).ToString());
         }
 
         private string GetTotalHullVolume()
@@ -127,7 +127,7 @@ namespace Barotrauma
 
         private string GetPhysicsBodyCount()
         {
-            return TextManager.Get("PhysicsBodies") + ": " + GameMain.World.BodyList.Count;
+            return TextManager.AddPunctuation(':', TextManager.Get("PhysicsBodies"), GameMain.World.BodyList.Count.ToString());
         }
 
         public bool CharacterMode { get; private set; }
