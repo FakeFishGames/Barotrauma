@@ -824,7 +824,7 @@
 <missiondescription.cargovolatilecompoundn>Местный торговец оружием предлагает [reward] кред. За доставку двух ящиков взрывчатки его клиенту в точке «[location2]»</missiondescription.cargovolatilecompoundn>
 <missionsuccess.cargovolatilecompoundn>Вы успешно доставили взрывчатку.</missionsuccess.cargovolatilecompoundn>
 <missionname.cargochemicals>Доставка химикатов</missionname.cargochemicals>
-<missiondescription.cargochemicals>Исследователи из точки «[location1]» ищут того, кто сможет выполнить доставку опасных химикатов. Пункт назначения: «[location1]». Награда: 250 кред.</missiondescription.cargochemicals>
+<missiondescription.cargochemicals>Исследователи из точки «[location1]» ищут того, кто сможет выполнить доставку опасных химикатов. Пункт назначения: «[location1]». Награда: [reward] кред.</missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>Вы успешно доставили химикаты.</missionsuccess.cargochemicals>
 <missionname.cargohuskeggs>Биологическая угроза</missionname.cargohuskeggs>
 <missiondescription.cargohuskeggs>Местные исследователи предлагают [reward] кред. за доставку контейнера с яйцами трупного паразита. Пункт назначения: [location2].</missiondescription.cargohuskeggs>

@@ -824,7 +824,6 @@
   <missiondescription.cargovolatilecompoundn>A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2].</missiondescription.cargovolatilecompoundn>
   <missionsuccess.cargovolatilecompoundn>The explosives have been successfully delivered.</missionsuccess.cargovolatilecompoundn>
   <missionname.cargochemicals>Chemical shipment</missionname.cargochemicals>
-  <missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits. </missiondescription.cargochemicals>
   <missionsuccess.cargochemicals>The chemicals have been successfully delivered.</missionsuccess.cargochemicals>
   <missionname.cargohuskeggs>Biohazard</missionname.cargohuskeggs>
   <missiondescription.cargohuskeggs>Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2].</missiondescription.cargohuskeggs>
@@ -3193,4 +3192,8 @@
   <connection.waterdatain>water_data_in</connection.waterdatain>
   <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
   <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
+  
+  <!-- CHANGED VALUES -->
+  <missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits. </missiondescription.cargochemicals>
+
 </infotexts>

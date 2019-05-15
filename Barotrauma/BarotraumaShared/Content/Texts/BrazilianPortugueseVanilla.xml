@@ -824,7 +824,7 @@
 <missiondescription.cargovolatilecompoundn>Um comerciante de armas da região está oferecendo [reward] créditos pela entrega de duas caixas com explosivos de alta potência para um cliente em: [location2].</missiondescription.cargovolatilecompoundn>
 <missionsuccess.cargovolatilecompoundn>Os explosivos foram entregues.</missionsuccess.cargovolatilecompoundn>
 <missionname.cargochemicals>Remessa de produtos químicos</missionname.cargochemicals>
-<missiondescription.cargochemicals>Os pesquisadores de [location1] precisam de alguém para entregar produtos químicos perigosos para [location2] em troca de 250 créditos. </missiondescription.cargochemicals>
+<missiondescription.cargochemicals>Os pesquisadores de [location1] precisam de alguém para entregar produtos químicos perigosos para [location2] em troca de [reward] créditos. </missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>Os produtos químicos foram entregues.</missionsuccess.cargochemicals>
 <missionname.cargohuskeggs>Perigo biológico</missionname.cargohuskeggs>
 <missiondescription.cargohuskeggs>Os pesquisadores da região estão oferecendo [reward] créditos pela entrega de um contêiner de ovos de Parasita-Carcaça para [location2].</missiondescription.cargohuskeggs>

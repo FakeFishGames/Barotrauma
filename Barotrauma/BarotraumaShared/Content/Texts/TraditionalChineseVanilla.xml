@@ -824,7 +824,7 @@
 <missiondescription.cargovolatilecompoundn>當地一家軍火商出[reward]點數，想讓人幫忙吧兩箱易爆貨物送到[location2]的顧客手裡。</missiondescription.cargovolatilecompoundn>
 <missionsuccess.cargovolatilecompoundn>易爆貨物已成功送達。</missionsuccess.cargovolatilecompoundn>
 <missionname.cargochemicals>化學品運輸</missionname.cargochemicals>
-<missiondescription.cargochemicals>[location1]的研究人員想將一些危險的化學品運送到[location2]，他開價250點數。</missiondescription.cargochemicals>
+<missiondescription.cargochemicals>[location1]的研究人員想將一些危險的化學品運送到[location2]，他開價[reward]點數。</missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>化學品已成功送達。</missionsuccess.cargochemicals>
 <missionname.cargohuskeggs>高危生化產品運輸</missionname.cargohuskeggs>
 <missiondescription.cargohuskeggs>當地的研究人員想將一些畫皮寄生蟲的卵運送到[location2]，他能夠提供的報酬是[reward]點數。</missiondescription.cargohuskeggs>

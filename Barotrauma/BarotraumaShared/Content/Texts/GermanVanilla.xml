@@ -824,7 +824,7 @@
 <missiondescription.cargovolatilecompoundn>Ein hiesiger Waffenhändler bietet [reward] Credits im Austausch für die Lieferung von zwei Kisten mit Sprengstoff an einen Kunden in [location2] an.</missiondescription.cargovolatilecompoundn>
 <missionsuccess.cargovolatilecompoundn>Der Sprengstoff wurden erfolgreich geliefert.</missionsuccess.cargovolatilecompoundn>
 <missionname.cargochemicals>Chemikalientransport</missionname.cargochemicals>
-<missiondescription.cargochemicals>Forscher von [location1] brauchen jemanden, der für eine Belohnung von 250 Credits einige gefährliche Chemikalien nach [location2] liefert. </missiondescription.cargochemicals>
+<missiondescription.cargochemicals>Forscher von [location1] brauchen jemanden, der für eine Belohnung von [reward] Credits einige gefährliche Chemikalien nach [location2] liefert. </missiondescription.cargochemicals>
 <missionsuccess.cargochemicals>Die Chemikalien wurden erfolgreich geliefert.</missionsuccess.cargochemicals>
 <missionname.cargohuskeggs>Biologisches Gefahrgut</missionname.cargohuskeggs>
 <missiondescription.cargohuskeggs>Ein paar hiesige Forscher bieten [reward] Credits für die Lieferung eines Behälters mit Eiern von Hüllenparasiten nach [location2] an.</missiondescription.cargohuskeggs>
