@@ -16,7 +16,7 @@ namespace Barotrauma
 
         public List<AIObjective> Objectives { get; private set; } = new List<AIObjective>();
 
-        private Character character;
+        private readonly Character character;
 
 
         private float _waitTimer;
@@ -28,14 +28,7 @@ namespace Barotrauma
             get { return _waitTimer; }
             set
             {
-                if (CurrentObjective is AIObjectiveCombat || CurrentObjective is AIObjectiveFindSafety)
-                {
-                    _waitTimer = 0;
-                }
-                else
-                {
-                    _waitTimer = value;
-                }
+                _waitTimer = IsAllowedToWait() ? value : 0;
             }
         }
 
@@ -205,31 +198,6 @@ namespace Barotrauma
             {
                 CurrentObjective?.TryComplete(deltaTime);
             }
-            else
-            {
-                if (CurrentOrder != null)
-                {
-                    CurrentOrder.TryComplete(deltaTime);
-                }
-                else
-                {
-                    // Wait, if not swimming, climbing, or staying in a forbidden/unsafe hull.
-                    if (character.AIController is HumanAIController humanAI && humanAI.SteeringManager != null)
-                    {
-                        if (!character.AnimController.InWater &&
-                            !character.IsClimbing &&
-                            !humanAI.UnsafeHulls.Contains(character.CurrentHull) && 
-                            !AIObjectiveIdle.IsForbidden(character.CurrentHull))
-                        {
-                            humanAI.SteeringManager.Reset();
-                        }
-                        else
-                        {
-                            CurrentObjective?.TryComplete(deltaTime);
-                        }
-                    }
-                }
-            }
         }
         
         public void SetOrder(AIObjective objective)
@@ -305,6 +273,20 @@ namespace Barotrauma
                     break;
             }
             return newObjective;
+        }
+
+        private bool IsAllowedToWait()
+        {
+            if (CurrentOrder != null) { return false; }
+            if (CurrentObjective is AIObjectiveCombat || CurrentObjective is AIObjectiveFindSafety) { return false; }
+            if (character.AnimController.InWater) { return false; }
+            if (character.IsClimbing) { return false; }
+            if (character.AIController is HumanAIController humanAI)
+            {
+                if (humanAI.UnsafeHulls.Contains(character.CurrentHull)) { return false; }
+            }
+            if (AIObjectiveIdle.IsForbidden(character.CurrentHull)) { return false; }
+            return true;
         }
     }
 }
