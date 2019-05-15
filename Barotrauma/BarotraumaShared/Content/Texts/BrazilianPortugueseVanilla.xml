@@ -2027,7 +2027,7 @@
 <afflictioncauseofdeathself.burn>Você queimou até a morte.</afflictioncauseofdeathself.burn>
 <afflictionname.oxygenlow>Oxigênio baixo</afflictionname.oxygenlow>
 <afflictiondescription.oxygenlow>A pele está pálida e úmida, os lábios estão ficando azuis.</afflictiondescription.oxygenlow>
-<afflictioncauseofdeath.oxygenlow>Sufocado.</afflictioncauseofdeath.oxygenlow>
+<afflictioncauseofdeath.oxygenlow>Sufocado</afflictioncauseofdeath.oxygenlow>
 <afflictioncauseofdeathself.oxygenlow>Você morreu sufocado.</afflictioncauseofdeathself.oxygenlow>
 <afflictionname.bloodloss>Perda de sangue</afflictionname.bloodloss>
 <afflictiondescription.bloodloss>O paciente está pálido e frio. Seu coração bate assustadoramente rápido.</afflictiondescription.bloodloss>
