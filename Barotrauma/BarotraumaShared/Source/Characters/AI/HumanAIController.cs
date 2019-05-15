@@ -15,14 +15,14 @@ namespace Barotrauma
         
         private float sortTimer;
         private float crouchRaycastTimer;
-        private float reportTimer;
+        private float reactTimer;
         private float hullVisibilityTimer;
         private bool shouldCrouch;
 
+        const float reactionTime = 0.5f;
+        const float hullVisibilityInterval = 0.5f;
         const float crouchRaycastInterval = 1;
-        const float reportInterval = 1;
         const float sortObjectiveInterval = 1;
-        const float hullVisibilityInterval = 1;
 
         public static float HULL_SAFETY_THRESHOLD = 50;
 
@@ -72,7 +72,7 @@ namespace Barotrauma
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);
-            reportTimer = Rand.Range(0f, reportInterval);
+            reactTimer = Rand.Range(0f, reactionTime);
             sortTimer = Rand.Range(0f, sortObjectiveInterval);
             hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             InitProjSpecific();
@@ -119,22 +119,22 @@ namespace Barotrauma
                 sortTimer = sortObjectiveInterval;
             }
 
-            if (reportTimer > 0.0f)
+            if (reactTimer > 0.0f)
             {
-                reportTimer -= deltaTime;
+                reactTimer -= deltaTime;
             }
             else
             {
                 if (Character.CurrentHull != null)
                 {
-                    VisibleHulls.ForEach(h => PropagateHullSafety(Character.Controlled, h));
+                    VisibleHulls.ForEach(h => PropagateHullSafety(Character, h));
                 }
                 if (Character.SpeechImpediment < 100.0f)
                 {
                     ReportProblems();
                     UpdateSpeaking();
                 }
-                reportTimer = reportInterval;
+                reactTimer = reactionTime * Rand.Range(0.75f, 1.25f);
             }
 
             if (objectiveManager.CurrentObjective == null) { return; }
@@ -559,6 +559,7 @@ namespace Barotrauma
             DoForEachCrewMember(character, (humanAi) => humanAi.RefreshHullSafety(hull));
         }
 
+        public float CurrentHullSafety { get; private set; }
         private void RefreshHullSafety(Hull hull)
         {
             if (GetHullSafety(hull, Character, VisibleHulls) > HULL_SAFETY_THRESHOLD)
@@ -653,12 +654,34 @@ namespace Barotrauma
 
         public float GetHullSafety(Hull hull, Character character, IEnumerable<Hull> visibleHulls = null)
         {
-            if (hull == null) { return 0; }
+            bool updateCurrentHullSafety = character == Character && character.CurrentHull == hull;
+            if (hull == null)
+            {
+                if (updateCurrentHullSafety)
+                {
+                    CurrentHullSafety = 0;
+                }
+                return 0;
+            }
+            if (character == Character)
+            {
+                // If the character is this character, we can use the cached hulls.
+                // If no visible hulls are provided, the calculations don't take visible/adjacent hulls into account.
+                if (visibleHulls == null)
+                {
+                    visibleHulls = VisibleHulls;
+                }
+            }
             bool ignoreFire = ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() || ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(character);
             bool ignoreOxygen = ignoreWater || HasDivingMask(character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
-            return GetHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
+            float safety = GetHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
+            if (updateCurrentHullSafety)
+            {
+                CurrentHullSafety = safety;
+            }
+            return safety;
         }
 
         public static float GetHullSafety(Hull hull, IEnumerable<Hull> visibleHulls, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false)
