@@ -118,7 +118,6 @@ namespace Barotrauma
                 objectiveManager.SortObjectives();
                 sortTimer = sortObjectiveInterval;
             }
-
             if (reactTimer > 0.0f)
             {
                 reactTimer -= deltaTime;
@@ -287,14 +286,38 @@ namespace Barotrauma
             {
                 foreach (var hull in VisibleHulls)
                 {
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (c.CurrentHull != hull) { continue; }
+                        if (AIObjectiveFightIntruders.IsValidTarget(c, Character))
+                        {
+                            AddTargets<AIObjectiveFightIntruders, Character>(Character, c);
+                            if (newOrder == null)
+                            {
+                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
+                            }
+                        }
+                    }
                     if (AIObjectiveExtinguishFires.IsValidTarget(hull, Character))
                     {
-                        if (AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull))
+                        AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull);
+                        if (newOrder == null)
                         {
-                            if (hull == Character.CurrentHull)
+                            var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
+                            newOrder = new Order(orderPrefab, hull, null);
+                        }
+                    }
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (c.CurrentHull != hull) { continue; }
+                        if (AIObjectiveRescueAll.IsValidTarget(c, Character))
+                        {
+                            AddTargets<AIObjectiveRescueAll, Character>(c, Character);
+                            if (newOrder == null)
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
                             }
                         }
                     }
@@ -302,13 +325,11 @@ namespace Barotrauma
                     {
                         if (AIObjectiveFixLeaks.IsValidTarget(gap, Character))
                         {
-                            if (AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap))
+                            AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
+                            if (newOrder == null)
                             {
-                                if (hull == Character.CurrentHull)
-                                {
-                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                                }
+                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                                newOrder = new Order(orderPrefab, hull, null);
                             }
                         }
                     }
@@ -318,38 +339,13 @@ namespace Barotrauma
                         if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                         {
                             if (item.Repairables.All(r => item.Condition > r.ShowRepairUIThreshold)) { continue; }
-                            if (AddTargets<AIObjectiveRepairItems, Item>(Character, item))
+                            AddTargets<AIObjectiveRepairItems, Item>(Character, item);
+                            if (newOrder == null)
                             {
-                                if (hull == Character.CurrentHull)
-                                {
-                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
-                                    newOrder = new Order(orderPrefab, Character.CurrentHull, item.Repairables?.FirstOrDefault());
-                                }
+                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
+                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault());
                             }
                         }
-                    }
-                    foreach (Character c in Character.CharacterList)
-                    {
-                        if (c.CurrentHull != hull) { continue; }
-                        if (AIObjectiveFightIntruders.IsValidTarget(c, Character))
-                        {
-                            if (AddTargets<AIObjectiveFightIntruders, Character>(Character, c))
-                            {
-                                if (hull == Character.CurrentHull)
-                                {
-                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
-                {
-                    if (AddTargets<AIObjectiveRescueAll, Character>(Character, Character))
-                    {
-                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
                     }
                 }
             }
