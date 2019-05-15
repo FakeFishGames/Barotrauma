@@ -29,38 +29,19 @@ namespace Barotrauma
             monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", "");
             monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
         }
-
+        
         public override void Start(Level level)
         {
             Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
 
-            //bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
-            //for (int i = 0; i < monsterCount; i++)
-            //{
-            //    monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
-            //}
-            //monsters.ForEach(m => m.Enabled = false);
-            //SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
-            //sonarPositions.Add(spawnPos);
-
-            float offsetAmount = 500;
+            bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
             for (int i = 0; i < monsterCount; i++)
             {
-                CoroutineManager.InvokeAfter(() =>
-                {
-                    bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
-                    var monster = Character.Create(monsterFile, spawnPos + Rand.Vector(offsetAmount, Rand.RandSync.Server), i.ToString(), null, isClient, true, true);
-                    monster.Enabled = false;
-                    monsters.Add(monster);
-                    if (monsters.Count == monsterCount)
-                    {
-                        //this will do nothing if the monsters have no swarm behavior defined, 
-                        //otherwise it'll make the spawned characters act as a swarm
-                        SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
-                        sonarPositions.Add(spawnPos);
-                    }
-                }, Rand.Range(0f, monsterCount / 2, Rand.RandSync.Server));
+                monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
             }
+            monsters.ForEach(m => m.Enabled = false);
+            SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
+            sonarPositions.Add(spawnPos);
         }
 
         public override void Update(float deltaTime)
