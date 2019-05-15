@@ -381,7 +381,7 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
-                    DebugConsole.ThrowError("Downloading the preview image of the Workshop item \"" + EnsureUTF8(item.Title) + "\" failed.", e);
+                    DebugConsole.ThrowError("Downloading the preview image of the Workshop item \"" + TextManager.EnsureUTF8(item.Title) + "\" failed.", e);
                 }
             }
 
@@ -392,7 +392,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var titleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), rightColumn.RectTransform), EnsureUTF8(item.Title), textAlignment: Alignment.CenterLeft, wrap: true)
+            var titleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), rightColumn.RectTransform), TextManager.EnsureUTF8(item.Title), textAlignment: Alignment.CenterLeft, wrap: true)
             {
                 UserData = "titletext",
                 CanBeFocused = false
@@ -410,14 +410,14 @@ namespace Barotrauma
                         {
                             if (SteamManager.UpdateWorkshopItem(item, out string errorMsg))
                             {
-                                new GUIMessageBox("", TextManager.Get("WorkshopItemUpdated").Replace("[itemname]", EnsureUTF8(item.Title)));
+                                new GUIMessageBox("", TextManager.Get("WorkshopItemUpdated").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
                             }
                             else
                             {
                                 DebugConsole.ThrowError(errorMsg);
                                 new GUIMessageBox(
                                     TextManager.Get("Error"), 
-                                    TextManager.Get("WorkshopItemUpdateFailed").Replace("[itemname]", EnsureUTF8(item.Title)).Replace("[errormessage]", errorMsg));
+                                    TextManager.Get("WorkshopItemUpdateFailed").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)).Replace("[errormessage]", errorMsg));
                             }
                             btn.Enabled = false;
                             btn.Visible = false;
@@ -648,7 +648,7 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.005f), content.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), EnsureUTF8(item.Title), textAlignment: Alignment.TopLeft, font: GUI.LargeFont, wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.EnsureUTF8(item.Title), textAlignment: Alignment.TopLeft, font: GUI.LargeFont, wrap: true);
 
             var creatorHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform)) { IsHorizontal = true, Stretch = true };
 
@@ -656,7 +656,7 @@ namespace Barotrauma
                 TextManager.Get("WorkshopItemCreator"), textAlignment: Alignment.TopLeft, wrap: true);
 
             new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.0f), creatorHolder.RectTransform), 
-                EnsureUTF8(item.OwnerName), textAlignment: Alignment.TopRight, wrap: true);
+                TextManager.EnsureUTF8(item.OwnerName), textAlignment: Alignment.TopRight, wrap: true);
 
 
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), creatorHolder.RectTransform, Anchor.BottomRight), TextManager.Get("WorkshopShowItemInSteam"), style: null)
@@ -690,7 +690,7 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), EnsureUTF8(item.Description), wrap: true)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), TextManager.EnsureUTF8(item.Description), wrap: true)
             {
                 CanBeFocused = false
             };
@@ -826,7 +826,7 @@ namespace Barotrauma
             if (!item.Installed)
             {
                 new GUIMessageBox(TextManager.Get("Error"), 
-                    TextManager.Get("WorkshopErrorInstallRequiredToEdit").Replace("[itemname]", EnsureUTF8(item.Title)));
+                    TextManager.Get("WorkshopErrorInstallRequiredToEdit").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
                 return;
             }
             SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
@@ -1261,7 +1261,7 @@ namespace Barotrauma
             string pleaseWaitText = TextManager.Get("WorkshopPublishPleaseWait");
             var msgBox = new GUIMessageBox(
                 pleaseWaitText,
-                TextManager.Get("WorkshopPublishInProgress").Replace("[itemname]", EnsureUTF8(item.Title)), 
+                TextManager.Get("WorkshopPublishInProgress").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)), 
                 new string[] { TextManager.Get("Cancel") });
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
@@ -1283,13 +1283,13 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(item.Error))
             {
-                new GUIMessageBox("", TextManager.Get("WorkshopItemPublished").Replace("[itemname]", EnsureUTF8(item.Title)));
+                new GUIMessageBox("", TextManager.Get("WorkshopItemPublished").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
             }
             else
             {
                 new GUIMessageBox(
                     TextManager.Get("Error"), 
-                    TextManager.Get("WorkshopItemPublishFailed").Replace("[itemname]", EnsureUTF8(item.Title)) + item.Error);
+                    TextManager.Get("WorkshopItemPublishFailed").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
             }
 
             createItemFrame.ClearChildren();
@@ -1317,13 +1317,7 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
         }
-
-        private string EnsureUTF8(string text)
-        {
-            byte[] bytes = Encoding.Default.GetBytes(text);
-            return Encoding.UTF8.GetString(bytes);
-        }
-
+        
         #endregion
     }
 }
