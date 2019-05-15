@@ -1353,10 +1353,7 @@ namespace Barotrauma
                 bool hasLeaks = Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
                 ToggleReportButton("reportbreach", hasLeaks);
 
-                bool hasIntruders = Character.CharacterList.Any(c =>
-                    c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
-                    (c.AIController is EnemyAIController || (c.TeamID != Character.Controlled.TeamID && c.TeamID != Character.TeamType.FriendlyNPC)));
-
+                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(Character.Controlled, c));
                 ToggleReportButton("reportintruders", hasIntruders);
 
                 foreach (GUIComponent reportButton in reportButtonFrame.Children)
