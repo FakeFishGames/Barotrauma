@@ -23,6 +23,7 @@ namespace Barotrauma
 
         private Vector2 currentDynamicAtlasCoords;
         private int currentDynamicAtlasNextY;
+        uint[] currentDynamicPixelBuffer;
 
         public bool DynamicLoading
         {
@@ -264,6 +265,7 @@ namespace Barotrauma
                 currentDynamicAtlasCoords.Y = 0;
                 currentDynamicAtlasNextY = 0;
                 textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                currentDynamicPixelBuffer = null;
             }
 
             GlyphData newData = new GlyphData
@@ -274,19 +276,22 @@ namespace Barotrauma
                 drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
             };
             texCoords.Add(character, newData);
-            
-            uint[] pixelBuffer = new uint[texDims * texDims];
-            textures[newData.texIndex].GetData<uint>(pixelBuffer, 0, texDims * texDims);
+
+            if (currentDynamicPixelBuffer == null)
+            {
+                currentDynamicPixelBuffer = new uint[texDims * texDims];
+                textures[newData.texIndex].GetData<uint>(currentDynamicPixelBuffer, 0, texDims * texDims);
+            }
             
             for (int y = 0; y < glyphHeight; y++)
             {
                 for (int x = 0; x < glyphWidth; x++)
                 {
                     byte byteColor = bitmap[x + y * glyphWidth];
-                    pixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | byteColor << 16 | byteColor << 8 | byteColor);
+                    currentDynamicPixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | byteColor << 16 | byteColor << 8 | byteColor);
                 }
             }
-            textures[newData.texIndex].SetData<uint>(pixelBuffer);
+            textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
 
             currentDynamicAtlasCoords.X += glyphWidth + 2;
         }
