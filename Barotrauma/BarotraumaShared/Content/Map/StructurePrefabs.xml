@@ -640,7 +640,7 @@
   <TailFinD2p1 name="Tail Fin D2 p1" identifier="tailfind2p1" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1061,1820,288,225" depth="0.9" origin="0.5,0.5" />
   </TailFinD2p1>
-  <TailFinD2p2 name="Tail Fin D2 p2" identifier="tailfind2p2" description="Submarine tail temp" scale="0.5" resizehorizontal="true" body="false" castshadow="false">
+  <TailFinD2p2 name="Tail Fin D2 p2" identifier="tailfind2p2" description="Submarine tail temp" scale="0.5" resizehorizontal="false" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1346,1820,227,227" depth="0.9" origin="0.5,0.5" />
   </TailFinD2p2>
   <TailFinD2p3 name="Tail Fin D2 p3" identifier="tailfind2p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
