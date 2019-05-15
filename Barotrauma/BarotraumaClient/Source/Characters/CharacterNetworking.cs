@@ -206,7 +206,7 @@ namespace Barotrauma
                         ushort itemID = msg.ReadUInt16();
                         selectedCharacter = FindEntityByID(characterID) as Character;
                         selectedItem = FindEntityByID(itemID) as Item;
-                        if (selectedCharacter != null)
+                        if (characterID != NullEntityID)
                         {
                             bool doingCpr = msg.ReadBoolean();
                             if (doingCpr && SelectedCharacter != null)
