@@ -89,11 +89,6 @@ namespace Barotrauma
                     TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager));
                     return;
                 }
-                else if (character.Inventory.IsInLimbSlot(repairTool.Item, InvSlotType.LeftHand))
-                {
-                    sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
-                }
-                canReach = character.CanSeeTarget(leak, sightLimb);
             }
             if (subObjectives.Any()) { return; }
             var repairTool = weldingTool.GetComponent<RepairTool>();

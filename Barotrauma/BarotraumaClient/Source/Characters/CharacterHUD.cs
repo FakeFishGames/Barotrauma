@@ -174,13 +174,6 @@ namespace Barotrauma
             {
                 DrawObjectiveIndicator(spriteBatch, cam, character, objectiveEntity, 1.0f);
             }
-        }
-        
-        public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
-        {
-            if (GUI.DisableHUD) return;
-            
-            character.CharacterHealth.Alignment = Alignment.Right;
 
             foreach (Item brokenItem in brokenItems)
             {

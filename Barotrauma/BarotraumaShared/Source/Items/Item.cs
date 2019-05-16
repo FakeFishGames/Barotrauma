@@ -1130,13 +1130,8 @@ namespace Barotrauma
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
-            if (Math.Abs(body.LinearVelocity.X) > NetConfig.MaxPhysicsBodyVelocity || 
-                Math.Abs(body.LinearVelocity.Y) > NetConfig.MaxPhysicsBodyVelocity)
-            {
-                body.LinearVelocity = new Vector2(
-                    MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
-                    MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
-            }
+            ApplyWaterForces();
+            CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
                 
         public void UpdateTransform()

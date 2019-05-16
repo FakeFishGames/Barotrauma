@@ -304,24 +304,7 @@ namespace Barotrauma
                 float targetDistance = collider.radius * margin;
                 if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh)
                 {
-                    float multiplierX = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
-                    float multiplierY = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.Y) / 10, 0, 1));
-                    float verticalDistance = Math.Abs(colliderBottom.Y - currentPath.CurrentNode.SimPosition.Y);
-                    float targetDistX = collider.radius * multiplierX;
-                    float targetDistY = collider.radius * multiplierY;
-                    if (horizontalDistance < targetDistX && verticalDistance < targetDistY && isAboveFeet && isNotTooHigh)
-                    {
-                        currentPath.SkipToNextNode();
-                    }
-                }
-                else
-                {
-                    float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
-                    float targetDistance = collider.radius * margin;
-                    if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh)
-                    {
-                        currentPath.SkipToNextNode();
-                    }
+                    currentPath.SkipToNextNode();
                 }
             }
 

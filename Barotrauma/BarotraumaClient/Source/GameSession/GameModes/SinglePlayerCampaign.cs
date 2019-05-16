@@ -9,8 +9,6 @@ namespace Barotrauma
 {
     class SinglePlayerCampaign : CampaignMode
     {
-        public ContextualTutorial ContextualTutorial;
-
         private GUIButton endRoundButton;
                 
         private bool crewDead;
@@ -40,13 +38,6 @@ namespace Barotrauma
                 {
                     CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", jobPrefab));
                 }
-            }
-
-            ContextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial) as ContextualTutorial;
-
-            if (ContextualTutorial.Selected) // Selected when starting a new game -> initialize
-            {
-                ContextualTutorial.Initialize();
             }
         }
 
@@ -157,11 +148,6 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
-
-            if (ContextualTutorial.Initialized)
-            {
-                ContextualTutorial.AddToGUIUpdateList();
-            }
         }
 
         public override void Update(float deltaTime)
@@ -306,7 +292,6 @@ namespace Barotrauma
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
-                    quitButton.OnClicked += (GUIButton button, object obj) => { if (ContextualTutorial.Initialized) ContextualTutorial.Stop(); return true; };
                 }
             }
 
@@ -390,10 +375,6 @@ namespace Barotrauma
                         break;
                     case "map":
                         campaign.map = Map.LoadNew(subElement);
-                        break;
-                    case "contextualtutorial":
-                        campaign.ContextualTutorial.Initialize(); // Initialize when saved element found
-                        campaign.ContextualTutorial.LoadPartiallyComplete(subElement);
                         break;
                 }
             }

@@ -271,7 +271,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }            
+            }
 
             if (highlighted != null)
             {

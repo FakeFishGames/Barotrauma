@@ -60,7 +60,7 @@ namespace Barotrauma
             GUI.Style.Apply(Header, "", this);
             Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-            if (height == 0)
+            if (!string.IsNullOrWhiteSpace(text))
             {
                 Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                     text, textAlignment: textAlignment, wrap: true);

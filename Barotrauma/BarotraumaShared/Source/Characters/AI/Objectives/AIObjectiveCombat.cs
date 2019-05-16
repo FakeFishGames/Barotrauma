@@ -279,7 +279,6 @@ namespace Barotrauma
                     Weapon.Drop(character);
                 }
             }
-            return true;
         }
 
         private bool Equip()

@@ -562,20 +562,6 @@ namespace Barotrauma
                             null, connectionColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
                             new Vector2(0, 16), SpriteEffects.None, 0.01f);
                     }
-                }
-                
-                rect.Inflate(8, 8);
-                GUI.DrawRectangle(spriteBatch, rect, Color.Black, false, 0.0f, 8);
-                GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
-
-                for (int i = 0; i < Locations.Count; i++)
-                {
-                    Location location = Locations[i];
-                    Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
-                    
-                    Rectangle drawRect = location.Type.Sprite.SourceRect;
-                    drawRect.X = (int)pos.X - drawRect.Width / 2;
-                    drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
                     if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)
                     {

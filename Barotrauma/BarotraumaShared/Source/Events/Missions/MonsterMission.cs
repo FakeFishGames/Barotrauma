@@ -29,7 +29,7 @@ namespace Barotrauma
             monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", "");
             monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
         }
-
+        
         public override void Start(Level level)
         {
             Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);

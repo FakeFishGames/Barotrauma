@@ -79,39 +79,10 @@ namespace Barotrauma.Items.Components
             +" Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine."), Serialize(0.5f, true)]
         public float NeutralBallastLevel
         {
-            if (!CanBeSelected) return false;
-
-            user = character;
-            return true;
-        }
-
-        [Serialize(1000.0f, true)]
-        public float DockingAssistThreshold
-        {
-            get;
-            set;
-        }
-
-        [Serialize(1000.0f, true)]
-        public float DockingAssistThreshold
-        {
-            get;
-            set;
-        }
-
-        public Vector2 TargetVelocity
-        {
-            sonar = item.GetComponent<Sonar>();
-        }
-
-        public Vector2 SteeringInput
-        {
-            get { return steeringInput; }
+            get { return neutralBallastLevel; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
-                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
-                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+                neutralBallastLevel = MathHelper.Clamp(value, 0.0f, 1.0f);
             }
         }
 
@@ -124,12 +95,12 @@ namespace Barotrauma.Items.Components
 
         public Vector2 TargetVelocity
         {
-            get { return steeringInput; }
-            set
+            get { return targetVelocity;}
+            set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
-                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+                targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }
         }
 
@@ -146,22 +117,7 @@ namespace Barotrauma.Items.Components
 
         public SteeringPath SteeringPath
         {
-            if (!CanBeSelected) return false;
-
-            user = character;
-            return true;
-        }
-
-        public Vector2? PosToMaintain
-        {
-            get { return posToMaintain; }
-            set { posToMaintain = value; }
-        }
-
-        public Vector2? PosToMaintain
-        {
-            get { return posToMaintain; }
-            set { posToMaintain = value; }
+            get { return steeringPath; }
         }
 
         public Vector2? PosToMaintain

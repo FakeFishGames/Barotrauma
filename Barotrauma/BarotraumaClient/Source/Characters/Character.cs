@@ -164,14 +164,8 @@ namespace Barotrauma
                         break;
                 }
             }
-        }
 
-        partial void UpdateLimbLightSource(Limb limb)
-        {
-            if (limb.LightSource != null)
-            {
-                limb.LightSource.Enabled = enabled;
-            }
+            hudProgressBars = new Dictionary<object, HUDProgressBar>();
         }
 
         partial void UpdateLimbLightSource(Limb limb)

@@ -20,7 +20,6 @@ namespace Barotrauma
         public readonly string[] itemIdentifiers;
         public readonly ItemContainer container;
 
-        private bool isCompleted;
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
 

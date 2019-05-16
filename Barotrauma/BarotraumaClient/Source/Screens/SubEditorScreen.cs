@@ -1205,7 +1205,6 @@ namespace Barotrauma
                 AbsoluteSpacing = 5,
                 Stretch = true
             };
-#endif
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);

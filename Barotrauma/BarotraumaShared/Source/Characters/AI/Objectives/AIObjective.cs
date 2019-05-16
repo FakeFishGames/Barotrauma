@@ -92,7 +92,6 @@ namespace Barotrauma
                 }
             }
 
-            bool wasCompleted = IsCompleted();
             Act(deltaTime);
             if (IsCompleted())
             {

@@ -49,9 +49,7 @@ namespace Barotrauma
                     return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true);
                 });
             }
-            if (getDivingGear != null) { return; }
-            var containedItems = item.ContainedItems;
-            if (containedItems == null)
+            else
             {
                 var containedItems = item.ContainedItems;
                 if (containedItems == null)

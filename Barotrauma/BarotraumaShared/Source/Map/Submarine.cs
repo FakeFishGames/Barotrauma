@@ -1433,7 +1433,7 @@ namespace Barotrauma
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
             if (previewImage != null)
             {
-                //doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
+                doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }
 
             try

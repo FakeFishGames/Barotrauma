@@ -277,11 +277,6 @@ namespace Barotrauma
             {
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
-
-            if (Character.CurrentHull != null)
-            {
-                Character.GetVisibleHulls().ForEach(h => PropagateHullSafety(Character.Controlled, h));
-            }
         }
 
         protected void ReportProblems()

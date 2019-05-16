@@ -74,44 +74,6 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
-        {
-            if (objectiveManager.CurrentObjective == this)
-            {
-                if (randomTimer > 0)
-                {
-                    randomTimer -= deltaTime;
-                }
-                else
-                {
-                    SetRandom();
-                }
-            }
-        }
-
-        public override void Update(float deltaTime)
-        {
-            if (objectiveManager.CurrentObjective == this)
-            {
-                if (randomTimer > 0)
-                {
-                    randomTimer -= deltaTime;
-                }
-                else
-                {
-                    SetRandom();
-                }
-            }
-        }
-
-        public override bool IsCompleted() => false;
-        public override bool CanBeCompleted => true;
-
-        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
-
-        // TODO: take the initiative into account
-        public override float GetPriority() => 1;
-
         protected override void Act(float deltaTime)
         {
             if (PathSteering == null) { return; }

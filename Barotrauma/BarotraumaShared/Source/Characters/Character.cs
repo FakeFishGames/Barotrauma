@@ -1147,7 +1147,7 @@ namespace Barotrauma
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
-                if (speedMultipliers.Count == 0) return 1f;
+                Vector2 targetMovement = GetTargetMovement();
 
                 AnimController.TargetMovement = targetMovement;
                 AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;

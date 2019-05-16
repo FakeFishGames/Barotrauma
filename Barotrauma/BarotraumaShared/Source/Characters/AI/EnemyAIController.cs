@@ -797,7 +797,6 @@ namespace Barotrauma
             {
                 UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance);
             }
-            return false;
         }
 
         public bool IsSteeringThroughGap { get; private set; }
