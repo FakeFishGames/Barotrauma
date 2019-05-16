@@ -21,13 +21,17 @@ namespace Barotrauma
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-        protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveCombat(character, target, AIObjectiveCombat.CombatMode.Offensive, objectiveManager, PriorityModifier);
-
         protected override float TargetEvaluation()
         {
             // TODO: sorting criteria
             return 100;
         }
+
+        protected override AIObjective ObjectiveConstructor(Character target) 
+            => new AIObjectiveCombat(character, target, AIObjectiveCombat.CombatMode.Offensive, objectiveManager, PriorityModifier);
+
+        protected override void OnObjectiveCompleted(AIObjective objective, Character target)
+            => HumanAIController.RemoveTargets<AIObjectiveFightIntruders, Character>(character, target);
 
         public static bool IsValidTarget(Character target, Character character)
         {

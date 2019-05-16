@@ -71,6 +71,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is completed.");
 #endif
+                    subObjective.OnCompleted();
                     subObjectives.Remove(subObjective);
                 }
                 else if (!subObjective.CanBeCompleted)
@@ -93,9 +94,9 @@ namespace Barotrauma
 
             bool wasCompleted = IsCompleted();
             Act(deltaTime);
-            if (!wasCompleted && IsCompleted())
+            if (IsCompleted())
             {
-                Completed?.Invoke();
+                OnCompleted();
             }
         }
 
@@ -211,6 +212,15 @@ namespace Barotrauma
             //{
             //    SteeringManager.Reset();
             //}
+        }
+
+        protected virtual void OnCompleted()
+        {
+            if (Completed != null)
+            {
+                Completed();
+                Completed = null;
+            }
         }
 
         public virtual void Reset() { }

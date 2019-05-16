@@ -65,5 +65,8 @@ namespace Barotrauma
 
         protected override AIObjective ObjectiveConstructor(PowerContainer battery) 
             => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier) { IsLoop = false };
+
+        protected override void OnObjectiveCompleted(AIObjective objective, PowerContainer target) 
+            => HumanAIController.RemoveTargets<AIObjectiveChargeBatteries, PowerContainer>(character, target);
     }
 }

@@ -36,3 +36,38 @@ Query port (used to communicate with Steam)
 	External Port: The port you have selected for your server (27016 by default)
 	Internal Port: The port you have selected for your server (27016 by default)
 	Protocol: UDP
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Credits:
+------------------------------------------------------------------------
+
+Programming, graphics, sounds, game design	- Joonas Rikkonen ("Regalis")
+Graphics					- James Bear ("Moonsaber99")
+Programming					- Sebastian Broberg
+Programming					- Juan Pablo Arce ("juanjp600")
+
+------------------------------------------------------------------------
+
+"Road to Hell"
+Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 3.0
+http://creativecommons.org/licenses/by/3.0/
+
+------------------------------------------------------------------------
+
+Lidgren.Network networking library - Michael Lidgren
+
+------------------------------------------------------------------------
+
+Sound effects:
+	metal whining and screeching - ScottFerguson1
+	metal gate 10 - thencamenow
+	foil_expanding_multiple - markb
+	Bug Zapper_Many medium zaps - CGEffex
+	
+Query port (used to communicate with Steam)
+	Service/Application: barotrauma
+	External Port: The port you have selected for your server (27016 by default)
+	Internal Port: The port you have selected for your server (27016 by default)
+	Protocol: UDP
