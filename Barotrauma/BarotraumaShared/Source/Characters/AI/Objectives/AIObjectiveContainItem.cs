@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -22,6 +23,8 @@ namespace Barotrauma
         private bool isCompleted;
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
+
+        private readonly HashSet<Item> containedItems = new HashSet<Item>();
 
         public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
@@ -71,16 +74,33 @@ namespace Barotrauma
             }            
             if (itemToContain == null)
             {
-                if (getItemObjective != null && getItemObjective.IsCompleted())
+                if (getItemObjective != null)
                 {
-                    getItemObjective = null;
-                    targetItemCount--;
+                    if (getItemObjective.IsCompleted())
+                    {
+                        if (getItemObjective.TargetItem != null)
+                        {
+                            containedItems.Add(getItemObjective.TargetItem);
+                        }
+                        else
+                        {
+                            // Reduce the target item count to prevent getting stuck here, if the target item for some reason is null, which shouldn't happen.
+                            targetItemCount--;
+                        }
+                        getItemObjective = null;
+                    }
+                    else if (!getItemObjective.CanBeCompleted)
+                    {
+                        getItemObjective = null;
+                        targetItemCount--;
+                    }
                 }
                 TryAddSubObjective(ref getItemObjective, () =>
                     new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, checkInventory: checkInventory)
                     {
                         GetItemPriority = GetItemPriority,
-                        ignoredContainerIdentifiers = ignoredContainerIdentifiers
+                        ignoredContainerIdentifiers = ignoredContainerIdentifiers,
+                        ignoredItems = containedItems
                     });
                 return;
             }
