@@ -26,6 +26,8 @@ namespace Barotrauma
 
         public bool Wrap;
 
+        public bool RoundToNearestPixel = true;
+
         private bool overflowClipActive;
         public bool OverflowClip;
 
@@ -329,8 +331,11 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(text))
             {
                 Vector2 pos = rect.Location.ToVector2() + textPos + TextOffset;
-                pos.X = (int)pos.X;
-                pos.Y = (int)pos.Y;
+                if (RoundToNearestPixel)
+                {
+                    pos.X = (int)pos.X;
+                    pos.Y = (int)pos.Y;
+                }
 
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
