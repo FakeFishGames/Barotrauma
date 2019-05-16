@@ -54,12 +54,7 @@ namespace Barotrauma
 
         protected override float TargetEvaluation() => Targets.Max(t => 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
-
-        protected override AIObjective ObjectiveConstructor(Item item) 
-            => new AIObjectiveRepairItem(character, item, objectiveManager, PriorityModifier);
-
-        protected override void OnObjectiveCompleted(AIObjective objective, Item target)
-            => HumanAIController.RemoveTargets<AIObjectiveRepairItems, Item>(character, target);
+        protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item, objectiveManager, PriorityModifier);
 
         public static bool IsValidTarget(Item item, Character character)
         {

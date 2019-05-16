@@ -4,27 +4,47 @@ v0.9.0.0
 
 Additions and changes:
 - Translations to German, Russian, French, Brazilian Portuguese, Traditional Chinese and Simplified Chinese.
-- New logo and main menu art.
-- 2 new outposts.
-- New docking system.
 - Numerous fixes and improvements to the crew AI. The biggest change is that the AI characters can now do
 tasks by themselves even when they haven't been assigned an order.
+- One new outpost.
+- New docking system.
+- New logo and main menu art.
+- Added a credits tab to the main menu.
+- Some new item and structure sprites.
+- Some new environment sprites.
+- Increased the amount of credits the player starts with in the campaign.
+- Balanced location and mission distribution.
+- Balanced mission rewards.
+- AI characters can be ordered to fight intruders.
 - Lock the inventory when aiming with a railgun or a coilgun.
 - Swap the order of the starting location & destination in nav terminals when playing in a mirrored sub.
+- Option to automatically pause the game when the window loses focus.
 
 Bugfixes:
 - Fixed splash screens and tutorial videos crashing the Linux version.
 - Fixed damaged item sprites not updating client-side after being repaired.
 - Fixed characters occasionally taking impact damage when hitting walls while climbing.
+- Fixes crashing when attempting to use symbols such as <, > or | in the save file name.
+- UI layout/scale fixes on resolutions larger than 1080p.
+- Fixed crashing when loading the same sub twice in the sub editor.
+- Fixed submarines occasionally being rendered at an incorrect position when viewing them in the sub editor 
+after they've been used in-game.
 - Improved the syncing of ragdolled characters.
+- Fixed characters not receiving impact damage when ragdolled.
+- Fixed characters' arms occasionally spinning around when standing still.
+- Fixed tutorial level generation parameters being used in some normal campaign levels (leading to extremely
+small levels and submarines overlapping with the outposts).
 - Fixed characters running more slowly when their torso is in a different hull than the feet (for example 
 in Humpback's bilge). 
+- Fixed character's feet getting stuck to platforms when climbing ladders while holding A/D.
+- Fixed monsters being able to drag characters through walls.
 - Fixed items "vanishing" if they move directly from sub to another without going outside first.
 - Fixed content package hash calculation failing if the package is not enabled and contains new monster files.
 - Fixed inability to enable content packages if some of the files included in the package are already in 
 the game folder (which may happen, for example, if enabling a content package fails).
 - Fixed AllowRagdollButton settings not being synced with clients, leading to strange ragdolling behavior
 client-side if the server has disabled ragdolling.
+- Fixed incorrect keybinds being displayed in a couple of tutorial texts.
 
 ---------------------------------------------------------------------------------------------------------
 v0.8.10.0

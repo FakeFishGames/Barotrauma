@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
-using System;
 
 namespace Barotrauma
 {
@@ -21,11 +20,7 @@ namespace Barotrauma
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveExtinguishFires;
         protected override IEnumerable<Hull> GetList() => Hull.hullList;
 
-        protected override AIObjective ObjectiveConstructor(Hull target) 
-            => new AIObjectiveExtinguishFire(character, target, objectiveManager, PriorityModifier);
-
-        protected override void OnObjectiveCompleted(AIObjective objective, Hull target) 
-            => HumanAIController.RemoveTargets<AIObjectiveExtinguishFires, Hull>(character, target);
+        protected override AIObjective ObjectiveConstructor(Hull target) => new AIObjectiveExtinguishFire(character, target, objectiveManager, PriorityModifier);
 
         public static bool IsValidTarget(Hull hull, Character character)
         {
