@@ -23,6 +23,12 @@ namespace Barotrauma
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
+            if (targetCharacter != character)
+            {
+                // TODO: enable healing self too
+                abandon = true;
+                return;
+            }
             this.targetCharacter = targetCharacter;
         }
 
@@ -201,7 +207,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            bool isCompleted = targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
+            bool isCompleted = targetCharacter.Bleeding <= 0 && targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
             if (isCompleted)
             {
                 character.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
