@@ -20,7 +20,6 @@ namespace Barotrauma
         }
 
         public readonly string Name;
-        public readonly string DoingText;
 
         public readonly Sprite SymbolSprite;
 
@@ -64,8 +63,7 @@ namespace Barotrauma
         private Order(XElement orderElement)
         {
             AITag = orderElement.GetAttributeString("aitag", "");
-            Name = TextManager.Get("OrderName." + AITag, true) ?? orderElement.GetAttributeString("name", "Name not found");
-            DoingText = TextManager.Get("OrderNameDoing." + AITag, true) ?? orderElement.GetAttributeString("doingtext", "");
+            Name = TextManager.Get("OrderName." + AITag, true) ?? "Name not found";
 
             string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
             if (!string.IsNullOrWhiteSpace(targetItemType))
@@ -127,7 +125,6 @@ namespace Barotrauma
 
             Name                = prefab.Name;
             AITag               = prefab.AITag;
-            DoingText           = prefab.DoingText;
             ItemComponentType   = prefab.ItemComponentType;
             Options             = prefab.Options;
             SymbolSprite        = prefab.SymbolSprite;
