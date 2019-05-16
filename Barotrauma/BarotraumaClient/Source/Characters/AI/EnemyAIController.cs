@@ -91,7 +91,7 @@ namespace Barotrauma
 
                         GUI.SmallFont.DrawString(spriteBatch,
                             currentNode.ID.ToString(),
-                            new Vector2(currentNode.DrawPosition.X + 20, -currentNode.DrawPosition.Y - 20),
+                            new Vector2(currentNode.DrawPosition.X - 10, -currentNode.DrawPosition.Y - 30),
                             Color.Red);
                     }
                 }
