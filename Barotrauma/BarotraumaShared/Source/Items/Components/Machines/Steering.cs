@@ -703,9 +703,27 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(1000.0f, true)]
+        public float DockingAssistThreshold
+        {
+            get;
+            set;
+        }
+
         public Vector2 TargetVelocity
         {
             sonar = item.GetComponent<Sonar>();
+        }
+
+        public Vector2 SteeringInput
+        {
+            get { return steeringInput; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+            }
         }
 
         public Vector2 SteeringInput
@@ -754,11 +772,51 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
+        }
+
+        struct ObstacleDebugInfo
+        {
+            public Vector2 Point1;
+            public Vector2 Point2;
+
+            public Vector2? Intersection;
+
+            public float Dot;
+
+            public Vector2 AvoidStrength;
+
+            public ObstacleDebugInfo(GraphEdge edge, Vector2? intersection, float dot, Vector2 avoidStrength)
+            {
+                Point1 = edge.Point1;
+                Point2 = edge.Point2;
+                Intersection = intersection;
+                Dot = dot;
+                AvoidStrength = avoidStrength;
+            }
+        }
+
         //edge point 1, edge point 2, avoid strength
         private List<ObstacleDebugInfo> debugDrawObstacles = new List<ObstacleDebugInfo>();
 
         public Steering(Item item, XElement element)
             : base(item, element)
+        {
+            sonar = item.GetComponent<Sonar>();
+        }
+
+        public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+            user = character;
+            return true;
+        }
+
+        public override void OnItemLoaded()
         {
             sonar = item.GetComponent<Sonar>();
         }
