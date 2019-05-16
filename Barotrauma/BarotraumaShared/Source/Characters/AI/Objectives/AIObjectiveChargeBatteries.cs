@@ -48,6 +48,6 @@ namespace Barotrauma
         }
 
         protected override AIObjective ObjectiveConstructor(PowerContainer battery) 
-            => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier) { IsLoop = true };
+            => new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier) { IsLoop = false };
     }
 }
