@@ -417,7 +417,7 @@ namespace Barotrauma
                         {
                             target = limb.character;
                         }
-                        if (target != null && target == Enemy)
+                        if (target != null && (target == Enemy || !HumanAIController.IsFriendly(target)))
                         {
                             character.SetInput(InputType.Shoot, false, true);
                             Weapon.Use(deltaTime, character);
