@@ -67,7 +67,7 @@ namespace Barotrauma
         {
             if (batteryList == null)
             {
-                batteryList = Item.ItemList.Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
+                batteryList = character.Submarine.GetItems(true).Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
             }
             return batteryList;
         }

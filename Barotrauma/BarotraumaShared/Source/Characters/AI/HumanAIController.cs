@@ -12,11 +12,30 @@ namespace Barotrauma
     {
         public static bool DisableCrewAI;
 
-        const float UpdateObjectiveInterval = 0.5f;
-
         private AIObjectiveManager objectiveManager;
         
-        private float updateObjectiveTimer;
+        private float sortTimer;
+        private float crouchRaycastTimer;
+        private float reportTimer;
+        private bool shouldCrouch;
+
+        const float crouchRaycastInterval = 1;
+        const float reportInterval = 1;
+        const float sortObjectiveInterval = 1;
+
+        public static float HULL_SAFETY_THRESHOLD = 50;
+
+        public HashSet<Hull> UnsafeHulls { get; private set; } = new HashSet<Hull>();
+
+        private SteeringManager outsideSteering, insideSteering;
+
+        public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
+        public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
+
+        public override AIObjectiveManager ObjectiveManager
+        {
+            get { return objectiveManager; }
+        }
 
         private bool shouldCrouch;
         private float crouchRaycastTimer;
@@ -53,7 +72,8 @@ namespace Barotrauma
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);
-            updateObjectiveTimer = Rand.Range(0.0f, UpdateObjectiveInterval);
+            reportTimer = Rand.Range(0f, reportInterval);
+            sortTimer = Rand.Range(0f, sortObjectiveInterval);
             InitProjSpecific();
         }
         partial void InitProjSpecific();
@@ -78,21 +98,28 @@ namespace Barotrauma
             Character.ClearInputs();
 
             objectiveManager.UpdateObjectives(deltaTime);
-            if (updateObjectiveTimer > 0.0f)
+            if (sortTimer > 0.0f)
             {
-                updateObjectiveTimer -= deltaTime;
+                sortTimer -= deltaTime;
             }
             else
             {
                 objectiveManager.SortObjectives();
-                updateObjectiveTimer = UpdateObjectiveInterval;
+                sortTimer = sortObjectiveInterval;
             }
 
-            if (Character.SpeechImpediment < 100.0f)
+            if (reportTimer > 0.0f)
             {
-                // TODO: add a timer -> once per second is enough?
-                ReportProblems();
-                UpdateSpeaking();
+                reportTimer -= deltaTime;
+            }
+            else
+            {
+                if (Character.SpeechImpediment < 100.0f)
+                {
+                    ReportProblems();
+                    UpdateSpeaking();
+                }
+                reportTimer = reportInterval;
             }
 
             if (objectiveManager.CurrentObjective == null) { return; }
@@ -408,7 +435,7 @@ namespace Barotrauma
             crouchRaycastTimer -= deltaTime;
             if (crouchRaycastTimer > 0.0f) return;
 
-            crouchRaycastTimer = CrouchRaycastInterval;
+            crouchRaycastTimer = crouchRaycastInterval;
 
             //start the raycast in front of the character in the direction it's heading to
             Vector2 startPos = Character.SimPosition;
