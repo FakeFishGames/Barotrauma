@@ -36,6 +36,10 @@ namespace Barotrauma
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
         protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
 
+        protected HumanAIController HumanAIController => character.AIController as HumanAIController;
+        protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
+        protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
+
         /// <summary>
         /// Run the main objective with all subobjectives concurrently?
         /// If false, the main objective will continue only when all the subobjectives have been removed (done).
