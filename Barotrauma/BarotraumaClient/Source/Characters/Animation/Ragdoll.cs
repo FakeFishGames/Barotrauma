@@ -152,6 +152,32 @@ namespace Barotrauma
 
                 }
 
+                if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
+                character.MemState.Clear();
+            }
+        }
+        
+        partial void ImpactProjSpecific(float impact, Body body)
+        {
+            float volume = MathHelper.Clamp(impact - 3.0f, 0.5f, 1.0f);
+
+            if (body.UserData is Limb limb && character.Stun <= 0f)
+            {
+                if (impact > 3.0f) { PlayImpactSound(limb); }
+            }
+            else if (body.UserData is Limb || body == Collider.FarseerBody)
+            {
+                if (!character.IsRemotePlayer && impact > ImpactTolerance)
+                {
+                    SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
+                }
+            }
+            if (Character.Controlled == character)
+            {
+                GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
+            }
+        }
+
                 if (character.MemState.Count < 1) return;
 
                 overrideTargetMovement = Vector2.Zero;
