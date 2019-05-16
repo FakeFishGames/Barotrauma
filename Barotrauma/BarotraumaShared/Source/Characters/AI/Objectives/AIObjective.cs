@@ -106,18 +106,6 @@ namespace Barotrauma
             subObjectives.Add(objective);
         }
 
-        public void RemoveSubObjective<T>(ref T objective) where T : AIObjective
-        {
-            if (objective != null)
-            {
-                if (subObjectives.Contains(objective))
-                {
-                    subObjectives.Remove(objective);
-                }
-                objective = null;
-            }
-        }
-
         public void SortSubObjectives()
         {
             if (subObjectives.None()) { return; }

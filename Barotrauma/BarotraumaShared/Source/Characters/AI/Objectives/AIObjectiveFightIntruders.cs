@@ -29,7 +29,7 @@ namespace Barotrauma
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-        protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveCombat(character, target, AIObjectiveCombat.CombatMode.Offensive, objectiveManager, PriorityModifier);
+        protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveCombat(character, target, AIObjectiveCombat.CombatMode.Offensive, objectiveManager, PriorityModifier) { useCoolDown = false };
 
         protected override float TargetEvaluation()
         {
