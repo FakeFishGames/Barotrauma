@@ -633,7 +633,6 @@
 <serverlog>Journal du serveur</serverlog>
 <campaignview>Vue campagne</campaignview>
 <createnew>Créer nouveau</createnew>
-<playyourself>No living players on the server and Jouer vous-même</playyourself>
 <startgamebutton>Commencer</startgamebutton>
 <readytostarttickbox>Prêt à commencer</readytostarttickbox>
 <roundstartingpleasewait>Veuillez patienter</roundstartingpleasewait>
@@ -2582,4 +2581,7 @@
 <!-- NEW VALUES -->
 <privacypolicy>Politique de confidentialité</privacypolicy>
   
+<!-- CHANGED VALUES -->
+<playyourself>Jouer vous-même</playyourself>
+
 </infotexts>
