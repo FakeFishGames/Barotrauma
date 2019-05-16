@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -46,13 +47,14 @@ namespace Barotrauma
         private Hull retreatTarget;
         private AIObjectiveGoTo retreatObjective;
         private AIObjectiveFindSafety findSafety;
+        private AIObjectiveGoTo followTargetObjective;
 
         private float coolDownTimer;
 
         public enum CombatMode
         {
             Defensive,
-            Offensive, // Not implemented
+            Offensive,
             Retreat
         }
 
@@ -77,10 +79,17 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
             if (abandon) { return; }
+            Arm(deltaTime);
+            Move(deltaTime);
+        }
+
+        private void Arm(float deltaTime)
+        {
             switch (Mode)
             {
+                case CombatMode.Offensive:
                 case CombatMode.Defensive:
-                    if (Weapon != null && character.Inventory.Items.Contains(_weapon))
+                    if (Weapon != null && !character.Inventory.Items.Contains(_weapon) || _weaponComponent != null && !_weaponComponent.HasRequiredContainedItems(false))
                     {
                         Weapon = null;
                     }
@@ -99,15 +108,31 @@ namespace Barotrauma
                             Attack(deltaTime);
                         }
                     }
-                    // When defensive, try to retreat to safety. TODO: in offsensive mode, engage the target
-                    Retreat(deltaTime);
+                    else
+                    {
+                        Mode = CombatMode.Retreat;
+                    }
                     break;
+                case CombatMode.Retreat:
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private void Move(float deltaTime)
+        {
+            switch (Mode)
+            {
+                case CombatMode.Offensive:
+                    Engage(deltaTime);
+                    break;
+                case CombatMode.Defensive:
                 case CombatMode.Retreat:
                     Retreat(deltaTime);
                     break;
-                case CombatMode.Offensive:
                 default:
-                    throw new System.NotImplementedException();
+                    throw new NotImplementedException();
             }
         }
 
@@ -202,8 +227,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    //couldn't equip the item, escape
-                    //Abandon(deltaTime);
+                    //couldn't equip the item -> escape
                     return false;
                 }
             }
@@ -212,6 +236,7 @@ namespace Barotrauma
 
         private void Retreat(float deltaTime)
         {
+            followTargetObjective = null;
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
                 retreatTarget = findSafety.FindBestHull(new List<Hull>() { character.CurrentHull });
@@ -220,10 +245,42 @@ namespace Barotrauma
             {
                 if (retreatObjective == null || retreatObjective.Target != retreatTarget)
                 {
-                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true);
+                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true, priorityModifier: PriorityModifier);
                 }
                 retreatObjective.TryComplete(deltaTime);
             }
+        }
+
+        private void Engage(float deltaTime)
+        {
+            retreatTarget = null;
+            retreatObjective = null;
+            if (followTargetObjective == null)
+            {
+                followTargetObjective = new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true, priorityModifier: PriorityModifier)
+                {
+                    AllowGoingOutside = true,
+                    IgnoreIfTargetDead = true
+                };
+            }
+            if (WeaponComponent is RangedWeapon)
+            {
+                followTargetObjective.CloseEnough = 3;
+            }
+            else if (WeaponComponent is MeleeWeapon mw)
+            {
+                followTargetObjective.CloseEnough = ConvertUnits.ToSimUnits(mw.Range);
+            }
+            else if (WeaponComponent is RepairTool rt)
+            {
+                followTargetObjective.CloseEnough = ConvertUnits.ToSimUnits(rt.Range);
+            }
+            if (retreatTarget != null)
+            {
+                SteeringManager.Reset();
+                Mode = CombatMode.Retreat;
+            }
+            followTargetObjective.TryComplete(deltaTime);
         }
 
         private bool Reload(float deltaTime)
@@ -251,6 +308,7 @@ namespace Barotrauma
                 }
                 else if (!reloadWeaponObjective.CanBeCompleted)
                 {
+                    SteeringManager.Reset();
                     Mode = CombatMode.Retreat;
                 }
                 else
@@ -310,12 +368,6 @@ namespace Barotrauma
                     }
                 }
             }
-        }
-
-        private void Abandon(float deltaTime)
-        {
-            abandon = true;
-            SteeringManager.Reset();
         }
 
         public override bool IsCompleted()
