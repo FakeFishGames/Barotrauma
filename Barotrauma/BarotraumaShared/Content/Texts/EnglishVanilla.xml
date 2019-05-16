@@ -3199,5 +3199,7 @@
   <!-- NEW VALUES -->
   <privacypolicy>Privacy policy</privacypolicy>
   <missionfailed>Mission failed</missionfailed>
+  <label.highpressurewarning>WARNING: High pressure</label.highpressurewarning>
+  <label.reactortempwarning>Reactor temp. caution</label.reactortempwarning>
   
 </infotexts>
