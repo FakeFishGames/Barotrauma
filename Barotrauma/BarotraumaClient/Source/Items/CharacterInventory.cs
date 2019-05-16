@@ -35,7 +35,7 @@ namespace Barotrauma
 
         private static Dictionary<InvSlotType, Sprite> limbSlotIcons;
         
-        const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
+        public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
 
         private Point screenResolution;
 
@@ -448,7 +448,8 @@ namespace Barotrauma
                 {
                     if (Items[i]?.OwnInventory != null && Items[i].OwnInventory.Capacity == 1 && PersonalSlots.HasFlag(SlotTypes[i]))
                     {
-                        if (Items[i].OwnInventory.Items[0].Condition > 0.0f &&
+                        if (Items[i].OwnInventory.Items[0] != null &&
+                            Items[i].OwnInventory.Items[0].Condition > 0.0f &&
                             Items[i].OwnInventory.Items[0].Condition / Items[i].OwnInventory.Items[0].MaxCondition < 0.15f)
                         {
                             hidePersonalSlots = false;

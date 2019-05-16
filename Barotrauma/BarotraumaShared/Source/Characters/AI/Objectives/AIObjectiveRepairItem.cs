@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -15,7 +14,6 @@ namespace Barotrauma
         public Item Item { get; private set; }
 
         private AIObjectiveGoTo goToObjective;
-        private AIObjectiveContainItem refuelObjective;
         private float previousCondition = -1;
         private RepairTool repairTool;
 
@@ -73,45 +71,10 @@ namespace Barotrauma
                 }
             }
             // Only continue when the get item sub objectives have been completed.
-            if (subObjectives.Any()) { return; }
+            if (subObjectives.Any(so => so is AIObjectiveGetItem)) { return; }
             if (repairTool == null)
             {
                 FindRepairTool();
-            }
-            if (repairTool != null)
-            {
-                var containedItems = repairTool.Item.ContainedItems;
-                if (containedItems == null)
-                {
-#if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveRepairItem failed - the item \"" + repairTool + "\" has no proper inventory");
-#endif
-                    abandon = true;
-                    return;
-                }
-                // Drop empty tanks
-                foreach (Item containedItem in containedItems)
-                {
-                    if (containedItem == null) { continue; }
-                    if (containedItem.Condition <= 0.0f)
-                    {
-                        containedItem.Drop(character);
-                    }
-                }
-                RelatedItem item = null;
-                Item fuel = null;
-                foreach (RelatedItem requiredItem in repairTool.requiredItems[RelatedItem.RelationType.Contained])
-                {
-                    item = requiredItem;
-                    fuel = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
-                    if (fuel != null) { break; }
-                }
-                if (fuel == null)
-                {
-                    RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager));
-                    return;
-                }
             }
             if (character.CurrentHull == Item.CurrentHull && character.CanInteractWith(Item))
             {
@@ -149,7 +112,6 @@ namespace Barotrauma
             }
             else
             {
-                RemoveSubObjective(ref refuelObjective);
                 // If cannot reach the item, approach it.
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>

@@ -1,4 +1,32 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.0.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Translations to German, Russian, French, Brazilian Portuguese, Traditional Chinese and Simplified Chinese.
+- New logo and main menu art.
+- 2 new outposts.
+- New docking system.
+- Numerous fixes and improvements to the crew AI. The biggest change is that the AI characters can now do
+tasks by themselves even when they haven't been assigned an order.
+- Lock the inventory when aiming with a railgun or a coilgun.
+- Swap the order of the starting location & destination in nav terminals when playing in a mirrored sub.
+
+Bugfixes:
+- Fixed splash screens and tutorial videos crashing the Linux version.
+- Fixed damaged item sprites not updating client-side after being repaired.
+- Fixed characters occasionally taking impact damage when hitting walls while climbing.
+- Improved the syncing of ragdolled characters.
+- Fixed characters running more slowly when their torso is in a different hull than the feet (for example 
+in Humpback's bilge). 
+- Fixed items "vanishing" if they move directly from sub to another without going outside first.
+- Fixed content package hash calculation failing if the package is not enabled and contains new monster files.
+- Fixed inability to enable content packages if some of the files included in the package are already in 
+the game folder (which may happen, for example, if enabling a content package fails).
+- Fixed AllowRagdollButton settings not being synced with clients, leading to strange ragdolling behavior
+client-side if the server has disabled ragdolling.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.10.0
 ---------------------------------------------------------------------------------------------------------
 

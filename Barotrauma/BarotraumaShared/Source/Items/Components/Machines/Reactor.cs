@@ -501,7 +501,7 @@ namespace Barotrauma.Items.Components
                 {
                     var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>(), objective.objectiveManager)
                     {
-                        targetItemCount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
+                        MinContainedAmount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
                         GetItemPriority = (Item fuelItem) =>
                         {
                             if (fuelItem.ParentInventory?.Owner is Item)
