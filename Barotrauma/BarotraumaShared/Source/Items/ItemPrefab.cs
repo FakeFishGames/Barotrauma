@@ -132,14 +132,16 @@ namespace Barotrauma
         //default size
         protected Vector2 size;                
 
-        private float impactTolerance;
+        private List<XElement> fabricationRecipeElements = new List<XElement>();
 
         private bool canSpriteFlipX, canSpriteFlipY;
         
         private Dictionary<string, PriceInfo> prices;
 
-        //an area next to the construction
-        //the construction can be Activated() by a Character inside the area
+        /// <summary>
+        /// Defines areas where the item can be interacted with. If RequireBodyInsideTrigger is set to true, the character
+        /// has to be within the trigger to interact. If it's set to false, having the cursor within the trigger is enough.
+        /// </summary>
         public List<Rectangle> Triggers;
 
         private List<XElement> fabricationRecipeElements = new List<XElement>();

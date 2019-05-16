@@ -426,7 +426,7 @@ namespace Barotrauma
             }
         }
 
-        private bool canSpeak;
+        public bool CanSpeak;
 
         private bool speechImpedimentSet;
 
@@ -436,7 +436,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!canSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
+                if (!CanSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
                 return speechImpediment;
             }
             set
@@ -710,7 +710,7 @@ namespace Barotrauma
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            canSpeak = doc.Root.GetAttributeBool("canspeak", false);
+            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
             Noise = doc.Root.GetAttributeFloat("noise", 100f);
 
@@ -1588,9 +1588,8 @@ namespace Barotrauma
                     }
                 }
             }
-
-
-            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
+            
+            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) { return false; }
             
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) { return false; }
@@ -2593,6 +2592,10 @@ namespace Barotrauma
             if (selectedItems[1] != null) { selectedItems[1].Drop(this); }
 
             if (info != null) { info.Remove(); }
+
+#if CLIENT
+            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+#endif
 
 #if CLIENT
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);

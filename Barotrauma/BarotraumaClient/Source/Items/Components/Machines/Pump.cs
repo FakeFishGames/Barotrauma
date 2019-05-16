@@ -10,6 +10,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
+        public GUIScrollBar IsActiveSlider
+        {
+            get { return isActiveSlider; }
+        }
         private GUIScrollBar isActiveSlider;
         private GUIScrollBar pumpSpeedSlider;
         private GUITickBox powerIndicator;
@@ -49,7 +53,6 @@ namespace Barotrauma.Items.Components
             };
             var sliderHandle = isActiveSlider.GetChild<GUIButton>();
             sliderHandle.RectTransform.NonScaledSize = new Point(84, sliderHandle.Rect.Height);
-            
             isActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 bool active = scrollBar.BarScroll < 0.5f;

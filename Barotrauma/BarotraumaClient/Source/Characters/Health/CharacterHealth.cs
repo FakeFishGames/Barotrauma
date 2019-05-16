@@ -136,6 +136,17 @@ namespace Barotrauma
             }
         }
 
+        public GUIButton CPRButton
+        {
+            get { return cprButton; }
+        }
+
+        public float HealthBarPulsateTimer
+        {
+            get { return healthBarPulsateTimer; }
+            set { healthBarPulsateTimer = MathHelper.Clamp(value, 0.0f, 10.0f); }
+        }
+
         static CharacterHealth()
         {
             damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);

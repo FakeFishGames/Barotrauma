@@ -42,7 +42,21 @@ namespace Barotrauma
                     MathHelper.Clamp(value.Y, 0.01f, 10));
             }
         }
-                
+
+        private string specialTag;
+        [Editable, Serialize("", true)]
+        public string SpecialTag
+        {
+            get { return specialTag; }
+            set { specialTag = value; }
+        }
+
+        // Only for testing in the debug build. Not saved.
+#if DEBUG
+        [Editable, Serialize(true, false)]
+#endif
+        public bool DrawTiled { get; protected set; } = true;
+        
         protected Vector2 textureOffset = Vector2.Zero;
         [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
         public Vector2 TextureOffset
@@ -187,7 +201,7 @@ namespace Barotrauma
                 if (HasBody && !ShowWalls) return;
             }
 
-            Color color = isHighlighted ? Color.Orange : spriteColor;
+            Color color = IsHighlighted ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);

@@ -303,7 +303,7 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(1.0f);
 
-            infoBox = CreateInfoFrame("Uh-oh... Something enormous just appeared on the sonar.");
+            infoBox = CreateInfoFrame("", "Uh-oh... Something enormous just appeared on the sonar.");
 
             List<Structure> windows = new List<Structure>();
             foreach (Structure s in Structure.WallList)

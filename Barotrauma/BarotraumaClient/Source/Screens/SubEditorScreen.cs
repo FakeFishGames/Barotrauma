@@ -1301,6 +1301,12 @@ namespace Barotrauma
             var paddedLoadFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.02f };
 
             var deleteButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform, Anchor.Center));
+
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
             var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLoadFrame.RectTransform))
             {
                 ScrollBarVisible = true,
@@ -1311,15 +1317,13 @@ namespace Barotrauma
                 }
             };
 
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            var searchBox = new GUITextBox(new RectTransform(new Vector2(0.9f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+
             searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), filterContainer.RectTransform), "x")
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterContainer.RectTransform), "x")
             {
                 OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
             };

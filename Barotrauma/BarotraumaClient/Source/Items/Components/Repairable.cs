@@ -10,6 +10,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IDrawableComponent
     {
+        public GUIButton RepairButton
+        {
+            get { return repairButton; }
+        }
         private GUIButton repairButton;
         private GUIProgressBar progressBar;
 

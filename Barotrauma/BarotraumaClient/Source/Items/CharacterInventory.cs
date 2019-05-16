@@ -100,6 +100,7 @@ namespace Barotrauma
                 limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/IconAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
                 limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
                 limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(768 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/IconAtlas.png", new Rectangle(768 + margin, 896 + margin, 128 - margin * 2, 128 - margin * 2)));
             }
             SlotPositions = new Vector2[SlotTypes.Length];
             CurrentLayout = Layout.Default;

@@ -121,74 +121,19 @@ namespace Barotrauma
         protected Color selectedColor;
         protected Color pressedColor;
 
+        private CoroutineHandle pulsateCoroutine;
+
         protected ComponentState state;
 
         protected Color flashColor;
         protected float flashDuration = 1.5f;
+        private bool useRectangleFlash;
+        public float FlashTimer
+        {
+            get { return flashTimer; }
+        }
         protected float flashTimer;
         private Vector2 flashRectInflate;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
-
-        public bool IgnoreLayoutGroups;
 
         public bool IgnoreLayoutGroups;
 
@@ -323,6 +268,8 @@ namespace Barotrauma
             get { return pressedColor; }
             set { pressedColor = value; }
         }
+
+        public bool ExternalHighlight = false;
 
         private RectTransform rectTransform;
         public RectTransform RectTransform
@@ -496,11 +443,21 @@ namespace Barotrauma
                 int flashCycleCount = (int)Math.Max(flashDuration, 1);
                 float flashCycleDuration = flashDuration / flashCycleCount;
 
+                Rectangle flashRect = Rect;
+                flashRect.Inflate(flashRectInflate.X, flashRectInflate.Y);
+
                 //MathHelper.Pi * 0.8f -> the curve goes from 144 deg to 0, 
                 //i.e. quickly bumps up from almost full brightness to full and then fades out
-                GUI.UIGlow.Draw(spriteBatch,
-                    rect,
-                    flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
+                if (!useRectangleFlash)
+                {
+                    GUI.UIGlow.Draw(spriteBatch,
+                        flashRect,
+                        flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
+                }
+                else
+                {
+                    GUI.DrawRectangle(spriteBatch, flashRect, flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), true);
+                }
             }
         }
 
@@ -525,6 +482,7 @@ namespace Barotrauma
                     toolTipBlock.WrappedText.Split('\n').Length * 18 + 7);
                 toolTipBlock.userData = toolTip;
             }
+            toolTipBlock.SetTextPos();
 
             toolTipBlock.RectTransform.AbsoluteOffset = new Point(targetElement.Center.X, targetElement.Bottom);
             if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
@@ -548,9 +506,11 @@ namespace Barotrauma
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
         }
 
-        public virtual void Flash(Color? color = null, float flashDuration = 1.5f)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectInflate = null)
         {
             flashTimer = flashDuration;
+            this.flashRectInflate = flashRectInflate ?? Vector2.Zero;            
+            this.useRectangleFlash = useRectangleFlash;
             this.flashDuration = flashDuration;
             flashColor = (color == null) ? Color.Red : (Color)color;
         }
@@ -568,12 +528,9 @@ namespace Barotrauma
             while (t < duration)
             {
                 t += CoroutineManager.DeltaTime;
-
                 SetAlpha(MathHelper.Lerp(startA, to, t / duration));
-
                 yield return CoroutineStatus.Running;
             }
-            toolTipBlock.SetTextPos();
 
             SetAlpha(to);
 
@@ -584,9 +541,31 @@ namespace Barotrauma
 
             yield return CoroutineStatus.Success;
         }
+
+        public void Pulsate(Vector2 startScale, Vector2 endScale, float duration)
+        {
+            if (CoroutineManager.IsCoroutineRunning(pulsateCoroutine))
+            {
+                return;
+            }
+            pulsateCoroutine = CoroutineManager.StartCoroutine(DoPulsate(startScale, endScale, duration), "Pulsate" + ToString());
+        }
+
+        private IEnumerable<object> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
+        {
+            float t = 0.0f;
+            while (t < duration)
+            {
+                t += CoroutineManager.DeltaTime;
+                RectTransform.LocalScale = Vector2.Lerp(startScale, endScale, (float)Math.Sin(t / duration * MathHelper.Pi));
+                yield return CoroutineStatus.Running;
+            }
+            RectTransform.LocalScale = startScale;
+            yield return CoroutineStatus.Success;
+        }
         #endregion
 
-        protected virtual void SetAlpha(float a)
+        public virtual void ApplyStyle(GUIComponentStyle style)
         {
             if (style == null) return;
 
@@ -599,11 +578,7 @@ namespace Barotrauma
 
             OutlineColor = style.OutlineColor;
 
-        public virtual void Flash(Color? color = null, float flashDuration = 1.5f)
-        {
-            flashTimer = flashDuration;
-            this.flashDuration = flashDuration;
-            flashColor = (color == null) ? Color.Red : (Color)color;
+            this.style = style;
         }
     }
 }
