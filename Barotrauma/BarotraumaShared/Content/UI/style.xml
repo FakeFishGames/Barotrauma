@@ -782,16 +782,12 @@
   </SerializableEntityEditor>
 
   <ChatBox
-    color="255,255,255,255"
+    color="255,255,255,220"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
     textcolor="255,255,255,255"
     outlinecolor="0,0,0,0">
-    <GUIFrame
-      padding="5.0,10.0,5.0,10.0"
-      color="1.0,1.0,1.0,0.95"
-      hovercolor="255,255,255,255"
-      selectedcolor="255,255,255,255">
-      <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect ="688,490,335,445" slice="714,514,1002,920"/>
-    </GUIFrame>
+    <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect ="688,490,335,445" slice="714,514,1002,920"/>
   </ChatBox>
 
   <ChatTextBox
