@@ -906,7 +906,7 @@ namespace Barotrauma
 
         public void CreateTextPicker(string textTag, ISerializableEntity entity, SerializableProperty property, GUITextBox textBox)
         {
-            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, new Vector2(0.2f, 0.5f), new Point(300, 400));
+            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, width: 300, height: 400);
             msgBox.Buttons[0].OnClicked = msgBox.Close;
 
             var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
