@@ -117,11 +117,11 @@ namespace Barotrauma.Items.Components
             {
                 if (uiElements[i] is GUIButton button)
                 {
-                    button.Text = customInterfaceElementList[i].Label;
+                    button.Text = labels[i];
                 }
                 else if (uiElements[i] is GUITickBox tickBox)
                 {
-                    tickBox.Text = customInterfaceElementList[i].Label;
+                    tickBox.Text = labels[i];
                 }
             }
         }

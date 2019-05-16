@@ -132,24 +132,19 @@ namespace Barotrauma
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
             {
-                //TODO: display the name of the language in the target language?
-                languageDD.AddItem(language, language);
+                languageDD.AddItem(TextManager.Get("Language." + language, returnNull: true) ?? language, language);
             }
             languageDD.SelectItem(TextManager.Language);
             languageDD.OnSelected = (guiComponent, obj) =>
             {
                 string newLanguage = obj as string;
                 if (newLanguage == Language) return true;
-                
+
+                UnsavedSettings = true;
                 Language = newLanguage;
                 ApplySettings();
 
-                var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
-                //change fonts to the default font of the new language to make sure
-                //they can be displayed when for example changing from English to Chinese
-                var defaultFont = GUI.Style.LoadCurrentDefaultFont();
-                msgBox.Header.Font = defaultFont;
-                msgBox.Text.Font = defaultFont;
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
 
                 return true;
             };

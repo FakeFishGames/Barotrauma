@@ -178,6 +178,7 @@ namespace Barotrauma
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
+
             PerformanceCounter = new PerformanceCounter();
 
             IsFixedTimeStep = false;
@@ -321,11 +322,6 @@ namespace Barotrauma
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
 
-            while (TitleScreen.WaitForLanguageSelection)
-            {
-                yield return CoroutineStatus.Running;
-            }
-
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
@@ -374,9 +370,11 @@ namespace Barotrauma
             InitUserStats();
 
         yield return CoroutineStatus.Running;
-            
+
+
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
+            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
@@ -527,7 +525,7 @@ namespace Barotrauma
         protected override void UnloadContent()
         {
             Video.Close();
-            SoundManager?.Dispose();
+            SoundManager.Dispose();
         }
 
         /// <summary>

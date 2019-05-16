@@ -104,13 +104,13 @@ namespace Barotrauma.Items.Components
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), GuiFrame.RectTransform, Anchor.Center), isHorizontal: true)
             {
-                RelativeSpacing = 0.012f,
+                RelativeSpacing = 0.015f,
                 Stretch = true
             };
             
-            GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), paddedFrame.RectTransform), style: null);
+            GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), style: null);
             leftHUDColumn = columnLeft;
-            GUIFrame columnMid = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), paddedFrame.RectTransform), style: null);
+            GUIFrame columnMid = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), paddedFrame.RectTransform), style: null);
             GUIFrame columnRight = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), paddedFrame.RectTransform), style: null);
 
             //----------------------------------------------------------
@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
                 };
 
                 var btnText = warningBtn.GetChild<GUITextBlock>();
-                btnText.Font = GUI.Font;
+                btnText.Font = GUI.SmallFont;
                 btnText.Wrap = true;
                 btnText.SetTextPos();
                 warningButtons.Add(warningTexts[i], warningBtn);

@@ -279,8 +279,6 @@ namespace Barotrauma
         }
         public static bool ShowUserStatisticsPrompt { get; set; }
 
-        public bool ShowLanguageSelectionPrompt { get; set; }
-
         public GameSettings()
         {
             SelectedContentPackages = new HashSet<ContentPackage>();
@@ -766,7 +764,6 @@ namespace Barotrauma
             CheckBindings(!fileFound);
             if (!fileFound)
             {
-                ShowLanguageSelectionPrompt = true;
                 SaveNewPlayerConfig();
             }
         }
