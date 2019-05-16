@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -13,16 +14,6 @@ namespace Barotrauma
         public AIObjectivePumpWater(Character character, string option, float priorityModifier = 1) : base(character, option, priorityModifier)
         {
             pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
-        }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (character.Submarine == null) { return 0; }
-            if (objectiveManager.CurrentOrder == this && targets.Count > 0)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-            return 0.0f;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater && otherObjective.Option == Option;
@@ -63,6 +54,6 @@ namespace Barotrauma
         protected override bool Filter(Pump pump) => true;
         protected override IEnumerable<Pump> GetList() => pumpList;
         protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, Option, false);
-        protected override float Average(Pump target) => 0;
+        protected override float Average(Pump target) => MathHelper.Lerp(0, 100, target.CurrFlow / target.MaxFlow);
     }
 }

@@ -86,8 +86,16 @@ namespace Barotrauma
         {
             if (character.Submarine == null) { return 0; }
             if (targets.None()) { return 0; }
+            //if (objectiveManager.CurrentOrder == this)
+            //{
+            //    return AIObjectiveManager.OrderPriority;
+            //}
             float avg = targets.Average(t => Average(t));
-            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority + 20, avg / 100);
+            // If the avg is less than 1% of the max value, let's just treat it as zero.
+            if (avg < 1) { return 0; }
+            float max = MathHelper.Min(AIObjectiveManager.OrderPriority + 20, 100);
+            float value = MathHelper.Min((Priority + avg) / 100 * PriorityModifier, 1);
+            return MathHelper.Lerp(0, max, value);
         }
 
         protected void UpdateTargets()
@@ -126,6 +134,10 @@ namespace Barotrauma
         /// List of all possible items of the specified type. Used for filtering the removed objectives.
         /// </summary>
         protected abstract IEnumerable<T> GetList();
+
+        /// <summary>
+        /// 0 to 100.
+        /// </summary>
         protected abstract float Average(T target);
         protected abstract AIObjective ObjectiveConstructor(T target);
         protected abstract bool Filter(T target);

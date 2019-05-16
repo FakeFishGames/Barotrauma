@@ -105,7 +105,7 @@ namespace Barotrauma
             CurrentSubObjective.SortSubObjectives(objectiveManager);
         }
 
-        public virtual float GetPriority(AIObjectiveManager objectiveManager) => Priority;
+        public virtual float GetPriority(AIObjectiveManager objectiveManager) => Priority * PriorityModifier;
 
         public virtual void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
@@ -116,9 +116,8 @@ namespace Barotrauma
             }
             else if (objectiveManager.CurrentObjective == this || subObjective == this)
             {
-                Priority += Devotion * deltaTime;
+                Priority += Devotion * PriorityModifier * deltaTime;
             }
-            Priority *= PriorityModifier;
             Priority = MathHelper.Clamp(Priority, 0, 100);
             subObjectives.ForEach(so => so.Update(objectiveManager, deltaTime));
         }

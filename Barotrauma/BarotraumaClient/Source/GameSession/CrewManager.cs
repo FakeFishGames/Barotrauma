@@ -70,6 +70,11 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
+            return characterListBox.Rect;
+        }
+
+        partial void InitProjectSpecific()
+        {
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
                 CanBeFocused = false

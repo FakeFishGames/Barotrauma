@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
+    // TODO: use objective loop and sort the targets by severity
     class AIObjectiveExtinguishFires : AIObjective
     {
         public override string DebugTag => "extinguish fires";
@@ -23,8 +24,8 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-
-            return MathHelper.Clamp(fireCount * 20, 0, 100);
+            float basePriority = MathHelper.Clamp(Priority, 0, 10);
+            return MathHelper.Clamp(basePriority + fireCount * 20, 0, 100);
         }
 
         public override bool IsCompleted() => false;
