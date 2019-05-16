@@ -135,6 +135,12 @@ namespace Barotrauma
             return style;
         }
 
+        public GUIComponentStyle GetComponentStyle(string name)
+        {
+            componentStyles.TryGetValue(name.ToLowerInvariant(), out GUIComponentStyle style);
+            return style;
+        }
+
         public void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {
             GUIComponentStyle componentStyle = null;  
