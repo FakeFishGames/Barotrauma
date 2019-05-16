@@ -20,16 +20,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Filter(Hull target)
-        {
-            if (target == null) { return false; }
-            if (target.FireSources.None()) { return false; }
-            if (target.Submarine == null) { return false; }
-            if (target.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target, true)) { return false; }
-            //if (Character.CharacterList.Any(c => c.CurrentHull == target && !HumanAIController.IsFriendly(c))) { return false; }
-            return true;
-        }
+        protected override bool Filter(Hull hull) => IsValidTarget(hull, character);
 
         protected override float TargetEvaluation() => objectiveManager.CurrentObjective == this ? 100 : targets.Sum(t => GetFireSeverity(t));
 
@@ -39,5 +30,15 @@ namespace Barotrauma
         protected override IEnumerable<Hull> GetList() => Hull.hullList;
 
         protected override AIObjective ObjectiveConstructor(Hull target) => new AIObjectiveExtinguishFire(character, target, objectiveManager, PriorityModifier);
+
+        public static bool IsValidTarget(Hull hull, Character character)
+        {
+            if (hull == null) { return false; }
+            if (hull.FireSources.None()) { return false; }
+            if (hull.Submarine == null) { return false; }
+            if (hull.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { return false; }
+            return true;
+        }
     }
 }

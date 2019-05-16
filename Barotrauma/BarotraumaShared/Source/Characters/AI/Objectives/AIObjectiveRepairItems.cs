@@ -46,13 +46,7 @@ namespace Barotrauma
 
         protected override bool Filter(Item item)
         {
-            if (item == null) { return false; }
-            if (item.IsFullCondition) { return false; }
-            if (item.CurrentHull == null) { return false; }
-            if (item.Submarine == null) { return false; }
-            if (item.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
-            if (item.Repairables.None()) { return false; }
+            if (!IsValidTarget(item, character)) { return false; }
             if (item.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
@@ -73,5 +67,17 @@ namespace Barotrauma
         protected override float TargetEvaluation() => targets.Max(t => 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
         protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item, objectiveManager, PriorityModifier);
+
+        public static bool IsValidTarget(Item item, Character character)
+        {
+            if (item == null) { return false; }
+            if (item.IsFullCondition) { return false; }
+            if (item.CurrentHull == null) { return false; }
+            if (item.Submarine == null) { return false; }
+            if (item.Submarine.TeamID != character.TeamID) { return false; }
+            if (item.Repairables.None()) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+            return true;
+        }
     }
 }

@@ -90,6 +90,7 @@ namespace Barotrauma
 
             if (Character.SpeechImpediment < 100.0f)
             {
+                // TODO: add a timer -> once per second is enough?
                 ReportProblems();
                 UpdateSpeaking();
             }
@@ -246,7 +247,7 @@ namespace Barotrauma
             Order newOrder = null;
             if (Character.CurrentHull != null)
             {
-                if (AIObjectiveExtinguishFires.IsValidTarget(Character.CurrentHull))
+                if (AIObjectiveExtinguishFires.IsValidTarget(Character.CurrentHull, Character))
                 {
                     var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
                     newOrder = new Order(orderPrefab, Character.CurrentHull, null);
@@ -255,7 +256,7 @@ namespace Barotrauma
 
                 foreach (var gap in Character.CurrentHull.ConnectedGaps)
                 {
-                    if (AIObjectiveFixLeaks.IsValidTarget(gap))
+                    if (AIObjectiveFixLeaks.IsValidTarget(gap, Character))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
                         newOrder = new Order(orderPrefab, Character.CurrentHull, null);
@@ -266,7 +267,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.CurrentHull != Character.CurrentHull) { continue; }
-                    if (AIObjectiveRepairItems.IsValidTarget(item))
+                    if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
                         newOrder = new Order(orderPrefab, Character.CurrentHull, item.Repairables?.FirstOrDefault());
@@ -277,7 +278,7 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (c.CurrentHull != Character.CurrentHull) { continue; }
-                    if (AIObjectiveFightIntruders.IsValidTarget(c))
+                    if (AIObjectiveFightIntruders.IsValidTarget(c, Character))
                     {
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
                         newOrder = new Order(orderPrefab, Character.CurrentHull, null);
@@ -483,7 +484,7 @@ namespace Barotrauma
                 case "reportbreach":
                     foreach (var gap in hull.ConnectedGaps)
                     {
-                        if (AIObjectiveFixLeaks.IsValidTarget(gap))
+                        if (AIObjectiveFixLeaks.IsValidTarget(gap, character))
                         {
                             AddTargets<AIObjectiveFixLeaks, Gap>(character, gap);
                         }
@@ -493,7 +494,7 @@ namespace Barotrauma
                     foreach (var item in Item.ItemList)
                     {
                         if (item.CurrentHull != hull) { continue; }
-                        if (AIObjectiveRepairItems.IsValidTarget(item))
+                        if (AIObjectiveRepairItems.IsValidTarget(item, character))
                         {
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
                         }
@@ -503,7 +504,7 @@ namespace Barotrauma
                     foreach (var enemy in Character.CharacterList)
                     {
                         if (enemy.CurrentHull != hull) { continue; }
-                        if (AIObjectiveFightIntruders.IsValidTarget(enemy))
+                        if (AIObjectiveFightIntruders.IsValidTarget(enemy, character))
                         {
                             AddTargets<AIObjectiveFightIntruders, Character>(character, enemy);
                         }
@@ -513,7 +514,7 @@ namespace Barotrauma
                     foreach (var c in Character.CharacterList)
                     {
                         if (c.CurrentHull != hull) { continue; }
-                        if (AIObjectiveRescueAll.IsValidTarget(c))
+                        if (AIObjectiveRescueAll.IsValidTarget(c, character))
                         {
                             AddTargets<AIObjectiveRescueAll, Character>(character, c);
                         }

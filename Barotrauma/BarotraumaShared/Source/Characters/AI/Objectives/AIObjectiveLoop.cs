@@ -13,8 +13,6 @@ namespace Barotrauma
         private float ignoreListTimer;
         private float targetUpdateTimer;
 
-        private static AIObjectiveLoop<T> instance;
-
         // By default, doesn't clear the list automatically
         protected virtual float IgnoreListClearInterval => 0;
         protected virtual float TargetUpdateInterval => 2;
@@ -23,6 +21,10 @@ namespace Barotrauma
 
         public bool AddTarget(T target)
         {
+            if (ReportedTargets.Contains(target))
+            {
+                return false;
+            }
             if (Filter(target))
             {
                 ReportedTargets.Add(target);
@@ -34,7 +36,6 @@ namespace Barotrauma
         public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null) 
             : base(character, objectiveManager, priorityModifier, option)
         {
-            instance = this;
             Reset();
         }
 
@@ -171,7 +172,5 @@ namespace Barotrauma
 
         protected abstract AIObjective ObjectiveConstructor(T target);
         protected abstract bool Filter(T target);
-
-        public static bool IsValidTarget(T target) => instance == null ? false : instance.Filter(target);
     }
 }

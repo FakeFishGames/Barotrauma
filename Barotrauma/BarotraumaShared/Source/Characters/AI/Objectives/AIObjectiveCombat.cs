@@ -248,7 +248,7 @@ namespace Barotrauma
             {
                 if (retreatObjective == null || retreatObjective.Target != retreatTarget)
                 {
-                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true, priorityModifier: PriorityModifier);
+                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true);
                 }
                 retreatObjective.TryComplete(deltaTime);
             }
@@ -260,7 +260,7 @@ namespace Barotrauma
             retreatObjective = null;
             if (followTargetObjective == null)
             {
-                followTargetObjective = new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true, priorityModifier: PriorityModifier)
+                followTargetObjective = new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
                 {
                     AllowGoingOutside = true,
                     IgnoreIfTargetDead = true,
