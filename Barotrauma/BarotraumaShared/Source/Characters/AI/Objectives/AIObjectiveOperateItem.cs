@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
@@ -66,11 +67,13 @@ namespace Barotrauma
             }
             if (target.CanBeSelected)
             {
-                bool inSameRoom = character.CurrentHull == target.Item.CurrentHull;
-                bool withinReach = target.Item.IsInsideTrigger(character.WorldPosition) || Vector2.DistanceSquared(character.Position, target.Item.Position) < MathUtils.Pow(target.Item.InteractDistance, 2);
-                if (inSameRoom && withinReach)
+                if (character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
                     if (character.SelectedConstruction != target.Item)
+                    {
+                        isCompleted = true;
+                    }
+                    if (component.AIOperate(deltaTime, character, this))
                     {
                         isCompleted = true;
                     }

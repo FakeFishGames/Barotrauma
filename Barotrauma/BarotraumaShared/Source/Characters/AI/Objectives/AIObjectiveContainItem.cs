@@ -91,8 +91,7 @@ namespace Barotrauma
             }
             else
             {
-                if (container.Item.CurrentHull != character.CurrentHull || 
-                    (Vector2.DistanceSquared(character.Position, container.Item.Position) > Math.Pow(container.Item.InteractDistance, 2) && !container.Item.IsInsideTrigger(character.WorldPosition)))
+                if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager));
                     return;
