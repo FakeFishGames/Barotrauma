@@ -300,7 +300,7 @@ namespace Barotrauma
                 UserData = "filterarea"
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.Font);
+            new GUITextBlock(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font);
             entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
             entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), filterArea.RectTransform), "x")
@@ -1333,7 +1333,7 @@ namespace Barotrauma
                 }
             };
 
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
             var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
