@@ -1,5 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -8,7 +11,7 @@ namespace Barotrauma
     {
         private GUIListBox listBox;
 
-        private readonly float scrollSpeed;
+        private float scrollSpeed;
 
         public CreditsPlayer(RectTransform rectT, string configFile) : base(null, rectT)
         {

@@ -44,15 +44,15 @@ namespace Barotrauma
         {
             backgroundVignette = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
 
-            new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.08f, 0.05f), AbsoluteOffset = new Point(-8, -8) },
+            new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.05f, 0.1f), AbsoluteOffset = new Point(-8, -8) },
                 style: "TitleText")
             {
                 Color = Color.Black * 0.5f,
                 CanBeFocused = false
             };
-            titleText = new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.08f, 0.05f) },
+            titleText = new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.05f, 0.1f) },
                 style: "TitleText");
 
             buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
@@ -354,12 +354,6 @@ namespace Barotrauma
             };
             var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
-
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.05f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.BottomLeft) { RelativeOffset = new Vector2(0.25f, 0.02f) },
-                TextManager.Get("Back"), style: "GUIButtonLarge")
-            {
-                OnClicked = SelectTab
-            };
         }
 #endregion
 
@@ -389,9 +383,10 @@ namespace Barotrauma
 
         private bool SelectTab(GUIButton button, object obj)
         {
-            titleText.Visible = true;
             if (obj is Tab)
             {
+                titleText.Visible = true;
+
                 if (GameMain.Config.UnsavedSettings)
                 {
                     var applyBox = new GUIMessageBox(
@@ -784,6 +779,10 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             DrawBackground(graphics, spriteBatch);
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
+
+            GUI.Draw(Cam, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 
