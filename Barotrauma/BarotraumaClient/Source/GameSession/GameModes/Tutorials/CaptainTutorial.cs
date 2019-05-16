@@ -201,7 +201,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_statusMonitor, true);
             do
             {
-                //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
+                captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f);
             } while (Submarine.MainSub.DockedTo.Count > 0);
             RemoveCompletedObjective(segments[4]);
@@ -225,7 +225,7 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(6); // Docking
             do
             {
-                //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
+                captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f);
             } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
             RemoveCompletedObjective(segments[6]);

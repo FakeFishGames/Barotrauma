@@ -25,21 +25,17 @@ namespace Barotrauma
             var allLevelObjects = levelObjectManager.GetAllObjects();
             foreach (var levelObj in allLevelObjects)
             {
-                foreach (Sprite sprite in levelObj.Prefab.Sprites)
+                if (levelObj.Prefab.Sprite != null &&
+                    !uniqueTextures.Contains(levelObj.Prefab.Sprite.Texture))
                 {
-                    if (!uniqueTextures.Contains(sprite.Texture))
-                    {
-                        uniqueTextures.Add(sprite.Texture);
-                        uniqueSprites.Add(sprite);
-                    }
+                    uniqueTextures.Add(levelObj.Prefab.Sprite.Texture);
+                    uniqueSprites.Add(levelObj.Prefab.Sprite);
                 }
-                foreach (Sprite specularSprite in levelObj.Prefab.SpecularSprites)
+                if (levelObj.Prefab.SpecularSprite != null &&
+                    !uniqueTextures.Contains(levelObj.Prefab.SpecularSprite.Texture))
                 {
-                    if (!uniqueTextures.Contains(specularSprite.Texture))
-                    {
-                        uniqueTextures.Add(specularSprite.Texture);
-                        uniqueSprites.Add(specularSprite);
-                    }
+                    uniqueTextures.Add(levelObj.Prefab.SpecularSprite.Texture);
+                    uniqueSprites.Add(levelObj.Prefab.SpecularSprite);
                 }
             }
 

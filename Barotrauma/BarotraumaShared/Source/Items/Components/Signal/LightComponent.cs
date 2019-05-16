@@ -152,8 +152,7 @@ namespace Barotrauma.Items.Components
                 ParentSub = item.CurrentHull?.Submarine,
                 Position = item.Position,
                 CastShadows = castShadows,
-                IsBackground = drawBehindSubs,
-                SpriteScale = Vector2.One * item.Scale
+                IsBackground = drawBehindSubs
             };
 #endif
 

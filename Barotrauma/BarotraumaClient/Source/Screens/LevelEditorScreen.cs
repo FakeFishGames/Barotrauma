@@ -174,10 +174,7 @@ namespace Barotrauma
 
             foreach (LevelObjectPrefab levelObjPrefab in LevelObjectPrefab.List)
             {
-                foreach (Sprite sprite in levelObjPrefab.Sprites)
-                {
-                    sprite?.EnsureLazyLoaded();
-                }
+                levelObjPrefab.Sprite?.EnsureLazyLoaded();
             }
 
             pointerLightSource = new LightSource(Vector2.Zero, 1000.0f, Color.White, submarine: null);
@@ -254,7 +251,7 @@ namespace Barotrauma
                     CanBeFocused = false,
                 };
 
-                Sprite sprite = levelObjPrefab.Sprites.FirstOrDefault() ?? levelObjPrefab.DeformableSprite?.Sprite;
+                Sprite sprite = levelObjPrefab.Sprite ?? levelObjPrefab.DeformableSprite?.Sprite;
                 GUIImage img = new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
                     paddedFrame.RectTransform, Anchor.TopCenter), sprite, scaleToFit: true)
                 {
@@ -292,7 +289,7 @@ namespace Barotrauma
                 editor.AddCustomContent(commonnessContainer, 1);
             }
 
-            Sprite sprite = levelObjectPrefab.Sprites.FirstOrDefault() ?? levelObjectPrefab.DeformableSprite?.Sprite;
+            Sprite sprite = levelObjectPrefab.Sprite ?? levelObjectPrefab.DeformableSprite?.Sprite;
             if (sprite != null)
             {
                 editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), 
@@ -300,6 +297,7 @@ namespace Barotrauma
                 {
                     OnClicked = (btn, userdata) =>
                     {
+                        GameMain.SpriteEditorScreen.RefreshLists();
                         editingSprite = sprite;
                         GameMain.SpriteEditorScreen.SelectSprite(editingSprite);
                         return true;
@@ -604,7 +602,7 @@ namespace Barotrauma
             public GUIMessageBox Create()
             {
                 var box = new GUIMessageBox(TextManager.Get("LevelEditorCreateLevelObj"), string.Empty, 
-                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, new Vector2(0.5f, 0.8f));
+                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, GameMain.GraphicsWidth / 2, (int)(GameMain.GraphicsHeight * 0.8f));
 
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
@@ -620,8 +618,8 @@ namespace Barotrauma
                 var texturePathBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
                 foreach (LevelObjectPrefab prefab in LevelObjectPrefab.List)
                 {
-                    if (prefab.Sprites.FirstOrDefault() == null) continue;
-                    texturePathBox.Text = Path.GetDirectoryName(prefab.Sprites.FirstOrDefault().FilePath);
+                    if (prefab.Sprite == null) continue;
+                    texturePathBox.Text = Path.GetDirectoryName(prefab.Sprite.FilePath);
                     break;
                 }
 
@@ -678,8 +676,6 @@ namespace Barotrauma
                             doc.WriteTo(writer);
                             writer.Flush();
                         }
-                        // Recreate the prefab so that the sprite loads correctly: TODO: consider a better way to do this
-                        newPrefab = new LevelObjectPrefab(newElement);
                         break;
                     }
 
