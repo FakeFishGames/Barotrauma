@@ -353,7 +353,8 @@ namespace Barotrauma
                     {
                         myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     }
-                    var pickedBody = Submarine.PickBody(character.SimPosition, Enemy.SimPosition, myBodies);
+                    var collisionCategories = Physics.CollisionCharacter | Physics.CollisionItemBlocking | Physics.CollisionWall;
+                    var pickedBody = Submarine.PickBody(character.SimPosition, Enemy.SimPosition, myBodies, collisionCategories);
                     if (pickedBody != null)
                     {
                         Character target = null;
