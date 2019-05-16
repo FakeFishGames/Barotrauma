@@ -1,21 +1,10 @@
 ﻿BAROTRAUMA
 
-www.barotraumagame.com
-Copyright © Undertow Games 2017-2018
+http://www.barotraumagame.com
 
-Default controls:
-WASD		- move
-Shift		- run
-E		- use/activate items and devices
-Right click	- aim with equipped item
-Left click	- use equipped item
-C		- open the crew command menu
-Left control	- crouch
-Tab		- select/deselect the chat box in multiplayer mode
-Tilde		- select the chat box in multiplayer mode and set 
-		  the message to be sent through the radio
-Space		- hold to stay in ragdoll mode
-F3		- open/close the debug console
+© 2018-2019 FakeFish Ltd. All rights reserved.
+© 2019 Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved.
+Privacy policy: http://privacypolicy.daedalic.com
 
 See the wiki for more detailed info and instructions:
 http://barotrauma.gamepedia.com
@@ -47,37 +36,3 @@ Query port (used to communicate with Steam)
 	External Port: The port you have selected for your server (27016 by default)
 	Internal Port: The port you have selected for your server (27016 by default)
 	Protocol: UDP
-
-------------------------------------------------------------------------
-------------------------------------------------------------------------
-Credits:
-------------------------------------------------------------------------
-
-Programming, graphics, sounds, game design	- Joonas Rikkonen ("Regalis")
-Graphics					- James Bear ("Moonsaber99")
-Programming					- Sebastian Broberg
-Programming					- Juan Pablo Arce ("juanjp600")
-
-------------------------------------------------------------------------
-
-"Road to Hell"
-Kevin MacLeod (incompetech.com)
-Licensed under Creative Commons: By Attribution 3.0
-http://creativecommons.org/licenses/by/3.0/
-
-------------------------------------------------------------------------
-
-Lidgren.Network networking library - Michael Lidgren
-
-------------------------------------------------------------------------
-
-Sound effects:
-	metal whining and screeching - ScottFerguson1
-	metal gate 10 - thencamenow
-	foil_expanding_multiple - markb
-	Bug Zapper_Many medium zaps - CGEffex
-	
-------------------------------------------------------------------------
-
-Textures from the PK01, PK02 and Ancient Collection Texture packages by Philip Klevestav are used in some of the sprites in the game. 
-The texture packages are licensed under a Creative Commons Attribution 3.0 Unported License (https://creativecommons.org/licenses/by/3.0/).
