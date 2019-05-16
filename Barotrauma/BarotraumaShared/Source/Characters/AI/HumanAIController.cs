@@ -37,24 +37,6 @@ namespace Barotrauma
             get { return objectiveManager; }
         }
 
-        private bool shouldCrouch;
-        private float crouchRaycastTimer;
-        const float CrouchRaycastInterval = 1.0f;
-
-        public const float HULL_SAFETY_THRESHOLD = 50;
-
-        public HashSet<Hull> UnsafeHulls { get; private set; } = new HashSet<Hull>();
-
-        private SteeringManager outsideSteering, insideSteering;
-
-        public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
-        public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
-
-        public override AIObjectiveManager ObjectiveManager
-        {
-            get { return objectiveManager; }
-        }
-
         public Order CurrentOrder
         {
             get;
