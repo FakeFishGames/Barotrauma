@@ -51,26 +51,8 @@ namespace Barotrauma
         {
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
-
             objectiveManager = new AIObjectiveManager(c);
-            objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
-            objectiveManager.AddObjective(new AIObjectiveIdle(c));
-            foreach (var automaticOrder in c.Info.Job.Prefab.AutomaticOrders)
-            {
-                var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
-                // TODO: Similar code is used in CrewManager:815-> DRY
-                var matchingItems = orderPrefab.ItemIdentifiers.Any() ?
-                    Item.ItemList.FindAll(it => orderPrefab.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(orderPrefab.ItemIdentifiers)) :
-                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == orderPrefab.ItemComponentType));
-                matchingItems.RemoveAll(it => it.Submarine != c.Submarine);
-                var item = matchingItems.GetRandom();
-                var order = new Order(orderPrefab, item ?? c.CurrentHull as Entity, item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType));
-                //SetOrder(order, automaticOrder.option, c, true);
-                objectiveManager.AddObjective(objectiveManager.CreateObjective(order, automaticOrder.option, c, automaticOrder.priorityModifier));
-            }
-
             updateObjectiveTimer = Rand.Range(0.0f, UpdateObjectiveInterval);
-
             InitProjSpecific();
         }
         partial void InitProjSpecific();
@@ -377,8 +359,10 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option, orderGiver);
-            if (speak && Character.SpeechImpediment < 100.0f) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
-
+            if (speak && Character.SpeechImpediment < 100.0f)
+            {
+                Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+            }
             SetOrderProjSpecific(order);
         }
         partial void SetOrderProjSpecific(Order order);
