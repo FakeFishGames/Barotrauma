@@ -169,15 +169,7 @@ namespace Barotrauma
                 bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
                 bool shouldKeepTheGearOn = !ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>();
 
-                // Don't allow to drop the diving suit in water or while climbing or if the current path has stairs
-                bool removeDivingSuit = 
-                    (oxygenLow && !highPressure) || 
-                        (!shouldKeepTheGearOn && 
-                        Character.CurrentHull.WaterPercentage < 1 && 
-                        !Character.IsClimbing && 
-                        steeringManager == insideSteering && 
-                        !PathSteering.InStairs);
-
+                bool removeDivingSuit = (oxygenLow && !highPressure) || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 1 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs);
                 if (removeDivingSuit)
                 {
                     var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
