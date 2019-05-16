@@ -198,7 +198,9 @@ namespace Barotrauma
                         focusName = character.FocusedCharacter.Info.DisplayName;
                     }
                     Vector2 textPos = startPos;
-                    textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
+                    Vector2 offset = GUI.Font.MeasureString(focusName);
+
+                    textPos -= new Vector2(offset.X / 2, offset.Y);
                     
                     Color nameColor = Color.White;
                     if (character.TeamID != character.FocusedCharacter.TeamID)
@@ -207,23 +209,23 @@ namespace Barotrauma
                     }
 
                     GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2);
-                    textPos.Y += 20;
+                    textPos.Y += offset.Y;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
                         GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBind(InputType.Grab).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
-                        textPos.Y += 15;
+                        textPos.Y += offset.Y;
                     }
                     if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
                     {
                         GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBind(InputType.Health).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
-                        textPos.Y += 15;
+                        textPos.Y += offset.Y;
                     }
                     if (!string.IsNullOrEmpty(character.FocusedCharacter.customInteractHUDText))
                     {
                         GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.customInteractHUDText, Color.LightGreen, Color.Black, 2, GUI.SmallFont);
-                        textPos.Y += 15;
+                        textPos.Y += offset.Y;
                     }
                 }
 
@@ -259,8 +261,10 @@ namespace Barotrauma
                         var hudTexts = focusedItem.GetHUDTexts(character);
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
+
+                        Vector2 offset = GUI.Font.MeasureString(focusedItem.Name);
                         Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
-                        startPos.Y -= (hudTexts.Count + 1) * 20;
+                        startPos.Y -= (hudTexts.Count + 1) * offset.Y;
                         if (focusedItem.Sprite != null)
                         {
                             startPos.X += (int)(circleSize * 0.4f * dir);
@@ -268,17 +272,17 @@ namespace Barotrauma
                         }
 
                         Vector2 textPos = startPos;
-                        if (dir == -1) textPos.X -= (int)GUI.Font.MeasureString(focusedItem.Name).X;
+                        if (dir == -1) textPos.X -= offset.X;
 
                         float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
 
                         GUI.DrawString(spriteBatch, textPos, focusedItem.Name, Color.White * alpha, Color.Black * alpha * 0.7f, 2);
-                        textPos.Y += 20.0f;
+                        textPos.Y += offset.Y;
                         foreach (ColoredText coloredText in hudTexts)
                         {
                             if (dir == -1) textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X);
                             GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
-                            textPos.Y += 20;
+                            textPos.Y += offset.Y;
                         }
                     }                    
                 }
