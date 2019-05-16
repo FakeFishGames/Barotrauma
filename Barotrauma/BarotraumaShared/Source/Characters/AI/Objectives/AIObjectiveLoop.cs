@@ -131,18 +131,18 @@ namespace Barotrauma
 
         protected virtual void FindTargets()
         {
-            foreach (T item in GetList())
+            foreach (T target in GetList())
             {
                 if (objectiveManager.CurrentOrder != this)
                 {
                     // Battery or pump states cannot be reported and therefore we must ignore them -> the bots always know if they require attention.
                     bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater;
-                    if (!ignore && !ReportedTargets.Contains(item)) { continue; }
+                    if (!ignore && !ReportedTargets.Contains(target)) { continue; }
                 }
-                if (!Filter(item)) { continue; }
-                if (!ignoreList.Contains(item))
+                if (!Filter(target)) { continue; }
+                if (!ignoreList.Contains(target))
                 {
-                    targets.Add(item);
+                    targets.Add(target);
                 }
             }
         }
