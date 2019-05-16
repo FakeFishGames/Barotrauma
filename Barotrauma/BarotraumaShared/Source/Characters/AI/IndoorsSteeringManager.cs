@@ -144,9 +144,9 @@ namespace Barotrauma
 
         protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
         {
-            bool isDifferentTarget = Vector2.DistanceSquared(target, currentTarget) > 1;
+            bool needsNewPath = currentPath != null && currentPath.Unreachable || Vector2.DistanceSquared(target, currentTarget) > 1;
             //find a new path if one hasn't been found yet or the target is different from the current target
-            if (currentPath == null || isDifferentTarget || findPathTimer < -1.0f)
+            if (currentPath == null || needsNewPath || findPathTimer < -1.0f)
             {
                 IsPathDirty = true;
 
@@ -164,7 +164,7 @@ namespace Barotrauma
                 }
 
                 var newPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
-                if (currentPath == null || isDifferentTarget || newPath.Cost < currentPath.Cost)
+                if (currentPath == null || needsNewPath || !newPath.Unreachable && newPath.Cost < currentPath.Cost)
                 {
                     currentPath = newPath;
                 }
