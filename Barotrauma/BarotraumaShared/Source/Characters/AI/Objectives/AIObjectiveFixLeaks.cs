@@ -20,8 +20,16 @@ namespace Barotrauma
             if (leak == null) { return 0; }
             float sizeFactor = MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, 200, (leak.IsHorizontal ? leak.Rect.Width : leak.Rect.Height)));
             float severity = sizeFactor * leak.Open;
-            if (!leak.IsRoomToRoom) { severity *= 50; }
-            return MathHelper.Min(severity, 100);
+            if (!leak.IsRoomToRoom)
+            {
+                severity *= 100;
+                // If there is a leak in the outer walls, the severity cannot be lower than 10, no matter how small the leak
+                return MathHelper.Clamp(severity, 10, 100);
+            }
+            else
+            {
+                return MathHelper.Min(severity, 100);
+            }
         }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;

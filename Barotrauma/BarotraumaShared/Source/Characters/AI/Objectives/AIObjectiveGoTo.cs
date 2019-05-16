@@ -10,7 +10,6 @@ namespace Barotrauma
         public override string DebugTag => "go to";
 
         private AIObjectiveFindDivingGear findDivingGear;
-        private Vector2 targetPos;
         private bool repeat;
         //how long until the path to the target is declared unreachable
         private float waitUntilPathUnreachable;
@@ -19,9 +18,9 @@ namespace Barotrauma
         public Func<bool> customCondition;
 
         /// <summary>
-        /// Sim units
+        /// Display units
         /// </summary>
-        public float CloseEnough { get; set; } = 0.5f;
+        public float CloseEnough { get; set; } = 50;
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
         public bool CheckVisibility { get; set; }
@@ -29,7 +28,7 @@ namespace Barotrauma
         public override float GetPriority()
         {
             if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
-            if (Target != null && Target.Removed) { return 0.0f; }
+            if (Target is Entity e && e.Removed) { return 0.0f; }
             if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }                     
             if (objectiveManager.CurrentOrder == this)
             {
@@ -38,31 +37,16 @@ namespace Barotrauma
             return 1.0f;
         }
 
-        public Entity Target { get; private set; }
-
-        public Vector2 TargetPos => Target != null ? Target.SimPosition : targetPos;
+        public ISpatialEntity Target { get; private set; }
 
         public bool FollowControlledCharacter;
 
-        public AIObjectiveGoTo(Entity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
+        public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
             : base (character, objectiveManager, priorityModifier)
         {
             this.Target = target;
             this.repeat = repeat;
-
             waitUntilPathUnreachable = 2.0f;
-            this.getDivingGearIfNeeded = getDivingGearIfNeeded;
-            CalculateCloseEnough();
-        }
-
-
-        public AIObjectiveGoTo(Vector2 simPos, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
-            : base(character, objectiveManager, priorityModifier)
-        {
-            this.targetPos = simPos;
-            this.repeat = repeat;
-
-            waitUntilPathUnreachable = 5.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
             CalculateCloseEnough();
         }
@@ -89,90 +73,69 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-            if (Target != null)
+            if (Target is Entity e)
             {
-                if (Target.Removed)
+                if (e.Removed)
                 {
                     abandon = true;
                 }
                 else
                 {
-                    character.AIController.SelectTarget(Target.AiTarget);
+                    character.AIController.SelectTarget(e.AiTarget);
                 }
             }
-            Vector2 currTargetPos = Vector2.Zero;
-            if (Target == null)
+            bool isInside = character.CurrentHull != null;
+            bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
+            var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
+            bool targetIsOutside = (Target != null && targetHull == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
+            if (isInside && targetIsOutside && !AllowGoingOutside)
             {
-                currTargetPos = targetPos;
+                abandon = true;
+            }
+            else if (!repeat && waitUntilPathUnreachable < 0)
+            {
+                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
+                {
+                    abandon = PathSteering.CurrentPath.Unreachable;
+                }
+            }
+            if (abandon)
+            {
+#if DEBUG
+                DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
+#endif
+                if (objectiveManager.CurrentOrder != null)
+                {
+                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                }
+                character.AIController.SteeringManager.Reset();
             }
             else
             {
-                currTargetPos = Target.SimPosition;
-                
+                Vector2 currTargetSimPos = Vector2.Zero;
+                currTargetSimPos = Target.SimPosition;
                 //if character is inside the sub and target isn't, transform the position
                 if (character.Submarine != null && Target.Submarine == null)
                 {
-                    currTargetPos -= character.Submarine.SimPosition;
+                    currTargetSimPos -= character.Submarine.SimPosition;
                 }
-            }
-            bool sightCheck = true;
-            if (CheckVisibility && Target != null)
-            {
-                sightCheck = Target is Character ch ? character.CanSeeCharacter(ch) : character.CanSeeTarget(Target);
-            }
-            if (sightCheck && Vector2.DistanceSquared(currTargetPos, character.SimPosition) < CloseEnough * CloseEnough)
-            {
-                character.AIController.SteeringManager.Reset();
-                character.AnimController.TargetDir = currTargetPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
-            }
-            else
-            {
-                bool isInside = character.CurrentHull != null;
-                bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
-                var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
-                bool targetIsOutside = (Target != null && targetHull == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
-                if (isInside && targetIsOutside && !AllowGoingOutside)
+                character.AIController.SteeringManager.SteeringSeek(currTargetSimPos);
+                if (getDivingGearIfNeeded)
                 {
-                    abandon = true;
-                }
-                else if (!repeat && waitUntilPathUnreachable < 0)
-                {
-                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
+                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
+                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90);
+                    bool needsEquipment = false;
+                    if (needsDivingSuit)
                     {
-                        abandon = PathSteering.CurrentPath.Unreachable;
+                        needsEquipment = !HumanAIController.HasDivingSuit(character);
                     }
-                }
-                if (abandon)
-                {
-#if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {(Target != null ? Target.ToString() : TargetPos.ToString())}", Color.Yellow);
-#endif
-                    if (objectiveManager.CurrentOrder != null)
+                    else if (needsDivingGear)
                     {
-                        character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                        needsEquipment = !HumanAIController.HasDivingMask(character);
                     }
-                    character.AIController.SteeringManager.Reset();
-                }
-                else
-                {
-                    character.AIController.SteeringManager.SteeringSeek(currTargetPos);
-                    if (getDivingGearIfNeeded)
+                    if (needsEquipment)
                     {
-                        bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
-                        bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90);
-                        bool needsEquipment = false;
-                        if (needsDivingSuit)
-                        {
-                            needsEquipment = !HumanAIController.HasDivingSuit(character);
-                        }
-                        else if (needsDivingGear)
-                        {
-                            needsEquipment = !HumanAIController.HasDivingMask(character);
-                        }
-                        if (needsEquipment)
-                        {
-                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager));
-                        }
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager));
                     }
                 }
             }
@@ -186,7 +149,12 @@ namespace Barotrauma
             // And finally check if can interact (heaviest)
             if (repeat) { return false; }
             if (isCompleted) { return true; }
-            bool closeEnough = Vector2.DistanceSquared(Target != null ? Target.SimPosition : targetPos, character.SimPosition) < CloseEnough * CloseEnough;
+            if (Target == null)
+            {
+                abandon = true;
+                return false;
+            }
+            bool closeEnough = Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
             if (closeEnough)
             {
                 if (customCondition == null || customCondition())
@@ -197,7 +165,7 @@ namespace Barotrauma
                     }
                     else if (Target is Character targetCharacter)
                     {
-                        if (character.CanInteractWith(targetCharacter, ConvertUnits.ToDisplayUnits(CloseEnough))) { isCompleted = true; }
+                        if (character.CanInteractWith(targetCharacter, CloseEnough)) { isCompleted = true; }
                     }
                     else
                     {
@@ -208,6 +176,7 @@ namespace Barotrauma
             if (isCompleted)
             {
                 character.AIController.SteeringManager.Reset();
+                character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
             }
             return isCompleted;
         }
@@ -215,13 +184,12 @@ namespace Barotrauma
         public override bool IsDuplicate(AIObjective otherObjective)
         {
             if (!(otherObjective is AIObjectiveGoTo objective)) { return false; }
-            if (objective.Target == Target) { return true; }
-            return objective.targetPos == targetPos;
+            return objective.Target == Target;
         }
 
         private void CalculateCloseEnough()
         {
-            float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance * 0.9f) : 0;
+            float interactionDistance = Target is Item i ? i.InteractDistance * 0.9f : 0;
             CloseEnough = Math.Max(interactionDistance, CloseEnough);
         }
     }

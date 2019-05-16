@@ -719,22 +719,36 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
             }
-        }
-
-        private Vector2 GetStandPosition()
-        {
-            Vector2 standPos = Leak.Position;
-            var hull = Leak.FlowTargetHull;
-            if (hull == null) { return standPos; }
-            if (Leak.IsHorizontal)
+            if (subObjectives.Any()) { return; }
+            var repairTool = weldingTool.GetComponent<RepairTool>();
+            if (repairTool == null)
             {
-                standPos += Vector2.UnitX * Math.Sign(hull.Position.X - Leak.Position.X) * Leak.Rect.Width;
+#if DEBUG
+                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
+#endif
+                abandon = true;
+                return;
+            }
+            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
+            // TODO: use the collider size/reach?
+            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
+            {
+                HumanAIController.AnimController.Crouching = true;
+            }
+            // Use a greater reach, because the distance is calculated from the character to the leak, not from the item to the leak.
+            float reach = repairTool.Range + ((HumanoidAnimController)character.AnimController).ArmLength;
+            bool canOperate = gapDiff.LengthSquared() < reach * reach;
+            if (canOperate)
+            {
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
             }
             else
             {
-                standPos += Vector2.UnitY * Math.Sign(hull.Position.Y - Leak.Position.Y) * Leak.Rect.Height;
+                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
+                {
+                    CloseEnough = reach
+                });
             }
-            return standPos;            
         }
     }
 }
