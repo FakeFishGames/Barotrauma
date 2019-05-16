@@ -349,11 +349,7 @@ namespace Barotrauma
 
         private void CheckDoorsInPath()
         {
-            if (door.IsOpen) { return true; }
-            if (canBreakDoors) { return true; }
-            if (door.IsStuck) { return false; }
-            if (!canOpenDoors || character.LockHands) { return false; }
-            if (door.HasIntegratedButtons)
+            for (int i = 0; i < 2; i++)
             {
                 WayPoint currentWaypoint = null;
                 WayPoint nextWaypoint = null;

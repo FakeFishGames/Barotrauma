@@ -45,7 +45,7 @@ namespace Barotrauma
             this.Target = target;
             this.repeat = repeat;
 
-            waitUntilPathUnreachable = 1.0f;
+            waitUntilPathUnreachable = 2.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
             CalculateCloseEnough();
         }
