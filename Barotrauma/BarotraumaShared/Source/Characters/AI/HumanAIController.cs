@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -195,6 +196,30 @@ namespace Barotrauma
                 {
                     // TODO: take the item where it was taken from?
                     extinguisherItem.Drop(Character);
+                }
+            }
+            foreach (var item in Character.Inventory.Items)
+            {
+                if (item == null) { continue; }
+                bool unequip = false;
+                if (ObjectiveManager.CurrentObjective is AIObjectiveIdle)
+                {
+                    unequip = item.AllowedSlots.Contains(InvSlotType.RightHand | InvSlotType.LeftHand);
+                }
+                else if (!(ObjectiveManager.CurrentObjective is AIObjectiveCombat))
+                {
+                    unequip = item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
+                }
+                if (unequip)
+                {
+                    if (Character.HasEquippedItem(item))
+                    {
+                        // Try to put the weapon in an Any slot, and drop it if that fails
+                        if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
+                        {
+                            item.Drop(Character);
+                        }
+                    }
                 }
             }
 
