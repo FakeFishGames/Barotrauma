@@ -70,6 +70,11 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
+            return characterListBox.Rect;
+        }
+
+        partial void InitProjectSpecific()
+        {
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
                 CanBeFocused = false
@@ -90,64 +95,14 @@ namespace Barotrauma
                 return true;
             };
 
-            characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
-            {
-                //Spacing = (int)(3 * GUI.Scale),
-                ScrollBarEnabled = false,
-                ScrollBarVisible = false,
-                CanBeFocused = false
-            };
-
-            scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                Visible = false,
-                UserData = -1,
-                OnClicked = ScrollCharacterList
-            };
-            scrollButtonDown = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                Visible = false,
-                UserData = 1,
-                OnClicked = ScrollCharacterList
-            };
-            scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
-
-            if (isSinglePlayer)
-            {
-                ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
+                var characterInfo = new CharacterInfo(subElement);
+                characterInfos.Add(characterInfo);
+                foreach (XElement invElement in subElement.Elements())
                 {
-                    OnEnterMessage = (textbox, text) =>
-                    {
-                        if (Character.Controlled?.Info == null)
-                        {
-                            textbox.Deselect();
-                            textbox.Text = "";
-                            return true;
-                        }
-
-                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-
-                        if (!string.IsNullOrWhiteSpace(text))
-                        {
-                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
-                            AddSinglePlayerChatMessage(
-                                Character.Controlled.Info.Name,
-                                msg,
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
-                                Character.Controlled);
-                            var headset = GetHeadset(Character.Controlled, true);
-                            if (headset != null && headset.CanTransmit())
-                            {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
-                            }
-                        }
-                        textbox.Deselect();
-                        textbox.Text = "";
-                        return true;
-                    }
-                };
-
-                ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
+                    if (invElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
+                    characterInfo.InventoryData = invElement;
+                    break;
+                }
             }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
@@ -186,14 +141,12 @@ namespace Barotrauma
                     Visible = false
                 };
 
-                var characterInfo = new CharacterInfo(subElement);
-                characterInfos.Add(characterInfo);
-                foreach (XElement invElement in subElement.Elements())
+                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite, scaleToFit: true)
                 {
-                    if (invElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
-                    characterInfo.InventoryData = invElement;
-                    break;
-                }
+                    Color = order.Color,
+                    HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
+                    ToolTip = order.Name
+                };
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
@@ -201,16 +154,6 @@ namespace Barotrauma
             prevUIScale = GUI.Scale;
 
             ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
-        }
-
-
-        #endregion
-
-        #region Character list management
-
-        public Rectangle GetCharacterListArea()
-        {
-            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
