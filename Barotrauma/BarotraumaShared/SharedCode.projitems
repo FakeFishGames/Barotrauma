@@ -272,4 +272,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\Zones\Ice\Zone4BaseTextureEdge.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\Zones\ThermalReefs\Zone2BaseTextureEdge.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\Zones\Tundra\Zone3BaseTextureEdge.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\Zones\Volcanic\Zone1BaseTextureEdge.png" />
+  </ItemGroup>
 </Project>

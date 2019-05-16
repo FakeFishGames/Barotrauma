@@ -13,7 +13,7 @@ namespace Barotrauma
         public override string DebugTag => "combat";
         public bool useCoolDown = true;
 
-        const float coolDown = 10.0f;
+        const float CoolDown = 10.0f;
 
         public Character Enemy { get; private set; }
         
@@ -40,7 +40,6 @@ namespace Barotrauma
         {
             get
             {
-                if (Weapon == null) { return null; }
                 if (_weaponComponent == null)
                 {
                     _weaponComponent =
@@ -65,8 +64,6 @@ namespace Barotrauma
 
         private Hull retreatTarget;
         private float coolDownTimer;
-        private IEnumerable<FarseerPhysics.Dynamics.Body> myBodies;
-        private float aimTimer;
 
         public enum CombatMode
         {
@@ -81,7 +78,7 @@ namespace Barotrauma
             : base(character, objectiveManager, priorityModifier)
         {
             Enemy = enemy;
-            coolDownTimer = coolDown;
+            coolDownTimer = CoolDown;
             findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
             if (findSafety != null)
             {
@@ -130,7 +127,7 @@ namespace Barotrauma
             }
             if (abandon) { return; }
             Arm(deltaTime);
-            Move();
+            Move(deltaTime);
         }
 
         private void Arm(float deltaTime)
@@ -151,9 +148,9 @@ namespace Barotrauma
                     {
                         Mode = CombatMode.Retreat;
                     }
-                    else if (Equip())
+                    if (Equip())
                     {
-                        if (Reload())
+                        if (Reload(deltaTime))
                         {
                             Attack(deltaTime);
                         }
@@ -166,16 +163,16 @@ namespace Barotrauma
             }
         }
 
-        private void Move()
+        private void Move(float deltaTime)
         {
             switch (Mode)
             {
                 case CombatMode.Offensive:
-                    Engage();
+                    Engage(deltaTime);
                     break;
                 case CombatMode.Defensive:
                 case CombatMode.Retreat:
-                    Retreat();
+                    Retreat(deltaTime);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -266,7 +263,6 @@ namespace Barotrauma
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
                     Weapon.Equip(character);
-                    aimTimer = Rand.Range(1f, 2f);
                 }
                 else
                 {
@@ -277,7 +273,7 @@ namespace Barotrauma
             return true;
         }
 
-        private void Retreat()
+        private void Retreat(float deltaTime)
         {
             if (followTargetObjective != null)
             {
@@ -298,7 +294,7 @@ namespace Barotrauma
             TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
         }
 
-        private void Engage()
+        private void Engage(float deltaTime)
         {
             retreatTarget = null;
             if (retreatObjective != null)
@@ -327,7 +323,7 @@ namespace Barotrauma
                 });
         }
 
-        private bool Reload()
+        private bool Reload(float deltaTime)
         {
             if (WeaponComponent != null && WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
             {
@@ -350,6 +346,7 @@ namespace Barotrauma
             return reloadWeaponObjective == null || reloadWeaponObjective.IsCompleted();
         }
 
+        private IEnumerable<FarseerPhysics.Dynamics.Body> myBodies;
         private void Attack(float deltaTime)
         {
             float squaredDistance = Vector2.DistanceSquared(character.Position, Enemy.Position);
@@ -373,16 +370,6 @@ namespace Barotrauma
                 {
                     character.SetInput(InputType.Aim, false, true);
                 }
-            }
-            bool isFacing = character.AnimController.Dir > 0 && Enemy.WorldPosition.X > character.WorldPosition.X || character.AnimController.Dir < 0 && Enemy.WorldPosition.X < character.WorldPosition.X;
-            if (!isFacing)
-            {
-                aimTimer = Rand.Range(1f, 2f);
-            }
-            if (aimTimer > 0)
-            {
-                aimTimer -= deltaTime;
-                return;
             }
             if (WeaponComponent is MeleeWeapon meleeWeapon)
             {
@@ -421,7 +408,6 @@ namespace Barotrauma
                         {
                             character.SetInput(InputType.Shoot, false, true);
                             Weapon.Use(deltaTime, character);
-                            aimTimer = Rand.Range(0.5f, 1f);
                         }
                     }
                 }

@@ -297,7 +297,6 @@ namespace Barotrauma
                 {
                     OnClicked = (btn, userdata) =>
                     {
-                        GameMain.SpriteEditorScreen.RefreshLists();
                         editingSprite = sprite;
                         GameMain.SpriteEditorScreen.SelectSprite(editingSprite);
                         return true;
@@ -602,7 +601,7 @@ namespace Barotrauma
             public GUIMessageBox Create()
             {
                 var box = new GUIMessageBox(TextManager.Get("LevelEditorCreateLevelObj"), string.Empty, 
-                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, GameMain.GraphicsWidth / 2, (int)(GameMain.GraphicsHeight * 0.8f));
+                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, new Vector2(0.5f, 0.8f));
 
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
@@ -676,6 +675,8 @@ namespace Barotrauma
                             doc.WriteTo(writer);
                             writer.Flush();
                         }
+                        // Recreate the prefab so that the sprite loads correctly: TODO: consider a better way to do this
+                        newPrefab = new LevelObjectPrefab(newElement);
                         break;
                     }
 
