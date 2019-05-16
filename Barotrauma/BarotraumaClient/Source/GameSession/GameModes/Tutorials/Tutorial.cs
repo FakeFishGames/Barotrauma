@@ -305,7 +305,7 @@ namespace Barotrauma.Tutorials
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
                             activeContentSegment.TextContent.GetAttributeInt("width", 300),
                             activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment, false));
+                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment));
                     break;
                 case TutorialContentTypes.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
@@ -404,7 +404,8 @@ namespace Barotrauma.Tutorials
         {
             if (ContentRunning) return;
             ContentRunning = true;
-            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
+            LoadVideo(segment);
+            //videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
         }
 
         private void ShowSegmentText(TutorialSegment segment)
@@ -419,7 +420,7 @@ namespace Barotrauma.Tutorials
 
             if (segment.ContentType != TutorialContentTypes.TextOnly)
             {
-                videoAction = () => LoadVideo(segment, false);
+                videoAction = () => LoadVideo(segment);
             }
 
             infoBox = CreateInfoFrame(TextManager.Get(segment.Id), tutorialText,
@@ -566,16 +567,16 @@ namespace Barotrauma.Tutorials
         #endregion
 
         #region Video
-        protected void LoadVideo(TutorialSegment segment, bool showText = true)
+        protected void LoadVideo(TutorialSegment segment)
         {
             if (videoPlayer == null) videoPlayer = new VideoPlayer();
-            if (showText)
+            if (segment.ContentType != TutorialContentTypes.ManualVideo)
             {
                 videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, segment.Objective, StopCurrentContentSegment);
             }
             else
             {
-                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), null, segment.Id, true, segment.Objective, null);
+                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), null, segment.Id, true, string.Empty, null);
             }
         }
         #endregion

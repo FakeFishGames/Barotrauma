@@ -107,24 +107,42 @@ namespace Barotrauma
 
             text = text.Replace("\n", " \n ");
 
-            string[] words;
-            if (TextManager.NoWhiteSpace)
+            List<string> words = new List<string>();
+            string currWord = "";
+            for (int i = 0; i < text.Length; i++)
             {
-                words = new string[text.Length];
-                for (int i = 0; i < text.Length; i++)
+                if (isCJK.IsMatch(text[i].ToString()))
                 {
-                    words[i] = text[i].ToString();
+                    if (currWord.Length > 0)
+                    {
+                        words.Add(currWord);
+                        currWord = "";
+                    }
+                    words.Add(text[i].ToString());
+                }
+                else if (text[i] == ' ')
+                {
+                    if (currWord.Length > 0)
+                    {
+                        words.Add(currWord);
+                        currWord = "";
+                    }
+                }
+                else
+                {
+                    currWord += text[i];
                 }
             }
-            else
+            if (currWord.Length > 0)
             {
-                words = text.Split(' ');
+                words.Add(currWord);
+                currWord = "";
             }
 
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;
             Vector2 spaceSize = font.MeasureString(" ") * textScale;
-            for (int i = 0; i < words.Length; ++i)
+            for (int i = 0; i < words.Count; ++i)
             {
                 if (words[i].Length == 0)
                 {

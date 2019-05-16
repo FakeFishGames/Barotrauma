@@ -393,7 +393,9 @@ namespace Barotrauma
                 {
                     using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
                     using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                        while (DecompressFile(sDir, zipStream, progress)) ;
+                        while (DecompressFile(sDir, zipStream, progress)) { };
+
+                    break;
                 }
                 catch (IOException e)
                 {
