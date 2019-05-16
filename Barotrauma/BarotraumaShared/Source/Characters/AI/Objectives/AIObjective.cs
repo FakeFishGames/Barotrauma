@@ -155,7 +155,41 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Checks if the objective already is created and added in subobjectives. If not, creates it. Handles objectives that cannot be completed.
+        /// Returns true if the objective was created.
+        /// </summary>
+        protected bool TryAddSubObjective<T>(T objective, Func<T> constructor, Action onAbandon = null) where T : AIObjective
+        {
+            if (objective != null)
+            {
+                // Sub objective already found, no need to do anything if it remains in the subobjectives
+                // If the sub objective is removed -> it's either completed or impossible to complete.
+                if (!subObjectives.Contains(objective))
+                {
+                    if (!objective.CanBeCompleted)
+                    {
+                        abandon = true;
+                        onAbandon?.Invoke();
+                    }
+                    objective = null;
+                }
+                return false;
+            }
+            else
+            {
+                objective = constructor();
+                if (!subObjectives.Contains(objective))
+                {
+                    AddSubObjective(objective);
+                }
+                return true;
+            }
+        }
+
+        // TODO: remove
         protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
+
         public virtual void OnSelected()
         {
             SteeringManager.Reset();
@@ -166,6 +200,7 @@ namespace Barotrauma
         protected abstract void Act(float deltaTime);
         
         public abstract bool IsCompleted();
+
         public abstract bool IsDuplicate(AIObjective otherObjective);
     }
 }

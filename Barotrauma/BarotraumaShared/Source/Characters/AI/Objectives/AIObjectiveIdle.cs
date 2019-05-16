@@ -74,21 +74,6 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
-        {
-            if (objectiveManager.CurrentObjective == this)
-            {
-                if (randomTimer > 0)
-                {
-                    randomTimer -= deltaTime;
-                }
-                else
-                {
-                    SetRandom();
-                }
-            }
-        }
-
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
@@ -110,13 +95,6 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-            if (!character.IsClimbing)
-            {
-                character.SelectedConstruction = null;
-            }
-
-            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
-                (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
