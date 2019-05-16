@@ -72,8 +72,11 @@ namespace Barotrauma
             Enemy = enemy;
             coolDownTimer = CoolDown;
             findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
-            findSafety.Priority = 0;
-            findSafety.unreachable.Clear();
+            if (findSafety != null)
+            {
+                findSafety.Priority = 0;
+                findSafety.unreachable.Clear();
+            }
             Mode = mode;
             if (Enemy == null)
             {

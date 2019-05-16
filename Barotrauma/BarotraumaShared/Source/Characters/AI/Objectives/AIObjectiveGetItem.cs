@@ -94,7 +94,7 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {
-                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                 return;
             }
             if (moveToTarget.CurrentHull == character.CurrentHull && 

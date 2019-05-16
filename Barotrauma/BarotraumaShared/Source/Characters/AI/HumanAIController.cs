@@ -94,8 +94,9 @@ namespace Barotrauma
                 UpdateSpeaking();
             }
 
-            objectiveManager.DoCurrentObjective(deltaTime);
+            if (objectiveManager.CurrentObjective == null) { return; }
 
+            objectiveManager.DoCurrentObjective(deltaTime);
             bool run = objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
@@ -517,11 +518,7 @@ namespace Barotrauma
             {
                 if (IsFriendly(caller, c) && c.AIController is HumanAIController humanAI)
                 {
-                    var objective = humanAI.ObjectiveManager.GetObjective<T1>();
-                    if (objective != null)
-                    {
-                        objective.AddTarget(target);
-                    }
+                    humanAI.ObjectiveManager.GetObjective<T1>()?.AddTarget(target);
                 }
             }
         }
