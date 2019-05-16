@@ -33,7 +33,6 @@ namespace Barotrauma
         public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, string tag = "")
             : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "")
         {
-            //int width = (int)(DefaultWidth * GUI.Scale), height = 0;
             int width = DefaultWidth, height = 0;
             if (relativeSize.HasValue)
             {
