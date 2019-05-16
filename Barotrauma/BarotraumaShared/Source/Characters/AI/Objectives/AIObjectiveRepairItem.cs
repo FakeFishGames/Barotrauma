@@ -30,6 +30,7 @@ namespace Barotrauma
             if (Item.Repairables.None()) { return 0; }
             // Ignore items that are being repaired by someone else.
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
+            if (Item.CurrentHull != null && (Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == Item.CurrentHull && !HumanAIController.IsFriendly(c)))) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
@@ -69,6 +70,11 @@ namespace Barotrauma
                     //character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
                 }
                 goToObjective = null;
+            }
+            if (!abandon)
+            {
+                // Don't allow to repair items in rooms that have a fire or an enemy inside
+                abandon = Item.CurrentHull != null && (Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == Item.CurrentHull && !HumanAIController.IsFriendly(c)));
             }
             foreach (Repairable repairable in Item.Repairables)
             {

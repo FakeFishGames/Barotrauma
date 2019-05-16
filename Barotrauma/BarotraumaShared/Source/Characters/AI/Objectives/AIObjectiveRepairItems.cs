@@ -53,6 +53,7 @@ namespace Barotrauma
                 else
                 {
                     if (item.Repairables.None()) { ignore = true; }
+                    else if (item.CurrentHull != null || item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { ignore = true; }
                     else
                     {
                         foreach (Repairable repairable in item.Repairables)

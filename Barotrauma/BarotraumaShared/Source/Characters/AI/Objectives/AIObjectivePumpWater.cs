@@ -29,7 +29,9 @@ namespace Barotrauma
         {
             if (pump.Item.HasTag("ballast")) { return false; }
             if (pump.Item.Submarine == null) { return false; }
+            if (pump.Item.CurrentHull == null) { return false; }
             if (pump.Item.Submarine.TeamID != character.TeamID) { return false; }
+            if (pump.Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == pump.Item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
             if (pump.Item.ConditionPercentage <= 0) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
             if (Option == "stoppumping")
