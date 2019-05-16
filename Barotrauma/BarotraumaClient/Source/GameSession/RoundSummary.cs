@@ -60,7 +60,9 @@ namespace Barotrauma
                     endMessage, wrap: true);
             }
 
-            if (GameMain.GameSession.Mission != null)
+            //don't show the mission info if the mission was not completed and there's no localized "mission failed" text available
+            if (GameMain.GameSession.Mission != null &&
+                (GameMain.GameSession.Mission.Completed || !string.IsNullOrEmpty(GameMain.GameSession.Mission.FailureMessage)))
             {
                 //spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
