@@ -82,6 +82,7 @@ namespace Barotrauma
 
         public override void OnSelected()
         {
+            base.OnSelected();
             if (HumanAIController.ObjectiveManager.CurrentOrder == this)
             {
                 Reset();

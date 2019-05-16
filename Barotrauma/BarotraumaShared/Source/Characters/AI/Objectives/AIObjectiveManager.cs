@@ -14,7 +14,7 @@ namespace Barotrauma
         // Constantly increases the priority of the selected objective, unless overridden
         public const float baseDevotion = 2;
 
-        public List<AIObjective> Objectives { get; private set; }
+        public List<AIObjective> Objectives { get; private set; } = new List<AIObjective>();
 
         private Character character;
 
@@ -26,10 +26,11 @@ namespace Barotrauma
         public AIObjective CurrentOrder { get; private set; }
         public AIObjective CurrentObjective { get; private set; }
 
+        public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
+
         public AIObjectiveManager(Character character)
         {
             this.character = character;
-            Objectives = new List<AIObjective>();
             CreateAutomaticObjectives();
         }
 
@@ -56,6 +57,7 @@ namespace Barotrauma
             foreach (var automaticOrder in character.Info.Job.Prefab.AutomaticOrders)
             {
                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
+                if (orderPrefab == null) { throw new Exception("Could not find a matching prefab by ai tag: " + automaticOrder.aiTag); }
                 // TODO: Similar code is used in CrewManager:815-> DRY
                 var matchingItems = orderPrefab.ItemIdentifiers.Any() ?
                     Item.ItemList.FindAll(it => orderPrefab.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(orderPrefab.ItemIdentifiers)) :
@@ -174,8 +176,6 @@ namespace Barotrauma
             }
         }
 
-        // TODO: attack enemies : new AIObjectiveCombat(Character, attacker, AIObjectiveCombat.CombatMode.Offensive, objectiveManager);
-
         public AIObjective CreateObjective(Order order, string option, Character orderGiver, float priorityModifier = 1)
         {
             if (order == null) { return null; }
@@ -213,7 +213,10 @@ namespace Barotrauma
                     newObjective = new AIObjectivePumpWater(character, this, option, priorityModifier: priorityModifier);
                     break;
                 case "extinguishfires":
-                    newObjective = new AIObjectiveExtinguishFires(character, this, priorityModifier: priorityModifier);
+                    newObjective = new AIObjectiveExtinguishFires(character, this, priorityModifier);
+                    break;
+                case "fightintruders":
+                    newObjective = new AIObjectiveFightIntruders(character, this, priorityModifier);
                     break;
                 case "steer":
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();

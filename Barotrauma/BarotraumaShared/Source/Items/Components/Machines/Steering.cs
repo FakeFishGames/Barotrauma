@@ -874,6 +874,19 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override void OnItemLoaded()
+        {
+            sonar = item.GetComponent<Sonar>();
+        }
+
+        public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+            user = character;
+            return true;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             networkUpdateTimer -= deltaTime;

@@ -12,6 +12,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "combat";
         public override bool KeepDivingGearOn => true;
+        public bool useCoolDown = true;
 
         const float CoolDown = 10.0f;
 
@@ -77,7 +78,10 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            coolDownTimer -= deltaTime;
+            if (useCoolDown)
+            {
+                coolDownTimer -= deltaTime;
+            }
             if (abandon) { return; }
             Arm(deltaTime);
             Move(deltaTime);
@@ -373,7 +377,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || coolDownTimer <= 0;
+            bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (useCoolDown && coolDownTimer <= 0);
             if (completed)
             {
                 if (Weapon != null)
