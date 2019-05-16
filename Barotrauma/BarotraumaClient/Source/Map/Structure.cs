@@ -110,12 +110,11 @@ namespace Barotrauma
 
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
-            var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
+            var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
             
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, 20)), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f

@@ -471,16 +471,13 @@ namespace Barotrauma
 
         public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement)
         {
-            int width = (int)(400 * GUI.Scale);
-            int height = (int)(18 * GUI.Scale);
-            Point padding = new Point((int)(20 * GUI.Scale), (int)(7 * GUI.Scale));
-
+            int width = 400;
             if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, 18), null), toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X),
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y));
+                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20),
+                    toolTipBlock.WrappedText.Split('\n').Length * 18 + 7);
                 toolTipBlock.userData = toolTip;
             }
             toolTipBlock.SetTextPos();
