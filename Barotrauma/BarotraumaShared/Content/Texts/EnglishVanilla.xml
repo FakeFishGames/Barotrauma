@@ -3191,11 +3191,14 @@
   <connection.toggledocking>toggle_docking</connection.toggledocking>
   <connection.waterdatain>water_data_in</connection.waterdatain>
   <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
-  <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
   
   <!-- CHANGED VALUES -->
   <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits. </missiondescription.cargochemicals>
 
+  <!-- Temporarily disable this because it hasn't been localized -->
+  <!-- <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill> -->
+  <itemmsgoxygenrefill></itemmsgoxygenrefill>
+  
   <!-- NEW VALUES -->
   <privacypolicy>Privacy policy</privacypolicy>
   <missionfailed>Mission failed</missionfailed>
