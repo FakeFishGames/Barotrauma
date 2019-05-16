@@ -125,7 +125,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < labels.Length; i++)
             {
                 labels[i] = i < newLabels.Length ? newLabels[i] : customInterfaceElementList[i].Label;
-                customInterfaceElementList[i].Label = labels[i];
+                customInterfaceElementList[i].Label = TextManager.Get(labels[i], returnNull: true) ?? labels[i];
             }
             UpdateLabelsProjSpecific();
         }
@@ -169,6 +169,13 @@ namespace Barotrauma.Items.Components
                     item.ApplyStatusEffect(effect, ciElement.State ? ActionType.OnUse : ActionType.OnSecondaryUse, 1.0f, null, null, true, false);
                 }
             }
+        }
+
+        public override XElement Save(XElement parentElement)
+        {
+            labels = customInterfaceElementList.Select(ci => ci.Label).ToArray();
+            signals = customInterfaceElementList.Select(ci => ci.Signal).ToArray();
+            return base.Save(parentElement);
         }
     }
 }

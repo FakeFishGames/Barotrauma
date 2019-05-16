@@ -149,8 +149,8 @@ namespace Barotrauma
             //These will be visible through the LOS effect.
             //Could be drawn with one Submarine.DrawBack call, but we can avoid sorting by depth by doing it like this.
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, s => s is Structure && s.ResizeVertical && s.ResizeHorizontal);
-            Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(s.ResizeVertical && s.ResizeHorizontal) && ((Structure)s).Prefab.BackgroundSprite != null);
+            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (s.ResizeVertical || s.ResizeHorizontal) && !s.DrawDamageEffect);
+            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && !(s.ResizeVertical && s.ResizeHorizontal) && s.Prefab.BackgroundSprite != null);
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);

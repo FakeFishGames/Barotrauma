@@ -88,7 +88,7 @@ namespace Barotrauma
 
         public override bool Equals(object obj)
         {
-            if (obj is KeyOrMouse keyOrMouse )
+            if (obj is KeyOrMouse keyOrMouse)
             {
                 if (MouseButton.HasValue)
                 {
