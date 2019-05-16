@@ -481,12 +481,12 @@ namespace Barotrauma
             var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), VoiceCaptureDevice, deviceNames.Count);
             foreach (string name in deviceNames)
             {
-                deviceList.AddItem(name, name);
+                deviceList.AddItem(TextManager.EnsureUTF8(name), name);
             }
             deviceList.OnSelected = (GUIComponent selected, object obj) =>
             {
                 string name = obj as string;
-                if (VoiceCaptureDevice == name) return true;
+                if (VoiceCaptureDevice == name) { return true; }
 
                 VoipCapture.ChangeCaptureDevice(name);
                 return true;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -259,6 +260,12 @@ namespace Barotrauma
                     break;
             }
             return string.Join(separator, texts);
+        }
+        
+        public static string EnsureUTF8(string text)
+        {
+            byte[] bytes = Encoding.Default.GetBytes(text);
+            return Encoding.UTF8.GetString(bytes);
         }
 
         public static List<string> GetAll(string textTag)
