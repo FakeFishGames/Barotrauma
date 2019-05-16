@@ -853,15 +853,26 @@ namespace Barotrauma
             {
                 if (characterConfigFiles == null)
                 {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true);
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
                 }
                 return characterConfigFiles;
             }
         }
 
-        public static string GetConfigFile(string speciesName)
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
         {
-            string configFile = CharacterConfigFiles.FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
             if (configFile == null)
             {
                 DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
@@ -1136,7 +1147,7 @@ namespace Barotrauma
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
-                Vector2 targetMovement = GetTargetMovement();
+                if (speedMultipliers.Count == 0) return 1f;
 
                 AnimController.TargetMovement = targetMovement;
                 AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;

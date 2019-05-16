@@ -362,10 +362,11 @@ namespace Barotrauma
                 case ContentType.Character:
                     XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                     string speciesName = doc.Root.GetAttributeString("name", "");
-                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName));
+                    //TODO: check non-default paths if defined
+                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName, this));
                     foreach (AnimationType animationType in Enum.GetValues(typeof(AnimationType)))
                     {
-                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType));
+                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType, this));
                     }
                     break;
             }
@@ -491,6 +492,11 @@ namespace Barotrauma
         public ContentFile(string path, ContentType type, Workshop.Item workShopItem = null)
         {
             Path = path;
+
+#if OSX
+            Path = Path.Replace("\\", "/");
+#endif
+
             Type = type;
             WorkShopItem = workShopItem;
         }
