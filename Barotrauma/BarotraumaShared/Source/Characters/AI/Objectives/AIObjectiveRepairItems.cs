@@ -22,7 +22,10 @@ namespace Barotrauma
         protected override void FindTargets()
         {
             base.FindTargets();
-            // TODO: display a dialog when no targets found and the objective is an order
+            if (targets.None() && objectiveManager.CurrentOrder == this)
+            {
+                character.Speak(TextManager.Get("DialogNoRepairTargets"), null, 3.0f, "norepairtargets", 30.0f);
+            }
         }
 
         protected override void CreateObjectives()

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -17,12 +18,14 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater && otherObjective.Option == Option;
 
-        //availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
         protected override void FindTargets()
         {
             if (Option == null) { return; }
             base.FindTargets();
-            // TODO: add dialog when no targets found and the objective is an order
+            if (targets.None() && objectiveManager.CurrentOrder == this)
+            {
+                character.Speak(TextManager.Get("DialogNoPumps"), null, 3.0f, "nopumps", 30.0f);
+            }
         }
 
         protected override bool Filter(Pump pump)

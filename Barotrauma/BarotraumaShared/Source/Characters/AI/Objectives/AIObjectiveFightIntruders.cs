@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -20,7 +21,10 @@ namespace Barotrauma
         {
             if (Option == null) { return; }
             base.FindTargets();
-            // TODO: add dialog when no targets found and the objective is an order
+            if (targets.None() && objectiveManager.CurrentOrder == this)
+            {
+                character.Speak(TextManager.Get("DialogNoEnemies"), null, 3.0f, "noenemies", 30.0f);
+            }
         }
 
         protected override bool Filter(Character target)
