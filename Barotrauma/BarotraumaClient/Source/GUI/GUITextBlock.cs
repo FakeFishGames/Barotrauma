@@ -328,9 +328,13 @@ namespace Barotrauma
 
             if (!string.IsNullOrEmpty(text))
             {
+                Vector2 pos = rect.Location.ToVector2() + textPos + TextOffset;
+                pos.X = (int)pos.X;
+                pos.Y = (int)pos.Y;
+
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
-                    rect.Location.ToVector2() + textPos + TextOffset,
+                    pos,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);
