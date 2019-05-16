@@ -75,39 +75,115 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            if (GameMain.Client != null)
+            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
-                //let the server create random conversations in MP
-                return;
-            }
-            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
-                c.AIController is HumanAIController &&
-                !c.IsDead &&
-                c.SpeechImpediment <= 100.0f);
-            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
-        }
+                CanBeFocused = false
+            };
 
-        public void AddCharacter(Character character)
-        {
-            if (character.Removed)
+            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
+
+            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent)
             {
-                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
-                return;
-            }
-            if (character.IsDead)
+                CanBeFocused = false
+            };
+            toggleCrewButton = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform)
+            { AbsoluteOffset = HUDLayoutSettings.CrewArea.Location },
+                "", style: "UIToggleButton");
+            toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
             {
-                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
-                return;
+                ToggleCrewAreaOpen = !ToggleCrewAreaOpen;
+                return true;
+            };
+
+            characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
+            {
+                //Spacing = (int)(3 * GUI.Scale),
+                ScrollBarEnabled = false,
+                ScrollBarVisible = false,
+                CanBeFocused = false
+            };
+
+            scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = -1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = 1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
+
+            if (isSinglePlayer)
+            {
+                ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
+                {
+                    OnEnterMessage = (textbox, text) =>
+                    {
+                        if (Character.Controlled?.Info == null)
+                        {
+                            textbox.Deselect();
+                            textbox.Text = "";
+                            return true;
+                        }
+
+                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
+                            AddSinglePlayerChatMessage(
+                                Character.Controlled.Info.Name,
+                                msg,
+                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
+                                Character.Controlled);
+                            var headset = GetHeadset(Character.Controlled, true);
+                            if (headset != null && headset.CanTransmit())
+                            {
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                            }
+                        }
+                        textbox.Deselect();
+                        textbox.Text = "";
+                        return true;
+                    }
+                };
+
+                ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
             }
 
-            if (!characters.Contains(character)) characters.Add(character);
-            if (!characterInfos.Contains(character.Info))
+            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            reportButtonFrame = new GUILayoutGroup(new RectTransform(
+                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
             {
-                characterInfos.Add(character.Info);
-            }
+                AbsoluteSpacing = (int)(5 * GUI.Scale),
+                UserData = "reportbuttons",
+                CanBeFocused = false
+            };
 
-            CreateCharacterFrame(character, characterListBox.Content);
-            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
+            //report buttons
+            foreach (Order order in reports)
+            {
+                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
+                var btn = new GUIButton(new RectTransform(new Point(reportButtonFrame.Rect.Width), reportButtonFrame.RectTransform), style: null)
+                {
+                    OnClicked = (GUIButton button, object userData) =>
+                    {
+                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
+                        SetCharacterOrder(null, order, null, Character.Controlled);
+                        foreach (var hull in Character.Controlled.GetVisibleHulls())
+                        {
+                            HumanAIController.PropagateHullSafety(Character.Controlled, hull);
+                            HumanAIController.RefreshTargets(Character.Controlled, order, hull);
+                        }
+                        return true;
+                    },
+                    UserData = order,
+                    ToolTip = order.Name
+                };
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -269,6 +345,11 @@ namespace Barotrauma
 
         public IEnumerable<Character> GetCharacters()
         {
+            return characterListBox.Rect;
+        }
+
+        public IEnumerable<CharacterInfo> GetCharacterInfos()
+        {
             if (characterInfos.Contains(characterInfo))
             {
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
@@ -276,17 +357,6 @@ namespace Barotrauma
             }
 
             characterInfos.Add(characterInfo);
-        }
-
-        public IEnumerable<CharacterInfo> GetCharacterInfos()
-        {
-            if (character == null)
-            {
-                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
-                return;
-            }
-            characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
         }
 
         public void AddCharacter(Character character)
