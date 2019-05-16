@@ -425,6 +425,17 @@ namespace Barotrauma
             return retVal;
         }
 
+        public Vector2 MeasureChar(char c)
+        {
+            Vector2 retVal = Vector2.Zero;
+            retVal.Y = baseHeight * 1.8f;
+            if (texCoords.TryGetValue(c, out GlyphData gd))
+            {
+                retVal.X = gd.advance;
+            }
+            return retVal;
+        }
+
         public void Dispose()
         {
             FontList.Remove(this);

@@ -24,6 +24,10 @@ namespace Barotrauma
         private GUIComponent selectedLocationInfo;
         private GUIListBox selectedMissionInfo;
 
+        private GUIComponent missionPanel;
+        private GUIComponent selectedLocationInfo;
+        private GUIListBox selectedMissionInfo;
+
         private GUIButton repairHullsButton, repairItemsButton;
 
         private GUIFrame characterPreviewFrame;

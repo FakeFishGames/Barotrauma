@@ -18,10 +18,7 @@ namespace Barotrauma
         
         private Hull hull;
 
-        private readonly Submarine submarine;
-        public Submarine Submarine => submarine;
-
-        protected bool removed;
+        private bool removed;
 
         private bool removed;
 
