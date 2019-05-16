@@ -17,11 +17,13 @@ namespace Barotrauma
         private float sortTimer;
         private float crouchRaycastTimer;
         private float reportTimer;
+        private float hullVisibilityTimer;
         private bool shouldCrouch;
 
         const float crouchRaycastInterval = 1;
         const float reportInterval = 1;
         const float sortObjectiveInterval = 1;
+        const float hullVisibilityInterval = 1;
 
         public static float HULL_SAFETY_THRESHOLD = 50;
 
@@ -49,6 +51,23 @@ namespace Barotrauma
             private set;
         }
 
+        private IEnumerable<Hull> visibleHulls;
+        public IEnumerable<Hull> VisibleHulls
+        {
+            get
+            {
+                if (visibleHulls == null)
+                {
+                    visibleHulls = Character.GetVisibleHulls();
+                }
+                return visibleHulls;
+            }
+            private set
+            {
+                visibleHulls = value;
+            }
+        }
+
         public HumanAIController(Character c) : base(c)
         {
             insideSteering = new IndoorsSteeringManager(this, true, false);
@@ -56,6 +75,7 @@ namespace Barotrauma
             objectiveManager = new AIObjectiveManager(c);
             reportTimer = Rand.Range(0f, reportInterval);
             sortTimer = Rand.Range(0f, sortObjectiveInterval);
+            hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             InitProjSpecific();
         }
         partial void InitProjSpecific();
@@ -78,6 +98,16 @@ namespace Barotrauma
             AnimController.Crouching = shouldCrouch;
             CheckCrouching(deltaTime);
             Character.ClearInputs();
+            
+            if (hullVisibilityTimer > 0)
+            {
+                hullVisibilityTimer--;
+            }
+            else
+            {
+                hullVisibilityTimer = hullVisibilityInterval;
+                VisibleHulls = Character.GetVisibleHulls();
+            }
 
             objectiveManager.UpdateObjectives(deltaTime);
             if (sortTimer > 0.0f)
