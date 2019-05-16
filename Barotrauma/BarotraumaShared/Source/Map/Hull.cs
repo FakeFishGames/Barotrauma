@@ -590,6 +590,25 @@ namespace Barotrauma
             }
         }
 
+        public string DisplayName
+        {
+            get;
+            private set;
+        }
+
+        private string roomName;
+        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
+        public string RoomName
+        {
+            get { return roomName; }
+            set
+            {
+                if (roomName == value) { return; }
+                roomName = value;
+                DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+            }
+        }
+
         public override Rectangle Rect
         {
             get
@@ -1097,6 +1116,11 @@ namespace Barotrauma
         }
 
         private HashSet<Hull> GetAdjacentHulls(HashSet<Hull> connectedHulls, int steps, int? searchDepth)
+        {
+            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance);
+        }
+
+        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
         {
             if (distance >= maxDistance) return float.MaxValue;
             if (this == target)

@@ -1527,13 +1527,16 @@ namespace Barotrauma
 
             if (!picked) return false;
 
-            if (picker.SelectedConstruction == this)
+            if (picker != null)
             {
-                if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
-            }
-            else if (selected)
-            {
-                picker.SelectedConstruction = this;
+                if (picker.SelectedConstruction == this)
+                {
+                    if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
+                }
+                else if (selected)
+                {
+                    picker.SelectedConstruction = this;
+                }
             }
 
 #if CLIENT
