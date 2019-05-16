@@ -460,7 +460,7 @@ namespace Barotrauma.Items.Components
 
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container, objective.objectiveManager);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
-                containShellObjective.MinContainedAmount = usableProjectileCount + 1;
+                containShellObjective.targetItemCount = usableProjectileCount + 1;
                 containShellObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
                 objective.AddSubObjective(containShellObjective);                
                 return false;
