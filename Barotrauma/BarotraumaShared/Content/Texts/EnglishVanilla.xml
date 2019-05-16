@@ -3201,5 +3201,36 @@
   <missionfailed>Mission failed</missionfailed>
   <label.highpressurewarning>WARNING: High pressure</label.highpressurewarning>
   <label.reactortempwarning>Reactor temp. caution</label.reactortempwarning>
+
+  <addercomponent.timeframe>Timeframe</addercomponent.timeframe>
+  <addercomponent.clampmin>Clamp min</addercomponent.clampmin>
+  <addercomponent.clampmax>Clamp max</addercomponent.clampmax>
+  <equalscomponent.timeframe>Timeframe</equalscomponent.timeframe>
+  <equalscomponent.output>Output</equalscomponent.output>
+  <equalscomponent.falseoutput>False output</equalscomponent.falseoutput>  
+  <andcomponent.timeframe>Timeframe</andcomponent.timeframe>
+  <andcomponentcomponent.output>Output</andcomponentcomponent.output>
+  <andcomponentcomponent.falseoutput>False output</andcomponentcomponent.falseoutput>
+  <oscillatorcomponent.timeframe>Timeframe</oscillatorcomponent.timeframe>
+  <oscillatorcomponent.outputtype>Output type</oscillatorcomponent.outputtype>
+  <lightcomponent.lightcolor>Color</lightcomponent.lightcolor>
+  <delaycomponent.delay>Delay</delaycomponent.delay>
+  <delaycomponent.resetwhensignalreceived>Reset when signal received</delaycomponent.resetwhensignalreceived>
+  <delaycomponent.resetwhendifferentsignalreceived>Reset when different signal received</delaycomponent.resetwhendifferentsignalreceived>
+  <regexfindcomponent.output>Output</regexfindcomponent.output>
+  <regexfindcomponent.falseoutput>False output</regexfindcomponent.falseoutput>
+  <regexfindcomponent.expression>Expression</regexfindcomponent.expression>
+  <regexfindcomponent.continuousoutput>Continuous output</regexfindcomponent.continuousoutput>
+  <memorycomponent.value>Value</memorycomponent.value>
+  <motionsensor.output>Output</motionsensor.output>
+  <motionsensor.falseoutput>False output</motionsensor.falseoutput>
+  <motionsensor.rangex>Range X</motionsensor.rangex>
+  <motionsensor.rangey>Range Y</motionsensor.rangey>
+  <signalcheckcomponent.targetsignal>Target signal</signalcheckcomponent.targetsignal>
+  <signalcheckcomponent.output>Output</signalcheckcomponent.output>
+  <signalcheckcomponent.falseoutput>False output</signalcheckcomponent.falseoutput>
+  <waterdetector.output>Output</waterdetector.output>
+  <waterdetector.falseoutput>False output</waterdetector.falseoutput>
+  <wificomponent.channel>Channel</wificomponent.channel>
   
 </infotexts>

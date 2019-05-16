@@ -2581,5 +2581,6 @@
 
 <!-- NEW VALUES -->
 <privacypolicy>Datenschutzerklärung</privacypolicy>
-  
+
+<lightcomponent.lightcolor>Farbe</lightcomponent.lightcolor>
 </infotexts>
