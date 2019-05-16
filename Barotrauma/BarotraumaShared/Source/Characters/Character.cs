@@ -1147,6 +1147,15 @@ namespace Barotrauma
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
+                //apply some smoothing to the cursor positions of remote players when playing as a client
+                //to make aiming look a little less choppy
+                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
+                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
+                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
+            }
+            
+            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
+            {
                 if (speedMultipliers.Count == 0) return 1f;
 
                 AnimController.TargetMovement = targetMovement;
@@ -2656,8 +2665,8 @@ namespace Barotrauma
 
         public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
 
-        private List<Hull> visibleHulls = new List<Hull>();
-        private HashSet<Hull> tempList = new HashSet<Hull>();
+        private readonly List<Hull> visibleHulls = new List<Hull>();
+        private readonly HashSet<Hull> tempList = new HashSet<Hull>();
         /// <summary>
         /// Returns hulls that are visible to the player, including the current hull.
         /// Can be heavy if used every frame.
