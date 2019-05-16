@@ -778,10 +778,6 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
-
-            GUI.Draw(Cam, spriteBatch);
-
             GUI.Draw(Cam, spriteBatch);
             
 #if DEBUG
