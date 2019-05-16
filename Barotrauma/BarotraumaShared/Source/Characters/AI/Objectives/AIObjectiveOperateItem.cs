@@ -92,7 +92,7 @@ namespace Barotrauma
                 {
                     if (character.CurrentHull == target.Item.CurrentHull)
                     {
-                        if (character.SelectedConstruction != target.Item && target.CanBeSelected)
+                        if (character.SelectedConstruction != target.Item)
                         {
                             target.Item.TryInteract(character, false, true);
                         }
@@ -102,12 +102,6 @@ namespace Barotrauma
                         }
                         return;
                     }
-
-                    if (component.AIOperate(deltaTime, character, this))
-                    {
-                        isCompleted = true;
-                    }
-                    return;
                 }
 
                 AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character, objectiveManager));

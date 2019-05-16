@@ -21,7 +21,8 @@ namespace Barotrauma
         protected Vector2 position;
         protected Vector2 size;
 
-        protected bool removed;
+        private readonly Submarine submarine;
+        public Submarine Submarine => submarine;
 
         protected bool removed;
 
@@ -86,7 +87,7 @@ namespace Barotrauma
             position = worldPosition - new Vector2(-5.0f, 5.0f);
             if (hull.Submarine != null)
             {
-                Submarine = hull.Submarine;
+                submarine = hull.Submarine;
                 position -= Submarine.Position;
             }
 

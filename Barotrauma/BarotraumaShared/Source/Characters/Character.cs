@@ -1379,25 +1379,35 @@ namespace Barotrauma
             else
             {
                 closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
-                if (closestBody != null)
+                if (!IsBlocking(closestBody))
                 {
-                    if (closestBody.UserData is Structure wall && wall.CastShadow)
+                    closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
+                }
+            }
+            return !IsBlocking(closestBody);
+
+            bool IsBlocking(Body body)
+            {
+                if (body == null) { return false; }
+                if (body.UserData is Structure wall && wall.CastShadow)
+                {
+                    return wall != target;
+                }
+                else if (body.UserData is Item item && item != target)
+                {
+                    var door = item.GetComponent<Door>();
+                    if (door != null)
                     {
-                        return false;
+                        return !door.IsOpen;
                     }
                 }
-                closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
+                return false;
             }
-            if (closestBody != null)
-            {
-                if (closestBody.UserData is Structure wall && wall.CastShadow)
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
+        /// <summary>
+        /// TODO: ensure that works. CheckVisibility takes positions in sim space, but this method uses world positions
+        /// </summary>
         public bool CanSeeCharacter(Character target, Vector2 sourceWorldPos)
         {
             Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceWorldPos);
@@ -1413,7 +1423,9 @@ namespace Barotrauma
                 if (closestBody == null) return true;
             }
             Structure wall = closestBody.UserData as Structure;
-            return wall == null || !wall.CastShadow;
+            Item item = closestBody.UserData as Item;
+            Door door = item?.GetComponent<Door>();
+            return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
         }
 
         public bool HasEquippedItem(Item item)
