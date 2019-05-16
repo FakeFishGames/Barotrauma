@@ -11,7 +11,6 @@ namespace Barotrauma
     {
         public override string DebugTag => "rescue";
         public override bool ForceRun => true;
-        public override bool KeepDivingGearOn => true;
 
         const float TreatmentDelay = 0.5f;
 
@@ -21,26 +20,11 @@ namespace Barotrauma
 
         private float treatmentTimer;
 
-        public override bool CanBeCompleted
-        {
-            get
-            {
-                if (targetCharacter.Removed || 
-                    targetCharacter.IsDead || 
-                    targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.VitalityThreshold)
-                {
-                    return false;
-                }
-                if (goToObjective != null && !goToObjective.CanBeCompleted) { return false; }
+        public override bool CanBeCompleted => base.CanBeCompleted && AIObjectiveRescueAll.IsValidTarget(targetCharacter, character);
 
-                return true;
-            }
-        }
-
-        public AIObjectiveRescue(Character character, Character targetCharacter)
-            : base(character, "")
+        public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
-            Debug.Assert(character != targetCharacter);
             this.targetCharacter = targetCharacter;
         }
 
@@ -52,14 +36,19 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            //target in water -> move to a dry place first
-            if (targetCharacter.AnimController.InWater)
+            // Target is not in a safe place -> Move to a safe place first
+            if (HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 if (character.SelectedCharacter != targetCharacter)
                 {
+                    // Go to the target and select it
                     if (!character.CanInteractWith(targetCharacter))
                     {
-                        AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character));
+                        if (goToObjective != null && goToObjective.Target != targetCharacter)
+                        {
+                            goToObjective = null;
+                        }
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
                     }
                     else
                     {
@@ -68,15 +57,28 @@ namespace Barotrauma
                 }
                 else
                 {
-                    AddSubObjective(new AIObjectiveFindSafety(character));
+                    // Drag the character into safety
+                    if (goToObjective != null && goToObjective.Target == targetCharacter)
+                    {
+                        goToObjective = null;
+                    }
+                    var findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
+                    if (findSafety == null)
+                    {
+                        // Ensure that we have the find safety objective (should always be the case)
+                        objectiveManager.AddObjective(new AIObjectiveFindSafety(character, objectiveManager));
+                    }
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(findSafety.FindBestHull(), character, objectiveManager));
                 }
                 return;
             }
 
-            //target not in water -> we can start applying treatment
+            if (subObjectives.Any()) { return; }
+
+            // We can start applying treatment
             if (!character.CanInteractWith(targetCharacter))
             {
-                AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character));
+                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
             }
             else
             {
@@ -87,31 +89,12 @@ namespace Barotrauma
                         null, 1.0f,
                         "foundunconscioustarget" + targetCharacter.Name, 60.0f);
                 }
-
                 character.SelectCharacter(targetCharacter);
                 GiveTreatment(deltaTime);
             }
         }
 
-        protected override bool ShouldInterruptSubObjective(AIObjective subObjective)
-        {
-            if (subObjective is AIObjectiveFindSafety)
-            {
-                if (character.SelectedCharacter != targetCharacter) return true;
-                if (character.AnimController.InWater || targetCharacter.AnimController.InWater) return false;
-
-                foreach (Limb limb in targetCharacter.AnimController.Limbs)
-                {
-                    if (!Submarine.RectContains(targetCharacter.CurrentHull.WorldRect, limb.WorldPosition)) return false;
-                }
-
-                return !character.AnimController.InWater && !targetCharacter.AnimController.InWater &&
-                    HumanAIController.GetHullSafety(character.CurrentHull, character) > HumanAIController.HULL_SAFETY_THRESHOLD;
-            }
-
-            return false;
-        }
-
+        // TODO: consider optimizing a bit
         private void GiveTreatment(float deltaTime)
         {
             if (treatmentTimer > 0.0f)
@@ -128,7 +111,6 @@ namespace Barotrauma
             {
                 return Math.Sign(a2.GetVitalityDecrease(targetCharacter.CharacterHealth) - a1.GetVitalityDecrease(targetCharacter.CharacterHealth));
             });
-
             //check if we already have a suitable treatment for any of the afflictions
             foreach (Affliction affliction in allAfflictions)
             {
@@ -143,7 +125,6 @@ namespace Barotrauma
                     }
                 }
             }
-
             //didn't have any suitable treatments available, try to find some medical items
             HashSet<string> suitableItemIdentifiers = new HashSet<string>();
             foreach (Affliction affliction in allAfflictions)
@@ -166,9 +147,8 @@ namespace Barotrauma
                         itemNameList.Add(itemPrefab.Name);
                     }
                     //only list the first 4 items
-                    if (itemNameList.Count >= 4) break;
+                    if (itemNameList.Count >= 4) { break; }
                 }
-
                 if (itemNameList.Count > 0)
                 {
                     string itemListStr = "";
@@ -185,30 +165,29 @@ namespace Barotrauma
                         .Replace("[treatmentlist]", itemListStr),
                         null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
                 }
-
                 character.DeselectCharacter();
-                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), true));
+                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true));
             }
-
             character.AnimController.Anim = AnimController.Animation.CPR;
         }
 
         private void ApplyTreatment(Affliction affliction, Item item)
         {
             var targetLimb = targetCharacter.CharacterHealth.GetAfflictionLimb(affliction);
-
             bool remove = false;
             foreach (ItemComponent ic in item.Components)
             {
-                if (!ic.HasRequiredContainedItems(addMessage: false)) continue;
+                if (!ic.HasRequiredContainedItems(addMessage: false)) { continue; }
 #if CLIENT
                 ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
 #endif
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
-                if (ic.DeleteOnUse) remove = true;
+                if (ic.DeleteOnUse)
+                {
+                    remove = true;
+                }
             }
-
             if (remove)
             {
                 Entity.Spawner?.AddToRemoveQueue(item);
@@ -217,28 +196,26 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            bool isCompleted = 
-                targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.VitalityThreshold;
-
+            bool isCompleted = targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.VitalityThreshold;
             if (isCompleted)
             {
                 character?.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
                     null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
             }
-
-            return isCompleted || targetCharacter.IsDead;
+            return isCompleted || targetCharacter.Removed || targetCharacter.IsDead;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
-            if (targetCharacter.AnimController.CurrentHull == null || targetCharacter.IsDead) { return 0.0f; }
-
-            Vector2 diff = targetCharacter.WorldPosition - character.WorldPosition;
-            float distance = Math.Abs(diff.X) + Math.Abs(diff.Y);
-
-            float vitalityFactor = (targetCharacter.MaxVitality - targetCharacter.Vitality) / targetCharacter.MaxVitality;
-
-            return 1000.0f * vitalityFactor / distance;
+            if (targetCharacter.CurrentHull == null || targetCharacter.IsDead) { return 0; ; }
+            // Don't go into rooms that have enemies
+            if (Character.CharacterList.Any(c => c.CurrentHull == targetCharacter.CurrentHull && !HumanAIController.IsFriendly(c))) { return 0; }
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+            float dist = Math.Abs(character.WorldPosition.X - targetCharacter.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetCharacter.WorldPosition.Y) * 2.0f;
+            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
+            float vitalityFactor = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter);
+            float devotion = Math.Max(Priority, 10) / 100;
+            return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + vitalityFactor * distanceFactor, 0, 1));
         }
     }
 }

@@ -11,36 +11,32 @@ namespace Barotrauma
     {
         public override string DebugTag => "repair item";
 
-        public override bool KeepDivingGearOn => true;
-
         public Item Item { get; private set; }
 
         private AIObjectiveGoTo goToObjective;
-
         private float previousCondition = -1;
+        private RepairTool repairTool;
 
-        public AIObjectiveRepairItem(Character character, Item item) : base(character, "")
+        public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             Item = item;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             // TODO: priority list?
-            if (Item.Repairables.None()) { return 0; }
             // Ignore items that are being repaired by someone else.
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
-            float damagePriority = MathHelper.Lerp(1, 0, (Item.Condition + 10) / Item.MaxCondition);
+            float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
             float isSelected = character.SelectedConstruction == Item ? 50 : 0;
-            float baseLevel = Math.Max(Priority + isSelected, 1);
-            return MathHelper.Clamp(baseLevel * damagePriority * distanceFactor * successFactor, 0, 100);
+            float devotion = (Math.Min(Priority, 10) + isSelected) / 100;
+            float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
+            return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + damagePriority * distanceFactor * successFactor * PriorityModifier, 0, 1));
         }
-
-        public override bool CanBeCompleted => !abandon;
 
         public override bool IsCompleted()
         {
@@ -59,15 +55,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (goToObjective != null && !subObjectives.Contains(goToObjective))
-            {
-                if (!goToObjective.IsCompleted() && !goToObjective.CanBeCompleted)
-                {
-                    abandon = true;
-                    character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
-                }
-                goToObjective = null;
-            }
             foreach (Repairable repairable in Item.Repairables)
             {
                 if (!repairable.HasRequiredItems(character, false))
@@ -77,12 +64,14 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, true));
+                            AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true));
                         }
                     }
                     return;
                 }
             }
+            // Only continue when the get item sub objectives have been completed.
+            if (subObjectives.Any(so => so is AIObjectiveGetItem)) { return; }
             if (repairTool == null)
             {
                 FindRepairTool();
@@ -114,31 +103,31 @@ namespace Barotrauma
                         {
                             // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
                             abandon = true;
-                            character?.Speak(TextManager.Get("DialogRepairFailed").Replace("[itemname]", Item.Name), null, 0.0f, "repairfailed", 10.0f);
+                            character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
                         }
                     }
                     repairable.CurrentFixer = abandon && repairable.CurrentFixer == character ? null : character;
                     break;
                 }
             }
-            else if (goToObjective == null || goToObjective.Target != Item)
+            else
             {
-                previousCondition = -1;
-                if (goToObjective != null)
-                {
-                    subObjectives.Remove(goToObjective);
-                }
-                goToObjective = new AIObjectiveGoTo(Item, character);
-                if (repairTool != null)
-                {
-                    //goToObjective.CloseEnough = (HumanAIController.AnimController.ArmLength + ConvertUnits.ToSimUnits(repairTool.Range)) * 0.75f;
-                    goToObjective.CloseEnough = ConvertUnits.ToSimUnits(repairTool.Range);
-                }
-                AddSubObjective(goToObjective);
+                // If cannot reach the item, approach it.
+                TryAddSubObjective(ref goToObjective,
+                    constructor: () =>
+                    {
+                        previousCondition = -1;
+                        var objective = new AIObjectiveGoTo(Item, character, objectiveManager);
+                        if (repairTool != null)
+                        {
+                            objective.CloseEnough = ConvertUnits.ToSimUnits(repairTool.Range) * 0.75f;
+                        }
+                        return objective;
+                    },
+                    onAbandon: () => character.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f));
             }
         }
 
-        private RepairTool repairTool;
         private void FindRepairTool()
         {
             foreach (Repairable repairable in Item.Repairables)
