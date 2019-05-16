@@ -94,13 +94,6 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-            if (!character.IsClimbing)
-            {
-                character.SelectedConstruction = null;
-            }
-
-            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
-                (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
