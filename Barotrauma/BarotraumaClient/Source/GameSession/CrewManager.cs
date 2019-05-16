@@ -98,6 +98,20 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = -1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = 1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
+
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -157,6 +171,16 @@ namespace Barotrauma
             prevUIScale = GUI.Scale;
 
             ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
+        }
+
+
+        #endregion
+
+        #region Character list management
+
+        public Rectangle GetCharacterListArea()
+        {
+            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()

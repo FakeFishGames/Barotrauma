@@ -53,7 +53,7 @@ namespace Barotrauma
 
         protected override bool Filter(Pump pump) => true;
         protected override IEnumerable<Pump> GetList() => pumpList;
-        protected override float Average(Pump target) => MathHelper.Lerp(0, 100, target.CurrFlow / target.MaxFlow);
         protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, Option, false) { IsLoop = true };
+        protected override float TargetEvaluation() => targets.Max(t => MathHelper.Lerp(100, 0, t.CurrFlow / t.MaxFlow));
     }
 }

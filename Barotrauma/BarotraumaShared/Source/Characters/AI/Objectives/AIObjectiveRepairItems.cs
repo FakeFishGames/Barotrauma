@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
 
@@ -66,7 +67,7 @@ namespace Barotrauma
             return ignore;
         }
 
-        protected override float Average(Item item) => 100 - item.ConditionPercentage;
+        protected override float TargetEvaluation() => targets.Max(t => 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
         protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item);
     }
