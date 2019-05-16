@@ -29,11 +29,14 @@ namespace Barotrauma
         private readonly List<Hull> targetHulls = new List<Hull>(20);
         private readonly List<float> hullWeights = new List<float>(20);
 
-        public AIObjectiveIdle(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
+        public AIObjectiveIdle(Character character) : base(character, "")
         {
             standStillTimer = Rand.Range(-10.0f, 10.0f);
             walkDuration = Rand.Range(0.0f, 10.0f);
         }
+
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
 
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
@@ -85,9 +88,6 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-
-            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
-                (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));

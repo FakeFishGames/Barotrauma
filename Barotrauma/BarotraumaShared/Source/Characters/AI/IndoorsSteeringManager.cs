@@ -427,6 +427,18 @@ namespace Barotrauma
                             return;
                         }
 
+                        closestButton.Item.TryInteract(character, false, true, false);
+                        buttonPressCooldown = ButtonPressInterval;
+                        break;
+                    }
+                    else
+                    {
+                        if (!door.HasRequiredItems(character, false) && shouldBeOpen)
+                        {
+                            currentPath.Unreachable = true;
+                            return;
+                        }
+
                         door.Item.TryInteract(character, false, true, true);
                         buttonPressCooldown = ButtonPressInterval;
                         break;

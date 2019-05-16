@@ -43,10 +43,18 @@ namespace Barotrauma
             return ignore;
         }
 
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
-        protected override float TargetEvaluation() => targets.Max(t => GetLeakSeverity(t));
-        protected override IEnumerable<Gap> GetList() => Gap.GapList;
-        protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character, objectiveManager, PriorityModifier);
+        private float GetGapFixPriority(Gap gap)
+        {
+            if (gap == null) return 0.0f;
+
+            //larger gap -> higher priority
+            float gapPriority = (gap.IsHorizontal ? gap.Rect.Width : gap.Rect.Height) * gap.Open;
+
+            //prioritize gaps that are close
+            gapPriority /= Math.Max(Vector2.Distance(character.WorldPosition, gap.WorldPosition), 1.0f);
+
+            //gaps to outside are much higher priority
+            if (!gap.IsRoomToRoom) gapPriority *= 10.0f;
 
             return gapPriority;
 

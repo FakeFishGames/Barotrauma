@@ -80,6 +80,16 @@ namespace Barotrauma
                 unreachable.Clear();
             }
 
+            if (unreachableClearTimer > 0)
+            {
+                unreachableClearTimer -= deltaTime;
+            }
+            else
+            {
+                unreachableClearTimer = clearUnreachableInterval;
+                unreachable.Clear();
+            }
+
             if (searchHullTimer > 0.0f)
             {
                 unreachableClearTimer = clearUnreachableInterval;
