@@ -755,6 +755,25 @@ namespace Barotrauma
             }
         }
 
+        public string DisplayName
+        {
+            get;
+            private set;
+        }
+
+        private string roomName;
+        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
+        public string RoomName
+        {
+            get { return roomName; }
+            set
+            {
+                if (roomName == value) { return; }
+                roomName = value;
+                DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+            }
+        }
+
         public override Rectangle Rect
         {
             get
