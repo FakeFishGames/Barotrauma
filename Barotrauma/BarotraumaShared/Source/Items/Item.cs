@@ -1127,6 +1127,10 @@ namespace Barotrauma
             {
                 ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
+            if (!broken)
+            {
+                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            }
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
@@ -1157,6 +1161,27 @@ namespace Barotrauma
             {
                 body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
             }
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+            if (Math.Abs(body.LinearVelocity.X) > NetConfig.MaxPhysicsBodyVelocity || 
+                Math.Abs(body.LinearVelocity.Y) > NetConfig.MaxPhysicsBodyVelocity)
+            {
+                body.LinearVelocity = new Vector2(
+                    MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
+            }
+        }
+                
+        public void UpdateTransform()
+        {
+            Submarine prevSub = Submarine;
+
+            FindHull();
+
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
@@ -2003,6 +2028,7 @@ namespace Barotrauma
             return Load(element, submarine, createNetworkEvent: false);
         }
 
+
         /// <summary>
         /// Instantiate a new item and load its data from the XML element.
         /// </summary>
@@ -2015,30 +2041,10 @@ namespace Barotrauma
             string name = element.Attribute("name").Value;            
             string identifier = element.GetAttributeString("identifier", "");
 
-            ItemPrefab prefab;
-            if (string.IsNullOrEmpty(identifier))
-            {
-                //legacy support: 
-                //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = MapEntityPrefab.Find(name, "", showErrorMessages: false) as ItemPrefab;
-                //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = MapEntityPrefab.Find(name) as ItemPrefab;
-            }
-            else
-            {
-                prefab = MapEntityPrefab.Find(null, identifier, showErrorMessages: false) as ItemPrefab;
-
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = MapEntityPrefab.List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
-            }
+            ItemPrefab prefab = ItemPrefab.Find(name, identifier);
 
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
                 return null;
             }
 
