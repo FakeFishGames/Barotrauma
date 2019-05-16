@@ -105,6 +105,9 @@ namespace Barotrauma
             {
                 if (IsTakenBySomeone(targetItem))
                 {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Found an item, but it's equipped by someone else. Aborting.", Color.Yellow);
+#endif
                     abandon = true;
                 }
                 else
@@ -172,7 +175,7 @@ namespace Barotrauma
                 if (targetItem == null)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item is was defined.");
+                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item, because neither identifiers nor item is was defined.", Color.Red);
 #endif
                     abandon = true;
                 }
@@ -212,7 +215,7 @@ namespace Barotrauma
             if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}");
+                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Red);
 #endif
                 abandon = true;
             }
