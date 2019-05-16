@@ -271,13 +271,10 @@ namespace Barotrauma
         {
             bool isEquipped = !equip || character.HasEquippedItem(item);
             if (character.Inventory.Items.Contains(item) && isEquipped) { return true; }
-            if (!equip)
+            Item rootContainer = item.GetRootContainer();
+            if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
             {
-                Item rootContainer = item.GetRootContainer();
-                if (rootContainer != null && rootContainer.ParentInventory is CharacterInventory)
-                {
-                    return rootContainer.ParentInventory.Owner == character;
-                }
+                return rootContainer.ParentInventory.Owner == character;
             }
             return false;
         }
