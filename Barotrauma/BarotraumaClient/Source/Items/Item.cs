@@ -562,6 +562,7 @@ namespace Barotrauma
                     }
                 };
                 itemEditor.AddCustomContent(buttonContainer, itemEditor.ContentCount);
+                GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Select(b => ((GUIButton)b).TextBlock));
             }
 
             foreach (ItemComponent ic in components)

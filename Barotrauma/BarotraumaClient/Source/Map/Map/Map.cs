@@ -380,7 +380,10 @@ namespace Barotrauma
                 zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
                 zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
 
-                if (PlayerInput.MidButtonHeld()) { drawOffset += PlayerInput.MouseSpeed / zoom; }
+                if (PlayerInput.MidButtonHeld() || (highlightedLocation == null && PlayerInput.LeftButtonHeld()))
+                {
+                    drawOffset += PlayerInput.MouseSpeed / zoom;
+                }
 #if DEBUG
                 if (PlayerInput.DoubleClicked() && highlightedLocation != null)
                 {
@@ -559,6 +562,11 @@ namespace Barotrauma
                             null, connectionColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
                             new Vector2(0, 16), SpriteEffects.None, 0.01f);
                     }
+                }
+                
+                rect.Inflate(8, 8);
+                GUI.DrawRectangle(spriteBatch, rect, Color.Black, false, 0.0f, 8);
+                GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
 
                     if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)
                     {
