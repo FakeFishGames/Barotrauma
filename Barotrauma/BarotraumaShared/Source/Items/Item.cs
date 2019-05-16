@@ -1203,6 +1203,38 @@ namespace Barotrauma
                     MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
             }
         }
+                
+        public void UpdateTransform()
+        {
+            Submarine prevSub = Submarine;
+
+            FindHull();
+
+            if (Submarine == null && prevSub != null)
+            {
+                body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+            }
+            else if (Submarine != null && prevSub == null)
+            {
+                body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
+            else if (Submarine != null && prevSub != null && Submarine != prevSub)
+            {
+                body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+            if (Math.Abs(body.LinearVelocity.X) > NetConfig.MaxPhysicsBodyVelocity || 
+                Math.Abs(body.LinearVelocity.Y) > NetConfig.MaxPhysicsBodyVelocity)
+            {
+                body.LinearVelocity = new Vector2(
+                    MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
+            }
+        }
 
         /// <summary>
         /// Applies buoyancy, drag and angular drag caused by water

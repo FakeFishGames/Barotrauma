@@ -17,6 +17,7 @@ namespace Barotrauma
         private ScalableFont defaultFont;
 
         public ScalableFont Font { get; private set; }
+        public ScalableFont UnscaledSmallFont { get; private set; }
         public ScalableFont SmallFont { get; private set; }
         public ScalableFont LargeFont { get; private set; }
         public ScalableFont VideoTitleFont { get; private set; }
@@ -63,6 +64,9 @@ namespace Barotrauma
                         break;
                     case "font":
                         Font = LoadFont(subElement, graphicsDevice);
+                        break;
+                    case "unscaledsmallfont":
+                        UnscaledSmallFont = LoadFont(subElement, graphicsDevice);
                         break;
                     case "smallfont":
                         SmallFont = LoadFont(subElement, graphicsDevice);
