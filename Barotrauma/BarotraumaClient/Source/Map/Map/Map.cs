@@ -638,9 +638,7 @@ namespace Barotrauma
 
                 if (mouseOn && PlayerInput.LeftButtonClicked() && !messageBoxOpen)
                 {
-                    //TODO: translate or replace
                     var messageBox = new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
-                    messageBoxOpen = true;
                     CoroutineManager.StartCoroutine(WaitForMessageBoxClosed(messageBox));
                 }
             }

@@ -1184,6 +1184,7 @@ namespace Barotrauma
             {
                 OnClicked = SaveSub
             };
+#endif
 
         }
 
@@ -1356,7 +1357,7 @@ namespace Barotrauma
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
                     var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
-                        TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), font: GUI.SmallFont)
+                        TextManager.Get("Shuttle"), font: GUI.SmallFont)
                         {
                             TextColor = textBlock.TextColor * 0.8f,
                             ToolTip = textBlock.ToolTip
