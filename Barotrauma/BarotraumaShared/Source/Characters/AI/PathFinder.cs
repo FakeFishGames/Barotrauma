@@ -29,7 +29,7 @@ namespace Barotrauma
 
         public Vector2 Position
         {
-            get {return position;}
+            get { return position; }
         }
 
         public PathNode(WayPoint wayPoint)
@@ -216,6 +216,7 @@ namespace Barotrauma
             {
                 Vector2 nodePos = node.Position;
 
+                // TODO: use squared distance 
                 float dist = Vector2.Distance(end, nodePos);
                 if (insideSubmarine)
                 {
@@ -229,13 +230,6 @@ namespace Barotrauma
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
                     {
-                        // Doesn't seem to work
-                        //var body = Submarine.CheckVisibility(end, node.Waypoint.SimPosition);
-                        //if (body != null && body.UserData is Structure)
-                        //{
-                        //    continue;
-                        //}
-
                         var body = Submarine.PickBody(end, node.Waypoint.SimPosition, null,
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
 
