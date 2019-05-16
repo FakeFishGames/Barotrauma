@@ -32,6 +32,7 @@ namespace Barotrauma
             float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
             float severityFactor = MathHelper.Lerp(0, 1, MathHelper.Clamp(targetHull.FireSources.Sum(fs => fs.Size.X) / targetHull.Size.X, 0, 1));
+            // Devotion?
             return MathHelper.Lerp(0, 100, severityFactor * distanceFactor);
         }
 

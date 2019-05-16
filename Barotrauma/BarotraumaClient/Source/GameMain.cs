@@ -178,6 +178,10 @@ namespace Barotrauma
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
+            GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
+
+
+            PerformanceCounter = new PerformanceCounter();
 
             PerformanceCounter = new PerformanceCounter();
 

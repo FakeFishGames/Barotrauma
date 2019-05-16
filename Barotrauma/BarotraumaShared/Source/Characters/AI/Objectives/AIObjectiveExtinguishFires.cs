@@ -25,7 +25,8 @@ namespace Barotrauma
                 return AIObjectiveManager.OrderPriority;
             }
             float basePriority = MathHelper.Clamp(Priority, 0, 10);
-            return MathHelper.Clamp(basePriority + fireCount * 20, 0, 100);
+            float max = MathHelper.Min(AIObjectiveManager.OrderPriority + 20, 100);
+            return MathHelper.Clamp(basePriority + fireCount * 20, 0, max);
         }
 
         public override bool IsCompleted() => false;

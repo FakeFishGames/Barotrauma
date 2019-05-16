@@ -70,17 +70,10 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            return characterListBox.Rect;
-        }
-
-        partial void InitProjectSpecific()
-        {
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
                 CanBeFocused = false
             };
-
-            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -92,21 +85,55 @@ namespace Barotrauma
                 }
             }
 
+            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            reportButtonFrame = new GUILayoutGroup(new RectTransform(
+                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
+            {
+                AbsoluteSpacing = (int)(5 * GUI.Scale),
+                UserData = "reportbuttons",
+                CanBeFocused = false
+            };
+
+            //report buttons
+            foreach (Order order in reports)
+            {
+                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
+                var btn = new GUIButton(new RectTransform(new Point(reportButtonFrame.Rect.Width), reportButtonFrame.RectTransform), style: null)
+                {
+                    OnClicked = (GUIButton button, object userData) =>
+                    {
+                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
+                        SetCharacterOrder(null, order, null, Character.Controlled);
+                        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
+                        return true;
+                    },
+                    UserData = order,
+                    ToolTip = order.Name
+                };
+
+                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
+                {
+                    Color = Color.Red * 0.8f,
+                    HoverColor = Color.Red * 1.0f,
+                    PressedColor = Color.Red * 0.6f,
+                    UserData = "highlighted",
+                    CanBeFocused = false,
+                    Visible = false
+                };
+
+                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite, scaleToFit: true)
+                {
+                    Color = order.Color,
+                    HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
+                    ToolTip = order.Name
+                };
+            }
+
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             prevUIScale = GUI.Scale;
 
             ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
-        }
-
-
-        #endregion
-
-        #region Character list management
-
-        public Rectangle GetCharacterListArea()
-        {
-            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
@@ -630,7 +657,20 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-            return radioItem.GetComponent<WifiComponent>();
+        #region Dialog
+        /// <summary>
+        /// Adds the message to the single player chatbox.
+        /// </summary>
+        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
+        {
+            if (!isSinglePlayer)
+            {
+                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                return;
+            }
+            if (string.IsNullOrEmpty(text)) { return; }
+
+            ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
