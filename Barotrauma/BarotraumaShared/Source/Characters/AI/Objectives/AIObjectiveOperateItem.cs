@@ -70,15 +70,7 @@ namespace Barotrauma
                 {
                     if (character.SelectedConstruction != target.Item)
                     {
-                        if (character.SelectedConstruction != target.Item)
-                        {
-                            target.Item.TryInteract(character, false, true);
-                        }
-                        if (component.AIOperate(deltaTime, character, this))
-                        {
-                            isCompleted = true;
-                        }
-                        return;
+                        isCompleted = true;
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
