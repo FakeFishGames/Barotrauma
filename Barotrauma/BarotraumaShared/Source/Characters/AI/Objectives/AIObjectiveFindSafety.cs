@@ -32,7 +32,7 @@ namespace Barotrauma
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
-        public override void Update(float deltaTime)
+        protected override void Act(float deltaTime)
         {
             var currentHull = character.AnimController.CurrentHull;           
             if (HumanAIController.NeedsDivingGear(currentHull) && divingGearObjective == null)

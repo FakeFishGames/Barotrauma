@@ -225,6 +225,8 @@ namespace Barotrauma
                 moveToTarget = rootContainer ?? item;
 
             }
+
+            }
             //if searched through all the items and a target wasn't found, can't be completed
             if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
             {
