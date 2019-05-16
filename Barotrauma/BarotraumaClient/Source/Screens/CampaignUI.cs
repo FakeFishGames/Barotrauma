@@ -180,7 +180,7 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };

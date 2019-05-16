@@ -372,6 +372,8 @@ namespace Barotrauma
 
         private GUILayoutGroup subPreviewContainer;
 
+        private GUILayoutGroup subPreviewContainer;
+
         private GUIButton loadGameButton;
         
         public Action<Submarine, string, string> StartNewGame;
@@ -430,7 +432,7 @@ namespace Barotrauma
             };
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
             
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
             var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
