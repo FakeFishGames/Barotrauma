@@ -49,6 +49,7 @@ namespace Barotrauma
                 c.TeamID == character.TeamID &&
                 c != character &&
                 !c.IsDead &&
+                HumanAIController.IsFriendly(c) &&
                 c.Vitality / c.MaxVitality < VitalityThreshold);
         }
 

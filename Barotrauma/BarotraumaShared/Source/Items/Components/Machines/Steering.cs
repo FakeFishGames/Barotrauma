@@ -640,12 +640,55 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void OnItemLoaded()
-        {
-            sonar = item.GetComponent<Sonar>();
-        }
+        private float autopilotRayCastTimer;
+        private float autopilotRecalculatePathTimer;
 
         public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+        private float neutralBallastLevel;
+
+        private float steeringAdjustSpeed = 1.0f;
+
+        private Character user;
+
+        private Sonar sonar;
+
+        private Submarine controlledSub;
+                
+        public bool AutoPilot
+        {
+            get { return autoPilot; }
+            set
+            {
+                if (value == autoPilot) return;
+                autoPilot = value;
+#if CLIENT
+                autopilotTickBox.Selected = autoPilot;
+                manualTickBox.Selected = !autoPilot;
+                maintainPosTickBox.Enabled = autoPilot;
+                levelEndTickBox.Enabled = autoPilot;
+                levelStartTickBox.Enabled = autoPilot;
+#endif
+                if (autoPilot)
+                {
+                    if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                    MaintainPos = true;
+                }
+                else
+                {
+                    PosToMaintain = null;
+                    MaintainPos = false;
+                    LevelEndSelected = false;
+                    LevelStartSelected = false;
+                }
+            }
+        }
+        
+        [Editable(0.0f, 1.0f, decimals: 3, ToolTip = "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
+            +" Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine."), Serialize(0.5f, true)]
+        public float NeutralBallastLevel
         {
             if (!CanBeSelected) return false;
 
@@ -653,12 +696,30 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void OnItemLoaded()
+        [Serialize(1000.0f, true)]
+        public float DockingAssistThreshold
+        {
+            get;
+            set;
+        }
+
+        public Vector2 TargetVelocity
         {
             sonar = item.GetComponent<Sonar>();
         }
 
-        public override bool Select(Character character)
+        public Vector2 SteeringInput
+        {
+            get { return steeringInput; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+            }
+        }
+
+        public SteeringPath SteeringPath
         {
             if (!CanBeSelected) return false;
 
@@ -666,20 +727,38 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void OnItemLoaded()
+        public Vector2? PosToMaintain
         {
-            sonar = item.GetComponent<Sonar>();
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
         }
 
-        public override bool Select(Character character)
+        struct ObstacleDebugInfo
         {
-            if (!CanBeSelected) return false;
+            public Vector2 Point1;
+            public Vector2 Point2;
 
-            user = character;
-            return true;
+            public Vector2? Intersection;
+
+            public float Dot;
+
+            public Vector2 AvoidStrength;
+
+            public ObstacleDebugInfo(GraphEdge edge, Vector2? intersection, float dot, Vector2 avoidStrength)
+            {
+                Point1 = edge.Point1;
+                Point2 = edge.Point2;
+                Intersection = intersection;
+                Dot = dot;
+                AvoidStrength = avoidStrength;
+            }
         }
 
-        public override void OnItemLoaded()
+        //edge point 1, edge point 2, avoid strength
+        private List<ObstacleDebugInfo> debugDrawObstacles = new List<ObstacleDebugInfo>();
+
+        public Steering(Item item, XElement element)
+            : base(item, element)
         {
             sonar = item.GetComponent<Sonar>();
         }
