@@ -14,11 +14,16 @@ namespace Barotrauma
         private float maxDistFromCenter;
         private float cohesion;
 
-        private List<AICharacter> members = new List<AICharacter>();
+        public List<AICharacter> Members { get; private set; } = new List<AICharacter>();
+        public HashSet<AICharacter> ActiveMembers { get; private set; } = new HashSet<AICharacter>();
 
-        private AIController ai;
+        private EnemyAIController ai;
 
-        public SwarmBehavior(XElement element, AIController ai)
+        public bool IsActive { get; set; }
+        public bool IsEnoughMembers => ActiveMembers.Count > 1;
+
+
+        public SwarmBehavior(XElement element, EnemyAIController ai)
         {
             this.ai = ai;
             minDistFromClosest = ConvertUnits.ToSimUnits(element.GetAttributeFloat("mindistfromclosest", 10.0f));
@@ -32,21 +37,36 @@ namespace Barotrauma
             {
                 if (character.AIController is EnemyAIController enemyAI && enemyAI.SwarmBehavior != null)
                 {
-                    enemyAI.SwarmBehavior.members = swarm.ToList();
+                    enemyAI.SwarmBehavior.Members = swarm.ToList();
                 }
             }
         }
 
-        public void Update(float deltaTime)
+        public void Refresh()
         {
-            members.RemoveAll(m => m.IsDead || m.Removed);
-            if (members.Count < 2) { return; }
+            Members.RemoveAll(m => m.IsDead || m.Removed);
+            foreach (var member in Members)
+            {
+                if (!member.AIController.Enabled && member.IsRemotePlayer || Character.Controlled == member || !((EnemyAIController)member.AIController).SwarmBehavior.IsActive)
+                {
+                    ActiveMembers.Remove(member);
+                }
+                else
+                {
+                    ActiveMembers.Add(member);
+                }
+            }
+        }
 
+        public void UpdateSteering(float deltaTime)
+        {
+            if (!IsActive) { return; }
+            if (!IsEnoughMembers) { return; }
             //calculate the "center of mass" of the swarm and the distance to the closest character in the swarm
             float closestDistSqr = float.MaxValue;
             Vector2 center = Vector2.Zero;
             AICharacter closest = null;
-            foreach (AICharacter member in members)
+            foreach (AICharacter member in Members)
             {
                 center += member.SimPosition;
                 if (member == ai.Character) { continue; }
@@ -57,7 +77,7 @@ namespace Barotrauma
                     closest = member;
                 }
             }
-            center /= members.Count;
+            center /= Members.Count;
 
             if (closest == null) { return; }
 
@@ -83,11 +103,11 @@ namespace Barotrauma
             if (cohesion > 0.0f)
             {
                 Vector2 avgVel = Vector2.Zero;
-                foreach (AICharacter member in members)
+                foreach (AICharacter member in Members)
                 {
                     avgVel += member.AnimController.TargetMovement;
                 }
-                avgVel /= members.Count;
+                avgVel /= Members.Count;
                 ai.SteeringManager.SteeringManual(deltaTime, avgVel * cohesion);
             }
         }
