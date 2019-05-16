@@ -2291,7 +2291,7 @@
 <!-- Room 5 -->
 <engineer.wirejunctionboxes>Fiação</engineer.wirejunctionboxes>
 <engineer.wirejunctionboxesobjective>Conecte as caixas de passagem</engineer.wirejunctionboxesobjective>
-<engineer.wirejunctionboxestext>Caixas de passagem são a principal forma de conectar os dispositivos do submarino à rede elétrica. Use a instalação elétrica para conectá-las e habilitar o fluxo de energia entre elas.\n\nPara conectar fios a itens, equipe uma chave de fenda e um fio, um em cada mão, e então interaja ({0}) com o item a que você quer adicionar o fio. Você verá um painel de conexão com alguns pinos de conexão e um fio saindo pela parte inferior do painel. Arraste o fio para o pino energia e então pressione {1} para fechar o painel. Repita os passos no próximo item.\n\nSe ao abrir a interface do painel de conexão você não encontrar um fio solto, certifique-se de tê-lo equipado.</engineer.wirejunctionboxestext>
+<engineer.wirejunctionboxestext>Caixas de passagem são a principal forma de conectar os dispositivos do submarino à rede elétrica. Use a instalação elétrica para conectá-las e habilitar o fluxo de energia entre elas.\n\nPara conectar fios a itens, equipe uma chave de fenda e um fio, um em cada mão, e então interaja ({0}) com o item a que você quer adicionar o fio. Você verá um painel de conexão com alguns pinos de conexão e um fio saindo pela parte inferior do painel. Arraste o fio para o pino "energia" e então pressione {1} para fechar o painel. Repita os passos no próximo item.\n\nSe ao abrir a interface do painel de conexão você não encontrar um fio solto, certifique-se de tê-lo equipado.</engineer.wirejunctionboxestext>
 
 <!-- Submarine -->
 <engineer.repairelectricalroom>Sala de energia</engineer.repairelectricalroom>
