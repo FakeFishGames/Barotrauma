@@ -80,13 +80,6 @@ namespace Barotrauma
 #endif
                     subObjectives.Remove(subObjective);
                 }
-                else if (subObjective.ShouldInterruptSubObjective(subObjective))
-                {
-#if DEBUG
-                    DebugConsole.NewMessage($"Removing subobjective {subObjective.DebugTag} of {DebugTag}, because it is interrupted.");
-#endif
-                    subObjectives.Remove(subObjective);
-                }
             }
 
             foreach (AIObjective objective in subObjectives)
@@ -198,9 +191,6 @@ namespace Barotrauma
                 return true;
             }
         }
-
-        // TODO: remove
-        protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
 
         public virtual void OnSelected()
         {
