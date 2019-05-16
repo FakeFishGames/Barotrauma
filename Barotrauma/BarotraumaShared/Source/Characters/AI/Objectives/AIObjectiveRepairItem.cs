@@ -61,11 +61,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            // Don't allow to repair items in rooms that have a fire or an enemies inside or if outside the sub
-            if (Item.CurrentHull == null || Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == Item.CurrentHull && !HumanAIController.IsFriendly(c)))
-            {
-                abandon = true;
-            }
             foreach (Repairable repairable in Item.Repairables)
             {
                 if (!repairable.HasRequiredItems(character, false))
