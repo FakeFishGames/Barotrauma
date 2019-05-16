@@ -29,7 +29,7 @@ namespace Barotrauma
         private readonly List<Hull> targetHulls = new List<Hull>(20);
         private readonly List<float> hullWeights = new List<float>(20);
 
-        public AIObjectiveIdle(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
+        public void SetRandom()
         {
             standStillTimer = Rand.Range(-10.0f, 10.0f);
             walkDuration = Rand.Range(0.0f, 10.0f);
@@ -37,27 +37,6 @@ namespace Barotrauma
 
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
-
-        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
-
-        private float randomTimer;
-        private float randomUpdateInterval = 5;
-        public float Random { get; private set; }
-
-        public void SetRandom()
-        {
-            Random = Rand.Range(0.5f, 1.5f);
-            randomTimer = randomUpdateInterval;
-        }
-
-        public override float GetPriority()
-        {
-            return 1;
-            float max = Math.Min(Math.Min(AIObjectiveManager.RunPriority, AIObjectiveManager.OrderPriority) - 1, 100);
-            float initiative = character.GetSkillLevel("initiative");
-            Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, initiative * Random));
-            return Priority;
-        }
 
         public override void Update(float deltaTime)
         {
@@ -99,7 +78,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (PathSteering == null) { return; }
+            if (PathSteering == null) return;
 
             //don't keep dragging others when idling
             if (character.SelectedCharacter != null)
@@ -111,10 +90,17 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
             }
 
+            bool currentHullForbidden = IsForbidden(character.CurrentHull);
+            if (!currentHullForbidden && !character.AnimController.InWater && !character.IsClimbing && HumanAIController.ObjectiveManager.WaitTimer > 0)
+            {
+                SteeringManager.Reset();
+                return;
+            }
+
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-            if (currentTargetIsInvalid || currentTarget == null && IsForbidden(character.CurrentHull))
+            if (currentTargetIsInvalid || (currentTarget == null && currentHullForbidden))
             {
                 newTargetTimer = 0;
                 standStillTimer = 0;
@@ -151,6 +137,7 @@ namespace Barotrauma
                 {
                     //choose a random available hull
                     var randomHull = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
+
                     bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
                     if (isCurrentHullOK)
                     {
@@ -158,8 +145,7 @@ namespace Barotrauma
                         // Only do this when the current hull is ok, because otherwise would block all paths from the current hull to the target hull.
                         var path = PathSteering.PathFinder.FindPath(character.SimPosition, randomHull.SimPosition);
                         if (path.Unreachable ||
-                            path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) ||
-                            IsForbidden(n.CurrentHull)))
+                            path.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull) || IsForbidden(n.CurrentHull)))
                         {
                             //can't go to this room, remove it from the list and try another room next frame
                             int index = targetHulls.IndexOf(randomHull);
@@ -282,6 +268,7 @@ namespace Barotrauma
 
         private void FindTargetHulls()
         {
+            bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
             targetHulls.Clear();
             hullWeights.Clear();
             foreach (var hull in Hull.hullList)
@@ -313,7 +300,7 @@ namespace Barotrauma
             }
         }
 
-        public static bool IsForbidden(Hull hull)
+        private bool IsForbidden(Hull hull)
         {
             if (hull == null) { return true; }
             string hullName = hull.RoomName?.ToLowerInvariant();

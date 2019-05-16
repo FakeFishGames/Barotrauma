@@ -11,6 +11,8 @@ namespace Barotrauma
         public override string DebugTag => "operate item";
 
         private ItemComponent component, controller;
+
+        private ItemComponent component, controller;
         private Entity operateTarget;
         private bool isCompleted;
         private bool requireEquip;
@@ -18,25 +20,35 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
-        public override bool CanBeCompleted => base.CanBeCompleted && (!useController || controller != null);
+        private bool useController;
+
+        private AIObjectiveGoTo gotoObjective;
+
+        public override bool CanBeCompleted
+        {
+            get
+            {
+                if (gotoObjective != null && !gotoObjective.CanBeCompleted) return false;
+
+                if (useController && controller == null) return false;
+
+                return canBeCompleted;
+            }
+        }
 
         public Entity OperateTarget => operateTarget;
         public ItemComponent Component => component;
 
-        public override float GetPriority()
+        public ItemComponent Component => component;
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (component.Item.ConditionPercentage <= 0) { return 0; }
+            if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
             if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
-            if (component.Item.CurrentHull == null) { return 0; }
-            if (component.Item.CurrentHull.FireSources.Count > 0) { return 0; }
-            if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c))) { return 0; }
-            float devotion = MathHelper.Min(10, Priority);
-            float value = devotion + AIObjectiveManager.OrderPriority * PriorityModifier;
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
-            return MathHelper.Clamp(value, 0, max);
+            return base.GetPriority(objectiveManager);
         }
 
         public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) 
@@ -46,31 +58,34 @@ namespace Barotrauma
             this.requireEquip = requireEquip;
             this.operateTarget = operateTarget;
             this.useController = useController;
+
             if (useController)
             {
-                //try finding the controller with the simpler non-recursive method first
-                controller =
-                        component.Item.GetConnectedComponents<Controller>().FirstOrDefault() ??
-                        component.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
+                var controllers = component.Item.GetConnectedComponents<Controller>();
+                if (controllers.Any()) controller = controllers[0];
             }
+
+            canBeCompleted = true;
         }
 
         protected override void Act(float deltaTime)
         {
             ItemComponent target = useController ? controller : component;
+
             if (useController && controller == null)
             {
                 character.Speak(TextManager.Get("DialogCantFindController").Replace("[item]", component.Item.Name), null, 2.0f, "cantfindcontroller", 30.0f);
-                abandon = true;
                 return;
             }
+            
+
             if (target.CanBeSelected)
             {
                 bool inSameRoom = character.CurrentHull == target.Item.CurrentHull;
                 bool withinReach = target.Item.IsInsideTrigger(character.WorldPosition) || Vector2.DistanceSquared(character.Position, target.Item.Position) < MathUtils.Pow(target.Item.InteractDistance, 2);
                 if (inSameRoom && withinReach)
                 {
-                    if (character.SelectedConstruction != target.Item)
+                    if (character.CurrentHull == target.Item.CurrentHull)
                     {
                         if (character.SelectedConstruction != target.Item && target.CanBeSelected)
                         {
@@ -82,34 +97,16 @@ namespace Barotrauma
                         }
                         return;
                     }
-                    if (component.AIOperate(deltaTime, character, this))
-                    {
-                        isCompleted = true;
-                    }
-                    if (component.AIOperate(deltaTime, character, this))
-                    {
-                        isCompleted = true;
-                    }
-                    if (component.AIOperate(deltaTime, character, this))
-                    {
-                        isCompleted = true;
-                    }
-                    if (component.AIOperate(deltaTime, character, this))
-                    {
-                        isCompleted = true;
-                    }
                 }
-                else
-                {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager));
-                }
+
+                AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character));
             }
             else
             {
                 if (component.Item.GetComponent<Pickable>() == null)
                 {
                     //controller/target can't be selected and the item cannot be picked -> objective can't be completed
-                    abandon = true;
+                    canBeCompleted = false;
                     return;
                 }
                 else if (!character.Inventory.Items.Contains(component.Item))
@@ -129,9 +126,11 @@ namespace Barotrauma
 #endif
                             return;
                         }
+
                         for (int i = 0; i < character.Inventory.Capacity; i++)
                         {
-                            if (character.Inventory.SlotTypes[i] == InvSlotType.Any || !holdable.AllowedSlots.Any(s => s.HasFlag(character.Inventory.SlotTypes[i])))
+                            if (character.Inventory.SlotTypes[i] == InvSlotType.Any ||
+                                !holdable.AllowedSlots.Any(s => s.HasFlag(character.Inventory.SlotTypes[i])))
                             {
                                 continue;
                             }
@@ -165,8 +164,10 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            if (!(otherObjective is AIObjectiveOperateItem operateItem)) { return false; }
-            return (operateItem.component == component || otherObjective.Option == Option);
+            AIObjectiveOperateItem operateItem = otherObjective as AIObjectiveOperateItem;
+            if (operateItem == null) return false;
+
+            return (operateItem.component == component ||otherObjective.Option == Option);
         }
     }
 }

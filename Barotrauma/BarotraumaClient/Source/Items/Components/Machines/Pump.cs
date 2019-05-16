@@ -78,8 +78,8 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), rightArea.RectTransform) { RelativeOffset = new Vector2(0.25f, 0.0f) },
-                "", textAlignment: Alignment.BottomLeft);
+            var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), rightArea.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) },
+                "", textAlignment: Alignment.BottomLeft, wrap: true);
             string pumpSpeedStr = TextManager.Get("PumpSpeed");
             pumpSpeedText.TextGetter = () => { return pumpSpeedStr + ": " + (int)flowPercentage + " %"; };
 
@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpOut"), textAlignment: Alignment.Center);
+                TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
             pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
             {
                 Step = 0.05f,
@@ -111,7 +111,7 @@ namespace Barotrauma.Items.Components
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpIn"), textAlignment: Alignment.Center);            
+                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);            
         }
 
         public override void OnItemLoaded()

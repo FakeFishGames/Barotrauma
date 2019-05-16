@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -10,10 +9,8 @@ namespace Barotrauma
         public override string DebugTag => "find diving gear";
         public override bool ForceRun => true;
 
-        private readonly string gearTag;
-
-        private AIObjectiveGetItem getDivingGear;
-        private AIObjectiveContainItem getOxygen;
+        private AIObjective subObjective;
+        private string gearTag;
 
         public override bool IsCompleted()
         {
@@ -24,16 +21,15 @@ namespace Barotrauma
                 {
                     var containedItems = character.Inventory.Items[i].ContainedItems;
                     if (containedItems == null) { continue; }
-                    return containedItems.Any(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f);
+
+                    var oxygenTank = containedItems.FirstOrDefault(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f);
+                    if (oxygenTank != null) { return true; }
                 }
             }
             return false;
         }
 
-        public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindDivingGear;
-
-        public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
+        public AIObjectiveFindDivingGear(Character character, bool needDivingSuit) : base(character, "")
         {
             gearTag = needDivingSuit ? "divingsuit" : "diving";
         }
@@ -46,23 +42,16 @@ namespace Barotrauma
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
                     character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
-                    return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true);
-                });
+                    subObjective = new AIObjectiveGetItem(character, gearTag, true);
+                }
             }
             if (getDivingGear != null) { return; }
             var containedItems = item.ContainedItems;
             if (containedItems == null)
             {
                 var containedItems = item.ContainedItems;
-                if (containedItems == null)
-                {
-#if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
-#endif
-                    abandon = true;
-                    return;
-                }
-                // Drop empty tanks
+                if (containedItems == null) { return; }
+                //check if there's an oxygen tank in the mask/suit
                 foreach (Item containedItem in containedItems)
                 {
                     if (containedItem == null) { continue; }
@@ -70,16 +59,26 @@ namespace Barotrauma
                     {
                         containedItem.Drop(character);
                     }
-                }
-                if (containedItems.None(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f))
-                {
-                    TryAddSubObjective(ref getOxygen, () =>
+                    else if (containedItem.Prefab.Identifier == "oxygentank" || containedItem.HasTag("oxygensource"))
                     {
-                        character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                        return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
-                    });
+                        //we've got an oxygen source inside the mask/suit, all good
+                        return;
+                    }
+                }               
+                if (!(subObjective is AIObjectiveContainItem) || subObjective.IsCompleted())
+                {
+                    character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
+                    subObjective = new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>());
                 }
             }
+            if (subObjective != null)
+            {
+                subObjective.TryComplete(deltaTime);
+            }
         }
+
+        public override bool CanBeCompleted => subObjective == null || subObjective.CanBeCompleted;
+        public override float GetPriority(AIObjectiveManager objectiveManager) => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindDivingGear;
     }
 }

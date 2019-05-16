@@ -43,6 +43,11 @@ namespace Barotrauma.Items.Components
             set { userPos = value; }
         }
 
+        public Character User
+        {
+            get { return user; }
+        }
+
         public Controller(Item item, XElement element)
             : base(item, element)
         {
@@ -163,7 +168,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            item.SendSignal(0, "1", "trigger_out", character);
+            item.SendSignal(0, "1", "trigger_out", user);
             
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
@@ -233,7 +238,7 @@ namespace Barotrauma.Items.Components
 
         private Item GetFocusTarget()
         {
-            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", character);
+            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", user);
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {

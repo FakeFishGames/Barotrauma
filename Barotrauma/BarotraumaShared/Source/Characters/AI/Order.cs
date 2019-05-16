@@ -64,7 +64,8 @@ namespace Barotrauma
         private Order(XElement orderElement)
         {
             AITag = orderElement.GetAttributeString("aitag", "");
-            Name = TextManager.Get("OrderName." + AITag, true) ?? "Name not found";
+            Name = TextManager.Get("OrderName." + AITag, true) ?? orderElement.GetAttributeString("name", "Name not found");
+            DoingText = TextManager.Get("OrderNameDoing." + AITag, true) ?? orderElement.GetAttributeString("doingtext", "");
 
             string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
             if (!string.IsNullOrWhiteSpace(targetItemType))
@@ -126,6 +127,7 @@ namespace Barotrauma
 
             Name                = prefab.Name;
             AITag               = prefab.AITag;
+            DoingText           = prefab.DoingText;
             ItemComponentType   = prefab.ItemComponentType;
             Options             = prefab.Options;
             SymbolSprite        = prefab.SymbolSprite;
@@ -140,10 +142,8 @@ namespace Barotrauma
             {
                 if (UseController)
                 {
-                    //try finding the controller with the simpler non-recursive method first
-                    ConnectedController = 
-                        targetItem.Item.GetConnectedComponents<Controller>().FirstOrDefault() ?? 
-                        targetItem.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
+                    var controllers = targetItem.Item.GetConnectedComponents<Controller>();
+                    if (controllers.Count > 0) ConnectedController = controllers[0];
                 }
                 TargetEntity = targetItem.Item;
                 TargetItemComponent = targetItem;
