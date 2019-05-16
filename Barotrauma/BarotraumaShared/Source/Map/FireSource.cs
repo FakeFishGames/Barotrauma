@@ -24,6 +24,8 @@ namespace Barotrauma
 
         private bool removed;
 
+        private bool removed;
+
 #if CLIENT
         private List<Decal> burnDecals = new List<Decal>();
 #endif

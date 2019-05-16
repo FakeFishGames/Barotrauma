@@ -208,6 +208,16 @@ namespace Barotrauma
             ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
         }
 
+
+        #endregion
+
+        #region Character list management
+
+        public Rectangle GetCharacterListArea()
+        {
+            return characterListBox.Rect;
+        }
+
         partial void InitProjectSpecific()
         {
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
