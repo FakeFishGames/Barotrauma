@@ -98,17 +98,10 @@ namespace Barotrauma
             if (objectiveManager.CurrentObjective == null) { return; }
 
             objectiveManager.DoCurrentObjective(deltaTime);
-            bool run = objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
+            bool run = objectiveManager.CurrentObjective.ForceRun || objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
-                if (Vector2.DistanceSquared(Character.SimPosition, goTo.Target.SimPosition) > 3 * 3)
-                {
-                    run = true;
-                }
-            }
-            if (!run)
-            {
-                run = objectiveManager.CurrentObjective.ForceRun;
+                run = Vector2.DistanceSquared(Character.SimPosition, goTo.Target.SimPosition) > 3 * 3;
             }
             if (run)
             {
