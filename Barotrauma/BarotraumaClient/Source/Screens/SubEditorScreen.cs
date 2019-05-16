@@ -835,7 +835,6 @@ namespace Barotrauma
             //make space for the entity menu
             for (int i = 0; i < dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
-                if (CharacterInventory.PersonalSlots.HasFlag(dummyCharacter.Inventory.SlotTypes[i])) { continue; }
                 if (dummyCharacter.Inventory.SlotPositions[i].Y > GameMain.GraphicsHeight / 2)
                 {
                     dummyCharacter.Inventory.SlotPositions[i].Y -= 50 * GUI.Scale;

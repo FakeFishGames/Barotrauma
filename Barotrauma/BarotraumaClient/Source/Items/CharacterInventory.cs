@@ -35,7 +35,7 @@ namespace Barotrauma
 
         private static Dictionary<InvSlotType, Sprite> limbSlotIcons;
         
-        public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
+        const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
 
         private Point screenResolution;
 
