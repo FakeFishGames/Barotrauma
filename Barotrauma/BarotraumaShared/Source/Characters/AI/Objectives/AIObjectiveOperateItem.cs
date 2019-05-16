@@ -50,9 +50,8 @@ namespace Barotrauma
                 return AIObjectiveManager.OrderPriority;
             }
             float devotion = MathHelper.Min(10, Priority);
-            float value = (devotion + (AIObjectiveManager.OrderPriority / 2)) * PriorityModifier;
-            float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
+            float value = (devotion + AIObjectiveManager.OrderPriority / 2) * PriorityModifier;
+            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
             return MathHelper.Clamp(value, 0, max);
         }
 

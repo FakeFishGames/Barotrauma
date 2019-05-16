@@ -91,17 +91,16 @@ namespace Barotrauma
         {
             if (character.Submarine == null) { return 0; }
             if (targets.None()) { return 0; }
-            //if (objectiveManager.CurrentOrder == this)
-            //{
-            //    return AIObjectiveManager.OrderPriority;
-            //}
             float targetValue = MathHelper.Clamp(TargetEvaluation(), 0, 100);
             // If the target value is less than 1% of the max value, let's just treat it as zero.
             if (targetValue < 1) { return 0; }
-            float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+            float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
             float devotion = MathHelper.Min(10, Priority);
-            float value = MathHelper.Min((devotion + targetValue) / 100, 1);
+            float value = MathHelper.Min((devotion + targetValue * PriorityModifier) / 100, 1);
             return MathHelper.Lerp(0, max, value);
         }
 
