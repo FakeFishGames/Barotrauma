@@ -78,86 +78,13 @@ namespace Barotrauma
                         break;
                 }
             }
-            return defaultFont;
-        }
-
-
-        private void RescaleFonts()
-        {
-            foreach (XElement subElement in configElement.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "font":
-                        Font.Size = GetFontSize(subElement);
-                        break;
-                    case "smallfont":
-                        SmallFont.Size = GetFontSize(subElement);
-                        break;
-                    case "largefont":
-                        LargeFont.Size = GetFontSize(subElement);
-                        break;
-                    case "objectivetitle":
-                        ObjectiveTitleFont.Size = GetFontSize(subElement);
-                        break;
-                    case "objectivename":
-                        ObjectiveNameFont.Size = GetFontSize(subElement);
-                        break;
-                    case "videotitle":
-                        VideoTitleFont.Size = GetFontSize(subElement);
-                        break;
-                }
-            }
-        }
-
-        private ScalableFont LoadFont(XElement element, GraphicsDevice graphicsDevice)
-        {
-            string file         = GetFontFilePath(element);
-            uint size           = GetFontSize(element);
-            bool dynamicLoading = GetFontDynamicLoading(element);
-            return new ScalableFont(file, size, graphicsDevice, dynamicLoading);
-        }
-
-        private uint GetFontSize(XElement element)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "size") { continue; }
-                Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
-                if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
-                {
-                    return (uint)subElement.GetAttributeInt("size", 14);
-                }
-            }
-            return 14;
-        }
-
-        private string GetFontFilePath(XElement element)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
-                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
-                if (GameMain.Config.Language.ToLowerInvariant() == language)
-                {
-                    return subElement.GetAttributeString("file", "");
-                }
-            }
-            return element.GetAttributeString("file", "");
-        }
-
-        private bool GetFontDynamicLoading(XElement element)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
-                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
-                if (GameMain.Config.Language.ToLowerInvariant() == language)
-                {
-                    return subElement.GetAttributeBool("dynamicloading", false);
-                }
-            }
             return element.GetAttributeBool("dynamicloading", false);
+        }
+
+        public GUIComponentStyle GetComponentStyle(string name)
+        {
+            componentStyles.TryGetValue(name.ToLowerInvariant(), out GUIComponentStyle style);
+            return style;
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

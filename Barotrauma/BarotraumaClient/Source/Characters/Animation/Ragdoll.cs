@@ -415,7 +415,7 @@ namespace Barotrauma
             }
         }
 
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint)
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound = true)
         {
             foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
             {
@@ -432,6 +432,11 @@ namespace Barotrauma
                 {
                     character.CurrentHull?.AddDecal(character.BloodDecalName, limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
                 }
+            }
+
+            if (playSound)
+            {
+                SoundPlayer.PlayDamageSound("Gore", 1.0f, limbJoint.LimbA.body);
             }
         }
 

@@ -534,7 +534,12 @@ namespace Barotrauma
 
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
-            
+
+            float limpAmount = 
+                character.CharacterHealth.GetAfflictionStrength("damage", leftFoot, true) +
+                character.CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
+            limpAmount = MathHelper.Clamp(limpAmount / 100.0f, 0.0f, 1.0f);
+
             float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
@@ -564,17 +569,16 @@ namespace Barotrauma
 
             float walkPosX = (float)Math.Cos(WalkPos);
             float walkPosY = (float)Math.Sin(WalkPos);
-
-
+            
             Vector2 stepSize = StepSize.Value;
             stepSize.X *= walkPosX;
-            stepSize.Y *= walkPosY;                
+            stepSize.Y *= walkPosY;
 
             float footMid = colliderPos.X;
             if (limpAmount > 0.0f)
             {
                 //make the footpos oscillate when limping
-                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f));
+                footMid += ((float)Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * 0.3f);
             }
 
             movement = overrideTargetMovement == Vector2.Zero ?
@@ -589,7 +593,7 @@ namespace Barotrauma
             movement.Y = 0.0f;
 
             if (torso == null) { return; }
-            
+
             bool isNotRemote = true;
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
 
@@ -693,7 +697,7 @@ namespace Barotrauma
 
                     //make the character limp if the feet are damaged
                     float footAfflictionStrength = character.CharacterHealth.GetAfflictionStrength("damage", foot, true);
-                    footPos *= MathHelper.Lerp(1.0f, 0.5f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+                    footPos.X *= MathHelper.Lerp(1.0f, 0.75f, MathHelper.Clamp(footAfflictionStrength / 50.0f, 0.0f, 1.0f));
 
                     if (onSlope && Stairs == null)
                     {

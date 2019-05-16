@@ -14,6 +14,11 @@ namespace Barotrauma
     {
         public static bool DisableEnemyAI;
 
+        /// <summary>
+        /// Enable the character to attack the outposts and the characters inside them. Disabled by default.
+        /// </summary>
+        public bool TargetOutposts;
+
         class WallTarget
         {
             public Vector2 Position;
@@ -1043,6 +1048,8 @@ namespace Barotrauma
 
         private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
 
+        private bool IsProperlyLatchedOnSub => LatchOntoAI != null && LatchOntoAI.IsAttachedToSub && SelectedAiTarget?.Entity == wallTarget?.Structure;
+
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
@@ -1068,9 +1075,10 @@ namespace Barotrauma
                     continue;
                 }
                 if (target.Type == AITarget.TargetType.HumanOnly) { continue; }
-                // Don't attack outposts.
-                if (target.Entity.Submarine != null && target.Entity.Submarine.IsOutpost) { continue; }
-
+                if (!TargetOutposts)
+                {
+                    if (target.Entity.Submarine != null && target.Entity.Submarine.IsOutpost) { continue; }
+                }
                 Character targetCharacter = target.Entity as Character;
                 //ignore the aitarget if it is the Character itself
                 if (targetCharacter == character) continue;

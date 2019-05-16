@@ -8,11 +8,19 @@ namespace Barotrauma.Items.Components
 {
     partial class CustomInterface : ItemComponent, IClientSerializable, IServerSerializable
     {
-        class CustomInterfaceElement
+        class CustomInterfaceElement : ISerializableEntity
         {
             public bool ContinuousSignal;
             public bool State;
-            public string Label, Connection, Signal;
+            public string Connection;
+            [Serialize("", false, translationTextTag = "Label.")]
+            public string Label { get; set; }
+            [Serialize("1", false)]
+            public string Signal { get; set; }
+
+            public string Name => "CustomInterfaceElement";
+
+            public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
 
             public List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
@@ -33,7 +41,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string[] labels;
-        [Serialize("", true), Editable()]
+        [Serialize("", true)]
         public string Labels
         {
             get { return string.Join(",", labels); }
@@ -48,7 +56,7 @@ namespace Barotrauma.Items.Components
             }
         }
         private string[] signals;
-        [Serialize("", true), Editable()]
+        [Serialize("", true)]
         public string Signals
         {
             //use semicolon as a separator because comma may be needed in the signals (for color or vector values for example)

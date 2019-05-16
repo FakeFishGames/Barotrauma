@@ -380,9 +380,13 @@ namespace Barotrauma.Items.Components
 
         public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
 
-        public ItemComponent GetLinkUIToComponent()
+        public virtual void CreateEditingHUD(SerializableEntityEditor editor)
         {
-            if (string.IsNullOrEmpty(LinkUIToComponent))
+        }
+
+        private bool LoadElemProjSpecific(XElement subElement)
+        {
+            switch (subElement.Name.ToString().ToLowerInvariant())
             {
                 case "guiframe":
                     if (subElement.Attribute("rect") != null)

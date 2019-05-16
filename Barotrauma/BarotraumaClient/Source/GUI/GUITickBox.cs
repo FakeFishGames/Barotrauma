@@ -44,10 +44,11 @@ namespace Barotrauma
         
         public Color TextColor
         {
-            get { return box; }
+            get { return text.TextColor; }
+            set { text.TextColor = value; }
         }
 
-        public GUITextBlock TextBlock
+        public override Rectangle MouseRect
         {
             get
             {

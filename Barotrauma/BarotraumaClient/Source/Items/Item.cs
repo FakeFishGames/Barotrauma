@@ -41,8 +41,6 @@ namespace Barotrauma
         {
             get { return activeSprite; }
         }
-              
-        public float SpriteRotation;
 
         private GUITextBlock itemInUseWarning;
         private GUITextBlock ItemInUseWarning
@@ -579,8 +577,13 @@ namespace Barotrauma
                 }
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
-                
-                if (inGame) continue;
+
+                if (inGame)
+                {
+                    ic.CreateEditingHUD(componentEditor);
+                    componentEditor.Recalculate();
+                    continue;
+                }
 
                 foreach (var kvp in ic.requiredItems)
                 {
@@ -613,6 +616,10 @@ namespace Barotrauma
                         };
                     }
                 }
+
+                ic.CreateEditingHUD(componentEditor);
+                componentEditor.Recalculate();
+            }
 
             PositionEditingHUD();
             SetHUDLayout();
@@ -830,14 +837,28 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ComponentState:
                     {
                         int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                        (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
+                        if (components[componentIndex] is IServerSerializable serverSerializable)
+                        {
+                            serverSerializable.ClientRead(type, msg, sendingTime);
+                        }
+                        else
+                        {
+                            throw new Exception("Failed to read component state - " + components[componentIndex].GetType() + " is not IServerSerializable.");
+                        }
                     }
                     break;
-                    
+
                 case NetEntityEvent.Type.InventoryState:
-                    { 
+                    {
                         int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                        (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
+                        if (components[containerIndex] is ItemContainer container)
+                        {
+                            container.Inventory.ClientRead(type, msg, sendingTime);
+                        }
+                        else
+                        {
+                            throw new Exception("Failed to read inventory state - " + components[containerIndex].GetType() + " is not an ItemContainer.");
+                        }
                     }
                     break;
                 case NetEntityEvent.Type.Status:

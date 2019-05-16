@@ -9,13 +9,9 @@ namespace Barotrauma
 {
     class CampaignUI
     {
-        public enum Tab { Map, Crew, Store }
+        public enum Tab { Map, Crew, Store, Repair }
         private Tab selectedTab;
         private GUIFrame[] tabs;
-        private GUIFrame topPanel;
-
-        private GUIButton startButton;
-        
         private GUIFrame topPanel;
 
         private GUIListBox characterList;
@@ -27,6 +23,8 @@ namespace Barotrauma
         private GUIComponent missionPanel;
         private GUIComponent selectedLocationInfo;
         private GUIListBox selectedMissionInfo;
+
+        private GUIButton repairHullsButton, repairItemsButton;
 
         private GUIFrame characterPreviewFrame;
 
@@ -41,10 +39,7 @@ namespace Barotrauma
 
         public GUIComponent MapContainer { get; private set; }
 
-        public GUIButton StartButton
-        {
-            get { return startButton; }
-        }
+        public GUIButton StartButton { get; private set; }
 
         public CampaignMode Campaign { get; }
 
@@ -114,7 +109,7 @@ namespace Barotrauma
             tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.7f), container.RectTransform, Anchor.TopLeft)
             {
                 RelativeOffset = new Vector2(0.0f, topPanel.RectTransform.RelativeSize.Y)
-            }, color: Color.Black * 0.7f);
+            }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Crew].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
                 CanBeFocused = false
@@ -159,7 +154,7 @@ namespace Barotrauma
             tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.7f), container.RectTransform, Anchor.TopLeft)
             {
                 RelativeOffset = new Vector2(0.1f, topPanel.RectTransform.RelativeSize.Y)
-            }, color: Color.Black * 0.7f);
+            }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Store].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
                 CanBeFocused = false
@@ -219,6 +214,97 @@ namespace Barotrauma
                 };
             }
             SelectItemCategory(MapEntityCategory.Equipment);
+
+            // repair tab -------------------------------------------------------------------------
+
+            tabs[(int)Tab.Repair] = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.5f), container.RectTransform, Anchor.TopLeft)
+            {
+                RelativeOffset = new Vector2(0.02f, topPanel.RectTransform.RelativeSize.Y)
+            }, color: Color.Black * 0.9f);
+            new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Repair].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
+            {
+                CanBeFocused = false
+            };
+
+            var repairContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), tabs[(int)Tab.Repair].RectTransform, Anchor.Center))
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), crewContent.RectTransform), "", font: GUI.LargeFont)
+            {
+                TextGetter = GetMoney
+            };
+
+            var repairHullsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+            new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), repairHullsHolder.RectTransform, Anchor.CenterLeft), "RepairHullButton")
+            {
+                IgnoreLayoutGroups = true,
+                CanBeFocused = false
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            {
+                ForceUpperCase = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), "500", textAlignment: Alignment.Right, font: GUI.LargeFont);
+            repairHullsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (campaign.Money >= CampaignMode.HullRepairCost)
+                    {
+                        campaign.Money -= CampaignMode.HullRepairCost;
+                        campaign.PurchasedHullRepairs = true;
+                        GameMain.Client?.SendCampaignState();
+                        btn.GetChild<GUITickBox>().Selected = true;
+                    }
+                    btn.Enabled = false;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Vector2(0.65f), repairHullsButton.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(10, 0) }, "")
+            {
+                CanBeFocused = false
+            };
+
+            var repairItemsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+            new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), repairItemsHolder.RectTransform, Anchor.CenterLeft), "RepairItemsButton")
+            {
+                IgnoreLayoutGroups = true,
+                CanBeFocused = false
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            {
+                ForceUpperCase = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), "500", textAlignment: Alignment.Right, font: GUI.LargeFont);
+            repairItemsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (campaign.Money >= CampaignMode.ItemRepairCost)
+                    {
+                        campaign.Money -= CampaignMode.ItemRepairCost;
+                        campaign.PurchasedItemRepairs = true;
+                        GameMain.Client?.SendCampaignState();
+                        btn.GetChild<GUITickBox>().Selected = true;
+                    }
+                    btn.Enabled = false;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Vector2(0.65f), repairItemsButton.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(10, 0) }, "")
+            {
+                CanBeFocused = false
+            };
 
             // mission info -------------------------------------------------------------------------
 
@@ -332,8 +418,7 @@ namespace Barotrauma
             bool purchaseableItemsFound = false;
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
-                var itemPrefab = mapEntityPrefab as ItemPrefab;
-                if (itemPrefab == null) { continue; }
+                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
 
                 PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
                 if (priceInfo != null) { purchaseableItemsFound = true; break; }
@@ -351,8 +436,7 @@ namespace Barotrauma
             {
                 //refresh store view
                 SelectItemCategory(MapEntityCategory.Equipment);
-            }
-            
+            }            
         }
         
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
@@ -454,7 +538,7 @@ namespace Barotrauma
                 
                 RefreshMissionTab(selectedMission);
 
-                startButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
+                StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
                     TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
                 {
                     IgnoreLayoutGroups = true,
@@ -463,7 +547,7 @@ namespace Barotrauma
                 };
                 if (GameMain.Client != null)
                 {
-                    startButton.Visible = !GameMain.Client.GameStarted &&
+                    StartButton.Visible = !GameMain.Client.GameStarted &&
                         (GameMain.Client.HasPermission(Networking.ClientPermissions.ManageRound) ||
                         GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                 }
@@ -510,10 +594,10 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            if (startButton != null)
+            if (StartButton != null)
             {
-                startButton.Enabled = true;
-                startButton.Visible = GameMain.Client == null || 
+                StartButton.Enabled = true;
+                StartButton.Visible = GameMain.Client == null || 
                     GameMain.Client.HasPermission(Networking.ClientPermissions.ManageRound) || 
                     GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign);
             }
@@ -599,8 +683,7 @@ namespace Barotrauma
 
         private bool BuyItem(GUIComponent component, object obj)
         {
-            PurchasedItem pi = obj as PurchasedItem;
-            if (pi == null || pi.ItemPrefab == null) return false;
+            if (!(obj is PurchasedItem pi) || pi.ItemPrefab == null) return false;
 
             if (GameMain.Client != null && !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
             {
@@ -618,8 +701,7 @@ namespace Barotrauma
 
         private bool SellItem(GUIComponent component, object obj)
         {
-            PurchasedItem pi = obj as PurchasedItem;
-            if (pi == null || pi.ItemPrefab == null) return false;
+            if (!(obj is PurchasedItem pi) || pi.ItemPrefab == null) return false;
 
             if (GameMain.Client != null && !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
             {
@@ -661,6 +743,20 @@ namespace Barotrauma
             {
                 button.Selected = (Tab)button.UserData == tab;
             }
+
+            switch (selectedTab)
+            {
+                case Tab.Repair:
+                    repairHullsButton.Enabled = 
+                        !Campaign.PurchasedHullRepairs && Campaign.Money >= CampaignMode.HullRepairCost &&
+                        (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
+                    repairHullsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedHullRepairs;
+                    repairItemsButton.Enabled = 
+                        !Campaign.PurchasedItemRepairs && Campaign.Money >= CampaignMode.ItemRepairCost &&
+                        (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
+                    repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
+                    break;
+            }
         }
 
         private bool SelectItemCategory(MapEntityCategory category)
@@ -670,8 +766,7 @@ namespace Barotrauma
             int width = storeItemList.Rect.Width;
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
-                var itemPrefab = mapEntityPrefab as ItemPrefab;
-                if (itemPrefab == null || !itemPrefab.Category.HasFlag(category)) continue;
+                if (!(mapEntityPrefab is ItemPrefab itemPrefab) || !itemPrefab.Category.HasFlag(category)) continue;
 
                 PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
                 if (priceInfo == null) continue;
@@ -709,9 +804,8 @@ namespace Barotrauma
             }
 
             if (prevInfoFrame != null) { tabs[(int)selectedTab].RemoveChild(prevInfoFrame); }
-            
-            CharacterInfo characterInfo = selection as CharacterInfo;
-            if (characterInfo == null) { return false; }
+
+            if (!(selection is CharacterInfo characterInfo)) { return false; }
             if (Character.Controlled != null && characterInfo == Character.Controlled.Info) { return false; }
 
             if (characterPreviewFrame == null || characterPreviewFrame.UserData != characterInfo)
@@ -763,11 +857,9 @@ namespace Barotrauma
 
         private bool HireCharacter(GUIButton button, object selection)
         {
-            CharacterInfo characterInfo = selection as CharacterInfo;
-            if (characterInfo == null) { return false; }
+            if (!(selection is CharacterInfo characterInfo)) { return false; }
 
-            SinglePlayerCampaign spCampaign = Campaign as SinglePlayerCampaign;
-            if (spCampaign == null)
+            if (!(Campaign is SinglePlayerCampaign spCampaign))
             {
                 DebugConsole.ThrowError("Characters can only be hired in the single player campaign.\n" + Environment.StackTrace);
                 return false;
@@ -786,11 +878,9 @@ namespace Barotrauma
 
         private bool FireCharacter(GUIButton button, object selection)
         {
-            CharacterInfo characterInfo = selection as CharacterInfo;
-            if (characterInfo == null) return false;
+            if (!(selection is CharacterInfo characterInfo)) return false;
 
-            SinglePlayerCampaign spCampaign = Campaign as SinglePlayerCampaign;
-            if (spCampaign == null)
+            if (!(Campaign is SinglePlayerCampaign spCampaign))
             {
                 DebugConsole.ThrowError("Characters can only be fired in the single player campaign.\n" + Environment.StackTrace);
                 return false;

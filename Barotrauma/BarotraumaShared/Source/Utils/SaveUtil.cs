@@ -228,6 +228,12 @@ namespace Barotrauma
                 if (fileName.Length == 0) fileName = "Save";
             }
 
+            if (fileName == "Save_Default")
+            {
+                fileName = TextManager.Get("SaveFile.DefaultName", true);
+                if (fileName.Length == 0) fileName = "Save";
+            }
+
             if (!Directory.Exists(folder))
             {
                 DebugConsole.ThrowError("Save folder \"" + folder + "\" not found. Created new folder");

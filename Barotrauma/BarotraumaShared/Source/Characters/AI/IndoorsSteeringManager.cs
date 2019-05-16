@@ -388,6 +388,18 @@ namespace Barotrauma
                         buttonPressCooldown = ButtonPressInterval;
                         break;
                     }
+                    else
+                    {
+                        if (!door.HasRequiredItems(character, false) && shouldBeOpen)
+                        {
+                            currentPath.Unreachable = true;
+                            return;
+                        }
+
+                        door.Item.TryInteract(character, false, true, true);
+                        buttonPressCooldown = ButtonPressInterval;
+                        break;
+                    }
                 }
             }
         }
@@ -408,20 +420,18 @@ namespace Barotrauma
                     //door closed and the character can't open doors -> node can't be traversed
                     if (!canOpenDoors || character.LockHands) { return null; }
 
-                if (!canBreakDoors)
-                {
-                    //door closed and the character can't open doors -> node can't be traversed
-                    if (!canOpenDoors || character.LockHands) return null;
-
                     var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
-                    if (!doorButtons.Any()) return null;
+                    if (!doorButtons.Any())
+                    {
+                        if (!nextNode.Waypoint.ConnectedDoor.HasRequiredItems(character, false)) { return null; }
+                    }
 
                     foreach (Controller button in doorButtons)
                     {
                         if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=
-                            Math.Sign(node.Position.X - nextNode.Position.X)) continue;
+                            Math.Sign(node.Position.X - nextNode.Position.X)) { continue; }
 
-                        if (!button.HasRequiredItems(character, false)) return null;
+                        if (!button.HasRequiredItems(character, false)) { return null; }
                     }
                 }
             }

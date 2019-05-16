@@ -314,8 +314,8 @@ namespace Barotrauma
                 }
             }
 
-            // Only add ai targets automatically to walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall"))
+            // Only add ai targets automatically to submarine/outpost walls 
+            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null)
             {
                 aiTarget = new AITarget(this);
             }
@@ -1199,6 +1199,9 @@ namespace Barotrauma
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                     width + "," + height));
+
+            if (FlippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
             if (FlippedY) element.Add(new XAttribute("flippedy", true));
