@@ -306,12 +306,12 @@ namespace Barotrauma
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            // Damage from falling etc.
-            if (Character.LastDamageSource == null) { return; }
             float damage = attackResult.Damage;
             if (damage <= 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
+                // Ignore damage from falling etc that we shouldn't react to.
+                if (Character.LastDamageSource == null) { return; }
                 AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
             }
             else if (IsFriendly(attacker))
