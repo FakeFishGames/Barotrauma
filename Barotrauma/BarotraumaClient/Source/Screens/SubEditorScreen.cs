@@ -1171,6 +1171,7 @@ namespace Barotrauma
             {
                 OnClicked = SaveSub
             };
+#endif
 
         }
 
