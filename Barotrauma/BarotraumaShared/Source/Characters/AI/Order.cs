@@ -141,15 +141,8 @@ namespace Barotrauma
             {
                 if (UseController)
                 {
-                    var controllers = targetItem.Item.GetComponents<Controller>();
-                    if (controllers.None())
-                    {
-                        controllers = targetItem.Item.GetConnectedComponents<Controller>();
-                    }
-                    if (controllers.Any())
-                    {
-                        ConnectedController = controllers.First();
-                    }
+                    var controllers = targetItem.Item.GetConnectedComponents<Controller>();
+                    if (controllers.Count > 0) ConnectedController = controllers[0];
                 }
                 TargetEntity = targetItem.Item;
                 TargetItemComponent = targetItem;

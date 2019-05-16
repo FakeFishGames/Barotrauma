@@ -99,18 +99,6 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.03f,
                 Stretch = true
             };
-            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
-                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
-            {
-                OnSelected = (GUITickBox box) =>
-                {
-                    AutoPilot = box.Selected;
-                    if (AutoPilot && MaintainPos)
-                    {
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
-                    }
-                    unsentChanges = true;
-                    user = Character.Controlled;
 
             manualTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
                 TextManager.Get("SteeringManual"), style: "GUIRadioButton")
@@ -397,13 +385,7 @@ namespace Barotrauma.Items.Components
             int x = rect.X;
             int y = rect.Y;
 
-        public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
-        {
-            int width = rect.Width, height = rect.Height;
-            int x = rect.X;
-            int y = rect.Y;
-            
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
