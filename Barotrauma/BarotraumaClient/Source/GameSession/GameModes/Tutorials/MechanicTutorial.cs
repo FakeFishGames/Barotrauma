@@ -293,7 +293,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Aim)); // Welding objective
+            TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Welding objective
             do
             {
                 if (!mechanic.HasEquippedItem("divingmask"))
