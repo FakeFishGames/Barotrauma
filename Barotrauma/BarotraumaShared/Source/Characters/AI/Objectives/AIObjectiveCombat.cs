@@ -328,14 +328,33 @@ namespace Barotrauma
         private IEnumerable<FarseerPhysics.Dynamics.Body> myBodies;
         private void Attack(float deltaTime)
         {
+            float squaredDistance = Vector2.DistanceSquared(character.Position, Enemy.Position);
             character.CursorPosition = Enemy.Position;
             if (Weapon.RequireAimToUse)
             {
-                character.SetInput(InputType.Aim, false, true);
+                bool isOperatingButtons = false;
+                float engageDistance = 500;
+                if (SteeringManager == PathSteering)
+                {
+                    var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
+                    if (door != null && !door.IsOpen)
+                    {
+                        var buttons = door.Item.GetComponents<Controller>();
+                        if (buttons.None())
+                        {
+                            buttons = door.Item.GetConnectedComponents<Controller>(true);
+                        }
+                        isOperatingButtons = buttons.Any();
+                    }
+                }
+                if (!isOperatingButtons && character.SelectedConstruction == null && (Enemy.CurrentHull == character.CurrentHull || squaredDistance < engageDistance * engageDistance))
+                {
+                    character.SetInput(InputType.Aim, false, true);
+                }
             }
             if (WeaponComponent is MeleeWeapon meleeWeapon)
             {
-                if (Vector2.DistanceSquared(character.Position, Enemy.Position) <= meleeWeapon.Range * meleeWeapon.Range)
+                if (squaredDistance <= meleeWeapon.Range * meleeWeapon.Range)
                 {
                     character.SetInput(InputType.Shoot, false, true);
                     Weapon.Use(deltaTime, character);
@@ -345,7 +364,7 @@ namespace Barotrauma
             {
                 if (WeaponComponent is RepairTool repairTool)
                 {
-                    if (Vector2.DistanceSquared(character.Position, Enemy.Position) > repairTool.Range * repairTool.Range) { return; }
+                    if (squaredDistance > repairTool.Range * repairTool.Range) { return; }
                 }
                 if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - character.Position) < MathHelper.PiOver4)
                 {

@@ -344,7 +344,24 @@ namespace Barotrauma.Items.Components
             character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             if (item.RequireAimToUse)
             {
-                character.SetInput(InputType.Aim, false, true);
+                bool isOperatingButtons = false;
+                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                {
+                    var door = indoorSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
+                    if (door != null && !door.IsOpen)
+                    {
+                        var buttons = door.Item.GetComponents<Controller>();
+                        if (buttons.None())
+                        {
+                            buttons = door.Item.GetConnectedComponents<Controller>(true);
+                        }
+                        isOperatingButtons = buttons.Any();
+                    }
+                }
+                if (!isOperatingButtons)
+                {
+                    character.SetInput(InputType.Aim, false, true);
+                }
             }
             // Press the trigger only when the tool is approximately facing the target.
             var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
