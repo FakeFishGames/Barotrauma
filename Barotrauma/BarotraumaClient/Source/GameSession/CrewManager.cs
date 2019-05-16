@@ -75,12 +75,39 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            if (!isSinglePlayer)
+            if (GameMain.Client != null)
             {
-                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                //let the server create random conversations in MP
                 return;
             }
-            if (string.IsNullOrEmpty(text)) { return; }
+            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
+                c.AIController is HumanAIController &&
+                !c.IsDead &&
+                c.SpeechImpediment <= 100.0f);
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+        }
+
+        public void AddCharacter(Character character)
+        {
+            if (character.Removed)
+            {
+                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+            if (character.IsDead)
+            {
+                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+
+            if (!characters.Contains(character)) characters.Add(character);
+            if (!characterInfos.Contains(character.Info))
+            {
+                characterInfos.Add(character.Info);
+            }
+
+            CreateCharacterFrame(character, characterListBox.Content);
+            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -242,27 +269,24 @@ namespace Barotrauma
 
         public IEnumerable<Character> GetCharacters()
         {
-            if (character?.Inventory == null) return null;
+            if (characterInfos.Contains(characterInfo))
+            {
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
+                return;
+            }
 
-            var radioItem = character.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
-            if (radioItem == null) return null;
-            if (requireEquipped && !character.HasEquippedItem(radioItem)) return null;
-
-            return radioItem.GetComponent<WifiComponent>();
+            characterInfos.Add(characterInfo);
         }
 
         public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
-            if (GameMain.Client != null)
+            if (character == null)
             {
-                //let the server create random conversations in MP
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
                 return;
             }
-            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
-                c.AIController is HumanAIController &&
-                !c.IsDead &&
-                c.SpeechImpediment <= 100.0f);
-            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+            characters.Remove(character);
+            if (removeInfo) characterInfos.Remove(character.Info);
         }
 
         public void AddCharacter(Character character)
@@ -636,9 +660,42 @@ namespace Barotrauma
             {
                 characterListBox.BarScroll = roundedPos;
             }
-            soundIcon.Visible = !muted && !mutedLocally;
-            soundIconDisabled.Visible = muted || mutedLocally;
-            soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
+
+            var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
+                "", style: "UIToggleButton")
+            {
+                UserData = "togglewrongorder",
+                CanBeFocused = false
+            };
+
+            wrongOrderList.RectTransform.NonScaledSize = new Point(
+                wrongOrderList.Content.Children.Sum(c => c.Rect.Width + wrongOrderList.Spacing),
+                wrongOrderList.RectTransform.NonScaledSize.Y);
+            wrongOrderList.RectTransform.SetAsLastChild();
+
+            new GUIFrame(new RectTransform(new Point(
+                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2,
+                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
+                style: null)
+            {
+                CanBeFocused = false
+            };
+
+            //scale to fit the content
+            orderButtonFrame.RectTransform.NonScaledSize = new Point(
+                orderButtonFrame.Children.Sum(c => c.Rect.Width + orderButtonFrame.AbsoluteSpacing),
+                orderButtonFrame.RectTransform.NonScaledSize.Y);
+
+            frame.RectTransform.NonScaledSize = new Point(
+                characterInfoWidth + spacing + (orderButtonFrame.Rect.Width - wrongOrderList.Rect.Width),
+                frame.RectTransform.NonScaledSize.Y);
+
+            characterListBox.RectTransform.NonScaledSize = new Point(
+                characterListBox.Content.Children.Max(c => c.Rect.Width) + wrongOrderList.Rect.Width,
+                characterListBox.RectTransform.NonScaledSize.Y);
+            characterListBox.Content.RectTransform.NonScaledSize = characterListBox.RectTransform.NonScaledSize;
+            characterListBox.UpdateScrollBarSize();
+            return frame;
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -840,19 +897,7 @@ namespace Barotrauma
                     }
                 }
             }
-            //only one target (or an order with no particular targets), just show options
-            else
-            {
-                orderTargetFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f + order.Options.Length * 0.1f, 0.18f), GUI.Canvas)
-                    { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
-                    isHorizontal: true, childAnchor: Anchor.BottomLeft)
-                {
-                    UserData = character,
-                    Stretch = true
-                };
-                //line connecting the order button to the option buttons
-                //TODO: sprite
-                new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), orderTargetFrame.RectTransform), style: null);
+        }
 
         /// <summary>
         /// Create the UI panel that's used to select the target and options for a given order
