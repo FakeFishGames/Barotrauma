@@ -1160,6 +1160,19 @@ namespace Barotrauma
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
+                SmoothedCursorPosition = cursorPosition;
+            }
+            else
+            {
+                //apply some smoothing to the cursor positions of remote players when playing as a client
+                //to make aiming look a little less choppy
+                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
+                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
+                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
+            }
+            
+            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
+            {
                 if (speedMultipliers.Count == 0) return 1f;
 
                 AnimController.TargetMovement = targetMovement;

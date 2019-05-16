@@ -164,6 +164,12 @@ namespace Barotrauma.Items.Components
             set { posToMaintain = value; }
         }
 
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
+        }
+
         struct ObstacleDebugInfo
         {
             public Vector2 Point1;
