@@ -242,6 +242,10 @@ namespace Barotrauma
                     {
                         isCompleted = true;
                     }
+                    if (component.AIOperate(deltaTime, character, this))
+                    {
+                        isCompleted = true;
+                    }
                 }
                 else
                 {
