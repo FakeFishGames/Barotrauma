@@ -14,6 +14,8 @@ namespace Barotrauma
         private AIObjectiveFindDivingGear findDivingGear;
 
         private AIObjectiveFindDivingGear findDivingGear;
+
+        private AIObjectiveFindDivingGear findDivingGear;
         private Vector2 targetPos;
         private bool repeat;
         private bool cannotReach;
@@ -82,6 +84,8 @@ namespace Barotrauma
         public Entity Target { get; private set; }
 
         public Vector2 TargetPos => Target != null ? Target.SimPosition : targetPos;
+
+        public bool FollowControlledCharacter;
 
         public bool FollowControlledCharacter;
 
@@ -217,7 +221,7 @@ namespace Barotrauma
 
         private void CalculateCloseEnough()
         {
-            float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance * 0.9f) : 0;
+            float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance) : 0;
             CloseEnough = Math.Max(interactionDistance, CloseEnough);
         }
 
