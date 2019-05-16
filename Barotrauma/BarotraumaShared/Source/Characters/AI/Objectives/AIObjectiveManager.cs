@@ -28,11 +28,6 @@ namespace Barotrauma
 
         public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
 
-        public AIObjective CurrentOrder { get; private set; }
-        public AIObjective CurrentObjective { get; private set; }
-
-        public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
-
         public AIObjectiveManager(Character character)
         {
             this.character = character;
