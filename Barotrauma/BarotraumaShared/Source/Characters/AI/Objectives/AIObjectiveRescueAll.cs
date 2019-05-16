@@ -9,7 +9,7 @@ namespace Barotrauma
         public override string DebugTag => "rescue all";
         public override bool ForceRun => true;
 
-        private const float vitalityThreshold = 0.8f;
+        private const float vitalityThreshold = 0.85f;
         private const float vitalityThresholdForOrders = 0.95f;
         public static float GetVitalityThreshold(AIObjectiveManager manager) => manager.CurrentOrder is AIObjectiveRescueAll ? vitalityThresholdForOrders : vitalityThreshold;
         
@@ -35,9 +35,10 @@ namespace Barotrauma
         public static bool IsValidTarget(Character target, Character character)
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
+            if (target == character) { return false; } // TODO: enable healing self
             if (!HumanAIController.IsFriendly(character, target)) { return false; }
             if (!(character.AIController is HumanAIController humanAI)) { return false; }
-            if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
+            if (target.Vitality / target.MaxVitality > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
             if (target.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }

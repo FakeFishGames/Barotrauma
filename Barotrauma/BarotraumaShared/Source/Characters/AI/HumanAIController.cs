@@ -15,14 +15,14 @@ namespace Barotrauma
         
         private float sortTimer;
         private float crouchRaycastTimer;
-        private float reactTimer;
+        private float reportTimer;
         private float hullVisibilityTimer;
         private bool shouldCrouch;
 
-        const float reactionTime = 0.5f;
-        const float hullVisibilityInterval = 0.5f;
         const float crouchRaycastInterval = 1;
+        const float reportInterval = 1;
         const float sortObjectiveInterval = 1;
+        const float hullVisibilityInterval = 1;
 
         public static float HULL_SAFETY_THRESHOLD = 50;
 
@@ -72,7 +72,7 @@ namespace Barotrauma
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);
-            reactTimer = Rand.Range(0f, reactionTime);
+            reportTimer = Rand.Range(0f, reportInterval);
             sortTimer = Rand.Range(0f, sortObjectiveInterval);
             hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             InitProjSpecific();
@@ -118,22 +118,23 @@ namespace Barotrauma
                 objectiveManager.SortObjectives();
                 sortTimer = sortObjectiveInterval;
             }
-            if (reactTimer > 0.0f)
+
+            if (reportTimer > 0.0f)
             {
-                reactTimer -= deltaTime;
+                reportTimer -= deltaTime;
             }
             else
             {
                 if (Character.CurrentHull != null)
                 {
-                    VisibleHulls.ForEach(h => PropagateHullSafety(Character, h));
+                    VisibleHulls.ForEach(h => PropagateHullSafety(Character.Controlled, h));
                 }
                 if (Character.SpeechImpediment < 100.0f)
                 {
                     ReportProblems();
                     UpdateSpeaking();
                 }
-                reactTimer = reactionTime * Rand.Range(0.75f, 1.25f);
+                reportTimer = reportInterval;
             }
 
             if (objectiveManager.CurrentObjective == null) { return; }
@@ -445,6 +446,88 @@ namespace Barotrauma
             }
         }
 
+        protected void ReportProblems()
+        {
+            Order newOrder = null;
+            if (Character.CurrentHull != null)
+            {
+                foreach (var hull in VisibleHulls)
+                {
+                    if (AIObjectiveExtinguishFires.IsValidTarget(hull, Character))
+                    {
+                        if (AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull))
+                        {
+                            if (hull == Character.CurrentHull)
+                            {
+                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
+                                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                            }
+                        }
+                    }
+                    foreach (var gap in hull.ConnectedGaps)
+                    {
+                        if (AIObjectiveFixLeaks.IsValidTarget(gap, Character))
+                        {
+                            if (AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap))
+                            {
+                                if (hull == Character.CurrentHull)
+                                {
+                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                                }
+                            }
+                        }
+                    }
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.CurrentHull != hull) { continue; }
+                        if (AIObjectiveRepairItems.IsValidTarget(item, Character))
+                        {
+                            if (item.Repairables.All(r => item.Condition > r.ShowRepairUIThreshold)) { continue; }
+                            if (AddTargets<AIObjectiveRepairItems, Item>(Character, item))
+                            {
+                                if (hull == Character.CurrentHull)
+                                {
+                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
+                                    newOrder = new Order(orderPrefab, Character.CurrentHull, item.Repairables?.FirstOrDefault());
+                                }
+                            }
+                        }
+                    }
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (c.CurrentHull != hull) { continue; }
+                        if (AIObjectiveFightIntruders.IsValidTarget(c, Character))
+                        {
+                            if (AddTargets<AIObjectiveFightIntruders, Character>(Character, c))
+                            {
+                                if (hull == Character.CurrentHull)
+                                {
+                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
+                                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
+                {
+                    if (AddTargets<AIObjectiveRescueAll, Character>(Character, Character))
+                    {
+                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                    }
+                }
+            }
+            if (newOrder != null)
+            {
+                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
+                {
+                    Character.Speak(newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+                }
+            }
+        }
+
         private void UpdateSpeaking()
         {
             if (Character.Oxygen < 20.0f)
@@ -642,7 +725,6 @@ namespace Barotrauma
             DoForEachCrewMember(character, (humanAi) => humanAi.RefreshHullSafety(hull));
         }
 
-        public float CurrentHullSafety { get; private set; }
         private void RefreshHullSafety(Hull hull)
         {
             if (GetHullSafety(hull, Character, VisibleHulls) > HULL_SAFETY_THRESHOLD)
@@ -737,34 +819,12 @@ namespace Barotrauma
 
         public float GetHullSafety(Hull hull, Character character, IEnumerable<Hull> visibleHulls = null)
         {
-            bool updateCurrentHullSafety = character == Character && character.CurrentHull == hull;
-            if (hull == null)
-            {
-                if (updateCurrentHullSafety)
-                {
-                    CurrentHullSafety = 0;
-                }
-                return 0;
-            }
-            if (character == Character)
-            {
-                // If the character is this character, we can use the cached hulls.
-                // If no visible hulls are provided, the calculations don't take visible/adjacent hulls into account.
-                if (visibleHulls == null)
-                {
-                    visibleHulls = VisibleHulls;
-                }
-            }
+            if (hull == null) { return 0; }
             bool ignoreFire = ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() || ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(character);
             bool ignoreOxygen = ignoreWater || HasDivingMask(character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
-            float safety = GetHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
-            if (updateCurrentHullSafety)
-            {
-                CurrentHullSafety = safety;
-            }
-            return safety;
+            return GetHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
         }
 
         public static float GetHullSafety(Hull hull, IEnumerable<Hull> visibleHulls, Character character, bool ignoreWater = false, bool ignoreOxygen = false, bool ignoreFire = false, bool ignoreEnemies = false)
