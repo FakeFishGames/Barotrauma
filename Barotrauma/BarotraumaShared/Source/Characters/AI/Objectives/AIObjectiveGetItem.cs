@@ -108,7 +108,7 @@ namespace Barotrauma
             }
 
             if (moveToTarget.CurrentHull == character.CurrentHull && 
-                Vector2.DistanceSquared(character.Position, moveToTarget.Position) < MathUtils.Pow(targetItem.InteractDistance * 2, 2))
+                Vector2.DistanceSquared(character.Position, moveToTarget.Position) < MathUtils.Pow(targetItem.InteractDistance, 2))
             {
                 int targetSlot = -1;
                 if (equip)
