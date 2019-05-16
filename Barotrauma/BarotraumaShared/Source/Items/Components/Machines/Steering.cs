@@ -158,33 +158,6 @@ namespace Barotrauma.Items.Components
             set { posToMaintain = value; }
         }
 
-        struct ObstacleDebugInfo
-        {
-            public Vector2 Point1;
-            public Vector2 Point2;
-
-            public Vector2? Intersection;
-
-            public float Dot;
-
-            public Vector2 AvoidStrength;
-
-            public ObstacleDebugInfo(GraphEdge edge, Vector2? intersection, float dot, Vector2 avoidStrength)
-            {
-                Point1 = edge.Point1;
-                Point2 = edge.Point2;
-                Intersection = intersection;
-                Dot = dot;
-                AvoidStrength = avoidStrength;
-            }
-        }
-
-        public Vector2? PosToMaintain
-        {
-            get { return posToMaintain; }
-            set { posToMaintain = value; }
-        }
-
         public Vector2? PosToMaintain
         {
             get { return posToMaintain; }

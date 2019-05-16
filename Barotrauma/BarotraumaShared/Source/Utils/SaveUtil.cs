@@ -224,7 +224,7 @@ namespace Barotrauma
 
             if (!Directory.Exists(folder))
             {
-                DebugConsole.ThrowError("Save folder \"" + folder + "\" not found. Created new folder");
+                DebugConsole.Log("Save folder \"" + folder + "\" not found. Created new folder");
                 Directory.CreateDirectory(folder);
             }
             
