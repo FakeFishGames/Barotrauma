@@ -114,10 +114,22 @@ namespace Barotrauma
             {
                 Vector2 currTargetSimPos = Vector2.Zero;
                 currTargetSimPos = Target.SimPosition;
-                //if character is inside the sub and target isn't, transform the position
-                if (character.Submarine != null && Target.Submarine == null)
+                // Take the sub position into account in the sim pos
+                if (character.Submarine == null && Target.Submarine != null)
+                {
+                    currTargetSimPos += Target.Submarine.SimPosition;
+                }
+                else if (character.Submarine != null && Target.Submarine == null)
                 {
                     currTargetSimPos -= character.Submarine.SimPosition;
+                }
+                else if (character.Submarine != Target.Submarine)
+                {
+                    if (character.Submarine != null && Target.Submarine != null)
+                    {
+                        Vector2 diff = character.Submarine.SimPosition - Target.Submarine.SimPosition;
+                        currTargetSimPos -= diff;
+                    }
                 }
                 character.AIController.SteeringManager.SteeringSeek(currTargetSimPos);
                 if (getDivingGearIfNeeded)
