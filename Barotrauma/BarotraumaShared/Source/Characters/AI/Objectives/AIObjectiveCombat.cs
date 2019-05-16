@@ -260,7 +260,8 @@ namespace Barotrauma
                 followTargetObjective = new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true, priorityModifier: PriorityModifier)
                 {
                     AllowGoingOutside = true,
-                    IgnoreIfTargetDead = true
+                    IgnoreIfTargetDead = true,
+                    CheckVisibility = true
                 };
             }
             if (WeaponComponent is RangedWeapon)
