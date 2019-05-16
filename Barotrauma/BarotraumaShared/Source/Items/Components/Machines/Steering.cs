@@ -185,6 +185,12 @@ namespace Barotrauma.Items.Components
             set { posToMaintain = value; }
         }
 
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
+        }
+
         struct ObstacleDebugInfo
         {
             public Vector2 Point1;
@@ -211,6 +217,19 @@ namespace Barotrauma.Items.Components
 
         public Steering(Item item, XElement element)
             : base(item, element)
+        {
+            sonar = item.GetComponent<Sonar>();
+        }
+
+        public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+            user = character;
+            return true;
+        }
+
+        public override void OnItemLoaded()
         {
             sonar = item.GetComponent<Sonar>();
         }
