@@ -17,7 +17,7 @@ namespace Barotrauma
         protected override void FindTargets()
         {
             base.FindTargets();
-            targets.Sort((x, y) => GetGapFixPriority(y).CompareTo(GetGapFixPriority(x)));
+            targets.Sort((x, y) => GetLeakFixPriority(y).CompareTo(GetLeakFixPriority(x)));
         }
 
         protected override bool Filter(Gap gap)
@@ -32,25 +32,27 @@ namespace Barotrauma
             return ignore;
         }
 
-        private float GetGapFixPriority(Gap gap)
+        private float GetLeakFixPriority(Gap leak)
         {
-            if (gap == null) return 0.0f;
+            if (leak == null) { return 0; }
+            float severity = GetLeakSeverity(leak);
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+            float dist = Math.Abs(character.WorldPosition.X - leak.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - leak.WorldPosition.Y) * 2.0f;
+            float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 10000, dist));
+            return severity * distanceFactor;
+        }
 
-            //larger gap -> higher priority
-            float gapPriority = (gap.IsHorizontal ? gap.Rect.Width : gap.Rect.Height) * gap.Open;
-
-            //prioritize gaps that are close
-            gapPriority /= Math.Max(Vector2.Distance(character.WorldPosition, gap.WorldPosition), 1.0f);
-
-            //gaps to outside are much higher priority
-            if (!gap.IsRoomToRoom) gapPriority *= 10.0f;
-
-            return gapPriority;
-
+        public static float GetLeakSeverity(Gap leak)
+        {
+            if (leak == null) { return 0; }
+            float sizeFactor = MathHelper.Lerp(1, 10, MathUtils.InverseLerp(0, 200, (leak.IsHorizontal ? leak.Rect.Width : leak.Rect.Height)));
+            float severity = sizeFactor * leak.Open;
+            if (!leak.IsRoomToRoom) { severity *= 50; }
+            return MathHelper.Min(severity, 100);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
-        protected override float Average(Gap gap) => gap.Open * 100;
+        protected override float Average(Gap gap) => GetLeakSeverity(gap);
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character);
     }
