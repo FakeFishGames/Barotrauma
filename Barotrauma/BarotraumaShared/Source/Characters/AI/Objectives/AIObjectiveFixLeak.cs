@@ -820,6 +820,31 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
             }
+            var repairTool = weldingTool.GetComponent<RepairTool>();
+            if (repairTool == null)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
+#endif
+                abandon = true;
+                return;
+            }
+            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
+            // TODO: use the collider size/reach?
+            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
+            {
+                HumanAIController.AnimController.Crouching = true;
+            }
+            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
+            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
+            if (canOperate)
+            {
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
+            }
+            else
+            {
+                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
+            }
         }
 
         private Vector2 GetStandPosition()
