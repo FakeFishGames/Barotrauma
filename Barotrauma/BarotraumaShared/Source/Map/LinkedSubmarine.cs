@@ -54,7 +54,6 @@ namespace Barotrauma
         public LinkedSubmarine(Submarine submarine)
             : base(null, submarine) 
         {
-            linkedTo = new System.Collections.ObjectModel.ObservableCollection<MapEntity>();
             linkedToID = new List<ushort>();
 
             InsertToList();

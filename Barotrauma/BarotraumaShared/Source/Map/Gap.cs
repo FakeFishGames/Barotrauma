@@ -111,7 +111,6 @@ namespace Barotrauma
             : base (MapEntityPrefab.Find(null, "gap"), submarine)
         {
             rect = newRect;
-            linkedTo = new ObservableCollection<MapEntity>();
 
             flowForce = Vector2.Zero;
 

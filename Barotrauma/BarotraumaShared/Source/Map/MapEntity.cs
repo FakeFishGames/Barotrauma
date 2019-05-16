@@ -20,14 +20,14 @@ namespace Barotrauma
         protected List<ushort> linkedToID;
 
         //observable collection because some entities may need to be notified when the collection is modified
-        public ObservableCollection<MapEntity> linkedTo;
+        public readonly ObservableCollection<MapEntity> linkedTo = new ObservableCollection<MapEntity>();
 
         private bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
         public bool FlippedY { get { return flippedY; } }
-        
+
         public bool ShouldBeSaved = true;
-        
+
         //the position and dimensions of the entity
         protected Rectangle rect;
 
@@ -41,21 +41,21 @@ namespace Barotrauma
             get { return isHighlighted || ExternalHighlight; }
             set { isHighlighted = value; }
         }
-                
+
         public virtual Rectangle Rect
         {
             get { return rect; }
             set { rect = value; }
         }
-     
+
         public Rectangle WorldRect
         {
             get { return Submarine == null ? rect : new Rectangle((int)(Submarine.Position.X + rect.X), (int)(Submarine.Position.Y + rect.Y), rect.Width, rect.Height); }
         }
 
-        public virtual Sprite Sprite 
+        public virtual Sprite Sprite
         {
-            get { return null; } 
+            get { return null; }
         }
 
         public virtual bool DrawBelowWater
@@ -81,7 +81,7 @@ namespace Barotrauma
                 return false;
             }
         }
-        
+
         public virtual bool Linkable
         {
             get { return false; }
@@ -129,7 +129,7 @@ namespace Barotrauma
             set
             {
                 if (aiTarget == null) return;
-                aiTarget.SoundRange = value; 
+                aiTarget.SoundRange = value;
             }
         }
 
@@ -161,13 +161,13 @@ namespace Barotrauma
         // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
         private Memento<Rectangle> rectMemento;
 
-        public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine) 
+        public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine)
         {
             this.prefab = prefab;
             Scale = prefab != null ? prefab.Scale : 1;
         }
 
-        public virtual void Move(Vector2 amount) 
+        public virtual void Move(Vector2 amount)
         {
             rect.X += (int)amount.X;
             rect.Y += (int)amount.Y;
@@ -205,7 +205,7 @@ namespace Barotrauma
             Debug.Assert(clones.Count == entitiesToClone.Count);
 
             //clone links between the entities
-            for (int i = 0; i < clones.Count; i++)            
+            for (int i = 0; i < clones.Count; i++)
             {
                 if (entitiesToClone[i].linkedTo == null) continue;
                 foreach (MapEntity linked in entitiesToClone[i].linkedTo)
@@ -265,22 +265,22 @@ namespace Barotrauma
 
             return clones;
         }
-        
+
         protected void InsertToList()
         {
             int i = 0;
 
-            if (Sprite==null)
+            if (Sprite == null)
             {
                 mapEntityList.Add(this);
                 return;
             }
 
-            while (i<mapEntityList.Count)
+            while (i < mapEntityList.Count)
             {
                 i++;
 
-                Sprite existingSprite = mapEntityList[i-1].Sprite;
+                Sprite existingSprite = mapEntityList[i - 1].Sprite;
                 if (existingSprite == null) continue;
 #if CLIENT
                 if (existingSprite.Texture == this.Sprite.Texture) break;
@@ -289,7 +289,7 @@ namespace Barotrauma
 
             mapEntityList.Insert(i, this);
         }
-                
+
         /// <summary>
         /// Remove the entity from the entity list without removing links to other entities
         /// </summary>
@@ -319,14 +319,14 @@ namespace Barotrauma
 
             if (linkedTo != null)
             {
-                for (int i = linkedTo.Count - 1; i >= 0; i-- )
+                for (int i = linkedTo.Count - 1; i >= 0; i--)
                 {
                     linkedTo[i].RemoveLinked(this);
                 }
                 linkedTo.Clear();
             }
         }
-        
+
         /// <summary>
         /// Call Update() on every object in Entity.list
         /// </summary>
@@ -409,7 +409,7 @@ namespace Barotrauma
 
                 try
                 {
-                    MethodInfo loadMethod = t.GetMethod("Load", new [] { typeof(XElement), typeof(Submarine) });
+                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(XElement), typeof(Submarine) });
                     if (loadMethod == null)
                     {
                         DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");
@@ -484,7 +484,7 @@ namespace Barotrauma
                 linkedSub.OnMapLoaded();
             }
         }
-        
+
         public virtual void OnMapLoaded() { }
 
         public virtual XElement Save(XElement parentElement)
@@ -497,6 +497,37 @@ namespace Barotrauma
         {
             if (linkedTo == null) return;
             if (linkedTo.Contains(e)) linkedTo.Remove(e);
+        }
+
+        /// <summary>
+        /// Gets all linked entities of specific type.
+        /// </summary>
+        public HashSet<T> GetLinkedEntities<T>(HashSet<T> list = null, int? maxDepth = null) where T : MapEntity
+        {
+            list = list ?? new HashSet<T>();
+            int startDepth = 0;
+            GetLinkedEntitiesRecursive<T>(this, list, ref startDepth, maxDepth);
+            return list;
+        }
+
+        /// <summary>
+        /// Gets all linked entities of specific type.
+        /// </summary>
+        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null) where T : MapEntity
+        {
+            if (depth > maxDepth) { return; }
+            foreach (var linkedEntity in mapEntity.linkedTo)
+            {
+                if (linkedEntity is T linkedTarget)
+                {
+                    if (!linkedTargets.Contains(linkedTarget))
+                    {
+                        linkedTargets.Add(linkedTarget);
+                        depth++;
+                        GetLinkedEntitiesRecursive(linkedEntity, linkedTargets, ref depth, maxDepth);
+                    }
+                }
+            }
         }
 
         #region Serialized properties

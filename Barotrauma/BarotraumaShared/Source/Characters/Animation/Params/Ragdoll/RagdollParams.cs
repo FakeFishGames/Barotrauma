@@ -64,7 +64,7 @@ namespace Barotrauma
 
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
-        public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null) => $"{GetFolder(speciesName, contentPackage)}{GetDefaultFileName(speciesName)}.xml";
+        public static string GetDefaultFile(string speciesName) => $"{GetFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
 
         private static readonly object[] dummyParams = new object[]
         {
@@ -79,9 +79,9 @@ namespace Barotrauma
                     new XAttribute("sourcerect", $"0, 0, 1, 1")))
         };
 
-        public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
+        public static string GetFolder(string speciesName)
         {
-            var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName, contentPackage))?.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
+            var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName))?.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
                 //DebugConsole.NewMessage("[RagollParams] Using the default folder.");

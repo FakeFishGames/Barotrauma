@@ -111,7 +111,6 @@ namespace Barotrauma
             : base (prefab, submarine)
         {
             rect = newRect;
-            linkedTo = new ObservableCollection<MapEntity>();
             idCardTags = new string[0];
 
 #if CLIENT
