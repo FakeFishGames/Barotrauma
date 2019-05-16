@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Structures
-  sizemin="6000,6000"
-  sizemax="9000,9000"
+  sizemin="4000,4000"
+  sizemax="6000,6000"
   minsplitwidth="400"
   minsplitheight="400"
-  roomdivisioniterationsmin="5"
-  roomdivisioniterationsmax="5"
+  roomdivisioniterationsmin="4"
+  roomdivisioniterationsmax="4"
   verticalsplitprobability="0.2"
   roomwidthrange="0.5,0.7"
   roomheightrange="0.7,0.7"
