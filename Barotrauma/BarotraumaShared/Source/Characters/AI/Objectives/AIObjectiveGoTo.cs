@@ -16,6 +16,8 @@ namespace Barotrauma
         private AIObjectiveFindDivingGear findDivingGear;
 
         private AIObjectiveFindDivingGear findDivingGear;
+
+        private AIObjectiveFindDivingGear findDivingGear;
         private Vector2 targetPos;
         private bool repeat;
         private bool cannotReach;
@@ -84,8 +86,6 @@ namespace Barotrauma
         public Entity Target { get; private set; }
 
         public Vector2 TargetPos => Target != null ? Target.SimPosition : targetPos;
-
-        public bool FollowControlledCharacter;
 
         public bool FollowControlledCharacter;
 

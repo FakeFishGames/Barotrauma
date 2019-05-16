@@ -32,6 +32,10 @@ namespace Barotrauma
 
         private AIObjectiveGoTo gotoObjective;
 
+        private bool useController;
+
+        private AIObjectiveGoTo gotoObjective;
+
         public override bool CanBeCompleted
         {
             get
@@ -45,6 +49,8 @@ namespace Barotrauma
         }
 
         public Entity OperateTarget => operateTarget;
+        public ItemComponent Component => component;
+
         public ItemComponent Component => component;
 
         public ItemComponent Component => component;
