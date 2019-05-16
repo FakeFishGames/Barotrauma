@@ -471,6 +471,8 @@ namespace Barotrauma
 
         public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement)
         {
+            if (Tutorials.Tutorial.ContentRunning) return;
+
             int width = (int)(400 * GUI.Scale);
             int height = (int)(18 * GUI.Scale);
             Point padding = new Point((int)(20 * GUI.Scale), (int)(7 * GUI.Scale));
