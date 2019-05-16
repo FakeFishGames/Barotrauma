@@ -287,7 +287,7 @@ namespace Barotrauma
                     character.AnimController.Anim = AnimController.Animation.None;
                     character.SelectedConstruction = null;
                 }
-                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 4, 2))
+                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 3, 2))
                 {
                     currentPath.SkipToNextNode();
                 }
@@ -302,7 +302,7 @@ namespace Barotrauma
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
                 
-                if (horizontalDistance < collider.radius * 4 && isAboveFeet && isNotTooHigh)
+                if (horizontalDistance < collider.radius * 3 && isAboveFeet && isNotTooHigh)
                 {
                     currentPath.SkipToNextNode();
                 }
@@ -325,50 +325,6 @@ namespace Barotrauma
             if (door.IsStuck) { return false; }
             if (!canOpenDoors || character.LockHands) { return false; }
             if (door.HasIntegratedButtons)
-            {
-                return door.HasRequiredItems(character, false);
-            }
-            else
-            {
-                bool canUseButton = false;
-                float closestDistance = 0;
-                foreach (var button in door.Item.GetConnectedComponents<Controller>(true))
-                {
-                    if (!button.HasRequiredItems(character, false))
-                    {
-                        continue;
-                    }
-                    // Ignore buttons that are on the wrong side of the door
-                    if (door.IsHorizontal)
-                    {
-                        if (Math.Sign(button.Item.Position.Y - nextNode.Position.Y) != Math.Sign(currentNode.Position.Y - nextNode.Position.Y)) { continue; }
-                    }
-                    else
-                    {
-                        if (Math.Sign(button.Item.Position.X - nextNode.Position.X) != Math.Sign(currentNode.Position.X - nextNode.Position.X)) { continue; }
-                    }
-                    float distance = Vector2.DistanceSquared(button.Item.WorldPosition, currentNode.WorldPosition);
-                    // Too far from the current node (can't reach)
-                    if (distance > button.Item.InteractDistance * button.Item.InteractDistance)
-                    {
-                        continue;
-                    }
-                    else if (closestButton == null || distance < closestDistance)
-                    {
-                        closestButton = button;
-                        closestDistance = distance;
-                    }
-                    canUseButton = true;
-                }
-                return canUseButton;
-            }
-        }
-
-        // TODO: use the CanAccessThroughDoor method. 
-        private void CheckDoorsInPath()
-        {
-            // TODO: if no doors was found, seek more nodes?
-            for (int i = 0; i < 2; i++)
             {
                 Door door = null;
                 bool shouldBeOpen = false;
@@ -416,7 +372,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (door == null) { return; }
+                if (door == null) return;
                 
                 //toggle the door if it's the previous node and open, or if it's current node and closed
                 if (door.IsOpen != shouldBeOpen)
@@ -482,9 +438,24 @@ namespace Barotrauma
                 {
                     penalty = 100.0f;
                 }
-                if (!CanAccessThroughDoor(node.Waypoint, nextNode.Waypoint, out _))
+                else if (!canBreakDoors)
                 {
-                    return null;
+                    //door closed and the character can't open doors -> node can't be traversed
+                    if (!canOpenDoors || character.LockHands) { return null; }
+
+                    var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
+                    if (!doorButtons.Any())
+                    {
+                        if (!nextNode.Waypoint.ConnectedDoor.HasRequiredItems(character, false)) { return null; }
+                    }
+
+                    foreach (Controller button in doorButtons)
+                    {
+                        if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=
+                            Math.Sign(node.Position.X - nextNode.Position.X)) { continue; }
+
+                        if (!button.HasRequiredItems(character, false)) { return null; }
+                    }
                 }
             }
 

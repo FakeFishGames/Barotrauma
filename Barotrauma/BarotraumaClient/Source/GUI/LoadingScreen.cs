@@ -5,12 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Media;
+using System.Linq;
 
 namespace Barotrauma
 {
     class LoadingScreen
     {
-        private Texture2D backgroundTexture, monsterTexture, titleTexture;
+        private Texture2D backgroundTexture;
 
         private RenderTarget2D renderTarget;
 
@@ -43,18 +44,7 @@ namespace Barotrauma
 
         private object loadMutex = new object();
         private float? loadState;
-
-        public Vector2 TitleSize
-        {
-            get { return new Vector2(titleTexture.Width, titleTexture.Height); }
-        }
-
-        public float Scale
-        {
-            get;
-            private set;
-        }
-
+        
         public float? LoadState
         {
             get
@@ -103,7 +93,7 @@ namespace Barotrauma
                 try
                 {
                     DrawSplashScreen(spriteBatch);
-                    if (SplashScreen!=null && SplashScreen.IsPlaying) return;
+                    if (SplashScreen != null && SplashScreen.IsPlaying) return;
                 }
                 catch (Exception e)
                 {
@@ -111,20 +101,27 @@ namespace Barotrauma
                     GameMain.Config.EnableSplashScreen = false;
                 }
             }
-            
+
+            var titleStyle = GUI.Style?.GetComponentStyle("TitleText");
+            Sprite titleSprite = null;
+            if (titleStyle != null && titleStyle.Sprites.ContainsKey(GUIComponent.ComponentState.None))
+            {
+                titleSprite = titleStyle.Sprites[GUIComponent.ComponentState.None].First()?.Sprite;
+            }
+
             drawn = true;
 
             graphics.SetRenderTarget(renderTarget);
 
-            Scale = GameMain.GraphicsHeight / 1500.0f;
+            float backgroundScale = GameMain.GraphicsHeight / 1500.0f;
+            float titleScale = MathHelper.SmoothStep(0.8f, 1.0f, state / 10.0f) * GameMain.GraphicsHeight / 1000.0f;
 
             state += deltaTime;
 
             if (DrawLoadingText)
             {
-                CenterPosition = new Vector2(GameMain.GraphicsWidth * 0.3f, GameMain.GraphicsHeight / 2.0f);
-                TitlePosition = CenterPosition + new Vector2(-0.0f + (float)Math.Sqrt(state) * 220.0f, 0.0f) * Scale;
-                TitlePosition.X = Math.Min(TitlePosition.X, (float)GameMain.GraphicsWidth / 2.0f);
+                BackgroundPosition = new Vector2(GameMain.GraphicsWidth * 0.3f, GameMain.GraphicsHeight * 0.45f);
+                TitlePosition = new Vector2(GameMain.GraphicsWidth * 0.5f, GameMain.GraphicsHeight * 0.45f);
             }
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
@@ -132,16 +129,10 @@ namespace Barotrauma
 
             spriteBatch.Draw(backgroundTexture, BackgroundPosition, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
                 new Vector2(backgroundTexture.Width / 2.0f, backgroundTexture.Height / 2.0f),
-                Scale * 1.5f, SpriteEffects.None, 0.2f);
-
-            spriteBatch.Draw(monsterTexture,
-                CenterPosition + new Vector2((state % 40) * 100.0f - 1800.0f, (state % 40) * 30.0f - 200.0f) * Scale, null,
-                Color.White, 0.0f, Vector2.Zero, Scale, SpriteEffects.None, 0.1f);
-
-            spriteBatch.Draw(titleTexture,
-                TitlePosition, null,
-                Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), Scale, SpriteEffects.None, 0.0f);
-
+                backgroundScale * 1.5f, SpriteEffects.None, 0.2f);
+            
+            titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
+            
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
@@ -154,9 +145,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
-            spriteBatch.Draw(titleTexture,
-                TitlePosition, null,
-                Color.White * Math.Min((state - 3.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), Scale, SpriteEffects.None, 0.0f);
+            titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
 
             if (DrawLoadingText)
             {

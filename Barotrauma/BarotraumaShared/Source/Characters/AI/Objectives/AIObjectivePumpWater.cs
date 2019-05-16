@@ -1,73 +1,68 @@
 ﻿using Barotrauma.Items.Components;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class AIObjectivePumpWater : AIObjectiveLoop<Pump>
     {
         public override string DebugTag => "pump water";
-        private IEnumerable<Pump> pumpList;
+        public override bool KeepDivingGearOn => true;
+        private readonly IEnumerable<Pump> pumpList;
 
-        public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier = 1) 
-            : base(character, objectiveManager, priorityModifier, option) { }
+        public AIObjectivePumpWater(Character character, string option) : base(character, option)
+        {
+            pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (character.Submarine == null) { return 0; }
+            if (objectiveManager.CurrentOrder == this && targets.Count > 0)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+            return 0.0f;
+        }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater && otherObjective.Option == Option;
 
+        //availablePumps = allPumps.Where(p => !p.Item.HasTag("ballast") && p.Item.Connections.None(c => c.IsPower && p.Item.GetConnectedComponentsRecursive<Steering>(c).None())).ToList();
         protected override void FindTargets()
         {
-            if (Option == null) { return; }
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
+            if (option == null) { return; }
+            foreach (Item item in Item.ItemList)
             {
-                character.Speak(TextManager.Get("DialogNoPumps"), null, 3.0f, "nopumps", 30.0f);
+                if (item.HasTag("ballast")) { continue; }
+                if (item.Submarine == null) { continue; }
+                if (item.Submarine.TeamID != character.TeamID) { continue; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                var pump = item.GetComponent<Pump>();
+                if (pump != null)
+                {
+                    if (!ignoreList.Contains(pump))
+                    {
+                        if (option == "stoppumping")
+                        {
+                            if (!pump.IsActive || pump.FlowPercentage == 0.0f) { continue; }
+                        }
+                        else
+                        {
+                            if (!pump.Item.InWater) { continue; }
+                            if (pump.IsActive && pump.FlowPercentage <= -90.0f) { continue; }
+                        }
+                        if (!targets.Contains(pump))
+                        {
+                            targets.Add(pump);
+                        }
+                    }
+                }
             }
         }
 
-        protected override bool Filter(Pump pump)
-        {
-            if (pump == null) { return false; }
-            if (pump.Item.HasTag("ballast")) { return false; }
-            if (pump.Item.Submarine == null) { return false; }
-            if (pump.Item.CurrentHull == null) { return false; }
-            if (pump.Item.Submarine.TeamID != character.TeamID) { return false; }
-            if (pump.Item.CurrentHull.FireSources.Count > 0 || Character.CharacterList.Any(c => c.CurrentHull == pump.Item.CurrentHull && !HumanAIController.IsFriendly(c))) { return false; }
-            if (pump.Item.ConditionPercentage <= 0) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
-            if (Option == "stoppumping")
-            {
-                if (!pump.IsActive || MathUtils.NearlyEqual(pump.FlowPercentage, 0)) { return false; }
-            }
-            else
-            {
-                if (!pump.Item.InWater) { return false; }
-                if (pump.IsActive && pump.FlowPercentage <= -99.9f) { return false; }
-            }
-            return true;
-        }
-        protected override IEnumerable<Pump> GetList()
-        {
-            if (pumpList == null)
-            {
-                pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
-            }
-            return pumpList;
-        }
-
-        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, objectiveManager, Option, false) { IsLoop = false };
-        protected override float TargetEvaluation()
-        {
-            if (Option == "stoppumping")
-            {
-                return targets.Max(t => MathHelper.Lerp(0, 100, Math.Abs(t.FlowPercentage / 100)));
-            }
-            else
-            {
-                return targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(-t.FlowPercentage / 100)));
-            }
-        }
+        protected override bool Filter(Pump pump) => true;
+        protected override IEnumerable<Pump> GetList() => pumpList;
+        protected override AIObjective ObjectiveConstructor(Pump pump) => new AIObjectiveOperateItem(pump, character, Option, false);
+        protected override float Average(Pump target) => 0;
     }
 }

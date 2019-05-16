@@ -3,24 +3,28 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class AIObjectiveFixLeak : AIObjective
     {
         public override string DebugTag => "fix leak";
+
+        public override bool KeepDivingGearOn => true;
         public override bool ForceRun => true;
 
-        public Gap Leak { get; private set; }
+        private readonly Gap leak;
 
         private AIObjectiveFindDivingGear findDivingGear;
-        private AIObjectiveGetItem getWeldingTool;
-        private AIObjectiveContainItem refuelObjective;
         private AIObjectiveGoTo gotoObjective;
         private AIObjectiveOperateItem operateObjective;
+        
+        public Gap Leak
+        {
+            get { return leak; }
+        }
 
-        public AIObjectiveFixLeak(Gap leak, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base (character, objectiveManager, priorityModifier)
+        public AIObjectiveFixLeak(Gap leak, Character character) : base (character, "")
         {
             Leak = leak;
         }
@@ -30,16 +34,17 @@ namespace Barotrauma
             return Leak.Open <= 0.0f || Leak.Removed;
         }
 
-        public override float GetPriority()
+        public override bool CanBeCompleted => !abandon && base.CanBeCompleted;
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            if (Leak.Open == 0.0f) { return 0.0f; }
-            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 10000, dist));
-            float severity = AIObjectiveFixLeaks.GetLeakSeverity(Leak);
-            float max = Math.Min((AIObjectiveManager.OrderPriority - 1), 90);
-            float devotion = Math.Min(Priority, 10) / 100;
-            return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + severity * distanceFactor * PriorityModifier, 0, 1));
+            if (leak.Open == 0.0f) { return 0.0f; }
+
+            float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
+
+            float dist = Vector2.DistanceSquared(character.SimPosition, leak.SimPosition);
+            dist = Math.Max(dist / 100.0f, 1.0f);
+            return Math.Min(leakSize / dist, 40.0f);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
@@ -50,447 +55,105 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (!Leak.IsRoomToRoom)
+            if (!leak.IsRoomToRoom)
             {
-                if (!HumanAIController.HasDivingSuit(character))
+                if (findDivingGear == null)
                 {
-                    TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, true, objectiveManager));
+                    findDivingGear = new AIObjectiveFindDivingGear(character, true);
+                    AddSubObjective(findDivingGear);
+                }
+                else if (!findDivingGear.CanBeCompleted)
+                {
+                    abandon = true;
                     return;
                 }
             }
+
             var weldingTool = character.Inventory.FindItemByTag("weldingtool");
+
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingtool", objectiveManager, true));
+                AddSubObjective(new AIObjectiveGetItem(character, "weldingtool", true));
                 return;
             }
             else
             {
                 var containedItems = weldingTool.ContainedItems;
-                if (containedItems == null)
+                if (containedItems == null) return;
+                
+                var fuelTank = containedItems.FirstOrDefault(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f);
+                if (fuelTank == null)
                 {
-#if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
-#endif
-                    abandon = true;
+                    AddSubObjective(new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>()));
                     return;
                 }
-                // Drop empty tanks
-                foreach (Item containedItem in containedItems)
+            }
+
+            var repairTool = weldingTool.GetComponent<RepairTool>();
+            if (repairTool == null) { return; }
+
+            Vector2 gapDiff = leak.WorldPosition - character.WorldPosition;
+
+            // TODO: use the collider size/reach?
+            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
+            {
+                HumanAIController.AnimController.Crouching = true;
+            }
+
+            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
+            bool canReach = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
+            if (canReach)
+            {
+                Limb sightLimb = null;
+                if (character.Inventory.IsInLimbSlot(repairTool.Item, InvSlotType.RightHand))
                 {
-                    if (containedItem == null) { continue; }
-                    if (containedItem.Condition <= 0.0f)
+                    sightLimb = character.AnimController.GetLimb(LimbType.RightHand);
+                }
+                else if (character.Inventory.IsInLimbSlot(repairTool.Item, InvSlotType.LeftHand))
+                {
+                    sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
+                }
+                canReach = character.CanSeeTarget(leak, sightLimb);
+            }
+            else
+            {
+                if (gotoObjective != null)
+                {
+                    // Check if the objective is already removed -> completed/impossible
+                    if (!subObjectives.Contains(gotoObjective))
                     {
-                        containedItem.Drop(character);
+                        if (!gotoObjective.CanBeCompleted)
+                        {
+                            abandon = true;
+                        }
+                        gotoObjective = null;
+                        return;
                     }
                 }
-                if (containedItems.None(i => i.HasTag("weldingfueltank") && i.Condition > 0.0f))
+                else
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfueltank", weldingTool.GetComponent<ItemContainer>(), objectiveManager));
-                    return;
+                    gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character)
+                    {
+                        CloseEnough = reach
+                    };
+                    if (!subObjectives.Contains(gotoObjective))
+                    {
+                        AddSubObjective(gotoObjective);
+                    }
                 }
-                canReach = character.CanSeeTarget(Leak, sightLimb);
             }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                abandon = true;
-                return;
-            }
-            Vector2 gapDiff = Leak.WorldPosition - character.WorldPosition;
-            // TODO: use the collider size/reach?
-            if (!character.AnimController.InWater && Math.Abs(gapDiff.X) < 100 && gapDiff.Y < 0.0f && gapDiff.Y > -150)
-            {
-                HumanAIController.AnimController.Crouching = true;
-            }
-            float reach = ConvertUnits.ToSimUnits(repairTool.Range);
-            bool canOperate = ConvertUnits.ToSimUnits(gapDiff.Length()) < reach;
-            if (canOperate)
-            {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak));
-            }
-            else
-            {
-                TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character, objectiveManager) { CloseEnough = reach * 0.75f });
-            }
+            if (gotoObjective == null || gotoObjective.IsCompleted())
+            {
+                if (operateObjective == null)
+                {
+                    operateObjective = new AIObjectiveOperateItem(repairTool, character, "", true, leak);
+                    AddSubObjective(operateObjective);
+                }
+                else if (!subObjectives.Contains(operateObjective))
+                {
+                    operateObjective = null;
+                }
+            }   
         }
 
         private Vector2 GetStandPosition()

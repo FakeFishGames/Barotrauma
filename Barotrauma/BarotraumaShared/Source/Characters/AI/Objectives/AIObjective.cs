@@ -12,6 +12,21 @@ namespace Barotrauma
 
         public abstract string DebugTag { get; }
         public virtual bool ForceRun => false;
+        public virtual bool KeepDivingGearOn => false;
+
+        protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
+        public float Priority { get; set; }
+        protected readonly Character character;
+        protected string option;
+        protected bool abandon;
+
+        public virtual bool CanBeCompleted => !abandon && subObjectives.All(so => so.CanBeCompleted);
+        public IEnumerable<AIObjective> SubObjectives => subObjectives;
+        public AIObjective CurrentSubObjective { get; private set; }
+
+        protected HumanAIController HumanAIController => character.AIController as HumanAIController;
+        protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
+        protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
 
         /// <summary>
         /// Run the main objective with all subobjectives concurrently?
@@ -47,7 +62,6 @@ namespace Barotrauma
         
         public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null)
         {
-            this.objectiveManager = objectiveManager;
             this.character = character;
             Option = option ?? string.Empty;
 
@@ -89,6 +103,11 @@ namespace Barotrauma
                 }
             }
 
+            if (!subObjectives.Contains(CurrentSubObjective))
+            {
+                CurrentSubObjective = null;
+            }
+
             foreach (AIObjective objective in subObjectives)
             {
                 objective.TryComplete(deltaTime);
@@ -113,40 +132,29 @@ namespace Barotrauma
             subObjectives.Add(objective);
         }
 
-        public void SortSubObjectives()
+        public void SortSubObjectives(AIObjectiveManager objectiveManager)
         {
             if (subObjectives.None()) { return; }
-            subObjectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
-            if (ConcurrentObjectives)
-            {
-                subObjectives.ForEach(so => SortSubObjectives());
-            }
-            else
-            {
-                subObjectives.First().SortSubObjectives();
-            }
+            subObjectives.Sort((x, y) => y.GetPriority(objectiveManager).CompareTo(x.GetPriority(objectiveManager)));
+            CurrentSubObjective = SubObjectives.First();
+            CurrentSubObjective.SortSubObjectives(objectiveManager);
         }
 
-        public virtual float GetPriority() => Priority * PriorityModifier;
+        public virtual float GetPriority(AIObjectiveManager objectiveManager) => Priority;
 
-        public virtual void Update(float deltaTime)
+        public virtual void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
+            var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
             if (objectiveManager.CurrentOrder == this)
             {
                 Priority = AIObjectiveManager.OrderPriority;
             }
-            else if (objectiveManager.WaitTimer <= 0)
+            else if (objectiveManager.CurrentObjective == this || subObjective == this)
             {
-                if (objectiveManager.CurrentObjective != null)
-                {
-                    if (objectiveManager.CurrentObjective == this || objectiveManager.CurrentObjective.subObjectives.Any(so => so == this))
-                    {
-                        Priority += Devotion * PriorityModifier * deltaTime;
-                    }
-                }
-                Priority = MathHelper.Clamp(Priority, 0, 100);
-                subObjectives.ForEach(so => so.Update(deltaTime));
+                Priority += Devotion * deltaTime;
             }
+            Priority = MathHelper.Clamp(Priority, 0, 100);
+            subObjectives.ForEach(so => so.Update(objectiveManager, deltaTime));
         }
 
         /// <summary>
@@ -166,57 +174,13 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Checks if the objective already is created and added in subobjectives. If not, creates it.
-        /// Handles objectives that cannot be completed. If the objective has been removed form the subobjectives, a null value is assigned to the reference.
-        /// Returns true if the objective was created.
-        /// </summary>
-        protected bool TryAddSubObjective<T>(ref T objective, Func<T> constructor, Action onAbandon = null) where T : AIObjective
-        {
-            if (objective != null)
-            {
-                // Sub objective already found, no need to do anything if it remains in the subobjectives
-                // If the sub objective is removed -> it's either completed or impossible to complete.
-                if (!subObjectives.Contains(objective))
-                {
-                    if (!objective.CanBeCompleted)
-                    {
-                        abandon = true;
-                        onAbandon?.Invoke();
-                    }
-                    objective = null;
-                }
-                return false;
-            }
-            else
-            {
-                objective = constructor();
-                if (!subObjectives.Contains(objective))
-                {
-                    AddSubObjective(objective);
-                }
-                return true;
-            }
-        }
-
-        // TODO: remove
         protected virtual bool ShouldInterruptSubObjective(AIObjective subObjective) => false;
-
-        public virtual void OnSelected()
-        {
-            // Should we reset steering here?
-            //if (!ConcurrentObjectives)
-            //{
-            //    SteeringManager.Reset();
-            //}
-        }
-
+        public virtual void OnSelected() { }
         public virtual void Reset() { }
 
         protected abstract void Act(float deltaTime);
         
         public abstract bool IsCompleted();
-
         public abstract bool IsDuplicate(AIObjective otherObjective);
     }
 }

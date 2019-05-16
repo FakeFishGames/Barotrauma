@@ -927,6 +927,7 @@ namespace Barotrauma
 
             textTag = textTag.ToLowerInvariant();
             var tagTextPairs = TextManager.GetAllTagTextPairs();
+            tagTextPairs.Sort((t1, t2) => { return t1.Value.CompareTo(t2.Value); });
             foreach (KeyValuePair<string, string> tagTextPair in tagTextPairs)
             {
                 if (!tagTextPair.Key.StartsWith(textTag)) { continue; }
