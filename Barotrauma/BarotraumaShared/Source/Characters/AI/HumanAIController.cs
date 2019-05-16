@@ -532,7 +532,7 @@ namespace Barotrauma
             bool ignoreFire = ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFires>() || ObjectiveManager.IsCurrentObjective<AIObjectiveExtinguishFire>();
             bool ignoreWater = HasDivingSuit(Character);
             bool ignoreOxygen = ignoreWater || HasDivingGear(Character);
-            bool ignoreEnemies = !ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
+            bool ignoreEnemies = ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             return GetHullSafety(hull, Character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
         }
 
