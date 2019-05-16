@@ -270,21 +270,24 @@ namespace Barotrauma
             WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
 
             loadingScreenOpen = true;
-            TitleScreen = new LoadingScreen(GraphicsDevice);
-            TitleScreen.WaitForLanguageSelection = Config.ShowLanguageSelectionPrompt;
+            TitleScreen = new LoadingScreen(GraphicsDevice)
+            {
+                WaitForLanguageSelection = Config.ShowLanguageSelectionPrompt
+            };
 
             bool canLoadInSeparateThread = false;
 #if WINDOWS
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(), "", canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
         }
         
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
             {
+                //TODO: translate
                 var userStatsPrompt = new GUIMessageBox(
                     "Do you want to help us make Barotrauma better?",
                     "Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, " +
@@ -334,16 +337,21 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
             if (Config.EnableSplashScreen)
             {
-                try
+                var pendingSplashScreens = TitleScreen.PendingSplashScreens;
+                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_UTG.mp4", new Point(1280, 720)));
+                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_FF.mp4", new Point(1280, 720)));
+                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_Daedalic.mp4", new Point(1920, 1080)));
+            }
+
+            //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading
+            //otherwise the videos will look extremely choppy
+            if (!isSeparateThread)
+            {
+                while (TitleScreen.PlayingSplashScreen || TitleScreen.PendingSplashScreens.Count > 0)
                 {
-                    (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, SoundManager, "Content/splashscreen.mp4", 1280, 720);
+                    yield return CoroutineStatus.Running;
                 }
-                catch (Exception e)
-                {
-                    Config.EnableSplashScreen = false;
-                    DebugConsole.ThrowError("Playing the splash screen failed.", e);
-                }
-             }
+            }
 
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();

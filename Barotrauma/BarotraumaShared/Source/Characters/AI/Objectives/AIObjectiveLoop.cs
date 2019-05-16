@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     abstract class AIObjectiveLoop<T> : AIObjective
     {
-        protected HashSet<T> targets = new HashSet<T>();
+        protected List<T> targets = new List<T>();
         protected Dictionary<T, AIObjective> objectives = new Dictionary<T, AIObjective>();
         protected HashSet<T> ignoreList = new HashSet<T>();
         private float ignoreListTimer;
@@ -15,25 +15,9 @@ namespace Barotrauma
 
         // By default, doesn't clear the list automatically
         protected virtual float IgnoreListClearInterval => 0;
+        protected virtual float TargetUpdateInterval => 2;
 
-        public HashSet<T> ReportedTargets { get; private set; } = new HashSet<T>();
-
-        public bool AddTarget(T target)
-        {
-            if (ReportedTargets.Contains(target))
-            {
-                return false;
-            }
-            if (Filter(target))
-            {
-                ReportedTargets.Add(target);
-                return true;
-            }
-            return false;
-        }
-
-        public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null) 
-            : base(character, objectiveManager, priorityModifier, option)
+        public AIObjectiveLoop(Character character, string option) : base(character, option)
         {
             Reset();
         }
@@ -42,11 +26,9 @@ namespace Barotrauma
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
-        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
-
-        public override void Update(float deltaTime)
+        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
         {
-            base.Update(deltaTime);
+            base.Update(objectiveManager, deltaTime);
             if (IgnoreListClearInterval > 0)
             {
                 if (ignoreListTimer > IgnoreListClearInterval)
@@ -58,13 +40,14 @@ namespace Barotrauma
                     ignoreListTimer += deltaTime;
                 }
             }
-            if (targetUpdateTimer < 0)
+            if (targetUpdateTimer >= TargetUpdateInterval)
             {
+                targetUpdateTimer = 0;
                 UpdateTargets();
             }
             else
             {
-                targetUpdateTimer -= deltaTime;
+                targetUpdateTimer += deltaTime;
             }
             // Sync objectives, subobjectives and targets
             foreach (var objective in objectives)
@@ -73,7 +56,7 @@ namespace Barotrauma
                 if (!objective.Value.CanBeCompleted)
                 {
                     ignoreList.Add(target);
-                    targetUpdateTimer = 0;
+                    targetUpdateTimer = TargetUpdateInterval;
                 }
                 if (!targets.Contains(target))
                 {
@@ -87,9 +70,6 @@ namespace Barotrauma
             }
         }
 
-        // the timer is set between 1 and 10 seconds, depending on the priority
-        private float SetTargetUpdateTimer() => targetUpdateTimer = 1 / MathHelper.Clamp(PriorityModifier * Rand.Range(0.75f, 1.25f), 0.1f, 1);
-
         public override void Reset()
         {
             ignoreList.Clear();
@@ -99,34 +79,19 @@ namespace Barotrauma
 
         public override void OnSelected()
         {
-            base.OnSelected();
-            if (HumanAIController.ObjectiveManager.CurrentOrder == this)
-            {
-                Reset();
-            }
+            Reset();
         }
 
-        public override float GetPriority()
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (character.Submarine == null) { return 0; }
             if (targets.None()) { return 0; }
-            // Allow the target value to be more than 100.
-            float targetValue = TargetEvaluation();
-            // If the target value is less than 1% of the max value, let's just treat it as zero.
-            if (targetValue < 1) { return 0; }
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-            float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
-            float devotion = MathHelper.Min(10, Priority);
-            float value = MathHelper.Clamp((devotion + targetValue * PriorityModifier) / 100, 0, 1);
-            return MathHelper.Lerp(0, max, value);
+            float avg = targets.Average(t => Average(t));
+            return MathHelper.Lerp(0, AIObjectiveManager.OrderPriority + 20, avg / 100);
         }
 
         protected void UpdateTargets()
         {
-            SetTargetUpdateTimer();
             targets.Clear();
             FindTargets();
             CreateObjectives();
@@ -134,19 +99,12 @@ namespace Barotrauma
 
         protected virtual void FindTargets()
         {
-            foreach (T target in GetList())
+            foreach (T item in GetList())
             {
-                // The bots always find targets when the objective is an order.
-                if (objectiveManager.CurrentOrder != this)
+                if (Filter(item)) { continue; }
+                if (!targets.Contains(item))
                 {
-                    // Battery or pump states cannot currently be reported (not implemented) and therefore we must ignore them -> the bots always know if they require attention.
-                    bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater;
-                    if (!ignore && !ReportedTargets.Contains(target)) { continue; }
-                }
-                if (!Filter(target)) { continue; }
-                if (!ignoreList.Contains(target))
-                {
-                    targets.Add(target);
+                    targets.Add(item);
                 }
             }
         }
@@ -158,7 +116,6 @@ namespace Barotrauma
                 if (!objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);
-                    objective.Completed += () => ReportedTargets.Remove(target);
                     objectives.Add(target, objective);
                     AddSubObjective(objective);
                 }
@@ -169,9 +126,7 @@ namespace Barotrauma
         /// List of all possible items of the specified type. Used for filtering the removed objectives.
         /// </summary>
         protected abstract IEnumerable<T> GetList();
-
-        protected abstract float TargetEvaluation();
-
+        protected abstract float Average(T target);
         protected abstract AIObjective ObjectiveConstructor(T target);
         protected abstract bool Filter(T target);
     }
