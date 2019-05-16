@@ -2043,12 +2043,13 @@ namespace Barotrauma
                 GUI.AddMessage(GetCharacterEditorTranslation("RagdollReset"), Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
+            Vector2 messageBoxRelSize = new Vector2(0.5f, 0.5f);
             int messageBoxWidth = GameMain.GraphicsWidth / 2;
             int messageBoxHeight = GameMain.GraphicsHeight / 2;
             var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("SaveRagdoll"));
             saveRagdollButton.OnClicked += (button, userData) =>
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("SaveRagdoll"), $"{GetCharacterEditorTranslation("ProvideFileName")}: ", new string[] { TextManager.Get("Cancel"), TextManager.Get("Save") }, messageBoxWidth, messageBoxHeight);
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("SaveRagdoll"), $"{GetCharacterEditorTranslation("ProvideFileName")}: ", new string[] { TextManager.Get("Cancel"), TextManager.Get("Save") }, messageBoxRelSize);
                 var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), RagdollParams.Name);
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
@@ -2076,7 +2077,7 @@ namespace Barotrauma
             var loadRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LoadRagdoll"));
             loadRagdollButton.OnClicked += (button, userData) =>
             {
-                var loadBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadRagdoll"), "", new string[] { TextManager.Get("Cancel"), TextManager.Get("Load"), TextManager.Get("Delete") }, messageBoxWidth, messageBoxHeight);
+                var loadBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadRagdoll"), "", new string[] { TextManager.Get("Cancel"), TextManager.Get("Load"), TextManager.Get("Delete") }, messageBoxRelSize);
                 loadBox.Buttons[0].OnClicked += loadBox.Close;
                 var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform, Anchor.TopCenter));
                 var deleteButton = loadBox.Buttons[2];
@@ -2122,7 +2123,7 @@ namespace Barotrauma
                     var msgBox = new GUIMessageBox(
                         TextManager.Get("DeleteDialogLabel"),
                         TextManager.Get("DeleteDialogQuestion").Replace("[file]", selectedFile),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") }, messageBoxWidth - 100, messageBoxHeight - 100);
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
                     msgBox.Buttons[0].OnClicked += (b, d) =>
                     {
                         try
@@ -2163,7 +2164,7 @@ namespace Barotrauma
             var saveAnimationButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("SaveAnimation"));
             saveAnimationButton.OnClicked += (button, userData) =>
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("SaveAnimation"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Save") }, messageBoxWidth, messageBoxHeight);
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("SaveAnimation"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Save") }, messageBoxRelSize);
                 var textArea = new GUIFrame(new RectTransform(new Vector2(1, 0.1f), box.Content.RectTransform) { MinSize = new Point(350, 30) }, style: null);
                 var inputLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), textArea.RectTransform) { MinSize = new Point(250, 30) }, $"{GetCharacterEditorTranslation("ProvideFileName")}: ");
                 var inputField = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), textArea.RectTransform, Anchor.TopRight) { MinSize = new Point(100, 30) }, CurrentAnimation.Name);
@@ -2211,7 +2212,7 @@ namespace Barotrauma
             var loadAnimationButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LoadAnimation"));
             loadAnimationButton.OnClicked += (button, userData) =>
             {
-                var loadBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadAnimation"), "", new string[] { TextManager.Get("Cancel"), TextManager.Get("Load"), TextManager.Get("Delete") }, messageBoxWidth, messageBoxHeight);
+                var loadBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadAnimation"), "", new string[] { TextManager.Get("Cancel"), TextManager.Get("Load"), TextManager.Get("Delete") }, messageBoxRelSize);
                 loadBox.Buttons[0].OnClicked += loadBox.Close;
                 var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform));
                 var deleteButton = loadBox.Buttons[2];
@@ -2273,7 +2274,7 @@ namespace Barotrauma
                     var msgBox = new GUIMessageBox(
                         TextManager.Get("DeleteDialogLabel"),
                         TextManager.Get("DeleteDialogQuestion").Replace("[file]", selectedFile),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") }, messageBoxWidth - 100, messageBoxHeight - 100);
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
                     msgBox.Buttons[0].OnClicked += (b, d) =>
                     {
                         try
@@ -4425,7 +4426,7 @@ namespace Barotrauma
 
                 protected override GUIMessageBox Create()
                 {
-                    var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Next") }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Next") }, new Vector2(0.5f, 1.0f));
                     box.Content.ChildAnchor = Anchor.TopCenter;
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;
@@ -4541,7 +4542,7 @@ namespace Barotrauma
 
                 protected override GUIMessageBox Create()
                 {
-                    var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new string[] { TextManager.Get("Previous"), TextManager.Get("Create") }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                    var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new string[] { TextManager.Get("Previous"), TextManager.Get("Create") }, new Vector2(0.5f, 1.0f));
                     box.Content.ChildAnchor = Anchor.TopCenter;
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;
@@ -4621,7 +4622,7 @@ namespace Barotrauma
                     {
                         if (htmlBox == null)
                         {
-                            htmlBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadHTML"), string.Empty, new string[] { TextManager.Get("Close"), TextManager.Get("Load") }, GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight);
+                            htmlBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadHTML"), string.Empty, new string[] { TextManager.Get("Close"), TextManager.Get("Load") }, new Vector2(0.5f, 1.0f));
                             var element = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.05f), htmlBox.Content.RectTransform), style: null, color: Color.Gray * 0.25f);
                             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), element.RectTransform), GetCharacterEditorTranslation("HTMLPath"));
                             var htmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), element.RectTransform, Anchor.TopRight), $"Content/Characters/{Name}/{Name}.html");

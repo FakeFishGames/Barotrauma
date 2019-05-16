@@ -499,7 +499,7 @@ namespace Barotrauma.Items.Components
                 //load more fuel if the current maximum output is only 50% of the current load
                 if (NeedMoreFuel(minimumOutputRatio: 0.5f))
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>())
+                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>(), objective.objectiveManager)
                     {
                         MinContainedAmount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
                         GetItemPriority = (Item fuelItem) =>

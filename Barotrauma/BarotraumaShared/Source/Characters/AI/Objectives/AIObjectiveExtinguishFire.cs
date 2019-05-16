@@ -3,6 +3,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -10,125 +11,117 @@ namespace Barotrauma
     {
         public override string DebugTag => "extinguish fire";
         public override bool ForceRun => true;
-        public override bool KeepDivingGearOn => true;
+        public override bool ConcurrentObjectives => true;
 
-        private Hull targetHull;
+        private readonly Hull targetHull;
 
         private AIObjectiveGetItem getExtinguisherObjective;
-
         private AIObjectiveGoTo gotoObjective;
-
         private float useExtinquisherTimer;
 
-        public AIObjectiveExtinguishFire(Character character, Hull targetHull) : base(character, "")
+        public AIObjectiveExtinguishFire(Character character, Hull targetHull, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             this.targetHull = targetHull;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
-            if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c))) { return 0; }
             // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
             float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
-            float severityFactor = MathHelper.Lerp(0, 1, MathHelper.Clamp(targetHull.FireSources.Sum(fs => fs.Size.X) / targetHull.Size.X, 0, 1));
-            return MathHelper.Clamp(Priority * severityFactor * distanceFactor, 0, 100);
+            float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
+            float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
+            float devotion = Math.Min(Priority, 10) / 100;
+            return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + severityFactor * distanceFactor, 0, 1));
         }
 
-        public override bool IsCompleted()
-        {
-            return targetHull.FireSources.Count == 0;
-        }
+        public override bool IsCompleted() => targetHull.FireSources.None();
 
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            var otherExtinguishFire = otherObjective as AIObjectiveExtinguishFire;
-            return otherExtinguishFire != null && otherExtinguishFire.targetHull == targetHull;
-        }
-
-        public override bool CanBeCompleted
-        {
-            get { return getExtinguisherObjective == null || getExtinguisherObjective.IsCompleted() || getExtinguisherObjective.CanBeCompleted; }
-        }
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveExtinguishFire otherExtinguishFire && otherExtinguishFire.targetHull == targetHull;
 
         protected override void Act(float deltaTime)
         {
             var extinguisherItem = character.Inventory.FindItemByIdentifier("extinguisher") ?? character.Inventory.FindItemByTag("extinguisher");
             if (extinguisherItem == null || extinguisherItem.Condition <= 0.0f || !character.HasEquippedItem(extinguisherItem))
             {
-                if (getExtinguisherObjective == null)
+                TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
                     character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
-                    getExtinguisherObjective = new AIObjectiveGetItem(character, "extinguisher", true);
-                }
-                else
-                {
-                    getExtinguisherObjective.TryComplete(deltaTime);
-                }
-
-                return;
+                    return new AIObjectiveGetItem(character, "extinguisher", objectiveManager, equip: true);
+                });
             }
-
-            var extinguisher = extinguisherItem.GetComponent<RepairTool>();
-            if (extinguisher == null)
+            else
             {
-                DebugConsole.ThrowError("AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
-                return;
-            }
-
-            foreach (FireSource fs in targetHull.FireSources)
-            {
-                bool inRange = fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range));
-                bool move = !inRange;
-                if (inRange || useExtinquisherTimer > 0.0f)
+                var extinguisher = extinguisherItem.GetComponent<RepairTool>();
+                if (extinguisher == null)
                 {
-                    useExtinquisherTimer += deltaTime;
-                    if (useExtinquisherTimer > 2.0f)
+#if DEBUG
+                    DebugConsole.ThrowError("AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
+#endif
+                    abandon = true;
+                    return;
+                }
+                foreach (FireSource fs in targetHull.FireSources)
+                {
+                    bool inRange = fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range));
+                    bool move = !inRange;
+                    if (inRange || useExtinquisherTimer > 0.0f)
                     {
-                        useExtinquisherTimer = 0.0f;
-                    }
-                    character.AIController.SteeringManager.Reset();
-                    character.CursorPosition = fs.Position;
-                    if (extinguisher.Item.RequireAimToUse)
-                    {
-                        character.SetInput(InputType.Aim, false, true);
-                    }
-                    Limb sightLimb = null;
-                    if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.RightHand))
-                    {
-                        sightLimb = character.AnimController.GetLimb(LimbType.RightHand);
-                    }
-                    else if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.LeftHand))
-                    {
-                        sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
-                    }
-                    if (!character.CanSeeTarget(fs, sightLimb))
-                    {
-                        move = true;
-                    }
-                    else
-                    {
-                        move = false;
-                        extinguisher.Use(deltaTime, character);
-                        if (!targetHull.FireSources.Contains(fs))
+                        useExtinquisherTimer += deltaTime;
+                        if (useExtinquisherTimer > 2.0f)
                         {
-                            character.Speak(TextManager.Get("DialogPutOutFire").Replace("[roomname]", targetHull.Name), null, 0, "putoutfire", 10.0f);
+                            useExtinquisherTimer = 0.0f;
+                        }
+                        character.AIController.SteeringManager.Reset();
+                        character.CursorPosition = fs.Position;
+                        if (extinguisher.Item.RequireAimToUse)
+                        {
+                            bool isOperatingButtons = false;
+                            if (SteeringManager == PathSteering)
+                            {
+                                var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
+                                if (door != null && !door.IsOpen)
+                                {
+                                    isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
+                                }
+                            }
+                            if (!isOperatingButtons)
+                            {
+                                character.SetInput(InputType.Aim, false, true);
+                            }
+                        }
+                        Limb sightLimb = null;
+                        if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.RightHand))
+                        {
+                            sightLimb = character.AnimController.GetLimb(LimbType.RightHand);
+                        }
+                        else if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.LeftHand))
+                        {
+                            sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
+                        }
+                        if (!character.CanSeeTarget(fs, sightLimb))
+                        {
+                            move = true;
+                        }
+                        else
+                        {
+                            move = false;
+                            extinguisher.Use(deltaTime, character);
+                            if (!targetHull.FireSources.Contains(fs))
+                            {
+                                character.Speak(TextManager.Get("DialogPutOutFire").Replace("[roomname]", targetHull.Name), null, 0, "putoutfire", 10.0f);
+                            }
                         }
                     }
-                }
-                if (move)
-                {
-                    //go to the first firesource
-                    if (gotoObjective == null || !gotoObjective.CanBeCompleted || gotoObjective.IsCompleted())
+                    if (move)
                     {
-                        gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character);
+                        //go to the first firesource
+                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(ConvertUnits.ToSimUnits(fs.Position), character, objectiveManager));
                     }
-                    else
-                    {
-                        gotoObjective.TryComplete(deltaTime);
-                    }
+                    break;
                 }
-                break;
             }
         }
     }

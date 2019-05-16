@@ -235,7 +235,7 @@ namespace Barotrauma
                         //}
 
                         var body = Submarine.PickBody(end, node.Waypoint.SimPosition, null,
-                            Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs | Physics.CollisionPlatform);
+                            Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
 
                         if (body != null)
                         {

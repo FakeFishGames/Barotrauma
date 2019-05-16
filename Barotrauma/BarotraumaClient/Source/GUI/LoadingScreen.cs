@@ -15,21 +15,41 @@ namespace Barotrauma
 
         private RenderTarget2D renderTarget;
 
-        private Video splashScreen;
-        public Video SplashScreen
+        private Sprite languageSelectionCursor;
+        private ScalableFont languageSelectionFont;
+
+        private Video currSplashScreen;
+        private DateTime videoStartTime;
+
+        private Queue<Pair<string, Point>> pendingSplashScreens = new Queue<Pair<string, Point>>();
+        /// <summary>
+        /// Pair.first = filepath, Pair.second = resolution
+        /// </summary>
+        public Queue<Pair<string, Point>> PendingSplashScreens
         {
             get
             {
                 lock (loadMutex)
                 {
-                    return splashScreen;
+                    return pendingSplashScreens;
                 }
             }
             set
             {
                 lock (loadMutex)
                 {
-                    splashScreen = value;
+                    pendingSplashScreens = value;
+                }
+            }
+        }
+
+        public bool PlayingSplashScreen
+        {
+            get
+            {
+                lock (loadMutex)
+                {
+                    return currSplashScreen != null;
                 }
             }
         }
@@ -72,10 +92,16 @@ namespace Barotrauma
 
         public bool WaitForLanguageSelection
         {
+            get;
+            set;
+        }
+
+        public LoadingScreen(GraphicsDevice graphics)
+        {
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
 
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            GameMain.Instance.OnResolutionChanged += () => 
+            GameMain.Instance.OnResolutionChanged += () =>
             {
                 renderTarget?.Dispose();
                 renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
@@ -85,15 +111,14 @@ namespace Barotrauma
             selectedTip = TextManager.Get("LoadingScreenTip", true);
         }
 
-
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
             if (GameMain.Config.EnableSplashScreen)
             {
                 try
                 {
-                    DrawSplashScreen(spriteBatch);
-                    if (SplashScreen != null && SplashScreen.IsPlaying) return;
+                    DrawSplashScreen(spriteBatch, graphics);
+                    if (currSplashScreen != null || PendingSplashScreens.Count > 0) { return; }
                 }
                 catch (Exception e)
                 {
@@ -101,10 +126,10 @@ namespace Barotrauma
                     GameMain.Config.EnableSplashScreen = false;
                 }
             }
-
+                        
             var titleStyle = GUI.Style?.GetComponentStyle("TitleText");
             Sprite titleSprite = null;
-            if (titleStyle != null && titleStyle.Sprites.ContainsKey(GUIComponent.ComponentState.None))
+            if (!WaitForLanguageSelection && titleStyle != null && titleStyle.Sprites.ContainsKey(GUIComponent.ComponentState.None))
             {
                 titleSprite = titleStyle.Sprites[GUIComponent.ComponentState.None].First()?.Sprite;
             }
@@ -144,8 +169,6 @@ namespace Barotrauma
             }
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-
-            titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
 
             titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
 
@@ -191,28 +214,81 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void DrawSplashScreen(SpriteBatch spriteBatch)
+        private void DrawLanguageSelectionPrompt(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
         {
-            if (SplashScreen != null)
+            if (languageSelectionFont == null)
             {
-                if (SplashScreen.IsPlaying)
-                {
-                    spriteBatch.Begin();
-                    spriteBatch.Draw(SplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-                    spriteBatch.End();
+                languageSelectionFont = new ScalableFont("Content/Fonts/BebasNeue-Regular.otf", (uint)(30 * (GameMain.GraphicsHeight / 1080.0f)), graphicsDevice);
+            }
+            if (languageSelectionCursor == null)
+            {
+                languageSelectionCursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
+            }
 
-                    if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
-                    {
-                        SplashScreen.Dispose(); SplashScreen = null;
-                    }
-                }
-                else
+            Vector2 textPos = new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight * 0.3f);
+            Vector2 textSpacing = new Vector2(0.0f, (GameMain.GraphicsHeight * 0.5f) / TextManager.AvailableLanguages.Count());
+            foreach (string language in TextManager.AvailableLanguages)
+            {
+                Vector2 textSize = languageSelectionFont.MeasureString(language);
+                bool hover = 
+                    Math.Abs(PlayerInput.MousePosition.X - textPos.X) < textSize.X / 2 && 
+                    Math.Abs(PlayerInput.MousePosition.Y - textPos.Y) < textSpacing.Y / 2;
+
+                //TODO: display the name of the language in the target language?
+                languageSelectionFont.DrawString(spriteBatch, language, textPos - textSize / 2, 
+                    hover ? Color.White : Color.White * 0.6f);
+                if (hover && PlayerInput.LeftButtonClicked())
                 {
-                    SplashScreen.Dispose(); SplashScreen = null;
+                    GameMain.Config.Language = language;
+                    WaitForLanguageSelection = false;
                 }
-            }            
+
+                textPos += textSpacing;
+            }
+
+            languageSelectionCursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
         }
- 
+
+        private void DrawSplashScreen(SpriteBatch spriteBatch, GraphicsDevice graphics)
+        {
+            if (currSplashScreen == null && PendingSplashScreens.Count == 0) { return; }
+
+            if (currSplashScreen == null)
+            {
+                var newSplashScreen = PendingSplashScreens.Dequeue();
+                string fileName = newSplashScreen.First;
+                Point resolution = newSplashScreen.Second;
+                try
+                {
+                    currSplashScreen = new Video(graphics, GameMain.SoundManager, fileName, (uint)resolution.X, (uint)resolution.Y);
+                    videoStartTime = DateTime.Now;
+                }
+                catch (Exception e)
+                {
+                    GameMain.Config.EnableSplashScreen = false;
+                    DebugConsole.ThrowError("Playing the splash screen \"" + fileName + "\" failed.", e);
+                    PendingSplashScreens.Clear();
+                    currSplashScreen = null;
+                }
+            }
+
+            if (currSplashScreen.IsPlaying)
+            {
+                spriteBatch.Begin();
+                spriteBatch.Draw(currSplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                spriteBatch.End();
+
+                if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
+                {
+                    currSplashScreen.Dispose(); currSplashScreen = null;
+                }
+            }
+            else if (DateTime.Now > videoStartTime + new TimeSpan(0, 0, 0, 0, milliseconds: 500))
+            {
+                currSplashScreen.Dispose(); currSplashScreen = null;
+            }
+        }
+
         bool drawn;
         public IEnumerable<object> DoLoading(IEnumerable<object> loader)
         {

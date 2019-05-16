@@ -281,7 +281,7 @@ namespace Barotrauma.Items.Components
             float dist = fromItemToLeak.Length();
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
-            if (dist > Range * 5.0f) return true;
+            if (dist > Range * 3.0f) { return true; }
 
             // TODO: use the collider size?
             if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
@@ -344,7 +344,19 @@ namespace Barotrauma.Items.Components
             character.CursorPosition = leak.Position + VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime), dist);
             if (item.RequireAimToUse)
             {
-                character.SetInput(InputType.Aim, false, true);
+                bool isOperatingButtons = false;
+                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                {
+                    var door = indoorSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
+                    if (door != null && !door.IsOpen)
+                    {
+                        isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
+                    }
+                }
+                if (!isOperatingButtons)
+                {
+                    character.SetInput(InputType.Aim, false, true);
+                }
             }
             // Press the trigger only when the tool is approximately facing the target.
             var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
@@ -400,7 +412,8 @@ namespace Barotrauma.Items.Components
                             object value = property.GetValue(target);
                             if (value.GetType() == typeof(float))
                             {
-                                user.UpdateHUDProgressBar(door, door.Item.WorldPosition, (float)value / 100, Color.DarkGray * 0.5f, Color.White);
+                                var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, (float)value / 100, Color.DarkGray * 0.5f, Color.White);
+                                if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                             }
                         }
                     }
