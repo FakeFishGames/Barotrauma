@@ -39,9 +39,13 @@ namespace Barotrauma
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (leak.Open == 0.0f) { return 0.0f; }
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
+            float dist = Math.Abs(character.WorldPosition.X - leak.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - leak.WorldPosition.Y) * 2.0f;
+            float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 10000, dist));
             float severity = AIObjectiveFixLeaks.GetLeakSeverity(leak);
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
-            return MathHelper.Clamp(Priority + severity * PriorityModifier, 0, max);
+            float max = Math.Min((AIObjectiveManager.OrderPriority - 1), 90);
+            float devotion = Math.Min(Priority, 10) / 100;
+            return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + severity * distanceFactor * PriorityModifier, 0, 1));
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

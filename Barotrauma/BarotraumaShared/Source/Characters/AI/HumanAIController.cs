@@ -464,7 +464,7 @@ namespace Barotrauma
             // Even the smallest fire reduces the safety by 50%
             float fire = hull.FireSources.Count * 0.5f + hull.FireSources.Sum(fs => fs.DamageRange) / hull.Size.X;
             float fireFactor = ignoreFire ? 1 : MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
-                int enemyCount = Character.CharacterList.Count(e => 
+            int enemyCount = Character.CharacterList.Count(e => 
                 e.CurrentHull == hull && !e.IsDead && !e.IsUnconscious && 
                 (e.AIController is EnemyAIController || (e.TeamID != character.TeamID && character.TeamID != Character.TeamType.FriendlyNPC && e.TeamID != Character.TeamType.FriendlyNPC)));
             // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)

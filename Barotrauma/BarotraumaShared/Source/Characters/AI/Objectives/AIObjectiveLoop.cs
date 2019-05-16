@@ -91,7 +91,8 @@ namespace Barotrauma
         {
             if (character.Submarine == null) { return 0; }
             if (targets.None()) { return 0; }
-            float targetValue = MathHelper.Clamp(TargetEvaluation(), 0, 100);
+            // Allow the target value to be more than 100.
+            float targetValue = TargetEvaluation();
             // If the target value is less than 1% of the max value, let's just treat it as zero.
             if (targetValue < 1) { return 0; }
             if (objectiveManager.CurrentOrder == this)
@@ -100,7 +101,7 @@ namespace Barotrauma
             }
             float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
             float devotion = MathHelper.Min(10, Priority);
-            float value = MathHelper.Min((devotion + targetValue * PriorityModifier) / 100, 1);
+            float value = MathHelper.Clamp((devotion + targetValue * PriorityModifier) / 100, 0, 1);
             return MathHelper.Lerp(0, max, value);
         }
 
@@ -115,8 +116,8 @@ namespace Barotrauma
         {
             foreach (T item in GetList())
             {
-                if (Filter(item)) { continue; }
-                if (!targets.Contains(item))
+                if (!Filter(item)) { continue; }
+                if (!ignoreList.Contains(item) && !targets.Contains(item))
                 {
                     targets.Add(item);
                 }
@@ -141,10 +142,6 @@ namespace Barotrauma
         /// </summary>
         protected abstract IEnumerable<T> GetList();
 
-        /// <summary>
-        /// 0 to 100.
-        /// </summary>
-        /// <returns></returns>
         protected abstract float TargetEvaluation();
 
         protected abstract AIObjective ObjectiveConstructor(T target);
