@@ -50,7 +50,9 @@ namespace Barotrauma
                 return AIObjectiveManager.OrderPriority;
             }
             float value = (Priority + (AIObjectiveManager.OrderPriority / 2)) * PriorityModifier;
-            return MathHelper.Clamp(value, 0, AIObjectiveManager.OrderPriority);
+            float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
+            float max = MathHelper.Min(AIObjectiveManager.OrderPriority * maxMultiplier, 90);
+            return MathHelper.Clamp(value, 0, max);
         }
 
         public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) : base (character, option, priorityModifier)

@@ -75,6 +75,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
+
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -657,20 +659,7 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-        #region Dialog
-        /// <summary>
-        /// Adds the message to the single player chatbox.
-        /// </summary>
-        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
-        {
-            if (!isSinglePlayer)
-            {
-                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
-                return;
-            }
-            if (string.IsNullOrEmpty(text)) { return; }
-
-            ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
+            return radioItem.GetComponent<WifiComponent>();
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)

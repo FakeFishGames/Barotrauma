@@ -93,7 +93,8 @@ namespace Barotrauma
             float avg = targets.Average(t => Average(t));
             // If the avg is less than 1% of the max value, let's just treat it as zero.
             if (avg < 1) { return 0; }
-            float max = MathHelper.Min(AIObjectiveManager.OrderPriority + 20, 100);
+            float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
+            float max = MathHelper.Min((AIObjectiveManager.OrderPriority + 20) * maxMultiplier, 90);
             float value = MathHelper.Min((Priority + avg) / 100 * PriorityModifier, 1);
             return MathHelper.Lerp(0, max, value);
         }
