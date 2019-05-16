@@ -76,9 +76,8 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
-        public List<DockingPort> DockingSources = new List<DockingPort>();
-        public DockingPort ActiveDockingSource, DockingTarget;
+        
+        public DockingPort DockingSource, DockingTarget;
 
         private bool searchedConnectedDockingPort;
 
@@ -358,24 +357,17 @@ namespace Barotrauma.Items.Components
 
         private void FindConnectedDockingPort()
         {
-           foreach (MapEntity linkedTo in item.linkedTo)
+            DockingSource =
+                (item.linkedTo.FirstOrDefault(l => l is Item item && item.GetComponent<DockingPort>() != null) as Item)?.GetComponent<DockingPort>();
+            if (DockingSource == null)
             {
-                if (linkedTo is Item item)
+                var dockingConnection = item.Connections.FirstOrDefault(c => c.Name == "toggle_docking");
+                if (dockingConnection != null)
                 {
-                    var port = item.GetComponent<DockingPort>();
-                    if (port != null)
-                    {
-                        DockingSources.Add(port);
-                    }
+                    var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                    DockingSource = connectedPorts.Find(p => p.Item.Submarine == item.Submarine);
                 }
             }
-
-            var dockingConnection = item.Connections.FirstOrDefault(c => c.Name == "toggle_docking");
-            if (dockingConnection != null)
-            {
-                var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
-                DockingSources.AddRange(connectedPorts.Where(p => p.Item.Submarine != null && !p.Item.Submarine.IsOutpost));
-            }            
         }
 
         /// <summary>
@@ -568,10 +560,10 @@ namespace Barotrauma.Items.Components
             dockingContainer.Visible = DockingModeEnabled;
             statusContainer.Visible = !DockingModeEnabled;
 
-            if (DockingModeEnabled && ActiveDockingSource != null)
+            if (DockingModeEnabled)
             {
-                if (Math.Abs(ActiveDockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < ActiveDockingSource.DistanceTolerance.X &&
-                    Math.Abs(ActiveDockingSource.Item.WorldPosition.Y - DockingTarget.Item.WorldPosition.Y) < ActiveDockingSource.DistanceTolerance.Y)
+                if (Math.Abs(DockingSource.Item.WorldPosition.X - DockingTarget.Item.WorldPosition.X) < DockingSource.DistanceTolerance.X &&
+                    Math.Abs(DockingSource.Item.WorldPosition.Y - DockingTarget.Item.WorldPosition.Y) < DockingSource.DistanceTolerance.Y)
                 {
                     dockingButton.Text = dockText;
                     if (dockingButton.FlashTimer <= 0.0f)
@@ -581,7 +573,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            else if (DockingSources.Any(d => d.Docked))
+            else if (DockingSource != null && DockingSource.Docked)
             {
                 dockingButton.Text = undockText;
                 dockingContainer.Visible = true;
@@ -730,7 +722,7 @@ namespace Barotrauma.Items.Components
                     if (dist < closestDist)
                     {
                         DockingModeEnabled = true;
-                        ActiveDockingSource = sourcePort;
+                        DockingSource = sourcePort;
                         DockingTarget = targetPort;
                     }
                 }

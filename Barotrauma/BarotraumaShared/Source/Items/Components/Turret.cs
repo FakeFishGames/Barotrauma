@@ -495,10 +495,10 @@ namespace Barotrauma.Items.Components
 
             character.CursorPosition = closestEnemy.WorldPosition;
             if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
-
-            //force aim input even if the turret doesn't require it,
-            //because the cursor position (and consequently, turret aim direction) is only synced to clients when aiming
-            character.SetInput(InputType.Aim, false, true);
+            if (item.RequireAimToUse)
+            {
+                character.SetInput(InputType.Aim, false, true);
+            }
 
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
