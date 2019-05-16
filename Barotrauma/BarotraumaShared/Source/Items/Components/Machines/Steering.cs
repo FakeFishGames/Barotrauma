@@ -212,6 +212,33 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
+        }
+
+        struct ObstacleDebugInfo
+        {
+            public Vector2 Point1;
+            public Vector2 Point2;
+
+            public Vector2? Intersection;
+
+            public float Dot;
+
+            public Vector2 AvoidStrength;
+
+            public ObstacleDebugInfo(GraphEdge edge, Vector2? intersection, float dot, Vector2 avoidStrength)
+            {
+                Point1 = edge.Point1;
+                Point2 = edge.Point2;
+                Intersection = intersection;
+                Dot = dot;
+                AvoidStrength = avoidStrength;
+            }
+        }
+
         //edge point 1, edge point 2, avoid strength
         private List<ObstacleDebugInfo> debugDrawObstacles = new List<ObstacleDebugInfo>();
 
@@ -585,6 +612,7 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
+            bool dockingButtonClicked   = msg.ReadBoolean();
             Vector2 newSteeringInput    = targetVelocity;
             bool maintainPos            = false;
             Vector2? newPosToMaintain   = null;
@@ -612,8 +640,12 @@ namespace Barotrauma.Items.Components
             if (!item.CanClientAccess(c)) return;
 
             user = c.Character;
-
             AutoPilot = autoPilot;
+
+            if (dockingButtonClicked)
+            {
+                item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
+            }
 
             if (!AutoPilot)
             {
