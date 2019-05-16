@@ -4,18 +4,19 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class AIObjectiveRescueAll : AIObjective
+    class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
         public override string DebugTag => "rescue all";
 
-        public override bool KeepDivingGearOn => true;
-
         //only treat characters whose vitality is below this (0.8 = 80% of max vitality)
         public const float VitalityThreshold = 0.8f;
-
-        private List<Character> rescueTargets;
         
-        public AIObjectiveRescueAll(Character character) : base (character, "")
+        public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier) { }
+
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRescueAll;
+
+        protected override void FindTargets()
         {
             base.FindTargets();
             if (targets.None() && objectiveManager.CurrentOrder == this)
@@ -35,39 +36,14 @@ namespace Barotrauma
             return true;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (character.Submarine == null) { return 0; }
-            GetRescueTargets();
-            if (!rescueTargets.Any()) { return 0.0f; }
-            
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
+        protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-            //if there are targets to rescue, the priority is slightly less 
-            //than the priority of explicit orders given to the character
-            return AIObjectiveManager.OrderPriority - 5.0f;
-        }
-
-        private void GetRescueTargets()
-        {
-            rescueTargets = Character.CharacterList.FindAll(c => 
-                c.AIController is HumanAIController &&
-                c.TeamID == character.TeamID &&
-                c != character &&
-                !c.IsDead &&
-                c.Vitality / c.MaxVitality < VitalityThreshold);
-        }
+        protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
 
         protected override float TargetEvaluation()
         {
             // TODO: sorting criteria
             return 100;
         }
-
-        public override bool IsCompleted() => false;
-        public override bool CanBeCompleted => true;
     }
 }

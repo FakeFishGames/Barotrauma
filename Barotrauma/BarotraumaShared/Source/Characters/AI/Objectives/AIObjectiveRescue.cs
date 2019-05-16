@@ -7,11 +7,11 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    // TODO: refactor
     class AIObjectiveRescue : AIObjective
     {
         public override string DebugTag => "rescue";
         public override bool ForceRun => true;
-        public override bool KeepDivingGearOn => true;
 
         const float TreatmentDelay = 0.5f;
 
@@ -37,8 +37,8 @@ namespace Barotrauma
             }
         }
 
-        public AIObjectiveRescue(Character character, Character targetCharacter)
-            : base(character, "")
+        public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             Debug.Assert(character != targetCharacter);
             this.targetCharacter = targetCharacter;
@@ -59,7 +59,7 @@ namespace Barotrauma
                 {
                     if (!character.CanInteractWith(targetCharacter))
                     {
-                        AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character));
+                        AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
                     }
                     else
                     {
@@ -68,7 +68,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    AddSubObjective(new AIObjectiveFindSafety(character));
+                    AddSubObjective(new AIObjectiveFindSafety(character, objectiveManager));
                 }
                 return;
             }
@@ -76,7 +76,7 @@ namespace Barotrauma
             //target not in water -> we can start applying treatment
             if (!character.CanInteractWith(targetCharacter))
             {
-                AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character));
+                AddSubObjective(goToObjective = new AIObjectiveGoTo(targetCharacter, character, objectiveManager));
             }
             else
             {
@@ -93,6 +93,7 @@ namespace Barotrauma
             }
         }
 
+        // TODO: remove and replace with the priority system
         protected override bool ShouldInterruptSubObjective(AIObjective subObjective)
         {
             if (subObjective is AIObjectiveFindSafety)
@@ -187,7 +188,7 @@ namespace Barotrauma
                 }
 
                 character.DeselectCharacter();
-                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), true));
+                AddSubObjective(new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true));
             }
 
             character.AnimController.Anim = AnimController.Animation.CPR;
@@ -229,8 +230,9 @@ namespace Barotrauma
             return isCompleted || targetCharacter.IsDead;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
+            // TODO: review
             if (targetCharacter.AnimController.CurrentHull == null || targetCharacter.IsDead) { return 0.0f; }
 
             Vector2 diff = targetCharacter.WorldPosition - character.WorldPosition;

@@ -109,11 +109,6 @@ namespace Barotrauma
             if (!ParseTexturePath(path, file)) { return; }
             Name = SourceElement.GetAttributeString("name", null);
             Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
-            var overrideElement = GetLocalizationOverrideElement();
-            if (overrideElement != null && overrideElement.Attribute("sourcerect") != null)
-            {
-                sourceVector = overrideElement.GetAttributeVector4("sourcerect", Vector4.Zero);
-            }
             preMultipliedAlpha = preMultiplyAlpha ?? SourceElement.GetAttributeBool("premultiplyalpha", true);
             bool shouldReturn = false;
             if (!lazyLoad)
@@ -245,12 +240,8 @@ namespace Barotrauma
             }
             if (SourceElement != null)
             {
-                sourceRect = SourceElement.GetAttributeRect("sourcerect", Rectangle.Empty);
-                var overrideElement = GetLocalizationOverrideElement();
-                if (overrideElement != null && overrideElement.Attribute("sourcerect") != null)
-                {
-                    sourceRect = overrideElement.GetAttributeRect("sourcerect", Rectangle.Empty);
-                }
+                Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
+                sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
                 size = SourceElement.GetAttributeVector2("size", Vector2.One);
                 size.X *= sourceRect.Width;
                 size.Y *= sourceRect.Height;
@@ -265,12 +256,6 @@ namespace Barotrauma
             if (file == "")
             {
                 file = SourceElement.GetAttributeString("texture", "");
-                var overrideElement = GetLocalizationOverrideElement();
-                if (overrideElement != null)
-                {
-                    string overrideFile = overrideElement.GetAttributeString("texture", "");
-                    if (!string.IsNullOrEmpty(overrideFile)) { file = overrideFile; }
-                }
             }
             if (file == "")
             {
@@ -287,22 +272,6 @@ namespace Barotrauma
                 FullPath = Path.GetFullPath(FilePath);
             }
             return true;
-        }
-
-        private XElement GetLocalizationOverrideElement()
-        {
-            foreach (XElement subElement in SourceElement.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() == "override")
-                {
-                    string language = subElement.GetAttributeString("language", "");
-                    if (TextManager.Language.ToLower() == language.ToLower())
-                    {
-                        return subElement;
-                    }
-                }
-            }
-            return null;
         }
     }
 }

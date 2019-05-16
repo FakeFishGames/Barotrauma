@@ -463,7 +463,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            
+
             bool forceAfflictionContainerUpdate = false;
             if (updateDisplayedAfflictionsTimer > 0.0f)
             {
@@ -505,7 +505,7 @@ namespace Barotrauma
                     Math.Min(healthShadowSize + deltaTime, healthBar.BarSize) :
                     Math.Max(healthShadowSize - deltaTime, healthBar.BarSize);
             }
-            
+
             dropItemArea.Visible = !Character.IsDead;
 
             float blurStrength = 0.0f;
@@ -733,9 +733,7 @@ namespace Barotrauma
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarAreaLeft) :
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaRight, HUDLayoutSettings.HealthBarAreaRight);
 
-            if (Character.AllowInput && UseHealthWindow && 
-                Character.SelectedConstruction?.GetComponent<Controller>()?.User != Character &&
-                hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
+            if (Character.AllowInput && UseHealthWindow && hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())
