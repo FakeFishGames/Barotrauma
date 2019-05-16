@@ -26,8 +26,6 @@ namespace Barotrauma.Items.Components
         private bool autoOrientGap;
 
         private bool isStuck;
-        public bool IsStuck => isStuck;
-
         private float resetPredictionTimer;
 
         private Rectangle doorRect;
@@ -229,7 +227,9 @@ namespace Barotrauma.Items.Components
             {
                 msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
             }
-            return isBroken || base.HasRequiredItems(character, addMessage, msg);
+            if (item.Condition <= RepairThreshold) { return true; }
+            //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
+            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage, msg) : canBePicked;
         }
 
         public override bool Pick(Character picker)

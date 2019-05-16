@@ -220,7 +220,7 @@ namespace Barotrauma.Items.Components
                 AutoScale = true
             };
             autoTempSlider = new GUIScrollBar(new RectTransform(new Vector2(0.6f, 0.15f), columnRight.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) },
-                barSize: 0.55f, style: "OnOffSlider", isHorizontal: true)
+                barSize: 0.55f, style: "OnOffSlider")
             {
                 ToolTip = TextManager.Get("ReactorTipAutoTemp"),
                 IsBooleanSwitch = true,
@@ -233,10 +233,10 @@ namespace Barotrauma.Items.Components
                 }
             };
             var sliderSprite = autoTempSlider.Frame.Style.Sprites[GUIComponent.ComponentState.None].First();
-            autoTempSlider.RectTransform.MaxSize = sliderSprite.Sprite.SourceRect.Size;
+            autoTempSlider.RectTransform.MaxSize = sliderSprite.Sprite.size.ToPoint();
 
             onOffSwitch = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 0.3f), columnRight.RectTransform, Anchor.TopRight),
-                barSize: 0.2f, style: "OnOffLever", isHorizontal: false)
+                barSize: 0.2f, style: "OnOffLever")
             {
                 IsBooleanSwitch = true,
                 MinValue = 0.25f, 
@@ -249,7 +249,7 @@ namespace Barotrauma.Items.Components
                 }
             };
             var switchSprite = onOffSwitch.Frame.Style.Sprites[GUIComponent.ComponentState.None].First();
-            onOffSwitch.RectTransform.MaxSize = switchSprite.Sprite.SourceRect.Size;
+            onOffSwitch.RectTransform.MaxSize = switchSprite.Sprite.size.ToPoint();
             
             var lever = onOffSwitch.GetChild<GUIButton>();
             lever.RectTransform.NonScaledSize = new Point(lever.Rect.Width + 30, lever.Rect.Height);

@@ -729,8 +729,6 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites();
         
-        // TODO: change the formula so that it's not linear and so that it takes into account the usefulness of the skill 
-        // -> give a weight to each skill, because some are much more valuable than others?
         private int CalculateSalary()
         {
             if (Name == null || Job == null) return 0;

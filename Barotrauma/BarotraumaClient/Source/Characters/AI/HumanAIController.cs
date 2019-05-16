@@ -39,10 +39,6 @@ namespace Barotrauma
                 {
                     GUI.DrawString(spriteBatch, pos + textOffset, $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                 }
-                else if (ObjectiveManager.WaitTimer > 0)
-                {
-                    GUI.DrawString(spriteBatch, pos + textOffset, $"Waiting... {ObjectiveManager.WaitTimer.FormatZeroDecimal()}", Color.White, Color.Black);
-                }
                 var currentObjective = ObjectiveManager.CurrentObjective;
                 if (currentObjective != null)
                 {

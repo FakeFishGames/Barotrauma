@@ -17,8 +17,6 @@ namespace Barotrauma.Items.Components
             Passive
         };
 
-        private bool dynamicDockingIndicator = true;
-
         private bool unsentChanges;
         private float networkUpdateTimer;
 
@@ -655,7 +653,7 @@ namespace Barotrauma.Items.Components
                        
             Vector2 dockingDir = sourcePortPos - targetPortPos;
             Vector2 normalizedDockingDir = Vector2.Normalize(dockingDir);
-            if (!dynamicDockingIndicator)
+            if (!DynamicDockingIndicator)
             {
                 if (steering.DockingSource.IsHorizontal)
                 {

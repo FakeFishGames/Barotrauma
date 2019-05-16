@@ -261,7 +261,7 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
-                Priority = 100;
+                Priority = 5;
                 return;
             }
             if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }

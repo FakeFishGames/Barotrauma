@@ -19,7 +19,7 @@ namespace Barotrauma
         private Character character;
 
         /// <summary>
-        /// When set above zero, the character will stand still doing nothing until the timer runs out. Does not affect orders.
+        /// When set above zero, the character will stand still doing nothing until the timer runs out. Only affects idling.
         /// </summary>
         public float WaitTimer;
 
@@ -31,7 +31,7 @@ namespace Barotrauma
         public AIObjectiveManager(Character character)
         {
             this.character = character;
-            CreateAutonomousObjectives();
+            CreateAutomaticObjectives();
         }
 
         public void AddObjective(AIObjective objective)
@@ -49,7 +49,7 @@ namespace Barotrauma
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
 
-        public void CreateAutonomousObjectives()
+        public void CreateAutomaticObjectives()
         {
             Objectives.Clear();
             AddObjective(new AIObjectiveFindSafety(character, this));
@@ -109,7 +109,6 @@ namespace Barotrauma
             if (previousObjective != CurrentObjective)
             {
                 CurrentObjective?.OnSelected();
-                GetObjective<AIObjectiveIdle>().SetRandom();
             }
             return CurrentObjective;
         }
@@ -158,31 +157,8 @@ namespace Barotrauma
         
         public void DoCurrentObjective(float deltaTime)
         {
-            if (WaitTimer <= 0)
-            {
-                CurrentObjective?.TryComplete(deltaTime);
-            }
-            else
-            {
-                if (CurrentOrder != null)
-                {
-                    CurrentOrder.TryComplete(deltaTime);
-                }
-                else
-                {
-                    WaitTimer -= deltaTime;
-                    if (character.AIController is HumanAIController humanAI && humanAI.SteeringManager != null)
-                    {
-                        if (!character.AnimController.InWater &&
-                            !character.IsClimbing &&
-                            !humanAI.UnsafeHulls.Contains(character.CurrentHull) && 
-                            !AIObjectiveIdle.IsForbidden(character.CurrentHull))
-                        {
-                            humanAI.SteeringManager.Reset();
-                        }
-                    }
-                }
-            }
+            if (WaitTimer > 0.0f) { WaitTimer -= deltaTime; }
+            CurrentObjective?.TryComplete(deltaTime);
         }
         
         public void SetOrder(AIObjective objective)
@@ -196,7 +172,7 @@ namespace Barotrauma
             if (CurrentOrder == null)
             {
                 // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
-                CreateAutonomousObjectives();
+                CreateAutomaticObjectives();
             }
         }
 
