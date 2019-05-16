@@ -284,10 +284,15 @@ namespace Barotrauma
         {
             if (Font == null) return Vector2.Zero;
 
+            if (string.IsNullOrEmpty(text))
+            {
+                return Font.MeasureString(" ");
+            }
+
             Vector2 size = Vector2.Zero;
             while (size == Vector2.Zero)
             {
-                try { size = Font.MeasureString((text == "") ? " " : text); }
+                try { size = Font.MeasureString(string.IsNullOrEmpty(text) ? " " : text); }
                 catch { text = text.Substring(0, text.Length - 1); }
             }
 
