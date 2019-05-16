@@ -304,51 +304,10 @@ namespace Barotrauma
                 
                 if (horizontalDistance < collider.radius * 3 && isAboveFeet && isNotTooHigh)
                 {
-                    float multiplierX = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.X / 10, 0, 1));
-                    float multiplierY = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.Y / 10, 0, 1));
-                    float verticalDistance = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
-                    float targetDistX = collider.radius * multiplierX;
-                    float targetDistY = collider.radius * multiplierY;
-                    if (horizontalDistance < targetDistX && verticalDistance < targetDistY && isAboveFeet && isNotTooHigh)
-                    {
-                        currentPath.SkipToNextNode();
-                    }
+                    currentPath.SkipToNextNode();
                 }
-                else
-                {
-                    float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.X / 10, 0, 1));
-                    float targetDistance = collider.radius * margin;
-                    if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh)
-                    {
-                        currentPath.SkipToNextNode();
-                    }
-                }
-            }
-
-            if (currentPath.CurrentNode == null) return Vector2.Zero;
-
-            return currentPath.CurrentNode.SimPosition - pos;
-        }
-
-        private bool CanAccessDoor(Door door, Func<Controller, bool> buttonFilter = null)
-        {
-            if (door.IsOpen) { return true; }
-            if (canBreakDoors) { return true; }
-            if (door.IsStuck) { return false; }
-            if (!canOpenDoors || character.LockHands) { return false; }
-            if (door.HasIntegratedButtons)
-            {
-                return door.HasRequiredItems(character, false);
             }
             else
-            {
-                return door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasRequiredItems(character, false) && (buttonFilter == null || buttonFilter(b)));
-            }
-        }
-
-        private void CheckDoorsInPath()
-        {
-            for (int i = 0; i < 2; i++)
             {
                 Door door = null;
                 bool shouldBeOpen = false;
@@ -421,6 +380,18 @@ namespace Barotrauma
                             door.Item.TryInteract(character, false, true, true);
                             buttonPressCooldown = ButtonPressInterval;
                             break;
+                        }
+
+                        closestButton.Item.TryInteract(character, false, true, false);
+                        buttonPressCooldown = ButtonPressInterval;
+                        break;
+                    }
+                    else
+                    {
+                        if (!door.HasRequiredItems(character, false) && shouldBeOpen)
+                        {
+                            currentPath.Unreachable = true;
+                            return;
                         }
 
                         closestButton.Item.TryInteract(character, false, true, false);

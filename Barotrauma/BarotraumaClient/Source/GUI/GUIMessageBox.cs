@@ -23,14 +23,8 @@ namespace Barotrauma
         public string Tag { get; private set; }
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
-        
-        public GUIMessageBox(string headerText, string text)
-            : this(headerText, text, new string[] {"OK"}, Vector2.Zero)
-        {
-            this.Buttons[0].OnClicked = Close;
-        }
-        
-        public GUIMessageBox(string headerText, string text, Vector2 relativeSize, Point? minSize = null)
+
+        public GUIMessageBox(string headerText, string text, Vector2? relativeSize = null, Point? minSize = null)
             : this(headerText, text, new string[] { "OK" }, relativeSize, minSize)
         {
             this.Buttons[0].OnClicked = Close;
@@ -48,7 +42,10 @@ namespace Barotrauma
             if (minSize.HasValue)
             {
                 width = Math.Max(width, minSize.Value.X);
-                height = Math.Max(height, minSize.Value.Y);
+                if (height > 0)
+                {
+                    height = Math.Max(height, minSize.Value.Y);
+                }
             }
 
             InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { IsFixedSize = false }, style: null);
@@ -62,7 +59,7 @@ namespace Barotrauma
             GUI.Style.Apply(Header, "", this);
             Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-            if (!string.IsNullOrWhiteSpace(text))
+            if (height == 0)
             {
                 Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                     text, textAlignment: textAlignment, wrap: true);
@@ -87,7 +84,11 @@ namespace Barotrauma
                 height += Header.Rect.Height + Content.AbsoluteSpacing;
                 height += (Text == null ? 0 : Text.Rect.Height) + Content.AbsoluteSpacing;
                 height += buttonContainer.Rect.Height;
-                
+                if (minSize.HasValue)
+                {
+                    height = Math.Max(height, minSize.Value.Y);
+                }
+
                 InnerFrame.RectTransform.NonScaledSize = 
                     new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + 50));
                 Content.RectTransform.NonScaledSize =
