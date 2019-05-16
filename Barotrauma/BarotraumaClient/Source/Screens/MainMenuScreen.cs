@@ -324,7 +324,6 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
-                if (tutorial is ContextualTutorial) continue;
                 var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
@@ -405,6 +404,12 @@ namespace Barotrauma
                 switch (selectedTab)
                 {
                     case Tab.NewGame:
+                        if (!GameMain.Config.CampaignDisclaimerShown)
+                        {
+                            selectedTab = 0;
+                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
+                            return true;
+                        }
                         campaignSetupUI.CreateDefaultSaveName();
                         campaignSetupUI.RandomizeSeed();
                         campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
@@ -423,6 +428,12 @@ namespace Barotrauma
                     case Tab.HostServer:
                         break;
                     case Tab.Tutorials:
+                        if (!GameMain.Config.CampaignDisclaimerShown)
+                        {
+                            selectedTab = 0;
+                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
+                            return true;
+                        }
                         UpdateTutorialList();
                         break;
                     case Tab.CharacterEditor:
