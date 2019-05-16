@@ -15,6 +15,8 @@ namespace Barotrauma
         public static List<Hull> hullList = new List<Hull>();
         public static List<EntityGrid> EntityGrids { get; } = new List<EntityGrid>();
 
+        public static bool ShowHulls = true;
+
         public static bool EditWater, EditFire;
         public const float OxygenDistributionSpeed = 500.0f;
         public const float OxygenDeteriorationSpeed = 0.3f;
@@ -80,6 +82,25 @@ namespace Barotrauma
         public readonly List<Gap> ConnectedGaps = new List<Gap>();
 
         public readonly List<Gap> ConnectedGaps = new List<Gap>();
+
+        private string roomName;
+        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
+        public string RoomName
+        {
+            get { return roomName; }
+            set
+            {
+                if (roomName == value) { return; }
+                roomName = value;
+                DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+            }
+        }
+
+        public string DisplayName
+        {
+            get;
+            private set;
+        }
 
         private string roomName;
         [Editable, Serialize("", true, translationTextTag: "RoomName.")]
