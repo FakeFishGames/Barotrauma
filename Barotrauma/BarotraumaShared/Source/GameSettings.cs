@@ -416,11 +416,14 @@ namespace Barotrauma
         }
 
         #region Load DefaultConfig
-        private void LoadDefaultConfig()
+        private void LoadDefaultConfig(bool setLanguage = true)
         {
             XDocument doc = XMLExtensions.TryLoadXml(savePath);
 
-            Language = doc.Root.GetAttributeString("language", "English");
+            if (setLanguage || string.IsNullOrEmpty(Language))
+            {
+                Language = doc.Root.GetAttributeString("language", "English");
+            }
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 

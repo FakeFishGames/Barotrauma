@@ -175,7 +175,7 @@ namespace Barotrauma
                     {
                         if (character.CanInteractWith(item, out _, checkLinked: false)) { isCompleted = true; }
                     }
-                    else if (Target is Character targetCharacter)
+                    else if (Target is Character targetCharacter && !FollowControlledCharacter)
                     {
                         if (character.CanInteractWith(targetCharacter, CloseEnough)) { isCompleted = true; }
                     }
