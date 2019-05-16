@@ -295,7 +295,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                             }
                         }
                     }
@@ -305,7 +305,7 @@ namespace Barotrauma
                         if (newOrder == null)
                         {
                             var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                            newOrder = new Order(orderPrefab, hull, null);
+                            newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                         }
                     }
                     foreach (Character c in Character.CharacterList)
@@ -317,7 +317,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                             }
                         }
                     }
@@ -329,7 +329,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                                newOrder = new Order(orderPrefab, hull, null);
+                                newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                             }
                         }
                     }
@@ -343,7 +343,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
-                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault());
+                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
                             }
                         }
                     }
