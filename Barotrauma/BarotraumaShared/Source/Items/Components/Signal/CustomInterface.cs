@@ -125,14 +125,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < labels.Length; i++)
             {
                 labels[i] = i < newLabels.Length ? newLabels[i] : customInterfaceElementList[i].Label;
-                if (Screen.Selected != GameMain.SubEditorScreen)
-                {
-                    customInterfaceElementList[i].Label = TextManager.Get(labels[i], returnNull: true) ?? labels[i];
-                }
-                else
-                {
-                    customInterfaceElementList[i].Label = labels[i];
-                }
+                customInterfaceElementList[i].Label = TextManager.Get(labels[i], returnNull: true) ?? labels[i];
             }
             UpdateLabelsProjSpecific();
         }

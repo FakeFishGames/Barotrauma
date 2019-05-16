@@ -12,7 +12,7 @@ namespace Barotrauma
         public override string DebugTag => "pump water";
         private IEnumerable<Pump> pumpList;
 
-        public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier = 1) 
+        public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier, option) { }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectivePumpWater && otherObjective.Option == Option;
@@ -21,10 +21,6 @@ namespace Barotrauma
         {
             if (Option == null) { return; }
             base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
-            {
-                character.Speak(TextManager.Get("DialogNoPumps"), null, 3.0f, "nopumps", 30.0f);
-            }
         }
 
         protected override bool Filter(Pump pump)
@@ -63,11 +59,11 @@ namespace Barotrauma
         {
             if (Option == "stoppumping")
             {
-                return targets.Max(t => MathHelper.Lerp(0, 100, Math.Abs(t.FlowPercentage / 100)));
+                return Targets.Max(t => MathHelper.Lerp(0, 100, Math.Abs(t.FlowPercentage / 100)));
             }
             else
             {
-                return targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(-t.FlowPercentage / 100)));
+                return Targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(-t.FlowPercentage / 100)));
             }
         }
     }

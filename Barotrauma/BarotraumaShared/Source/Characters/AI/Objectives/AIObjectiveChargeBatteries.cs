@@ -20,15 +20,6 @@ namespace Barotrauma
             return otherObjective is AIObjectiveChargeBatteries other && other.Option == Option;
         }
 
-        protected override void FindTargets()
-        {
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
-            {
-                character.Speak(TextManager.Get("DialogNoBatteries"), null, 4.0f, "nobatteries", 10.0f);
-            }
-        }
-
         protected override bool Filter(PowerContainer battery)
         {
             if (battery == null) { return false; }
@@ -54,12 +45,12 @@ namespace Barotrauma
         {
             if (Option == "charge")
             {
-                return targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(PowerContainer.aiRechargeTargetRatio - t.RechargeRatio)));
+                return Targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(PowerContainer.aiRechargeTargetRatio - t.RechargeRatio)));
             }
             else
             {
 
-                return targets.Max(t => MathHelper.Lerp(0, 100, t.RechargeRatio));
+                return Targets.Max(t => MathHelper.Lerp(0, 100, t.RechargeRatio));
             }
         }
 

@@ -11,18 +11,9 @@ namespace Barotrauma
 
         public AIObjectiveExtinguishFires(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
-        protected override void FindTargets()
-        {
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
-            {
-                character.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
-            }
-        }
-
         protected override bool Filter(Hull hull) => IsValidTarget(hull, character);
 
-        protected override float TargetEvaluation() => objectiveManager.CurrentObjective == this ? 100 : targets.Sum(t => GetFireSeverity(t));
+        protected override float TargetEvaluation() => objectiveManager.CurrentObjective == this ? 100 : Targets.Sum(t => GetFireSeverity(t));
 
         public static float GetFireSeverity(Hull hull) => hull.FireSources.Sum(fs => fs.Size.X);
 
