@@ -10,6 +10,7 @@ namespace Barotrauma
     class AIObjectiveFightIntruders : AIObjectiveLoop<Character>
     {
         public override string DebugTag => "fight intruders";
+        protected override float IgnoreListClearInterval => 30;
 
         public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
