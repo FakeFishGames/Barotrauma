@@ -229,8 +229,7 @@ namespace Barotrauma.Items.Components
             {
                 msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
             }
-            if (isBroken) { return true; }
-            return base.HasRequiredItems(character, addMessage, msg);
+            return isBroken || base.HasRequiredItems(character, addMessage, msg);
         }
 
         public override bool Pick(Character picker)

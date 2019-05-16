@@ -1416,6 +1416,10 @@ namespace Barotrauma
             {
                 ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
+            if (!broken)
+            {
+                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            }
             ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
@@ -1940,29 +1944,6 @@ namespace Barotrauma
             }
 
             if (remove) { Spawner?.AddToRemoveQueue(this); }
-        }
-
-        List<ColoredText> texts = new List<ColoredText>();
-        public List<ColoredText> GetHUDTexts(Character character)
-        {
-            texts.Clear();
-            foreach (ItemComponent ic in components)
-            {
-                if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
-                if (!ic.CanBePicked && !ic.CanBeSelected) continue;
-                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
-
-                Color color = Color.Gray;
-                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
-                if (hasRequiredSkillsAndItems)
-                {
-                    color = Color.Cyan;
-                }
-
-                texts.Add(new ColoredText(ic.DisplayMsg, color, false));
-            }
-
-            return texts;
         }
 
         public bool Combine(Item item)
