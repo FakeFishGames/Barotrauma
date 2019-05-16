@@ -12,6 +12,7 @@ namespace Barotrauma.Items.Components
         public const int MaxLinked = 5;
 
         public readonly string Name;
+        public readonly string DisplayName;
 
         private Wire[] wires;
         public IEnumerable<Wire> Wires
@@ -80,6 +81,11 @@ namespace Barotrauma.Items.Components
 
             IsOutput = (element.Name.ToString() == "output");
             Name = element.GetAttributeString("name", (IsOutput) ? "output" : "input");
+
+            DisplayName = element.Attributes("displayname") == null ? 
+                Name :
+                TextManager.GetServerMessage(element.GetAttributeString("displayname", Name));
+
 
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
