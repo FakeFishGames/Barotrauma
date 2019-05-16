@@ -67,9 +67,15 @@ namespace Barotrauma
             }
             if (target.CanBeSelected)
             {
-                if (character.CanInteractWith(target.Item, out _, checkLinked: false))
+                bool inSameRoom = character.CurrentHull == target.Item.CurrentHull;
+                bool withinReach = target.Item.IsInsideTrigger(character.WorldPosition) || Vector2.DistanceSquared(character.Position, target.Item.Position) < MathUtils.Pow(target.Item.InteractDistance, 2);
+                if (inSameRoom && withinReach)
                 {
                     if (character.SelectedConstruction != target.Item)
+                    {
+                        isCompleted = true;
+                    }
+                    if (component.AIOperate(deltaTime, character, this))
                     {
                         isCompleted = true;
                     }

@@ -113,7 +113,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            if (character.CanInteractWith(Item, out _, checkLinked: false))
+            if (character.CurrentHull == Item.CurrentHull && character.CanInteractWith(Item))
             {
                 if (repairTool != null)
                 {

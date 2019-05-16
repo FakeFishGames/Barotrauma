@@ -1026,6 +1026,25 @@ namespace Barotrauma.Items.Components
                     MoveInputQueue();
                     PutItemsToLinkedContainer();
                 }
+                else
+                {
+                    if (outputContainer.Inventory.Items.All(i => i != null))
+                    {
+                        targetItem.Drop(dropper: null);
+                    }
+                    else
+                    {
+                        outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
+                    }
+                }
+                
+                if (targetItem.Prefab.DeconstructItems.Any())
+                {
+                    inputContainer.Inventory.RemoveItem(targetItem);
+                    Entity.Spawner.AddToRemoveQueue(targetItem);
+                    MoveInputQueue();
+                    PutItemsToLinkedContainer();
+                }
 
                 if (inputContainer.Inventory.Items.Any(i => i != null))
                 {

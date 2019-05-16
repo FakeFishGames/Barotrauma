@@ -78,7 +78,7 @@ namespace Barotrauma
             }
             if (itemToDecontain.OwnInventory != character.Inventory && itemToDecontain.ParentInventory != character.Inventory)
             {
-                if (!character.CanInteractWith(container.Item, out _, checkLinked: false))
+                if (Vector2.DistanceSquared(character.Position, container.Item.Position) > MathUtils.Pow(container.Item.InteractDistance, 2) && !container.Item.IsInsideTrigger(character.WorldPosition))
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager));
                     return;
