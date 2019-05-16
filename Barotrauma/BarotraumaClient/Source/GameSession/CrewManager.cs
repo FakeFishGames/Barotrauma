@@ -75,143 +75,12 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
+            if (!isSinglePlayer)
             {
-                CanBeFocused = false
-            };
-
-            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
-
-            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent)
-            {
-                CanBeFocused = false
-            };
-            toggleCrewButton = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform)
-            { AbsoluteOffset = HUDLayoutSettings.CrewArea.Location },
-                "", style: "UIToggleButton");
-            toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
-            {
-                ToggleCrewAreaOpen = !ToggleCrewAreaOpen;
-                return true;
-            };
-
-            characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
-            {
-                //Spacing = (int)(3 * GUI.Scale),
-                ScrollBarEnabled = false,
-                ScrollBarVisible = false,
-                CanBeFocused = false
-            };
-
-            scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                Visible = false,
-                UserData = -1,
-                OnClicked = ScrollCharacterList
-            };
-            scrollButtonDown = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                Visible = false,
-                UserData = 1,
-                OnClicked = ScrollCharacterList
-            };
-            scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
-
-            if (isSinglePlayer)
-            {
-                ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
-                {
-                    OnEnterMessage = (textbox, text) =>
-                    {
-                        if (Character.Controlled?.Info == null)
-                        {
-                            textbox.Deselect();
-                            textbox.Text = "";
-                            return true;
-                        }
-
-                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-
-                        if (!string.IsNullOrWhiteSpace(text))
-                        {
-                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
-                            AddSinglePlayerChatMessage(
-                                Character.Controlled.Info.Name,
-                                msg,
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
-                                Character.Controlled);
-                            var headset = GetHeadset(Character.Controlled, true);
-                            if (headset != null && headset.CanTransmit())
-                            {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
-                            }
-                        }
-                        textbox.Deselect();
-                        textbox.Text = "";
-                        return true;
-                    }
-                };
-
-                ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
+                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                return;
             }
-
-            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
-            reportButtonFrame = new GUILayoutGroup(new RectTransform(
-                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
-            {
-                AbsoluteSpacing = (int)(5 * GUI.Scale),
-                UserData = "reportbuttons",
-                CanBeFocused = false
-            };
-
-            //report buttons
-            foreach (Order order in reports)
-            {
-                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
-                var btn = new GUIButton(new RectTransform(new Point(reportButtonFrame.Rect.Width), reportButtonFrame.RectTransform), style: null)
-                {
-                    OnClicked = (GUIButton button, object userData) =>
-                    {
-                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
-                        SetCharacterOrder(null, order, null, Character.Controlled);
-                        foreach (var hull in Character.Controlled.GetVisibleHulls())
-                        {
-                            HumanAIController.PropagateHullSafety(Character.Controlled, hull);
-                            HumanAIController.RefreshTargets(Character.Controlled, order, hull);
-                        }
-                        return true;
-                    },
-                    UserData = order,
-                    ToolTip = order.Name
-                };
-
-                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
-                {
-                    Color = Color.Red * 0.8f,
-                    HoverColor = Color.Red * 1.0f,
-                    PressedColor = Color.Red * 0.6f,
-                    UserData = "highlighted",
-                    CanBeFocused = false,
-                    Visible = false
-                };
-
-                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite, scaleToFit: true)
-                {
-                    Color = order.Color,
-                    HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
-                    ToolTip = order.Name
-                };
-            }
-
-            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-
-            prevUIScale = GUI.Scale;
-
-            ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
-        }
-
-
-        #endregion
+            if (string.IsNullOrEmpty(text)) { return; }
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -373,47 +242,27 @@ namespace Barotrauma
 
         public IEnumerable<Character> GetCharacters()
         {
-            if (character == null)
-            {
-                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
-                return;
-            }
-            characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
+            if (character?.Inventory == null) return null;
+
+            var radioItem = character.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
+            if (radioItem == null) return null;
+            if (requireEquipped && !character.HasEquippedItem(radioItem)) return null;
+
+            return radioItem.GetComponent<WifiComponent>();
         }
 
         public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
-            if (character.Removed)
+            if (GameMain.Client != null)
             {
-                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
+                //let the server create random conversations in MP
                 return;
             }
-            if (character.IsDead)
-            {
-                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
-                return;
-            }
-
-            if (!characters.Contains(character)) characters.Add(character);
-            if (!characterInfos.Contains(character.Info))
-            {
-                characterInfos.Add(character.Info);
-            }
-
-            CreateCharacterFrame(character, characterListBox.Content);
-            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
-
-            if (character is AICharacter)
-            {
-                var ai = character.AIController as HumanAIController;
-                if (ai == null)
-                {
-                    DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
-                    return;
-                }
-                character.SetOrder(ai.CurrentOrder, "", null, false);
-            }
+            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
+                c.AIController is HumanAIController &&
+                !c.IsDead &&
+                c.SpeechImpediment <= 100.0f);
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
         }
 
         public void AddCharacter(Character character)
@@ -787,17 +636,9 @@ namespace Barotrauma
             {
                 characterListBox.BarScroll = roundedPos;
             }
-            characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
-        }
-
-        /// <summary>
-        /// Remove info of a selected character. The character will not be visible in any menus or the round summary.
-        /// </summary>
-        /// <param name="characterInfo"></param>
-        public void RemoveCharacterInfo(CharacterInfo characterInfo)
-        {
-            characterInfos.Remove(characterInfo);
+            soundIcon.Visible = !muted && !mutedLocally;
+            soundIconDisabled.Visible = muted || mutedLocally;
+            soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -999,7 +840,19 @@ namespace Barotrauma
                     }
                 }
             }
-        }
+            //only one target (or an order with no particular targets), just show options
+            else
+            {
+                orderTargetFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f + order.Options.Length * 0.1f, 0.18f), GUI.Canvas)
+                    { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
+                    isHorizontal: true, childAnchor: Anchor.BottomLeft)
+                {
+                    UserData = character,
+                    Stretch = true
+                };
+                //line connecting the order button to the option buttons
+                //TODO: sprite
+                new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), orderTargetFrame.RectTransform), style: null);
 
         /// <summary>
         /// Create the UI panel that's used to select the target and options for a given order

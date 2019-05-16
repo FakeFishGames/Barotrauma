@@ -144,18 +144,23 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Vector2 SteeringInput
+        {
+            get { return steeringInput; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+            }
+        }
+
         public SteeringPath SteeringPath
         {
             if (!CanBeSelected) return false;
 
             user = character;
             return true;
-        }
-
-        public Vector2? PosToMaintain
-        {
-            get { return posToMaintain; }
-            set { posToMaintain = value; }
         }
 
         public Vector2? PosToMaintain
