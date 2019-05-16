@@ -568,6 +568,15 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, rect, Color.Black, false, 0.0f, 8);
                 GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
 
+                for (int i = 0; i < Locations.Count; i++)
+                {
+                    Location location = Locations[i];
+                    Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
+                    
+                    Rectangle drawRect = location.Type.Sprite.SourceRect;
+                    drawRect.X = (int)pos.X - drawRect.Width / 2;
+                    drawRect.Y = (int)pos.Y - drawRect.Width / 2;
+
                     if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)
                     {
                         Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
