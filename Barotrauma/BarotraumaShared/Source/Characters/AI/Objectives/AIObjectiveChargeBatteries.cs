@@ -38,7 +38,7 @@ namespace Barotrauma
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
             if (Option == "charge")
             {
-                if (battery.RechargeRatio >= PowerContainer.aiRechargeTargetRatio) { return false; }
+                if (battery.RechargeRatio >= PowerContainer.aiRechargeTargetRatio - 0.01f) { return false; }
             }
             else
             {
