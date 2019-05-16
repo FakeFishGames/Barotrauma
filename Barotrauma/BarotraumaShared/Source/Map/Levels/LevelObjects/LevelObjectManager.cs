@@ -166,7 +166,7 @@ namespace Barotrauma
                 Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero
             };
 
-            Sprite sprite = newObject.Prefab.Sprite ?? newObject.Prefab.DeformableSprite?.Sprite;
+            Sprite sprite = newObject.Sprite ?? newObject.Prefab.DeformableSprite?.Sprite;
 
             //calculate the positions of the corners of the rotated sprite
             if (sprite != null)
