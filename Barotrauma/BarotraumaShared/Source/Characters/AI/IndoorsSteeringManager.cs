@@ -287,7 +287,8 @@ namespace Barotrauma
                     character.AnimController.Anim = AnimController.Animation.None;
                     character.SelectedConstruction = null;
                 }
-                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 4, 2))
+                float multiplier = MathHelper.Lerp(1, 10, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
+                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 2 * multiplier, 2))
                 {
                     currentPath.SkipToNextNode();
                 }
@@ -296,16 +297,32 @@ namespace Barotrauma
             {
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
                 Vector2 colliderSize = collider.GetSize();
+                Vector2 velocity = collider.LinearVelocity;
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
                 float characterHeight = colliderSize.Y + character.AnimController.ColliderHeightFromFloor;
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
-
-                float multiplier = InStairs ? 1 : 4;
-                if (horizontalDistance < collider.radius * multiplier && isAboveFeet && isNotTooHigh)
+                if (InStairs)
                 {
-                    currentPath.SkipToNextNode();
+                    float multiplierX = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.X / 10, 0, 1));
+                    float multiplierY = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.Y / 10, 0, 1));
+                    float verticalDistance = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
+                    float targetDistX = collider.radius * multiplierX;
+                    float targetDistY = collider.radius * multiplierY;
+                    if (horizontalDistance < targetDistX && verticalDistance < targetDistY && isAboveFeet && isNotTooHigh)
+                    {
+                        currentPath.SkipToNextNode();
+                    }
+                }
+                else
+                {
+                    float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(velocity.X / 10, 0, 1));
+                    float targetDistance = collider.radius * margin;
+                    if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh)
+                    {
+                        currentPath.SkipToNextNode();
+                    }
                 }
             }
 
