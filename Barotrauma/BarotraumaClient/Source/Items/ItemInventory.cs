@@ -92,7 +92,6 @@ namespace Barotrauma
 
                     if (!string.IsNullOrEmpty(uiLabel) && !subInventory)
                     {
-                        uiLabel = ToolBox.WrapText(uiLabel, BackgroundFrame.Width, GUI.Font, 1);
                         GUI.DrawString(spriteBatch,
                             new Vector2((int)(BackgroundFrame.Center.X - GUI.Font.MeasureString(uiLabel).X / 2), (int)BackgroundFrame.Y + 5),
                             uiLabel, Color.White * 0.9f);

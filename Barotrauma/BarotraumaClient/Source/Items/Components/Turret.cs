@@ -321,7 +321,7 @@ namespace Barotrauma.Items.Components
                 int spacing = 5;
                 int slotsPerRow = Math.Min(availableAmmo.Count, 6);
                 int totalWidth = slotSize.X * slotsPerRow + spacing * (slotsPerRow - 1);
-                Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, 60);
+                Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, (int)(60 * GUI.Scale));
                 for (int i = 0; i < availableAmmo.Count; i++)
                 {
                     // TODO: Optimize? Creates multiple new classes per frame?

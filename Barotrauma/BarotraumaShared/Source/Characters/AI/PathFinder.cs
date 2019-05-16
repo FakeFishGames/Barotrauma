@@ -203,9 +203,7 @@ namespace Barotrauma
 
             if (startNode == null)
             {
-#if DEBUG
                 DebugConsole.NewMessage("Pathfinding error, couldn't find a start node. "+ errorMsgStr, Color.DarkRed);
-#endif
 
                 return new SteeringPath(true);
             }
@@ -237,7 +235,7 @@ namespace Barotrauma
                         //}
 
                         var body = Submarine.PickBody(end, node.Waypoint.SimPosition, null,
-                            Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
+                            Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs | Physics.CollisionPlatform);
 
                         if (body != null)
                         {
@@ -255,9 +253,7 @@ namespace Barotrauma
 
             if (endNode == null)
             {
-#if DEBUG
                 DebugConsole.NewMessage("Pathfinding error, couldn't find an end node. " + errorMsgStr, Color.DarkRed);
-#endif
                 return new SteeringPath(true);
             }
 
@@ -285,9 +281,7 @@ namespace Barotrauma
 
             if (startNode == null || endNode == null)
             {
-#if DEBUG
                 DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints.", Color.DarkRed);
-#endif
                 return new SteeringPath(true);
             }
 

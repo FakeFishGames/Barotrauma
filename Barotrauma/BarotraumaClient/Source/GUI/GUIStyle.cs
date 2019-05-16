@@ -137,10 +137,9 @@ namespace Barotrauma
 
         private ScalableFont LoadFont(XElement element, GraphicsDevice graphicsDevice)
         {
-            string file         = GetFontFilePath(element);
-            uint size           = GetFontSize(element);
-            bool dynamicLoading = GetFontDynamicLoading(element);
-            return new ScalableFont(file, size, graphicsDevice, dynamicLoading);
+            string file = GetFontFilePath(element);
+            uint size   = GetFontSize(element);
+            return new ScalableFont(file, size, graphicsDevice);
         }
 
         private uint GetFontSize(XElement element)
@@ -169,20 +168,6 @@ namespace Barotrauma
                 }
             }
             return element.GetAttributeString("file", "");
-        }
-
-        private bool GetFontDynamicLoading(XElement element)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
-                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
-                if (GameMain.Config.Language.ToLowerInvariant() == language)
-                {
-                    return subElement.GetAttributeBool("dynamicloading", false);
-                }
-            }
-            return element.GetAttributeBool("dynamicloading", false);
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

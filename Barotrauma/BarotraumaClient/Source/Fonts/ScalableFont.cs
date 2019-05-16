@@ -56,11 +56,11 @@ namespace Barotrauma
         }
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
-            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd, element.GetAttributeBool("dynamicloading", false))
+            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd)
         {            
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false)
+        public ScalableFont(string filename, uint size, GraphicsDevice gd = null)
         {
             if (Lib == null) Lib = new Library();
             this.filename = filename;
@@ -310,11 +310,6 @@ namespace Barotrauma
                 }
 
                 uint charIndex = text[i];
-                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
-                {
-                    DynamicRenderAtlas(graphicsDevice, charIndex);
-                }
-
                 if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
                 {
                     if (gd.texIndex >= 0)
@@ -349,13 +344,7 @@ namespace Barotrauma
                     currentPos.Y += baseHeight * 1.8f;
                     continue;
                 }
-
-                uint charIndex = text[i];
-                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
-                {
-                    DynamicRenderAtlas(graphicsDevice, charIndex);
-                }
-
+                uint charIndex = text[i];                
                 if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
                 {
                     if (gd.texIndex >= 0)
@@ -387,10 +376,6 @@ namespace Barotrauma
                     continue;
                 }
                 uint charIndex = text[i];
-                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
-                {
-                    DynamicRenderAtlas(graphicsDevice, charIndex);
-                }
                 if (texCoords.TryGetValue(charIndex, out GlyphData gd))
                 {
                     currentLineX += gd.advance;
@@ -404,10 +389,6 @@ namespace Barotrauma
         {
             Vector2 retVal = Vector2.Zero;
             retVal.Y = baseHeight * 1.8f;
-            if (DynamicLoading && !texCoords.ContainsKey(c))
-            {
-                DynamicRenderAtlas(graphicsDevice, c);
-            }
             if (texCoords.TryGetValue(c, out GlyphData gd))
             {
                 retVal.X = gd.advance;
