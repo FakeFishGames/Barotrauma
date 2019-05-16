@@ -17,8 +17,10 @@ namespace Barotrauma
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         public float Priority { get; set; }
         public float PriorityModifier { get; private set; }
-        protected readonly Character character;
-        protected string option;
+        public readonly Character character;
+        public readonly AIObjectiveManager objectiveManager;
+        public string Option { get; protected set; }
+
         protected bool abandon;
 
         /// <summary>
@@ -36,16 +38,13 @@ namespace Barotrauma
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
         protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
-
-        public string Option
+        
+        public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null)
         {
-            get { return option; }
-        }            
-
-        public AIObjective(Character character, string option, float priorityModifier)
-        {
+            this.objectiveManager = objectiveManager;
             this.character = character;
-            this.option = option;
+            Option = option ?? string.Empty;
+
             PriorityModifier = priorityModifier;
 #if DEBUG
             IsDuplicate(null);
@@ -100,22 +99,21 @@ namespace Barotrauma
 
         public void AddSubObjective(AIObjective objective)
         {
-            if (subObjectives.Any(o => o.IsDuplicate(objective))) return;
-
+            if (subObjectives.Any(o => o.IsDuplicate(objective))) { return; }
             subObjectives.Add(objective);
         }
 
-        public void SortSubObjectives(AIObjectiveManager objectiveManager)
+        public void SortSubObjectives()
         {
             if (subObjectives.None()) { return; }
-            subObjectives.Sort((x, y) => y.GetPriority(objectiveManager).CompareTo(x.GetPriority(objectiveManager)));
+            subObjectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             CurrentSubObjective = SubObjectives.First();
-            CurrentSubObjective.SortSubObjectives(objectiveManager);
+            CurrentSubObjective.SortSubObjectives();
         }
 
-        public virtual float GetPriority(AIObjectiveManager objectiveManager) => Priority * PriorityModifier;
+        public virtual float GetPriority() => Priority * PriorityModifier;
 
-        public virtual void Update(AIObjectiveManager objectiveManager, float deltaTime)
+        public virtual void Update(float deltaTime)
         {
             var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
             if (objectiveManager.CurrentOrder == this)
@@ -127,7 +125,7 @@ namespace Barotrauma
                 Priority += Devotion * PriorityModifier * deltaTime;
             }
             Priority = MathHelper.Clamp(Priority, 0, 100);
-            subObjectives.ForEach(so => so.Update(objectiveManager, deltaTime));
+            subObjectives.ForEach(so => so.Update(deltaTime));
         }
 
         /// <summary>

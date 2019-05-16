@@ -58,11 +58,12 @@ namespace Barotrauma
 
         public CombatMode Mode { get; private set; }
 
-        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             Enemy = enemy;
             coolDownTimer = CoolDown;
-            findSafety = HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>();
+            findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
             findSafety.Priority = 0;
             findSafety.unreachable.Clear();
             Mode = mode;
@@ -185,7 +186,7 @@ namespace Barotrauma
             {
                 if (retreatObjective == null || retreatObjective.Target != retreatTarget)
                 {
-                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, false, true);
+                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true);
                 }
                 retreatObjective.TryComplete(deltaTime);
             }
@@ -203,7 +204,7 @@ namespace Barotrauma
                     {
                         if (reloadWeaponObjective == null)
                         {
-                            reloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, Weapon.GetComponent<ItemContainer>());
+                            reloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, Weapon.GetComponent<ItemContainer>(), objectiveManager);
                         }
                     }
                 }
@@ -297,7 +298,7 @@ namespace Barotrauma
         }
 
         public override bool CanBeCompleted => !abandon && (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && (retreatObjective == null || retreatObjective.CanBeCompleted);
-        public override float GetPriority(AIObjectiveManager objectiveManager) => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
+        public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {

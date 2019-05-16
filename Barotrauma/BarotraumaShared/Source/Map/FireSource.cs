@@ -21,7 +21,7 @@ namespace Barotrauma
         protected Vector2 position;
         protected Vector2 size;
 
-        private bool removed;
+        protected bool removed;
 
         protected bool removed;
 

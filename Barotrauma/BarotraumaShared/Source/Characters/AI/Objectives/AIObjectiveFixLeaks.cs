@@ -12,14 +12,12 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool ForceRun => true;
 
-        public AIObjectiveFixLeaks(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) { }
+        public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
         protected override void FindTargets()
         {
             base.FindTargets();
-            // Sorting should be handled by the objective manager, because the targets should be subobjectives.
-            //targets.Sort((x, y) => GetLeakFixPriority(y).CompareTo(GetLeakFixPriority(x)));
-            // TODO: Add a dialog when no leaks are found.
+            // TODO: Add a dialog when no leaks are found and the objective is an order
         }
 
         protected override bool Filter(Gap gap)
@@ -46,6 +44,6 @@ namespace Barotrauma
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFixLeaks;
         protected override float TargetEvaluation() => targets.Max(t => GetLeakSeverity(t));
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
-        protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character, PriorityModifier);
+        protected override AIObjective ObjectiveConstructor(Gap gap) => new AIObjectiveFixLeak(gap, character, objectiveManager, PriorityModifier);
     }
 }

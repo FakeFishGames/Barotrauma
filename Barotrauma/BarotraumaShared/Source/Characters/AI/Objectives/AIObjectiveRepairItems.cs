@@ -15,9 +15,15 @@ namespace Barotrauma
         /// </summary>
         public bool RequireAdequateSkills;
 
-        public AIObjectiveRepairItems(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) { }
+        public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
         public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRepairItems repairItems && repairItems.RequireAdequateSkills == RequireAdequateSkills;
+
+        protected override void FindTargets()
+        {
+            base.FindTargets();
+            // TODO: display a dialog when no targets found and the objective is an order
+        }
 
         protected override void CreateObjectives()
         {
@@ -69,6 +75,6 @@ namespace Barotrauma
 
         protected override float TargetEvaluation() => targets.Max(t => 100 - t.ConditionPercentage);
         protected override IEnumerable<Item> GetList() => Item.ItemList;
-        protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item, PriorityModifier);
+        protected override AIObjective ObjectiveConstructor(Item item) => new AIObjectiveRepairItem(character, item, objectiveManager, PriorityModifier);
     }
 }

@@ -17,7 +17,8 @@ namespace Barotrauma
         protected virtual float IgnoreListClearInterval => 0;
         protected virtual float TargetUpdateInterval => 2;
 
-        public AIObjectiveLoop(Character character, string option, float priorityModifier = 1) : base(character, option, priorityModifier)
+        public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null) 
+            : base(character, objectiveManager, priorityModifier, option)
         {
             Reset();
         }
@@ -28,9 +29,9 @@ namespace Barotrauma
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
-        public override void Update(AIObjectiveManager objectiveManager, float deltaTime)
+        public override void Update(float deltaTime)
         {
-            base.Update(objectiveManager, deltaTime);
+            base.Update(deltaTime);
             if (IgnoreListClearInterval > 0)
             {
                 if (ignoreListTimer > IgnoreListClearInterval)
@@ -87,7 +88,7 @@ namespace Barotrauma
             }
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             if (character.Submarine == null) { return 0; }
             if (targets.None()) { return 0; }

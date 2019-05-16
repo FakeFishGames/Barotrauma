@@ -21,16 +21,19 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private Item targetItem;
 
-        public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer container, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             this.targetItem = targetItem;
             this.container = container;
         }
 
 
-        public AIObjectiveDecontainItem(Character character, string itemIdentifier, ItemContainer container, float priorityModifier = 1) : this(character, new string[] { itemIdentifier }, container, priorityModifier) { }
+        public AIObjectiveDecontainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
 
-        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, ItemContainer container, float priorityModifier = 1) : base(character, "", priorityModifier)
+        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
             for (int i = 0; i < itemIdentifiers.Length; i++)
@@ -59,7 +62,7 @@ namespace Barotrauma
             }
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             if (objectiveManager.CurrentOrder == this)
             {
@@ -103,7 +106,7 @@ namespace Barotrauma
                 if (Vector2.Distance(character.Position, container.Item.Position) > container.Item.InteractDistance
                 && !container.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    goToObjective = new AIObjectiveGoTo(container.Item, character);
+                    goToObjective = new AIObjectiveGoTo(container.Item, character, objectiveManager);
                     AddSubObjective(goToObjective);
                     return;
                 }

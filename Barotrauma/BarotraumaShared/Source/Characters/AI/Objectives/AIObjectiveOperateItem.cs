@@ -42,7 +42,7 @@ namespace Barotrauma
 
         public ItemComponent Component => component;
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             if (gotoObjective != null && !gotoObjective.CanBeCompleted) { return 0; }
             if (objectiveManager.CurrentOrder == this)
@@ -55,7 +55,8 @@ namespace Barotrauma
             return MathHelper.Clamp(value, 0, max);
         }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) : base (character, option, priorityModifier)
+        public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) 
+            : base (character, objectiveManager, priorityModifier, option)
         {
             this.component = item ?? throw new System.ArgumentNullException("item", "Attempted to create an AIObjectiveOperateItem with a null target.");
             this.requireEquip = requireEquip;
@@ -107,7 +108,7 @@ namespace Barotrauma
                     return;
                 }
 
-                AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character));
+                AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character, objectiveManager));
             }
             else
             {
@@ -119,7 +120,7 @@ namespace Barotrauma
                 }
                 else if (!character.Inventory.Items.Contains(component.Item))
                 {
-                    AddSubObjective(new AIObjectiveGetItem(character, component.Item, true));
+                    AddSubObjective(new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true));
                 }
                 else
                 {

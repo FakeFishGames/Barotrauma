@@ -415,7 +415,7 @@ namespace Barotrauma.Items.Components
 
                 if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed * 0.4f)
                 {
-                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, "", false));                    
+                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, objective.objectiveManager, option: "", requireEquip: false));                    
                     return false;
                 }
             }
@@ -454,11 +454,11 @@ namespace Barotrauma.Items.Components
 
                 if (container.Inventory.Items[0] != null && container.Inventory.Items[0].Condition <= 0.0f)
                 {
-                    var removeShellObjective = new AIObjectiveDecontainItem(character, container.Inventory.Items[0], container);
+                    var removeShellObjective = new AIObjectiveDecontainItem(character, container.Inventory.Items[0], container, objective.objectiveManager);
                     objective.AddSubObjective(removeShellObjective);
                 }
 
-                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container);
+                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container, objective.objectiveManager);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
                 containShellObjective.MinContainedAmount = usableProjectileCount + 1;
                 containShellObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };

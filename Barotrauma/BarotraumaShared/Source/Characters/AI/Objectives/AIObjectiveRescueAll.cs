@@ -15,7 +15,7 @@ namespace Barotrauma
 
         private List<Character> rescueTargets;
         
-        public AIObjectiveRescueAll(Character character, float priorityModifier = 1) : base (character, "", priorityModifier)
+        public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             rescueTargets = new List<Character>();
         }
@@ -25,7 +25,7 @@ namespace Barotrauma
             return true;
         }
 
-        public override float GetPriority(AIObjectiveManager objectiveManager)
+        public override float GetPriority()
         {
             // TODO: review
             if (character.Submarine == null) { return 0; }
@@ -56,7 +56,7 @@ namespace Barotrauma
         {
             foreach (Character target in rescueTargets)
             {
-                AddSubObjective(new AIObjectiveRescue(character, target));
+                AddSubObjective(new AIObjectiveRescue(character, target, objectiveManager));
             }
         }
 

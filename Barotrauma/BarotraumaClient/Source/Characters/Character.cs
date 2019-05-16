@@ -175,6 +175,14 @@ namespace Barotrauma
             }
         }
 
+        partial void UpdateLimbLightSource(Limb limb)
+        {
+            if (limb.LightSource != null)
+            {
+                limb.LightSource.Enabled = enabled;
+            }
+        }
+
         private bool wasFiring;
 
         /// <summary>
