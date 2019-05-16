@@ -216,8 +216,7 @@ namespace Barotrauma
             {
                 Vector2 nodePos = node.Position;
 
-                // TODO: use squared distance 
-                float dist = Vector2.Distance(end, nodePos);
+                float dist = Vector2.DistanceSquared(end, nodePos);
                 if (insideSubmarine)
                 {
                     //much higher cost to waypoints that are outside
