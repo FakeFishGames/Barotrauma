@@ -280,7 +280,7 @@ namespace Barotrauma
             {
                 followTargetObjective.CloseEnough = ConvertUnits.ToSimUnits(rt.Range);
             }
-            else if (WeaponComponent is MeleeWeapon mw)
+            else if (WeaponComponent is RepairTool rt)
             {
                 SteeringManager.Reset();
                 Mode = CombatMode.Retreat;
