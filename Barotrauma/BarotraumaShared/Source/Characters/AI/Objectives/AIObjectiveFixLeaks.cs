@@ -25,14 +25,12 @@ namespace Barotrauma
 
         protected override bool Filter(Gap gap)
         {
-            bool ignore = gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null);
-            if (!ignore)
-            {
-                if (gap.Submarine == null) { ignore = true; }
-                else if (gap.Submarine.TeamID != character.TeamID) { ignore = true; }
-                else if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { ignore = true; }
-            }
-            return !ignore;
+            if (gap == null) { return false; }
+            if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
+            if (gap.Submarine == null) { return false; }
+            if (gap.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { return false; }
+            return true;
         }
 
         public static float GetLeakSeverity(Gap leak)

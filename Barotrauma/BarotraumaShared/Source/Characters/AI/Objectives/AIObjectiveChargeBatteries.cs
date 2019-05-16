@@ -31,6 +31,7 @@ namespace Barotrauma
 
         protected override bool Filter(PowerContainer battery)
         {
+            if (battery == null) { return false; }
             var item = battery.Item;
             if (item.Submarine == null) { return false; }
             if (item.CurrentHull == null) { return false; }

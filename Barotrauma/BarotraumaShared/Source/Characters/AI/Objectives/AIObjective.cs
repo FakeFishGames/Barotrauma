@@ -35,6 +35,8 @@ namespace Barotrauma
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
         public AIObjective CurrentSubObjective { get; private set; }
 
+        public event Action Completed;
+
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
         protected IndoorsSteeringManager PathSteering => HumanAIController.PathSteering;
         protected SteeringManager SteeringManager => HumanAIController.SteeringManager;
@@ -94,7 +96,12 @@ namespace Barotrauma
                 return;
             }
 
+            bool wasCompleted = IsCompleted();
             Act(deltaTime);
+            if (!wasCompleted && IsCompleted())
+            {
+                Completed?.Invoke();
+            }
         }
 
         public void AddSubObjective(AIObjective objective)

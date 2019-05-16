@@ -7,19 +7,34 @@ namespace Barotrauma
 {
     abstract class AIObjectiveLoop<T> : AIObjective
     {
-        protected List<T> targets = new List<T>();
+        protected HashSet<T> targets = new HashSet<T>();
         protected Dictionary<T, AIObjective> objectives = new Dictionary<T, AIObjective>();
         protected HashSet<T> ignoreList = new HashSet<T>();
         private float ignoreListTimer;
         private float targetUpdateTimer;
 
+        private static AIObjectiveLoop<T> instance;
+
         // By default, doesn't clear the list automatically
         protected virtual float IgnoreListClearInterval => 0;
         protected virtual float TargetUpdateInterval => 2;
 
+        public HashSet<T> ReportedTargets { get; private set; } = new HashSet<T>();
+
+        public bool AddTarget(T target)
+        {
+            if (Filter(target))
+            {
+                ReportedTargets.Add(target);
+                return true;
+            }
+            return false;
+        }
+
         public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null) 
             : base(character, objectiveManager, priorityModifier, option)
         {
+            instance = this;
             Reset();
         }
 
@@ -118,8 +133,14 @@ namespace Barotrauma
         {
             foreach (T item in GetList())
             {
+                if (objectiveManager.CurrentOrder != this)
+                {
+                    // Battery or pump states cannot be reported and therefore we must ignore them -> the bots always know if they require attention.
+                    bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater;
+                    if (!ignore && !ReportedTargets.Contains(item)) { continue; }
+                }
                 if (!Filter(item)) { continue; }
-                if (!ignoreList.Contains(item) && !targets.Contains(item))
+                if (!ignoreList.Contains(item))
                 {
                     targets.Add(item);
                 }
@@ -133,6 +154,7 @@ namespace Barotrauma
                 if (!objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);
+                    objective.Completed += () => ReportedTargets.Remove(target);
                     objectives.Add(target, objective);
                     AddSubObjective(objective);
                 }
@@ -148,5 +170,7 @@ namespace Barotrauma
 
         protected abstract AIObjective ObjectiveConstructor(T target);
         protected abstract bool Filter(T target);
+
+        public static bool IsValidTarget(T target) => instance == null ? false : instance.Filter(target);
     }
 }
