@@ -132,11 +132,13 @@ namespace Barotrauma
 #else
                     if (!CrewManager.GetCharacters().Contains(character)) { continue; }
 #endif
-                    if (character.Submarine == Level.Loaded.StartOutpost && character.CurrentHull == startWatchman.CurrentHull)
+                    if (character.Submarine == Level.Loaded.StartOutpost &&
+                        Vector2.DistanceSquared(character.WorldPosition, startWatchman.WorldPosition) < 500.0f * 500.0f)
                     {
                         CreateDialog(new List<Character> { startWatchman }, "EnterStartOutpost", 5 * 60.0f);
                     }
-                    else if (character.Submarine == Level.Loaded.EndOutpost && character.CurrentHull == endWatchman.CurrentHull)
+                    else if (character.Submarine == Level.Loaded.EndOutpost &&
+                        Vector2.DistanceSquared(character.WorldPosition, endWatchman.WorldPosition) < 500.0f * 500.0f)
                     {
                         CreateDialog(new List<Character> { endWatchman }, "EnterEndOutpost", 5 * 60.0f);
                     }

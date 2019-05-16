@@ -20,7 +20,7 @@ namespace Barotrauma
             {
                 Rectangle drawRect = entity.Second;
                 drawRect = new Rectangle(
-                    (int)(drawRect.X * scale) + drawArea.Center.X, -((int)((drawRect.Y - drawRect.Height) * scale) + drawArea.Center.Y), 
+                    (int)(drawRect.X * scale) + drawArea.Center.X, (int)((drawRect.Y) * scale) - drawArea.Center.Y, 
                     (int)(drawRect.Width * scale), (int)(drawRect.Height * scale));
                 entity.First.DrawPlacing(spriteBatch, drawRect, entity.First.Scale * scale);
             }
