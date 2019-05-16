@@ -412,7 +412,8 @@ namespace Barotrauma.Items.Components
                             object value = property.GetValue(target);
                             if (value.GetType() == typeof(float))
                             {
-                                user.UpdateHUDProgressBar(door, door.Item.WorldPosition, (float)value / 100, Color.DarkGray * 0.5f, Color.White);
+                                var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, (float)value / 100, Color.DarkGray * 0.5f, Color.White);
+                                if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                             }
                         }
                     }

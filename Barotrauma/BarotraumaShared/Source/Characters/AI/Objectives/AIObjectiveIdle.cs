@@ -40,6 +40,44 @@ namespace Barotrauma
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
+        private float randomTimer;
+        private float randomUpdateInterval = 5;
+        public float Random { get; private set; }
+
+        public void SetRandom()
+        {
+            Random = Rand.Range(0.5f, 1.5f);
+            randomTimer = randomUpdateInterval;
+        }
+
+        public override float GetPriority()
+        {
+            float max = Math.Min(Math.Min(AIObjectiveManager.RunPriority, AIObjectiveManager.OrderPriority) - 1, 100);
+            float initiative = character.GetSkillLevel("initiative");
+            Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, initiative * Random));
+            return Priority;
+        }
+
+        public override void Update(float deltaTime)
+        {
+            if (objectiveManager.CurrentObjective == this)
+            {
+                if (randomTimer > 0)
+                {
+                    randomTimer -= deltaTime;
+                }
+                else
+                {
+                    SetRandom();
+                }
+            }
+        }
+
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
+
+        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
+
         // TODO: take the initiative into account
         public override float GetPriority() => 1;
 
@@ -56,13 +94,6 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-
-            bool currentHullForbidden = IsForbidden(character.CurrentHull);
-            if (!currentHullForbidden && !character.AnimController.InWater && !character.IsClimbing && HumanAIController.ObjectiveManager.WaitTimer > 0)
-            {
-                SteeringManager.Reset();
-                return;
-            }
             if (!character.IsClimbing)
             {
                 character.SelectedConstruction = null;
@@ -74,7 +105,7 @@ namespace Barotrauma
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-            if (currentTargetIsInvalid || (currentTarget == null && currentHullForbidden))
+            if (currentTargetIsInvalid || currentTarget == null && IsForbidden(character.CurrentHull))
             {
                 newTargetTimer = 0;
                 standStillTimer = 0;
@@ -276,7 +307,7 @@ namespace Barotrauma
             }
         }
 
-        private bool IsForbidden(Hull hull)
+        public static bool IsForbidden(Hull hull)
         {
             if (hull == null) { return true; }
             string hullName = hull.RoomName?.ToLowerInvariant();

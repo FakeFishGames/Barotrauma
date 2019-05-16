@@ -88,7 +88,7 @@ namespace Barotrauma
 
         public override bool Equals(object obj)
         {
-            if (obj is KeyOrMouse keyOrMouse )
+            if (obj is KeyOrMouse keyOrMouse)
             {
                 if (MouseButton.HasValue)
                 {
@@ -156,6 +156,26 @@ namespace Barotrauma
         {
             get { return GameMain.Config.KeyBind(inputType); }
         }
+#if CLIENT
+        private KeyOrMouse binding
+        {
+            get { return GameMain.Config.KeyBind(inputType); }
+        }
+
+        public KeyOrMouse State
+        {
+            get { return binding; }
+        }
+
+        public void SetState()
+        {
+            hit = binding.IsHit();
+            if (hit) hitQueue = true;
+
+            held = binding.IsDown();
+            if (held) heldQueue = true;
+        }
+#endif
 
         public KeyOrMouse State
         {

@@ -674,8 +674,6 @@ namespace Barotrauma
                 velocity -= ((Submarine)f2.Body.UserData).Velocity;
             }
 
-            if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
-
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody || !Collider.Enabled)
             {
@@ -694,6 +692,11 @@ namespace Barotrauma
                         character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                         character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+                        //briefly disable impact damage
+                        //otherwise the character will take damage multiple times when for example falling, 
+                        //because we use the velocity of the collider to determine the impact
+                        //(i.e. the character would take damage until the collider hits the floor and stops)
+                        character.DisableImpactDamageTimer = 0.25f;
                     }
                 }
             }
