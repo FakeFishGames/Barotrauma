@@ -117,53 +117,6 @@ namespace Barotrauma
             };
             scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
 
-            if (isSinglePlayer)
-            {
-                ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
-                {
-                    OnEnterMessage = (textbox, text) =>
-                    {
-                        if (Character.Controlled?.Info == null)
-                        {
-                            textbox.Deselect();
-                            textbox.Text = "";
-                            return true;
-                        }
-
-                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-
-                        if (!string.IsNullOrWhiteSpace(text))
-                        {
-                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
-                            AddSinglePlayerChatMessage(
-                                Character.Controlled.Info.Name,
-                                msg,
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
-                                Character.Controlled);
-                            var headset = GetHeadset(Character.Controlled, true);
-                            if (headset != null && headset.CanTransmit())
-                            {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
-                            }
-                        }
-                        textbox.Deselect();
-                        textbox.Text = "";
-                        return true;
-                    }
-                };
-
-                ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
-            }
-
-            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
-            reportButtonFrame = new GUILayoutGroup(new RectTransform(
-                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
-            {
-                AbsoluteSpacing = (int)(5 * GUI.Scale),
-                UserData = "reportbuttons",
-                CanBeFocused = false
-            };
-
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
