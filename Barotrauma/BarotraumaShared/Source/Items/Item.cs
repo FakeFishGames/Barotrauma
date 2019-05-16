@@ -1576,6 +1576,10 @@ namespace Barotrauma
             {
                 ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
+            if (!broken)
+            {
+                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            }
             ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
@@ -1712,9 +1716,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
-        /// </summary>
         public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
@@ -1767,9 +1768,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
-        /// </summary>
         public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
@@ -2103,6 +2101,29 @@ namespace Barotrauma
                 }
 
                 if (ic.DeleteOnUse) remove = true;
+            }
+
+            if (remove) { Spawner?.AddToRemoveQueue(this); }
+        }
+
+        List<ColoredText> texts = new List<ColoredText>();
+        public List<ColoredText> GetHUDTexts(Character character)
+        {
+            texts.Clear();
+            foreach (ItemComponent ic in components)
+            {
+                if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
+                if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
+
+                Color color = Color.Gray;
+                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
+                if (hasRequiredSkillsAndItems)
+                {
+                    color = Color.Cyan;
+                }
+
+                texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }
 
             if (remove) { Spawner?.AddToRemoveQueue(this); }

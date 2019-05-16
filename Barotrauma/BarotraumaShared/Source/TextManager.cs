@@ -16,14 +16,6 @@ namespace Barotrauma
         private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
         public static string Language;
-        public static bool NoWhiteSpace
-        {
-            get
-            {
-                if (!textPacks.ContainsKey(Language)) { return false; }
-                return textPacks[Language].Any(t => t.NoWhiteSpace);
-            }
-        }
 
         private static HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
@@ -87,7 +79,7 @@ namespace Barotrauma
             }
         }
 
-        public static string Get(string textTag, bool returnNull = false)
+        public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
         {
             if (!textPacks.ContainsKey(Language))
             {
@@ -102,7 +94,16 @@ namespace Barotrauma
             foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
-                if (text != null) return text;
+                if (text != null) { return text; }
+            }
+
+            if (!string.IsNullOrEmpty(fallBackTag))
+            {
+                foreach (TextPack textPack in textPacks[Language])
+                {
+                    string text = textPack.Get(fallBackTag);
+                    if (text != null) { return text; }
+                }
             }
 
             //if text was not found and we're using a language other than English, see if we can find an English version
