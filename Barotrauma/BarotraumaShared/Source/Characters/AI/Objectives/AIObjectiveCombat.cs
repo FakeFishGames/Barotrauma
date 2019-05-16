@@ -275,7 +275,7 @@ namespace Barotrauma
             {
                 followTargetObjective.CloseEnough = ConvertUnits.ToSimUnits(rt.Range);
             }
-            if (retreatTarget != null)
+            else if (WeaponComponent is MeleeWeapon mw)
             {
                 SteeringManager.Reset();
                 Mode = CombatMode.Retreat;
