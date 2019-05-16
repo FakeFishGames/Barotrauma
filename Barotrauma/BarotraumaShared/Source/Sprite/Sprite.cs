@@ -87,6 +87,7 @@ namespace Barotrauma
 
         public string FullPath { get; private set; }
 
+
         public override string ToString()
         {
             return FilePath + ": " + sourceRect;
@@ -106,14 +107,27 @@ namespace Barotrauma
         {
             this.lazyLoad = lazyLoad;
             SourceElement = element;
-            if (!ParseTexturePath(path, file)) { return; }
+            if (file == "")
+            {
+                file = SourceElement.GetAttributeString("texture", "");
+            }
+            if (file == "")
+            {
+                DebugConsole.ThrowError("Sprite " + SourceElement + " doesn't have a texture specified!");
+                return;
+            }
+            if (!string.IsNullOrEmpty(path))
+            {
+                LoadTexture(ref sourceVector, ref shouldReturn, preMultipliedAlpha);
+            }
+            FilePath = path + file;
+            if (!string.IsNullOrEmpty(FilePath))
+            {
+                FullPath = Path.GetFullPath(FilePath);
+            }
+
             Name = SourceElement.GetAttributeString("name", null);
             Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
-            var overrideElement = GetLocalizationOverrideElement();
-            if (overrideElement != null && overrideElement.Attribute("sourcerect") != null)
-            {
-                sourceVector = overrideElement.GetAttributeVector4("sourcerect", Vector4.Zero);
-            }
             preMultipliedAlpha = preMultiplyAlpha ?? SourceElement.GetAttributeBool("premultiplyalpha", true);
             bool shouldReturn = false;
             if (!lazyLoad)
@@ -245,12 +259,8 @@ namespace Barotrauma
             }
             if (SourceElement != null)
             {
-                sourceRect = SourceElement.GetAttributeRect("sourcerect", Rectangle.Empty);
-                var overrideElement = GetLocalizationOverrideElement();
-                if (overrideElement != null && overrideElement.Attribute("sourcerect") != null)
-                {
-                    sourceRect = overrideElement.GetAttributeRect("sourcerect", Rectangle.Empty);
-                }
+                Vector4 sourceVector = SourceElement.GetAttributeVector4("sourcerect", Vector4.Zero);
+                sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
                 size = SourceElement.GetAttributeVector2("size", Vector2.One);
                 size.X *= sourceRect.Width;
                 size.Y *= sourceRect.Height;
@@ -258,51 +268,6 @@ namespace Barotrauma
                 Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
                 ID = GetID(SourceElement);
             }
-        }
-
-        public bool ParseTexturePath(string path = "", string file = "")
-        {
-            if (file == "")
-            {
-                file = SourceElement.GetAttributeString("texture", "");
-                var overrideElement = GetLocalizationOverrideElement();
-                if (overrideElement != null)
-                {
-                    string overrideFile = overrideElement.GetAttributeString("texture", "");
-                    if (!string.IsNullOrEmpty(overrideFile)) { file = overrideFile; }
-                }
-            }
-            if (file == "")
-            {
-                DebugConsole.ThrowError("Sprite " + SourceElement + " doesn't have a texture specified!");
-                return false;
-            }
-            if (!string.IsNullOrEmpty(path))
-            {
-                if (!path.EndsWith("/")) path += "/";
-            }
-            FilePath = path + file;
-            if (!string.IsNullOrEmpty(FilePath))
-            {
-                FullPath = Path.GetFullPath(FilePath);
-            }
-            return true;
-        }
-
-        private XElement GetLocalizationOverrideElement()
-        {
-            foreach (XElement subElement in SourceElement.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() == "override")
-                {
-                    string language = subElement.GetAttributeString("language", "");
-                    if (TextManager.Language.ToLower() == language.ToLower())
-                    {
-                        return subElement;
-                    }
-                }
-            }
-            return null;
         }
     }
 }

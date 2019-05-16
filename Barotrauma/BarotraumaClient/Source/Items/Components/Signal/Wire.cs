@@ -271,11 +271,19 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }
+            }            
 
             if (highlighted != null)
             {
                 highlighted.item.IsHighlighted = true;
+
+                if (Character.Controlled != null)
+                {
+                    Character.Controlled.FocusedItem = null;
+                    Character.Controlled.ResetInteract = true;
+                    Character.Controlled.ClearInputs();
+                }
+
                 if (PlayerInput.LeftButtonClicked())
                 {
                     MapEntity.DisableSelect = true;

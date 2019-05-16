@@ -511,8 +511,10 @@ namespace Barotrauma
                             pos = 0;
                             totalSize += child.Rect.Width + spacing;
                         }
-                        pos += child.Rect.Height + spacing;
-
+                        else
+                        {
+                            pos += child.Rect.Height + spacing;
+                        }
                         if (child == children.Last())
                         {
                             totalSize += child.Rect.Width + spacing;
@@ -525,7 +527,10 @@ namespace Barotrauma
                             pos = 0;
                             totalSize += child.Rect.Height + spacing;
                         }
-                        pos += child.Rect.Width + spacing;
+                        else
+                        {
+                            pos += child.Rect.Width + spacing;
+                        }
 
                         if (child == children.Last())
                         {

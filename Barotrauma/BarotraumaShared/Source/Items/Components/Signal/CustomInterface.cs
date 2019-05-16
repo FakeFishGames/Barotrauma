@@ -8,19 +8,11 @@ namespace Barotrauma.Items.Components
 {
     partial class CustomInterface : ItemComponent, IClientSerializable, IServerSerializable
     {
-        class CustomInterfaceElement : ISerializableEntity
+        class CustomInterfaceElement
         {
             public bool ContinuousSignal;
             public bool State;
-            public string Connection;
-            [Serialize("", false, translationTextTag = "Label.")]
-            public string Label { get; set; }
-            [Serialize("1", false)]
-            public string Signal { get; set; }
-
-            public string Name => "CustomInterfaceElement";
-
-            public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+            public string Label, Connection, Signal;
 
             public List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
@@ -41,7 +33,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string[] labels;
-        [Serialize("", true)]
+        [Serialize("", true), Editable()]
         public string Labels
         {
             get { return string.Join(",", labels); }
@@ -56,7 +48,7 @@ namespace Barotrauma.Items.Components
             }
         }
         private string[] signals;
-        [Serialize("", true)]
+        [Serialize("", true), Editable()]
         public string Signals
         {
             //use semicolon as a separator because comma may be needed in the signals (for color or vector values for example)
@@ -125,7 +117,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < labels.Length; i++)
             {
                 labels[i] = i < newLabels.Length ? newLabels[i] : customInterfaceElementList[i].Label;
-                customInterfaceElementList[i].Label = TextManager.Get(labels[i], returnNull: true) ?? labels[i];
+                customInterfaceElementList[i].Label = labels[i];
             }
             UpdateLabelsProjSpecific();
         }
@@ -169,13 +161,6 @@ namespace Barotrauma.Items.Components
                     item.ApplyStatusEffect(effect, ciElement.State ? ActionType.OnUse : ActionType.OnSecondaryUse, 1.0f, null, null, true, false);
                 }
             }
-        }
-
-        public override XElement Save(XElement parentElement)
-        {
-            labels = customInterfaceElementList.Select(ci => ci.Label).ToArray();
-            signals = customInterfaceElementList.Select(ci => ci.Signal).ToArray();
-            return base.Save(parentElement);
         }
     }
 }

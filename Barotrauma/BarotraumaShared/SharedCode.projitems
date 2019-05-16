@@ -45,7 +45,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\PathFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\SteeringManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\SteeringPath.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\SwarmBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\AnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
@@ -181,12 +180,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Entity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\EntityGrid.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Explosion.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\DummyFireSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\FireSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Hull.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\IDamageable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ISpatialEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Level.cs" />

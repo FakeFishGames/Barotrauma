@@ -227,17 +227,17 @@ namespace Barotrauma
                 monsters = new List<Character>();
                 float offsetAmount = spawnPosType == Level.PositionType.MainPath ? 1000 : 100;
                 for (int i = 0; i < amount; i++)
-                {
+                {                    
                     CoroutineManager.InvokeAfter(() =>
                     {
-                        bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+                        bool isClient = false;
+#if CLIENT
+                        isClient = GameMain.Client != null;
+#endif
                         monsters.Add(Character.Create(characterFile, spawnPos + Rand.Vector(offsetAmount, Rand.RandSync.Server), i.ToString(), null, isClient, true, true));
                         if (monsters.Count == amount)
                         {
                             spawnReady = true;
-                            //this will do nothing if the monsters have no swarm behavior defined, 
-                            //otherwise it'll make the spawned characters act as a swarm
-                            SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
                         }
                     }, Rand.Range(0f, amount / 2, Rand.RandSync.Server));
                 }

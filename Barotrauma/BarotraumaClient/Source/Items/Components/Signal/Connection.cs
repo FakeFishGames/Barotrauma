@@ -18,14 +18,6 @@ namespace Barotrauma.Items.Components
 
         private static Wire draggingConnected;
 
-        private Color flashColor;
-        private float flashDuration = 1.5f;
-        public float FlashTimer
-        {
-            get { return flashTimer; }
-        }
-        private float flashTimer;
-
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
             Rectangle panelRect = panel.GuiFrame.Rect;
@@ -182,38 +174,14 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            if (flashTimer > 0.0f)
-            {
-                //the number of flashes depends on the duration, 1 flash per 1 full second
-                int flashCycleCount = (int)Math.Max(flashDuration, 1);
-                float flashCycleDuration = flashDuration / flashCycleCount;
-
-                //MathHelper.Pi * 0.8f -> the curve goes from 144 deg to 0, 
-                //i.e. quickly bumps up from almost full brightness to full and then fades out
-                connectionSpriteHighlight.Draw(spriteBatch, position, flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
-            }
-
+            
             if (Wires.Any(w => w != null && w != draggingConnected))
             {
                 int screwIndex = (int)Math.Floor(position.Y / 30.0f) % screwSprites.Count;
                 screwSprites[screwIndex].Draw(spriteBatch, position);
             }
         }
-
-        public void Flash(Color? color = null, float flashDuration = 1.5f)
-        {
-            flashTimer = flashDuration;
-            this.flashDuration = flashDuration;
-            flashColor = (color == null) ? Color.Red : (Color)color;
-        }
-
-        public void UpdateFlashTimer(float deltaTime)
-        {
-            if (flashTimer <= 0) return;
-            flashTimer -= deltaTime;
-        }
-
+        
         private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Item item, Vector2 end, Vector2 start, bool mouseIn, Wire equippedWire, ConnectionPanel panel, string label)
         {
             if (draggingConnected == wire)

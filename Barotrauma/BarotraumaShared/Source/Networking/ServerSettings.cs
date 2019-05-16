@@ -378,12 +378,6 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
-        public bool VoipEnabled {
-            get;
-            private set;
-        }
-
-        [Serialize(true, true)]
         public bool EndRoundAtLevelEnd
         {
             get;
@@ -401,7 +395,7 @@ namespace Barotrauma.Networking
         public bool AllowRagdollButton
         {
             get;
-            set;
+            private set;
         }
 
         [Serialize(true, true)]

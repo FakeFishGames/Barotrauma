@@ -33,8 +33,7 @@ namespace Barotrauma
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
-                Math.Abs(lastSentOxygen - OxygenPercentage) > 5f ||
-                FireSources.Count > 0)
+                Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
                 sendUpdateTimer -= deltaTime;
                 if (sendUpdateTimer < 0.0f)

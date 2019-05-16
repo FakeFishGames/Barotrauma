@@ -227,9 +227,10 @@ namespace Barotrauma.Items.Components
                 }
                 return;
             }
-                        
+
+            if (!sounds.TryGetValue(type, out List<ItemSound> matchingSounds)) return;
+            
             ItemSound itemSound = null;
-            var matchingSounds = sounds[type];
             if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
                 SoundSelectionMode soundSelectionMode = soundSelectionModes[type];
@@ -264,7 +265,7 @@ namespace Barotrauma.Items.Components
 
         private void PlaySound(ItemSound itemSound, Vector2 position, Character user = null)
         {
-            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > itemSound.Range * itemSound.Range)
+            if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > itemSound.Range * itemSound.Range)
             {
                 return;
             }
@@ -292,7 +293,7 @@ namespace Barotrauma.Items.Components
             {
                 float volume = GetSoundVolume(itemSound);
                 if (volume <= 0.0f) return;
-                SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, item.CurrentHull);
+                SoundPlayer.PlaySound(itemSound.RoundSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
             }
         }
 
@@ -379,13 +380,9 @@ namespace Barotrauma.Items.Components
 
         public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
 
-        public virtual void CreateEditingHUD(SerializableEntityEditor editor)
+        public ItemComponent GetLinkUIToComponent()
         {
-        }
-
-        private bool LoadElemProjSpecific(XElement subElement)
-        {
-            switch (subElement.Name.ToString().ToLowerInvariant())
+            if (string.IsNullOrEmpty(LinkUIToComponent))
             {
                 case "guiframe":
                     if (subElement.Attribute("rect") != null)

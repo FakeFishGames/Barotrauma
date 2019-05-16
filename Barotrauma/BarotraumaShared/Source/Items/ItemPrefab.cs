@@ -138,6 +138,16 @@ namespace Barotrauma
         
         private Dictionary<string, PriceInfo> prices;
 
+        //an area next to the construction
+        //the construction can be Activated() by a Character inside the area
+        public List<Rectangle> Triggers;
+
+        private List<XElement> fabricationRecipeElements = new List<XElement>();
+
+        private bool canSpriteFlipX, canSpriteFlipY;
+        
+        private Dictionary<string, PriceInfo> prices;
+
         /// <summary>
         /// Defines areas where the item can be interacted with. If RequireBodyInsideTrigger is set to true, the character
         /// has to be within the trigger to interact. If it's set to false, having the cursor within the trigger is enough.
@@ -460,11 +470,11 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             FabricationRecipes  = new List<FabricationRecipe>();
             DeconstructTime     = 1.0f;
-
-            Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
+            
+            Tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true).ToHashSet();
             if (Tags.None())
             {
-                Tags = new HashSet<string>(element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true));
+                Tags = element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true).ToHashSet();
             }
 
             if (element.Attribute("cargocontainername") != null)
@@ -626,25 +636,10 @@ namespace Barotrauma
 
                         string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
 
-                        List<AfflictionPrefab> matchingAfflictions = AfflictionPrefab.List.FindAll(a => a.Identifier == treatmentIdentifier || a.AfflictionType == treatmentIdentifier);
-                        if (matchingAfflictions.Count == 0)
+                        var matchingAffliction = AfflictionPrefab.List.Find(a => a.Identifier == treatmentIdentifier);
+                        if (matchingAffliction != null)
                         {
-                            DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - couldn't define as a treatment, no treatments with the identifier or type \"" + treatmentIdentifier + "\" were found.");
-                            continue;
-                        }
-
-                        float suitability = subElement.GetAttributeFloat("suitability", 0.0f);
-                        foreach (AfflictionPrefab matchingAffliction in matchingAfflictions)
-                        {
-                            if (matchingAffliction.TreatmentSuitability.ContainsKey(identifier))
-                            {
-                                matchingAffliction.TreatmentSuitability[identifier] =
-                                    Math.Max(matchingAffliction.TreatmentSuitability[identifier], suitability);
-                            }
-                            else
-                            {
-                                matchingAffliction.TreatmentSuitability.Add(identifier, suitability);
-                            }
+                            matchingAffliction.TreatmentSuitability.Add(identifier, subElement.GetAttributeFloat("suitability", 0.0f));
                         }
                         break;
                 }

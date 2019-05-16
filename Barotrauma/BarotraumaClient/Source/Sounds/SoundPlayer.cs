@@ -35,7 +35,6 @@ namespace Barotrauma
     {
         public readonly string File;
         public readonly string Type;
-        public readonly bool DuckVolume;
 
         public readonly Vector2 IntensityRange;
                 
@@ -44,7 +43,6 @@ namespace Barotrauma
             this.File = Path.GetFullPath(element.GetAttributeString("file", ""));
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
-            this.DuckVolume = element.GetAttributeBool("duckvolume", false);
         }
     }
 
@@ -238,7 +236,7 @@ namespace Barotrauma
             }
 
             float ambienceVolume = 0.8f;
-            if (Character.Controlled != null && !Character.Controlled.Removed)
+            if (Character.Controlled != null)
             {
                 AnimController animController = Character.Controlled.AnimController;
                 if (animController.HeadInWater)
@@ -441,6 +439,167 @@ namespace Barotrauma
             }
         }
 
+            if (waterAmbiences.Count > 1)
+            {
+                if (waterAmbienceChannels[0] == null || !waterAmbienceChannels[0].IsPlaying)
+                {
+                    waterAmbienceChannels[0] = waterAmbiences[0].Play(ambienceVolume * (1.0f - movementSoundVolume),"waterambience");
+                    //waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f - movementSoundVolume));
+                    waterAmbienceChannels[0].Looping = true;
+                }
+                else
+                {
+                    waterAmbienceChannels[0].Gain = ambienceVolume * (1.0f - movementSoundVolume);
+                }
+
+                if (waterAmbienceChannels[1] == null || !waterAmbienceChannels[1].IsPlaying)
+                {
+                    waterAmbienceChannels[1] = waterAmbiences[1].Play(ambienceVolume * movementSoundVolume, "waterambience");
+                    //waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementSoundVolume);
+                    waterAmbienceChannels[1].Looping = true;
+                }
+                else
+                {
+                    waterAmbienceChannels[1].Gain = ambienceVolume * movementSoundVolume;
+                }
+            }
+        }
+
+        private static void UpdateWaterFlowSounds(float deltaTime)
+        {
+            if (FlowSounds.Count == 0) { return; }
+
+            float[] targetFlowLeft = new float[FlowSounds.Count];
+            float[] targetFlowRight = new float[FlowSounds.Count];
+
+            Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.Open < 0.01f) continue;
+                float gapFlow = Math.Abs(gap.LerpedFlowForce.X) + Math.Abs(gap.LerpedFlowForce.Y) * 2.5f;
+
+                if (gapFlow < 10.0f) continue;
+
+                int flowSoundIndex = (int)Math.Floor(MathHelper.Clamp(gapFlow / MaxFlowStrength, 0, FlowSounds.Count));
+                flowSoundIndex = Math.Min(flowSoundIndex, FlowSounds.Count - 1);
+
+                Vector2 diff = gap.WorldPosition - listenerPos;
+                if (Math.Abs(diff.X) < FlowSoundRange && Math.Abs(diff.Y) < FlowSoundRange)
+                {
+                    float dist = diff.Length();
+                    float distFallOff = dist / FlowSoundRange;
+                    if (distFallOff >= 0.99f) continue;
+
+                    //flow at the left side
+                    if (diff.X < 0)
+                    {
+                        targetFlowLeft[flowSoundIndex] = 1.0f - distFallOff;
+                    }
+                    else
+                    {
+                        targetFlowRight[flowSoundIndex] = 1.0f - distFallOff;
+                    }
+                }
+            }
+
+            for (int i = 0; i < FlowSounds.Count; i++)
+            {
+                flowVolumeLeft[i] = (targetFlowLeft[i] < flowVolumeLeft[i]) ?
+                    Math.Max(targetFlowLeft[i], flowVolumeLeft[i] - deltaTime) :
+                    Math.Min(targetFlowLeft[i], flowVolumeLeft[i] + deltaTime);
+                flowVolumeRight[i] = (targetFlowRight[i] < flowVolumeRight[i]) ?
+                     Math.Max(targetFlowRight[i], flowVolumeRight[i] - deltaTime) :
+                     Math.Min(targetFlowRight[i], flowVolumeRight[i] + deltaTime);
+
+                if (flowVolumeLeft[i] < 0.05f && flowVolumeRight[i] < 0.05f)
+                {
+                    if (flowSoundChannels[i] != null)
+                    {
+                        flowSoundChannels[i].Dispose();
+                        flowSoundChannels[i] = null;
+                    }
+                }
+                else
+                {
+                    Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (flowVolumeRight[i] - flowVolumeLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
+                    if (flowSoundChannels[i] == null || !flowSoundChannels[i].IsPlaying)
+                    {
+                        flowSoundChannels[i] = FlowSounds[i].Play(1.0f, FlowSoundRange, soundPos);
+                        flowSoundChannels[i].Looping = true;
+                    }
+                    flowSoundChannels[i].Gain = Math.Max(flowVolumeRight[i], flowVolumeLeft[i]);
+                    flowSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
+                }
+            }
+        }
+
+        private static void UpdateFireSounds(float deltaTime)
+        {
+            for (int i = 0; i < fireVolumeLeft.Length; i++)
+            {
+                fireVolumeLeft[i] = 0.0f;
+                fireVolumeRight[i] = 0.0f;
+            }
+
+            Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
+            foreach (Hull hull in Hull.hullList)
+            {
+                foreach (FireSource fs in hull.FireSources)
+                {
+                    Vector2 diff = fs.WorldPosition + fs.Size / 2 - listenerPos;
+                    if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
+                    {
+                        Vector2 diffLeft = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
+                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
+                        if (diffLeft.X <= 0)
+                        {
+                            float distFallOffLeft = diffLeft.Length() / FireSoundRange;
+                            if (distFallOffLeft < 0.99f)
+                            {
+                                fireVolumeLeft[0] += (1.0f - distFallOffLeft) * (fs.Size.X / FireSoundLargeLimit);
+                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeLeft[1] += (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                            }
+                        }
+
+                        Vector2 diffRight = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
+                        if (diff.X < fs.Size.X / 2.0f) diff.X = 0.0f;
+                        if (diffRight.X >= 0)
+                        {
+                            float distFallOffRight = diffRight.Length() / FireSoundRange;
+                            if (distFallOffRight < 0.99f)
+                            {
+                                fireVolumeRight[0] += 1.0f - distFallOffRight;
+                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeRight[1] += (1.0f - distFallOffRight) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < fireVolumeLeft.Length; i++)
+            {
+                if (fireVolumeLeft[i] < 0.05f && fireVolumeRight[i] < 0.05f)
+                {
+                    if (fireSoundChannels[i] != null)
+                    {
+                        fireSoundChannels[i].FadeOutAndDispose();
+                        fireSoundChannels[i] = null;
+                    }
+                }
+                else
+                {
+                    Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (fireVolumeRight[i] - fireVolumeLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
+                    if (fireSoundChannels[i] == null || !fireSoundChannels[i].IsPlaying)
+                    {
+                        fireSoundChannels[i] = GetSound(i == 0 ? "fire" : "firelarge").Play(1.0f, FlowSoundRange, soundPos);
+                        fireSoundChannels[i].Looping = true;
+                    }
+                    fireSoundChannels[i].Gain = Math.Max(fireVolumeRight[i], fireVolumeLeft[i]);
+                    fireSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
+                }
+            }
+        }
+
         private static void UpdateRandomAmbience(float deltaTime)
         {
             if (ambientSoundTimer > 0.0f)
@@ -453,7 +612,8 @@ namespace Barotrauma
                     "ambient",
                     new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f),
                     Rand.Range(0.5f, 1.0f), 
-                    1000.0f);
+                    1000.0f, 
+                    new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f));
 
                 ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
             }
@@ -467,31 +627,23 @@ namespace Barotrauma
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }
 
-        /// <summary>
-        /// Play a sound defined in a sound xml file without any positional effects.
-        /// </summary>
         public static SoundChannel PlaySound(string soundTag, float volume = 1.0f)
         {
             var sound = GetSound(soundTag);            
             return sound?.Play(volume);
         }
 
-        /// <summary>
-        /// Play a sound defined in a sound xml file. If the volume or range parameters are omitted, the volume and range defined in the sound xml are used.
-        /// </summary>
-        public static SoundChannel PlaySound(string soundTag, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
+        public static SoundChannel PlaySound(string soundTag, float volume, float range, Vector2 position, Hull hullGuess = null)
         {
             var sound = GetSound(soundTag);
             if (sound == null) return null;
-            return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, hullGuess);
+            return PlaySound(sound, sound.BaseGain * volume, range, position, hullGuess);
         }
 
-        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
+        public static SoundChannel PlaySound(Sound sound, float volume, float range, Vector2 position, Hull hullGuess = null)
         {
-            float far = range ?? sound.BaseFar;
-
-            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far) return null;
-            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: ShouldMuffleSound(Character.Controlled, position, far, hullGuess));            
+            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > range * range) return null;
+            return sound.Play(sound.BaseGain * volume, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, hullGuess));            
         }
 
         private static void UpdateMusic(float deltaTime)
@@ -525,7 +677,7 @@ namespace Barotrauma
                 //switch the music if nothing playing atm or the currently playing clip is not suitable anymore
                 else if (targetMusic[0] == null || currentMusic[0] == null || !suitableMusic.Any(m => m.File == currentMusic[0].Filename))
                 {
-                    targetMusic[0] = suitableMusic.GetRandom();
+                    targetMusic[0] = suitableMusic.GetRandom();                    
                 }
                                 
                 //get the appropriate intensity layers for current situation
@@ -560,7 +712,6 @@ namespace Barotrauma
                 updateMusicTimer = UpdateMusicInterval;
             }
 
-            int activeTrackCount = targetMusic.Count(m => m != null);
             for (int i = 0; i < MaxMusicChannels; i++)
             {
                 //nothing should be playing on this channel
@@ -600,12 +751,7 @@ namespace Barotrauma
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
                         musicChannel[i].Looping = true;
                     }
-                    float targetGain = 1.0f;
-                    if (targetMusic[i].DuckVolume)
-                    {
-                        targetGain = (float)Math.Sqrt(1.0f / activeTrackCount);
-                    }
-                    musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, targetGain, MusicLerpSpeed * deltaTime);
+                    musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 1.0f, MusicLerpSpeed * deltaTime);
                 }
             } 
         }
@@ -673,7 +819,8 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
+                EnemyAIController enemyAI = character.AIController as EnemyAIController;
+                if (enemyAI == null || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
 
                 if (targetSubmarine != null)
                 {
@@ -691,16 +838,9 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession != null)
+            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0)
             {
-                if (Submarine.Loaded != null && Level.Loaded != null && Submarine.MainSub.AtEndPosition)
-                {
-                    return "levelend";
-                }
-                if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0)
-                {
-                    return "start";
-                }
+                return "start";
             }
             
             return "default";

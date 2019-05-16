@@ -53,21 +53,6 @@ namespace Barotrauma
             get { return Config.SelectedContentPackages; }
         }
 
-
-        private static ContentPackage vanillaContent;
-        public static ContentPackage VanillaContent
-        {
-            get
-            {
-                if (vanillaContent == null)
-                {
-                    // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
-                }
-                return vanillaContent;
-            }
-        }
-
         public readonly string[] CommandLineArgs;
 
         public GameMain(string[] args)
@@ -98,7 +83,6 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
-            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
@@ -106,6 +90,7 @@ namespace Barotrauma
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
             LocationType.Init();
@@ -146,20 +131,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns the file paths of all files of the given type in the content packages.
+        /// Returns the file paths of all files of the given type in the currently selected content packages.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
-        public IEnumerable<string> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
+        public IEnumerable<string> GetFilesOfType(ContentType type)
         {
-            if (searchAllContentPackages)
-            {
-                return ContentPackage.GetFilesOfType(ContentPackage.List, type);
-            }
-            else
-            {
-                return ContentPackage.GetFilesOfType(SelectedPackages, type);
-            }
+            return ContentPackage.GetFilesOfType(SelectedPackages, type);
         }
 
         public void StartServer()

@@ -42,17 +42,10 @@ namespace Barotrauma
             bool displace = moveAmount.LengthSquared() > 100.0f * 100.0f;
             foreach (Submarine sub in subsToMove)
             {
+                sub.PhysicsBody.SetTransform(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
                 sub.PhysicsBody.LinearVelocity = newVelocity;
 
-                if (displace)
-                {
-                    sub.PhysicsBody.SetTransform(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
-                    sub.SubBody.DisplaceCharacters(moveAmount);
-                }
-                else
-                {
-                    sub.PhysicsBody.SetTransformIgnoreContacts(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
-                }
+                if (displace) sub.SubBody.DisplaceCharacters(moveAmount);
             }
 
             if (closestSub != null && subsToMove.Contains(closestSub))
@@ -62,6 +55,7 @@ namespace Barotrauma
 
                 if (Character.Controlled != null) Character.Controlled.CursorPosition += moveAmount;
             }
+
         }
     }
 }

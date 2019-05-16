@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -67,8 +66,6 @@ namespace Barotrauma
 
         public LightComponent LightComponent { get; set; }
 
-        public int Variant { get; set; }
-
         private Gender _gender;
         /// <summary>
         /// None = Any/Not Defined -> no effect.
@@ -115,65 +112,30 @@ namespace Barotrauma
         /// <summary>
         /// Note: this constructor cannot initialize automatically, because the gender is unknown at this point. We only know it when the item is equipped.
         /// </summary>
-        public WearableSprite(XElement subElement, Wearable wearable, int variant = 0)
+        public WearableSprite(XElement subElement, Wearable wearable)
         {
             Type = WearableType.Item;
             WearableComponent = wearable;
-            Variant = Math.Max(variant, 0);
             SpritePath = ParseSpritePath(subElement.GetAttributeString("texture", string.Empty));
             SourceElement = subElement;
         }
 
         private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.ConfigFile)}/{texturePath}";
 
-        public void RefreshPath()
-        {
-            if (Variant > 0)
-            {
-                // Restore the tag so that we can parse it again.
-                ReplaceNumbersWith("[VARIANT]");
-            }
-            ParsePath(true);
-        }
-
-        private void ReplaceNumbersWith(string replacement)
-        {
-            var fileName = Path.GetFileName(SpritePath);
-            var path = Path.GetDirectoryName(SpritePath);
-            fileName = fileName.Replace(replacement, c => char.IsNumber(c));
-            SpritePath = Path.Combine(path, fileName);
-        }
-
-        private void ParsePath(bool parseSpritePath)
-        {
-            if (_gender != Gender.None)
-            {
-                SpritePath = SpritePath.Replace("[GENDER]", (_gender == Gender.Female) ? "female" : "male");
-            }
-            SpritePath = SpritePath.Replace("[VARIANT]", Variant.ToString());
-            if (!File.Exists(SpritePath))
-            {
-                // If the variant does not exist, parse the path so that it uses first variant.
-                Variant = 1;
-                ReplaceNumbersWith(Variant.ToString());
-            }
-            if (parseSpritePath)
-            {
-                Sprite.ParseTexturePath(file: SpritePath);
-            }
-        }
-
         public bool IsInitialized { get; private set; }
         public void Init(Gender gender = Gender.None)
         {
             if (IsInitialized) { return; }
             _gender = SpritePath.Contains("[GENDER]") ? gender : Gender.None;
-            ParsePath(false);
+            if (_gender != Gender.None)
+            {
+                SpritePath = SpritePath.Replace("[GENDER]", (_gender == Gender.Female) ? "female" : "male");
+            }
             if (Sprite != null)
             {
                 Sprite.Remove();
             }
-            Sprite = new Sprite(SourceElement, file: SpritePath);
+            Sprite = new Sprite(SourceElement, "", SpritePath);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
@@ -208,7 +170,7 @@ namespace Barotrauma.Items.Components
             get { return damageModifiers; }
         }
         
-        public Wearable(Item item, XElement element) : base(item, element)
+        public Wearable (Item item, XElement element) : base(item, element)
         {
             this.item = item;
 
@@ -235,7 +197,7 @@ namespace Barotrauma.Items.Components
                         limbType[i] = (LimbType)Enum.Parse(typeof(LimbType),
                             subElement.GetAttributeString("limb", "Head"), true);
 
-                        wearableSprites[i] = new WearableSprite(subElement, this, variant);
+                        wearableSprites[i] = new WearableSprite(subElement, this);
 
                         foreach (XElement lightElement in subElement.Elements())
                         {

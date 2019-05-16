@@ -178,6 +178,10 @@ namespace Barotrauma
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
+            GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
+
+
+            PerformanceCounter = new PerformanceCounter();
 
             PerformanceCounter = new PerformanceCounter();
 
@@ -340,6 +344,7 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
+            SteamManager.Initialize();
             if (Config.AutoUpdateWorkshopItems)
             {
                 if (SteamManager.AutoUpdateWorkshopItems())
@@ -525,20 +530,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns the file paths of all files of the given type in the content packages.
+        /// Returns the file paths of all files of the given type in the currently selected content packages.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
-        public IEnumerable<string> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
+        public IEnumerable<string> GetFilesOfType(ContentType type)
         {
-            if (searchAllContentPackages)
-            {
-                return ContentPackage.GetFilesOfType(ContentPackage.List, type);
-            }
-            else
-            {
-                return ContentPackage.GetFilesOfType(SelectedPackages, type);
-            }
+            return ContentPackage.GetFilesOfType(SelectedPackages, type);
         }
 
         /// <summary>
@@ -631,14 +627,6 @@ namespace Barotrauma
                         {
                             ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
-                        else if (Tutorial.Initialized && Tutorial.ContentRunning)
-                        {
-                            (GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
-                        }
-                        else if (GUI.PauseMenuOpen)
-                        {
-                            GUI.TogglePauseMenu();
-                        }
                         else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
                             && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
@@ -648,16 +636,8 @@ namespace Barotrauma
                     }
 
                     GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || ContextualTutorial.ContentRunning) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
-
-#if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen)
-                    {
-                        GUI.TogglePauseMenu();
-                        paused = true;
-                    }
-#endif
 
                     Screen.Selected.AddToGUIUpdateList();
 
@@ -675,9 +655,9 @@ namespace Barotrauma
                     {
                         Screen.Selected.Update(Timing.Step);
                     }
-                    else if (Tutorial.Initialized && Tutorial.ContentRunning)
+                    else if (ContextualTutorial.Initialized && ContextualTutorial.ContentRunning && GameSession.GameMode is SinglePlayerCampaign)
                     {
-                        (GameSession.GameMode as TutorialMode).Update((float)Timing.Step);
+                        (GameSession.GameMode as SinglePlayerCampaign).ContextualTutorial.Update((float)Timing.Step);
                     }
 
                     if (NetworkMember != null)
@@ -740,85 +720,6 @@ namespace Barotrauma
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
-        }
-
-        public void ShowCampaignDisclaimer(Action onContinue = null)
-        {
-            var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"), 
-                new string[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
-
-            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
-            {
-                var roadMap = new GUIMessageBox(TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("CampaignRoadMapText"),
-                                new string[] { TextManager.Get("Back"), TextManager.Get("OK") });
-                roadMap.Buttons[0].OnClicked += roadMap.Close;
-                roadMap.Buttons[0].OnClicked += (_, __) => { ShowCampaignDisclaimer(onContinue); return true; };
-                roadMap.Buttons[1].OnClicked += roadMap.Close;
-                roadMap.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
-                return true;
-            };
-            msgBox.Buttons[0].OnClicked += msgBox.Close;
-            msgBox.Buttons[1].OnClicked += msgBox.Close;
-            msgBox.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
-
-            Config.CampaignDisclaimerShown = true;
-            Config.SaveNewPlayerConfig();
-        }
-
-        public void ShowEditorDisclaimer()
-        {
-            var msgBox = new GUIMessageBox(TextManager.Get("EditorDisclaimerTitle"), TextManager.Get("EditorDisclaimerText"));
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
-            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
-            List<Pair<string, string>> links = new List<Pair<string, string>>()
-            {
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"),TextManager.Get("EditorDisclaimerWikiUrl")),
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"),TextManager.Get("EditorDisclaimerDiscordUrl")),
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"),TextManager.Get("EditorDisclaimerForumUrl")),
-            };
-            foreach (var link in links)
-            {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
-                {
-                    UserData = link.Second,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        Process.Start(userdata as string);
-                        return true;
-                    }
-                };
-            }
-            
-            msgBox.InnerFrame.RectTransform.MinSize = new Point(0, 
-                msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + 10);
-            Config.EditorDisclaimerShown = true;
-            Config.SaveNewPlayerConfig();
-        }
-
-        // ToDo: Move texts/links to localization, when possible.
-        public void ShowBugReporter()
-        {
-            var msgBox = new GUIMessageBox("", "");
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
-
-            List<Pair<string, string>> links = new List<Pair<string, string>>()
-                {
-                    new Pair<string, string>("Barotrauma Feedback Form","https://barotraumagame.com/feedback"),
-                    new Pair<string, string>("Github Issue Form (Needs account)","https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
-                };
-            foreach (var link in links)
-            {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
-                {
-                    UserData = link.Second,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        Process.Start(userdata as string);
-                        msgBox.Close();
-                        return true;
-                    }
-                };
-            }
         }
 
         static bool waitForKeyHit = true;

@@ -277,17 +277,13 @@ namespace Barotrauma
         {
             component.RectTransform.Parent = layoutGroup.RectTransform;
             component.RectTransform.RepositionChildInHierarchy(childIndex);
-            Recalculate();
-        }
 
-        public void Recalculate()
-        {
             int contentHeight = ContentHeight;
             RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.X, contentHeight);
             layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
         }
 
-        public GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
+        private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
         {
             object value = property.GetValue(entity);
             if (property.PropertyType == typeof(string) && value == null)
@@ -355,7 +351,7 @@ namespace Barotrauma
             return propertyField;
         }
 
-        public GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value, string displayName, string toolTip)
+        private GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value, string displayName, string toolTip)
         {
             GUITickBox propertyTickBox = new GUITickBox(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), displayName)
             {
@@ -371,11 +367,11 @@ namespace Barotrauma
                     return true;
                 }
             };
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { propertyTickBox }); }
+            Fields.Add(property.Name, new GUIComponent[] { propertyTickBox });
             return propertyTickBox;
         }
 
-        public GUIComponent CreateIntField(ISerializableEntity entity, SerializableProperty property, int value, string displayName, string toolTip)
+        private GUIComponent CreateIntField(ISerializableEntity entity, SerializableProperty property, int value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -399,11 +395,11 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { numberInput }); }
+            Fields.Add(property.Name, new GUIComponent[] { numberInput });
             return frame;
         }
 
-        public GUIComponent CreateFloatField(ISerializableEntity entity, SerializableProperty property, float value, string displayName, string toolTip)
+        private GUIComponent CreateFloatField(ISerializableEntity entity, SerializableProperty property, float value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -429,11 +425,11 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { numberInput }); }
+            Fields.Add(property.Name, new GUIComponent[] { numberInput });
             return frame;
         }
 
-        public GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value, string displayName, string toolTip)
+        private GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -458,11 +454,11 @@ namespace Barotrauma
                 return true;
             };
             enumDropDown.SelectItem(value);
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { enumDropDown }); }
+            Fields.Add(property.Name, new GUIComponent[] { enumDropDown });
             return frame;
         }
 
-        public GUIComponent CreateEnumFlagField(ISerializableEntity entity, SerializableProperty property, object value, string displayName, string toolTip)
+        private GUIComponent CreateEnumFlagField(ISerializableEntity entity, SerializableProperty property, object value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -491,26 +487,22 @@ namespace Barotrauma
                 return true;
             };
 
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { enumDropDown }); }
+            Fields.Add(property.Name, new GUIComponent[] { enumDropDown });
             return frame;
         }
 
-        public GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value, string displayName, string toolTip)
+        private GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value, string displayName, string toolTip)
         {
-            var frame = new GUILayoutGroup(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), isHorizontal: true)
-            {
-                Stretch = true
-            };
+            var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: GUI.SmallFont, textAlignment: Alignment.Left)
             {
                 ToolTip = toolTip
             };
-            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform))
+            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight))
             {
                 ToolTip = toolTip,
                 Font = GUI.SmallFont,
                 Text = value,
-                OverflowClip = true,
                 OnEnterPressed = (textBox, text) =>
                 {
                     if (property.TrySetValue(entity, text))
@@ -522,36 +514,11 @@ namespace Barotrauma
                     return true;
                 }
             };
-            string translationTextTag = property.GetAttribute<Serialize>()?.translationTextTag;
-            if (translationTextTag != null)
-            {
-                new GUIButton(new RectTransform(new Vector2(0.1f, 1), frame.RectTransform, Anchor.TopRight), "...")
-                {
-                    OnClicked = (bt, userData) => { CreateTextPicker(translationTextTag, entity, property, propertyBox); return true; }
-                };
-                propertyBox.OnTextChanged += (tb, text) =>
-                {
-                    string translatedText = TextManager.Get(text, returnNull: true);
-                    if (translatedText == null)
-                    {
-                        propertyBox.TextColor = Color.Gray;
-                        propertyBox.ToolTip = TextManager.Get("StringPropertyCannotTranslate").Replace("[tag]", text ?? "");
-                    }
-                    else
-                    {
-                        propertyBox.TextColor = Color.LightGreen;
-                        propertyBox.ToolTip = TextManager.Get("StringPropertyTranslate").Replace("[translation]", translatedText);
-                    }
-                    return true;
-                };
-                propertyBox.Text = value;
-            }
-
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, new GUIComponent[] { propertyBox }); }
+            Fields.Add(property.Name, new GUIComponent[] { propertyBox });
             return frame;
         }
 
-        public GUIComponent CreatePointField(ISerializableEntity entity, SerializableProperty property, Point value, string displayName, string toolTip)
+        private GUIComponent CreatePointField(ISerializableEntity entity, SerializableProperty property, Point value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -599,11 +566,11 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
-        public GUIComponent CreateVector2Field(ISerializableEntity entity, SerializableProperty property, Vector2 value, string displayName, string toolTip)
+        private GUIComponent CreateVector2Field(ISerializableEntity entity, SerializableProperty property, Vector2 value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -653,11 +620,11 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
-        public GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value, string displayName, string toolTip)
+        private GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -711,11 +678,11 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
-        public GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value, string displayName, string toolTip)
+        private GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -773,14 +740,14 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
-        public GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value, string displayName, string toolTip)
+        private GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, displayName, font: GUI.SmallFont)
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26)}, displayName, font: GUI.SmallFont)
             {
                 ToolTip = toolTip
             };
@@ -840,11 +807,11 @@ namespace Barotrauma
                 colorBox.Color = (Color)property.GetValue(entity);
                 fields[i] = numberInput;
             }
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            Fields.Add(property.Name, fields);
             return frame;
         }
 
-        public GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value, string displayName, string toolTip)
+        private GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value, string displayName, string toolTip)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, Math.Max(elementHeight, 26)), layoutGroup.RectTransform), color: Color.Transparent);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), displayName, font: GUI.SmallFont)
@@ -900,43 +867,8 @@ namespace Barotrauma
                 };
                 fields[i] = numberInput;
             }
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name, fields); }
+            Fields.Add(property.Name, fields);
             return frame;
-        }
-
-        public void CreateTextPicker(string textTag, ISerializableEntity entity, SerializableProperty property, GUITextBox textBox)
-        {
-            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, width: 300, height: 400);
-            msgBox.Buttons[0].OnClicked = msgBox.Close;
-
-            var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
-            {
-                OnSelected = (component, userData) =>
-                {
-                    string text = userData as string ?? "";
-
-                    if (property.TrySetValue(entity, text))
-                    {
-                        TrySendNetworkUpdate(entity, property);
-                        textBox.Text = (string)property.GetValue(entity);
-                        textBox.Deselect();
-                    }
-                    return true;
-                }
-            };
-
-            textTag = textTag.ToLowerInvariant();
-            var tagTextPairs = TextManager.GetAllTagTextPairs();
-            tagTextPairs.Sort((t1, t2) => { return t1.Value.CompareTo(t2.Value); });
-            foreach (KeyValuePair<string, string> tagTextPair in tagTextPairs)
-            {
-                if (!tagTextPair.Key.StartsWith(textTag)) { continue; }
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    ToolBox.LimitString(tagTextPair.Value, GUI.Font, textList.Content.Rect.Width))
-                {
-                    UserData = tagTextPair.Key
-                };
-            }
         }
         
         private void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)

@@ -94,7 +94,7 @@ namespace Barotrauma
         }
     }
     
-    partial class Limb : ISerializableEntity, ISpatialEntity
+    partial class Limb : ISerializableEntity
     {
         // Note: not used
         private const float LimbDensity = 15;
@@ -154,8 +154,6 @@ namespace Barotrauma
 #endif
             }
         }
-
-        public Submarine Submarine => character.Submarine;
 
         public Vector2 WorldPosition
         {

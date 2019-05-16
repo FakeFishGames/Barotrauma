@@ -223,10 +223,8 @@ namespace Barotrauma
                 }
             }
 
-            bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
-
             //only humanoids can climb ladders
-            if (!isDiving && character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
+            if (character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
                     currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
@@ -236,7 +234,7 @@ namespace Barotrauma
             }
             
             var collider = character.AnimController.Collider;
-            if (character.IsClimbing && !isDiving)
+            if (character.IsClimbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
@@ -280,12 +278,6 @@ namespace Barotrauma
             }
             else if (character.AnimController.InWater)
             {
-                // If the character is underwater, we don't need the ladders anymore
-                if (character.IsClimbing && isDiving)
-                {
-                    character.AnimController.Anim = AnimController.Animation.None;
-                    character.SelectedConstruction = null;
-                }
                 if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 3, 2))
                 {
                     currentPath.SkipToNextNode();
@@ -396,18 +388,6 @@ namespace Barotrauma
                         buttonPressCooldown = ButtonPressInterval;
                         break;
                     }
-                    else
-                    {
-                        if (!door.HasRequiredItems(character, false) && shouldBeOpen)
-                        {
-                            currentPath.Unreachable = true;
-                            return;
-                        }
-
-                        door.Item.TryInteract(character, false, true, true);
-                        buttonPressCooldown = ButtonPressInterval;
-                        break;
-                    }
                 }
             }
         }
@@ -428,18 +408,20 @@ namespace Barotrauma
                     //door closed and the character can't open doors -> node can't be traversed
                     if (!canOpenDoors || character.LockHands) { return null; }
 
+                if (!canBreakDoors)
+                {
+                    //door closed and the character can't open doors -> node can't be traversed
+                    if (!canOpenDoors || character.LockHands) return null;
+
                     var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
-                    if (!doorButtons.Any())
-                    {
-                        if (!nextNode.Waypoint.ConnectedDoor.HasRequiredItems(character, false)) { return null; }
-                    }
+                    if (!doorButtons.Any()) return null;
 
                     foreach (Controller button in doorButtons)
                     {
                         if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=
-                            Math.Sign(node.Position.X - nextNode.Position.X)) { continue; }
+                            Math.Sign(node.Position.X - nextNode.Position.X)) continue;
 
-                        if (!button.HasRequiredItems(character, false)) { return null; }
+                        if (!button.HasRequiredItems(character, false)) return null;
                     }
                 }
             }

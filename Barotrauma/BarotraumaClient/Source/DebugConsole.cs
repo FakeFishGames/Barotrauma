@@ -29,7 +29,7 @@ namespace Barotrauma
                 if (!CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
-                    if (Steam.SteamManager.USE_STEAM)
+                    if (GameMain.Config.UseSteam)
                     {
                         NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
                     }
@@ -340,7 +340,7 @@ namespace Barotrauma
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Enabled cheat commands.", Color.Red);
-                if (Steam.SteamManager.USE_STEAM)
+                if (GameMain.Config.UseSteam)
                 {
                     NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
                 }
@@ -377,27 +377,23 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>
+            commands.Add(new Command("editparticles|particleeditor", "", (string[] args) =>
             {
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editlevels|leveleditor", "editlevels/leveleditor: Switch to the Level Editor to edit levels.", (string[] args) =>
+            commands.Add(new Command("editlevels|editlevel|leveleditor", "", (string[] args) =>
             {
                 GameMain.LevelEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editsprites|spriteeditor", "editsprites/spriteeditor: Switch to the Sprite Editor to edit the source rects and origins of sprites.", (string[] args) =>
+            commands.Add(new Command("editsprites|editsprite|spriteeditor|spriteedit", "", (string[] args) =>
             {
                 GameMain.SpriteEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editcharacters|charactereditor", "editcharacters/charactereditor: Switch to the Character Editor to edit/create the ragdolls and animations of characters.", (string[] args) =>
+            commands.Add(new Command("charactereditor|editcharacter|editcharacters|editanimation|editanimations|animedit|animationeditor|animeditor|animationedit", "charactereditor: Edit characters, animations, ragdolls....", (string[] args) =>
             {
-                if (Screen.Selected == GameMain.GameScreen)
-                {
-                    NewMessage("WARNING: Switching between the character editor and the game view may cause odd behaviour or bugs. Use with caution.", Color.Orange);
-                }
                 GameMain.CharacterEditorScreen.Select();
             }));
 
@@ -1096,8 +1092,8 @@ namespace Barotrauma
                 List<string> lines = new List<string>();
                 foreach (MapEntityPrefab me in MapEntityPrefab.List)
                 {
-                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</EntityName." + me.Identifier + ">");
-                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</EntityDescription." + me.Identifier + ">");
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</" + me.Identifier + ".Description>");
                 }
                 File.WriteAllLines(filePath, lines);
             }));
@@ -1527,7 +1523,7 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
             }, isCheat: true));
 
-            commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
+            commands.Add(new Command("reloadwearables|reloadlimbs", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
@@ -1536,26 +1532,6 @@ namespace Barotrauma
                     return;
                 }
                 ReloadWearables(character);
-            }, isCheat: true));
-
-            commands.Add(new Command("loadwearable", "Force select certain variant for the selected character.", args =>
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Not controlling any character.");
-                    return;
-                }
-                if (args.Length == 0)
-                {
-                    ThrowError("No arguments provided! Give an index number for the variant starting from 1.");
-                    return;
-                }
-                if (int.TryParse(args[0], out int variant))
-                {
-                    ReloadWearables(character, variant);
-                }
-                
             }, isCheat: true));
 
             commands.Add(new Command("reloadsprite|reloadsprites", "Reloads the sprites of the selected item(s)/structure(s) (hovering over or selecting in the subeditor) or the controlled character. Can also reload sprites by entity id or by the name attribute (sprite element). Example 1: reloadsprite id itemid. Example 2: reloadsprite name \"Sprite name\"", args =>
@@ -1705,7 +1681,7 @@ namespace Barotrauma
             }, isCheat: true));
         }
 
-        private static void ReloadWearables(Character character, int variant = 0)
+        private static void ReloadWearables(Character character)
         {
             foreach (var limb in character.AnimController.Limbs)
             {
@@ -1714,17 +1690,11 @@ namespace Barotrauma
                 limb.DeformSprite?.Sprite.ReloadTexture();
                 foreach (var wearable in limb.WearingItems)
                 {
-                    if (variant > 0 && wearable.Variant > 0)
-                    {
-                        wearable.Variant = variant;
-                    }
-                    wearable.RefreshPath();
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }
                 foreach (var wearable in limb.OtherWearables)
                 {
-                    wearable.RefreshPath();
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }

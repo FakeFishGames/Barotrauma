@@ -122,12 +122,10 @@ namespace Barotrauma.Items.Components
                         foreach (Item subItem in containedSubItems)
                         {
                             projectile = subItem.GetComponent<Projectile>();
+
                             //apply OnUse statuseffects to the container in case it has to react to it somehow
                             //(play a sound, spawn more projectiles, reduce condition...)
-                            if (subItem.Condition > 0.0f)
-                            {
-                                subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
-                            }
+                            subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
                             if (projectile != null) break;
                         }
                     }

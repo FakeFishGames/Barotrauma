@@ -56,11 +56,11 @@ namespace Barotrauma
         }
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
-            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd, element.GetAttributeBool("dynamicloading", false))
+            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd)
         {            
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false)
+        public ScalableFont(string filename, uint size, GraphicsDevice gd = null)
         {
             if (Lib == null) Lib = new Library();
             this.filename = filename;
@@ -390,14 +390,10 @@ namespace Barotrauma
                 if (text[i] == '\n')
                 {
                     currentLineX = 0.0f;
-                    retVal.Y += baseHeight * 1.8f;
+                    retVal.Y += baseHeight * 18 / 10;
                     continue;
                 }
                 uint charIndex = text[i];
-                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
-                {
-                    DynamicRenderAtlas(graphicsDevice, charIndex);
-                }
                 if (texCoords.TryGetValue(charIndex, out GlyphData gd))
                 {
                     currentLineX += gd.advance;
@@ -411,10 +407,6 @@ namespace Barotrauma
         {
             Vector2 retVal = Vector2.Zero;
             retVal.Y = baseHeight * 1.8f;
-            if (DynamicLoading && !texCoords.ContainsKey(c))
-            {
-                DynamicRenderAtlas(graphicsDevice, c);
-            }
             if (texCoords.TryGetValue(c, out GlyphData gd))
             {
                 retVal.X = gd.advance;

@@ -16,6 +16,9 @@ namespace Barotrauma
         private GUIListBox saveList;
 
         private GUITextBox saveNameBox, seedBox;
+        private GUITickBox contextualTutorialBox;
+
+        private GUILayoutGroup subPreviewContainer;
 
         private GUILayoutGroup subPreviewContainer;
 
@@ -23,6 +26,14 @@ namespace Barotrauma
         
         public Action<Submarine, string, string> StartNewGame;
         public Action<string> LoadGame;
+        public bool TutorialSelected
+        {
+            get
+            {
+                if (contextualTutorialBox == null) return false;
+                return contextualTutorialBox.Selected;
+            }
+        }
 
         private readonly bool isMultiplayer;
 
@@ -54,31 +65,19 @@ namespace Barotrauma
 
             // New game left side
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName") + ":");
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
-            {
-                textFilterFunction = (string str) => { return ToolBox.RemoveInvalidFileNameChars(str); }
-            };
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed") + ":");
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub") + ":");
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
+            if (!isMultiplayer)
             {
-                Stretch = true
-            };
-            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
-            
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
-            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
-            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+                contextualTutorialBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("TutorialActive"));
+                UpdateTutorialSelection();
+            }
 
-            searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.075f, 1.0f), filterContainer.RectTransform), "x")
-            {
-                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
-            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub") + ":");
+            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
 
             if (!isMultiplayer) { subList.OnSelected = OnSubSelected; }
 
@@ -176,19 +175,9 @@ namespace Barotrauma
                 }
             };
 
-
-            if (!isMultiplayer)
-            {
-                var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
-                {
-                    IgnoreLayoutGroups = true,
-                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowCampaignDisclaimer(); return true; }
-                };
-                disclaimerBtn.RectTransform.MaxSize = new Point((int)(30 * GUI.Scale));
-            }
-
             leftColumn.Recalculate();
             rightColumn.Recalculate();
+
 
             UpdateSubList(submarines);
             UpdateLoadMenu(saveFiles);
@@ -197,16 +186,6 @@ namespace Barotrauma
         public void RandomizeSeed()
         {
             seedBox.Text = ToolBox.RandomSeed(8);
-        }
-
-        private void FilterSubs(GUIListBox subList, string filter)
-        {
-            foreach (GUIComponent child in subList.Content.Children)
-            {
-                var sub = child.UserData as Submarine;
-                if (sub == null) { return; }
-                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.Name.ToLower().Contains(filter.ToLower());
-            }
         }
 
         private bool OnSubSelected(GUIComponent component, object obj)
@@ -280,7 +259,7 @@ namespace Barotrauma
                     {
                         IsFixedSize = false
                     },
-                        TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
+                        TextManager.Get("Shuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
                     {
                         TextColor = textBlock.TextColor * 0.8f,
                         ToolTip = textBlock.ToolTip
@@ -398,7 +377,14 @@ namespace Barotrauma
                 },
                 Enabled = false
             };
-        }       
+        }
+
+        public void UpdateTutorialSelection()
+        {
+            if (isMultiplayer) return;
+            Tutorial contextualTutorial = Tutorial.Tutorials.Find(t => t is ContextualTutorial);
+            contextualTutorialBox.Selected = (contextualTutorial != null) ? !GameMain.Config.CompletedTutorialNames.Contains(contextualTutorial.Name) : true;
+        }
         
         private bool SelectSaveFile(GUIComponent component, object obj)
         {

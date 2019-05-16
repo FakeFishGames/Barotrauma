@@ -13,11 +13,6 @@ namespace Barotrauma.Items.Components
 
         private ItemContainer inputContainer, outputContainer;
 
-        public ItemContainer InputContainer
-        {
-            get { return inputContainer; }
-        }
-
         public ItemContainer OutputContainer
         {
             get { return outputContainer; }
@@ -76,10 +71,8 @@ namespace Barotrauma.Items.Components
             var targetItem = inputContainer.Inventory.Items.LastOrDefault(i => i != null);
             if (targetItem == null) { return; }
 
-            float deconstructTime = targetItem.Prefab.DeconstructItems.Any() ? targetItem.Prefab.DeconstructTime : 1.0f;
-
-            progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
-            if (progressTimer > deconstructTime)
+            progressState = Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
+            if (progressTimer > targetItem.Prefab.DeconstructTime)
             {
                 foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
                 {
@@ -107,24 +100,10 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 
-                if (targetItem.Prefab.DeconstructItems.Any())
-                {
-                    inputContainer.Inventory.RemoveItem(targetItem);
-                    Entity.Spawner.AddToRemoveQueue(targetItem);
-                    MoveInputQueue();
-                    PutItemsToLinkedContainer();
-                }
-                else
-                {
-                    if (outputContainer.Inventory.Items.All(i => i != null))
-                    {
-                        targetItem.Drop(dropper: null);
-                    }
-                    else
-                    {
-                        outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
-                    }
-                }
+                inputContainer.Inventory.RemoveItem(targetItem);
+                Entity.Spawner.AddToRemoveQueue(targetItem);
+                MoveInputQueue();
+                PutItemsToLinkedContainer();
 
                 if (inputContainer.Inventory.Items.Any(i => i != null))
                 {

@@ -534,12 +534,7 @@ namespace Barotrauma
 
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
-
-            float limpAmount = 
-                character.CharacterHealth.GetAfflictionStrength("damage", leftFoot, true) +
-                character.CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
-            limpAmount = MathHelper.Clamp(limpAmount / 100.0f, 0.0f, 1.0f);
-
+            
             float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
@@ -560,8 +555,7 @@ namespace Barotrauma
                     //TODO: take into account that the feet aren't necessarily in CurrentHull
                     //full slowdown (1.5f) when water is up to the torso
                     surfaceY = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    float bottomPos = Math.Max(colliderPos.Y, currentHull.Rect.Y - currentHull.Rect.Height);
-                    slowdownAmount = MathHelper.Clamp((surfaceY - bottomPos) / TorsoPosition.Value, 0.0f, 1.0f) * 1.5f;
+                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / TorsoPosition.Value, 0.0f, 1.0f) * 1.5f;
                 }
 
                 float maxSpeed = Math.Max(TargetMovement.Length() - slowdownAmount, 1.0f);
@@ -570,10 +564,11 @@ namespace Barotrauma
 
             float walkPosX = (float)Math.Cos(WalkPos);
             float walkPosY = (float)Math.Sin(WalkPos);
-            
+
+
             Vector2 stepSize = StepSize.Value;
             stepSize.X *= walkPosX;
-            stepSize.Y *= walkPosY;
+            stepSize.Y *= walkPosY;                
 
             float footMid = colliderPos.X;
             if (limpAmount > 0.0f)
@@ -594,7 +589,7 @@ namespace Barotrauma
             movement.Y = 0.0f;
 
             if (torso == null) { return; }
-
+            
             bool isNotRemote = true;
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
 
@@ -698,7 +693,7 @@ namespace Barotrauma
 
                     //make the character limp if the feet are damaged
                     float footAfflictionStrength = character.CharacterHealth.GetAfflictionStrength("damage", foot, true);
-                    footPos.X *= MathHelper.Lerp(1.0f, 0.75f, MathHelper.Clamp(footAfflictionStrength / 50.0f, 0.0f, 1.0f));
+                    footPos *= MathHelper.Lerp(1.0f, 0.5f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
 
                     if (onSlope && Stairs == null)
                     {
@@ -788,19 +783,13 @@ namespace Barotrauma
 
                     //get the upper arm to point downwards
                     var arm = GetLimb(armType);
-                    if (Math.Abs(arm.body.AngularVelocity) < 10.0f)
-                    {
-                        arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.1f, 0.1f), arm.Mass * 10.0f);
-                    }
+                    arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.1f, 0.1f), arm.Mass * 10.0f);
 
                     //get the elbow to a neutral rotation
-                    if (Math.Abs(hand.body.AngularVelocity) < 10.0f)
-                    {
-                        LimbJoint elbow =
+                    LimbJoint elbow =
                         GetJointBetweenLimbs(armType, hand.type) ??
                         GetJointBetweenLimbs(armType, foreArmType);
-                        hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
-                    }
+                    hand.body.ApplyTorque(-elbow.JointAngle * hand.Mass * 10.0f);
                 }
             }
         }
@@ -1138,12 +1127,12 @@ namespace Barotrauma
 #if CLIENT
                 if (Math.Abs(leftFootPos - prevLeftFootPos) > stepHeight && leftFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                 {
-                    SoundPlayer.PlaySound("footstep_armor_heavy", leftFoot.WorldPosition, hullGuess: currentHull);
+                    SoundPlayer.PlaySound("footstep_armor_heavy", volume: 0.5f, range: 500.0f, position: leftFoot.WorldPosition);
                     leftFoot.LastImpactSoundTime = (float)Timing.TotalTime;
                 }
                 if (Math.Abs(rightFootPos - prevRightFootPos) > stepHeight && rightFoot.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                 {
-                    SoundPlayer.PlaySound("footstep_armor_heavy", rightFoot.WorldPosition, hullGuess: currentHull);
+                    SoundPlayer.PlaySound("footstep_armor_heavy", volume: 0.5f, range: 500.0f, position: rightFoot.WorldPosition);
                     rightFoot.LastImpactSoundTime = (float)Timing.TotalTime;
                 }
 #endif
@@ -1194,8 +1183,7 @@ namespace Barotrauma
                     isClimbing = false;
                 }
             }
-            else if ((character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right)) &&
-                    (!character.IsKeyDown(InputType.Up) && !character.IsKeyDown(InputType.Down)))
+            else if (character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right))
             {
                 isClimbing = false;
             }

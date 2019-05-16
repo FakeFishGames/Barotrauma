@@ -26,7 +26,7 @@ namespace Barotrauma
                     NewMessage("Client \"" + client.Name + "\" attempted to use the command \"" + names[0] + "\". Cheats must be enabled using \"enablecheats\" before the command can be used.", Color.Red);
                     GameMain.Server.SendConsoleMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", client);
 
-                    if (Steam.SteamManager.USE_STEAM)
+                    if (GameMain.Config.UseSteam)
                     {
                         NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
                         GameMain.Server.SendConsoleMessage("Enabling cheats will disable Steam achievements during this play session.", client);
@@ -193,7 +193,7 @@ namespace Barotrauma
             Console.CursorLeft = 0;
             Console.CursorTop -= cursorLine;
             Console.Write(input);
-            Console.CursorLeft = input.Length % consoleWidth;
+            Console.CursorLeft = input.Length % Console.WindowWidth;
         }
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
@@ -699,7 +699,7 @@ namespace Barotrauma
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Enabled cheat commands.", Color.Red);
-                if (Steam.SteamManager.USE_STEAM)
+                if (GameMain.Config.UseSteam)
                 {
                     NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
                     GameMain.Server?.UpdateCheatsEnabled();
@@ -714,7 +714,7 @@ namespace Barotrauma
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Cheat commands have been enabled by \"" + client.Name + "\".", Color.Red);
-                if (Steam.SteamManager.USE_STEAM)
+                if (GameMain.Config.UseSteam)
                 {
                     NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
                     GameMain.Server?.UpdateCheatsEnabled();

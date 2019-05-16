@@ -336,12 +336,9 @@ namespace Barotrauma
                     UnlockAchievement("survivereactormeltdown");
                 }
 #endif
-                var charactersInSub = Character.CharacterList.FindAll(c => 
-                    !c.IsDead && 
-                    c.TeamID != Character.TeamType.FriendlyNPC &&
-                    !(c.AIController is EnemyAIController) &&
-                    (c.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 
+                var charactersInSub = Character.CharacterList.FindAll(c => !c.IsDead &&
+                    (c.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
                 if (charactersInSub.Count == 1)
                 {
                     //there must be some non-enemy casualties to get the last mant standing achievement
@@ -349,11 +346,7 @@ namespace Barotrauma
                     {
                         UnlockAchievement(charactersInSub[0], "lastmanstanding");
                     }
-                    //lone sailor achievement if alone in the sub and there are no other characters with the same team ID
-                    else if (!Character.CharacterList.Any(c => 
-                        c != charactersInSub[0] && 
-                        c.TeamID == charactersInSub[0].TeamID && 
-                        !(c.AIController is EnemyAIController)))
+                    else if (!Character.CharacterList.Any(c => !(c.AIController is EnemyAIController)))
                     {
                         UnlockAchievement(charactersInSub[0], "lonesailor");
                     }

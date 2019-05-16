@@ -295,7 +295,7 @@ namespace Barotrauma.Networking
                     OnClicked = SelectSettingsTab
                 };
             }
-            GUITextBlock.AutoScaleAndNormalize(tabButtons.Select(b => b.TextBlock));
+
             SelectSettingsTab(tabButtons[0], 0);
 
             //"Close"
@@ -388,7 +388,7 @@ namespace Barotrauma.Networking
                 ToolTip = TextManager.Get("ServerSettingsMinRespawnToolTip")
             };
 
-            string minRespawnLabel = TextManager.Get("ServerSettingsMinRespawn") + " ";
+            string minRespawnLabel = TextManager.Get("ServerSettingsMinRespawn");
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
             slider.ToolTip = minRespawnText.ToolTip;
             slider.UserData = minRespawnText;
@@ -407,7 +407,7 @@ namespace Barotrauma.Networking
                 ToolTip = TextManager.Get("ServerSettingsRespawnDurationToolTip")
             };
 
-            string respawnDurationLabel = TextManager.Get("ServerSettingsRespawnDuration") + " ";
+            string respawnDurationLabel = TextManager.Get("ServerSettingsRespawnDuration");
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
             slider.ToolTip = respawnDurationText.ToolTip;
             slider.UserData = respawnDurationText;
@@ -471,7 +471,7 @@ namespace Barotrauma.Networking
             {
                 string translatedLabel = TextManager.Get($"Character.{s}", true);
                 var monsterEnabledBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), monsterFrame.Content.RectTransform) { MinSize = new Point(0, 25) },
-                    label: translatedLabel ?? s)
+                    label: translatedLabel != null ? translatedLabel : s)
                 {
                     Selected = tempMonsterEnabled[s],
                     OnSelected = (GUITickBox tb) =>
@@ -503,8 +503,6 @@ namespace Barotrauma.Networking
                 ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
                 return true;
             };
-
-            GUITextBlock.AutoScaleAndNormalize(buttonHolder.Children.Select(c => ((GUIButton)c).TextBlock));
 
             foreach (ItemPrefab ip in MapEntityPrefab.List.Where(p => p is ItemPrefab).Select(p => p as ItemPrefab))
             {
@@ -575,7 +573,7 @@ namespace Barotrauma.Networking
 
             //***********************************************
 
-            string autoRestartDelayLabel = TextManager.Get("ServerSettingsAutoRestartDelay") + " ";
+            string autoRestartDelayLabel = TextManager.Get("ServerSettingsAutoRestartDelay");
             var startIntervalText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), autoRestartDelayLabel);
             var startIntervalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), barSize: 0.1f)
             {
@@ -619,7 +617,7 @@ namespace Barotrauma.Networking
             GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);
 
             CreateLabeledSlider(serverTab, "ServerSettingsKickVotesRequired", out slider, out sliderLabel);
-            string votesRequiredLabel = sliderLabel.Text + " ";
+            string votesRequiredLabel = sliderLabel.Text;
             slider.Step = 0.2f;
             slider.Range = new Vector2(0.5f, 1.0f);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -631,7 +629,7 @@ namespace Barotrauma.Networking
             slider.OnMoved(slider, slider.BarScroll);
 
             CreateLabeledSlider(serverTab, "ServerSettingsAutobanTime", out slider, out sliderLabel);
-            string autobanLabel = sliderLabel.Text + " ";
+            string autobanLabel = sliderLabel.Text;
             slider.Step = 0.05f;
             slider.Range = new Vector2(0.0f, MaxAutoBanTime);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -683,8 +681,8 @@ namespace Barotrauma.Networking
                 traitorRatioSlider.Range = new Vector2(1.0f, maxPlayers);
             }
 
-            string traitorRatioLabel = TextManager.Get("ServerSettingsTraitorRatio") + " ";
-            string traitorCountLabel = TextManager.Get("ServerSettingsTraitorCount") + " ";
+            string traitorRatioLabel = TextManager.Get("ServerSettingsTraitorRatio");
+            string traitorCountLabel = TextManager.Get("ServerSettingsTraitorCount");
 
             traitorRatioSlider.Range = new Vector2(0.1f, 1.0f);
             traitorRatioSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>

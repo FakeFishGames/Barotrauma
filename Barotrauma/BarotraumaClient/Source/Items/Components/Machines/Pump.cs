@@ -10,10 +10,6 @@ namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
-        public GUIScrollBar IsActiveSlider
-        {
-            get { return isActiveSlider; }
-        }
         private GUIScrollBar isActiveSlider;
         private GUIScrollBar pumpSpeedSlider;
         private GUITickBox powerIndicator;
@@ -53,6 +49,7 @@ namespace Barotrauma.Items.Components
             };
             var sliderHandle = isActiveSlider.GetChild<GUIButton>();
             sliderHandle.RectTransform.NonScaledSize = new Point(84, sliderHandle.Rect.Height);
+            
             isActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 bool active = scrollBar.BarScroll < 0.5f;
@@ -78,8 +75,8 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), rightArea.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) },
-                "", textAlignment: Alignment.BottomLeft, wrap: true);
+            var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), rightArea.RectTransform) { RelativeOffset = new Vector2(0.25f, 0.0f) },
+                "", textAlignment: Alignment.BottomLeft);
             string pumpSpeedStr = TextManager.Get("PumpSpeed");
             pumpSpeedText.TextGetter = () => { return pumpSpeedStr + ": " + (int)flowPercentage + " %"; };
 
@@ -90,7 +87,7 @@ namespace Barotrauma.Items.Components
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: true);
+                TextManager.Get("PumpOut"), textAlignment: Alignment.Center);
             pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
             {
                 Step = 0.05f,
@@ -111,7 +108,7 @@ namespace Barotrauma.Items.Components
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true);            
+                TextManager.Get("PumpIn"), textAlignment: Alignment.Center);            
         }
 
         public override void OnItemLoaded()

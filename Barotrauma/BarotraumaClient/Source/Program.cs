@@ -30,7 +30,6 @@ namespace Barotrauma
         [STAThread]
         static void Main()
         {
-            SteamManager.Initialize();
             GameMain game = null;
 #if !DEBUG
             try
@@ -214,10 +213,6 @@ namespace Barotrauma
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
-            if (SteamManager.IsInitialized)
-            {
-                sb.AppendLine("SteamManager initialized");
-            }
 
             if (GameMain.Client != null)
             {

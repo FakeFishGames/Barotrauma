@@ -26,7 +26,6 @@ namespace Barotrauma
         public Color Color;
 
         public Color HighlightColor;
-        public float HighlightScaleUpAmount;
         private CoroutineHandle highlightCoroutine;
         public float HighlightTimer;
         
@@ -81,7 +80,7 @@ namespace Barotrauma
             return rect.Contains(PlayerInput.MousePosition);
         }
 
-        public void ShowBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount = 0.5f)
+        public void ShowBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration)
         {
             if (highlightCoroutine != null)
             {
@@ -89,7 +88,6 @@ namespace Barotrauma
                 highlightCoroutine = null;
             }
 
-            HighlightScaleUpAmount = scaleUpAmount;
             highlightCoroutine = CoroutineManager.StartCoroutine(UpdateBorderHighlight(color, fadeInDuration, fadeOutDuration));
         }
 
@@ -156,6 +154,8 @@ namespace Barotrauma
 
             public SlotReference(Inventory parentInventory, InventorySlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
+
+
                 ParentInventory = parentInventory;
                 Slot = slot;
                 SlotIndex = slotIndex;
@@ -714,15 +714,12 @@ namespace Barotrauma
                     float scale = Math.Min(Math.Min(iconSize / sprite.size.X, iconSize / sprite.size.Y), 1.5f);
                     Vector2 itemPos = PlayerInput.MousePosition;
 
-                    bool mouseOnHealthInterface = CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement;
-
-                    if ((GUI.MouseOn == null || mouseOnHealthInterface) && selectedSlot == null)
+                    if (GUI.MouseOn == null && selectedSlot == null)
                     {
                         var shadowSprite = GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0];
-                        string toolTip = mouseOnHealthInterface ? TextManager.Get("QuickUseAction.UseTreatment") :                            
-                            Character.Controlled.FocusedItem != null ?
-                                TextManager.Get("PutItemIn").Replace("[itemname]", Character.Controlled.FocusedItem.Name) :
-                                TextManager.Get("DropItem");
+                        string toolTip = Character.Controlled.FocusedItem != null ?
+                            TextManager.Get("PutItemIn").Replace("[itemname]", Character.Controlled.FocusedItem.Name) :
+                            TextManager.Get("DropItem");
                         int textWidth = (int)Math.Max(GUI.Font.MeasureString(draggingItem.Name).X, GUI.SmallFont.MeasureString(toolTip).X);
                         int textSpacing = (int)(15 * GUI.Scale);
                         Point shadowBorders = (new Point(40, 10)).Multiply(GUI.Scale);
@@ -730,7 +727,7 @@ namespace Barotrauma
                             new Rectangle(itemPos.ToPoint() - new Point(iconSize / 2) - shadowBorders, new Point(iconSize + textWidth + textSpacing, iconSize) + shadowBorders.Multiply(2)), Color.Black * 0.8f);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y - iconSize / 2), draggingItem.Name, Color.White);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y), toolTip,
-                            color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? Color.Red : Color.LightGreen,
+                            color: Character.Controlled.FocusedItem == null ? Color.Red : Color.LightGreen,
                             font: GUI.SmallFont);
                     }
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black, scale: scale);
@@ -802,7 +799,8 @@ namespace Barotrauma
             
             if (slot.HighlightColor.A > 0)
             {
-                float inflateAmount = (slot.HighlightColor.A / 255.0f) * slot.HighlightScaleUpAmount * 0.5f;
+                float scaleUpAmount = 0.5f;
+                float inflateAmount = (slot.HighlightColor.A / 255.0f) * scaleUpAmount * 0.5f;
                 rect.Inflate(rect.Width * inflateAmount, rect.Height * inflateAmount);
             }
 
@@ -820,9 +818,8 @@ namespace Barotrauma
             else
             {
                 Sprite slotSprite = slot.SlotSprite ?? slotSpriteSmall;
-                Color slotColor = slot.IsHighlighted ? Color.White : Color.White * 0.8f;
-                if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
-                spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
+
+                spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slot.IsHighlighted ? Color.White : Color.White * 0.8f);
 
                 if (item != null && drawItem)
                 {
@@ -856,7 +853,7 @@ namespace Barotrauma
                         if (itemContainer.ContainedStateIndicator?.Texture == null)
                         {
                             containedIndicatorArea.Inflate(0, -2);
-                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.9f, true);
+                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.8f, true);
                             GUI.DrawRectangle(spriteBatch,
                                 new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
                                 Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f, true);
@@ -870,21 +867,18 @@ namespace Barotrauma
 
                             if (containedState > 0.0f && containedState < 0.25f)
                             {
-                                indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.25f;
+                                indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.1f;
                             }
 
                             indicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
-                                (inventory != null && inventory.Locked) ? Color.DarkGray * 0.5f : Color.DarkGray * 0.9f, 
+                                Color.DarkGray * 0.6f, 
                                 origin: indicatorSprite.size / 2,
                                 rotate: 0.0f,
                                 scale: indicatorScale);
-
-                            Color indicatorColor = ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.Green);
-                            if (inventory != null && inventory.Locked) { indicatorColor *= 0.5f; }
-
+                     
                             spriteBatch.Draw(indicatorSprite.Texture, containedIndicatorArea.Center.ToVector2(),
                                 sourceRectangle: new Rectangle(indicatorSprite.SourceRect.Location, new Point((int)(indicatorSprite.SourceRect.Width * containedState), indicatorSprite.SourceRect.Height)),
-                                color: indicatorColor,
+                                color: ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.Green),
                                 rotation: 0.0f,
                                 origin: indicatorSprite.size / 2,
                                 scale: indicatorScale,
@@ -924,7 +918,6 @@ namespace Barotrauma
                 }
 
                 Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
-                if (inventory != null && inventory.Locked) { spriteColor *= 0.5f; }
                 if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
@@ -936,10 +929,7 @@ namespace Barotrauma
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
             }
 
-            if (inventory != null && 
-                !inventory.Locked &&
-                Character.Controlled?.Inventory == inventory && 
-                slot.QuickUseKey != Keys.None)
+            if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)
             {
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2(), 
                     slot.QuickUseKey.ToString().Substring(1, 1), 

@@ -426,7 +426,7 @@ namespace Barotrauma
             }
         }
 
-        public bool CanSpeak;
+        private bool canSpeak;
 
         private bool speechImpedimentSet;
 
@@ -436,7 +436,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!CanSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
+                if (!canSpeak || IsUnconscious || Stun > 0.0f || IsDead) return 100.0f;
                 return speechImpediment;
             }
             set
@@ -710,7 +710,7 @@ namespace Barotrauma
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
+            canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
             Noise = doc.Root.GetAttributeFloat("noise", 100f);
 
@@ -853,7 +853,7 @@ namespace Barotrauma
             {
                 if (characterConfigFiles == null)
                 {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true);
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
                 }
                 return characterConfigFiles;
             }
@@ -1103,14 +1103,14 @@ namespace Barotrauma
             if (leftFoot != null)
             {
                 float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", leftFoot, true);
-                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
+                speed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
             var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
             if (rightFoot != null)
             {
                 float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
-                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
+                speed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
             return speed;
@@ -1428,6 +1428,26 @@ namespace Barotrauma
             return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
         }
 
+        public bool CanSeeCharacter(Character character, Vector2 sourceWorldPos)
+        {
+            Vector2 diff = ConvertUnits.ToSimUnits(character.WorldPosition - sourceWorldPos);
+
+            Body closestBody = null;
+            if (character.Submarine == null)
+            {
+                closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
+                if (closestBody == null) return true;
+            }
+            else
+            {
+                closestBody = Submarine.CheckVisibility(character.WorldPosition, character.WorldPosition - diff);
+                if (closestBody == null) return true;
+            }
+
+            Structure wall = closestBody.UserData as Structure;
+            return wall == null || !wall.CastShadow;
+        }
+
         public bool HasEquippedItem(Item item)
         {
             for (int i = 0; i < Inventory.Capacity; i++)
@@ -1568,8 +1588,9 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) { return false; }
+
+
+            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
             
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) { return false; }
@@ -2023,10 +2044,6 @@ namespace Barotrauma
             {
                 IsRagdolled = IsForceRagdolled;
             }
-            else if (IsRemotePlayer)
-            {
-                IsRagdolled = IsKeyDown(InputType.Ragdoll);
-            }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
             else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f))
             {
@@ -2155,8 +2172,7 @@ namespace Barotrauma
 
         public void Speak(string message, ChatMessageType? messageType = null, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (string.IsNullOrEmpty(message)) { return; }
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
 
             //already sent a similar message a moment ago
             if (!string.IsNullOrEmpty(identifier) && minDurationBetweenSimilar > 0.0f &&
@@ -2165,6 +2181,7 @@ namespace Barotrauma
             {
                 return;
             }
+
             aiChatMessageQueue.Add(new AIChatMessage(message, messageType, identifier, delay));
         }
 
@@ -2581,9 +2598,11 @@ namespace Barotrauma
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
 #endif
 
-            CharacterList.Remove(this);
+#if CLIENT
+            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+#endif
 
-            if (Controlled == this) { Controlled = null; }
+            CharacterList.Remove(this);
 
             if (Inventory != null)
             {

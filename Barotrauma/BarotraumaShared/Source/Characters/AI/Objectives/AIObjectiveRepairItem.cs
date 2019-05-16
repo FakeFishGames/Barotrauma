@@ -83,12 +83,12 @@ namespace Barotrauma
                     return;
                 }
             }
-            if (repairTool == null)
+            if (character.CanInteractWith(Item))
             {
-                FindRepairTool();
-            }
-            if (character.CurrentHull == Item.CurrentHull && character.CanInteractWith(Item))
-            {
+                if (repairTool == null)
+                {
+                    FindRepairTool();
+                }
                 if (repairTool != null)
                 {
                     OperateRepairTool(deltaTime);

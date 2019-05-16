@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string text;
-        [Serialize("", true, translationTextTag: "Label."), Editable(100)]
+        [Serialize("", true), Editable(100)]
         public string Text
         {
             get { return text; }
@@ -40,10 +40,9 @@ namespace Barotrauma.Items.Components
                 {
                     textBlock = null;
                 }
-                
+
                 text = value;
-                DisplayText = TextManager.Get(text, returnNull: true) ?? value;
-                TextBlock.Text = DisplayText;
+                TextBlock.Text = value;
                 SetScrollingText();
             }
         }
@@ -122,7 +121,7 @@ namespace Barotrauma.Items.Components
         {
             if (!scrollable) return;
 
-            float totalWidth = textBlock.Font.MeasureString(DisplayText).X;
+            float totalWidth = textBlock.Font.MeasureString(text).X;
             float textAreaWidth = Math.Max(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z, 0);
             if (totalWidth >= textAreaWidth)
             {
@@ -130,13 +129,13 @@ namespace Barotrauma.Items.Components
                 //(so the text can scroll entirely out of view before we reset it back to start)
                 needsScrolling = true;
                 float spaceWidth = textBlock.Font.MeasureChar(' ').X;
-                scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText;
+                scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + text;
             }
             else
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
-                scrollingText = DisplayText;
+                scrollingText = text;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
                 return;
@@ -152,7 +151,7 @@ namespace Barotrauma.Items.Components
                 charWidths[i] = charWidth;
             }
 
-            scrollIndex = MathHelper.Clamp(scrollIndex, 0, DisplayText.Length);
+            scrollIndex = MathHelper.Clamp(scrollIndex, 0, text.Length);
         }
 
         public override void Update(float deltaTime, Camera cam)

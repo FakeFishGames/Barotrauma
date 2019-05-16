@@ -21,9 +21,9 @@ namespace Barotrauma
         {
             if (!Enabled) { return 1000.0f; }
 
-            if (recipient.Character == null || recipient.Character.IsDead)
+            if (recipient.Character == null)
             {
-                return 0.2f;
+                return 0.1f;
             }
             else
             {

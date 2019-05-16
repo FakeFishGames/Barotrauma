@@ -928,9 +928,14 @@ namespace Barotrauma
         
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
-            if (!hasStatusEffectsOfType[(int)type]) { return; }
-            foreach (StatusEffect effect in statusEffectLists[type])
+            if (statusEffectLists == null) return;
+
+            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
+
+            bool broken = condition <= 0.0f;
+            foreach (StatusEffect effect in statusEffects)
             {
+                if (broken && effect.type != ActionType.OnBroken) continue;
                 ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
             }
         }
@@ -1047,8 +1052,6 @@ namespace Barotrauma
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
-            bool broken = condition <= 0.0f;
-
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 sendConditionUpdateTimer -= deltaTime;
@@ -1124,10 +1127,7 @@ namespace Barotrauma
                     container = container.Container;
                 }
             }
-            if (!broken)
-            {
-                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
-            }
+            ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
@@ -1148,10 +1148,6 @@ namespace Barotrauma
             else if (Submarine != null && prevSub == null)
             {
                 body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
-            }
-            else if (Submarine != null && prevSub != null && Submarine != prevSub)
-            {
-                body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
             }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
@@ -1210,7 +1206,7 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return true; }
 
-            if (ImpactTolerance > 0.0f && condition > 0.0f && impact > ImpactTolerance)
+            if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
             {
                 ApplyStatusEffects(ActionType.OnImpact, 1.0f);
 #if SERVER
@@ -1269,7 +1265,7 @@ namespace Barotrauma
 
             if (recursive)
             {
-                HashSet<Connection> alreadySearched = new HashSet<Connection>();
+                List<Item> alreadySearched = new List<Item>() { this };
                 GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
 
                 return connectedComponents;
@@ -1291,7 +1287,7 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
             if (connectionPanel == null) { return; }
@@ -1315,35 +1311,28 @@ namespace Barotrauma
             }
         }
 
+                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
+                }
+            }
+        }
+
         public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
-            List<T> connectedComponents = new List<T>();
-            HashSet<Connection> alreadySearched = new HashSet<Connection>();
+            List<T> connectedComponents = new List<T>();            
+            List<Item> alreadySearched = new List<Item>() { this };
             GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
 
             return connectedComponents;
         }
-        
-        private static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
-        {
-            new Pair<string, string>("power_in", "power_out"),
-            new Pair<string, string>("signal_in1", "signal_out1"),
-            new Pair<string, string>("signal_in2", "signal_out2"),
-            new Pair<string, string>("signal_in3", "signal_out3"),
-            new Pair<string, string>("signal_in4", "signal_out4"),
-            new Pair<string, string>("signal_in", "signal_out"),
-            new Pair<string, string>("signal_in1", "signal_out"),
-            new Pair<string, string>("signal_in2", "signal_out")
-        };
 
-        private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
-            alreadySearched.Add(c);
+            alreadySearched.Add(this);
                         
             var recipients = c.Recipients;
             foreach (Connection recipient in recipients)
             {
-                if (alreadySearched.Contains(recipient)) { continue; }
+                if (alreadySearched.Contains(recipient.Item)) continue;
 
                 var component = recipient.Item.GetComponent<T>();                    
                 if (component != null)
@@ -1352,29 +1341,7 @@ namespace Barotrauma
                 }
 
                 recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
-            }
-
-            foreach (Pair<string, string> connectionPair in connectionPairs)
-            {
-                if (connectionPair.First == c.Name)
-                {
-                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.Second);
-                    if (pairedConnection != null)
-                    {
-                        if (alreadySearched.Contains(pairedConnection)) { continue; }
-                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
-                    }
-                }
-                else if (connectionPair.Second == c.Name)
-                {
-                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.First);
-                    if (pairedConnection != null)
-                    {
-                        if (alreadySearched.Contains(pairedConnection)) { continue; }
-                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
-                    }
-                }
-            }
+            }            
         }
 
 

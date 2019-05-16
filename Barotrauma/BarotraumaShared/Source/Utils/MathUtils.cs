@@ -796,18 +796,6 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Rotates a point in 2d space around the origin
-        /// </summary>
-        public static Vector2 RotatePoint(Vector2 point, float radians)
-        {
-            var sin = Math.Sin(radians);
-            var cos = Math.Cos(radians);
-            var x = (cos * point.X) - (sin * point.Y);
-            var y = (sin * point.X) + (cos * point.Y);
-            return new Vector2((float)x, (float)y);
-        }
-
-        /// <summary>
         /// Returns the corners of an imaginary rectangle.
         /// Unlike the XNA rectangle, this can be rotated with the up parameter.
         /// </summary>

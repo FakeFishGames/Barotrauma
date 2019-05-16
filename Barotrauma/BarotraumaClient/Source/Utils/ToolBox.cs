@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -142,7 +141,7 @@ namespace Barotrauma
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;
             Vector2 spaceSize = font.MeasureString(" ") * textScale;
-            for (int i = 0; i < words.Count; ++i)
+            for (int i = 0; i < words.Length; ++i)
             {
                 if (words[i].Length == 0)
                 {

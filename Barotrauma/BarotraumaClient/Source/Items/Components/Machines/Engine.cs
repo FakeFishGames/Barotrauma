@@ -30,25 +30,25 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
-
-            powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), content.RectTransform), 
+            powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), GuiFrame.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.15f) }, 
                 TextManager.Get("EnginePowered"), style: "IndicatorLightGreen")
             {
                 CanBeFocused = false
             };
 
             string powerLabel = TextManager.Get("EngineForce");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), "", textAlignment: Alignment.Center)
+            new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.3f), GuiFrame.RectTransform, Anchor.BottomCenter)
+                { RelativeOffset = new Vector2(0.0f, 0.4f) }, "", textAlignment: Alignment.Center)
             {
                 TextGetter = () => { return powerLabel + ": " + (int)(targetForce) + " %"; }
             };
 
-            forceSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), barSize: 0.2f, style: "GUISlider")
+            var sliderArea = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.25f), GuiFrame.RectTransform, Anchor.BottomCenter)
+                { RelativeOffset = new Vector2(0.0f, 0.2f) }, isHorizontal: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), sliderArea.RectTransform), TextManager.Get("EngineBackwards"), 
+                font: GUI.SmallFont, textAlignment: Alignment.Center);
+            forceSlider = new GUIScrollBar(new RectTransform(new Vector2(0.6f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
             {
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -66,16 +66,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
-            var textArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform), isHorizontal: true)
-            {
-                Stretch = true
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textArea.RectTransform), TextManager.Get("EngineBackwards"), 
-                font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textArea.RectTransform), TextManager.Get("EngineForwards"),
-                font: GUI.SmallFont, textAlignment: Alignment.CenterRight);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), sliderArea.RectTransform), TextManager.Get("EngineForwards"),
+                font: GUI.SmallFont, textAlignment: Alignment.Center);
             
             foreach (XElement subElement in element.Elements())
             {

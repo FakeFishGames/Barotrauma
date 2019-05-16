@@ -55,9 +55,9 @@ namespace Barotrauma
             get { return true; }
         }
 
-        public virtual IEnumerable<Vector2> SonarPositions
+        public virtual Vector2 SonarPosition
         {
-            get { return Enumerable.Empty<Vector2>(); }
+            get { return Vector2.Zero; }
         }
         
         public string SonarLabel

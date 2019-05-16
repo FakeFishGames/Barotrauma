@@ -1126,7 +1126,7 @@ namespace Barotrauma.Networking
                     UInt16 modeIndex = inc.ReadUInt16();
                     if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.ToLowerInvariant() == "multiplayercampaign")
                     {
-                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer).ToArray();
+                        string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
                         for (int i = 0; i < saveFiles.Length; i++)
                         {
                             XDocument doc = SaveUtil.LoadGameSessionDoc(saveFiles[i]);
@@ -1959,8 +1959,6 @@ namespace Barotrauma.Networking
             {
                 msg.Write(false);
             }
-
-            msg.Write(serverSettings.AllowRagdollButton);
 
             serverSettings.WriteMonsterEnabled(msg);
 

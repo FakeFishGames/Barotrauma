@@ -60,10 +60,7 @@ namespace Barotrauma
             var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoHolder.RectTransform, Anchor.Center), TextManager.Get("JoinServer"), font: GUI.LargeFont)
-            {
-                ForceUpperCase = true,
-                AutoScale = true
-            };
+            { ForceUpperCase = true };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")

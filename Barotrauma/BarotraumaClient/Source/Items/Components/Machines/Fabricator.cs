@@ -15,10 +15,6 @@ namespace Barotrauma.Items.Components
 
         private GUIFrame selectedItemFrame;
         
-        public GUIButton ActivateButton
-        {
-            get { return activateButton; }
-        }
         private GUIButton activateButton;
 
         private GUITextBox itemFilterBox;
@@ -26,10 +22,6 @@ namespace Barotrauma.Items.Components
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
         private GUICustomComponent inputInventoryOverlay, outputInventoryOverlay;
 
-        public FabricationRecipe SelectedItem
-        {
-            get { return selectedItem; }
-        }
         private FabricationRecipe selectedItem;
 
         private GUIComponent inSufficientPowerWarning;
@@ -81,31 +73,7 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
-
-            CreateRecipes();
-
-            activateButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.07f), paddedFrame.RectTransform),
-                TextManager.Get("FabricatorCreate"), style: "GUIButtonLarge")
-            {
-                OnClicked = StartButtonClicked,
-                UserData = selectedItem,
-                Enabled = false
-            };
-
-            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), TextManager.Get("FabricatorNoPower"),
-                textColor: Color.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
-            {
-                HoverColor = Color.Black,
-                IgnoreLayoutGroups = true,
-                Visible = false,
-                CanBeFocused = false
-            };
-        }
-
-        partial void CreateRecipes()
-        {
-            itemList.Content.RectTransform.ClearChildren();
-
+            
             foreach (FabricationRecipe fi in fabricationRecipes)
             {
                 GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 30), itemList.Content.RectTransform), style: null)
@@ -133,6 +101,23 @@ namespace Barotrauma.Items.Components
                     };
                 }
             }
+
+            activateButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.07f), paddedFrame.RectTransform),
+                TextManager.Get("FabricatorCreate"), style: "GUIButtonLarge")
+            {
+                OnClicked = StartButtonClicked,
+                UserData = selectedItem,
+                Enabled = false
+            };
+
+            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), TextManager.Get("FabricatorNoPower"),
+                textColor: Color.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
+            {
+                HoverColor = Color.Black,
+                IgnoreLayoutGroups = true,
+                Visible = false,
+                CanBeFocused = false
+            };
         }
 
         partial void OnItemLoadedProjSpecific()
@@ -164,15 +149,13 @@ namespace Barotrauma.Items.Components
                 return string.Compare(item1.DisplayName, item2.DisplayName);
             });
 
-            var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
-                TextManager.Get("fabricatorsufficientskills", returnNull: true) ?? "Sufficient skills to fabricate", textColor: Color.LightGreen)
+            var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Sufficient skills to fabricate:", textColor: Color.LightGreen)
             {
                 CanBeFocused = false
             };
             sufficientSkillsText.RectTransform.SetAsFirstChild();
 
-            var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
-                TextManager.Get("fabricatorinsufficientskills", returnNull: true) ?? "Insufficient skills to fabricate", textColor: Color.Orange)
+            var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Insufficient skills to fabricate:", textColor: Color.Orange)
             {
                 CanBeFocused = false
             };
@@ -258,7 +241,6 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
         private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
@@ -379,29 +361,6 @@ namespace Barotrauma.Items.Components
                 requiredTimeText, textColor: ToolBox.GradientLerp(degreeOfSuccess, Color.Red, Color.Yellow, Color.LightGreen), font: GUI.SmallFont);
                         
             return true;
-        }
-
-        public void HighlightRecipe(string identifier, Color color)
-        {
-            foreach (GUIComponent child in itemList.Content.Children)
-            {
-                FabricationRecipe recipe = child.UserData as FabricationRecipe;
-                if (recipe?.DisplayName == null) { continue; }
-                if (recipe.TargetItem.Identifier == identifier)
-                {
-                    if (child.FlashTimer > 0.0f) return;
-                    child.Flash(color, 1.5f, false);
-
-                    for (int i = 0; i < child.CountChildren; i++)
-                    {
-                        var grandChild = child.GetChild(i);
-                        if (grandChild is GUITextBlock) continue;
-                        grandChild.Flash(color, 1.5f, false);
-                    }
-
-                    return;
-                }
-            }
         }
 
         private bool StartButtonClicked(GUIButton button, object obj)

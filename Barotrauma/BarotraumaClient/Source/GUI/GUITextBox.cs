@@ -123,12 +123,6 @@ namespace Barotrauma
             }
         }
 
-        public bool OverflowClip
-        {
-            get { return textBlock.OverflowClip; }
-            set { textBlock.OverflowClip = value; }
-        }
-
         public override bool Enabled
         {
             get { return enabled; }
@@ -324,7 +318,7 @@ namespace Barotrauma
                 for (int i = 0; i <= textBlock.Text.Length; i++)
                 {
                     Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, i));
-                    Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, textSize.Y + textBlock.Padding.Y) + textBlock.TextPos - textBlock.Origin;
+                    Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, textSize.Y + textBlock.Padding.Y);
                     //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
                     positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, i));
                 }
@@ -365,9 +359,9 @@ namespace Barotrauma
             OnDeselected?.Invoke(this, Keys.None);
         }
 
-        public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectOffset = null)
+        public override void Flash(Color? color = null, float flashDuration = 1.5f)
         {
-            textBlock.Flash(color, flashDuration, useRectangleFlash, flashRectOffset);
+            textBlock.Flash(color, flashDuration);
         }
         
         protected override void Update(float deltaTime)
@@ -411,7 +405,7 @@ namespace Barotrauma
             {
                 isSelecting = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
             }
-
+            
             if (CaretEnabled)
             {
                 if (textBlock.OverflowClipActive)
@@ -434,7 +428,7 @@ namespace Barotrauma
                     CalculateCaretPos();
                 }
             }
-
+            
             if (GUI.KeyboardDispatcher.Subscriber == this)
             {
                 state = ComponentState.Selected;
@@ -553,7 +547,15 @@ namespace Barotrauma
 
         public void ReceiveTextInput(char inputChar)
         {
-            ReceiveTextInput(inputChar.ToString());
+            if (selectedCharacters > 0)
+            {
+                RemoveSelectedText();
+            }
+            if (SetText(Text.Insert(CaretIndex, inputChar.ToString())))
+            {
+                CaretIndex = Math.Min(Text.Length, CaretIndex + 1);
+                OnTextChanged?.Invoke(this, Text);
+            }
         }
 
         public void ReceiveTextInput(string input)
@@ -562,16 +564,10 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            Vector2 textPos = textBlock.TextPos;
-            bool wasOverflowClipActive = textBlock.OverflowClipActive;
             if (SetText(Text.Insert(CaretIndex, input)))
             {
                 CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
                 OnTextChanged?.Invoke(this, Text);
-                if (textBlock.OverflowClipActive && wasOverflowClipActive && !MathUtils.NearlyEqual(textBlock.TextPos, textPos))
-                {
-                    textBlock.TextPos = textPos + Vector2.UnitX * Font.MeasureString(input).X;
-                }
             }
         }
 

@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -9,12 +8,6 @@ namespace Barotrauma
     public class GUIStyle
     {
         private Dictionary<string, GUIComponentStyle> componentStyles;
-
-        private XElement configElement;
-
-        private GraphicsDevice graphicsDevice;
-
-        private ScalableFont defaultFont;
 
         public ScalableFont Font { get; private set; }
         public ScalableFont SmallFont { get; private set; }
@@ -52,6 +45,24 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "font":
+                        Font = new ScalableFont(subElement, graphicsDevice);
+                        break;
+                    case "smallfont":
+                        SmallFont = new ScalableFont(subElement, graphicsDevice);
+                        break;
+                    case "largefont":
+                        LargeFont = new ScalableFont(subElement, graphicsDevice);
+                        break;
+                    case "objectivetitle":
+                        ObjectiveTitleFont = new ScalableFont(subElement, graphicsDevice);
+                        break;
+                    case "objectivename":
+                        ObjectiveNameFont = new ScalableFont(subElement, graphicsDevice);
+                        break;
+                    case "videotitle":
+                        VideoTitleFont = new ScalableFont(subElement, graphicsDevice);
+                        break;
                     case "cursor":
                         CursorSprite = new Sprite(subElement);
                         break;
@@ -61,45 +72,9 @@ namespace Barotrauma
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
                         break;
-                    case "font":
-                        Font = LoadFont(subElement, graphicsDevice);
-                        break;
-                    case "smallfont":
-                        SmallFont = LoadFont(subElement, graphicsDevice);
-                        break;
-                    case "largefont":
-                        LargeFont = LoadFont(subElement, graphicsDevice);
-                        break;
-                    case "objectivetitle":
-                        ObjectiveTitleFont = LoadFont(subElement, graphicsDevice);
-                        break;
-                    case "objectivename":
-                        ObjectiveNameFont = LoadFont(subElement, graphicsDevice);
-                        break;
-                    case "videotitle":
-                        VideoTitleFont = LoadFont(subElement, graphicsDevice);
-                        break;
                     default:
                         GUIComponentStyle componentStyle = new GUIComponentStyle(subElement);
                         componentStyles.Add(subElement.Name.ToString().ToLowerInvariant(), componentStyle);
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns the default font of the currently selected language
-        /// </summary>
-        public ScalableFont LoadCurrentDefaultFont()
-        {
-            defaultFont?.Dispose();
-            defaultFont = null;
-            foreach (XElement subElement in configElement.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "font":
-                        defaultFont = LoadFont(subElement, graphicsDevice);
                         break;
                 }
             }
@@ -183,6 +158,12 @@ namespace Barotrauma
                 }
             }
             return element.GetAttributeBool("dynamicloading", false);
+        }
+
+        public GUIComponentStyle GetComponentStyle(string name)
+        {
+            componentStyles.TryGetValue(name.ToLowerInvariant(), out GUIComponentStyle style);
+            return style;
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

@@ -399,7 +399,7 @@ namespace Barotrauma
         {
             ID = idCounter;
             idCounter++;
-            Name = element.GetAttributeString("name", "");
+            Name = element.GetAttributeString("name", "unnamed");
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
             File = element.GetAttributeString("file", "");
             SourceElement = GetConfig(File).Root;
@@ -423,29 +423,6 @@ namespace Barotrauma
                 element.GetAttributeInt("beardindex", -1),
                 element.GetAttributeInt("moustacheindex", -1),
                 element.GetAttributeInt("faceattachmentindex", -1));
-
-            if (string.IsNullOrEmpty(Name))
-            {
-                if (SourceElement.Element("name") != null)
-                {
-                    string firstNamePath = SourceElement.Element("name").GetAttributeString("firstname", "");
-                    if (firstNamePath != "")
-                    {
-                        firstNamePath = firstNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
-                        Name = ToolBox.GetRandomLine(firstNamePath);
-                    }
-
-                    string lastNamePath = SourceElement.Element("name").GetAttributeString("lastname", "");
-                    if (lastNamePath != "")
-                    {
-                        lastNamePath = lastNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
-                        if (Name != "") Name += " ";
-                        Name += ToolBox.GetRandomLine(lastNamePath);
-                    }
-                }
-            }
-
-
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
             string personalityName = element.GetAttributeString("personality", "");
             ragdollFileName = element.GetAttributeString("ragdoll", string.Empty);
@@ -729,8 +706,6 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites();
         
-        // TODO: change the formula so that it's not linear and so that it takes into account the usefulness of the skill 
-        // -> give a weight to each skill, because some are much more valuable than others?
         private int CalculateSalary()
         {
             if (Name == null || Job == null) return 0;

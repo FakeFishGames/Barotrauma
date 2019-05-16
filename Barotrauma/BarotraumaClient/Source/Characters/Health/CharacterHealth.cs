@@ -96,11 +96,6 @@ namespace Barotrauma
         private const float UpdateDisplayedAfflictionsInterval = 0.5f;
         private List<Affliction> currentDisplayedAfflictions = new List<Affliction>();
 
-        public bool MouseOnElement
-        {
-            get { return highlightedLimbIndex > -1 || GUI.MouseOn == dropItemArea; }
-        }
-
         private static CharacterHealth openHealthWindow;
         public static CharacterHealth OpenHealthWindow
         {
@@ -134,17 +129,6 @@ namespace Barotrauma
                     Character.Controlled.SelectedConstruction = null;
                 }
             }
-        }
-
-        public GUIButton CPRButton
-        {
-            get { return cprButton; }
-        }
-
-        public float HealthBarPulsateTimer
-        {
-            get { return healthBarPulsateTimer; }
-            set { healthBarPulsateTimer = MathHelper.Clamp(value, 0.0f, 10.0f); }
         }
 
         static CharacterHealth()
@@ -188,16 +172,18 @@ namespace Barotrauma
 
             afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
 
-            lowSkillIndicator = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedInfoFrame.RectTransform, Anchor.TopRight),
-              TextManager.Get("LowMedicalSkillWarning"), Color.Orange, textAlignment: Alignment.TopRight, font: GUI.SmallFont, wrap: true)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), paddedInfoFrame.RectTransform), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopRight);
+            lowSkillIndicator = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.07f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.08f) },
+              TextManager.Get("LowMedicalSkillWarning"), Color.Orange, textAlignment: Alignment.Center, font: GUI.SmallFont, wrap: true)
             {
                 Visible = false
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedInfoFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.05f) }, TextManager.Get("SuitableTreatments"), textAlignment: Alignment.BottomRight);
-            
-            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.12f) });
+            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.15f) })
+            {
+                Spacing = 10
+            };
             dropItemArea = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.3f), paddedInfoFrame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.02f, 0.0f) }, style: null)
+            { RelativeOffset = new Vector2(0.0f, 0.0f) }, style: null)
             {
                 ToolTip = TextManager.Get("HealthItemUseTip")
             };
@@ -598,18 +584,9 @@ namespace Barotrauma
                     var affliction = GetAllAfflictions(a => a.Prefab.IndicatorLimb != LimbType.None)
                         .OrderByDescending(a => a.DamagePerSecond)
                         .ThenByDescending(a => a.Strength).FirstOrDefault();
-                    if (affliction.DamagePerSecond > 0 || affliction.Strength > 0)
+                    var limbHealth = GetMathingLimbHealth(affliction);
+                    if (limbHealth != null)
                     {
-                        var limbHealth = GetMathingLimbHealth(affliction);
-                        if (limbHealth != null)
-                        {
-                            selectedLimbIndex = limbHealths.IndexOf(limbHealth);
-                        }
-                    }
-                    else
-                    {
-                        // If no affliction is critical, select the limb which has most damage.
-                        var limbHealth = limbHealths.OrderByDescending(l => l.TotalDamage).FirstOrDefault();
                         selectedLimbIndex = limbHealths.IndexOf(limbHealth);
                     }
                 }
@@ -951,7 +928,7 @@ namespace Barotrauma
         {
             afflictionInfoContainer.Content.ClearChildren();
             recommendedTreatmentContainer.Content.ClearChildren();
-            
+
             float characterSkillLevel = Character.Controlled == null ? 0.0f : Character.Controlled.GetSkillLevel("medical");
 
             //random variance is 200% when the skill is 0
@@ -1046,15 +1023,14 @@ namespace Barotrauma
             {
                 ItemPrefab item = MapEntityPrefab.Find(name: null, identifier: treatment.Key, showErrorMessages: false) as ItemPrefab;
                 if (item == null) continue;
-                int slotSize = (int)(recommendedTreatmentContainer.Content.Rect.Width * 0.5f);
+                int slotSize = (int)(recommendedTreatmentContainer.Content.Rect.Width * 0.8f);
 
-                var itemSlot = new GUIFrame(new RectTransform(new Point(recommendedTreatmentContainer.Content.Rect.Width, slotSize), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopCenter),
-                    style: "InnerGlow")
+                var itemSlot = new GUIButton(new RectTransform(new Point(slotSize), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopCenter),
+                    text: "", style: "InventorySlotSmall")
                 {
-                    UserData = item,
-                    CanBeFocused = false
+                    UserData = item
                 };
-                itemSlot.Color = ToolBox.GradientLerp(treatment.Value, Color.Red, Color.Orange, Color.LightGreen);
+                itemSlot.Color = ToolBox.GradientLerp(treatment.Value, Color.Red, Color.White, Color.LightGreen);
 
                 Sprite itemSprite = item.InventoryIcon ?? item.sprite;
                 Color itemColor = itemSprite == item.sprite ? item.SpriteColor : item.InventoryIconColor;
@@ -1438,8 +1414,6 @@ namespace Barotrauma
         {
             foreach (Limb limb in Character.AnimController.Limbs)
             {
-                if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count) { continue; }
-
                 limb.BurnOverlayStrength = 0.0f;
                 limb.DamageOverlayStrength = 0.0f;
                 if (limbHealths[limb.HealthIndex].Afflictions.Count == 0) continue;

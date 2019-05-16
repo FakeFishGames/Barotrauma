@@ -98,7 +98,7 @@ namespace Barotrauma
                         if (distSqrd > 10.0f || !character.AllowInput)
                         {
                             Collider.TargetRotation = newRotation;
-                            SetPosition(newPosition, lerp: distSqrd < 5.0f, ignorePlatforms: false);
+                            SetPosition(newPosition, lerp: distSqrd < 5.0f);
                         }
                         else
                         {
@@ -238,16 +238,20 @@ namespace Barotrauma
                         }
 
                         float errorMagnitude = positionError.Length();
-                        if (errorMagnitude > 0.5f)
-                        {
-                            character.MemLocalState.Clear();
-                            SetPosition(serverPos.Position, lerp: true, ignorePlatforms: false);
-                        }
-                        else if (errorMagnitude > 0.01f)
+                        if (errorMagnitude > 0.01f)
                         {
                             Collider.TargetPosition = Collider.SimPosition + positionError;
                             Collider.TargetRotation = Collider.Rotation + rotationError;
                             Collider.MoveToTargetPosition(lerp: true);
+                            if (errorMagnitude > 0.5f)
+                            {
+                                character.MemLocalState.Clear();                 
+                                foreach (Limb limb in Limbs)
+                                {
+                                    limb.body.TargetPosition = limb.body.SimPosition + positionError;
+                                    limb.body.MoveToTargetPosition(lerp: true);
+                                }
+                            }
                         }
                     }
 
@@ -260,45 +264,62 @@ namespace Barotrauma
         
         partial void ImpactProjSpecific(float impact, Body body)
         {
-            float volume = MathHelper.Clamp(impact - 3.0f, 0.5f, 1.0f);
+            float volume = Math.Min(impact - 3.0f, 1.0f);
 
-            if (body.UserData is Limb limb && character.Stun <= 0f)
+        partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos)
+        {
+            if (character != GameMain.Client.Character || !character.AllowInput)
             {
-                if (impact > 3.0f) { PlayImpactSound(limb); }
-            }
-            else if (body.UserData is Limb || body == Collider.FarseerBody)
-            {
-                if (!character.IsRemotePlayer && impact > ImpactTolerance)
+                Limb limb = (Limb)body.UserData;
+                if (impact > 3.0f && limb.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                 {
-                    SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
+                    limb.LastImpactSoundTime = (float)Timing.TotalTime;
+                    if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
+                    {
+                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
+                    }
+                    
+                    //unconscious/dead characters can't correct their position using AnimController movement
+                    // -> we need to correct it manually
+                    if (!character.AllowInput)
+                    {
+                        float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, Collider.SimPosition);
+                        float mainLimbErrorTolerance = 0.1f;
+                        //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
+                        //don't attempt to correct the position.
+                        if (mainLimbDistSqrd > mainLimbErrorTolerance || Collider.LinearVelocity.LengthSquared() > 0.05f)
+                        {
+                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
+                        }
+                    }
+                }
+                character.MemLocalState.Clear();
+            }
+            else
+            {
+                if (!character.IsRemotePlayer)
+                {
+                    if (character.Submarine == null)
+                    {
+                        //transform in-sub coordinates to outside coordinates
+                        if (character.MemLocalState[i].Position.Y > lowestSubPos)
+                        {                            
+                            character.MemLocalState[i].TransformInToOutside();
+                        }
+                    }
+                    else if (currentHull?.Submarine != null)
+                    {
+                        //transform outside coordinates to in-sub coordinates
+                        if (character.MemLocalState[i].Position.Y < lowestSubPos)
+                        {
+                            character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);
+                        }
+                    }
                 }
             }
             if (Character.Controlled == character)
             {
                 GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
-            }
-        }
-
-        public void PlayImpactSound(Limb limb)
-        {
-            limb.LastImpactSoundTime = (float)Timing.TotalTime;
-            if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
-            {
-                bool inWater = limb.inWater;
-                if (character.CurrentHull != null &&
-                    character.CurrentHull.Surface > character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height &&
-                    limb.SimPosition.Y < ConvertUnits.ToSimUnits(character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height) + limb.body.GetMaxExtent())
-                {
-                    inWater = true;
-                }
-                SoundPlayer.PlaySound(inWater ? "footstep_water" : limb.HitSoundTag, limb.WorldPosition, hullGuess: character.CurrentHull);
-            }
-            foreach (WearableSprite wearable in limb.WearingItems)
-            {
-                if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
-                {
-                    SoundPlayer.PlaySound(wearable.Sound, limb.WorldPosition, hullGuess: character.CurrentHull);
-                }
             }
         }
 
@@ -364,8 +385,6 @@ namespace Barotrauma
         
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (!character.Enabled || SimplePhysicsEnabled) { return; }
-
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             foreach (var deformation in SpriteDeformations)
             {
@@ -396,7 +415,7 @@ namespace Barotrauma
             }
         }
 
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound = true)
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint)
         {
             foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
             {
@@ -413,11 +432,6 @@ namespace Barotrauma
                 {
                     character.CurrentHull?.AddDecal(character.BloodDecalName, limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
                 }
-            }
-
-            if (playSound)
-            {
-                SoundPlayer.PlayDamageSound("Gore", 1.0f, limbJoint.LimbA.body);
             }
         }
 
@@ -436,15 +450,14 @@ namespace Barotrauma
                 return;
             }
 
-            Color? color = null;
-            if (character.ExternalHighlight)
-            {
-                color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
-            }
+            //foreach (Limb limb in Limbs)
+            //{
+            //    limb.Draw(spriteBatch, cam);
+            //}
 
             for (int i = 0; i < limbs.Length; i++)
             {
-                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam);
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }

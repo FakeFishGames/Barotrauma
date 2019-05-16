@@ -43,7 +43,6 @@ namespace Barotrauma
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
-        public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
@@ -78,17 +77,24 @@ namespace Barotrauma
 
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
+        public bool UseSteam;
         public bool RequireSteamAuthentication
         {
-            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
+            get { return requireSteamAuthentication && UseSteam; }
             set { requireSteamAuthentication = value; }
         }
         public bool UseSteamMatchmaking
         {
-            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
+            get { return useSteamMatchmaking && UseSteam; }
             set { useSteamMatchmaking = value; }
         }
+
 #else
+        //steam functionality determined at compile time
+        public bool UseSteam
+        {
+            get { return Steam.SteamManager.USE_STEAM; }
+        }
         public bool RequireSteamAuthentication
         {
             get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
@@ -432,6 +438,9 @@ namespace Barotrauma
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
 
+#if DEBUG
+            UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+#endif
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (doc == null)
@@ -595,14 +604,13 @@ namespace Barotrauma
             }
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
-                {
-                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
-                    continue;
-                }
                 foreach (ContentFile file in contentPackage.Files)
                 {
+                    if (!System.IO.File.Exists(file.Path))
+                    {
+                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
+                        continue;
+                    }
                     ToolBox.IsProperFilenameCase(file.Path);
                 }
             }
@@ -841,15 +849,11 @@ namespace Barotrauma
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
 
-            PauseOnFocusLost = doc.Root.GetAttributeBool("pauseonfocuslost", PauseOnFocusLost);
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
             EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
             CrewMenuOpen = doc.Root.GetAttributeBool("crewmenuopen", CrewMenuOpen);
             ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
-
-            CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", false);
-            EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", false);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -963,19 +967,24 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
-                {
-                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
-                    continue;
-                }
                 foreach (ContentFile file in contentPackage.Files)
                 {
+                    if (!System.IO.File.Exists(file.Path))
+                    {
+                        DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\" - file \"" + file.Path + "\" not found.");
+                        continue;
+                    }
                     ToolBox.IsProperFilenameCase(file.Path);
                 }
             }
-
-            EnsureCoreContentPackageSelected();
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
 
             //save to get rid of the invalid selected packages in the config file
             if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
@@ -994,25 +1003,6 @@ namespace Barotrauma
                                 .Replace("[gameversion]", GameMain.Version.ToString()));
             }
         }
-
-        public void EnsureCoreContentPackageSelected()
-        {
-            if (SelectedContentPackages.Any(cp => cp.CorePackage)) { return; }
-
-            if (GameMain.VanillaContent != null)
-            {
-                SelectedContentPackages.Add(GameMain.VanillaContent);
-            }
-            else
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
-        }
-
         #endregion
 
         #region Save PlayerConfig
@@ -1039,13 +1029,10 @@ namespace Barotrauma
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
-                new XAttribute("pauseonfocuslost", PauseOnFocusLost),
                 new XAttribute("aimassistamount", aimAssistAmount),
                 new XAttribute("enablemouselook", EnableMouseLook),
                 new XAttribute("chatopen", ChatOpen),
-                new XAttribute("crewmenuopen", CrewMenuOpen),
-                new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
-                new XAttribute("editordisclaimershown", EditorDisclaimerShown));
+                new XAttribute("crewmenuopen", CrewMenuOpen));
 
             if (!ShowUserStatisticsPrompt)
             {
@@ -1148,9 +1135,9 @@ namespace Barotrauma
             {
                 foreach (Tutorial tutorial in Tutorial.Tutorials)
                 {
-                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Identifier))
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
                     {
-                        CompletedTutorialNames.Add(tutorial.Identifier);
+                        CompletedTutorialNames.Add(tutorial.Name);
                     }
                 }
             }

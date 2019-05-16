@@ -473,8 +473,6 @@ namespace Barotrauma.Items.Components
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
 
-            IsActive = true;
-
             float degreeOfSuccess = DegreeOfSuccess(character);
 
             //characters with insufficient skill levels don't refuel the reactor

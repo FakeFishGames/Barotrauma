@@ -12,16 +12,13 @@ namespace Barotrauma
 
         public bool CheatsEnabled;
 
-        const int InitialMoney = 8700;
-        public const int HullRepairCost = 500, ItemRepairCost = 500;
+        const int InitialMoney = 4700;
 
         protected bool watchmenSpawned;
         protected Character startWatchman, endWatchman;
 
         //key = dialog flag, double = Timing.TotalTime when the line was last said
         private Dictionary<string, double> dialogLastSpoken = new Dictionary<string, double>();
-
-        public bool PurchasedHullRepairs, PurchasedItemRepairs;
 
         protected Map map;
         public Map Map
@@ -73,37 +70,6 @@ namespace Barotrauma
             watchmenSpawned = false;
             startWatchman = null;
             endWatchman = null;
-
-            if (PurchasedHullRepairs)
-            {
-                foreach (Structure wall in Structure.WallList)
-                {
-                    if (wall.Submarine == null || wall.Submarine.IsOutpost) { continue; }
-                    if (wall.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(wall.Submarine))
-                    {
-                        for (int i = 0; i < wall.SectionCount; i++)
-                        {
-                            wall.AddDamage(i, -100000.0f);
-                        }
-                    }
-                }
-                PurchasedHullRepairs = false;
-            }
-            if (PurchasedItemRepairs)
-            {
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.Submarine == null || item.Submarine.IsOutpost) { continue; }
-                    if (item.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(item.Submarine))
-                    {
-                        if (item.GetComponent<Items.Components.Repairable>() != null)
-                        {
-                            item.Condition = item.Health;
-                        }
-                    }
-                }
-                PurchasedItemRepairs = false;
-            }
         }
 
         public override void Update(float deltaTime)

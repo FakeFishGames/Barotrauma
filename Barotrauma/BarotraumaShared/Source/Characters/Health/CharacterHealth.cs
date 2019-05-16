@@ -231,8 +231,7 @@ namespace Barotrauma
                 : afflictions.Concat(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
         }
 
-        private LimbHealth GetMatchingLimbHealth(Limb limb) => limbHealths[limb.HealthIndex];
-        private LimbHealth GetMathingLimbHealth(Affliction affliction) => GetMatchingLimbHealth(Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb));
+        private LimbHealth GetMathingLimbHealth(Affliction affliction) => limbHealths[Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb).HealthIndex];
 
         /// <summary>
         /// Returns the limb afflictions and non-limbspecific afflictions that are set to be displayed on this limb.
@@ -266,12 +265,6 @@ namespace Barotrauma
 
         public Affliction GetAffliction(string afflictionType, Limb limb)
         {
-            if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
-            {
-                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
-                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
-                return null;
-            }
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
                 if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
@@ -473,13 +466,7 @@ namespace Barotrauma
 
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)
         {
-            if (!newAffliction.Prefab.LimbSpecific || limb == null) return;
-            if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
-            {
-                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
-                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
-                return;
-            }
+            if (!newAffliction.Prefab.LimbSpecific) return;
             AddLimbAffliction(limbHealths[limb.HealthIndex], newAffliction);
         }
 
@@ -623,12 +610,6 @@ namespace Barotrauma
         partial void UpdateOxygenProjSpecific(float prevOxygen);
 
         partial void UpdateBleedingProjSpecific(AfflictionBleeding affliction, Limb targetLimb, float deltaTime);
-
-        public void SetVitality(float newVitality)
-        {
-            maxVitality = newVitality;
-            CalculateVitality();
-        }
 
         public void CalculateVitality()
         {

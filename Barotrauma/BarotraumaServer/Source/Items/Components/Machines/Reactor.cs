@@ -20,8 +20,6 @@ namespace Barotrauma.Items.Components
 
             if (!item.CanClientAccess(c)) return;
 
-            IsActive = true;
-
             if (!autoTemp && AutoTemp) blameOnBroken = c;
             if (turbineOutput < targetTurbineOutput) blameOnBroken = c;
             if (fissionRate > targetFissionRate) blameOnBroken = c;

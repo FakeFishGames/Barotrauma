@@ -25,7 +25,6 @@ namespace Barotrauma.Networking
         public SelectionMode? ModeSelectionMode;
         public SelectionMode? SubSelectionMode;
         public bool? AllowSpectating;
-        public bool? VoipEnabled;
         public bool? AllowRespawn;
         public YesNoMaybe? TraitorsEnabled;
         public string GameMode;
@@ -151,14 +150,11 @@ namespace Barotrauma.Networking
             else
                 allowRespawn.Selected = AllowRespawn.Value;
 
-            var voipEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("serversettingsvoicechatenabled"))
+            /*new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListHasPassword"))
             {
+                Selected = HasPassword,
                 CanBeFocused = false
-            };
-            if (!VoipEnabled.HasValue)
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), voipEnabledTickBox.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
-            else
-                voipEnabledTickBox.Selected = VoipEnabled.Value;
+            };*/
 
             var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
             {

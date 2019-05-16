@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -54,6 +55,28 @@ namespace Barotrauma
             objectiveManager = new AIObjectiveManager(c);
             objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
             objectiveManager.AddObjective(new AIObjectiveIdle(c));
+            // TODO: do this only when the player hasn't issued an order for a while
+            foreach (var automaticOrder in c.Info.Job.Prefab.AutomaticOrders)
+            {
+                var orderPrefab = Order.PrefabList.Find(o => o.AITag == automaticOrder.aiTag);
+                // TODO: Similar code is used in CrewManager:815-> DRY
+                var matchingItems = orderPrefab.ItemIdentifiers.Any() ?
+                    Item.ItemList.FindAll(it => orderPrefab.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(orderPrefab.ItemIdentifiers)) :
+                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == orderPrefab.ItemComponentType));
+                matchingItems.RemoveAll(it => it.Submarine != c.Submarine);
+                var item = matchingItems.GetRandom();
+                var order = new Order(orderPrefab, item ?? c.CurrentHull as Entity, item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType));
+                SetOrder(order, automaticOrder.option, c, true);
+
+//#if CLIENT
+//                GameMain.GameSession?.CrewManager?.SetCharacterOrder(c, order, automaticOrder.option, c);
+//#endif
+
+//                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(order, order.FadeOutTime))
+//                {
+//                    Character.Speak(order.GetChatMessage("", Character.CurrentHull?.RoomName, givingOrderToSelf: true), ChatMessageType.Order);
+//                }
+            }
 
             updateObjectiveTimer = Rand.Range(0.0f, UpdateObjectiveInterval);
 
@@ -267,7 +290,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
                 }
             }
         }
@@ -286,18 +309,18 @@ namespace Barotrauma
 
             if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
             {
-                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.DisplayName), null, 0, "pressure", 30.0f);
+                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.RoomName), null, 0, "pressure", 30.0f);
             }
         }
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
+            // Damage from falling etc.
+            if (Character.LastDamageSource == null) { return; }
             float damage = attackResult.Damage;
             if (damage <= 0) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
-                // Ignore damage from falling etc that we shouldn't react to.
-                if (Character.LastDamageSource == null) { return; }
                 AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
             }
             else if (IsFriendly(attacker))

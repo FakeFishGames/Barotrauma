@@ -1,9 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Lights;
 using Barotrauma.Networking;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -44,14 +41,6 @@ namespace Barotrauma
                     MathHelper.Clamp(value.X, 0.01f, 10),
                     MathHelper.Clamp(value.Y, 0.01f, 10));
             }
-        }
-
-        private string specialTag;
-        [Editable, Serialize("", true)]
-        public string SpecialTag
-        {
-            get { return specialTag; }
-            set { specialTag = value; }
         }
 
         // Only for testing in the debug build. Not saved.
@@ -113,7 +102,7 @@ namespace Barotrauma
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
-            
+
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, 20)), isHorizontal: true)
             {
                 Stretch = true,
@@ -168,20 +157,6 @@ namespace Barotrauma
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
 
-                int section = FindSectionIndex(pos);
-                if (section > -1)
-                {
-                    Vector2 normal = contact.Manifold.LocalNormal;
-
-                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal) * f2.Body.Mass * 0.1f;
-                    if (impact > 10.0f)
-                    {
-                        SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: Tags);
-                    }
-                }
-            }
-        }
-
         public override bool IsVisible(Rectangle worldView)
         {
             Rectangle worldRect = WorldRect;
@@ -218,7 +193,7 @@ namespace Barotrauma
                 if (HasBody && !ShowWalls) return;
             }
 
-            Color color = IsHighlighted ? Color.Orange : spriteColor;
+            Color color = isHighlighted ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);
@@ -266,35 +241,62 @@ namespace Barotrauma
                         }
                         dropShadowOffset.Y = -dropShadowOffset.Y;
                     }
-                    
-                    SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
-                    Prefab.BackgroundSprite.effects ^= SpriteEffects;
 
-                    Point backGroundOffset = new Point(
-                        MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width),
-                        MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height));
-
-                    Prefab.BackgroundSprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
-                        new Vector2(rect.Width, rect.Height),
-                        color: color,
-                        textureScale: TextureScale * Scale,
-                        startOffset: backGroundOffset);
-
-                    if (UseDropShadow)
+                    if (DrawTiled)
                     {
+                        SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
+                        Prefab.BackgroundSprite.effects ^= SpriteEffects;
+
+                        Point backGroundOffset = new Point(
+                            MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width),
+                            MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height));
+
                         Prefab.BackgroundSprite.DrawTiled(
                             spriteBatch,
-                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                             new Vector2(rect.Width, rect.Height),
-                            color: Color.Black * 0.5f,
+                            color: color,
                             textureScale: TextureScale * Scale,
-                            startOffset: backGroundOffset,
-                            depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f);
-                    }
+                            startOffset: backGroundOffset);
 
-                    Prefab.BackgroundSprite.effects = oldEffects;
+                        if (UseDropShadow)
+                        {
+                            Prefab.BackgroundSprite.DrawTiled(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                new Vector2(rect.Width, rect.Height),
+                                color: Color.Black * 0.5f,
+                                textureScale: TextureScale * Scale,
+                                startOffset: backGroundOffset,
+                                depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f);
+                        }
+
+                        Prefab.BackgroundSprite.effects = oldEffects;
+                    }
+                    else
+                    {
+                        Prefab.BackgroundSprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
+
+                        if (UseDropShadow)
+                        {
+                            Prefab.BackgroundSprite.Draw(
+                                spriteBatch,
+                                new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                                Color.Black * 0.5f,
+                                Vector2.Zero,
+                                scale: Scale,
+                                rotate: 0,
+                                spriteEffect: SpriteEffects,
+                                depth: (depth + Prefab.BackgroundSprite.Depth) / 2.0f);
+                        }
+                    }
                 }
             }
 
@@ -321,25 +323,39 @@ namespace Barotrauma
                             Submarine.DamageEffectColor = color;
                         }
                     }
-                    
-                    Point sectionOffset = new Point(
-                        Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
 
-                    if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
-                    if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
+                    if (DrawTiled)
+                    {
+                        Point sectionOffset = new Point(
+                            Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
+                            Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
 
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+                        if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
+                        if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
 
-                    prefab.sprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
-                        new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
-                        color: color,
-                        startOffset: sectionOffset,
-                        depth: depth,
-                        textureScale: TextureScale * Scale);
+                        sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
+                        sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+
+                        prefab.sprite.DrawTiled(
+                            spriteBatch,
+                            new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
+                            new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
+                            color: color,
+                            startOffset: sectionOffset,
+                            depth: depth,
+                            textureScale: TextureScale * Scale);
+                    }
+                    else
+                    {
+                        prefab.sprite.Draw(
+                            spriteBatch,
+                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                            color,
+                            Vector2.Zero,
+                            scale: Scale,
+                            rotate: 0,
+                            spriteEffect: SpriteEffects);
+                    }
                 }
                 prefab.sprite.effects = oldEffects;
             }
@@ -360,20 +376,6 @@ namespace Barotrauma
                             -Bodies[i].Rotation, Color.White);
                     }
                 }
-
-                if (SectionCount > 0 && HasBody)
-                {
-                    for (int i = 0; i < SectionCount; i++)
-                    {
-                        if (GetSection(i).damage > 0)
-                        {
-                            var textPos = SectionPosition(i, true);
-                            textPos.Y = -textPos.Y;
-                            GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / Health) * 100f) + "%", Color.Yellow);
-                        }
-                    }
-                }
-
                 AiTarget?.Draw(spriteBatch);
             }
         }

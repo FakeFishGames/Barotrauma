@@ -26,7 +26,6 @@ namespace Barotrauma.Networking
         //TODO: move these to NetLobbyScreen
         public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
-        private GUIComponent buttonContainer;
 
         private NetStats netStats;
 
@@ -130,7 +129,7 @@ namespace Barotrauma.Networking
             chatBox.OnEnterMessage += EnterChatMessage;
             chatBox.InputBox.OnTextChanged += TypingChatMessage;
 
-            buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
+            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 AbsoluteSpacing = 5,
@@ -631,10 +630,12 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        GameMain.GameSession?.CrewManager?.SetClientSpeaking(myClient);
+                        GameMain.GameSession?.CrewManager?.SetPlayerSpeaking(myClient);
                     }
                 }
             }
+
+            if (gameStarted) SetRadioButtonColor();
 
             if (ShowNetStats && client?.ServerConnection != null)
             {
@@ -1079,8 +1080,6 @@ namespace Barotrauma.Networking
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
-            bool allowRagdollButton = inc.ReadBoolean();
-
             serverSettings.ReadMonsterEnabled(inc);
 
             GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
@@ -1097,7 +1096,6 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
             serverSettings.AllowDisguises = disguisesAllowed;
-            serverSettings.AllowRagdollButton = allowRagdollButton;
 
             if (campaign == null)
             {
@@ -2126,7 +2124,9 @@ namespace Barotrauma.Networking
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
         public GUIButton ShowLogButton; //TODO: move to NetLobbyScreen
-        
+
+        private float myCharacterFrameOpenState;
+
         public GUIFrame InGameHUD
         {
             get { return inGameHUD; }
@@ -2136,7 +2136,22 @@ namespace Barotrauma.Networking
         {
             get { return chatBox; }
         }
-        
+
+        protected void SetRadioButtonColor()
+        {
+            if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f)
+            {
+                chatBox.RadioButton.GetChild<GUIImage>().Color = new Color(60, 60, 60, 255);
+            }
+            else
+            {
+                var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                chatBox.RadioButton.GetChild<GUIImage>().Color =
+                    (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
+                    Color.White : new Color(60, 60, 60, 255);
+            }
+        }
+
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
             return chatBox.TypingChatMessage(textBox, text);
@@ -2168,6 +2183,11 @@ namespace Barotrauma.Networking
                 Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.AddToGUIUpdateList();
+
+                if (Character.Controlled == null)
+                {
+                    GameMain.NetLobbyScreen.MyCharacterFrame.AddToGUIUpdateList();
+                }
             }
         }
 
@@ -2186,17 +2206,24 @@ namespace Barotrauma.Networking
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                bool disableButtons =
-                    Character.Controlled != null &&
-                    Character.Controlled.SelectedConstruction?.GetComponent<Controller>() != null;
-                buttonContainer.Visible = !disableButtons;
-                
                 if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
                 {
                     inGameHUD.UpdateManually(deltaTime);
                     chatBox.Update(deltaTime);
 
                     cameraFollowsSub.Visible = Character.Controlled == null;
+
+                    if (Character.Controlled == null)
+                    {
+                        myCharacterFrameOpenState = GameMain.NetLobbyScreen.MyCharacterFrameOpen ? myCharacterFrameOpenState + deltaTime * 5 : myCharacterFrameOpenState - deltaTime * 5;
+                        myCharacterFrameOpenState = MathHelper.Clamp(myCharacterFrameOpenState, 0.0f, 1.0f);
+
+                        var myCharFrame = GameMain.NetLobbyScreen.MyCharacterFrame;
+                        int padding = GameMain.GraphicsWidth - myCharFrame.Parent.Rect.Right;
+
+                        myCharFrame.RectTransform.AbsoluteOffset =
+                            Vector2.SmoothStep(new Vector2(-myCharFrame.Rect.Width - padding, 0.0f), new Vector2(-padding, 0), myCharacterFrameOpenState).ToPoint();
+                    }
                 }
                 if (Character.Controlled == null || Character.Controlled.IsDead)
                 {

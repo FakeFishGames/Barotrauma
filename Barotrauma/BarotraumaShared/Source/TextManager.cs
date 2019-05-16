@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -16,7 +15,7 @@ namespace Barotrauma
         private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
         public static string Language;
-
+        
         private static HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
         {
@@ -79,7 +78,7 @@ namespace Barotrauma
             }
         }
 
-        public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
+        public static string Get(string textTag, bool returnNull = false)
         {
             if (!textPacks.ContainsKey(Language))
             {
@@ -94,16 +93,7 @@ namespace Barotrauma
             foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
-                if (text != null) { return text; }
-            }
-
-            if (!string.IsNullOrEmpty(fallBackTag))
-            {
-                foreach (TextPack textPack in textPacks[Language])
-                {
-                    string text = textPack.Get(fallBackTag);
-                    if (text != null) { return text; }
-                }
+                if (text != null) return text;
             }
 
             //if text was not found and we're using a language other than English, see if we can find an English version
@@ -128,14 +118,138 @@ namespace Barotrauma
             }
         }
 
-        public static string ParseInputTypes(string text)
+        public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)
         {
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            string text = Get(textTag, returnNull);
+
+            if (text == null || text.Length == 0)
             {
-                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
-                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                if (returnNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
+                    return textTag;
+                }
             }
-            return text;
+
+            return string.Format(text, args);     
+        }
+
+        // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
+        public static string GetServerMessage(string serverMessage)
+        {
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            string[] messages = serverMessage.Split('/');
+
+            try
+            {
+                for (int i = 0; i < messages.Length; i++)
+                {
+                    if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
+                    {
+                        if (messages[i].Contains(" ")) continue; // Spaces found, do not translate
+                        string msg = Get(messages[i], true);
+                        if (msg != null) // If a translation was found, otherwise use the original
+                        {
+                            messages[i] = msg;
+                        }
+                    }
+                    else
+                    {
+                        string[] messageWithVariables = messages[i].Split('~');
+                        string msg = Get(messageWithVariables[0], true);
+
+                        if (msg != null) // If a translation was found, otherwise use the original
+                        {
+                            messages[i] = msg;
+                        }
+                        else
+                        {
+                            continue; // No translation found, probably caused by player input -> skip variable handling
+                        }
+
+                        // First index is always the message identifier -> start at 1
+                        for (int j = 1; j < messageWithVariables.Length; j++)
+                        {
+                            string[] variableAndValue = messageWithVariables[j].Split('=');
+                            messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
+                        }
+                    }
+                }
+
+                string translatedServerMessage = string.Empty;
+                for (int i = 0; i < messages.Length; i++)
+                {
+                    translatedServerMessage += messages[i];
+                }
+                return translatedServerMessage;
+            }
+
+            catch (IndexOutOfRangeException exception)
+            {
+                string errorMsg = "Failed to translate server message \"" + serverMessage + "\".";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg, exception);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("TextManager.GetServerMessage:" + serverMessage, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return errorMsg;
+            }
+        }
+
+        public static bool IsServerMessageWithVariables(string message)
+        {
+            for (int i = 0; i < serverMessageCharacters.Length; i++)
+            {
+                if (!message.Contains(serverMessageCharacters[i])) return false;
+            }
+
+            return true;
+        }
+
+        public static List<string> GetAll(string textTag)
+        {
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+
+            List<string> allText;
+
+            foreach (TextPack textPack in textPacks[Language])
+            {
+                allText = textPack.GetAll(textTag);
+                if (allText != null) return allText;
+            }
+
+            //if text was not found and we're using a language other than English, see if we can find an English version
+            //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
+            if (Language != "English" && textPacks.ContainsKey("English"))
+            {
+                foreach (TextPack textPack in textPacks["English"])
+                {
+                    allText = textPack.GetAll(textTag);
+                    if (allText != null) return allText;
+                }
+            }
+
+            return null;
         }
 
         public static string GetFormatted(string textTag, bool returnNull = false, params object[] args)

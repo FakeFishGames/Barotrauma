@@ -104,7 +104,14 @@ namespace Barotrauma.SpriteDeformations
 
         public Point Resolution
         {
-            get { return deformationParams.Resolution; }
+            get
+            {
+                if (deformationParams.Resolution.X != Deformation.GetLength(0) || deformationParams.Resolution.Y != Deformation.GetLength(1))
+                {
+                    Deformation = new Vector2[deformationParams.Resolution.X, deformationParams.Resolution.Y];
+                }
+                return deformationParams.Resolution;
+            }
             set { SetResolution(value); }
         }
 
@@ -195,15 +202,6 @@ namespace Barotrauma.SpriteDeformations
 
         public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale)
         {
-            foreach (SpriteDeformation animation in animations)
-            {
-                if (animation.deformationParams.Resolution.X != animation.Deformation.GetLength(0) ||
-                    animation.deformationParams.Resolution.Y != animation.Deformation.GetLength(1))
-                {
-                    animation.Deformation = new Vector2[animation.deformationParams.Resolution.X, animation.deformationParams.Resolution.Y];
-                }
-            }
-
             Point resolution = animations.First().Resolution;
             if (animations.Any(a => a.Resolution != resolution))
             {
@@ -213,6 +211,7 @@ namespace Barotrauma.SpriteDeformations
             }
 
             Vector2[,] deformation = new Vector2[resolution.X, resolution.Y];
+
             foreach (SpriteDeformation animation in animations)
             {
                 animation.GetDeformation(out Vector2[,] animDeformation, out float multiplier);

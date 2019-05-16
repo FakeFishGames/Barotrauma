@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, item.CurrentHull);                    
+                    SoundPlayer.PlaySound(powerOnSound.Sound, powerOnSound.Volume, powerOnSound.Range, item.WorldPosition, item.CurrentHull);                    
                     powerOnSoundPlayed = true;
                 }
             }

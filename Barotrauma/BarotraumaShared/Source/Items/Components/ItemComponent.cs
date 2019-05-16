@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
         
-        [Editable, Serialize("", true, translationTextTag: "ItemMsg")]
+        [Editable, Serialize("", true)]
         public string Msg
         {
             get;
@@ -580,8 +580,8 @@ namespace Barotrauma.Items.Components
 
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
-            if (!requiredItems.Any()) { return true; }
-            if (character.Inventory == null) { return false; }
+            if (!requiredItems.Any()) return true;
+            if (character.Inventory == null) return false;
             bool hasRequiredItems = false;
             bool canContinue = true;
             if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
@@ -615,15 +615,7 @@ namespace Barotrauma.Items.Components
             {
                 bool Predicate(Item it) => it != null && it.Condition > 0.0f && relatedItem.MatchesItem(it);
                 bool shouldBreak = false;
-                bool inEditor = false;
-#if CLIENT
-                inEditor = Screen.Selected == GameMain.SubEditorScreen;
-#endif
-                if (relatedItem.IgnoreInEditor && inEditor)
-                {
-                    hasRequiredItems = true;
-                }
-                else if (relatedItem.IsOptional)
+                if (relatedItem.IsOptional)
                 {
                     if (!hasRequiredItems)
                     {
@@ -792,7 +784,6 @@ namespace Barotrauma.Items.Components
                             newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
                             newRequiredItem.Msg = prevRequiredItem.Msg;
                             newRequiredItem.IsOptional = prevRequiredItem.IsOptional;
-                            newRequiredItem.IgnoreInEditor = prevRequiredItem.IgnoreInEditor;
                         }
 
                         if (!requiredItems.ContainsKey(newRequiredItem.Type))
@@ -810,7 +801,10 @@ namespace Barotrauma.Items.Components
             string msg = TextManager.Get(Msg, true);
             if (msg != null)
             {
-                msg = TextManager.ParseInputTypes(msg);
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                }
                 DisplayMsg = msg;
             }
             else

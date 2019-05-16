@@ -68,7 +68,7 @@ namespace Barotrauma
                 if (!CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
-                    if (Steam.SteamManager.USE_STEAM)
+                    if (GameMain.Config.UseSteam)
                     {
                         NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
                     }
@@ -228,7 +228,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
                     ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 }
             },
             () =>
@@ -615,7 +615,7 @@ namespace Barotrauma
                 NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
             }, isCheat: true));
 
-            commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
+            commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 Hull.EditFire = !Hull.EditFire;
                 NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
