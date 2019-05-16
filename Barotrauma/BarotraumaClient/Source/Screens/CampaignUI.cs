@@ -16,8 +16,11 @@ namespace Barotrauma
 
         private GUIListBox characterList;
 
+        private MapEntityCategory selectedItemCategory = MapEntityCategory.Equipment;
+
         private GUIListBox myItemList;
         private GUIListBox storeItemList;
+        private GUITextBox searchBox;
 
         private GUIComponent missionPanel;
         private GUIComponent selectedLocationInfo;
@@ -66,7 +69,7 @@ namespace Barotrauma
             var outpostBtn = new GUIButton(new RectTransform(new Vector2(0.15f, 0.55f), topPanelContent.RectTransform), 
                 TextManager.Get("Outpost"), textAlignment: Alignment.Center, style: "GUISlopedHeader")
             {
-             OnClicked = (btn, userdata) => { SelectTab(Tab.Map); return true; }   
+                OnClicked = (btn, userdata) => { SelectTab(Tab.Map); return true; }   
             };
             outpostBtn.TextBlock.Font = GUI.LargeFont;
             outpostBtn.TextBlock.AutoScale = true;
@@ -170,9 +173,26 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), storeContent.RectTransform), "", font: GUI.LargeFont)
+            var storeContentTop = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), storeContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), storeContentTop.RectTransform), "", font: GUI.LargeFont)
             {
                 TextGetter = GetMoney
+            };
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.5f), storeContentTop.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterRight, font: GUI.Font);
+            searchBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
+            searchBox.OnTextChanged += (textBox, text) => { FilterStoreItems(null, text); return true; };
+            var clearButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), filterContainer.RectTransform), "x")
+            {
+                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterStoreItems(selectedItemCategory, ""); searchBox.Flash(Color.White); return true; }
             };
 
             var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), storeContent.RectTransform), isHorizontal: true)
@@ -196,7 +216,7 @@ namespace Barotrauma
                     "", style: "ItemCategory" + category.ToString())
                 {
                     UserData = category,
-                    OnClicked = (btn, userdata) => { SelectItemCategory((MapEntityCategory)userdata); return true; }
+                    OnClicked = (btn, userdata) => { FilterStoreItems((MapEntityCategory)userdata, searchBox.Text); return true; }
                 };
                 itemCategoryButtons.Add(categoryButton);
 
@@ -212,7 +232,8 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
             }
-            SelectItemCategory(MapEntityCategory.Equipment);
+            FillStoreItemList();
+            FilterStoreItems(MapEntityCategory.Equipment, "");
 
             // repair tab -------------------------------------------------------------------------
 
@@ -230,7 +251,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f,
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), crewContent.RectTransform), "", font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), repairContent.RectTransform), "", font: GUI.LargeFont)
             {
                 TextGetter = GetMoney
             };
@@ -254,14 +275,22 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (campaign.Money >= CampaignMode.HullRepairCost)
+                    if (campaign.PurchasedHullRepairs)
                     {
-                        campaign.Money -= CampaignMode.HullRepairCost;
-                        campaign.PurchasedHullRepairs = true;
-                        GameMain.Client?.SendCampaignState();
-                        btn.GetChild<GUITickBox>().Selected = true;
+                        campaign.Money += CampaignMode.HullRepairCost;
+                        campaign.PurchasedHullRepairs = false;
                     }
-                    btn.Enabled = false;
+                    else
+                    {
+                        if (campaign.Money >= CampaignMode.HullRepairCost)
+                        {
+                            campaign.Money -= CampaignMode.HullRepairCost;
+                            campaign.PurchasedHullRepairs = true;
+                        }
+                    }
+                    GameMain.Client?.SendCampaignState();
+                    btn.GetChild<GUITickBox>().Selected = campaign.PurchasedHullRepairs;
+
                     return true;
                 }
             };
@@ -289,14 +318,22 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (campaign.Money >= CampaignMode.ItemRepairCost)
+                    if (campaign.PurchasedItemRepairs)
                     {
-                        campaign.Money -= CampaignMode.ItemRepairCost;
-                        campaign.PurchasedItemRepairs = true;
-                        GameMain.Client?.SendCampaignState();
-                        btn.GetChild<GUITickBox>().Selected = true;
+                        campaign.Money += CampaignMode.ItemRepairCost;
+                        campaign.PurchasedItemRepairs = false;
                     }
-                    btn.Enabled = false;
+                    else
+                    {
+                        if (campaign.Money >= CampaignMode.ItemRepairCost)
+                        {
+                            campaign.Money -= CampaignMode.ItemRepairCost;
+                            campaign.PurchasedItemRepairs = true;
+                        }
+                    }
+                    GameMain.Client?.SendCampaignState();
+                    btn.GetChild<GUITickBox>().Selected = campaign.PurchasedItemRepairs;
+
                     return true;
                 }
             };
@@ -434,7 +471,8 @@ namespace Barotrauma
             else
             {
                 //refresh store view
-                SelectItemCategory(MapEntityCategory.Equipment);
+                FillStoreItemList();
+                FilterStoreItems(MapEntityCategory.Equipment, searchBox.Text);
             }            
         }
         
@@ -747,43 +785,54 @@ namespace Barotrauma
             {
                 case Tab.Repair:
                     repairHullsButton.Enabled = 
-                        !Campaign.PurchasedHullRepairs && Campaign.Money >= CampaignMode.HullRepairCost &&
+                        (Campaign.PurchasedHullRepairs || Campaign.Money >= CampaignMode.HullRepairCost) &&
                         (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                     repairHullsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedHullRepairs;
                     repairItemsButton.Enabled = 
-                        !Campaign.PurchasedItemRepairs && Campaign.Money >= CampaignMode.ItemRepairCost &&
+                        (Campaign.PurchasedItemRepairs || Campaign.Money >= CampaignMode.ItemRepairCost) &&
                         (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
                     break;
             }
         }
 
-        private bool SelectItemCategory(MapEntityCategory category)
+        private void FillStoreItemList()
         {
             storeItemList.ClearChildren();
 
             int width = storeItemList.Rect.Width;
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
-                if (!(mapEntityPrefab is ItemPrefab itemPrefab) || !itemPrefab.Category.HasFlag(category)) continue;
-
+                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
                 PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
                 if (priceInfo == null) continue;
 
                 CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList, width);
             }
-
             storeItemList.Content.RectTransform.SortChildren(
                 (x, y) => (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
+        }
 
+        private void FilterStoreItems(MapEntityCategory? category, string filter)
+        {
+            if (category.HasValue)
+            {
+                selectedItemCategory = category.Value;
+            }
+            foreach (GUIComponent child in storeItemList.Content.Children)
+            {
+                var item = child.UserData as PurchasedItem;
+                if (item?.ItemPrefab?.Name == null) { continue; }
+                child.Visible =
+                    (!category.HasValue || item.ItemPrefab.Category.HasFlag(category.Value)) &&
+                    (string.IsNullOrEmpty(filter) || item.ItemPrefab.Name.ToLower().Contains(searchBox.Text.ToLower()));
+            }
             foreach (GUIButton btn in itemCategoryButtons)
             {
-                btn.Selected = (MapEntityCategory)btn.UserData == category;
+                btn.Selected = (MapEntityCategory)btn.UserData == selectedItemCategory;
             }
-
+            storeItemList.UpdateScrollBarSize();
             storeItemList.BarScroll = 0.0f;
-
-            return true;
         }
 
         public string GetMoney()

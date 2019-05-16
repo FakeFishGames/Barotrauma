@@ -510,6 +510,7 @@ namespace Barotrauma
                 ToolTip = toolTip,
                 Font = GUI.SmallFont,
                 Text = value,
+                OverflowClip = true,
                 OnEnterPressed = (textBox, text) =>
                 {
                     if (property.TrySetValue(entity, text))

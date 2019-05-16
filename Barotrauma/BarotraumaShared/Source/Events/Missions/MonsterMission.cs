@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -10,30 +12,36 @@ namespace Barotrauma
 
         private int monsterCount;
 
-        private Vector2 sonarPosition;
+        private readonly List<Character> monsters = new List<Character>();
+        private readonly List<Vector2> sonarPositions = new List<Vector2>();
 
-        public override Vector2 SonarPosition
+        public override IEnumerable<Vector2> SonarPositions
         {
-            get { return monster != null && !monster.IsDead ? sonarPosition : Vector2.Zero; }
+            get
+            {
+                return sonarPositions;
+            }
         }
 
         public MonsterMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
             monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", "");
+            monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
         }
 
         public override void Start(Level level)
         {
             Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
 
-            bool isClient = false;
-#if CLIENT
-            isClient = GameMain.Client != null;
-#endif
-            monster = Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false);
-            monster.Enabled = false;
-            sonarPosition = spawnPos;
+            bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+            for (int i = 0; i < monsterCount; i++)
+            {
+                monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
+            }
+            monsters.ForEach(m => m.Enabled = false);
+            SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
+            sonarPositions.Add(spawnPos);
         }
 
         public override void Update(float deltaTime)
@@ -45,7 +53,15 @@ namespace Barotrauma
                     var activeMonsters = monsters.Where(m => m != null && !m.Removed && !m.IsDead);
                     if (activeMonsters.Any())
                     {
-                        sonarPosition = monster.Position;
+                        Vector2 centerOfMass = Vector2.Zero;
+                        foreach (var monster in activeMonsters)
+                        {
+                            //don't add another label if there's another monster roughly at the same spot
+                            if (sonarPositions.All(p => Vector2.DistanceSquared(p, monster.Position) > 1000.0f * 1000.0f))
+                            {
+                                sonarPositions.Add(monster.Position);
+                            }
+                        }
                     }
 
 

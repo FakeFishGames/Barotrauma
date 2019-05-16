@@ -588,6 +588,7 @@ namespace Barotrauma
                 }
             }
 
+            float prevWalkPos = WalkPos;
             WalkPos -= MainLimb.LinearVelocity.X * (CurrentAnimationParams.CycleSpeed / RagdollParams.JointScale / 100.0f);
 
             Vector2 transformedStepSize = Vector2.Zero;
@@ -623,6 +624,11 @@ namespace Barotrauma
                         bool playFootstepSound = false;
                         if (limb.type == LimbType.LeftFoot)
                         {
+                            if (Math.Sign(Math.Sin(prevWalkPos)) > 0 && Math.Sign(transformedStepSize.Y) < 0)
+                            {
+                                playFootstepSound = true;
+                            }
+
                             limb.DebugRefPos = footPos + Vector2.UnitX * movement.X * 0.1f;
                             limb.DebugTargetPos = footPos + new Vector2(
                                 transformedStepSize.X + movement.X * 0.1f,
@@ -631,13 +637,20 @@ namespace Barotrauma
                         }
                         else if (limb.type == LimbType.RightFoot)
                         {
+                            if (Math.Sign(Math.Sin(prevWalkPos)) < 0 && Math.Sign(transformedStepSize.Y) > 0)
+                            {
+                                playFootstepSound = true;
+                            }
+
                             limb.DebugRefPos = footPos + Vector2.UnitX * movement.X * 0.1f;
                             limb.DebugTargetPos = footPos + new Vector2(
                                 -transformedStepSize.X + movement.X * 0.1f,
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f);
                             limb.MoveToPos(limb.DebugTargetPos, FootMoveForce);
                         }
-
+#if CLIENT
+                        if (playFootstepSound) { PlayImpactSound(limb); }
+#endif
                         if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.limbParams.ID))
                         {
                             SmoothRotateWithoutWrapping(limb,

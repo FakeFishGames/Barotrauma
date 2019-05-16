@@ -2172,7 +2172,8 @@ namespace Barotrauma
 
         public void Speak(string message, ChatMessageType? messageType = null, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (string.IsNullOrEmpty(message)) { return; }
 
             //already sent a similar message a moment ago
             if (!string.IsNullOrEmpty(identifier) && minDurationBetweenSimilar > 0.0f &&
@@ -2181,7 +2182,6 @@ namespace Barotrauma
             {
                 return;
             }
-
             aiChatMessageQueue.Add(new AIChatMessage(message, messageType, identifier, delay));
         }
 
@@ -2593,6 +2593,10 @@ namespace Barotrauma
             if (selectedItems[1] != null) { selectedItems[1].Drop(this); }
 
             if (info != null) { info.Remove(); }
+
+#if CLIENT
+            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+#endif
 
 #if CLIENT
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);

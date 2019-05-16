@@ -16,11 +16,18 @@ namespace Barotrauma
 
         private int state;
 
-        public override Vector2 SonarPosition
+        public override IEnumerable<Vector2> SonarPositions
         {
             get
             {
-                return state > 0 ? Vector2.Zero : ConvertUnits.ToDisplayUnits(item.SimPosition);
+                if (state > 0 )
+                {
+                    Enumerable.Empty<Vector2>();
+                }
+                else
+                {
+                    yield return ConvertUnits.ToDisplayUnits(item.SimPosition);
+                }
             }
         }
 

@@ -264,62 +264,45 @@ namespace Barotrauma
         
         partial void ImpactProjSpecific(float impact, Body body)
         {
-            float volume = Math.Min(impact - 3.0f, 1.0f);
+            float volume = MathHelper.Clamp(impact - 3.0f, 0.5f, 1.0f);
 
-        partial void UpdateNetPlayerPositionProjSpecific(float deltaTime, float lowestSubPos)
-        {
-            if (character != GameMain.Client.Character || !character.AllowInput)
+            if (body.UserData is Limb limb && character.Stun <= 0f)
             {
-                Limb limb = (Limb)body.UserData;
-                if (impact > 3.0f && limb.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
-                {
-                    limb.LastImpactSoundTime = (float)Timing.TotalTime;
-                    if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
-                    {
-                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
-                    }
-                    
-                    //unconscious/dead characters can't correct their position using AnimController movement
-                    // -> we need to correct it manually
-                    if (!character.AllowInput)
-                    {
-                        float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, Collider.SimPosition);
-                        float mainLimbErrorTolerance = 0.1f;
-                        //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
-                        //don't attempt to correct the position.
-                        if (mainLimbDistSqrd > mainLimbErrorTolerance || Collider.LinearVelocity.LengthSquared() > 0.05f)
-                        {
-                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
-                        }
-                    }
-                }
-                character.MemLocalState.Clear();
+                if (impact > 3.0f) { PlayImpactSound(limb); }
             }
-            else
+            else if (body.UserData is Limb || body == Collider.FarseerBody)
             {
-                if (!character.IsRemotePlayer)
+                if (!character.IsRemotePlayer && impact > ImpactTolerance)
                 {
-                    if (character.Submarine == null)
-                    {
-                        //transform in-sub coordinates to outside coordinates
-                        if (character.MemLocalState[i].Position.Y > lowestSubPos)
-                        {                            
-                            character.MemLocalState[i].TransformInToOutside();
-                        }
-                    }
-                    else if (currentHull?.Submarine != null)
-                    {
-                        //transform outside coordinates to in-sub coordinates
-                        if (character.MemLocalState[i].Position.Y < lowestSubPos)
-                        {
-                            character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);
-                        }
-                    }
+                    SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                 }
             }
             if (Character.Controlled == character)
             {
                 GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
+            }
+        }
+
+        public void PlayImpactSound(Limb limb)
+        {
+            limb.LastImpactSoundTime = (float)Timing.TotalTime;
+            if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
+            {
+                bool inWater = limb.inWater;
+                if (character.CurrentHull != null &&
+                    character.CurrentHull.Surface > character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height &&
+                    limb.SimPosition.Y < ConvertUnits.ToSimUnits(character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height) + limb.body.GetMaxExtent())
+                {
+                    inWater = true;
+                }
+                SoundPlayer.PlaySound(inWater ? "footstep_water" : limb.HitSoundTag, limb.WorldPosition, hullGuess: character.CurrentHull);
+            }
+            foreach (WearableSprite wearable in limb.WearingItems)
+            {
+                if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
+                {
+                    SoundPlayer.PlaySound(wearable.Sound, limb.WorldPosition, hullGuess: character.CurrentHull);
+                }
             }
         }
 
@@ -385,6 +368,8 @@ namespace Barotrauma
         
         partial void UpdateProjSpecific(float deltaTime)
         {
+            if (!character.Enabled || SimplePhysicsEnabled) { return; }
+
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             foreach (var deformation in SpriteDeformations)
             {

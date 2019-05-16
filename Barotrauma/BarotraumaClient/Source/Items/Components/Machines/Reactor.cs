@@ -554,6 +554,8 @@ namespace Barotrauma.Items.Components
             fissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
             turbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
             onOffSwitch.BarScroll = shutDown ? Math.Max(onOffSwitch.BarScroll, 0.55f) : Math.Min(onOffSwitch.BarScroll, 0.45f);
+
+            IsActive = true;
         }
     }
 }

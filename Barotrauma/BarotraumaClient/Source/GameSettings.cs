@@ -81,9 +81,16 @@ namespace Barotrauma
 
             var leftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), settingsFramePadding.RectTransform, Anchor.TopLeft));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform),
+            var settingsTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform),
                 TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont)
             { ForceUpperCase = true };
+
+            //TODO: enable when new texts can be added
+            /*new GUIButton(new RectTransform(new Vector2(1.0f, 0.75f), settingsTitle.RectTransform, Anchor.CenterRight), style: "GUIBugButton")
+            {
+                ToolTip = "Bug Reporter",
+                OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+            };*/
 
             var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), leftPanel.RectTransform, Anchor.TopLeft));
 
@@ -157,7 +164,7 @@ namespace Barotrauma
                 {
                     UserData = tab
                 };
-                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform), 
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonHolder.RectTransform),
                     TextManager.Get("SettingsTab." + tab.ToString()), style: "GUITabButton")
                 {
                     UserData = tab,
@@ -195,7 +202,7 @@ namespace Barotrauma
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
                 OnSelected = SelectResolution,
-#if OSX
+#if !LINUX
                 ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
 #endif
         };
@@ -235,7 +242,7 @@ namespace Barotrauma
             {
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
-#if OSX
+#if !LINUX
                 resolutionDD.ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed;
 #endif
                 return true;
@@ -431,7 +438,7 @@ namespace Barotrauma
                 UnsavedSettings = true;
                 return true;
             };
-            
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("VoiceChat"));
 
             IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
@@ -640,7 +647,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            
+
             var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f), controlsLayoutGroup.RectTransform), isHorizontal: true)
                 { Stretch = true, RelativeSpacing = 0.03f };
 

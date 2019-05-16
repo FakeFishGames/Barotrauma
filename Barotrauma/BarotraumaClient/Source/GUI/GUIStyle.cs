@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -8,6 +9,8 @@ namespace Barotrauma
     public class GUIStyle
     {
         private Dictionary<string, GUIComponentStyle> componentStyles;
+
+        private XElement configElement;
 
         public ScalableFont Font { get; private set; }
         public ScalableFont SmallFont { get; private set; }
@@ -45,24 +48,6 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "font":
-                        Font = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "smallfont":
-                        SmallFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "largefont":
-                        LargeFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "objectivetitle":
-                        ObjectiveTitleFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "objectivename":
-                        ObjectiveNameFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
-                    case "videotitle":
-                        VideoTitleFont = new ScalableFont(subElement, graphicsDevice);
-                        break;
                     case "cursor":
                         CursorSprite = new Sprite(subElement);
                         break;
@@ -72,9 +57,55 @@ namespace Barotrauma
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
                         break;
+                    case "font":
+                        Font = LoadFont(subElement, graphicsDevice);
+                        break;
+                    case "smallfont":
+                        SmallFont = LoadFont(subElement, graphicsDevice);
+                        break;
+                    case "largefont":
+                        LargeFont = LoadFont(subElement, graphicsDevice);
+                        break;
+                    case "objectivetitle":
+                        ObjectiveTitleFont = LoadFont(subElement, graphicsDevice);
+                        break;
+                    case "objectivename":
+                        ObjectiveNameFont = LoadFont(subElement, graphicsDevice);
+                        break;
+                    case "videotitle":
+                        VideoTitleFont = LoadFont(subElement, graphicsDevice);
+                        break;
                     default:
                         GUIComponentStyle componentStyle = new GUIComponentStyle(subElement);
                         componentStyles.Add(subElement.Name.ToString().ToLowerInvariant(), componentStyle);
+                        break;
+                }
+            }
+        }
+
+        private void RescaleFonts()
+        {
+            foreach (XElement subElement in configElement.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "font":
+                        Font.Size = GetFontSize(subElement);
+                        break;
+                    case "smallfont":
+                        SmallFont.Size = GetFontSize(subElement);
+                        break;
+                    case "largefont":
+                        LargeFont.Size = GetFontSize(subElement);
+                        break;
+                    case "objectivetitle":
+                        ObjectiveTitleFont.Size = GetFontSize(subElement);
+                        break;
+                    case "objectivename":
+                        ObjectiveNameFont.Size = GetFontSize(subElement);
+                        break;
+                    case "videotitle":
+                        VideoTitleFont.Size = GetFontSize(subElement);
                         break;
                 }
             }
@@ -151,6 +182,32 @@ namespace Barotrauma
         {
             componentStyles.TryGetValue(name.ToLowerInvariant(), out GUIComponentStyle style);
             return style;
+        }
+
+        public GUIComponentStyle GetComponentStyle(string name)
+        {
+            componentStyles.TryGetValue(name.ToLowerInvariant(), out GUIComponentStyle style);
+            return style;
+        }
+
+        private ScalableFont LoadFont(XElement element, GraphicsDevice graphicsDevice)
+        {
+            string file = element.GetAttributeString("file", "");
+            uint size   = GetFontSize(element);
+            return new ScalableFont(file, size, graphicsDevice);
+        }
+
+        private uint GetFontSize(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
+                if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
+                {
+                    return (uint)subElement.GetAttributeInt("size", 14);
+                }
+            }
+            return 14;
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

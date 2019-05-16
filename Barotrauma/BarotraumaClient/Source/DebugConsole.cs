@@ -377,23 +377,27 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editparticles|particleeditor", "", (string[] args) =>
+            commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>
             {
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editlevels|editlevel|leveleditor", "", (string[] args) =>
+            commands.Add(new Command("editlevels|leveleditor", "editlevels/leveleditor: Switch to the Level Editor to edit levels.", (string[] args) =>
             {
                 GameMain.LevelEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editsprites|editsprite|spriteeditor|spriteedit", "", (string[] args) =>
+            commands.Add(new Command("editsprites|spriteeditor", "editsprites/spriteeditor: Switch to the Sprite Editor to edit the source rects and origins of sprites.", (string[] args) =>
             {
                 GameMain.SpriteEditorScreen.Select();
             }));
 
-            commands.Add(new Command("charactereditor|editcharacter|editcharacters|editanimation|editanimations|animedit|animationeditor|animeditor|animationedit", "charactereditor: Edit characters, animations, ragdolls....", (string[] args) =>
+            commands.Add(new Command("editcharacters|charactereditor", "editcharacters/charactereditor: Switch to the Character Editor to edit/create the ragdolls and animations of characters.", (string[] args) =>
             {
+                if (Screen.Selected == GameMain.GameScreen)
+                {
+                    NewMessage("WARNING: Switching between the character editor and the game view may cause odd behaviour or bugs. Use with caution.", Color.Orange);
+                }
                 GameMain.CharacterEditorScreen.Select();
             }));
 

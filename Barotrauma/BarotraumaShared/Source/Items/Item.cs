@@ -928,14 +928,9 @@ namespace Barotrauma
         
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
-            if (statusEffectLists == null) return;
-
-            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
-
-            bool broken = condition <= 0.0f;
-            foreach (StatusEffect effect in statusEffects)
+            if (!hasStatusEffectsOfType[(int)type]) { return; }
+            foreach (StatusEffect effect in statusEffectLists[type])
             {
-                if (broken && effect.type != ActionType.OnBroken) continue;
                 ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
             }
         }
@@ -1052,6 +1047,8 @@ namespace Barotrauma
                 aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
+            bool broken = condition <= 0.0f;
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 sendConditionUpdateTimer -= deltaTime;
@@ -1126,6 +1123,10 @@ namespace Barotrauma
                     waterProof = container.WaterProof;
                     container = container.Container;
                 }
+            }
+            if (!broken)
+            {
+                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
             ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
@@ -1206,7 +1207,7 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return true; }
 
-            if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
+            if (ImpactTolerance > 0.0f && condition > 0.0f && impact > ImpactTolerance)
             {
                 ApplyStatusEffects(ActionType.OnImpact, 1.0f);
 #if SERVER
