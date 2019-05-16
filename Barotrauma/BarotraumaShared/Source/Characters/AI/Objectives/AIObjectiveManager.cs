@@ -18,26 +18,15 @@ namespace Barotrauma
 
         private Character character;
 
-
-        private float _waitTimer;
         /// <summary>
-        /// When set above zero, the character will stand still doing nothing until the timer runs out. Does not affect orders, find safety or combat.
+        /// When set above zero, the character will stand still doing nothing until the timer runs out. Does not affect orders.
         /// </summary>
-        public float WaitTimer
-        {
-            get { return _waitTimer; }
-            set
-            {
-                if (CurrentObjective is AIObjectiveCombat || CurrentObjective is AIObjectiveFindSafety)
-                {
-                    _waitTimer = 0;
-                }
-                else
-                {
-                    _waitTimer = value;
-                }
-            }
-        }
+        public float WaitTimer;
+
+        public AIObjective CurrentOrder { get; private set; }
+        public AIObjective CurrentObjective { get; private set; }
+
+        public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
 
         public AIObjective CurrentOrder { get; private set; }
         public AIObjective CurrentObjective { get; private set; }
@@ -213,7 +202,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Wait, if not swimming, climbing, or staying in a forbidden/unsafe hull.
                     if (character.AIController is HumanAIController humanAI && humanAI.SteeringManager != null)
                     {
                         if (!character.AnimController.InWater &&

@@ -95,6 +95,66 @@ namespace Barotrauma
                 return true;
             };
 
+            characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
+            {
+                //Spacing = (int)(3 * GUI.Scale),
+                ScrollBarEnabled = false,
+                ScrollBarVisible = false,
+                CanBeFocused = false
+            };
+
+            scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = -1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
+            {
+                Visible = false,
+                UserData = 1,
+                OnClicked = ScrollCharacterList
+            };
+            scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
+
+            if (isSinglePlayer)
+            {
+                ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
+                {
+                    OnEnterMessage = (textbox, text) =>
+                    {
+                        if (Character.Controlled?.Info == null)
+                        {
+                            textbox.Deselect();
+                            textbox.Text = "";
+                            return true;
+                        }
+
+                        textbox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
+                            AddSinglePlayerChatMessage(
+                                Character.Controlled.Info.Name,
+                                msg,
+                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
+                                Character.Controlled);
+                            var headset = GetHeadset(Character.Controlled, true);
+                            if (headset != null && headset.CanTransmit())
+                            {
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                            }
+                        }
+                        textbox.Deselect();
+                        textbox.Text = "";
+                        return true;
+                    }
+                };
+
+                ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
+            }
+
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -260,13 +320,7 @@ namespace Barotrauma
 
         public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
-            if (characterInfos.Contains(characterInfo))
-            {
-                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
-                return;
-            }
-
-            characterInfos.Add(characterInfo);
+            return characterListBox.Rect;
         }
 
         public void AddCharacter(Character character)
@@ -641,19 +695,7 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-            CreateCharacterFrame(character, characterListBox.Content);
-            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
-
-            if (character is AICharacter)
-            {
-                var ai = character.AIController as HumanAIController;
-                if (ai == null)
-                {
-                    DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
-                    return;
-                }
-                character.SetOrder(ai.CurrentOrder, "", null, false);
-            }
+            characterInfos.Add(characterInfo);
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
