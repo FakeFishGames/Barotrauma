@@ -224,6 +224,10 @@ namespace Barotrauma
                 // Recreate objectives, because some of them may be removed, if impossible to complete (e.g. due to path finding)
                 CreateAutonomousObjectives();
             }
+            else
+            {
+                CurrentOrder.Reset();
+            }
         }
 
         public AIObjective CreateObjective(Order order, string option, Character orderGiver, float priorityModifier = 1)
