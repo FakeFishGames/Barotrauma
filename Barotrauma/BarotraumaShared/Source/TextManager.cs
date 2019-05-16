@@ -238,6 +238,29 @@ namespace Barotrauma
             return true;
         }
 
+        /// <summary>
+        /// Adds a punctuation symbol between two strings, taking into account special rules in some locales (e.g. non-breaking space before a colon in French)
+        /// </summary>
+        public static string AddPunctuation(char punctuationSymbol, params string[] texts)
+        {
+            string separator = "";
+            switch (GameMain.Config.Language)
+            {
+                case "French":
+                    bool addNonBreakingSpace =
+                        punctuationSymbol == ':' || punctuationSymbol == ';' ||
+                        punctuationSymbol == '!' || punctuationSymbol == '?';
+                    separator = addNonBreakingSpace ?
+                        new string(new char[] { (char)(0xA0), punctuationSymbol, ' ' }) :
+                        new string(new char[] { punctuationSymbol, ' ' });
+                    break;
+                default:
+                    separator = new string(new char[] { punctuationSymbol, ' ' });
+                    break;
+            }
+            return string.Join(separator, texts);
+        }
+
         public static List<string> GetAll(string textTag)
         {
             if (!textPacks.ContainsKey(Language))
