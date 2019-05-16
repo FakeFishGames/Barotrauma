@@ -8,7 +8,8 @@ namespace Barotrauma
     class AIObjectiveManager
     {
         // TODO: expose
-        public const float OrderPriority = 50.0f;
+        public const float OrderPriority = 70;
+        public const float RunPriority = 50;
         // Constantly increases the priority of the selected objective, unless overridden
         public const float baseDevotion = 2;
 
