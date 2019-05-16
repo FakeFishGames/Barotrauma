@@ -125,7 +125,7 @@ namespace Barotrauma
 
         public static int ContainedIndicatorHeight
         {
-            get { return (int)(15 * GameSettings.InventoryScale); }
+            get { return (int)(15 * UIScale); }
         }
 
         protected float prevUIScale = UIScale;

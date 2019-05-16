@@ -34,7 +34,10 @@ namespace Barotrauma
         }
 
         public AIObjectiveLoop(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null) 
-            : base(character, objectiveManager, priorityModifier, option) { }
+            : base(character, objectiveManager, priorityModifier, option)
+        {
+            Reset();
+        }
 
         protected override void Act(float deltaTime) { }
         public override bool IsCompleted() => false;
@@ -93,6 +96,15 @@ namespace Barotrauma
             ignoreList.Clear();
             ignoreListTimer = 0;
             UpdateTargets();
+        }
+
+        public override void OnSelected()
+        {
+            base.OnSelected();
+            if (HumanAIController.ObjectiveManager.CurrentOrder == this)
+            {
+                Reset();
+            }
         }
 
         public override float GetPriority()
