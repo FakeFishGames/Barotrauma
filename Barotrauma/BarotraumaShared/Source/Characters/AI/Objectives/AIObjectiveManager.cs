@@ -19,7 +19,7 @@ namespace Barotrauma
         private Character character;
 
         /// <summary>
-        /// When set above zero, the character will stand still doing nothing until the timer runs out. Only affects idling.
+        /// When set above zero, the character will stand still doing nothing until the timer runs out. Does not affect orders.
         /// </summary>
         public float WaitTimer;
 
@@ -157,8 +157,22 @@ namespace Barotrauma
         
         public void DoCurrentObjective(float deltaTime)
         {
-            if (WaitTimer > 0.0f) { WaitTimer -= deltaTime; }
-            CurrentObjective?.TryComplete(deltaTime);
+            if (WaitTimer <= 0)
+            {
+                CurrentObjective?.TryComplete(deltaTime);
+            }
+            else
+            {
+                if (CurrentOrder != null)
+                {
+                    CurrentOrder.TryComplete(deltaTime);
+                }
+                else
+                {
+                    WaitTimer -= deltaTime;
+                    character.AIController?.SteeringManager?.Reset();
+                }
+            }
         }
         
         public void SetOrder(AIObjective objective)

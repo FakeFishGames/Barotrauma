@@ -115,17 +115,20 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime)
         {
-            var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
             if (objectiveManager.CurrentOrder == this)
             {
                 Priority = AIObjectiveManager.OrderPriority;
             }
-            else if (objectiveManager.CurrentObjective == this || subObjective == this)
+            else if (objectiveManager.WaitTimer <= 0)
             {
-                Priority += Devotion * PriorityModifier * deltaTime;
+                var subObjective = objectiveManager.CurrentObjective?.CurrentSubObjective;
+                if ((objectiveManager.CurrentObjective == this || subObjective == this))
+                {
+                    Priority += Devotion * PriorityModifier * deltaTime;
+                }
+                Priority = MathHelper.Clamp(Priority, 0, 100);
+                subObjectives.ForEach(so => so.Update(deltaTime));
             }
-            Priority = MathHelper.Clamp(Priority, 0, 100);
-            subObjectives.ForEach(so => so.Update(deltaTime));
         }
 
         /// <summary>

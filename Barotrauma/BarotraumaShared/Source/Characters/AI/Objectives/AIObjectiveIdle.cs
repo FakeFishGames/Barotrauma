@@ -58,7 +58,7 @@ namespace Barotrauma
             }
 
             bool currentHullForbidden = IsForbidden(character.CurrentHull);
-            if (!currentHullForbidden && !character.AnimController.InWater && !character.IsClimbing && HumanAIController.ObjectiveManager.WaitTimer > 0)
+            if (!currentHullForbidden && !character.AnimController.InWater && !character.IsClimbing)
             {
                 SteeringManager.Reset();
                 return;
