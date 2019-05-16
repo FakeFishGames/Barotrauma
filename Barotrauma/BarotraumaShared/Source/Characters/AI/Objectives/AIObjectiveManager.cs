@@ -109,6 +109,7 @@ namespace Barotrauma
             if (previousObjective != CurrentObjective)
             {
                 CurrentObjective?.OnSelected();
+                GetObjective<AIObjectiveIdle>().SetRandom();
             }
             return CurrentObjective;
         }
@@ -170,7 +171,16 @@ namespace Barotrauma
                 else
                 {
                     WaitTimer -= deltaTime;
-                    character.AIController?.SteeringManager?.Reset();
+                    if (character.AIController is HumanAIController humanAI && humanAI.SteeringManager != null)
+                    {
+                        if (!character.AnimController.InWater &&
+                            !character.IsClimbing &&
+                            !humanAI.UnsafeHulls.Contains(character.CurrentHull) && 
+                            !AIObjectiveIdle.IsForbidden(character.CurrentHull))
+                        {
+                            humanAI.SteeringManager.Reset();
+                        }
+                    }
                 }
             }
         }
