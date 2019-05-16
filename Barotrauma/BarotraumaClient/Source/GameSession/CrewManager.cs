@@ -75,10 +75,37 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
+            return characterListBox.Rect;
+        }
+
+        public IEnumerable<Character> GetCharacters()
+        {
+            return characterListBox.Rect;
+        }
+
+        public IEnumerable<CharacterInfo> GetCharacterInfos()
+        {
+            return characterListBox.Rect;
+        }
+
+        public void AddCharacter(Character character)
+        {
+            if (character.Removed)
             {
-                CanBeFocused = false
-            };
+                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+            if (character.IsDead)
+            {
+                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+
+            if (!characters.Contains(character)) characters.Add(character);
+            if (!characterInfos.Contains(character.Info))
+            {
+                characterInfos.Add(character.Info);
+            }
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -240,12 +267,24 @@ namespace Barotrauma
 
         public IEnumerable<Character> GetCharacters()
         {
-            return characterListBox.Rect;
+            if (characterInfos.Contains(characterInfo))
+            {
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
+                return;
+            }
+
+            characterInfos.Add(characterInfo);
         }
 
         public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
-            return characterListBox.Rect;
+            if (character == null)
+            {
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
+                return;
+            }
+            characters.Remove(character);
+            if (removeInfo) characterInfos.Remove(character.Info);
         }
 
         public void AddCharacter(Character character)
@@ -619,17 +658,42 @@ namespace Barotrauma
             {
                 characterListBox.BarScroll = roundedPos;
             }
-            characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
-        }
 
-        /// <summary>
-        /// Remove info of a selected character. The character will not be visible in any menus or the round summary.
-        /// </summary>
-        /// <param name="characterInfo"></param>
-        public void RemoveCharacterInfo(CharacterInfo characterInfo)
-        {
-            characterInfos.Remove(characterInfo);
+            var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
+                "", style: "UIToggleButton")
+            {
+                UserData = "togglewrongorder",
+                CanBeFocused = false
+            };
+
+            wrongOrderList.RectTransform.NonScaledSize = new Point(
+                wrongOrderList.Content.Children.Sum(c => c.Rect.Width + wrongOrderList.Spacing),
+                wrongOrderList.RectTransform.NonScaledSize.Y);
+            wrongOrderList.RectTransform.SetAsLastChild();
+
+            new GUIFrame(new RectTransform(new Point(
+                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2,
+                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
+                style: null)
+            {
+                CanBeFocused = false
+            };
+
+            //scale to fit the content
+            orderButtonFrame.RectTransform.NonScaledSize = new Point(
+                orderButtonFrame.Children.Sum(c => c.Rect.Width + orderButtonFrame.AbsoluteSpacing),
+                orderButtonFrame.RectTransform.NonScaledSize.Y);
+
+            frame.RectTransform.NonScaledSize = new Point(
+                characterInfoWidth + spacing + (orderButtonFrame.Rect.Width - wrongOrderList.Rect.Width),
+                frame.RectTransform.NonScaledSize.Y);
+
+            characterListBox.RectTransform.NonScaledSize = new Point(
+                characterListBox.Content.Children.Max(c => c.Rect.Width) + wrongOrderList.Rect.Width,
+                characterListBox.RectTransform.NonScaledSize.Y);
+            characterListBox.Content.RectTransform.NonScaledSize = characterListBox.RectTransform.NonScaledSize;
+            characterListBox.UpdateScrollBarSize();
+            return frame;
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)

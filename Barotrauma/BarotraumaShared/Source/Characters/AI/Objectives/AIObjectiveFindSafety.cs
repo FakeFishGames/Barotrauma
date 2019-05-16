@@ -12,7 +12,7 @@ namespace Barotrauma
         public override bool ForceRun => true;
 
         // TODO: expose?
-        const float priorityIncrease = 25;
+        const float priorityIncrease = 100;
         const float priorityDecrease = 10;
         const float SearchHullInterval = 3.0f;
         const float clearUnreachableInterval = 30;
@@ -51,8 +51,7 @@ namespace Barotrauma
                 return;
             }
             if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }
-            // TODO: no need to update every frame?
-            currenthullSafety = HumanAIController.GetCurrentHullSafety();
+            currenthullSafety = HumanAIController.CurrentHullSafety;
             if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 Priority -= priorityDecrease * deltaTime;
@@ -65,6 +64,7 @@ namespace Barotrauma
             Priority = MathHelper.Clamp(Priority, 0, 100);
             if (divingGearObjective != null && !divingGearObjective.IsCompleted() && divingGearObjective.CanBeCompleted)
             {
+                // Boost the priority while seeking the diving gear
                 Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 20, 100));
             }
         }
@@ -123,6 +123,10 @@ namespace Barotrauma
                             }, 
                             onAbandon: () => unreachable.Add(goToObjective.Target as Hull));
                     }
+                    else
+                    {
+                        goToObjective = null;
+                    }
                 }
                 if (goToObjective != null) { return; }
                 if (currentHull == null) { return; }
@@ -148,18 +152,7 @@ namespace Barotrauma
                 }
                 if (escapeVel != Vector2.Zero)
                 {
-                    float left = HumanAIController.VisibleHulls.Min(h => h.Rect.X) + 50;
-                    float right = HumanAIController.VisibleHulls.Max(h => h.Rect.Right) - 50;
-                    //only move if we haven't reached the edge of the room
-                    if (escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right)
-                    {
-                        character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
-                    }
-                    else
-                    {
-                        character.AnimController.TargetDir = escapeVel.X < 0.0f ? Direction.Right : Direction.Left;
-                        character.AIController.SteeringManager.Reset();
-                    }
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
                 }
                 else
                 {
@@ -190,14 +183,14 @@ namespace Barotrauma
                     //skip the hull if the safety is already less than the best hull
                     //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
                     if (hullSafety < bestValue) { continue; }
-                    // Each unsafe node reduces the hull safety value.
-                    // Ignore current hull, because otherwise the would block all paths from the current hull to the target hull.
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
                     if (path.Unreachable)
                     {
                         unreachable.Add(hull);
                         continue;
                     }
+                    // Each unsafe node reduces the hull safety value.
+                    // Ignore the current hull, because otherwise we couldn't find a path out.
                     int unsafeNodes = path.Nodes.Count(n => n.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
                     hullSafety /= 1 + unsafeNodes;
                     // If the target is not inside a friendly submarine, considerably reduce the hull safety.
