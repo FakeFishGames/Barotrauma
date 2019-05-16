@@ -493,18 +493,23 @@ namespace Barotrauma
                 item.ContainedItems.Any(i => i.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage)));
         }
 
-        /// <summary>
-        /// Updates the hull safety for all ai characters in the team.
-        /// </summary>
-        public static void PropagateHullSafety(Character character, Hull hull)
+        public static void DoForEachCrewMember(Character character, Action<HumanAIController> action)
         {
             foreach (var c in Character.CharacterList)
             {
                 if (c.AIController is HumanAIController humanAi && humanAi.IsFriendly(character))
                 {
-                    humanAi.RefreshHullSafety(hull);
+                    action(humanAi);
                 }
             }
+        }
+
+        /// <summary>
+        /// Updates the hull safety for all ai characters in the team.
+        /// </summary>
+        public static void PropagateHullSafety(Character character, Hull hull)
+        {
+            DoForEachCrewMember(character, (humanAi) => humanAi.RefreshHullSafety(hull));
         }
 
         private void RefreshHullSafety(Hull hull)
@@ -577,19 +582,24 @@ namespace Barotrauma
         private static bool AddTargets<T1, T2>(Character caller, T2 target) where T1 : AIObjectiveLoop<T2>
         {
             bool targetAdded = false;
-            foreach (var c in Character.CharacterList)
+            DoForEachCrewMember(caller, humanAI =>
             {
-                if (IsFriendly(caller, c) && c.AIController is HumanAIController humanAI)
+                var objective = humanAI.ObjectiveManager.GetObjective<T1>();
+                if (objective != null)
                 {
-                    var objective = humanAI.ObjectiveManager.GetObjective<T1>();
-                    if (objective == null) { continue; }
                     if (!targetAdded && objective.AddTarget(target))
                     {
                         targetAdded = true;
                     }
                 }
-            }
+            });
             return targetAdded;
+        }
+
+        public static void RemoveTargets<T1, T2>(Character caller, T2 target) where T1 : AIObjectiveLoop<T2>
+        {
+            DoForEachCrewMember(caller, humanAI =>
+                humanAI.ObjectiveManager.GetObjective<T1>()?.ReportedTargets.Remove(target));
         }
 
         public float GetHullSafety(Hull hull)

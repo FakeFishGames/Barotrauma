@@ -1128,6 +1128,10 @@ namespace Barotrauma
             {
                 ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
+            if (!broken)
+            {
+                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            }
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
@@ -1158,6 +1162,27 @@ namespace Barotrauma
             {
                 body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
             }
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+            if (Math.Abs(body.LinearVelocity.X) > NetConfig.MaxPhysicsBodyVelocity || 
+                Math.Abs(body.LinearVelocity.Y) > NetConfig.MaxPhysicsBodyVelocity)
+            {
+                body.LinearVelocity = new Vector2(
+                    MathHelper.Clamp(body.LinearVelocity.X, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -NetConfig.MaxPhysicsBodyVelocity, NetConfig.MaxPhysicsBodyVelocity));
+            }
+        }
+                
+        public void UpdateTransform()
+        {
+            Submarine prevSub = Submarine;
+
+            FindHull();
+
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
