@@ -100,6 +100,12 @@ namespace Barotrauma
                         }
                         return;
                     }
+
+                    if (component.AIOperate(deltaTime, character, this))
+                    {
+                        isCompleted = true;
+                    }
+                    return;
                 }
 
                 AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character));
@@ -155,14 +161,17 @@ namespace Barotrauma
                         return;
                     }
 
-                    if (component.AIOperate(deltaTime, character, this)) isCompleted = true;
+                    if (component.AIOperate(deltaTime, character, this))
+                    {
+                        isCompleted = true;
+                    }
                 }
             }
         }
 
         public override bool IsCompleted()
         {
-            return isCompleted;
+            return isCompleted && !IsLoop;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
