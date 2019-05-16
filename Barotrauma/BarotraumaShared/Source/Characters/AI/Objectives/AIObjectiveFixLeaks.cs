@@ -14,7 +14,7 @@ namespace Barotrauma
 
         public AIObjectiveFixLeaks(Character character) : base (character, "") { }
 
-        protected override bool Filter(Gap gap)
+        protected override void FindTargets()
         {
             if (character.Submarine == null) { return 0; }
             if (targets.None()) { return 0; }

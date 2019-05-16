@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
 
         private Camera cam;
 
-        private Character character;
+        private Character user;
 
         private Item focusTarget;
         private float targetRotation;
@@ -41,6 +41,11 @@ namespace Barotrauma.Items.Components
         {
             get { return userPos; }
             set { userPos = value; }
+        }
+
+        public Character User
+        {
+            get { return user; }
         }
 
         public Controller(Item item, XElement element)
@@ -79,36 +84,36 @@ namespace Barotrauma.Items.Components
         {
             this.cam = cam;
             
-            if (character == null 
-                || character.Removed
-                || character.SelectedConstruction != item
-                || !character.CanInteractWith(item))
+            if (user == null 
+                || user.Removed
+                || user.SelectedConstruction != item
+                || !user.CanInteractWith(item))
             {
-                if (character != null)
+                if (user != null)
                 {
-                    CancelUsing(character);
-                    character = null;
+                    CancelUsing(user);
+                    user = null;
                 }
                 IsActive = false;
                 return;
             }
 
-            character.AnimController.Anim = AnimController.Animation.UsingConstruction;
+            user.AnimController.Anim = AnimController.Animation.UsingConstruction;
 
             if (userPos != Vector2.Zero)
             {
-                Vector2 diff = (item.WorldPosition + userPos) - character.WorldPosition;
+                Vector2 diff = (item.WorldPosition + userPos) - user.WorldPosition;
 
-                if (character.AnimController.InWater)
+                if (user.AnimController.InWater)
                 {
                     if (diff.Length() > 30.0f)
                     {
-                        character.AnimController.TargetMovement = Vector2.Clamp(diff*0.01f, -Vector2.One, Vector2.One);
-                        character.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
+                        user.AnimController.TargetMovement = Vector2.Clamp(diff*0.01f, -Vector2.One, Vector2.One);
+                        user.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
                     }
                     else
                     {
-                        character.AnimController.TargetMovement = Vector2.Zero;
+                        user.AnimController.TargetMovement = Vector2.Zero;
                     }
                 }
                 else
@@ -116,27 +121,27 @@ namespace Barotrauma.Items.Components
                     diff.Y = 0.0f;
                     if (diff != Vector2.Zero && diff.LengthSquared() > 10.0f * 10.0f)
                     {
-                        character.AnimController.TargetMovement = Vector2.Normalize(diff);
-                        character.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
+                        user.AnimController.TargetMovement = Vector2.Normalize(diff);
+                        user.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
                         return;
                     }
-                    character.AnimController.TargetMovement = Vector2.Zero;                    
+                    user.AnimController.TargetMovement = Vector2.Zero;                    
                 }
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, character);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, user);
 
             if (limbPositions.Count == 0) return;
 
-            character.AnimController.Anim = AnimController.Animation.UsingConstruction;
+            user.AnimController.Anim = AnimController.Animation.UsingConstruction;
 
-            character.AnimController.ResetPullJoints();
+            user.AnimController.ResetPullJoints();
 
-            if (dir != 0) character.AnimController.TargetDir = dir;
+            if (dir != 0) user.AnimController.TargetDir = dir;
 
             foreach (LimbPos lb in limbPositions)
             {
-                Limb limb = character.AnimController.GetLimb(lb.limbType);
+                Limb limb = user.AnimController.GetLimb(lb.limbType);
                 if (limb == null || !limb.body.Enabled) continue;
 
                 limb.Disabled = true;
@@ -151,19 +156,19 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            if (activator != character)
+            if (activator != user)
             {
                 return false;
             }
 
-            if (character == null || character.Removed ||
-                character.SelectedConstruction != item || !character.CanInteractWith(item))
+            if (user == null || user.Removed ||
+                user.SelectedConstruction != item || !user.CanInteractWith(item))
             {
-                character = null;
+                user = null;
                 return false;
             }
 
-            item.SendSignal(0, "1", "trigger_out", character);
+            item.SendSignal(0, "1", "trigger_out", user);
             
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
@@ -172,15 +177,15 @@ namespace Barotrauma.Items.Components
         
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (this.character != character)
+            if (this.user != character)
             {
                 return false;
             }
 
-            if (this.character == null || character.Removed ||
-                this.character.SelectedConstruction != item || !character.CanInteractWith(item))
+            if (this.user == null || character.Removed ||
+                this.user.SelectedConstruction != item || !character.CanInteractWith(item))
             {
-                this.character = null;
+                this.user = null;
                 return false;
             }
             if (character == null) return false;
@@ -233,7 +238,7 @@ namespace Barotrauma.Items.Components
 
         private Item GetFocusTarget()
         {
-            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", character);
+            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", user);
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
@@ -285,23 +290,23 @@ namespace Barotrauma.Items.Components
             if (activator == null || activator.Removed) return false;
 
             //someone already using the item
-            if (character != null && !character.Removed)
+            if (user != null && !user.Removed)
             {
-                if (character == activator)
+                if (user == activator)
                 {
                     IsActive = false;
-                    CancelUsing(character);
-                    character = null;
+                    CancelUsing(user);
+                    user = null;
                     return false;
                 }
             }
             else
             {
-                character = activator;                    
+                user = activator;                    
                 IsActive = true;
             }
 
-            item.SendSignal(0, "1", "signal_out", character);
+            item.SendSignal(0, "1", "signal_out", user);
             return true;
         }
 
