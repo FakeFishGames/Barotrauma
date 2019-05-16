@@ -16,6 +16,7 @@ namespace Barotrauma
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         public float Priority { get; set; }
+        public float PriorityModifier { get; private set; }
         protected readonly Character character;
         protected string option;
         protected bool abandon;
@@ -33,11 +34,11 @@ namespace Barotrauma
             get { return option; }
         }            
 
-        public AIObjective(Character character, string option)
+        public AIObjective(Character character, string option, float priorityModifier)
         {
             this.character = character;
             this.option = option;
-
+            PriorityModifier = priorityModifier;
 #if DEBUG
             IsDuplicate(null);
 #endif
@@ -117,6 +118,7 @@ namespace Barotrauma
             {
                 Priority += Devotion * deltaTime;
             }
+            Priority *= PriorityModifier;
             Priority = MathHelper.Clamp(Priority, 0, 100);
             subObjectives.ForEach(so => so.Update(objectiveManager, deltaTime));
         }

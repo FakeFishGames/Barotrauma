@@ -27,7 +27,7 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveFindDivingGear divingGearObjective;
 
-        public AIObjectiveFindSafety(Character character) : base(character, "") {  }
+        public AIObjectiveFindSafety(Character character, float priorityModifier = 1) : base(character, "", priorityModifier) {  }
 
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;

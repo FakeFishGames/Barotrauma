@@ -144,13 +144,17 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string option, Character orderGiver)
         {
-            CurrentOrder = null;
-            if (order == null) return;
+            CurrentOrder = CreateObjective(order, option, orderGiver);
+        }
 
+        public AIObjective CreateObjective(Order order, string option, Character orderGiver, float priorityModifier = 1)
+        {
+            if (order == null) { return null; }
+            AIObjective newObjective;
             switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
-                    CurrentOrder = new AIObjectiveGoTo(orderGiver, character, true)
+                    newObjective = new AIObjectiveGoTo(orderGiver, character, true, priorityModifier: priorityModifier)
                     {
                         CloseEnough = 1.5f,
                         AllowGoingOutside = true,
@@ -159,40 +163,41 @@ namespace Barotrauma
                     };
                     break;
                 case "wait":
-                    CurrentOrder = new AIObjectiveGoTo(character, character, true)
+                    newObjective = new AIObjectiveGoTo(character, character, true, priorityModifier: priorityModifier)
                     {
                         AllowGoingOutside = true
                     };
                     break;
                 case "fixleaks":
-                    CurrentOrder = new AIObjectiveFixLeaks(character);
+                    newObjective = new AIObjectiveFixLeaks(character, priorityModifier: priorityModifier);
                     break;
                 case "chargebatteries":
-                    CurrentOrder = new AIObjectiveChargeBatteries(character, option);
+                    newObjective = new AIObjectiveChargeBatteries(character, option);
                     break;
                 case "rescue":
-                    CurrentOrder = new AIObjectiveRescueAll(character);
+                    newObjective = new AIObjectiveRescueAll(character, priorityModifier: priorityModifier);
                     break;
                 case "repairsystems":
-                    CurrentOrder = new AIObjectiveRepairItems(character) { RequireAdequateSkills = option != "all" };
+                    newObjective = new AIObjectiveRepairItems(character, priorityModifier: priorityModifier) { RequireAdequateSkills = option != "all" };
                     break;
                 case "pumpwater":
-                    CurrentOrder = new AIObjectivePumpWater(character, option);
+                    newObjective = new AIObjectivePumpWater(character, option, priorityModifier: priorityModifier);
                     break;
                 case "extinguishfires":
-                    CurrentOrder = new AIObjectiveExtinguishFires(character);
+                    newObjective = new AIObjectiveExtinguishFires(character, priorityModifier: priorityModifier);
                     break;
                 case "steer":
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
                     if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
-                    if (order.TargetItemComponent == null) return;
-                    CurrentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
+                    if (order.TargetItemComponent == null) { return null; }
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier);
                     break;
                 default:
-                    if (order.TargetItemComponent == null) return;
-                    CurrentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
+                    if (order.TargetItemComponent == null) { return null; }
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController, priorityModifier: priorityModifier);
                     break;
             }
+            return newObjective;
         }
     }
 }

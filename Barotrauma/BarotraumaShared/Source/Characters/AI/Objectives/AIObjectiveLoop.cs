@@ -17,7 +17,7 @@ namespace Barotrauma
         protected virtual float IgnoreListClearInterval => 0;
         protected virtual float TargetUpdateInterval => 2;
 
-        public AIObjectiveLoop(Character character, string option) : base(character, option)
+        public AIObjectiveLoop(Character character, string option, float priorityModifier = 1) : base(character, option, priorityModifier)
         {
             Reset();
         }

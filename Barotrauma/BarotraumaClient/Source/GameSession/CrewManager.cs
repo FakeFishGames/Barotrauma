@@ -70,11 +70,6 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            return characterListBox.Rect;
-        }
-
-        partial void InitProjectSpecific()
-        {
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
                 CanBeFocused = false
@@ -181,16 +176,6 @@ namespace Barotrauma
                     ToolTip = order.Name
                 };
 
-                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
-                {
-                    Color = Color.Red * 0.8f,
-                    HoverColor = Color.Red * 1.0f,
-                    PressedColor = Color.Red * 0.6f,
-                    UserData = "highlighted",
-                    CanBeFocused = false,
-                    Visible = false
-                };
-
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -206,6 +191,16 @@ namespace Barotrauma
             prevUIScale = GUI.Scale;
 
             ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
+        }
+
+
+        #endregion
+
+        #region Character list management
+
+        public Rectangle GetCharacterListArea()
+        {
+            return characterListBox.Rect;
         }
 
         partial void InitProjectSpecific()
@@ -729,7 +724,7 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-            ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
+            return radioItem.GetComponent<WifiComponent>();
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)

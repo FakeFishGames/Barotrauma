@@ -18,11 +18,6 @@ namespace Barotrauma
 
         private GUIListBox myItemList;
         private GUIListBox storeItemList;
-        private GUITextBox searchBox;
-
-        private GUIComponent missionPanel;
-        private GUIComponent selectedLocationInfo;
-        private GUIListBox selectedMissionInfo;
 
         private GUIComponent missionPanel;
         private GUIComponent selectedLocationInfo;

@@ -25,13 +25,9 @@ namespace Barotrauma
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
         
-        public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container)
-            : this(character, new string[] { itemIdentifier }, container)
-        {
-        }
+        public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, float priorityModifier = 1) : this(character, new string[] { itemIdentifier }, container, priorityModifier) { }
 
-        public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container)
-            : base (character, "")
+        public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container, float priorityModifier = 1) : base (character, "", priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
             for (int i = 0; i < itemIdentifiers.Length; i++)

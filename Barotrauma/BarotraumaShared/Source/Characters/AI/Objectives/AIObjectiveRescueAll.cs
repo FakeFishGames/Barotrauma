@@ -15,7 +15,7 @@ namespace Barotrauma
 
         private List<Character> rescueTargets;
         
-        public AIObjectiveRescueAll(Character character) : base (character, "")
+        public AIObjectiveRescueAll(Character character, float priorityModifier = 1) : base (character, "", priorityModifier)
         {
             rescueTargets = new List<Character>();
         }

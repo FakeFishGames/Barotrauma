@@ -57,7 +57,7 @@ namespace Barotrauma
 
         public CombatMode Mode { get; private set; }
 
-        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode) : base(character, "")
+        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             Enemy = enemy;
             coolDownTimer = CoolDown;

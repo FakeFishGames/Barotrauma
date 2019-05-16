@@ -9,13 +9,14 @@ namespace Barotrauma
     {
         public string aiTag;
         public string option;
-        public float priority;
+        public float priorityModifier;
 
         public AutomaticOrder(XElement element)
         {
             aiTag = element.GetAttributeString("aitag", null);
             option = element.GetAttributeString("option", null);
-            priority = element.GetAttributeFloat("priority", 0);
+            priorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
+            priorityModifier = MathHelper.Max(priorityModifier, 0);
         }
     }
 

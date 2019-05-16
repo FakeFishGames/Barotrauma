@@ -29,7 +29,7 @@ namespace Barotrauma
             return false;
         }
 
-        public AIObjectiveFindDivingGear(Character character, bool needDivingSuit) : base(character, "")
+        public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             gearTag = needDivingSuit ? "divingsuit" : "diving";
         }

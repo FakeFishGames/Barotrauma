@@ -36,16 +36,16 @@ namespace Barotrauma
             return 1.0f;
         }
 
-        public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false) : base(character, "")
+        public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             currSearchIndex = -1;
             this.equip = equip;
             this.targetItem = targetItem;
         }
 
-        public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false) : this(character, new string[] { itemIdentifier }, equip) { }
+        public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false, float priorityModifier = 1) : this(character, new string[] { itemIdentifier }, equip, priorityModifier) { }
 
-        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false) : base(character, "")
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false, float priorityModifier = 1) : base(character, "", priorityModifier)
         {
             currSearchIndex = -1;
             this.equip = equip;
