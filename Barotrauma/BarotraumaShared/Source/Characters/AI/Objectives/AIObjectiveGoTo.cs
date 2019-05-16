@@ -186,7 +186,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            if (repeat) return false;
+            if (repeat) { return false; }
 
             bool completed = false;
 
@@ -218,7 +218,7 @@ namespace Barotrauma
 
         private void CalculateCloseEnough()
         {
-            float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance) : 0;
+            float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance * 0.9f) : 0;
             CloseEnough = Math.Max(interactionDistance, CloseEnough);
         }
     }

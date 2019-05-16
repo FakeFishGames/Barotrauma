@@ -173,6 +173,12 @@ namespace Barotrauma
             Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
             Tag = tag;
 
+            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { IsFixedSize = false }, style: null);
+            GUI.Style.Apply(InnerFrame, "", this);
+
+            Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            Tag = tag;
+
             if (height == 0)
             {
                 string wrappedText = ToolBox.WrapText(text, Content.Rect.Width, GUI.Font);
