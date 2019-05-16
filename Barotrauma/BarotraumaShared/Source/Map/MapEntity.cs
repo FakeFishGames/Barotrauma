@@ -20,12 +20,12 @@ namespace Barotrauma
         protected List<ushort> linkedToID;
 
         //observable collection because some entities may need to be notified when the collection is modified
-        public readonly ObservableCollection<MapEntity> linkedTo = new ObservableCollection<MapEntity>();
+        public ObservableCollection<MapEntity> linkedTo;
 
         private bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
         public bool FlippedY { get { return flippedY; } }
-
+        
         public bool ShouldBeSaved = true;
 
         //the position and dimensions of the entity
@@ -41,7 +41,7 @@ namespace Barotrauma
             get { return isHighlighted || ExternalHighlight; }
             set { isHighlighted = value; }
         }
-
+                
         public virtual Rectangle Rect
         {
             get { return rect; }
@@ -161,7 +161,7 @@ namespace Barotrauma
         // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
         private Memento<Rectangle> rectMemento;
 
-        public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine)
+        public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine) 
         {
             this.prefab = prefab;
             Scale = prefab != null ? prefab.Scale : 1;
@@ -289,7 +289,7 @@ namespace Barotrauma
 
             mapEntityList.Insert(i, this);
         }
-
+                
         /// <summary>
         /// Remove the entity from the entity list without removing links to other entities
         /// </summary>
@@ -409,7 +409,7 @@ namespace Barotrauma
 
                 try
                 {
-                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(XElement), typeof(Submarine) });
+                    MethodInfo loadMethod = t.GetMethod("Load", new [] { typeof(XElement), typeof(Submarine) });
                     if (loadMethod == null)
                     {
                         DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");
@@ -497,37 +497,6 @@ namespace Barotrauma
         {
             if (linkedTo == null) return;
             if (linkedTo.Contains(e)) linkedTo.Remove(e);
-        }
-
-        /// <summary>
-        /// Gets all linked entities of specific type.
-        /// </summary>
-        public HashSet<T> GetLinkedEntities<T>(HashSet<T> list = null, int? maxDepth = null) where T : MapEntity
-        {
-            list = list ?? new HashSet<T>();
-            int startDepth = 0;
-            GetLinkedEntitiesRecursive<T>(this, list, ref startDepth, maxDepth);
-            return list;
-        }
-
-        /// <summary>
-        /// Gets all linked entities of specific type.
-        /// </summary>
-        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null) where T : MapEntity
-        {
-            if (depth > maxDepth) { return; }
-            foreach (var linkedEntity in mapEntity.linkedTo)
-            {
-                if (linkedEntity is T linkedTarget)
-                {
-                    if (!linkedTargets.Contains(linkedTarget))
-                    {
-                        linkedTargets.Add(linkedTarget);
-                        depth++;
-                        GetLinkedEntitiesRecursive(linkedEntity, linkedTargets, ref depth, maxDepth);
-                    }
-                }
-            }
         }
 
         #region Serialized properties

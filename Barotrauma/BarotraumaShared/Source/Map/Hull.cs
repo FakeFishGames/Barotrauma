@@ -78,8 +78,27 @@ namespace Barotrauma
 
         private float[] leftDelta;
         private float[] rightDelta;
+                
+        public List<Gap> ConnectedGaps;
 
-        public readonly List<Gap> ConnectedGaps = new List<Gap>();
+        private string roomName;
+        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
+        public string RoomName
+        {
+            get { return roomName; }
+            set
+            {
+                if (roomName == value) { return; }
+                roomName = value;
+                DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+            }
+        }
+
+        public string DisplayName
+        {
+            get;
+            private set;
+        }
 
         private string roomName;
         [Editable, Serialize("", true, translationTextTag: "RoomName.")]
@@ -494,6 +513,9 @@ namespace Barotrauma
             OxygenPercentage = 100.0f;
 
             FireSources = new List<FireSource>();
+            linkedTo = new System.Collections.ObjectModel.ObservableCollection<MapEntity>();
+
+            
 
             properties = SerializableProperty.GetProperties(this);
 
@@ -858,7 +880,7 @@ namespace Barotrauma
             FireSources.Remove(fire);
         }
 
-        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth = null)
+        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
         {
             return GetAdjacentHulls(new HashSet<Hull>(), 0, searchDepth);
         }
