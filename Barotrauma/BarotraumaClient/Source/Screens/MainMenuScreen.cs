@@ -766,7 +766,7 @@ namespace Barotrauma
 
         readonly string[] legalCrap = new string[]
         {
-            "Privacy policy",
+            TextManager.Get("privacypolicy", returnNull: true) ?? "Privacy policy",
             "© " + DateTime.Now.Year + " Undertow Games & FakeFish. All rights reserved.",
             "© " + DateTime.Now.Year + " Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
         };
