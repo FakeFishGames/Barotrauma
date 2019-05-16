@@ -32,6 +32,7 @@ namespace Barotrauma
             var item = battery.Item;
             if (item.Submarine == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }
+            if (item.ConditionPercentage <= 0) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
             return true;
         }
