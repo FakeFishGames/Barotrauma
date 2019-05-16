@@ -470,6 +470,7 @@ namespace Barotrauma
                         break;
                     case Tab.Credits:
                         titleText.Visible = false;
+                        creditsPlayer.Restart();
                         break;
                 }
             }

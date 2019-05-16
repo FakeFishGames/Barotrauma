@@ -685,6 +685,25 @@ namespace Barotrauma
             }
         }
 
+        public string DisplayName
+        {
+            get;
+            private set;
+        }
+
+        private string roomName;
+        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
+        public string RoomName
+        {
+            get { return roomName; }
+            set
+            {
+                if (roomName == value) { return; }
+                roomName = value;
+                DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+            }
+        }
+
         public override Rectangle Rect
         {
             get
@@ -1220,7 +1239,8 @@ namespace Barotrauma
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        hull.GetAdjacentHulls(connectedHulls, steps++, searchDepth);
+                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position), maxDistance);
+                        if (dist < float.MaxValue) return dist;
                     }
                 }
             }
@@ -1266,8 +1286,7 @@ namespace Barotrauma
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position), maxDistance);
-                        if (dist < float.MaxValue) return dist;
+                        hull.GetAdjacentHulls(connectedHulls, steps++, searchDepth);
                     }
                 }
             }
