@@ -2408,7 +2408,10 @@ namespace Barotrauma.Networking
                         if (senderCharacter != null &&
                             client.Character != null && !client.Character.IsDead)
                         {
-                            modifiedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, client.Character);
+                            if (senderCharacter != client.Character)
+                            {
+                                modifiedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, client.Character);
+                            }
 
                             //too far to hear the msg -> don't send
                             if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
@@ -2457,13 +2460,16 @@ namespace Barotrauma.Networking
                 if (message.Sender != null &&
                     client.Character != null && !client.Character.IsDead)
                 {
-                    modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, messageType, message.Sender, client.Character);
+                    if (message.Sender != client.Character)
+                    {
+                        modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, messageType, message.Sender, client.Character);
+                    }
 
                     //too far to hear the msg -> don't send
                     if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
                 }
 
-                SendDirectChatMessage(message, client);
+                SendDirectChatMessage(new OrderChatMessage(message.Order, message.OrderOption, message.TargetEntity, message.TargetCharacter, message.Sender), client);
             }
 
             string myReceivedMessage = message.Text;
