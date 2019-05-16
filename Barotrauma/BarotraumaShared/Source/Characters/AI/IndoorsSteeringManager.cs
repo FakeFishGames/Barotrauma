@@ -320,6 +320,8 @@ namespace Barotrauma
                 var door = node.ConnectedDoor;
                 if (door != null)
                 {
+                    if (door.IsOpen) { return true; }
+                    if (door.IsStuck) { return false; }
                     if (door.HasIntegratedButtons)
                     {
                         if (!door.HasRequiredItems(character, false))

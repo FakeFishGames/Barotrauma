@@ -26,6 +26,8 @@ namespace Barotrauma.Items.Components
         private bool autoOrientGap;
 
         private bool isStuck;
+        public bool IsStuck => isStuck;
+
         private float resetPredictionTimer;
 
         private Rectangle doorRect;
