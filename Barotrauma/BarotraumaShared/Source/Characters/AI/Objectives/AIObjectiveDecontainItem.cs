@@ -8,53 +8,78 @@ namespace Barotrauma
     {
         public override string DebugTag => "decontain item";
 
-        public Func<Item, float> GetItemPriority;
-
         //can either be a tag or an identifier
-        private readonly string[] itemIdentifiers;
-        private readonly ItemContainer container;
-        private readonly Item targetItem;
+        private string[] itemIdentifiers;
 
-        private AIObjectiveGoTo goToObjective;
+        private ItemContainer container;
+
         private bool isCompleted;
 
-        public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
-            : base(character, objectiveManager, priorityModifier)
+        public Func<Item, float> GetItemPriority;
+
+        private AIObjectiveGetItem getItemObjective;
+        private AIObjectiveGoTo goToObjective;
+        private Item targetItem;
+
+        public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer container)
+        : base(character, "")
         {
             this.targetItem = targetItem;
             this.container = container;
         }
 
 
-        public AIObjectiveDecontainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
-            : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
+        public AIObjectiveDecontainItem(Character character, string itemIdentifier, ItemContainer container)
+            : this(character, new string[] { itemIdentifier }, container)
+        {
+        }
 
-        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
-            : base(character, objectiveManager, priorityModifier)
+        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, ItemContainer container)
+            : base(character, "")
         {
             this.itemIdentifiers = itemIdentifiers;
             for (int i = 0; i < itemIdentifiers.Length; i++)
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
             }
+
             this.container = container;
         }
 
-        public override bool IsCompleted() => isCompleted;
+        public override bool IsCompleted()
+        {
+            return isCompleted;
+        }
 
-        public override float GetPriority()
+        public override bool CanBeCompleted
+        {
+            get
+            {
+                if (goToObjective != null)
+                {
+                    return goToObjective.CanBeCompleted;
+                }
+
+                return getItemObjective == null || getItemObjective.CanBeCompleted;
+            }
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
+
             return 1.0f;
         }
 
         protected override void Act(float deltaTime)
         {
-            if (isCompleted) { return; }
+            if (isCompleted) return;
+
             Item itemToDecontain = null;
+
             //get the item that should be de-contained
             if (targetItem == null)
             {
@@ -63,7 +88,7 @@ namespace Barotrauma
                     foreach (string identifier in itemIdentifiers)
                     {
                         itemToDecontain = container.Inventory.FindItemByIdentifier(identifier) ?? container.Inventory.FindItemByTag(identifier);
-                        if (itemToDecontain != null) { break; }
+                        if (itemToDecontain != null) break;
                     }
                 }
             }
@@ -71,32 +96,38 @@ namespace Barotrauma
             {
                 itemToDecontain = targetItem;
             }
+
             if (itemToDecontain == null || itemToDecontain.Container != container.Item) // Item not found or already de-contained, consider complete
             {
                 isCompleted = true;
                 return;
             }
+
             if (itemToDecontain.OwnInventory != character.Inventory && itemToDecontain.ParentInventory != character.Inventory)
             {
-                if (Vector2.DistanceSquared(character.Position, container.Item.Position) > MathUtils.Pow(container.Item.InteractDistance, 2) && !container.Item.IsInsideTrigger(character.WorldPosition))
+                if (Vector2.Distance(character.Position, container.Item.Position) > container.Item.InteractDistance
+                && !container.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager));
+                    goToObjective = new AIObjectiveGoTo(container.Item, character);
+                    AddSubObjective(goToObjective);
                     return;
                 }
             }
+
             itemToDecontain.Drop(character);
             isCompleted = true;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            if (!(otherObjective is AIObjectiveDecontainItem decontainItem)) { return false; }
+            AIObjectiveDecontainItem decontainItem = otherObjective as AIObjectiveDecontainItem;
+            if (decontainItem == null) return false;
             if (decontainItem.itemIdentifiers != null && itemIdentifiers != null)
             {
-                if (decontainItem.itemIdentifiers.Length != itemIdentifiers.Length) { return false; }
+                if (decontainItem.itemIdentifiers.Length != itemIdentifiers.Length) return false;
                 for (int i = 0; i < decontainItem.itemIdentifiers.Length; i++)
                 {
-                    if (decontainItem.itemIdentifiers[i] != itemIdentifiers[i]) { return false; }
+                    if (decontainItem.itemIdentifiers[i] != itemIdentifiers[i]) return false;
                 }
                 return true;
             }
@@ -104,6 +135,7 @@ namespace Barotrauma
             {
                 return decontainItem.targetItem == targetItem;
             }
+
             return false;
         }
     }

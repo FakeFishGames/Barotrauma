@@ -50,7 +50,7 @@ namespace Barotrauma
                     Job.Name, textColor: Job.Prefab.UIColor, font: font);
             }
 
-            if (personalityTrait != null)
+            if (personalityTrait != null && TextManager.Language == "English")
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
                     TextManager.Get("PersonalityTrait") + ": " + personalityTrait.Name, font: font);

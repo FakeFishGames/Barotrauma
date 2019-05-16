@@ -1612,6 +1612,10 @@ namespace Barotrauma
             {
                 ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
+            if (!broken)
+            {
+                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            }
             ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
@@ -1748,9 +1752,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
-        /// </summary>
         public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
@@ -1759,6 +1760,7 @@ namespace Barotrauma
             {
                 HashSet<Connection> alreadySearched = new HashSet<Connection>();
                 GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
+
                 return connectedComponents;
             }
 
@@ -1787,13 +1789,27 @@ namespace Barotrauma
             {
                 if (alreadySearched.Contains(c)) { continue; }
                 alreadySearched.Add(c);
-                GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
+
+                var recipients = c.Recipients;
+                foreach (Connection recipient in recipients)
+                {
+                    if (alreadySearched.Contains(recipient)) { continue; }
+                    var component = recipient.Item.GetComponent<T>();                    
+                    if (component != null)
+                    {
+                        var receiverConnections = wifiReceiver.Item.Connections;
+                        if (receiverConnections == null) { continue; }
+                        foreach (Connection wifiOutput in receiverConnections)
+                        {
+                            if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
+                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents);
+                        }
+                    }
+                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
+                }
             }
         }
 
-        /// <summary>
-        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
-        /// </summary>
         public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
@@ -1823,26 +1839,11 @@ namespace Barotrauma
             foreach (Connection recipient in recipients)
             {
                 if (alreadySearched.Contains(recipient)) { continue; }
+
                 var component = recipient.Item.GetComponent<T>();                    
                 if (component != null)
                 {
                     connectedComponents.Add(component);
-                }
-
-                //connected to a wifi component -> see which other wifi components it can communicate with
-                var wifiComponent = recipient.Item.GetComponent<WifiComponent>();
-                if (wifiComponent != null && wifiComponent.CanTransmit())
-                {
-                    foreach (var wifiReceiver in wifiComponent.GetReceiversInRange())
-                    {
-                        var receiverConnections = wifiReceiver.Item.Connections;
-                        if (receiverConnections == null) { continue; }
-                        foreach (Connection wifiOutput in receiverConnections)
-                        {
-                            if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
-                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents);
-                        }
-                    }
                 }
 
                 recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
@@ -2142,6 +2143,29 @@ namespace Barotrauma
                 }
 
                 if (ic.DeleteOnUse) remove = true;
+            }
+
+            if (remove) { Spawner?.AddToRemoveQueue(this); }
+        }
+
+        List<ColoredText> texts = new List<ColoredText>();
+        public List<ColoredText> GetHUDTexts(Character character)
+        {
+            texts.Clear();
+            foreach (ItemComponent ic in components)
+            {
+                if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
+                if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
+
+                Color color = Color.Gray;
+                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
+                if (hasRequiredSkillsAndItems)
+                {
+                    color = Color.Cyan;
+                }
+
+                texts.Add(new ColoredText(ic.DisplayMsg, color, false));
             }
 
             if (remove) { Spawner?.AddToRemoveQueue(this); }
