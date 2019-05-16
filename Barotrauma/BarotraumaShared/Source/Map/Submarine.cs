@@ -1077,6 +1077,7 @@ namespace Barotrauma
 
         public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs)
         {
+            if (entity == null) { return false; }
             if (entity.Submarine == this) { return true; }
             if (entity.Submarine == null) { return false; }
             if (includingConnectedSubs)

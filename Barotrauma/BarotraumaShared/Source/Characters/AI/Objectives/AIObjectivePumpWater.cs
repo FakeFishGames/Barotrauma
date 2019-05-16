@@ -49,6 +49,7 @@ namespace Barotrauma
         {
             if (pumpList == null)
             {
+                if (character == null || character.Submarine == null) { return new Pump[0]; }
                 pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
             }
             return pumpList;
