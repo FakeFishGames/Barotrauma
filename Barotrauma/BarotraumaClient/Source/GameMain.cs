@@ -159,14 +159,14 @@ namespace Barotrauma
 
         public GameMain()
         {
-#if !DEBUG && OSX
+/*#if !DEBUG && OSX
             // Use a separate path for content that's editable due to macOS's .app bundles crashing when edited during runtime
             string macPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Barotrauma");
             Directory.SetCurrentDirectory(macPath);
             Content.RootDirectory = macPath + "/Content";
-#else
+#else*/
             Content.RootDirectory = "Content";
-#endif
+/*#endif*/
 
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
@@ -177,7 +177,6 @@ namespace Barotrauma
             Config = new GameSettings();
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
-
 
             PerformanceCounter = new PerformanceCounter();
 
@@ -267,21 +266,28 @@ namespace Barotrauma
             spriteBatch = new SpriteBatch(GraphicsDevice);
             TextureLoader.Init(GraphicsDevice);
 
+            //do this here because we need it for the loading screen
+            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
+
             loadingScreenOpen = true;
-            TitleScreen = new LoadingScreen(GraphicsDevice);
+            TitleScreen = new LoadingScreen(GraphicsDevice)
+            {
+                WaitForLanguageSelection = Config.ShowLanguageSelectionPrompt
+            };
 
             bool canLoadInSeparateThread = false;
 #if WINDOWS
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(), "", canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
         }
         
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
             {
+                //TODO: translate
                 var userStatsPrompt = new GUIMessageBox(
                     "Do you want to help us make Barotrauma better?",
                     "Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, " +
@@ -311,11 +317,16 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> Load()
+        private IEnumerable<object> Load(bool isSeparateThread)
         {
             if (GameSettings.VerboseLogging)
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
+            }
+
+            while (TitleScreen.WaitForLanguageSelection)
+            {
+                yield return CoroutineStatus.Running;
             }
 
             SoundManager = new Sounds.SoundManager();
@@ -326,21 +337,25 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
             if (Config.EnableSplashScreen)
             {
-                try
+                var pendingSplashScreens = TitleScreen.PendingSplashScreens;
+                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_UTG.mp4", new Point(1280, 720)));
+                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_FF.mp4", new Point(1280, 720)));
+                pendingSplashScreens?.Enqueue(new Pair<string, Point>("Content/Splash_Daedalic.mp4", new Point(1920, 1080)));
+            }
+
+            //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading
+            //otherwise the videos will look extremely choppy
+            if (!isSeparateThread)
+            {
+                while (TitleScreen.PlayingSplashScreen || TitleScreen.PendingSplashScreens.Count > 0)
                 {
-                    (TitleScreen as LoadingScreen).SplashScreen = new Video(base.GraphicsDevice, SoundManager, "Content/splashscreen.mp4", 1280, 720);
+                    yield return CoroutineStatus.Running;
                 }
-                catch (Exception e)
-                {
-                    Config.EnableSplashScreen = false;
-                    DebugConsole.ThrowError("Playing the splash screen failed.", e);
-                }
-             }
+            }
 
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            SteamManager.Initialize();
             if (Config.AutoUpdateWorkshopItems)
             {
                 if (SteamManager.AutoUpdateWorkshopItems())
@@ -367,11 +382,9 @@ namespace Barotrauma
             InitUserStats();
 
         yield return CoroutineStatus.Running;
-
-
+            
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
-            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
@@ -475,6 +488,11 @@ namespace Barotrauma
 
             CheckContentPackage();
 
+            foreach (string steamError in SteamManager.InitializationErrors)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
+            }
+
             TitleScreen.LoadState = 100.0f;
             hasLoaded = true;
             if (GameSettings.VerboseLogging)
@@ -517,15 +535,24 @@ namespace Barotrauma
         protected override void UnloadContent()
         {
             Video.Close();
-            SoundManager.Dispose();
+            SoundManager?.Dispose();
         }
 
         /// <summary>
-        /// Returns the file paths of all files of the given type in the currently selected content packages.
+        /// Returns the file paths of all files of the given type in the content packages.
         /// </summary>
-        public IEnumerable<string> GetFilesOfType(ContentType type)
+        /// <param name="type"></param>
+        /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
+        public IEnumerable<string> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
         {
-            return ContentPackage.GetFilesOfType(SelectedPackages, type);
+            if (searchAllContentPackages)
+            {
+                return ContentPackage.GetFilesOfType(ContentPackage.List, type);
+            }
+            else
+            {
+                return ContentPackage.GetFilesOfType(SelectedPackages, type);
+            }
         }
 
         /// <summary>
@@ -620,10 +647,14 @@ namespace Barotrauma
                         }
                         else if (Tutorial.Initialized && Tutorial.ContentRunning)
                         {
-                            (GameMain.GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+                            (GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+                        }
+                        else if (GUI.PauseMenuOpen)
+                        {
+                            GUI.TogglePauseMenu();
                         }
                         else if ((Character.Controlled?.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
-                        && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -633,6 +664,14 @@ namespace Barotrauma
                     GUI.ClearUpdateList();
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
+
+#if !DEBUG
+                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen)
+                    {
+                        GUI.TogglePauseMenu();
+                        paused = true;
+                    }
+#endif
 
                     Screen.Selected.AddToGUIUpdateList();
 
@@ -717,9 +756,9 @@ namespace Barotrauma
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
         }
 
-        public void ShowCampaignDisclaimer(Action onContinue)
+        public void ShowCampaignDisclaimer(Action onContinue = null)
         {
-            var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"), 
+            var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"),
                 new string[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>

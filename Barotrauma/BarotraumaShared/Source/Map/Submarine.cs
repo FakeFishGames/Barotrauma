@@ -428,17 +428,17 @@ namespace Barotrauma
                             //prevent rewiring
                             connectionPanel.Locked = true;
                         }
-                        else if (ic is Pickable pickable)
+                        else if (ic is Holdable holdable && holdable.Attached)
                         {
-                            //prevent picking up (or deattaching) items
+                            //prevent deattaching items from walls
 #if CLIENT
-                            if (GameMain.GameSession.GameMode is TutorialMode)
+                            if (GameMain.GameSession?.GameMode is TutorialMode)
                             {
                                 continue;
                             }
 #endif
-                            pickable.CanBePicked = false;
-                            pickable.CanBeSelected = false;
+                            holdable.CanBePicked = false;
+                            holdable.CanBeSelected = false;
                         }
                     }
                 }
@@ -1077,6 +1077,7 @@ namespace Barotrauma
 
         public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs)
         {
+            if (entity == null) { return false; }
             if (entity.Submarine == this) { return true; }
             if (entity.Submarine == null) { return false; }
             if (includingConnectedSubs)
@@ -1364,7 +1365,7 @@ namespace Barotrauma
 
             foreach (Hull hull in matchingHulls)
             {
-                if (string.IsNullOrEmpty(hull.RoomName))
+                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.ToLowerInvariant().Contains("roomname."))
                 {
                     hull.RoomName = hull.CreateRoomName();
                 }
@@ -1432,7 +1433,7 @@ namespace Barotrauma
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
             if (previewImage != null)
             {
-                //doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
+                doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }
 
             try

@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
             Passive
         };
 
+        private bool dynamicDockingIndicator = true;
+
         private bool unsentChanges;
         private float networkUpdateTimer;
 
@@ -64,6 +66,8 @@ namespace Barotrauma.Items.Components
             new Color(255, 255, 255)
         };
 
+        private float prevDockingDist;
+        
         public Vector2 DisplayOffset { get; private set; }
 
         public float DisplayRadius { get; private set; }
@@ -171,6 +175,31 @@ namespace Barotrauma.Items.Components
             sonarMode.Selected = Mode.Passive;
             
             GuiFrame.CanBeFocused = false;
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "pingcircle":
+                        pingCircle = new Sprite(subElement);
+                        break;
+                    case "directionalpingcircle":
+                        directionalPingCircle = new Sprite(subElement);
+                        break;
+                    case "screenoverlay":
+                        screenOverlay = new Sprite(subElement);
+                        break;
+                    case "screenbackground":
+                        screenBackground = new Sprite(subElement);
+                        break;
+                    case "blip":
+                        sonarBlip = new Sprite(subElement);
+                        break;
+                    case "linesprite":
+                        lineSprite = new Sprite(subElement);
+                        break;
+                }
+            }
         }
 
         public override void OnItemLoaded()
@@ -235,8 +264,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 transducerCenter = UseTransducers ? GetTransducerCenter() : item.WorldPosition;
-            transducerCenter += DisplayOffset;
+            Vector2 transducerCenter = GetTransducerPos() + DisplayOffset;
 
             if (Level.Loaded != null)
             {
@@ -285,8 +313,31 @@ namespace Barotrauma.Items.Components
                         sonarBlips.Add(flowBlip);
                     }
                 }
-            }            
-            
+            }
+
+            Steering steering = item.GetComponent<Steering>();
+            if (steering != null && steering.DockingModeEnabled && steering.ActiveDockingSource != null)
+            {
+                float dockingDist = Vector2.Distance(steering.ActiveDockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
+                if (prevDockingDist > steering.DockingAssistThreshold && dockingDist <= steering.DockingAssistThreshold)
+                {
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.25f));
+                }
+                else if (prevDockingDist > steering.DockingAssistThreshold * 0.75f && dockingDist <= steering.DockingAssistThreshold * 0.75f)
+                {
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.5f));
+                }
+                else if (prevDockingDist > steering.DockingAssistThreshold * 0.5f && dockingDist <= steering.DockingAssistThreshold * 0.5f)
+                {
+                    zoom = Math.Max(zoom, MathHelper.Lerp(MinZoom, MaxZoom, 0.25f));
+                }
+                prevDockingDist = Math.Min(dockingDist, prevDockingDist);
+            }
+            else
+            {
+                prevDockingDist = float.MaxValue;
+            }
+
             if (IsActive)
             {
                 float pingRadius = DisplayRadius * pingState / zoom;
@@ -357,7 +408,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 transducerCenter = UseTransducers && connectedTransducers.Count > 0 ? GetTransducerCenter() : item.WorldPosition;
+            Vector2 transducerCenter = GetTransducerPos();
 
             if (item.Submarine != null && !DetectSubmarineWalls)
             {
@@ -369,7 +420,6 @@ namespace Barotrauma.Items.Components
             {
                 DisplayOffset = Vector2.Zero;
             }
-
 
             if (sonarBlips.Count > 0)
             {
@@ -391,8 +441,8 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
                 Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
-                GUI.DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
-                GUI.DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
+                DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
+                DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
             }
 
             if (GameMain.DebugDraw)
@@ -495,7 +545,7 @@ namespace Barotrauma.Items.Components
                     Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
                     end.Y = -end.Y;
 
-                    DrawLine(spriteBatch, start, end, Color.LightBlue * signalStrength * 0.5f, width: 3);
+                    DrawLine(spriteBatch, start, end, Color.LightBlue * signalStrength * 0.5f, width: 4);
                 }
             }
         }
@@ -512,84 +562,51 @@ namespace Barotrauma.Items.Components
             {
                 if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, end, start, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
                 {
-                    GUI.DrawLine(spriteBatch, center + intersection1.Value, center + end, color, width: width);
+                    DrawLineSprite(spriteBatch, center + intersection1.Value, center + end, color, width: width);
                 }
             }
             else if (endOutside)
             {
                 if (MathUtils.GetLineCircleIntersections(Vector2.Zero, DisplayRadius, start, end, true, out Vector2? intersection1, out Vector2? intersection2) == 1)
                 {
-                    GUI.DrawLine(spriteBatch, center + start, center + intersection1.Value, color, width: width);
+                    DrawLineSprite(spriteBatch, center + start, center + intersection1.Value, color, width: width);
                 }
             }
             else
             {
-                GUI.DrawLine(spriteBatch, center + start, center + end, color, width: width);
+                DrawLineSprite(spriteBatch, center + start, center + end, color, width: width);
             }
         }
+
+        private void DrawLineSprite(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, int width)
+        {
+            if (lineSprite == null)
+            {
+                GUI.DrawLine(spriteBatch, start, end, color, width: width);
+            }
+            else
+            {
+                Vector2 dir = end - start;
+                float angle = (float)Math.Atan2(dir.Y, dir.X);
+                lineSprite.Draw(spriteBatch, start, color, origin: lineSprite.Origin, rotate: angle,
+                    scale: new Vector2(dir.Length() / lineSprite.size.X, 1.0f));
+            }
+        }
+
 
         private void DrawDockingPorts(SpriteBatch spriteBatch, Vector2 transducerCenter, float signalStrength)
         {
             float scale = displayScale * zoom;
 
             Steering steering = item.GetComponent<Steering>();
-            if (steering != null && steering.DockingModeEnabled)
+            if (steering != null && steering.DockingModeEnabled && steering.ActiveDockingSource != null)
             {
-                DisplayOffset =
-                    Vector2.Lerp(DisplayOffset,
-                    (steering.DockingSource.Item.WorldPosition + steering.DockingTarget.Item.WorldPosition) / 2.0f - transducerCenter,
-                    0.1f);
-                transducerCenter += DisplayOffset;
-
-                Vector2 sourcePortDiff = (steering.DockingSource.Item.WorldPosition - transducerCenter) * scale;
-                Vector2 sourcePortPos = new Vector2(sourcePortDiff.X, -sourcePortDiff.Y);
-                Vector2 targetPortDiff = (steering.DockingTarget.Item.WorldPosition - transducerCenter) * scale;
-                Vector2 targetPortPos = new Vector2(targetPortDiff.X, -targetPortDiff.Y);
-
-                Vector2 midPos = (sourcePortPos + targetPortPos) / 2.0f;
-
-                System.Diagnostics.Debug.Assert(steering.DockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
-
-                float xDist = Math.Abs(steering.DockingSource.Item.WorldPosition.X - steering.DockingTarget.Item.WorldPosition.X);
-                float normalizedXDist = xDist / steering.DockingSource.DistanceTolerance.X;
-                float yDist = Math.Abs(steering.DockingSource.Item.WorldPosition.Y - steering.DockingTarget.Item.WorldPosition.Y);
-                float normalizedYDist = yDist / steering.DockingSource.DistanceTolerance.Y;
-
-                Color xColor = normalizedXDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedXDist - 1.0f);
-                Color yColor = normalizedYDist <= 1.0f ? Color.Lime : Color.Lerp(Color.Orange, Color.Red, normalizedYDist - 1.0f);
-                
-                if (steering.DockingSource.IsHorizontal)
-                {
-                    if (yDist < steering.DockingSource.DistanceTolerance.Y)
-                    {
-                        DrawLine(spriteBatch, sourcePortPos, new Vector2(targetPortPos.X, sourcePortPos.Y), xColor, width: 3);
-                    }
-                    else
-                    {
-                        DrawLine(spriteBatch, sourcePortPos, new Vector2(midPos.X, sourcePortPos.Y), xColor, width: 3);
-                        DrawLine(spriteBatch, targetPortPos, new Vector2(midPos.X, targetPortPos.Y), xColor, width: 3);
-                        DrawLine(spriteBatch, new Vector2(midPos.X, sourcePortPos.Y), new Vector2(midPos.X, targetPortPos.Y), yColor, width: 3);
-                    }                        
-                }
-                else
-                {
-                    if (xDist < steering.DockingSource.DistanceTolerance.X)
-                    {
-                        DrawLine(spriteBatch, sourcePortPos, new Vector2(sourcePortPos.X, targetPortPos.Y), yColor, width: 3);
-                    }
-                    else
-                    {
-                        DrawLine(spriteBatch, sourcePortPos, new Vector2(sourcePortPos.X, midPos.Y), yColor, width: 3);
-                        DrawLine(spriteBatch, targetPortPos, new Vector2(targetPortPos.X, midPos.Y), yColor, width: 3);
-                        DrawLine(spriteBatch, new Vector2(sourcePortPos.X, midPos.Y), new Vector2(targetPortPos.X, midPos.Y), xColor, width: 3);
-                    }
-                }
+                DrawDockingIndicator(spriteBatch, steering, ref transducerCenter);
             }
             else
             {
                 DisplayOffset = Vector2.Lerp(DisplayOffset, Vector2.Zero, 0.1f);
-            }
-                
+            }                
 
             foreach (DockingPort dockingPort in DockingPort.List)
             {
@@ -608,9 +625,102 @@ namespace Barotrauma.Items.Components
                 {
                     size.Y = 0.0f;
                 }
-                GUI.DrawLine(spriteBatch, center + offset - size / 2, center + offset + size / 2, Color.LightGreen, width: (int)(zoom));
+                GUI.DrawLine(spriteBatch, center + offset - size, center + offset + size, Color.LightGreen, width: (int)(zoom * 2.5f));
+            }
+        }
+
+        private void DrawDockingIndicator(SpriteBatch spriteBatch, Steering steering, ref Vector2 transducerCenter)
+        {
+            float scale = displayScale * zoom;
+            
+            Vector2 worldFocusPos = (steering.ActiveDockingSource.Item.WorldPosition + steering.DockingTarget.Item.WorldPosition) / 2.0f;
+            worldFocusPos.X = steering.DockingTarget.Item.WorldPosition.X;
+
+            DisplayOffset = Vector2.Lerp(DisplayOffset, worldFocusPos - transducerCenter, 0.1f);
+            transducerCenter += DisplayOffset;
+
+            Vector2 sourcePortDiff = (steering.ActiveDockingSource.Item.WorldPosition - transducerCenter) * scale;
+            Vector2 sourcePortPos = new Vector2(sourcePortDiff.X, -sourcePortDiff.Y);
+            Vector2 targetPortDiff = (steering.DockingTarget.Item.WorldPosition - transducerCenter) * scale;
+            Vector2 targetPortPos = new Vector2(targetPortDiff.X, -targetPortDiff.Y);
+
+            Vector2 midPos = (sourcePortPos + targetPortPos) / 2.0f;
+
+            System.Diagnostics.Debug.Assert(steering.ActiveDockingSource.IsHorizontal == steering.DockingTarget.IsHorizontal);
+            Vector2 diff = steering.DockingTarget.Item.WorldPosition - steering.ActiveDockingSource.Item.WorldPosition;
+            float dist = diff.Length();
+            bool readyToDock = 
+                Math.Abs(diff.X) < steering.DockingTarget.DistanceTolerance.X &&
+                Math.Abs(diff.Y) < steering.DockingTarget.DistanceTolerance.Y;
+                       
+            Vector2 dockingDir = sourcePortPos - targetPortPos;
+            Vector2 normalizedDockingDir = Vector2.Normalize(dockingDir);
+            if (!dynamicDockingIndicator)
+            {
+                if (steering.ActiveDockingSource.IsHorizontal)
+                {
+                    normalizedDockingDir = new Vector2(Math.Sign(normalizedDockingDir.X), 0.0f);
+                }
+                else
+                {
+                    normalizedDockingDir = new Vector2(0.0f, Math.Sign(normalizedDockingDir.Y));
+                }
             }
 
+            Color staticLineColor = Color.White * 0.2f;
+
+            float sector = MathHelper.ToRadians(MathHelper.Lerp(10.0f, 45.0f, MathHelper.Clamp(dist / steering.DockingAssistThreshold, 0.0f, 1.0f)));
+            float sectorLength = DisplayRadius;
+            //use law of cosines to calculate the length of the center line
+            float midLength = (float)(Math.Cos(sector) * sectorLength);
+
+            Vector2 midNormal = new Vector2(-normalizedDockingDir.Y, normalizedDockingDir.X);
+
+            DrawLine(spriteBatch, targetPortPos, targetPortPos + normalizedDockingDir * midLength, readyToDock ? Color.LightGreen : staticLineColor, width: 2);
+            DrawLine(spriteBatch, targetPortPos,
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, sector) * sectorLength, staticLineColor, width: 2);
+            DrawLine(spriteBatch, targetPortPos,
+                targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -sector) * sectorLength, staticLineColor, width: 2);
+
+            for (float z = 0; z < 1.0f; z += 0.1f * zoom)
+            {
+                Vector2 linePos = targetPortPos + normalizedDockingDir * midLength * z;
+                DrawLine(spriteBatch, linePos + midNormal * 3.0f, linePos - midNormal * 3.0f, staticLineColor, width: 3);
+            }
+
+            if (readyToDock)
+            {
+                Color indicatorColor = Color.LightGreen * 0.8f;
+
+                float indicatorSize = (float)Math.Sin((float)Timing.TotalTime * 5.0f) * DisplayRadius * 0.75f;
+                Vector2 midPoint = (sourcePortPos + targetPortPos) / 2.0f;
+                DrawLine(spriteBatch, 
+                    midPoint + Vector2.UnitY * indicatorSize,
+                    midPoint - Vector2.UnitY * indicatorSize, 
+                    indicatorColor, width: 3);
+                DrawLine(spriteBatch,
+                    midPoint + Vector2.UnitX * indicatorSize,
+                    midPoint - Vector2.UnitX * indicatorSize,
+                    indicatorColor, width: 3);
+            }
+            else
+            {
+                float indicatorSector = sector * 0.75f;
+                float indicatorSectorLength = (float)(midLength / Math.Cos(indicatorSector));
+
+                    bool withinSector =
+                    (Math.Abs(diff.X) < steering.ActiveDockingSource.DistanceTolerance.X && Math.Abs(diff.Y) < steering.ActiveDockingSource.DistanceTolerance.Y) ||
+                    Vector2.Dot(normalizedDockingDir, MathUtils.RotatePoint(normalizedDockingDir, indicatorSector)) <
+                    Vector2.Dot(normalizedDockingDir, Vector2.Normalize(dockingDir));
+
+                Color indicatorColor = withinSector ? Color.LightGreen * 0.8f : Color.Red * 0.8f;
+
+                DrawLine(spriteBatch, targetPortPos,
+                    targetPortPos + MathUtils.RotatePoint(normalizedDockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
+                DrawLine(spriteBatch, targetPortPos,
+                    targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, -indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
+            }
+            
         }
 
         private void UpdateDisruptions(Vector2 pingSource, float worldPingRadius, float worldPrevPingRadius)

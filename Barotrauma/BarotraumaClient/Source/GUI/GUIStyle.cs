@@ -12,7 +12,12 @@ namespace Barotrauma
 
         private XElement configElement;
 
+        private GraphicsDevice graphicsDevice;
+
+        private ScalableFont defaultFont;
+
         public ScalableFont Font { get; private set; }
+        public ScalableFont UnscaledSmallFont { get; private set; }
         public ScalableFont SmallFont { get; private set; }
         public ScalableFont LargeFont { get; private set; }
         public ScalableFont VideoTitleFont { get; private set; }
@@ -27,6 +32,7 @@ namespace Barotrauma
             
         public GUIStyle(string file, GraphicsDevice graphicsDevice)
         {
+            this.graphicsDevice = graphicsDevice;
             componentStyles = new Dictionary<string, GUIComponentStyle>();
 
             GameMain.Instance.OnResolutionChanged += () => { RescaleFonts(); };
@@ -59,6 +65,9 @@ namespace Barotrauma
                     case "font":
                         Font = LoadFont(subElement, graphicsDevice);
                         break;
+                    case "unscaledsmallfont":
+                        UnscaledSmallFont = LoadFont(subElement, graphicsDevice);
+                        break;
                     case "smallfont":
                         SmallFont = LoadFont(subElement, graphicsDevice);
                         break;
@@ -81,6 +90,26 @@ namespace Barotrauma
                 }
             }
         }
+
+        /// <summary>
+        /// Returns the default font of the currently selected language
+        /// </summary>
+        public ScalableFont LoadCurrentDefaultFont()
+        {
+            defaultFont?.Dispose();
+            defaultFont = null;
+            foreach (XElement subElement in configElement.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "font":
+                        defaultFont = LoadFont(subElement, graphicsDevice);
+                        break;
+                }
+            }
+            return defaultFont;
+        }
+
 
         private void RescaleFonts()
         {
@@ -112,15 +141,17 @@ namespace Barotrauma
 
         private ScalableFont LoadFont(XElement element, GraphicsDevice graphicsDevice)
         {
-            string file = element.GetAttributeString("file", "");
-            uint size   = GetFontSize(element);
-            return new ScalableFont(file, size, graphicsDevice);
+            string file         = GetFontFilePath(element);
+            uint size           = GetFontSize(element);
+            bool dynamicLoading = GetFontDynamicLoading(element);
+            return new ScalableFont(file, size, graphicsDevice, dynamicLoading);
         }
 
         private uint GetFontSize(XElement element)
         {
             foreach (XElement subElement in element.Elements())
             {
+                if (subElement.Name.ToString().ToLowerInvariant() != "size") { continue; }
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {
@@ -128,6 +159,34 @@ namespace Barotrauma
                 }
             }
             return 14;
+        }
+
+        private string GetFontFilePath(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
+                {
+                    return subElement.GetAttributeString("file", "");
+                }
+            }
+            return element.GetAttributeString("file", "");
+        }
+
+        private bool GetFontDynamicLoading(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
+                {
+                    return subElement.GetAttributeBool("dynamicloading", false);
+                }
+            }
+            return element.GetAttributeBool("dynamicloading", false);
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

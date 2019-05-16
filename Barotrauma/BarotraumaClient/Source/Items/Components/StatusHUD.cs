@@ -149,8 +149,8 @@ namespace Barotrauma.Items.Components
                 texts.Add(TextManager.Get("Deceased"));
                 textColors.Add(Color.Red);
                 texts.Add(
-                    target.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? 
-                    TextManager.Get("CauseOfDeath") + ": " +TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString()));
+                    target.CauseOfDeath.Affliction?.CauseOfDeathDescription ??
+                    TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString())));
                 textColors.Add(Color.Red);
             }
             else
@@ -194,7 +194,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (AfflictionPrefab affliction in combinedAfflictionStrengths.Keys)
                 {
-                    texts.Add(affliction.Name + ": " + ((int)combinedAfflictionStrengths[affliction]).ToString() + " %");
+                    texts.Add(TextManager.AddPunctuation(':', affliction.Name, ((int)combinedAfflictionStrengths[affliction]).ToString() + " %"));
                     textColors.Add(Color.Lerp(Color.Orange, Color.Red, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
                 }
             }

@@ -34,8 +34,8 @@ namespace Barotrauma
 
             GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
-            int width = 760, height = 400;
-            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), frame.RectTransform, Anchor.Center, minSize: new Point(width, height)));
+            int width = 760, height = 500;
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), frame.RectTransform, Anchor.Center, minSize: new Point(width, height)));
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
@@ -60,13 +60,16 @@ namespace Barotrauma
                     endMessage, wrap: true);
             }
 
-            if (GameMain.GameSession.Mission != null)
+            //don't show the mission info if the mission was not completed and there's no localized "mission failed" text available
+            if (GameMain.GameSession.Mission != null &&
+                (GameMain.GameSession.Mission.Completed || !string.IsNullOrEmpty(GameMain.GameSession.Mission.FailureMessage)))
             {
                 //spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                    TextManager.Get("Mission") + ": " + GameMain.GameSession.Mission.Name, font: GUI.LargeFont);
+                   TextManager.AddPunctuation(':', TextManager.Get("Mission"), GameMain.GameSession.Mission.Name),
+                   font: GUI.LargeFont);
 
                 var missionInfo = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                     GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
@@ -87,7 +90,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), 
                 TextManager.Get("RoundSummaryCrewStatus"), font: GUI.LargeFont);
 
-            GUIListBox characterListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedFrame.RectTransform, minSize: new Point(0, 75)), isHorizontal: true);
+            GUIListBox characterListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), paddedFrame.RectTransform, minSize: new Point(0, 75)), isHorizontal: true);
                         
             foreach (CharacterInfo characterInfo in gameSession.CrewManager.GetCharacterInfos())
             {
@@ -141,10 +144,11 @@ namespace Barotrauma
                     }
                 }
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterFrame.RectTransform, Anchor.BottomCenter),
+                var textHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), characterFrame.RectTransform, Anchor.BottomCenter), style: "InnerGlow", color: statusColor);
+                new GUITextBlock(new RectTransform(Vector2.One, textHolder.RectTransform, Anchor.Center),
                     statusText, Color.White,
                     textAlignment: Alignment.Center,
-                    wrap: true, font: GUI.SmallFont, style: null, color: statusColor * 0.8f);
+                    wrap: true, font: GUI.SmallFont, style: null);
             }
 
             new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.BottomRight)

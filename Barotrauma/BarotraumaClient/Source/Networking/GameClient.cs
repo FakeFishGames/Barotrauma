@@ -1012,7 +1012,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg, GUIMessageBox.DefaultWidth, 0)
+                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg)
                 {
                     UserData = "permissions"
                 };
@@ -1079,6 +1079,8 @@ namespace Barotrauma.Networking
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
+            bool allowRagdollButton = inc.ReadBoolean();
+
             serverSettings.ReadMonsterEnabled(inc);
 
             GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
@@ -1095,6 +1097,7 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
             serverSettings.AllowDisguises = disguisesAllowed;
+            serverSettings.AllowRagdollButton = allowRagdollButton;
 
             if (campaign == null)
             {
@@ -1704,7 +1707,7 @@ namespace Barotrauma.Networking
                         infoButton.UserData = newSub;
                         infoButton.OnClicked = (component, userdata) =>
                         {
-                            ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
+                            ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", new Vector2(0.25f, 0.25f), new Point(500, 400)));
                             return true;
                         };
                     }
@@ -2398,7 +2401,7 @@ namespace Barotrauma.Networking
         {
             var banReasonPrompt = new GUIMessageBox(
                 TextManager.Get(ban ? "BanReasonPrompt" : "KickReasonPrompt"),
-                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, 400, 300);
+                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, new Vector2(0.25f, 0.2f), new Point(400, 200));
 
             var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center));
             var banReasonBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform))

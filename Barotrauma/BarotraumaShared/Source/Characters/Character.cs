@@ -14,7 +14,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable, ISpatialEntity
     {
         public static List<Character> CharacterList = new List<Character>();
 
@@ -859,9 +859,20 @@ namespace Barotrauma
             }
         }
 
-        public static string GetConfigFile(string speciesName)
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
         {
-            string configFile = CharacterConfigFiles.FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
             if (configFile == null)
             {
                 DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
@@ -1336,74 +1347,96 @@ namespace Barotrauma
             }
         }
 
-        public bool CanSeeCharacter(Character character)
+        public bool CanSeeCharacter(Character target)
+        {
+            Limb seeingLimb = GetSeeingLimb();
+            foreach (var targetLimb in target.AnimController.Limbs)
+            {
+                if (CanSeeTarget(targetLimb, seeingLimb))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private Limb GetSeeingLimb()
         {
             Limb selfLimb = AnimController.GetLimb(LimbType.Head);
-            if (selfLimb == null) selfLimb = AnimController.GetLimb(LimbType.Torso);
-            if (selfLimb == null) selfLimb = AnimController.Limbs[0];
+            if (selfLimb == null) { selfLimb = AnimController.GetLimb(LimbType.Torso); }
+            if (selfLimb == null) { selfLimb = AnimController.Limbs.FirstOrDefault(); }
+            return selfLimb;
+        }
 
-            Limb targetLimb = character.AnimController.GetLimb(LimbType.Head);
-            if (targetLimb == null) targetLimb = character.AnimController.GetLimb(LimbType.Torso);
-            if (targetLimb == null) targetLimb = character.AnimController.Limbs[0];
-
-            if (selfLimb != null && targetLimb != null)
+        public bool CanSeeTarget(ISpatialEntity target, Limb seeingLimb = null)
+        {
+            seeingLimb = seeingLimb ?? GetSeeingLimb();
+            if (seeingLimb == null) { return false; }
+            // TODO: Could we just use the method below? If not, let's refactor it so that we can.
+            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - seeingLimb.WorldPosition);
+            Body closestBody;
+            //both inside the same sub (or both outside)
+            //OR the we're inside, the other character outside
+            if (target.Submarine == Submarine || target.Submarine == null)
             {
-                Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - selfLimb.WorldPosition);
-                
-                Body closestBody = null;
-                //both inside the same sub (or both outside)
-                //OR the we're inside, the other character outside
-                if (character.Submarine == Submarine || character.Submarine == null)
-                {
-                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
-                    if (closestBody == null) return true;
-                }
-                //we're outside, the other character inside
-                else if (Submarine == null)
-                {
-                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
-                    if (closestBody == null) return true;
-                }
-                //both inside different subs
-                else
-                {
-                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
-                    if (closestBody != null && closestBody.UserData is Structure)
-                    {
-                        if (((Structure)closestBody.UserData).CastShadow) return false;
-                    }
-                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
-                    if (closestBody == null) return true;
-
-                }
-                
-                Structure wall = closestBody.UserData as Structure;
-                return wall == null || !wall.CastShadow;
+                closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
             }
+            //we're outside, the other character inside
+            else if (Submarine == null)
+            {
+                closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
+            }
+            //both inside different subs
             else
             {
+                closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
+                if (!IsBlocking(closestBody))
+                {
+                    closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
+                }
+            }
+            return !IsBlocking(closestBody);
+
+            bool IsBlocking(Body body)
+            {
+                if (body == null) { return false; }
+                if (body.UserData is Structure wall && wall.CastShadow)
+                {
+                    return wall != target;
+                }
+                else if (body.UserData is Item item && item != target)
+                {
+                    var door = item.GetComponent<Door>();
+                    if (door != null)
+                    {
+                        return !door.IsOpen;
+                    }
+                }
                 return false;
             }
         }
 
-        public bool CanSeeCharacter(Character character, Vector2 sourceWorldPos)
+        /// <summary>
+        /// TODO: ensure that works. CheckVisibility takes positions in sim space, but this method uses world positions
+        /// </summary>
+        public bool CanSeeCharacter(Character target, Vector2 sourceWorldPos)
         {
-            Vector2 diff = ConvertUnits.ToSimUnits(character.WorldPosition - sourceWorldPos);
-
-            Body closestBody = null;
-            if (character.Submarine == null)
+            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceWorldPos);
+            Body closestBody;
+            if (target.Submarine == null)
             {
                 closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
                 if (closestBody == null) return true;
             }
             else
             {
-                closestBody = Submarine.CheckVisibility(character.WorldPosition, character.WorldPosition - diff);
+                closestBody = Submarine.CheckVisibility(target.WorldPosition, target.WorldPosition - diff);
                 if (closestBody == null) return true;
             }
-
             Structure wall = closestBody.UserData as Structure;
-            return wall == null || !wall.CastShadow;
+            Item item = closestBody.UserData as Item;
+            Door door = item?.GetComponent<Door>();
+            return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
         }
 
         public bool HasEquippedItem(Item item)
@@ -2001,6 +2034,10 @@ namespace Barotrauma
             {
                 IsRagdolled = IsForceRagdolled;
             }
+            else if (IsRemotePlayer)
+            {
+                IsRagdolled = IsKeyDown(InputType.Ragdoll);
+            }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
             else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f))
             {
@@ -2534,7 +2571,7 @@ namespace Barotrauma
                 GameMain.GameSession.ReviveCharacter(this);
             }
         }
-        
+
         public override void Remove()
         {
             if (Removed)
@@ -2546,16 +2583,18 @@ namespace Barotrauma
 
             base.Remove();
 
-            if (selectedItems[0] != null) selectedItems[0].Drop(this);
-            if (selectedItems[1] != null) selectedItems[1].Drop(this);
+            if (selectedItems[0] != null) { selectedItems[0].Drop(this); }
+            if (selectedItems[1] != null) { selectedItems[1].Drop(this); }
 
-            if (info != null) info.Remove();
+            if (info != null) { info.Remove(); }
 
 #if CLIENT
             GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
 #endif
 
             CharacterList.Remove(this);
+
+            if (Controlled == this) { Controlled = null; }
 
             if (Inventory != null)
             {
@@ -2576,8 +2615,8 @@ namespace Barotrauma
 
             foreach (Character c in CharacterList)
             {
-                if (c.focusedCharacter == this) c.focusedCharacter = null;
-                if (c.SelectedCharacter == this) c.SelectedCharacter = null;
+                if (c.focusedCharacter == this) { c.focusedCharacter = null; }
+                if (c.SelectedCharacter == this) { c.SelectedCharacter = null; }
             }
         }
         partial void DisposeProjSpecific();
@@ -2616,5 +2655,57 @@ namespace Barotrauma
         }
 
         public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
+
+        private readonly List<Hull> visibleHulls = new List<Hull>();
+        private readonly HashSet<Hull> tempList = new HashSet<Hull>();
+        /// <summary>
+        /// Returns hulls that are visible to the player, including the current hull.
+        /// Can be heavy if used every frame.
+        /// </summary>
+        public List<Hull> GetVisibleHulls()
+        {
+            visibleHulls.Clear();
+            tempList.Clear();
+            if (CurrentHull != null)
+            {
+                visibleHulls.Add(CurrentHull);
+                var adjacentHulls = CurrentHull.GetConnectedHulls(true, 1);
+                float maxDistance = 1000f;
+                foreach (var hull in adjacentHulls)
+                {
+                    if (hull.ConnectedGaps.Any(g => g.Open > 0.9f && g.linkedTo.Contains(CurrentHull) &&
+                        Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2)))
+                    {
+                        if (Vector2.DistanceSquared(hull.WorldPosition, WorldPosition) < Math.Pow(maxDistance, 2))
+                        {
+                            visibleHulls.Add(hull);
+                        }
+                    }
+                }
+                visibleHulls.AddRange(CurrentHull.GetLinkedEntities<Hull>(tempList, filter: h =>
+                {
+                    // Ignore adjacent hulls because they were already handled above
+                    if (adjacentHulls.Contains(h))
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        if (h.ConnectedGaps.Any(g =>
+                            g.Open > 0.9f &&
+                            Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2) &&
+                            CanSeeTarget(g)))
+                        {
+                            return Vector2.DistanceSquared(h.WorldPosition, WorldPosition) < Math.Pow(maxDistance, 2);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }));
+            }
+            return visibleHulls;
+        }
     }
 }

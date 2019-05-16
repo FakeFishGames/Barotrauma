@@ -53,9 +53,9 @@ namespace Barotrauma.Tutorials
             doctor_suppliesCabinet = Item.ItemList.Find(i => i.HasTag("doctor_suppliescabinet"))?.GetComponent<ItemContainer>();
             doctor_medBayCabinet = Item.ItemList.Find(i => i.HasTag("doctor_medbaycabinet"))?.GetComponent<ItemContainer>();
 
-            var patientHull1 = Hull.hullList.Find(h => h.RoomName == "Waiting room" && h.Submarine == doctor.Submarine);
-            var patientHull2 = Hull.hullList.Find(h => h.RoomName == "Airlock" && h.Submarine == doctor.Submarine);
-            medBay = Hull.hullList.Find(h => h.RoomName == "Med bay" && h.Submarine == doctor.Submarine);
+            var patientHull1 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "waitingroom").CurrentHull;
+            var patientHull2 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "airlock").CurrentHull;
+            medBay = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "medbay").CurrentHull;
 
             var assistantInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "assistant"));
             patient1 = Character.Create(assistantInfo, patientHull1.WorldPosition, "1");
@@ -170,7 +170,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(2.0f);
             }*/
 
-            TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Medical supplies objective
+            TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Medical supplies objective
 
             do
             {

@@ -495,7 +495,6 @@ namespace Barotrauma
         {
             spriteColor = prefab.SpriteColor;
 
-            linkedTo            = new ObservableCollection<MapEntity>();
             components          = new List<ItemComponent>();
             drawableComponents  = new List<IDrawableComponent>();
             tags                = new HashSet<string>();
@@ -1149,6 +1148,10 @@ namespace Barotrauma
             {
                 body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
             }
+            else if (Submarine != null && prevSub != null && Submarine != prevSub)
+            {
+                body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
@@ -1259,15 +1262,17 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
+        /// </summary>
         public List<T> GetConnectedComponents<T>(bool recursive = false) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
             if (recursive)
             {
-                List<Item> alreadySearched = new List<Item>() { this };
+                HashSet<Connection> alreadySearched = new HashSet<Connection>();
                 GetConnectedComponentsRecursive(alreadySearched, connectedComponents);
-
                 return connectedComponents;
             }
 
@@ -1287,58 +1292,97 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        private void GetConnectedComponentsRecursive<T>(HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
         {
-            alreadySearched.Add(this);
-
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
-            if (connectionPanel == null) return;
+            if (connectionPanel == null) { return; }
 
             foreach (Connection c in connectionPanel.Connections)
             {
-                var recipients = c.Recipients;
-                foreach (Connection recipient in recipients)
-                {
-                    if (alreadySearched.Contains(recipient.Item)) continue;
-
-                    var component = recipient.Item.GetComponent<T>();
-                    
-                    if (component != null)
-                    {
-                        connectedComponents.Add(component);
-                    }
-
-                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
-                }
+                if (alreadySearched.Contains(c)) { continue; }
+                alreadySearched.Add(c);
+                GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
             }
         }
 
+        /// <summary>
+        /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
+        /// </summary>
         public List<T> GetConnectedComponentsRecursive<T>(Connection c) where T : ItemComponent
         {
-            List<T> connectedComponents = new List<T>();            
-            List<Item> alreadySearched = new List<Item>() { this };
+            List<T> connectedComponents = new List<T>();
+            HashSet<Connection> alreadySearched = new HashSet<Connection>();
             GetConnectedComponentsRecursive(c, alreadySearched, connectedComponents);
 
             return connectedComponents;
         }
-
-        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        
+        private static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
         {
-            alreadySearched.Add(this);
+            new Pair<string, string>("power_in", "power_out"),
+            new Pair<string, string>("signal_in1", "signal_out1"),
+            new Pair<string, string>("signal_in2", "signal_out2"),
+            new Pair<string, string>("signal_in3", "signal_out3"),
+            new Pair<string, string>("signal_in4", "signal_out4"),
+            new Pair<string, string>("signal_in", "signal_out"),
+            new Pair<string, string>("signal_in1", "signal_out"),
+            new Pair<string, string>("signal_in2", "signal_out")
+        };
+
+        private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
+        {
+            alreadySearched.Add(c);
                         
             var recipients = c.Recipients;
             foreach (Connection recipient in recipients)
             {
-                if (alreadySearched.Contains(recipient.Item)) continue;
-
+                if (alreadySearched.Contains(recipient)) { continue; }
                 var component = recipient.Item.GetComponent<T>();                    
                 if (component != null)
                 {
                     connectedComponents.Add(component);
                 }
 
+                //connected to a wifi component -> see which other wifi components it can communicate with
+                var wifiComponent = recipient.Item.GetComponent<WifiComponent>();
+                if (wifiComponent != null && wifiComponent.CanTransmit())
+                {
+                    foreach (var wifiReceiver in wifiComponent.GetReceiversInRange())
+                    {
+                        var receiverConnections = wifiReceiver.Item.Connections;
+                        if (receiverConnections == null) { continue; }
+                        foreach (Connection wifiOutput in receiverConnections)
+                        {
+                            if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
+                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents);
+                        }
+                    }
+                }
+
                 recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
-            }            
+            }
+
+            foreach (Pair<string, string> connectionPair in connectionPairs)
+            {
+                if (connectionPair.First == c.Name)
+                {
+                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.Second);
+                    if (pairedConnection != null)
+                    {
+                        if (alreadySearched.Contains(pairedConnection)) { continue; }
+                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
+                    }
+                }
+                else if (connectionPair.Second == c.Name)
+                {
+                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.First);
+                    if (pairedConnection != null)
+                    {
+                        if (alreadySearched.Contains(pairedConnection)) { continue; }
+                        GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
+                    }
+                }
+            }
         }
 
 
@@ -1478,13 +1522,16 @@ namespace Barotrauma
 
             if (!picked) return false;
 
-            if (picker.SelectedConstruction == this)
+            if (picker != null)
             {
-                if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
-            }
-            else if (selected)
-            {
-                picker.SelectedConstruction = this;
+                if (picker.SelectedConstruction == this)
+                {
+                    if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
+                }
+                else if (selected)
+                {
+                    picker.SelectedConstruction = this;
+                }
             }
 
 #if CLIENT
@@ -1615,29 +1662,6 @@ namespace Barotrauma
             }
 
             if (remove) { Spawner?.AddToRemoveQueue(this); }
-        }
-
-        List<ColoredText> texts = new List<ColoredText>();
-        public List<ColoredText> GetHUDTexts(Character character)
-        {
-            texts.Clear();
-            foreach (ItemComponent ic in components)
-            {
-                if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
-                if (!ic.CanBePicked && !ic.CanBeSelected) continue;
-                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
-
-                Color color = Color.Gray;
-                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
-                if (hasRequiredSkillsAndItems)
-                {
-                    color = Color.Cyan;
-                }
-
-                texts.Add(new ColoredText(ic.DisplayMsg, color, false));
-            }
-
-            return texts;
         }
 
         public bool Combine(Item item)
@@ -1913,6 +1937,7 @@ namespace Barotrauma
             return Load(element, submarine, createNetworkEvent: false);
         }
 
+
         /// <summary>
         /// Instantiate a new item and load its data from the XML element.
         /// </summary>
@@ -1925,30 +1950,10 @@ namespace Barotrauma
             string name = element.Attribute("name").Value;            
             string identifier = element.GetAttributeString("identifier", "");
 
-            ItemPrefab prefab;
-            if (string.IsNullOrEmpty(identifier))
-            {
-                //legacy support: 
-                //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = MapEntityPrefab.Find(name, "", showErrorMessages: false) as ItemPrefab;
-                //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = MapEntityPrefab.Find(name) as ItemPrefab;
-            }
-            else
-            {
-                prefab = MapEntityPrefab.Find(null, identifier, showErrorMessages: false) as ItemPrefab;
-
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = MapEntityPrefab.List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
-            }
+            ItemPrefab prefab = ItemPrefab.Find(name, identifier);
 
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
                 return null;
             }
 

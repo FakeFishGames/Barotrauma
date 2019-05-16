@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -15,7 +17,7 @@ namespace Barotrauma
         private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
         public static string Language;
-        
+
         private static HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
         {
@@ -78,7 +80,7 @@ namespace Barotrauma
             }
         }
 
-        public static string Get(string textTag, bool returnNull = false)
+        public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
         {
             if (!textPacks.ContainsKey(Language))
             {
@@ -93,7 +95,16 @@ namespace Barotrauma
             foreach (TextPack textPack in textPacks[Language])
             {
                 string text = textPack.Get(textTag);
-                if (text != null) return text;
+                if (text != null) { return text; }
+            }
+
+            if (!string.IsNullOrEmpty(fallBackTag))
+            {
+                foreach (TextPack textPack in textPacks[Language])
+                {
+                    string text = textPack.Get(fallBackTag);
+                    if (text != null) { return text; }
+                }
             }
 
             //if text was not found and we're using a language other than English, see if we can find an English version
@@ -226,6 +237,35 @@ namespace Barotrauma
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Adds a punctuation symbol between two strings, taking into account special rules in some locales (e.g. non-breaking space before a colon in French)
+        /// </summary>
+        public static string AddPunctuation(char punctuationSymbol, params string[] texts)
+        {
+            string separator = "";
+            switch (GameMain.Config.Language)
+            {
+                case "French":
+                    bool addNonBreakingSpace =
+                        punctuationSymbol == ':' || punctuationSymbol == ';' ||
+                        punctuationSymbol == '!' || punctuationSymbol == '?';
+                    separator = addNonBreakingSpace ?
+                        new string(new char[] { (char)(0xA0), punctuationSymbol, ' ' }) :
+                        new string(new char[] { punctuationSymbol, ' ' });
+                    break;
+                default:
+                    separator = new string(new char[] { punctuationSymbol, ' ' });
+                    break;
+            }
+            return string.Join(separator, texts);
+        }
+        
+        public static string EnsureUTF8(string text)
+        {
+            byte[] bytes = Encoding.Default.GetBytes(text);
+            return Encoding.UTF8.GetString(bytes);
         }
 
         public static List<string> GetAll(string textTag)

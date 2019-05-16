@@ -53,20 +53,23 @@ namespace Barotrauma
             columnContainer.Recalculate();
 
             // New game left side
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName") + ":");
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"));
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
+            {
+                textFilterFunction = (string str) => { return ToolBox.RemoveInvalidFileNameChars(str); }
+            };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed") + ":");
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"));
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub") + ":");
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"));
             var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
             subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
             
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
             var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
@@ -173,9 +176,19 @@ namespace Barotrauma
                 }
             };
 
+
+            if (!isMultiplayer)
+            {
+                var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
+                {
+                    IgnoreLayoutGroups = true,
+                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowCampaignDisclaimer(); return true; }
+                };
+                disclaimerBtn.RectTransform.MaxSize = new Point((int)(30 * GUI.Scale));
+            }
+
             leftColumn.Recalculate();
             rightColumn.Recalculate();
-
 
             UpdateSubList(submarines);
             UpdateLoadMenu(saveFiles);
@@ -267,7 +280,7 @@ namespace Barotrauma
                     {
                         IsFixedSize = false
                     },
-                        TextManager.Get("Shuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
+                        TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
                     {
                         TextColor = textBlock.TextColor * 0.8f,
                         ToolTip = textBlock.ToolTip
@@ -323,6 +336,12 @@ namespace Barotrauma
                     }
                     subName =  doc.Root.GetAttributeString("submarine", "");
                     saveTime = doc.Root.GetAttributeString("savetime", "");
+
+                    if (long.TryParse(saveTime, out long unixTime))
+                    {
+                        DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
+                        saveTime = time.ToString();
+                    }
                 }
                 else
                 {

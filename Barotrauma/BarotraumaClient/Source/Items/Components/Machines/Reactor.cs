@@ -104,14 +104,14 @@ namespace Barotrauma.Items.Components
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), GuiFrame.RectTransform, Anchor.Center), isHorizontal: true)
             {
-                RelativeSpacing = 0.015f,
+                RelativeSpacing = 0.012f,
                 Stretch = true
             };
             
-            GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), style: null);
+            GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), paddedFrame.RectTransform), style: null);
             leftHUDColumn = columnLeft;
             GUIFrame columnMid = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), paddedFrame.RectTransform), style: null);
-            GUIFrame columnRight = new GUIFrame(new RectTransform(new Vector2(0.35f, 1.0f), paddedFrame.RectTransform), style: null);
+            GUIFrame columnRight = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), paddedFrame.RectTransform), style: null);
 
             //----------------------------------------------------------
             //left column
@@ -131,11 +131,12 @@ namespace Barotrauma.Items.Components
                 };
 
                 var btnText = warningBtn.GetChild<GUITextBlock>();
-                btnText.Font = GUI.SmallFont;
+                btnText.Font = GUI.Font;
                 btnText.Wrap = true;
                 btnText.SetTextPos();
                 warningButtons.Add(warningTexts[i], warningBtn);
             }
+            GUITextBlock.AutoScaleAndNormalize(warningButtons.Values.Select(b => b.TextBlock));
 
             inventoryContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), columnLeft.RectTransform, Anchor.BottomLeft), style: null);
 
@@ -143,41 +144,45 @@ namespace Barotrauma.Items.Components
             //mid column
             //----------------------------------------------------------
             
-            criticalHeatWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform),
+            criticalHeatWarning = new GUITickBox(new RectTransform(new Point(columnMid.Rect.Width / 3, (int)(30 * GUI.Scale)), columnMid.RectTransform),
                 TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
             {
                 CanBeFocused = false
             };
-            lowTemperatureWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
+            lowTemperatureWarning = new GUITickBox(new RectTransform(new Point(columnMid.Rect.Width / 3, (int)(30 * GUI.Scale)), columnMid.RectTransform) { RelativeOffset = new Vector2(0.27f, 0.0f) },
                 TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
             {
                 CanBeFocused = false
             };
-            criticalOutputWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.75f, 0.0f) },
+            criticalOutputWarning = new GUITickBox(new RectTransform(new Point(columnMid.Rect.Width / 3, (int)(30 * GUI.Scale)), columnMid.RectTransform) { RelativeOffset = new Vector2(0.66f, 0.0f) },
                 TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SmallFont, style: "IndicatorLightRed")
             {
                 CanBeFocused = false
             };
+
+            GUITextBlock.AutoScaleAndNormalize(criticalHeatWarning.TextBlock, lowTemperatureWarning.TextBlock, criticalOutputWarning.TextBlock);
+
+            float gaugeOffset = criticalHeatWarning.Rect.Height / (float)columnMid.Rect.Height + 0.05f * GUI.Scale;
             
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) },
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, gaugeOffset) },
                 TextManager.Get("ReactorFissionRate"));
-            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.3f) },
+            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, gaugeOffset + 0.05f) },
                 DrawFissionRateMeter, null)
             {
                 ToolTip = TextManager.Get("ReactorTipFissionRate")
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.25f) },
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, gaugeOffset) },
                 TextManager.Get("ReactorTurbineOutput"));
-            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.3f) },
+            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, gaugeOffset + 0.05f) },
                 DrawTurbineOutputMeter, null)
             {
                 ToolTip = TextManager.Get("ReactorTipTurbineOutput")
             };
 
-            new GUITextBlock(new RectTransform(new Point(0, 20), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, 90) },
+            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, (int)(90 * GUI.Scale)) },
                 TextManager.Get("ReactorFissionRate"));
-            fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 60) },
+            fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, (int)(30 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, (int)(60 * GUI.Scale)) },
                 style: "GUISlider", barSize: 0.1f)
             {
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
@@ -189,10 +194,10 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             };
-
-            new GUITextBlock(new RectTransform(new Point(0, 20), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, 30) },
+                        
+            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, (int)(30 * GUI.Scale)) },
                 TextManager.Get("ReactorTurbineOutput"));
-            turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter),
+            turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, (int)(30 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomCenter),
                 style: "GUISlider", barSize: 0.1f, isHorizontal: true)
             {
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
@@ -209,12 +214,13 @@ namespace Barotrauma.Items.Components
             //right column
             //----------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Point(100, 20), columnRight.RectTransform), TextManager.Get("ReactorAutoTemp"))
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.1f), columnRight.RectTransform), TextManager.Get("ReactorAutoTemp"))
             {
-                ToolTip = TextManager.Get("ReactorTipAutoTemp")
+                ToolTip = TextManager.Get("ReactorTipAutoTemp"),
+                AutoScale = true
             };
-            autoTempSlider = new GUIScrollBar(new RectTransform(new Point(100, 30), columnRight.RectTransform) { AbsoluteOffset = new Point(0, 30) },
-                barSize: 0.5f, style: "OnOffSlider")
+            autoTempSlider = new GUIScrollBar(new RectTransform(new Vector2(0.6f, 0.15f), columnRight.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) },
+                barSize: 0.55f, style: "OnOffSlider", isHorizontal: true)
             {
                 ToolTip = TextManager.Get("ReactorTipAutoTemp"),
                 IsBooleanSwitch = true,
@@ -226,9 +232,11 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            
-            onOffSwitch = new GUIScrollBar(new RectTransform(new Point(50, 80), columnRight.RectTransform, Anchor.TopRight),
-                barSize: 0.2f, style: "OnOffLever")
+            var sliderSprite = autoTempSlider.Frame.Style.Sprites[GUIComponent.ComponentState.None].First();
+            autoTempSlider.RectTransform.MaxSize = new Point((int)(sliderSprite.Sprite.SourceRect.Size.X * GUI.Scale), (int)(sliderSprite.Sprite.SourceRect.Size.Y * GUI.Scale));
+
+            onOffSwitch = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 0.3f), columnRight.RectTransform, Anchor.TopRight),
+                barSize: 0.2f, style: "OnOffLever", isHorizontal: false)
             {
                 IsBooleanSwitch = true,
                 MinValue = 0.25f, 
@@ -240,22 +248,26 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            
+            var switchSprite = onOffSwitch.Frame.Style.Sprites[GUIComponent.ComponentState.None].First();
+            onOffSwitch.RectTransform.MaxSize = new Point((int)(switchSprite.Sprite.SourceRect.Size.X * GUI.Scale), (int)(switchSprite.Sprite.SourceRect.Size.Y * GUI.Scale));
+
             var lever = onOffSwitch.GetChild<GUIButton>();
-            lever.RectTransform.NonScaledSize = new Point(lever.Rect.Width + 30, lever.Rect.Height);
+            lever.RectTransform.NonScaledSize = new Point(lever.Rect.Width + (int)(30 * GUI.Scale), lever.Rect.Height);
 
             var graphArea = new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.5f), columnRight.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 30) },
                 DrawGraph, null);
 
-            var loadText = new GUITextBlock(new RectTransform(new Point(100, 30), graphArea.RectTransform, Anchor.TopLeft, Pivot.BottomLeft),
+            Point textSize = new Point((int)(100 * GUI.Scale), (int)(30 * GUI.Scale));
+
+            var loadText = new GUITextBlock(new RectTransform(textSize, graphArea.RectTransform, Anchor.TopLeft, Pivot.BottomLeft),
                 "Load", textColor: Color.LightBlue, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipLoad")
-            };
+            };            
             string loadStr = TextManager.Get("ReactorLoad");
             loadText.TextGetter += () => { return loadStr.Replace("[kw]", ((int)load).ToString()); };
 
-            var outputText = new GUITextBlock(new RectTransform(new Point(100, 30), graphArea.RectTransform, Anchor.BottomLeft, Pivot.TopLeft), 
+            var outputText = new GUITextBlock(new RectTransform(textSize, graphArea.RectTransform, Anchor.BottomLeft, Pivot.TopLeft), 
                 "Output", textColor: Color.LightGreen, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipPower")

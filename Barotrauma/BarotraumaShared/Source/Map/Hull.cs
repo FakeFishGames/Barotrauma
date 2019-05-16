@@ -53,8 +53,8 @@ namespace Barotrauma
 
         private float[] leftDelta;
         private float[] rightDelta;
-                
-        public List<Gap> ConnectedGaps;
+
+        public readonly List<Gap> ConnectedGaps = new List<Gap>();
 
         public override string Name
         {
@@ -217,9 +217,6 @@ namespace Barotrauma
             OxygenPercentage = 100.0f;
 
             FireSources = new List<FireSource>();
-            linkedTo = new System.Collections.ObjectModel.ObservableCollection<MapEntity>();
-
-            
 
             properties = SerializableProperty.GetProperties(this);
 
@@ -235,8 +232,6 @@ namespace Barotrauma
             aiTarget = new AITarget(this);
 
             hullList.Add(this);
-
-            ConnectedGaps = new List<Gap>();
 
             if (submarine == null || !submarine.Loading)
             {
@@ -586,28 +581,35 @@ namespace Barotrauma
             FireSources.Remove(fire);
         }
 
-        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
+        private HashSet<Hull> adjacentHulls = new HashSet<Hull>();
+        public IEnumerable<Hull> GetConnectedHulls(bool includingThis, int? searchDepth = null)
         {
-            return GetAdjacentHulls(new HashSet<Hull>(), 0, searchDepth);
+            adjacentHulls.Clear();
+            int startStep = 0;
+            return GetAdjacentHulls(includingThis, adjacentHulls, ref startStep, searchDepth);
         }
 
-        private HashSet<Hull> GetAdjacentHulls(HashSet<Hull> connectedHulls, int steps, int? searchDepth)
+        private HashSet<Hull> GetAdjacentHulls(bool includingThis, HashSet<Hull> connectedHulls, ref int step, int? searchDepth)
         {
-            connectedHulls.Add(this);
-
-            if (searchDepth != null && steps >= searchDepth.Value) return connectedHulls;
-
+            if (includingThis)
+            {
+                connectedHulls.Add(this);
+            }
+            if (step > searchDepth.Value)
+            {
+                return connectedHulls;
+            }
             foreach (Gap g in ConnectedGaps)
             {
                 for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        hull.GetAdjacentHulls(connectedHulls, steps++, searchDepth);
+                        step++;
+                        hull.GetAdjacentHulls(true, connectedHulls, ref step, searchDepth);
                     }
                 }
             }
-
             return connectedHulls;
         }
 

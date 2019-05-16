@@ -36,6 +36,7 @@ namespace Barotrauma.Items.Components
                     {
                         UserData = ciElement
                     };
+                    tickBox.TextBlock.AutoScale = true;
                     tickBox.OnSelected += (tBox) =>
                     {
                         if (GameMain.Client == null)
@@ -57,6 +58,7 @@ namespace Barotrauma.Items.Components
                     {
                         UserData = ciElement
                     };
+                    btn.TextBlock.AutoScale = true;
                     btn.OnClicked += (_, userdata) =>
                     {
                         if (GameMain.Client == null)
@@ -117,11 +119,15 @@ namespace Barotrauma.Items.Components
             {
                 if (uiElements[i] is GUIButton button)
                 {
-                    button.Text = labels[i];
+                    button.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
+                        TextManager.Get("connection.signaloutx").Replace("[num]", (i + 1).ToString()) :
+                        customInterfaceElementList[i].Label;
                 }
                 else if (uiElements[i] is GUITickBox tickBox)
                 {
-                    tickBox.Text = labels[i];
+                    tickBox.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
+                        TextManager.Get("connection.signaloutx").Replace("[num]", (i + 1).ToString()) :
+                        customInterfaceElementList[i].Label;
                 }
             }
         }

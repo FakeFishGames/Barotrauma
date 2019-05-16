@@ -4,9 +4,7 @@ using Barotrauma.Tutorials;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -16,11 +14,11 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11 }
 
         private GUIComponent buttonsParent;
 
-        private GUIFrame[] menuTabs;
+        private readonly GUIFrame[] menuTabs;
 
         private CampaignSetupUI campaignSetupUI;
 
@@ -36,22 +34,27 @@ namespace Barotrauma
         private Sprite backgroundSprite;
         private Sprite backgroundVignette;
 
+        private GUIComponent titleText;
+
+        private CreditsPlayer creditsPlayer;
+        
         #region Creation
         public MainMenuScreen(GameMain game)
         {
             backgroundVignette = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
 
-            new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.05f, 0.05f), AbsoluteOffset = new Point(-5, -5) },
+            new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.08f, 0.05f), AbsoluteOffset = new Point(-8, -8) },
                 style: "TitleText")
             {
                 Color = Color.Black * 0.5f,
                 CanBeFocused = false
             };
-            new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f, 0.05f) },
+            titleText = new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.08f, 0.05f) },
                 style: "TitleText");
 
-            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft)
+            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
             {
                 AbsoluteOffset = new Point(50, 0)
             })
@@ -84,7 +87,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), "Tutorial", textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("TutorialButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
                 UserData = Tab.Tutorials,
@@ -196,9 +199,9 @@ namespace Barotrauma
                     OnClicked = SelectTab
                 };
 
-#if OSX && !DEBUG
+/*#if OSX && !DEBUG
                 steamWorkshopButton.Text += " (Not yet available on MacOS)";
-#endif
+#endif*/
             }
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -224,7 +227,7 @@ namespace Barotrauma
             };
 
             // === OPTION
-            var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.5f), parent: buttonsParent.RectTransform), isHorizontal: true);
+            var optionHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), parent: buttonsParent.RectTransform), isHorizontal: true);
 
             new GUIImage(new RectTransform(new Vector2(0.15f, 0.6f), optionHolder.RectTransform), "MainMenuOptionIcon")
             {
@@ -234,9 +237,9 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.0f), optionHolder.RectTransform), style: null);
 
-            var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.05f) });
+            var optionButtons = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), parent: optionHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.0f) });
 
-            var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.3f), parent: optionButtons.RectTransform))
+            var optionList = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.25f), parent: optionButtons.RectTransform))
             {
                 Stretch = false,
                 RelativeSpacing = 0.035f
@@ -248,6 +251,13 @@ namespace Barotrauma
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
             };
+            //TODO: translate
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("CreditsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = true,
+                UserData = Tab.Credits,
+                OnClicked = SelectTab
+            };
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("QuitButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -256,9 +266,9 @@ namespace Barotrauma
 
             //debug button for quickly starting a new round
 #if DEBUG
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), buttonsParent.RectTransform, Anchor.TopLeft, Pivot.BottomLeft) { AbsoluteOffset = new Point(0, -40) },
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 40) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
-            { 
+            {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.QuickStartDev,
                 OnClicked = (tb, userdata) =>
@@ -324,7 +334,7 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
-                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
+                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.DisplayName, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
                 };
@@ -336,6 +346,19 @@ namespace Barotrauma
             };
 
             this.game = game;
+
+            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f)
+            {
+                CanBeFocused = false
+            };
+            var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
+            creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
+
+            new GUIButton(new RectTransform(new Vector2(0.1f, 0.05f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.BottomLeft) { RelativeOffset = new Vector2(0.25f, 0.02f) },
+                TextManager.Get("Back"), style: "GUIButtonLarge")
+            {
+                OnClicked = SelectTab
+            };
         }
 #endregion
 
@@ -365,6 +388,7 @@ namespace Barotrauma
 
         private bool SelectTab(GUIButton button, object obj)
         {
+            titleText.Visible = true;
             if (obj is Tab)
             {
                 if (GameMain.Config.UnsavedSettings)
@@ -442,6 +466,10 @@ namespace Barotrauma
                     case Tab.SteamWorkshop:
                         if (!Steam.SteamManager.IsInitialized) return false;
                         GameMain.SteamWorkshopScreen.Select();
+                        break;
+                    case Tab.Credits:
+                        titleText.Visible = false;
+                        creditsPlayer.Restart();
                         break;
                 }
             }
@@ -696,13 +724,7 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            GameMain.TitleScreen.TitlePosition =
-                Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
-                    GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
-                    GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
-                    0.1f);
 #if !DEBUG
-#if !OSX
             if (Steam.SteamManager.USE_STEAM)
             {
                 if (GameMain.Config.UseSteamMatchmaking)
@@ -712,16 +734,6 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
-#else
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                }
-            }
-#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
@@ -751,6 +763,13 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
+        readonly string[] legalCrap = new string[]
+        {
+            TextManager.Get("privacypolicy", returnNull: true) ?? "Privacy policy",
+            "© " + DateTime.Now.Year + " Undertow Games & FakeFish. All rights reserved.",
+            "© " + DateTime.Now.Year + " Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
+        };
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             DrawBackground(graphics, spriteBatch);
@@ -758,12 +777,38 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 
             GUI.Draw(Cam, spriteBatch);
-            
+
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
 #else
-            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White * 0.7f);
 #endif
+
+            if (selectedTab != Tab.Credits)
+            {
+                Vector2 textPos = new Vector2(GameMain.GraphicsWidth - 10, GameMain.GraphicsHeight - 10);
+                for (int i = legalCrap.Length - 1; i >= 0; i--)
+                {
+                    Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
+                    bool mouseOn = i == 0 &&
+                        PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
+                        PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
+
+                    GUI.SmallFont.DrawString(spriteBatch,
+                        legalCrap[i], textPos - textSize,
+                        mouseOn ? Color.White : Color.White * 0.7f);
+
+                    if (i == 0)
+                    {
+                        GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
+                        if (mouseOn && PlayerInput.LeftButtonClicked())
+                        {
+                            Process.Start("http://privacypolicy.daedalic.com");
+                        }
+                    }
+                    textPos.Y -= textSize.Y;
+                }
+            }
 
             spriteBatch.End();
         }
@@ -772,9 +817,9 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(saveName)) return;
 
-            string[] existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
+            var existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
 
-            if (Array.Find(existingSaveFiles, s => s == saveName) != null)
+            if (existingSaveFiles.Any(s => s == saveName))
             {
                 new GUIMessageBox(TextManager.Get("SaveNameInUseHeader"), TextManager.Get("SaveNameInUseText"));
                 return;

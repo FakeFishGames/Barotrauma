@@ -315,7 +315,7 @@ namespace Barotrauma
                 var dimensionsText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                     TextManager.Get("Dimensions"), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), dimensionsText.RectTransform, Anchor.TopRight),
+                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), dimensionsText.RectTransform, Anchor.TopRight),
                     dimensionsStr, textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
                 { CanBeFocused = false };
                 dimensionsText.RectTransform.MinSize = new Point(0, dimensionsText.Children.First().Rect.Height);
@@ -326,7 +326,7 @@ namespace Barotrauma
                 var crewSizeText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                     TextManager.Get("RecommendedCrewSize"), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), crewSizeText.RectTransform, Anchor.TopRight),
+                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), crewSizeText.RectTransform, Anchor.TopRight),
                     RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax, textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
                 { CanBeFocused = false };
                 crewSizeText.RectTransform.MinSize = new Point(0, crewSizeText.Children.First().Rect.Height);
@@ -337,7 +337,7 @@ namespace Barotrauma
                 var crewExperienceText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                     TextManager.Get("RecommendedCrewExperience"), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), crewExperienceText.RectTransform, Anchor.TopRight),
+                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), crewExperienceText.RectTransform, Anchor.TopRight),
                     TextManager.Get(RecommendedCrewExperience), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
                 { CanBeFocused = false };
                 crewExperienceText.RectTransform.MinSize = new Point(0, crewExperienceText.Children.First().Rect.Height);
@@ -348,18 +348,21 @@ namespace Barotrauma
                 var contentPackagesText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                     TextManager.Get("RequiredContentPackages"), textAlignment: Alignment.TopLeft, font: GUI.Font)
                 { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), contentPackagesText.RectTransform, Anchor.TopRight),
+                new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), contentPackagesText.RectTransform, Anchor.TopRight),
                     string.Join(", ", RequiredContentPackages), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
                 { CanBeFocused = false };
                 contentPackagesText.RectTransform.MinSize = new Point(0, contentPackagesText.Children.First().Rect.Height);
             }
+
+            GUITextBlock.AutoScaleAndNormalize(descriptionBox.Content.Children.Where(c => c is GUITextBlock).Cast<GUITextBlock>());
 
             //space
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), descriptionBox.Content.RectTransform), style: null);
 
             if (Description.Length != 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("SaveSubDialogDescription") + ":", font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
+                new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), 
+                    TextManager.Get("SaveSubDialogDescription", fallBackTag: "WorkshopItemDescription"), font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
             }
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Description, font: GUI.Font, wrap: true)
@@ -473,7 +476,7 @@ namespace Barotrauma
 
             if (errorMsgs.Any())
             {
-                new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), 400, 0);
+                new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), new Vector2(0.25f, 0.0f), new Point(400, 200));
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList)

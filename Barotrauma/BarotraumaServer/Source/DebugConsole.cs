@@ -26,7 +26,7 @@ namespace Barotrauma
                     NewMessage("Client \"" + client.Name + "\" attempted to use the command \"" + names[0] + "\". Cheats must be enabled using \"enablecheats\" before the command can be used.", Color.Red);
                     GameMain.Server.SendConsoleMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", client);
 
-                    if (GameMain.Config.UseSteam)
+                    if (Steam.SteamManager.USE_STEAM)
                     {
                         NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
                         GameMain.Server.SendConsoleMessage("Enabling cheats will disable Steam achievements during this play session.", client);
@@ -699,7 +699,7 @@ namespace Barotrauma
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Enabled cheat commands.", Color.Red);
-                if (GameMain.Config.UseSteam)
+                if (Steam.SteamManager.USE_STEAM)
                 {
                     NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
                     GameMain.Server?.UpdateCheatsEnabled();
@@ -714,7 +714,7 @@ namespace Barotrauma
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Cheat commands have been enabled by \"" + client.Name + "\".", Color.Red);
-                if (GameMain.Config.UseSteam)
+                if (Steam.SteamManager.USE_STEAM)
                 {
                     NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
                     GameMain.Server?.UpdateCheatsEnabled();

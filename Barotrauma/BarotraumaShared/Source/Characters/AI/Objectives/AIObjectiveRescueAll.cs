@@ -3,62 +3,45 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveRescueAll : AIObjective
+    class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
         public override string DebugTag => "rescue all";
+        public override bool ForceRun => true;
 
-        public override bool KeepDivingGearOn => true;
-
-        //only treat characters whose vitality is below this (0.8 = 80% of max vitality)
-        public const float VitalityThreshold = 0.8f;
-
-        private List<Character> rescueTargets;
+        private const float vitalityThreshold = 0.8f;
+        private const float vitalityThresholdForOrders = 0.95f;
+        public static float GetVitalityThreshold(AIObjectiveManager manager) => manager.CurrentOrder is AIObjectiveRescueAll ? vitalityThresholdForOrders : vitalityThreshold;
         
-        public AIObjectiveRescueAll(Character character) : base (character, "")
-        {
-            rescueTargets = new List<Character>();
-        }
+        public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier) { }
 
-        public override bool IsDuplicate(AIObjective otherObjective)
+        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveRescueAll;
+
+        protected override bool Filter(Character target) => IsValidTarget(target, character);
+
+        protected override IEnumerable<Character> GetList() => Character.CharacterList;
+
+        protected override float TargetEvaluation() => Targets.Max(t => GetVitalityFactor(t)) * 100;
+
+        public static float GetVitalityFactor(Character character) => (character.MaxVitality - character.Vitality) / character.MaxVitality;
+
+        protected override AIObjective ObjectiveConstructor(Character target)
+            => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
+
+        protected override void OnObjectiveCompleted(AIObjective objective, Character target)
+            => HumanAIController.RemoveTargets<AIObjectiveRescueAll, Character>(character, target);
+
+        public static bool IsValidTarget(Character target, Character character)
         {
+            if (target == null || target.IsDead || target.Removed) { return false; }
+            if (!HumanAIController.IsFriendly(character, target)) { return false; }
+            if (!(character.AIController is HumanAIController humanAI)) { return false; }
+            if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
+            if (target.Submarine == null) { return false; }
+            if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
+            if (target.CurrentHull == null) { return false; }
+            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
             return true;
         }
-
-        public override float GetPriority(AIObjectiveManager objectiveManager)
-        {
-            if (character.Submarine == null) { return 0; }
-            GetRescueTargets();
-            if (!rescueTargets.Any()) { return 0.0f; }
-            
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-
-            //if there are targets to rescue, the priority is slightly less 
-            //than the priority of explicit orders given to the character
-            return AIObjectiveManager.OrderPriority - 5.0f;
-        }
-
-        private void GetRescueTargets()
-        {
-            rescueTargets = Character.CharacterList.FindAll(c => 
-                c.AIController is HumanAIController &&
-                c.TeamID == character.TeamID &&
-                c != character &&
-                !c.IsDead &&
-                c.Vitality / c.MaxVitality < VitalityThreshold);
-        }
-
-        protected override void Act(float deltaTime)
-        {
-            foreach (Character target in rescueTargets)
-            {
-                AddSubObjective(new AIObjectiveRescue(character, target));
-            }
-        }
-
-        public override bool IsCompleted() => false;
-        public override bool CanBeCompleted => true;
     }
 }

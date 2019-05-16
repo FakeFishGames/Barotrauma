@@ -85,7 +85,8 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f)
+                    if (!character.LockHands && character.Stun < 0.1f && 
+                        (character.SelectedConstruction == null || character.SelectedConstruction?.GetComponent<Controller>()?.User != character))
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
@@ -191,13 +192,15 @@ namespace Barotrauma
                     Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
                     startPos = cam.WorldToScreen(startPos);
 
-                    string focusName = character.FocusedCharacter.SpeciesName;
+                    string focusName = character.FocusedCharacter.DisplayName;
                     if (character.FocusedCharacter.Info != null)
                     {
                         focusName = character.FocusedCharacter.Info.DisplayName;
                     }
                     Vector2 textPos = startPos;
-                    textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
+                    Vector2 offset = GUI.Font.MeasureString(focusName);
+
+                    textPos -= new Vector2(offset.X / 2, offset.Y);
                     
                     Color nameColor = Color.White;
                     if (character.TeamID != character.FocusedCharacter.TeamID)
@@ -206,23 +209,23 @@ namespace Barotrauma
                     }
 
                     GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2);
-                    textPos.Y += 20;
+                    textPos.Y += offset.Y;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
                         GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBind(InputType.Grab).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
-                        textPos.Y += 15;
+                        textPos.Y += offset.Y;
                     }
                     if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
                     {
                         GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBind(InputType.Health).ToString()),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
-                        textPos.Y += 15;
+                        textPos.Y += offset.Y;
                     }
                     if (!string.IsNullOrEmpty(character.FocusedCharacter.customInteractHUDText))
                     {
                         GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.customInteractHUDText, Color.LightGreen, Color.Black, 2, GUI.SmallFont);
-                        textPos.Y += 15;
+                        textPos.Y += offset.Y;
                     }
                 }
 
@@ -258,8 +261,10 @@ namespace Barotrauma
                         var hudTexts = focusedItem.GetHUDTexts(character);
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
+
+                        Vector2 offset = GUI.Font.MeasureString(focusedItem.Name);
                         Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
-                        startPos.Y -= (hudTexts.Count + 1) * 20;
+                        startPos.Y -= (hudTexts.Count + 1) * offset.Y;
                         if (focusedItem.Sprite != null)
                         {
                             startPos.X += (int)(circleSize * 0.4f * dir);
@@ -267,17 +272,17 @@ namespace Barotrauma
                         }
 
                         Vector2 textPos = startPos;
-                        if (dir == -1) textPos.X -= (int)GUI.Font.MeasureString(focusedItem.Name).X;
+                        if (dir == -1) textPos.X -= offset.X;
 
                         float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
 
                         GUI.DrawString(spriteBatch, textPos, focusedItem.Name, Color.White * alpha, Color.Black * alpha * 0.7f, 2);
-                        textPos.Y += 20.0f;
+                        textPos.Y += offset.Y;
                         foreach (ColoredText coloredText in hudTexts)
                         {
                             if (dir == -1) textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X);
                             GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
-                            textPos.Y += 20;
+                            textPos.Y += offset.Y;
                         }
                     }                    
                 }
@@ -320,6 +325,7 @@ namespace Barotrauma
                 }
                 if (character.Inventory != null && !character.LockHands)
                 {
+                    character.Inventory.Locked = (character.SelectedConstruction?.GetComponent<Controller>()?.User == character);
                     character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
@@ -357,19 +363,27 @@ namespace Barotrauma
             {
                 GUIComponent.DrawToolTip(
                     spriteBatch,
-                    character.Info?.Job == null ? character.Name : character.Name + " (" + character.Info.Job.Name + ")",
+                    character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
         }
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
         {
-            if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) return;
+            if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) { return; }
 
             Entity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetEntity;
-            if (target == null) return;
+            if (target == null) { return; }
 
-            if (!orderIndicatorCount.ContainsKey(target)) orderIndicatorCount.Add(target, 0);
+            //don't show the indicator if far away and not inside the same sub
+            //prevents exploiting the indicators in locating the sub
+            if (character.Submarine != target.Submarine && 
+                Vector2.DistanceSquared(character.WorldPosition, target.WorldPosition) > 1000.0f * 1000.0f)
+            {
+                return;
+            }
+
+            if (!orderIndicatorCount.ContainsKey(target)) { orderIndicatorCount.Add(target, 0); }
 
             Vector2 drawPos = target.WorldPosition + Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);

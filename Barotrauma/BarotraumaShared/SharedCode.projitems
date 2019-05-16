@@ -36,6 +36,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveLoop.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveFightIntruders.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectivePumpWater.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRepairItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRepairItems.cs" />
@@ -186,6 +187,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Hull.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\IDamageable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ISpatialEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Level.cs" />

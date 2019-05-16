@@ -255,9 +255,9 @@ namespace Barotrauma
                 Duration = CurrentLocation == location ? 1.0f : 2.0f,
                 StartDelay = 1.0f
             };
-            if (change.Messages.Count > 0)
+            if (change.Messages != null && change.Messages.Count > 0)
             {
-                mapAnim.EndMessage = change.Messages[Rand.Range(0,change.Messages.Count)]
+                mapAnim.EndMessage = change.Messages[Rand.Range(0, change.Messages.Count)]
                     .Replace("[previousname]", prevName)
                     .Replace("[name]", location.Name);
             }
@@ -380,7 +380,10 @@ namespace Barotrauma
                 zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
                 zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
 
-                if (PlayerInput.MidButtonHeld()) { drawOffset += PlayerInput.MouseSpeed / zoom; }
+                if (PlayerInput.MidButtonHeld() || (highlightedLocation == null && PlayerInput.LeftButtonHeld()))
+                {
+                    drawOffset += PlayerInput.MouseSpeed / zoom;
+                }
 #if DEBUG
                 if (PlayerInput.DoubleClicked() && highlightedLocation != null)
                 {
@@ -621,7 +624,9 @@ namespace Barotrauma
 
                 if (mouseOn && PlayerInput.LeftButtonClicked() && !messageBoxOpen)
                 {
+                    //TODO: translate or replace
                     var messageBox = new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
+                    messageBoxOpen = true;
                     CoroutineManager.StartCoroutine(WaitForMessageBoxClosed(messageBox));
                 }
             }
@@ -638,10 +643,10 @@ namespace Barotrauma
                 pos.Y -= 5 * zoom;
                 Vector2 size = GUI.LargeFont.MeasureString(location.Name);
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                    spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)size.Y + 25), Color.Black * hudOpenState * 0.7f);
+                    spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)(size.Y + 25 * GUI.Scale)), Color.Black * hudOpenState * 0.7f);
                 GUI.DrawString(spriteBatch, pos, 
                     location.Name, Color.White * hudOpenState * 1.5f, font: GUI.LargeFont);
-                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25, 
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 * GUI.Scale, 
                     location.Type.Name, Color.White * hudOpenState * 1.5f);
             }
                         

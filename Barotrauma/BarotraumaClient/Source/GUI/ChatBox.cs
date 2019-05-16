@@ -11,18 +11,10 @@ namespace Barotrauma
     class ChatBox
     {
         private static Sprite radioIcon;
-
-        private GUIFrame guiFrame;
-
         private GUIListBox chatBox;
-        private GUITextBox inputBox;
-
-        private GUIButton toggleButton;
-        
         private Point screenResolution;
 
-        private bool isSinglePlayer;
-        public bool IsSinglePlayer => isSinglePlayer;
+        public bool IsSinglePlayer { get; private set; }
 
         private bool _toggleOpen = true;
         public bool ToggleOpen
@@ -50,28 +42,19 @@ namespace Barotrauma
 
         public GUITextBox.OnEnterHandler OnEnterMessage
         {
-            get { return inputBox.OnEnterPressed; }
-            set { inputBox.OnEnterPressed = value; }
+            get { return InputBox.OnEnterPressed; }
+            set { InputBox.OnEnterPressed = value; }
         }
 
-        public GUIFrame GUIFrame
-        {
-            get { return guiFrame; }
-        }
-        
-        public GUITextBox InputBox
-        {
-            get { return inputBox; }
-        }
+        public GUIFrame GUIFrame { get; private set; }
 
-        public GUIButton ToggleButton
-        {
-            get { return toggleButton; }
-        }
+        public GUITextBox InputBox { get; private set; }
+
+        public GUIButton ToggleButton { get; private set; }
 
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
         {
-            this.isSinglePlayer = isSinglePlayer;
+            this.IsSinglePlayer = isSinglePlayer;
             if (radioIcon == null)
             {
                 radioIcon = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(527, 952, 38, 52), null);
@@ -81,24 +64,25 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             int toggleButtonWidth = (int)(30 * GUI.Scale);
-            guiFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
-            chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), guiFrame.RectTransform), style: "ChatBox");
-            toggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
+            GUIFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
+            var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), GUIFrame.RectTransform), style: "ChatBox");
+            chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), chatBoxHolder.RectTransform, Anchor.CenterRight), style: null);
+            ToggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
                 style: "UIToggleButton");
 
-            toggleButton.OnClicked += (GUIButton btn, object userdata) =>
+            ToggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 ToggleOpen = !ToggleOpen;
                 return true;
             };
 
-            inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
+            InputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), GUIFrame.RectTransform, Anchor.BottomCenter),
                 style: "ChatTextBox")
             {
                 Font = GUI.SmallFont,
                 MaxTextLength = ChatMessage.MaxLength
             };
-            inputBox.OnDeselected += (gui, Keys) =>
+            InputBox.OnDeselected += (gui, Keys) =>
             {
                 gui.Text = "";
             };
@@ -210,7 +194,7 @@ namespace Barotrauma
 
             if (!ToggleOpen)
             {
-                var popupMsg = new GUIFrame(new RectTransform(Vector2.One, guiFrame.RectTransform), style: "GUIToolTip")
+                var popupMsg = new GUIFrame(new RectTransform(Vector2.One, GUIFrame.RectTransform), style: "GUIToolTip")
                 {
                     Visible = false
                 };
@@ -264,22 +248,22 @@ namespace Barotrauma
 
         private void SetUILayout()
         {
-            guiFrame.RectTransform.AbsoluteOffset = Point.Zero;
-            guiFrame.RectTransform.RelativeOffset = new Vector2(
+            GUIFrame.RectTransform.AbsoluteOffset = Point.Zero;
+            GUIFrame.RectTransform.RelativeOffset = new Vector2(
                 HUDLayoutSettings.ChatBoxArea.X / (float)GameMain.GraphicsWidth,
                 HUDLayoutSettings.ChatBoxArea.Y / (float)GameMain.GraphicsHeight);
-            guiFrame.RectTransform.NonScaledSize = HUDLayoutSettings.ChatBoxArea.Size;
+            GUIFrame.RectTransform.NonScaledSize = HUDLayoutSettings.ChatBoxArea.Size;
 
             int toggleButtonWidth = (int)(30 * GUI.Scale);
             //make room for the toggle button
             if (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left)
             {
-                guiFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
+                GUIFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
             }
-            guiFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
+            GUIFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
 
-            toggleButton.RectTransform.NonScaledSize = new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height);
-            toggleButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ?
+            ToggleButton.RectTransform.NonScaledSize = new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height);
+            ToggleButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ?
                 new Point(HUDLayoutSettings.ChatBoxArea.X, HUDLayoutSettings.ChatBoxArea.Y) :
                 new Point(HUDLayoutSettings.ChatBoxArea.Right - toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Y);
         }
@@ -293,7 +277,7 @@ namespace Barotrauma
                 prevUIScale = GUI.Scale;
             }
 
-            if (ToggleOpen || (inputBox != null && inputBox.Selected))
+            if (ToggleOpen || (InputBox != null && InputBox.Selected))
             {
                 openState += deltaTime * 5.0f;
                 //delete all popup messages when the chatbox is open
@@ -311,7 +295,7 @@ namespace Barotrauma
                 var popupMsg = popupMessages.Count > 0 ? popupMessages.Peek() : null;
                 if (popupMsg != null)
                 {
-                    int offset = -popupMsg.Rect.Width - toggleButton.Rect.Width * 2 - (int)(50 * GUI.Scale) - (guiFrame.Rect.X - GameMain.GraphicsWidth);
+                    int offset = -popupMsg.Rect.Width - ToggleButton.Rect.Width * 2 - (int)(50 * GUI.Scale) - (GUIFrame.Rect.X - GameMain.GraphicsWidth);
                     popupMsg.Visible = true;
                     //popup messages appear and disappear faster when there's more pending messages
                     popupMessageTimer += deltaTime * popupMessages.Count * popupMessages.Count;
@@ -336,8 +320,8 @@ namespace Barotrauma
                 }
             }
             openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
-            int hiddenBoxOffset = guiFrame.Rect.Width + toggleButton.Rect.Width;
-            guiFrame.RectTransform.AbsoluteOffset =
+            int hiddenBoxOffset = GUIFrame.Rect.Width + ToggleButton.Rect.Width;
+            GUIFrame.RectTransform.AbsoluteOffset =
                 new Point((int)MathHelper.SmoothStep(hiddenBoxOffset * (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ? -1 : 1), 0, openState), 0);
         }
     }

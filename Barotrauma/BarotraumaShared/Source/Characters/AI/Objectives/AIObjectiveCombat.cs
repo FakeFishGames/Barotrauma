@@ -1,17 +1,20 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
     class AIObjectiveCombat : AIObjective
     {
         public override string DebugTag => "combat";
-        public override bool KeepDivingGearOn => true;
 
-        const float CoolDown = 10.0f;
+        private readonly CombatMode initialMode;
+
+        const float coolDown = 10.0f;
 
         public Character Enemy { get; private set; }
         
@@ -23,7 +26,7 @@ namespace Barotrauma
             {
                 _weapon = value;
                 _weaponComponent = null;
-                reloadWeaponObjective = null;
+                RemoveSubObjective(ref seekAmmunition);
             }
         }
         private ItemComponent _weaponComponent;
@@ -31,6 +34,7 @@ namespace Barotrauma
         {
             get
             {
+                if (Weapon == null) { return null; }
                 if (_weaponComponent == null)
                 {
                     _weaponComponent =
@@ -41,89 +45,194 @@ namespace Barotrauma
                 return _weaponComponent;
             }
         }
-        private AIObjectiveContainItem reloadWeaponObjective;
-        private Hull retreatTarget;
-        private AIObjectiveGoTo retreatObjective;
-        private AIObjectiveFindSafety findSafety;
 
+        public override bool ConcurrentObjectives => true;
+
+        private readonly AIObjectiveFindSafety findSafety;
+        private readonly HashSet<RangedWeapon> rangedWeapons = new HashSet<RangedWeapon>();
+        private readonly HashSet<MeleeWeapon> meleeWeapons = new HashSet<MeleeWeapon>();
+        private readonly HashSet<Item> adHocWeapons = new HashSet<Item>();
+
+        private AIObjectiveContainItem seekAmmunition;
+        private AIObjectiveGoTo retreatObjective;
+        private AIObjectiveGoTo followTargetObjective;
+
+        private Hull retreatTarget;
         private float coolDownTimer;
+        private IEnumerable<FarseerPhysics.Dynamics.Body> myBodies;
+        private float aimTimer;
 
         public enum CombatMode
         {
             Defensive,
-            Offensive, // Not implemented
+            Offensive,
             Retreat
         }
 
         public CombatMode Mode { get; private set; }
 
-        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode) : base(character, "")
+        public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+            : base(character, objectiveManager, priorityModifier)
         {
             Enemy = enemy;
-            coolDownTimer = CoolDown;
-            findSafety = HumanAIController.ObjectiveManager.GetObjective<AIObjectiveFindSafety>();
-            findSafety.Priority = 0;
-            findSafety.unreachable.Clear();
+            coolDownTimer = coolDown;
+            findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
+            if (findSafety != null)
+            {
+                findSafety.Priority = 0;
+                findSafety.unreachable.Clear();
+            }
             Mode = mode;
+            initialMode = Mode;
             if (Enemy == null)
             {
                 Mode = CombatMode.Retreat;
             }
         }
 
+        public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
+
+        public override bool IsDuplicate(AIObjective otherObjective)
+        {
+            if (!(otherObjective is AIObjectiveCombat objective)) return false;
+            return objective.Enemy == Enemy;
+        }
+
+        public override void OnSelected() => Weapon = null;
+
+        public override bool IsCompleted()
+        {
+            bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (initialMode != CombatMode.Offensive && coolDownTimer <= 0);
+            if (completed)
+            {
+                if (objectiveManager.CurrentOrder == this && Enemy != null && Enemy.IsDead)
+                {
+                    character.Speak(TextManager.Get("DialogTargetDown"), null, 3.0f, "targetdown", 30.0f);
+                }
+                if (Weapon != null)
+                {
+                    Unequip();
+                }
+            }
+            return completed;
+        }
+
         protected override void Act(float deltaTime)
         {
-            coolDownTimer -= deltaTime;
-            if (abandon) { return; }
-            switch (Mode)
+            if (initialMode != CombatMode.Offensive)
             {
-                case CombatMode.Defensive:
-                    if (Weapon != null && character.Inventory.Items.Contains(_weapon))
-                    {
-                        Weapon = null;
-                    }
-                    if (Weapon == null)
-                    {
-                        Weapon = GetWeapon();
-                    }
-                    if (Weapon == null)
-                    {
-                        Mode = CombatMode.Retreat;
-                    }
-                    else if (Equip(deltaTime))
-                    {
-                        if (Reload(deltaTime))
-                        {
-                            Attack(deltaTime);
-                        }
-                    }
-                    // When defensive, try to retreat to safety. TODO: in offsensive mode, engage the target
-                    Retreat(deltaTime);
-                    break;
-                case CombatMode.Retreat:
-                    Retreat(deltaTime);
-                    break;
-                case CombatMode.Offensive:
-                default:
-                    throw new System.NotImplementedException();
+                coolDownTimer -= deltaTime;
+            }
+            if (abandon) { return; }
+            TryArm();
+            if (seekAmmunition == null || !subObjectives.Contains(seekAmmunition))
+            {
+                Move();
+                if (Weapon != null)
+                {
+                    OperateWeapon(deltaTime);
+                }
             }
         }
 
-        private Item GetWeapon()
+        private void Move()
         {
-            _weaponComponent = null;
-            var weapon = character.Inventory.FindItemByTag("weapon");
-            if (weapon == null)
+            switch (Mode)
             {
-                foreach (var item in character.Inventory.Items)
+                case CombatMode.Offensive:
+                    Engage();
+                    break;
+                case CombatMode.Defensive:
+                case CombatMode.Retreat:
+                    Retreat();
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private bool TryArm()
+        {
+            if (Weapon != null)
+            {
+                if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
                 {
-                    if (item == null) { continue; }
-                    foreach (var component in item.Components)
+                    Weapon = null;
+                }
+                else if (!WeaponComponent.HasRequiredContainedItems(false))
+                {
+                    // Seek ammunition only if cannot find a new weapon
+                    if (!Reload(true, () => GetWeapon() == null))
                     {
-                        if (component is MeleeWeapon || component is RangedWeapon)
+                        if (seekAmmunition != null && subObjectives.Contains(seekAmmunition))
                         {
-                            return item;
+                            return false;
                         }
+                        else
+                        {
+                            Weapon = null;
+                        }
+                    }
+                }
+            }
+            if (Weapon == null)
+            {
+                Weapon = GetWeapon();
+            }
+            if (Weapon == null)
+            {
+                Weapon = GetWeapon(ignoreRequiredItems: true);
+            }
+            Mode = Weapon == null ? CombatMode.Retreat : initialMode;
+            return Weapon != null;
+        }
+
+        private void OperateWeapon(float deltaTime)
+        {
+            switch (Mode)
+            {
+                case CombatMode.Offensive:
+                case CombatMode.Defensive:
+                    if (Equip())
+                    {
+                        Attack(deltaTime);
+                    }
+                    break;
+                case CombatMode.Retreat:
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private Item GetWeapon(bool ignoreRequiredItems = false)
+        {
+            rangedWeapons.Clear();
+            meleeWeapons.Clear();
+            adHocWeapons.Clear();
+            Item weapon = null;
+            _weaponComponent = null;
+            foreach (var item in character.Inventory.Items)
+            {
+                if (item == null) { continue; }
+                foreach (var component in item.Components)
+                {
+                    if (component is RangedWeapon rw)
+                    {
+                        if (ignoreRequiredItems || rw.HasRequiredContainedItems(false))
+                        {
+                            rangedWeapons.Add(rw);
+                        }
+                    }
+                    else if (component is MeleeWeapon mw)
+                    {
+                        if (ignoreRequiredItems || mw.HasRequiredContainedItems(false))
+                        {
+                            meleeWeapons.Add(mw);
+                        }
+                    }
+                    else
+                    {
                         var effects = component.statusEffectLists;
                         if (effects != null)
                         {
@@ -133,13 +242,30 @@ namespace Barotrauma
                                 {
                                     if (statusEffect.Afflictions.Any())
                                     {
-                                        return item;
+                                        if (ignoreRequiredItems || component.HasRequiredContainedItems(false))
+                                        {
+                                            adHocWeapons.Add(item);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+            var rangedWeapon = rangedWeapons.OrderByDescending(w => w.CombatPriority).FirstOrDefault();
+            var meleeWeapon = meleeWeapons.OrderByDescending(w => w.CombatPriority).FirstOrDefault();
+            if (rangedWeapon != null)
+            {
+                weapon = rangedWeapon.Item;
+            }
+            else if (meleeWeapon != null)
+            {
+                weapon = meleeWeapon.Item;
+            }
+            if (weapon == null)
+            {
+                weapon = adHocWeapons.GetRandom(Rand.RandSync.Server);
             }
             return weapon;
         }
@@ -155,88 +281,193 @@ namespace Barotrauma
             }
         }
 
-        private bool Equip(float deltaTime)
+        private bool Equip()
         {
-            if (!character.SelectedItems.Contains(Weapon))
+            if (!WeaponComponent.HasRequiredContainedItems(false))
             {
+                Mode = CombatMode.Retreat;
+                return false;
+            }
+            //if (!character.SelectedItems.Contains(Weapon))
+            if (!character.HasEquippedItem(Weapon))
+            {
+                Weapon.TryInteract(character, forceSelectKey: true);
                 var slots = Weapon.AllowedSlots.FindAll(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
                     Weapon.Equip(character);
+                    aimTimer = Rand.Range(0.5f, 1f);
                 }
                 else
                 {
-                    //couldn't equip the item, escape
-                    //Abandon(deltaTime);
+                    Weapon = null;
+                    Mode = CombatMode.Retreat;
                     return false;
                 }
             }
             return true;
         }
 
-        private void Retreat(float deltaTime)
+        private void Retreat()
         {
+            RemoveSubObjective(ref followTargetObjective);
+            RemoveSubObjective(ref seekAmmunition);
+            if (retreatObjective != null && retreatObjective.Target != retreatTarget)
+            {
+                retreatObjective = null;
+            }
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
-                retreatTarget = findSafety.FindBestHull(new List<Hull>() { character.CurrentHull });
+                retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls);
             }
-            if (retreatTarget != null)
+            TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
+        }
+
+        private void Engage()
+        {
+            retreatTarget = null;
+            RemoveSubObjective(ref retreatObjective);
+            RemoveSubObjective(ref seekAmmunition);
+            if (followTargetObjective != null && followTargetObjective.Target != Enemy)
             {
-                if (retreatObjective == null || retreatObjective.Target != retreatTarget)
+                followTargetObjective = null;
+            }
+            TryAddSubObjective(ref followTargetObjective,
+                constructor: () => new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
                 {
-                    retreatObjective = new AIObjectiveGoTo(retreatTarget, character, false, true);
-                }
-                retreatObjective.TryComplete(deltaTime);
+                    AllowGoingOutside = true,
+                    IgnoreIfTargetDead = true,
+                    CheckVisibility = true
+                },
+                onAbandon: () =>
+                {
+                    Mode = CombatMode.Retreat;
+                    SteeringManager.Reset();
+                });
+            if (followTargetObjective != null && subObjectives.Contains(followTargetObjective))
+            {
+                followTargetObjective.CloseEnough =
+                    WeaponComponent is RangedWeapon ? 3 :
+                    WeaponComponent is MeleeWeapon mw ? mw.Range :
+                    WeaponComponent is RepairTool rt ? rt.Range : 50;
             }
         }
 
-        private bool Reload(float deltaTime)
+        /// <summary>
+        /// Seeks for more ammunition. Creates a new subobjective.
+        /// </summary>
+        private void SeekAmmunition(string[] ammunitionIdentifiers)
         {
-            if (WeaponComponent != null && WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
-            {
-                var containedItems = Weapon.ContainedItems;
-                foreach (RelatedItem requiredItem in WeaponComponent.requiredItems[RelatedItem.RelationType.Contained])
+            retreatTarget = null;
+            RemoveSubObjective(ref retreatObjective);
+            RemoveSubObjective(ref followTargetObjective);
+            TryAddSubObjective(ref seekAmmunition,
+                constructor: () => new AIObjectiveContainItem(character, ammunitionIdentifiers, Weapon.GetComponent<ItemContainer>(), objectiveManager)
                 {
-                    Item containedItem = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
-                    if (containedItem == null)
+                    targetItemCount = Weapon.GetComponent<ItemContainer>().Capacity,
+                    checkInventory = false
+                },
+                onAbandon: () =>
+                {
+                    Weapon = null;
+                    Mode = CombatMode.Retreat;
+                    SteeringManager.Reset();
+                });
+        }
+        
+        /// <summary>
+        /// Reloads the ammunition found in the inventory.
+        /// If seekAmmo is true and the condition is met or not provided, tries to get find the ammo elsewhere.
+        /// </summary>
+        private bool Reload(bool seekAmmo, Func<bool> condition = null)
+        {
+            if (WeaponComponent == null) { return false; }
+            if (!WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return false; }
+            var containedItems = Weapon.ContainedItems;
+            RelatedItem item = null;
+            Item ammunition = null;
+            string[] ammunitionIdentifiers = null;
+            foreach (RelatedItem requiredItem in WeaponComponent.requiredItems[RelatedItem.RelationType.Contained])
+            {
+                ammunition = containedItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                if (ammunition != null)
+                {
+                    // Ammunition still remaining
+                    return true;
+                }
+                item = requiredItem;
+                ammunitionIdentifiers = requiredItem.Identifiers;
+            }
+            // No ammo
+            if (ammunition == null)
+            {
+                var container = Weapon.GetComponent<ItemContainer>();
+                // Try reload ammunition in inventory
+                foreach (string identifier in ammunitionIdentifiers)
+                {
+                    foreach (var i in character.Inventory.Items)
                     {
-                        if (reloadWeaponObjective == null)
+                        if (i == null) { continue; }
+                        if (i.Prefab.Identifier == identifier || i.HasTag(identifier))
                         {
-                            reloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, Weapon.GetComponent<ItemContainer>());
+                            if (i.Condition > 0)
+                            {
+                                container.Inventory.TryPutItem(ammunition, null);
+                            }
                         }
                     }
                 }
             }
-            if (reloadWeaponObjective != null)
+            if (WeaponComponent.HasRequiredContainedItems(false))
             {
-                if (reloadWeaponObjective.IsCompleted())
-                {
-                    reloadWeaponObjective = null;
-                }
-                else if (!reloadWeaponObjective.CanBeCompleted)
-                {
-                    Mode = CombatMode.Retreat;
-                }
-                else
-                {
-                    reloadWeaponObjective.TryComplete(deltaTime);
-                }
-                return false;
+                return true;
             }
-            return true;
+            else if (ammunition == null)
+            {
+                if (seekAmmo && ammunitionIdentifiers != null && (condition == null || condition()))
+                {
+                    SeekAmmunition(ammunitionIdentifiers);
+                }
+            }
+            return false;
         }
 
-        private IEnumerable<FarseerPhysics.Dynamics.Body> myBodies;
         private void Attack(float deltaTime)
         {
+            float squaredDistance = Vector2.DistanceSquared(character.Position, Enemy.Position);
             character.CursorPosition = Enemy.Position;
+            float engageDistance = 500;
+            if (squaredDistance > engageDistance * engageDistance) { return; }
+            if (!character.CanSeeCharacter(Enemy)) { return; }
             if (Weapon.RequireAimToUse)
             {
-                character.SetInput(InputType.Aim, false, true);
+                bool isOperatingButtons = false;
+                if (SteeringManager == PathSteering)
+                {
+                    var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
+                    if (door != null && !door.IsOpen)
+                    {
+                        isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
+                    }
+                }
+                if (!isOperatingButtons && character.SelectedConstruction == null)
+                {
+                    character.SetInput(InputType.Aim, false, true);
+                }
+            }
+            bool isFacing = character.AnimController.Dir > 0 && Enemy.WorldPosition.X > character.WorldPosition.X || character.AnimController.Dir < 0 && Enemy.WorldPosition.X < character.WorldPosition.X;
+            if (!isFacing)
+            {
+                aimTimer = Rand.Range(1f, 1.5f);
+            }
+            if (aimTimer > 0)
+            {
+                aimTimer -= deltaTime;
+                return;
             }
             if (WeaponComponent is MeleeWeapon meleeWeapon)
             {
-                if (Vector2.DistanceSquared(character.Position, Enemy.Position) <= meleeWeapon.Range * meleeWeapon.Range)
+                if (squaredDistance <= meleeWeapon.Range * meleeWeapon.Range)
                 {
                     character.SetInput(InputType.Shoot, false, true);
                     Weapon.Use(deltaTime, character);
@@ -246,15 +477,16 @@ namespace Barotrauma
             {
                 if (WeaponComponent is RepairTool repairTool)
                 {
-                    if (Vector2.DistanceSquared(character.Position, Enemy.Position) > repairTool.Range * repairTool.Range) { return; }
+                    if (squaredDistance > repairTool.Range * repairTool.Range) { return; }
                 }
-                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - character.Position) < MathHelper.PiOver4)
+                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - Weapon.Position) < MathHelper.PiOver4)
                 {
                     if (myBodies == null)
                     {
                         myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     }
-                    var pickedBody = Submarine.PickBody(character.SimPosition, Enemy.SimPosition, myBodies);
+                    var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall;
+                    var pickedBody = Submarine.PickBody(Weapon.SimPosition, Enemy.SimPosition, myBodies, collisionCategories);
                     if (pickedBody != null)
                     {
                         Character target = null;
@@ -266,42 +498,15 @@ namespace Barotrauma
                         {
                             target = limb.character;
                         }
-                        if (target != null && target == Enemy)
+                        if (target != null && (target == Enemy || !HumanAIController.IsFriendly(target)))
                         {
                             character.SetInput(InputType.Shoot, false, true);
                             Weapon.Use(deltaTime, character);
+                            aimTimer = Rand.Range(0.25f, 0.5f);
                         }
                     }
                 }
             }
-        }
-
-        private void Abandon(float deltaTime)
-        {
-            abandon = true;
-            SteeringManager.Reset();
-        }
-
-        public override bool IsCompleted()
-        {
-            bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || coolDownTimer <= 0;
-            if (completed)
-            {
-                if (Weapon != null)
-                {
-                    Unequip();
-                }
-            }
-            return completed;
-        }
-
-        public override bool CanBeCompleted => !abandon && (reloadWeaponObjective == null || reloadWeaponObjective.CanBeCompleted) && (retreatObjective == null || retreatObjective.CanBeCompleted);
-        public override float GetPriority(AIObjectiveManager objectiveManager) => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : 100;
-
-        public override bool IsDuplicate(AIObjective otherObjective)
-        {
-            if (!(otherObjective is AIObjectiveCombat objective)) return false;
-            return objective.Enemy == Enemy;
         }
 
         //private float CalculateEnemyStrength()

@@ -255,7 +255,7 @@ namespace Barotrauma
 
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24) : base(style, new RectTransform(Vector2.One, parent))
         {
-            this.elementHeight = elementHeight;
+            this.elementHeight = (int)(elementHeight * GUI.Scale);
             List<SerializableProperty> editableProperties = inGame ? 
                 SerializableProperty.GetProperties<InGameEditable>(entity) : 
                 SerializableProperty.GetProperties<Editable>(entity);
@@ -263,7 +263,7 @@ namespace Barotrauma
             layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform)) { AbsoluteSpacing = 2 };
             if (showName)
             {
-                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, elementHeight), layoutGroup.RectTransform), entity.Name, font: GUI.Font);
+                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, this.elementHeight), layoutGroup.RectTransform), entity.Name, font: GUI.Font);
             }
             editableProperties.ForEach(ep => CreateNewField(ep, entity));
 
@@ -906,7 +906,7 @@ namespace Barotrauma
 
         public void CreateTextPicker(string textTag, ISerializableEntity entity, SerializableProperty property, GUITextBox textBox)
         {
-            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, width: 300, height: 400);
+            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, new Vector2(0.2f, 0.5f), new Point(300, 400));
             msgBox.Buttons[0].OnClicked = msgBox.Close;
 
             var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
@@ -927,6 +927,7 @@ namespace Barotrauma
 
             textTag = textTag.ToLowerInvariant();
             var tagTextPairs = TextManager.GetAllTagTextPairs();
+            tagTextPairs.Sort((t1, t2) => { return t1.Value.CompareTo(t2.Value); });
             foreach (KeyValuePair<string, string> tagTextPair in tagTextPairs)
             {
                 if (!tagTextPair.Key.StartsWith(textTag)) { continue; }

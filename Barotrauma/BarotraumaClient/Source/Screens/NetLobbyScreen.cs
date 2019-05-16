@@ -437,9 +437,13 @@ namespace Barotrauma
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), modeList.Content.RectTransform),
                     mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
                 {
-                    ToolTip = mode.Description,
                     UserData = mode
                 };
+                //TODO: translate mission descriptions
+                if (TextManager.Language == "English")
+                {
+                    textBlock.ToolTip = mode.Description;
+                }
             }
 
             //mission type ------------------------------------------------------------------
@@ -1045,7 +1049,8 @@ namespace Barotrauma
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
                     var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform),
-                        "  - " + TextManager.Get("SkillName." + skill.Identifier) + ": " + (int)skill.Level, textColor);
+                        "  - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), ((int)skill.Level).ToString()), 
+                        textColor);
                 }
 
                 //spacing
@@ -1208,7 +1213,7 @@ namespace Barotrauma
                 };
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 600));
+                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", new Vector2(0.25f, 0.25f), new Point(500, 400)));
                     return true;
                 };
             }
@@ -1216,7 +1221,7 @@ namespace Barotrauma
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.1f, 0.0f) },
-                    TextManager.Get("Shuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
+                    TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,
                     ToolTip = subTextBlock.ToolTip,
@@ -1348,7 +1353,7 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ClosePlayerFrame(btn, userdata); return true; }
             };
 
-            Point frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Point(450, 370) : new Point(450, 150);
+            Vector2 frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Vector2(.24f, .34f) : new Vector2(.24f, .14f);
 
             var playerFrameInner = new GUIFrame(new RectTransform(frameSize, playerFrame.RectTransform, Anchor.Center));
             var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), playerFrameInner.RectTransform, Anchor.Center))
@@ -2001,7 +2006,8 @@ namespace Barotrauma
                     return false;
                 }
 
-                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, new string[] { TextManager.Get("Yes"), TextManager.Get("No") }, 400, 300)
+                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, 
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
                 {
                     UserData = "request" + subName
                 };

@@ -154,10 +154,10 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
 
         public override void OnItemLoaded()
         {
@@ -474,7 +474,9 @@ namespace Barotrauma.Items.Components
                     if (!posToMaintain.HasValue)
                     {
                         unsentChanges = true;
-                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition;
+                        posToMaintain = controlledSub != null ?
+                            controlledSub.WorldPosition :
+                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
                     }
 
                     if (!AutoPilot || !MaintainPos) unsentChanges = true;
@@ -518,6 +520,7 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
+            bool dockingButtonClicked   = msg.ReadBoolean();
             Vector2 newSteeringInput    = targetVelocity;
             bool maintainPos            = false;
             Vector2? newPosToMaintain   = null;
@@ -545,8 +548,12 @@ namespace Barotrauma.Items.Components
             if (!item.CanClientAccess(c)) return;
 
             user = c.Character;
-
             AutoPilot = autoPilot;
+
+            if (dockingButtonClicked)
+            {
+                item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
+            }
 
             if (!AutoPilot)
             {

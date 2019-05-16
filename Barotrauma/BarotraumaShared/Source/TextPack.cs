@@ -11,8 +11,8 @@ namespace Barotrauma
         public readonly string Language;
 
         private Dictionary<string, List<string>> texts;
-
-        private string filePath;
+        
+        private readonly string filePath;
 
         public TextPack(string filePath)
         {

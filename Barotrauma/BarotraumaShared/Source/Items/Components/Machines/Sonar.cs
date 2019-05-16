@@ -47,8 +47,9 @@ namespace Barotrauma.Items.Components
         //was the last ping sent with directional pinging
         private bool isLastPingDirectional;
 
-        private readonly Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
-        private readonly Sprite sonarBlip;
+        private Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
+        private Sprite sonarBlip;
+        private Sprite lineSprite;
 
         private bool aiPingCheckPending;
 
@@ -85,7 +86,7 @@ namespace Barotrauma.Items.Components
         {
             get { return zoom; }
         }
-
+        
         public override bool IsActive
         {
             get
@@ -111,29 +112,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             connectedTransducers = new List<ConnectedTransducer>();
-
-            foreach (XElement subElement in element.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "pingcircle":
-                        pingCircle = new Sprite(subElement);
-                        break;
-                    case "directionalpingcircle":
-                        directionalPingCircle = new Sprite(subElement);
-                        break;
-                    case "screenoverlay":
-                        screenOverlay = new Sprite(subElement);
-                        break;
-                    case "screenbackground":
-                        screenBackground = new Sprite(subElement);
-                        break;
-                    case "blip":
-                        sonarBlip = new Sprite(subElement);
-                        break;
-                }
-            }
-            
+                        
             IsActive = false;
             InitProjSpecific(element);
         }
@@ -205,6 +184,7 @@ namespace Barotrauma.Items.Components
             directionalPingCircle?.Remove();
             screenOverlay?.Remove();
             screenBackground?.Remove();
+            lineSprite?.Remove();
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -262,12 +242,21 @@ namespace Barotrauma.Items.Components
             return TextManager.Get("roomname.subdiroclock").Replace("[dir]", clockDir.ToString());
         }
 
-        private Vector2 GetTransducerCenter()
+        private Vector2 GetTransducerPos()
         {
-            if (!UseTransducers || connectedTransducers.Count == 0) return Vector2.Zero;
+            if (!UseTransducers || connectedTransducers.Count == 0)
+            {
+                //use the position of the sub if the item is static (no body) and inside a sub
+                return item.Submarine != null && item.body == null ? item.Submarine.WorldPosition : item.WorldPosition;
+            }
+
             Vector2 transducerPosSum = Vector2.Zero;
             foreach (ConnectedTransducer transducer in connectedTransducers)
             {
+                if (transducer.Transducer.Item.Submarine != null)
+                {
+                    return transducer.Transducer.Item.Submarine.WorldPosition;
+                }
                 transducerPosSum += transducer.Transducer.Item.WorldPosition;
             }
             return transducerPosSum / connectedTransducers.Count;

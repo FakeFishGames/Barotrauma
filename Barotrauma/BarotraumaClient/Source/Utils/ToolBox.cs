@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma
 {
@@ -100,16 +102,47 @@ namespace Barotrauma
 
         public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f) //TODO: could integrate this into the ScalableFont class directly
         {
-            if (font.MeasureString(text).X < lineLength) return text;
+            Vector2 textSize = font.MeasureString(text);
+            if (textSize.X < lineLength) { return text; }
 
             text = text.Replace("\n", " \n ");
 
-            string[] words = text.Split(' ');
+            List<string> words = new List<string>();
+            string currWord = "";
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (isCJK.IsMatch(text[i].ToString()))
+                {
+                    if (currWord.Length > 0)
+                    {
+                        words.Add(currWord);
+                        currWord = "";
+                    }
+                    words.Add(text[i].ToString());
+                }
+                else if (text[i] == ' ')
+                {
+                    if (currWord.Length > 0)
+                    {
+                        words.Add(currWord);
+                        currWord = "";
+                    }
+                }
+                else
+                {
+                    currWord += text[i];
+                }
+            }
+            if (currWord.Length > 0)
+            {
+                words.Add(currWord);
+                currWord = "";
+            }
 
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;
             Vector2 spaceSize = font.MeasureString(" ") * textScale;
-            for (int i = 0; i < words.Length; ++i)
+            for (int i = 0; i < words.Count; ++i)
             {
                 if (words[i].Length == 0)
                 {
@@ -167,10 +200,24 @@ namespace Barotrauma
                     linePos = size.X + spaceSize.X;
                 }
 
-                if (i < words.Length - 1) wrappedText.Append(" ");
+                if (i < words.Count - 1 && !isCJK.IsMatch(words[i]) && !isCJK.IsMatch(words[i + 1]))
+                {
+                    wrappedText.Append(" ");
+                }
             }
 
             return wrappedText.ToString().Replace(" \n ", "\n");
         }
+
+        static Regex isCJK = new Regex(
+            @"\p{IsHangulJamo}|" +
+            @"\p{IsCJKRadicalsSupplement}|" +
+            @"\p{IsCJKSymbolsandPunctuation}|" +
+            @"\p{IsEnclosedCJKLettersandMonths}|" +
+            @"\p{IsCJKCompatibility}|" +
+            @"\p{IsCJKUnifiedIdeographsExtensionA}|" +
+            @"\p{IsCJKUnifiedIdeographs}|" +
+            @"\p{IsHangulSyllables}|" +
+            @"\p{IsCJKCompatibilityForms}");        
     }
 }

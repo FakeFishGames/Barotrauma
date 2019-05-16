@@ -83,12 +83,12 @@ namespace Barotrauma
 
         private string GetItemCount()
         {
-            return TextManager.Get("Items") + ": " + Item.ItemList.Count;
+            return TextManager.AddPunctuation(':', TextManager.Get("Items"), Item.ItemList.Count.ToString());
         }
 
         private string GetStructureCount()
         {
-            return TextManager.Get("Structures") + ": " + (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count);
+            return TextManager.AddPunctuation(':', TextManager.Get("Structures"), (MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.hullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count).ToString());
         }
 
         private string GetTotalHullVolume()
@@ -127,7 +127,7 @@ namespace Barotrauma
 
         private string GetPhysicsBodyCount()
         {
-            return TextManager.Get("PhysicsBodies") + ": " + GameMain.World.BodyList.Count;
+            return TextManager.AddPunctuation(':', TextManager.Get("PhysicsBodies"), GameMain.World.BodyList.Count.ToString());
         }
 
         public bool CharacterMode { get; private set; }
@@ -257,12 +257,12 @@ namespace Barotrauma
 
 
             saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), TopPanel.RectTransform, Anchor.BottomLeft, Pivot.TopLeft)
-            { MinSize = new Point(180, 40), AbsoluteOffset = new Point(LeftPanel.Rect.Width + hullVolumeFrame.Rect.Width, 0) }, "InnerFrame")
+            { MinSize = new Point(200, 40), AbsoluteOffset = new Point(LeftPanel.Rect.Width + hullVolumeFrame.Rect.Width, 0) }, "InnerFrame")
             {
                 Visible = false
             };
             var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
-            saveAssemblyFrame.Font = GUI.SmallFont;
+            saveAssemblyButton.TextBlock.AutoScale = true;
             saveAssemblyButton.OnClicked += (btn, userdata) =>
             {
                 CreateSaveAssemblyScreen();
@@ -300,7 +300,7 @@ namespace Barotrauma
                 UserData = "filterarea"
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.Font);
+            new GUITextBlock(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font);
             entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
             entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), filterArea.RectTransform), "x")
@@ -317,10 +317,11 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
-            {
-                OnClicked = (btn, userdata) => { ClearFilter(); return true; }
-            };
+            entityCategoryButtons.Add(
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), tabButtonHolder.RectTransform), TextManager.Get("MapEntityCategory.All"), style: "GUITabButton")
+                {
+                    OnClicked = (btn, userdata) => { entityCategoryButtons.ForEach(b => b.Selected = b == btn); ClearFilter(); return true; }
+                });
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
@@ -337,6 +338,8 @@ namespace Barotrauma
                 });
             }
 
+            GUITextBlock.AutoScaleAndNormalize(entityCategoryButtons.Select(b => b.TextBlock));
+
             entityList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), entityListHolder.RectTransform, Anchor.BottomCenter))
             {
                 OnSelected = SelectPrefab,
@@ -351,7 +354,7 @@ namespace Barotrauma
             var characterModeTickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.01f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 32) })
             { Color = secondaryColor };
 
-            characterModeTickBox = new GUITickBox(new RectTransform(new Point(32, 32), characterModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("CharacterModeButton"))
+            characterModeTickBox = new GUITickBox(new RectTransform(Vector2.One, characterModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("CharacterModeButton"))
             {
                 ToolTip = TextManager.Get("CharacterModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
@@ -364,7 +367,7 @@ namespace Barotrauma
             var wiringModeTickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.01f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 32) })
             { Color = secondaryColor };
 
-            wiringModeTickBox = new GUITickBox(new RectTransform(new Point(32, 32), wiringModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("WiringModeButton"))
+            wiringModeTickBox = new GUITickBox(new RectTransform(Vector2.One, wiringModeTickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("WiringModeButton"))
             {
                 ToolTip = TextManager.Get("WiringModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
@@ -373,7 +376,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-
+            
+            GUITextBlock.AutoScaleAndNormalize(characterModeTickBox.TextBlock, wiringModeTickBox.TextBlock);
+            
             button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("GenerateWaypointsButton"), style: null, color: new Color(70, 100, 122, 255))
             {
                 ForceUpperCase = true,
@@ -382,17 +387,18 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("GenerateWaypointsToolTip"),
                 OnClicked = GenerateWaypoints
             };
+            button.TextBlock.AutoScale = true;
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), paddedLeftPanel.RectTransform), style: null);
 
-            var showEntitiesHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.3f), paddedLeftPanel.RectTransform))
-            { Color = secondaryColor, Stretch = true, RelativeSpacing = 0.05f };
+            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(paddedLeftPanel.RectTransform.RelativeSize.X, 0.3f), paddedLeftPanel.RectTransform))
+                { Color = secondaryColor, Stretch = true, RelativeSpacing = 0.05f };
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), showEntitiesHolder.RectTransform) { MinSize = new Point(0, 3) }, style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), tickBoxHolder.RectTransform) { MinSize = new Point(0, 3) }, style: null);
 
-            var tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLighting"))
+            var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLighting"))
             {
                 Selected = lightingEnabled,
                 OnSelected = (GUITickBox obj) => 
@@ -414,51 +420,61 @@ namespace Barotrauma
                     return true;
                 }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowWalls"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowWalls"))
             {
                 Selected = Structure.ShowWalls,
                 OnSelected = (GUITickBox obj) => { Structure.ShowWalls = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowStructures"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowStructures"))
             {
                 Selected = Structure.ShowStructures,
                 OnSelected = (GUITickBox obj) => { Structure.ShowStructures = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowItems"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowItems"))
             {
                 Selected = Item.ShowItems,
                 OnSelected = (GUITickBox obj) => { Item.ShowItems = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowWaypoints"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowWaypoints"))
             {
                 Selected = WayPoint.ShowWayPoints,
                 OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowSpawnpoints"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowSpawnpoints"))
             {
                 Selected = WayPoint.ShowSpawnPoints,
                 OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLinks"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowLinks"))
             {
                 Selected = Item.ShowLinks,
                 OnSelected = (GUITickBox obj) => { Item.ShowLinks = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowHulls"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowHulls"))
             {
                 Selected = Hull.ShowHulls,
                 OnSelected = (GUITickBox obj) => { Hull.ShowHulls = obj.Selected; return true; }
             };
-            tickBox = new GUITickBox(new RectTransform(new Point(32, 32), showEntitiesHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowGaps"))
+            tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), tickBoxHolder.RectTransform) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("ShowGaps"))
             {
                 Selected = Gap.ShowGaps,
                 OnSelected = (GUITickBox obj) => { Gap.ShowGaps = obj.Selected; return true; },
             };
 
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), showEntitiesHolder.RectTransform) { MinSize = new Point(0, 3) }, style: null);
+            tickBoxHolder.Children.ForEach(c => 
+            {
+                if (c is GUITickBox tb) { tb.RectTransform.MinSize = new Point(0, 32); }
+            });
 
-            new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.025f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("PreviouslyUsedLabel"));
+            GUITextBlock.AutoScaleAndNormalize(tickBoxHolder.Children.Where(c => c is GUITickBox).Select(c => ((GUITickBox)c).TextBlock));
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), tickBoxHolder.RectTransform) { MinSize = new Point(0, 3) }, style: null);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.025f), paddedLeftPanel.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(10, 0) }, TextManager.Get("PreviouslyUsedLabel"))
+            {
+                AutoScale = true
+            };
             previouslyUsedList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform, Anchor.BottomCenter))
             {
                 ScrollBarVisible = true,
@@ -611,6 +627,8 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
+                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+                Submarine.MainSub.UpdateTransform();
                 cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
             }
             else
@@ -812,11 +830,12 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "");
+            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "", hasAi: false);
 
             //make space for the entity menu
             for (int i = 0; i < dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
+                if (CharacterInventory.PersonalSlots.HasFlag(dummyCharacter.Inventory.SlotTypes[i])) { continue; }
                 if (dummyCharacter.Inventory.SlotPositions[i].Y > GameMain.GraphicsHeight / 2)
                 {
                     dummyCharacter.Inventory.SlotPositions[i].Y -= 50 * GUI.Scale;
@@ -1314,7 +1333,7 @@ namespace Barotrauma
                 }
             };
 
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("FilterMapEntities"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
             var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
@@ -1337,7 +1356,7 @@ namespace Barotrauma
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
                     var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
-                        TextManager.Get("Shuttle"), font: GUI.SmallFont)
+                        TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                         {
                             TextColor = textBlock.TextColor * 0.8f,
                             ToolTip = textBlock.ToolTip
@@ -1413,8 +1432,10 @@ namespace Barotrauma
             if (subList.SelectedComponent == null) { return false; }
             if (!(subList.SelectedComponent.UserData is Submarine selectedSub)) { return false; }
 
-            Submarine.MainSub = selectedSub;
             selectedSub.Load(true);
+            Submarine.MainSub = selectedSub;
+            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+            Submarine.MainSub.UpdateTransform();
 
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
@@ -1489,7 +1510,9 @@ namespace Barotrauma
             ClearFilter();
             foreach (GUIButton button in entityCategoryButtons)
             {
-                button.Selected = (MapEntityCategory)button.UserData == selectedCategory;
+                button.Selected = 
+                    button.UserData != null &&
+                    (MapEntityCategory)button.UserData == selectedCategory;
             }
             
             foreach (GUIComponent child in toggleEntityMenuButton.Children)
@@ -2269,6 +2292,11 @@ namespace Barotrauma
             if (lightingEnabled)
             {
                 GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+            }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                sub.UpdateTransform();
             }
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,

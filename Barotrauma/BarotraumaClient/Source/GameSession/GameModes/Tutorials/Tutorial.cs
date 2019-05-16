@@ -70,7 +70,13 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        public string Name
+        public string Identifier
+        {
+            get;
+            protected set;
+        }
+
+        public string DisplayName
         {
             get;
             protected set;
@@ -159,8 +165,9 @@ namespace Barotrauma.Tutorials
         public Tutorial(XElement element)
         {
             configElement = element;
-            Name = element.GetAttributeString("name", "Unnamed");
-            completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
+            Identifier = element.GetAttributeString("identifier", "unknown");
+            DisplayName = TextManager.Get(Identifier);
+            completed = GameMain.Config.CompletedTutorialNames.Contains(Identifier);
             playableContentPath = element.GetAttributeString("playablecontentpath", "");
 
             segments = new List<TutorialSegment>();
@@ -298,7 +305,7 @@ namespace Barotrauma.Tutorials
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
                             activeContentSegment.TextContent.GetAttributeInt("width", 300),
                             activeContentSegment.TextContent.GetAttributeInt("height", 80),
-                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment, false));
+                        activeContentSegment.TextContent.GetAttributeString("anchor", "Center"), true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment));
                     break;
                 case TutorialContentTypes.TextOnly:
                     infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
@@ -365,7 +372,7 @@ namespace Barotrauma.Tutorials
 
         private void CreateObjectiveGUI(TutorialSegment segment, int index, TutorialContentTypes type)
         {
-            Point replayButtonSize = new Point((int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).X * GUI.Scale), (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f * GUI.Scale));
+            Point replayButtonSize = new Point((int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).X), (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f));
 
             segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
@@ -381,12 +388,14 @@ namespace Barotrauma.Tutorials
                 return true;
             };
 
-            string objectiveText = TextManager.ParseInputTypes(objectiveTranslated);
-            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveText).Y / 2f + 5));
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveNameFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.BottomRight) { AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) },
-                objectiveText, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Point(replayButtonSize.X, yOffset), segment.ReplayButton.RectTransform, Anchor.Center, Pivot.TopCenter) { AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }, 
-                TextManager.ParseInputTypes(segment.Objective), textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+            string objectiveTitleText = TextManager.ParseInputTypes(objectiveTranslated);
+            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveTitleText).Y / 2f + 5));
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveTitleFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.BottomRight) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
+                objectiveTitleText, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
+
+            string objectiveText = TextManager.ParseInputTypes(segment.Objective);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveNameFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.TopRight) /*{ AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }*/,
+                objectiveText, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
             
             segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
             segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;
@@ -397,7 +406,8 @@ namespace Barotrauma.Tutorials
         {
             if (ContentRunning) return;
             ContentRunning = true;
-            videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
+            LoadVideo(segment);
+            //videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
         }
 
         private void ShowSegmentText(TutorialSegment segment)
@@ -412,7 +422,7 @@ namespace Barotrauma.Tutorials
 
             if (segment.ContentType != TutorialContentTypes.TextOnly)
             {
-                videoAction = () => LoadVideo(segment, false);
+                videoAction = () => LoadVideo(segment);
             }
 
             infoBox = CreateInfoFrame(TextManager.Get(segment.Id), tutorialText,
@@ -439,12 +449,12 @@ namespace Barotrauma.Tutorials
             if (objectiveTextWidth > objectiveTitleWidth)
             {
                 rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5, 0);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(10 * GUI.Scale), 0);
             }
             else
             {
                 rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - 5 - (objectiveTitleWidth), 0);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(10 * GUI.Scale) - (objectiveTitleWidth - objectiveTextWidth), 0);
             }
 
             GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
@@ -559,16 +569,16 @@ namespace Barotrauma.Tutorials
         #endregion
 
         #region Video
-        protected void LoadVideo(TutorialSegment segment, bool showText = true)
+        protected void LoadVideo(TutorialSegment segment)
         {
             if (videoPlayer == null) videoPlayer = new VideoPlayer();
-            if (showText)
+            if (segment.ContentType != TutorialContentTypes.ManualVideo)
             {
                 videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, segment.Objective, StopCurrentContentSegment);
             }
             else
             {
-                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), null, segment.Id, true, segment.Objective, null);
+                videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), null, segment.Id, true, string.Empty, null);
             }
         }
         #endregion

@@ -21,6 +21,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
+            GuiFrame.RectTransform.RelativeOffset = new Vector2(0.4f, 0.0f);
             new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
                 DrawHUDBack, null);
             submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center), style: null);
@@ -42,10 +43,10 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.05f
             };
 
-            hullNameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), hullInfoContainer.RectTransform), "");
-            hullBreachText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), hullInfoContainer.RectTransform), "");
-            hullAirQualityText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), hullInfoContainer.RectTransform), "");
-            hullWaterText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), hullInfoContainer.RectTransform), "");
+            hullNameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), hullInfoContainer.RectTransform), "") { Wrap = true };
+            hullBreachText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), hullInfoContainer.RectTransform), "") { Wrap = true };
+            hullAirQualityText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), hullInfoContainer.RectTransform), "") { Wrap = true };
+            hullWaterText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), hullInfoContainer.RectTransform), "") { Wrap = true };
 
             hullInfoFrame.Children.ForEach(c => { c.CanBeFocused = false; c.Children.ForEach(c2 => c2.CanBeFocused = false); });
         }
@@ -235,10 +236,12 @@ namespace Barotrauma.Items.Components
                     hullBreachText.Text = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : "";
                     hullBreachText.TextColor = Color.Red;
 
-                    hullAirQualityText.Text = oxygenAmount == null ? TextManager.Get("MiniMapAirQualityUnavailable") : TextManager.Get("MiniMapAirQuality") + ": " + (int)oxygenAmount + " %";
+                    hullAirQualityText.Text = oxygenAmount == null ? TextManager.Get("MiniMapAirQualityUnavailable") :
+                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapAirQuality"), + (int)oxygenAmount + " %");
                     hullAirQualityText.TextColor = oxygenAmount == null ? Color.Red : Color.Lerp(Color.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
 
-                    hullWaterText.Text = waterAmount == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : TextManager.Get("MiniMapWaterLevel") + ": " + (int)(waterAmount * 100.0f) + " %";
+                    hullWaterText.Text = waterAmount == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : 
+                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)(waterAmount * 100.0f) + " %");
                     hullWaterText.TextColor = waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount);
                 }
                 

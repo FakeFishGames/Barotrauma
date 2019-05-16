@@ -580,8 +580,8 @@ namespace Barotrauma.Items.Components
 
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
-            if (!requiredItems.Any()) return true;
-            if (character.Inventory == null) return false;
+            if (!requiredItems.Any()) { return true; }
+            if (character.Inventory == null) { return false; }
             bool hasRequiredItems = false;
             bool canContinue = true;
             if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
@@ -615,7 +615,15 @@ namespace Barotrauma.Items.Components
             {
                 bool Predicate(Item it) => it != null && it.Condition > 0.0f && relatedItem.MatchesItem(it);
                 bool shouldBreak = false;
-                if (relatedItem.IsOptional)
+                bool inEditor = false;
+#if CLIENT
+                inEditor = Screen.Selected == GameMain.SubEditorScreen;
+#endif
+                if (relatedItem.IgnoreInEditor && inEditor)
+                {
+                    hasRequiredItems = true;
+                }
+                else if (relatedItem.IsOptional)
                 {
                     if (!hasRequiredItems)
                     {
@@ -784,6 +792,7 @@ namespace Barotrauma.Items.Components
                             newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
                             newRequiredItem.Msg = prevRequiredItem.Msg;
                             newRequiredItem.IsOptional = prevRequiredItem.IsOptional;
+                            newRequiredItem.IgnoreInEditor = prevRequiredItem.IgnoreInEditor;
                         }
 
                         if (!requiredItems.ContainsKey(newRequiredItem.Type))

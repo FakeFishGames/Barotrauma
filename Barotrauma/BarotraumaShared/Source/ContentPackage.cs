@@ -217,6 +217,7 @@ namespace Barotrauma
         {
             return corePackageRequiredFiles.All(fileType => Files.Any(file => file.Type == fileType));
         }
+
         public bool ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes)
         {
             missingContentTypes = new List<ContentType>();
@@ -228,6 +229,25 @@ namespace Barotrauma
                 }
             }
             return missingContentTypes.Count == 0;
+        }
+
+        /// <summary>
+        /// Make sure all the files defined in the content package are present
+        /// </summary>
+        /// <returns></returns>
+        public bool VerifyFiles(out List<string> errorMessages)
+        {
+            errorMessages = new List<string>();
+            foreach (ContentFile file in Files)
+            {
+                if (!File.Exists(file.Path))
+                {
+                    errorMessages.Add("File \"" + file.Path + "\" not found.");
+                    continue;
+                }
+            }
+
+            return errorMessages.Count == 0;
         }
 
         public static ContentPackage CreatePackage(string name, string path, bool corePackage)
@@ -342,10 +362,11 @@ namespace Barotrauma
                 case ContentType.Character:
                     XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                     string speciesName = doc.Root.GetAttributeString("name", "");
-                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName));
+                    //TODO: check non-default paths if defined
+                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName, this));
                     foreach (AnimationType animationType in Enum.GetValues(typeof(AnimationType)))
                     {
-                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType));
+                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType, this));
                     }
                     break;
             }
@@ -398,6 +419,13 @@ namespace Barotrauma
                     return path == "Mods";
             }
         }
+        /// <summary>
+        /// Are mods allowed to install a file into the specified path. If a content package XML includes files
+        /// with a prohibited path, they are treated as references to external files. For example, a mod could include
+        /// some vanilla files in the XML, in which case the game will simply use the vanilla files present in the game folder.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static bool IsModFilePathAllowed(string path)
         {
             while (true)
@@ -426,7 +454,7 @@ namespace Barotrauma
         {
             return Files.Where(f => f.Type == type).Select(f => f.Path);
         }
-
+        
         public static void LoadAll(string folder)
         {
             if (!Directory.Exists(folder))
@@ -464,6 +492,11 @@ namespace Barotrauma
         public ContentFile(string path, ContentType type, Workshop.Item workShopItem = null)
         {
             Path = path;
+
+#if OSX
+            Path = Path.Replace("\\", "/");
+#endif
+
             Type = type;
             WorkShopItem = workShopItem;
         }

@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
                 Stretch = true,
                 UserData = "filterarea"
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.Font);
+            new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font);
             itemFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
             itemFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterArea.RectTransform), "x")
@@ -164,13 +164,15 @@ namespace Barotrauma.Items.Components
                 return string.Compare(item1.DisplayName, item2.DisplayName);
             });
 
-            var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Sufficient skills to fabricate:", textColor: Color.LightGreen)
+            var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
+                TextManager.Get("fabricatorsufficientskills", returnNull: true) ?? "Sufficient skills to fabricate", textColor: Color.LightGreen)
             {
                 CanBeFocused = false
             };
             sufficientSkillsText.RectTransform.SetAsFirstChild();
 
-            var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform), "Insufficient skills to fabricate:", textColor: Color.Orange)
+            var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
+                TextManager.Get("fabricatorinsufficientskills", returnNull: true) ?? "Insufficient skills to fabricate", textColor: Color.Orange)
             {
                 CanBeFocused = false
             };
@@ -372,7 +374,7 @@ namespace Barotrauma.Items.Components
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
             float requiredTime = user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user);
-            string requiredTimeText = TextManager.Get("FabricatorRequiredTime") + ": " + ToolBox.SecondsToReadableTime(requiredTime);
+            string requiredTimeText = TextManager.AddPunctuation(':', TextManager.Get("FabricatorRequiredTime"), ToolBox.SecondsToReadableTime(requiredTime));
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 requiredTimeText, textColor: ToolBox.GradientLerp(degreeOfSuccess, Color.Red, Color.Yellow, Color.LightGreen), font: GUI.SmallFont);
                         

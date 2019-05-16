@@ -379,12 +379,19 @@ namespace Barotrauma
                 {
                     //rotate collider back upright
                     Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 10.0f;
-
                     Collider.FarseerBody.FixedRotation = false;
                 }
                 else
                 {
                     Collider.FarseerBody.FixedRotation = true;
+                }
+            }
+            else
+            {
+                float angleDiff = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f);
+                if (Math.Abs(angleDiff) > 0.001f)
+                {
+                    Collider.SetTransform(Collider.SimPosition, Collider.Rotation + angleDiff);
                 }
             }
 
@@ -550,9 +557,11 @@ namespace Barotrauma
                 float slowdownAmount = 0.0f;
                 if (currentHull != null)
                 {
+                    //TODO: take into account that the feet aren't necessarily in CurrentHull
                     //full slowdown (1.5f) when water is up to the torso
                     surfaceY = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / TorsoPosition.Value, 0.0f, 1.0f) * 1.5f;
+                    float bottomPos = Math.Max(colliderPos.Y, currentHull.Rect.Y - currentHull.Rect.Height);
+                    slowdownAmount = MathHelper.Clamp((surfaceY - bottomPos) / TorsoPosition.Value, 0.0f, 1.0f) * 1.5f;
                 }
 
                 float maxSpeed = Math.Max(TargetMovement.Length() - slowdownAmount, 1.0f);
@@ -570,7 +579,7 @@ namespace Barotrauma
             if (limpAmount > 0.0f)
             {
                 //make the footpos oscillate when limping
-                footMid += ((float)Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * 0.3f);
+                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f));
             }
 
             movement = overrideTargetMovement == Vector2.Zero ?
@@ -779,13 +788,19 @@ namespace Barotrauma
 
                     //get the upper arm to point downwards
                     var arm = GetLimb(armType);
-                    arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.1f, 0.1f), arm.Mass * 10.0f);
+                    if (Math.Abs(arm.body.AngularVelocity) < 10.0f)
+                    {
+                        arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.1f, 0.1f), arm.Mass * 10.0f);
+                    }
 
                     //get the elbow to a neutral rotation
-                    LimbJoint elbow =
+                    if (Math.Abs(hand.body.AngularVelocity) < 10.0f)
+                    {
+                        LimbJoint elbow =
                         GetJointBetweenLimbs(armType, hand.type) ??
                         GetJointBetweenLimbs(armType, foreArmType);
-                    hand.body.ApplyTorque(-elbow.JointAngle * hand.Mass * 10.0f);
+                        hand.body.ApplyTorque(MathHelper.Clamp(-elbow.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 10.0f);
+                    }
                 }
             }
         }
@@ -1179,7 +1194,8 @@ namespace Barotrauma
                     isClimbing = false;
                 }
             }
-            else if (character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right))
+            else if ((character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right)) &&
+                    (!character.IsKeyDown(InputType.Up) && !character.IsKeyDown(InputType.Down)))
             {
                 isClimbing = false;
             }

@@ -662,13 +662,20 @@ namespace Barotrauma
         {
             if (character.DisableImpactDamageTimer > 0.0f) return;
 
-            Vector2 normal = contact.Manifold.LocalNormal;            
-            Vector2 velocity = f1.Body.LinearVelocity;
+            //using the velocity of the limb would make the impact damage more realistic,
+            //but would also make it harder to edit the animations because the forces/torques
+            //would all have to be balanced in a way that prevents the character from doing
+            //impact damage to itself
+            Vector2 velocity = Collider.LinearVelocity;
+            Vector2 normal = contact.Manifold.LocalNormal;
 
-            if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
+            if (character.Submarine == null && f2.Body.UserData is Submarine)
+            {
+                velocity -= ((Submarine)f2.Body.UserData).Velocity;
+            }
 
             float impact = Vector2.Dot(velocity, -normal);
-            if (f1.Body == Collider.FarseerBody)
+            if (f1.Body == Collider.FarseerBody || !Collider.Enabled)
             {
                 bool isNotRemote = true;
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
@@ -685,6 +692,11 @@ namespace Barotrauma
                         character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                         character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+                        //briefly disable impact damage
+                        //otherwise the character will take damage multiple times when for example falling, 
+                        //because we use the velocity of the collider to determine the impact
+                        //(i.e. the character would take damage until the collider hits the floor and stops)
+                        character.DisableImpactDamageTimer = 0.25f;
                     }
                 }
             }
@@ -1450,7 +1462,7 @@ namespace Barotrauma
             }
         }
 
-        public void SetPosition(Vector2 simPosition, bool lerp = false)
+        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
         {
             if (!MathUtils.IsValid(simPosition))
             {
@@ -1481,18 +1493,18 @@ namespace Barotrauma
                 //check visibility from the new position of the collider to the new position of this limb
                 Vector2 movePos = limb.SimPosition + limbMoveAmount;
 
-                TrySetLimbPosition(limb, simPosition, movePos, lerp);
+                TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
             }
         }
 
-        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false)
+        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
         {
             Vector2 movePos = simPosition;
 
             if (Vector2.DistanceSquared(original, simPosition) > 0.0001f)
             {
                 Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
-                //if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
+                if (!ignorePlatforms) { collisionCategory |= Physics.CollisionPlatform; }
 
                 Body body = Submarine.PickBody(original, simPosition, null, collisionCategory);
             

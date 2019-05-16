@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
@@ -10,8 +12,29 @@ namespace Barotrauma
 {
     partial class SaveUtil
     {
-        public static string SaveFolder = "Data" + Path.DirectorySeparatorChar + "Saves";
-        public static string MultiplayerSaveFolder = "Data" + Path.DirectorySeparatorChar + "Saves" + Path.DirectorySeparatorChar + "Multiplayer";
+        private static string LegacySaveFolder = Path.Combine("Data", "Saves");
+        private static string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
+
+#if OSX
+        //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
+        public static string SaveFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
+            "Library",
+            "Application Support",
+            "Daedalic Entertainment GmbH",
+            "Barotrauma");
+#else
+        //"C:/Users/*user*/AppData/Local/Daedalic Entertainment GmbH/" on Windows
+        //"/home/*user*/.local/share/Daedalic Entertainment GmbH/" on Linux
+        public static string SaveFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Daedalic Entertainment GmbH",
+            "Barotrauma");
+#endif
+
+        public static string MultiplayerSaveFolder = Path.Combine(
+            SaveFolder, 
+            "Multiplayer");
 
         public delegate void ProgressDelegate(string sMessage);
 
@@ -158,15 +181,13 @@ namespace Barotrauma
 
         public static string GetSavePath(SaveType saveType, string saveName)
         {
-
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             return Path.Combine(folder, saveName);
         }
 
-        public static string[] GetSaveFiles(SaveType saveType)
+        public static IEnumerable<string> GetSaveFiles(SaveType saveType)
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
-
             if (!Directory.Exists(folder))
             {
                 DebugConsole.Log("Save folder \"" + folder + " not found! Attempting to create a new folder...");
@@ -180,20 +201,21 @@ namespace Barotrauma
                 }
             }
 
-            string[] files = Directory.GetFiles(folder, "*.save");
-
-            /*for (int i = 0; i < files.Length; i++)
+            List<string> files = Directory.GetFiles(folder, "*.save").ToList();
+            string legacyFolder = saveType == SaveType.Singleplayer ? LegacySaveFolder : LegacyMultiplayerSaveFolder;
+            if (Directory.Exists(legacyFolder))
             {
-                files[i] = Path.GetFileNameWithoutExtension(files[i]);
-            }*/
+                files.AddRange(Directory.GetFiles(legacyFolder, "*.save"));
+            }            
 
             return files;
         }
         
         public static string CreateSavePath(SaveType saveType, string fileName = "Save_Default")
         {
-            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
+            fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
+            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             if (fileName == "Save_Default")
             {
                 fileName = TextManager.Get("SaveFile.DefaultName", true);
@@ -202,10 +224,10 @@ namespace Barotrauma
 
             if (!Directory.Exists(folder))
             {
-                DebugConsole.ThrowError("Save folder \"" + folder + "\" not found. Created new folder");
+                DebugConsole.Log("Save folder \"" + folder + "\" not found. Created new folder");
                 Directory.CreateDirectory(folder);
             }
-
+            
             string extension = ".save";
             string pathWithoutExtension = Path.Combine(folder, fileName);
 
@@ -338,8 +360,25 @@ namespace Barotrauma
             if (!Directory.Exists(sFinalDir))
                 Directory.CreateDirectory(sFinalDir);
 
-            using (FileStream outFile = new FileStream(sFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
-                outFile.Write(bytes, 0, iFileLen);
+            int maxRetries = 4;
+            for (int i = 0; i <= maxRetries; i++)
+            {
+                try
+                {
+                    using (FileStream outFile = new FileStream(sFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        outFile.Write(bytes, 0, iFileLen);
+                    }
+                    break;
+                }
+                catch (IOException e)
+                {
+                    if (i >= maxRetries || !File.Exists(sFilePath)) { throw; }
+                    DebugConsole.NewMessage("Failed decompress file \"" + sFilePath + "\" {" + e.Message + "}, retrying in 250 ms...", Color.Red);
+                    Thread.Sleep(250);
+                }
+            }
+
 
             return true;
         }
@@ -354,7 +393,9 @@ namespace Barotrauma
                 {
                     using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
                     using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                        while (DecompressFile(sDir, zipStream, progress)) ;
+                        while (DecompressFile(sDir, zipStream, progress)) { };
+
+                    break;
                 }
                 catch (IOException e)
                 {

@@ -132,18 +132,24 @@ namespace Barotrauma
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
             {
-                languageDD.AddItem(TextManager.Get("Language." + language), language);
+                //TODO: display the name of the language in the target language?
+                languageDD.AddItem(language, language);
             }
             languageDD.SelectItem(TextManager.Language);
             languageDD.OnSelected = (guiComponent, obj) =>
             {
                 string newLanguage = obj as string;
                 if (newLanguage == Language) return true;
-
-                UnsavedSettings = true;
+                
                 Language = newLanguage;
+                ApplySettings();
 
-                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
+                var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
+                //change fonts to the default font of the new language to make sure
+                //they can be displayed when for example changing from English to Chinese
+                var defaultFont = GUI.Style.LoadCurrentDefaultFont();
+                msgBox.Header.Font = defaultFont;
+                msgBox.Text.Font = defaultFont;
 
                 return true;
             };
@@ -261,6 +267,18 @@ namespace Barotrauma
                     return true;
                 },
                 Selected = VSyncEnabled
+            };
+
+            //TODO: remove hardcoded texts after the texts have been added to localization
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), 
+                TextManager.Get("PauseOnFocusLost", returnNull: true) ?? "Pause on focus lost");
+            pauseOnFocusLostBox.Selected = PauseOnFocusLost;
+            pauseOnFocusLostBox.ToolTip = TextManager.Get("PauseOnFocusLostToolTip", returnNull: true) ?? "Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.";
+            pauseOnFocusLostBox.OnSelected = (tickBox) =>
+            {
+                PauseOnFocusLost = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
             };
 
             GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));
@@ -463,18 +481,19 @@ namespace Barotrauma
             var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), VoiceCaptureDevice, deviceNames.Count);
             foreach (string name in deviceNames)
             {
-                deviceList.AddItem(name, name);
+                deviceList.AddItem(TextManager.EnsureUTF8(name), name);
             }
             deviceList.OnSelected = (GUIComponent selected, object obj) =>
             {
                 string name = obj as string;
-                if (VoiceCaptureDevice == name) return true;
+                if (VoiceCaptureDevice == name) { return true; }
 
                 VoipCapture.ChangeCaptureDevice(name);
                 return true;
             };
 #else
-            var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("CurrentDevice") + ": " + VoiceCaptureDevice)
+            var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), 
+                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
                 TextAlignment = Alignment.CenterX
@@ -489,7 +508,7 @@ namespace Barotrauma
                     if (VoiceCaptureDevice == deviceNames[0]) return true;
 
                     VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                    suavemente.Text = TextManager.Get("CurrentDevice") + ": " + VoiceCaptureDevice;
+                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice);
                     suavemente.Flash(Color.Blue);
 
                     return true;
@@ -532,7 +551,7 @@ namespace Barotrauma
             var extraVoiceSettingsContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), audioSliders.RectTransform, Anchor.BottomCenter), style: null);
 
             var voiceInputContainer = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform, Anchor.BottomCenter));
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.25f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice") + ": ");
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.25f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
             var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.25f), voiceInputContainer.RectTransform, Anchor.TopRight),
                 text: keyMapping[(int)InputType.Voice].ToString())
             {
@@ -657,13 +676,15 @@ namespace Barotrauma
                 { Stretch = true, RelativeSpacing = 0.02f };
 
             var inputNames = Enum.GetValues(typeof(InputType));
+            var inputNameBlocks = new List<GUITextBlock>();
             for (int i = 0; i < inputNames.Length; i++)
             {
                 var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2.2f) ? inputColumnLeft : inputColumnRight).RectTransform))
                     { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
-                    TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont) { ForceUpperCase = true };
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform),
+                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
+                    TextManager.Get("InputType." + ((InputType)i)), font: GUI.SmallFont) { ForceUpperCase = true };
+                inputNameBlocks.Add(inputName);
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform),
                     text: keyMapping[i].ToString(), font: GUI.SmallFont)
                 {
                     UserData = i
@@ -672,12 +693,14 @@ namespace Barotrauma
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
 
+            GUITextBlock.AutoScaleAndNormalize(inputNameBlocks);
+
             var resetControlsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), isHorizontal: true)
             {
                 RelativeSpacing = 0.02f
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetDefaultBindings"))
+            var defaultBindingsButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetDefaultBindings"))
             {
                 ToolTip = TextManager.Get("SetDefaultBindingsToolTip"),
                 OnClicked = (button, data) =>
@@ -687,7 +710,7 @@ namespace Barotrauma
                 }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetLegacyBindings"))
+            var legacyBindingsButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), resetControlsHolder.RectTransform), TextManager.Get("SetLegacyBindings"))
             {
                 ToolTip = TextManager.Get("SetLegacyBindingsToolTip"),
                 OnClicked = (button, data) =>
@@ -695,6 +718,11 @@ namespace Barotrauma
                     ResetControls(legacy: true);
                     return true;
                 }
+            };
+
+            legacyBindingsButton.TextBlock.RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
             };
 
             //spacing

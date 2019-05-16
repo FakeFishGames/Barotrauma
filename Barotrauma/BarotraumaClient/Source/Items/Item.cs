@@ -486,6 +486,7 @@ namespace Barotrauma
         
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
+            int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
             {
@@ -497,8 +498,8 @@ namespace Barotrauma
             {
                 if (Linkable)
                 {
-                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
-                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), TextManager.Get("AllowedLinks") + ": ", font: GUI.SmallFont);
+                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
+                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("AllowedLinks"), font: GUI.SmallFont);
                     if (AllowedLinks.None())
                     {
                         itemsText.Text += TextManager.Get("None");
@@ -519,7 +520,7 @@ namespace Barotrauma
                     linkText.TextColor = Color.Yellow;
                     itemsText.TextColor = Color.Yellow;
                 }
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, 20)), isHorizontal: true)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.02f
@@ -562,6 +563,7 @@ namespace Barotrauma
                     }
                 };
                 itemEditor.AddCustomContent(buttonContainer, itemEditor.ContentCount);
+                GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Select(b => ((GUIButton)b).TextBlock));
             }
 
             foreach (ItemComponent ic in components)
@@ -589,7 +591,7 @@ namespace Barotrauma
                 {
                     foreach (RelatedItem relatedItem in kvp.Value)
                     {
-                        var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)),
+                        var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)),
                             relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
                         {
                             Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
@@ -777,6 +779,38 @@ namespace Barotrauma
             }
         }
 
+        List<ColoredText> texts = new List<ColoredText>();
+        public List<ColoredText> GetHUDTexts(Character character)
+        {
+            texts.Clear();
+            foreach (ItemComponent ic in components)
+            {
+                if (string.IsNullOrEmpty(ic.DisplayMsg)) continue;
+                if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+                if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
+
+                Color color = Color.Gray;
+                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
+                if (hasRequiredSkillsAndItems)
+                {
+                    if (ic is Repairable repairable)
+                    {
+                        if (Condition < repairable.ShowRepairUIThreshold)
+                        {
+                            color = Color.Cyan;
+                        }
+                    }
+                    else
+                    {
+                        color = Color.Cyan;
+                    }
+                }
+
+                texts.Add(new ColoredText(ic.DisplayMsg, color, false));
+            }
+            return texts;
+        }
+
         public override void AddToGUIUpdateList()
         {
             AddToGUIUpdateList(addLinkedHUDs: true);
@@ -872,6 +906,7 @@ namespace Barotrauma
                             ic.PlaySound(ActionType.OnBroken, WorldPosition);
                         }
                     }
+                    SetActiveSprite();
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     {
@@ -1079,8 +1114,18 @@ namespace Barotrauma
 
             //----------------------------------------
 
-            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
-            if (itemPrefab == null) return null;
+            var itemPrefab = string.IsNullOrEmpty(itemIdentifier) ?
+                MapEntityPrefab.Find(itemName, null, showErrorMessages: false) as ItemPrefab :
+                MapEntityPrefab.Find(itemName, itemIdentifier, showErrorMessages: false) as ItemPrefab;
+            if (itemPrefab == null)
+            {
+                string errorMsg = "Failed to spawn item (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null");
+                GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:PrefabNotFound" + (itemName ?? "null") + (itemIdentifier ?? "null"),
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Critical,
+                    errorMsg);
+                DebugConsole.ThrowError(errorMsg);
+                return null;
+            }
 
             Inventory inventory = null;
 

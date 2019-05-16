@@ -43,13 +43,24 @@ namespace Barotrauma
             private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             /// <summary>
-            /// Returns the current Unix Epoch
+            /// Returns the current Unix Epoch (Coordinated Universal Time )
             /// </summary>
-            public static int Now
+            public static int NowUTC
             {
                 get
                 {
                     return (int)(DateTime.UtcNow.Subtract(epoch).TotalSeconds);
+                }
+            }
+
+            /// <summary>
+            /// Returns the current Unix Epoch (user's current time)
+            /// </summary>
+            public static int NowLocal
+            {
+                get
+                {
+                    return (int)(DateTime.Now.Subtract(epoch).TotalSeconds);
                 }
             }
 
@@ -117,6 +128,16 @@ namespace Barotrauma
                 }
             }
             return true;
+        }
+
+        public static string RemoveInvalidFileNameChars(string fileName)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                fileName = fileName.Replace(invalidChar.ToString(), "");
+            }
+            return fileName;
         }
 
         public static string LimitString(string str, int maxCharacters)

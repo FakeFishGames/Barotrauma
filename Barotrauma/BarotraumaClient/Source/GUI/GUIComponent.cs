@@ -128,7 +128,7 @@ namespace Barotrauma
         protected Color flashColor;
         protected float flashDuration = 1.5f;
         private bool useRectangleFlash;
-        public float FlashTimer
+        public virtual float FlashTimer
         {
             get { return flashTimer; }
         }
@@ -166,9 +166,7 @@ namespace Barotrauma
             get { return enabled; }
             set { enabled = value; }
         }
-
-        public bool TileSprites;
-
+        
         private static GUITextBlock toolTipBlock;
 
         public Vector2 Center
@@ -297,8 +295,6 @@ namespace Barotrauma
         protected GUIComponent(string style)
         {
             Visible = true;
-
-            TileSprites = true;
 
             OutlineColor = Color.Transparent;
 
@@ -475,13 +471,16 @@ namespace Barotrauma
 
         public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement)
         {
-            int width = 400;
+            int width = (int)(400 * GUI.Scale);
+            int height = (int)(18 * GUI.Scale);
+            Point padding = new Point((int)(20 * GUI.Scale), (int)(7 * GUI.Scale));
+
             if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, 18), null), toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20),
-                    toolTipBlock.WrappedText.Split('\n').Length * 18 + 7);
+                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X),
+                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y));
                 toolTipBlock.userData = toolTip;
             }
 

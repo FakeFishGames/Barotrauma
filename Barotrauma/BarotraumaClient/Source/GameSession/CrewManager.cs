@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -188,9 +189,13 @@ namespace Barotrauma
                 {
                     OnClicked = (GUIButton button, object userData) =>
                     {
-                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
+                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
                         SetCharacterOrder(null, order, null, Character.Controlled);
-                        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
+                        foreach (var hull in Character.Controlled.GetVisibleHulls())
+                        {
+                            HumanAIController.PropagateHullSafety(Character.Controlled, hull);
+                            HumanAIController.RefreshTargets(Character.Controlled, order, hull);
+                        }
                         return true;
                     },
                     UserData = order,
@@ -740,40 +745,41 @@ namespace Barotrauma
         {
             if (order != null && order.TargetAllCharacters)
             {
-                if (orderGiver == null || orderGiver.CurrentHull == null) return;
-                AddOrder(new Order(order.Prefab, orderGiver.CurrentHull, null), order.Prefab.FadeOutTime);
-
+                if (orderGiver == null || orderGiver.CurrentHull == null) { return; }
+                var hull = orderGiver.CurrentHull;
+                AddOrder(new Order(order.Prefab, hull, null), order.Prefab.FadeOutTime);
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
-                        order.GetChatMessage("", orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
+                        order.GetChatMessage("", hull.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
                 }
                 else
                 {
-                    OrderChatMessage msg = new OrderChatMessage(order, "", orderGiver.CurrentHull, null, orderGiver);
+                    OrderChatMessage msg = new OrderChatMessage(order, "", hull, null, orderGiver);
                     if (GameMain.Client != null)
                     {
                         GameMain.Client.SendChatMessage(msg);
                     }
                 }
-                return;
             }
-
-            character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
-            if (IsSinglePlayer)
+            else
             {
-                orderGiver?.Speak(
-                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
-            }
-            else if (orderGiver != null)
-            {
-                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
-                if (GameMain.Client != null)
+                character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
+                if (IsSinglePlayer)
                 {
-                    GameMain.Client.SendChatMessage(msg);
+                    orderGiver?.Speak(
+                        order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
                 }
+                else if (orderGiver != null)
+                {
+                    OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
+                    if (GameMain.Client != null)
+                    {
+                        GameMain.Client.SendChatMessage(msg);
+                    }
+                }
+                DisplayCharacterOrder(character, order);
             }
-            DisplayCharacterOrder(character, order);
         }
 
         /// <summary>
@@ -1113,7 +1119,7 @@ namespace Barotrauma
                 ChatBox.Update(deltaTime);
                 ChatBox.InputBox.Visible = Character.Controlled != null;
 
-                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible)
+                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible && GUI.KeyboardDispatcher.Subscriber == null)
                 {
                     if (PlayerInput.KeyHit(InputType.Chat) && !ChatBox.InputBox.Selected)
                     {
@@ -1347,10 +1353,7 @@ namespace Barotrauma
                 bool hasLeaks = Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
                 ToggleReportButton("reportbreach", hasLeaks);
 
-                bool hasIntruders = Character.CharacterList.Any(c =>
-                    c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
-                    (c.AIController is EnemyAIController || (c.TeamID != Character.Controlled.TeamID && c.TeamID != Character.TeamType.FriendlyNPC)));
-
+                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(Character.Controlled, c));
                 ToggleReportButton("reportintruders", hasIntruders);
 
                 foreach (GUIComponent reportButton in reportButtonFrame.Children)
