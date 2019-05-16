@@ -1,7 +1,9 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -34,10 +36,30 @@ namespace Barotrauma
             if (item.Submarine.TeamID != character.TeamID) { return false; }
             if (item.ConditionPercentage <= 0) { return false; }
             if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+            if (Option == "charge")
+            {
+                if (battery.RechargeRatio >= PowerContainer.aiRechargeTargetRatio) { return false; }
+            }
+            else
+            {
+                if (battery.RechargeRatio <= 0) { return false; }
+            }
             return true;
         }
 
-        protected override float TargetEvaluation() => targets.Max(t => 100 - t.ChargePercentage);
+        protected override float TargetEvaluation()
+        {
+            if (Option == "charge")
+            {
+                return targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(PowerContainer.aiRechargeTargetRatio - t.RechargeRatio)));
+            }
+            else
+            {
+
+                return targets.Max(t => MathHelper.Lerp(0, 100, t.RechargeRatio));
+            }
+        }
+
         protected override IEnumerable<PowerContainer> GetList()
         {
             if (batteryList == null)
