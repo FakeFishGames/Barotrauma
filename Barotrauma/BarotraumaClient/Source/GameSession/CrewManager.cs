@@ -75,37 +75,25 @@ namespace Barotrauma
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
         {
-            return characterListBox.Rect;
-        }
-
-        public IEnumerable<Character> GetCharacters()
-        {
-            return characterListBox.Rect;
-        }
-
-        public IEnumerable<CharacterInfo> GetCharacterInfos()
-        {
-            return characterListBox.Rect;
-        }
-
-        public void AddCharacter(Character character)
-        {
-            if (character.Removed)
+            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
-                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
-                return;
-            }
-            if (character.IsDead)
-            {
-                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
-                return;
-            }
+                CanBeFocused = false
+            };
 
-            if (!characters.Contains(character)) characters.Add(character);
-            if (!characterInfos.Contains(character.Info))
+            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
+
+            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent)
             {
-                characterInfos.Add(character.Info);
-            }
+                CanBeFocused = false
+            };
+            toggleCrewButton = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform)
+            { AbsoluteOffset = HUDLayoutSettings.CrewArea.Location },
+                "", style: "UIToggleButton");
+            toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                ToggleCrewAreaOpen = !ToggleCrewAreaOpen;
+                return true;
+            };
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -267,6 +255,11 @@ namespace Barotrauma
 
         public IEnumerable<Character> GetCharacters()
         {
+            return characterListBox.Rect;
+        }
+
+        public IEnumerable<CharacterInfo> GetCharacterInfos()
+        {
             if (characterInfos.Contains(characterInfo))
             {
                 DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
@@ -274,17 +267,6 @@ namespace Barotrauma
             }
 
             characterInfos.Add(characterInfo);
-        }
-
-        public IEnumerable<CharacterInfo> GetCharacterInfos()
-        {
-            if (character == null)
-            {
-                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
-                return;
-            }
-            characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
         }
 
         public void AddCharacter(Character character)
@@ -659,41 +641,19 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-            var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
-                "", style: "UIToggleButton")
+            CreateCharacterFrame(character, characterListBox.Content);
+            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
+
+            if (character is AICharacter)
             {
-                UserData = "togglewrongorder",
-                CanBeFocused = false
-            };
-
-            wrongOrderList.RectTransform.NonScaledSize = new Point(
-                wrongOrderList.Content.Children.Sum(c => c.Rect.Width + wrongOrderList.Spacing),
-                wrongOrderList.RectTransform.NonScaledSize.Y);
-            wrongOrderList.RectTransform.SetAsLastChild();
-
-            new GUIFrame(new RectTransform(new Point(
-                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2,
-                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
-                style: null)
-            {
-                CanBeFocused = false
-            };
-
-            //scale to fit the content
-            orderButtonFrame.RectTransform.NonScaledSize = new Point(
-                orderButtonFrame.Children.Sum(c => c.Rect.Width + orderButtonFrame.AbsoluteSpacing),
-                orderButtonFrame.RectTransform.NonScaledSize.Y);
-
-            frame.RectTransform.NonScaledSize = new Point(
-                characterInfoWidth + spacing + (orderButtonFrame.Rect.Width - wrongOrderList.Rect.Width),
-                frame.RectTransform.NonScaledSize.Y);
-
-            characterListBox.RectTransform.NonScaledSize = new Point(
-                characterListBox.Content.Children.Max(c => c.Rect.Width) + wrongOrderList.Rect.Width,
-                characterListBox.RectTransform.NonScaledSize.Y);
-            characterListBox.Content.RectTransform.NonScaledSize = characterListBox.RectTransform.NonScaledSize;
-            characterListBox.UpdateScrollBarSize();
-            return frame;
+                var ai = character.AIController as HumanAIController;
+                if (ai == null)
+                {
+                    DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
+                    return;
+                }
+                character.SetOrder(ai.CurrentOrder, "", null, false);
+            }
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
