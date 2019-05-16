@@ -711,35 +711,43 @@ namespace Barotrauma
                     i < starCount ? "GUIStarIconBright" : "GUIStarIconDark");
             }
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemVotes").Replace("[votecount]", (item.VotesUp + item.VotesDown).ToString()));
-            
+
             //tags ------------------------------------
             var tagContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.05f
             };
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("WorkshopItemTags"));
-            if (!item.Tags.Any(t => !string.IsNullOrEmpty(t)))
-            {
-                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("None"));
-            }
+            List<string> tags = new List<string>();
             for (int i = 0; i < item.Tags.Length && i < 5; i++)
             {
                 if (string.IsNullOrEmpty(item.Tags[i])) { continue; }
                 string tag = TextManager.Get("Workshop.ContentTag." + item.Tags[i], true);
-                if (tag.Length == 0) tag = item.Tags[i].CapitaliseFirstInvariant();
-
-                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), tagContainer.RectTransform, Anchor.Center), tag, style: "ListBoxElement");
+                if (string.IsNullOrEmpty(tag)) { tag = item.Tags[i].CapitaliseFirstInvariant(); }
+                tags.Add(tag);
+            }
+            if (tags.Count > 0)
+            {
+                if (tags.Count == 1)
+                {
+                    tagContainer.RectTransform.RelativeSize = new Vector2(0.7f, tagContainer.RectTransform.RelativeSize.Y);
+                }
+                new GUITextBlock(new RectTransform(new Vector2(tags.Count == 1 ? 0.5f : 0.8f, 1.0f), tagContainer.RectTransform, Anchor.TopRight), string.Join(", ", tags))
+                {
+                    AutoScale = true
+                };
             }
 
-            var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize"));
+            var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize"));
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item.Installed ? (long)item.Size : item.DownloadSize), textAlignment: Alignment.TopRight);
 
             //var dateContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), isHorizontal: true);
 
-            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate"));
+            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate"));
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), creationDate.RectTransform, Anchor.CenterRight), item.Created.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
 
-            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate"));
+            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate"));
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item.Modified.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
         }
 
