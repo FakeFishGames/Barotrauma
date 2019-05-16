@@ -44,15 +44,15 @@ namespace Barotrauma
         {
             backgroundVignette = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
 
-            new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.05f, 0.1f), AbsoluteOffset = new Point(-8, -8) },
+            new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.08f, 0.05f), AbsoluteOffset = new Point(-8, -8) },
                 style: "TitleText")
             {
                 Color = Color.Black * 0.5f,
                 CanBeFocused = false
             };
-            titleText = new GUIImage(new RectTransform(new Vector2(0.35f, 0.2f), Frame.RectTransform, Anchor.BottomRight)
-            { RelativeOffset = new Vector2(0.05f, 0.1f) },
+            titleText = new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
+            { RelativeOffset = new Vector2(0.08f, 0.05f) },
                 style: "TitleText");
 
             buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.85f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
@@ -784,10 +784,6 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             DrawBackground(graphics, spriteBatch);
-
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
-
-            GUI.Draw(Cam, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, GameMain.ScissorTestEnable);
 
