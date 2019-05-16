@@ -663,7 +663,7 @@ namespace Barotrauma
                 {
                     CurrentHullSafety = 0;
                 }
-                return 0;
+                return CurrentHullSafety;
             }
             if (character == Character)
             {

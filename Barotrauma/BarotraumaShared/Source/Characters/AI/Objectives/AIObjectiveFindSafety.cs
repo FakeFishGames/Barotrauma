@@ -46,7 +46,7 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
-                Priority = 100;
+                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
                 return;
             }
             if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }
