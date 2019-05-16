@@ -77,37 +77,7 @@ namespace Barotrauma
         {
             if (GameMain.Client != null)
             {
-                //let the server create random conversations in MP
-                return;
-            }
-            List<Character> availableSpeakers = Character.CharacterList.FindAll(c =>
-                c.AIController is HumanAIController &&
-                !c.IsDead &&
-                c.SpeechImpediment <= 100.0f);
-            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
-        }
-
-        public void AddCharacter(Character character)
-        {
-            if (character.Removed)
-            {
-                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
-                return;
-            }
-            if (character.IsDead)
-            {
-                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
-                return;
-            }
-
-            if (!characters.Contains(character)) characters.Add(character);
-            if (!characterInfos.Contains(character.Info))
-            {
-                characterInfos.Add(character.Info);
-            }
-
-            CreateCharacterFrame(character, characterListBox.Content);
-            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
+                if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
@@ -269,24 +239,25 @@ namespace Barotrauma
 
         public IEnumerable<Character> GetCharacters()
         {
-            if (characterInfos.Contains(characterInfo))
-            {
-                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
-                return;
-            }
+            if (client?.Character == null) { return; }
 
-            characterInfos.Add(characterInfo);
+            var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
+            if (playerFrame == null) { return; }
+            var soundIcon = playerFrame.FindChild("soundicon");
+            var soundIconDisabled = playerFrame.FindChild("soundicondisabled");
+
+            if (!soundIcon.Visible)
+            {
+                soundIcon.Color = new Color(soundIcon.Color, 0.0f);
+            }
+            soundIcon.Visible = !muted && !mutedLocally;
+            soundIconDisabled.Visible = muted || mutedLocally;
+            soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
         }
 
         public IEnumerable<CharacterInfo> GetCharacterInfos()
         {
-            if (character == null)
-            {
-                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
-                return;
-            }
-            characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
+            if (client?.Character != null) { SetCharacterSpeaking(client.Character); }
         }
 
         public void AddCharacter(Character character)
@@ -660,183 +631,56 @@ namespace Barotrauma
             {
                 characterListBox.BarScroll = roundedPos;
             }
-            var characterArea = new GUIButton(new RectTransform(new Point(characterInfoWidth, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft), style: "GUITextBox")
-            {
-                UserData = character,
-                Color = frame.Color,
-                SelectedColor = frame.SelectedColor,
-                HoverColor = frame.HoverColor,
-                ToolTip = characterToolTip
-            };
+        }
 
-            var soundIcon = new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
-                "GUISoundIcon")
+        /// <summary>
+        /// Displays the specified order in the crew UI next to the character.
+        /// </summary>
+        public void DisplayCharacterOrder(Character character, Order order)
+        {
+            foreach (GUIComponent characterListElement in characterListBox.Content.Children)
             {
-                UserData = "soundicon",
-                CanBeFocused = false,
-                Visible = true
-            };
-            soundIcon.Color = new Color(soundIcon.Color, 0.0f);
-            new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
-                "GUISoundIconDisabled")
-            {
-                UserData = "soundicondisabled",
-                CanBeFocused = true,
-                Visible = false
-            };
+                var characterFrame = characterListElement.FindChild(character);
+                if (characterFrame == null) continue;
 
-            if (isSinglePlayer)
-            {
-                characterArea.OnClicked = CharacterClicked;
-            }
-            else
-            {
-                characterArea.CanBeFocused = false;
-                characterArea.CanBeSelected = false;
-            }
+                var orderButtonFrame = characterListElement.GetChildByUserData("orderbuttons");
 
-            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
-                onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
-            {
-                CanBeFocused = false,
-                HoverColor = Color.White,
-                SelectedColor = Color.White,
-                ToolTip = characterToolTip
-            };
-
-            var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width - soundIcon.Rect.Width - 10, characterArea.Rect.Height),
-                characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(soundIcon.Rect.Width + 10, 0) },
-                character.Name, textColor: frame.Color, font: GUI.SmallFont, wrap: true)
-            {
-                Color = frame.Color,
-                HoverColor = Color.Transparent,
-                SelectedColor = Color.Transparent,
-                CanBeFocused = false,
-                ToolTip = characterToolTip,
-                AutoScale = true
-            };
-
-            //---------------- order buttons ----------------
-
-            var orderButtonFrame = new GUILayoutGroup(new RectTransform(new Point(100, frame.Rect.Height), frame.RectTransform)
-            { AbsoluteOffset = new Point(characterInfoWidth + spacing, 0) },
-                isHorizontal: true, childAnchor: Anchor.CenterLeft)
-            {
-                AbsoluteSpacing = (int)(10 * GUI.Scale),
-                UserData = "orderbuttons",
-                CanBeFocused = false
-            };
-
-            //listbox for holding the orders inappropriate for this character
-            //(so we can easily toggle their visibility)
-            var wrongOrderList = new GUIListBox(new RectTransform(new Point(50, orderButtonFrame.Rect.Height), orderButtonFrame.RectTransform), isHorizontal: true, style: null)
-            {
-                ScrollBarEnabled = false,
-                ScrollBarVisible = false,
-                Enabled = false,
-                Spacing = spacing,
-                ClampMouseRectToParent = false
-            };
-            wrongOrderList.Content.ClampMouseRectToParent = false;
-
-            for (int i = 0; i < orders.Count; i++)
-            {
-                var order = orders[i];
-                if (order.TargetAllCharacters) continue;
-
-                RectTransform btnParent = (i >= correctOrderCount + neutralOrderCount) ?
-                    wrongOrderList.Content.RectTransform :
-                    orderButtonFrame.RectTransform;
-
-                var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), btnParent, Anchor.CenterLeft),
-                    style: null)
+                //get all order buttons from the frame
+                List<GUIButton> orderButtons = new List<GUIButton>();
+                foreach (GUIComponent child in orderButtonFrame.Children)
                 {
-                    UserData = order
-                };
-
-                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
-                {
-                    Color = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.8f,
-                    HoverColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 1.0f,
-                    PressedColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.6f,
-                    UserData = "selected",
-                    CanBeFocused = false,
-                    Visible = false
-                };
-
-                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite);
-                img.Scale = iconSize / (float)img.SourceRect.Width;
-                img.Color = Color.Lerp(order.Color, frame.Color, 0.5f);
-                img.ToolTip = order.Name;
-                img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
-
-                btn.OnClicked += (GUIButton button, object userData) =>
-                {
-                    if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
-
-                    if (btn.GetChildByUserData("selected").Visible)
+                    if (child is GUIButton orderBtn)
                     {
-                        SetCharacterOrder(character, Order.PrefabList.Find(o => o.AITag == "dismissed"), null, Character.Controlled);
+                        orderButtons.Add(orderBtn);
                     }
-                    else
+                    //the non-character-appropriate orders are in a hideable listbox, we need to go deeper!
+                    else if (child is GUIListBox listBox)
                     {
-                        if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
+                        foreach (GUIComponent listBoxElement in listBox.Content.Children)
                         {
-                            CreateOrderTargetFrame(button, character, order);
-                        }
-                        else
-                        {
-                            SetCharacterOrder(character, order, null, Character.Controlled);
+                            if (listBoxElement is GUIButton orderBtn2 && listBoxElement.UserData is Order) orderButtons.Add(orderBtn2);
                         }
                     }
-                    return true;
-                };
-                btn.UserData = order;
-                btn.ToolTip = order.Name;
+                }
 
-                //divider between different groups of orders
-                if (i == correctOrderCount - 1 || i == correctOrderCount + neutralOrderCount - 1)
+                foreach (GUIButton button in orderButtons)
                 {
-                    //TODO: divider sprite
-                    new GUIFrame(new RectTransform(new Point(8, iconSize), orderButtonFrame.RectTransform), style: "GUIButton");
+                    var selectedIndicator = button.GetChildByUserData("selected");
+                    if (selectedIndicator != null)
+                    {
+                        selectedIndicator.Visible = (order != null && ((Order)button.UserData).Prefab == order.Prefab);
+                    }
                 }
             }
-
-            var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
-                "", style: "UIToggleButton")
+            else if (orderGiver != null)
             {
-                UserData = "togglewrongorder",
-                CanBeFocused = false
-            };
-
-            wrongOrderList.RectTransform.NonScaledSize = new Point(
-                wrongOrderList.Content.Children.Sum(c => c.Rect.Width + wrongOrderList.Spacing),
-                wrongOrderList.RectTransform.NonScaledSize.Y);
-            wrongOrderList.RectTransform.SetAsLastChild();
-
-            new GUIFrame(new RectTransform(new Point(
-                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2,
-                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
-                style: null)
-            {
-                CanBeFocused = false
-            };
-
-            //scale to fit the content
-            orderButtonFrame.RectTransform.NonScaledSize = new Point(
-                orderButtonFrame.Children.Sum(c => c.Rect.Width + orderButtonFrame.AbsoluteSpacing),
-                orderButtonFrame.RectTransform.NonScaledSize.Y);
-
-            frame.RectTransform.NonScaledSize = new Point(
-                characterInfoWidth + spacing + (orderButtonFrame.Rect.Width - wrongOrderList.Rect.Width),
-                frame.RectTransform.NonScaledSize.Y);
-
-            characterListBox.RectTransform.NonScaledSize = new Point(
-                characterListBox.Content.Children.Max(c => c.Rect.Width) + wrongOrderList.Rect.Width,
-                characterListBox.RectTransform.NonScaledSize.Y);
-            characterListBox.Content.RectTransform.NonScaledSize = characterListBox.RectTransform.NonScaledSize;
-            characterListBox.UpdateScrollBarSize();
-            return frame;
+                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.SendChatMessage(msg);
+                }
+            }
+            DisplayCharacterOrder(character, order);
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -1038,15 +882,6 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (orderGiver != null)
-            {
-                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
-                if (GameMain.Client != null)
-                {
-                    GameMain.Client.SendChatMessage(msg);
-                }
-            }
-            DisplayCharacterOrder(character, order);
         }
 
         /// <summary>

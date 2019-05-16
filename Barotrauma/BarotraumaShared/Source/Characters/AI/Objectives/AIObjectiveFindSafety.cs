@@ -51,7 +51,8 @@ namespace Barotrauma
                 return;
             }
             if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }
-            currenthullSafety = HumanAIController.GetHullSafety(character.CurrentHull);
+            // TODO: no need to update every frame?
+            currenthullSafety = HumanAIController.GetCurrentHullSafety();
             if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 Priority -= priorityDecrease * deltaTime;
@@ -128,7 +129,8 @@ namespace Barotrauma
                 //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
                 // -> attempt to manually steer away from hazards
                 Vector2 escapeVel = Vector2.Zero;
-                foreach (FireSource fireSource in currentHull.FireSources)
+                // TODO: optimize
+                foreach (FireSource fireSource in HumanAIController.VisibleHulls.SelectMany(h => h.FireSources))
                 {
                     Vector2 dir = character.Position - fireSource.Position;
                     float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
@@ -136,12 +138,8 @@ namespace Barotrauma
                 }
                 foreach (Character enemy in Character.CharacterList)
                 {
-                    //don't run from friendly NPCs
-                    if (enemy.TeamID == Character.TeamType.FriendlyNPC) { continue; }
-                    //friendly NPCs don't run away from anything but characters controlled by EnemyAIController (= monsters)
-                    if (character.TeamID == Character.TeamType.FriendlyNPC && !(enemy.AIController is EnemyAIController)) { continue; }
-                    if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious &&
-                        (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
+                    if (enemy.IsDead || enemy.IsUnconscious || enemy.Removed || HumanAIController.IsFriendly(enemy)) { continue; }
+                    if (HumanAIController.VisibleHulls.Contains(enemy.CurrentHull))
                     {
                         Vector2 dir = character.Position - enemy.Position;
                         float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
@@ -150,9 +148,10 @@ namespace Barotrauma
                 }
                 if (escapeVel != Vector2.Zero)
                 {
+                    float left = HumanAIController.VisibleHulls.Min(h => h.Rect.X) + 50;
+                    float right = HumanAIController.VisibleHulls.Max(h => h.Rect.Right) - 50;
                     //only move if we haven't reached the edge of the room
-                    if ((escapeVel.X < 0 && character.Position.X > currentHull.Rect.X + 50) ||
-                        (escapeVel.X > 0 && character.Position.X < currentHull.Rect.Right - 50))
+                    if (escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right)
                     {
                         character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
                     }
