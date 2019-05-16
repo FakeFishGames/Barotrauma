@@ -49,7 +49,8 @@ namespace Barotrauma
             {
                 return AIObjectiveManager.OrderPriority;
             }
-            return base.GetPriority(objectiveManager);
+            float value = (Priority + (AIObjectiveManager.OrderPriority / 2)) * PriorityModifier;
+            return MathHelper.Clamp(value, 0, AIObjectiveManager.OrderPriority);
         }
 
         public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) : base (character, option, priorityModifier)

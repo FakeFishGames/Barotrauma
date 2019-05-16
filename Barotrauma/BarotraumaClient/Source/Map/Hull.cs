@@ -461,6 +461,33 @@ namespace Barotrauma
                     Color.Green, width: 2);
                 }
             }
+
+            foreach (MapEntity e in linkedTo)
+            {
+                if (e is Hull)
+                {
+                    Hull linkedHull = (Hull)e;
+                    Rectangle connectedHullRect = e.Submarine == null ? 
+                        linkedHull.rect : 
+                        new Rectangle(
+                            (int)(Submarine.DrawPosition.X + linkedHull.WorldPosition.X),
+                            (int)(Submarine.DrawPosition.Y + linkedHull.WorldPosition.Y), 
+                            linkedHull.WorldRect.Width, linkedHull.WorldRect.Height);
+
+                    //center of the hull
+                    Rectangle currentHullRect = Submarine == null ?
+                        WorldRect :
+                        new Rectangle(
+                            (int)(Submarine.DrawPosition.X + WorldPosition.X),
+                            (int)(Submarine.DrawPosition.Y + WorldPosition.Y), 
+                            WorldRect.Width, WorldRect.Height);
+
+                    GUI.DrawLine(spriteBatch,
+                    new Vector2(currentHullRect.X, -currentHullRect.Y),
+                    new Vector2(connectedHullRect.X, -connectedHullRect.Y),
+                    Color.Green, width: 2);
+                }
+            }
         }
 
         public static void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam, WaterRenderer renderer)
