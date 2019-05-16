@@ -101,6 +101,12 @@ namespace Barotrauma
             }
         }
 
+        public GUILayoutGroup LayoutGroup
+        {
+            get;
+            private set;
+        }
+
         public float valueStep;
 
         private float pressedTimer;
@@ -109,9 +115,9 @@ namespace Barotrauma
 
         public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center) : base(style, rectT)
         {
-            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), isHorizontal: true) { Stretch = true };
+            LayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), isHorizontal: true) { Stretch = true };
 
-            TextBox = new GUITextBox(new RectTransform(Vector2.One, layoutGroup.RectTransform), textAlignment: textAlignment, style: style)
+            TextBox = new GUITextBox(new RectTransform(Vector2.One, LayoutGroup.RectTransform), textAlignment: textAlignment, style: style)
             {
                 ClampText = false,
                 // For some reason the caret in the number inputs is dimmer than it should.
@@ -120,7 +126,7 @@ namespace Barotrauma
                 CaretColor = Color.White
             };
             TextBox.OnTextChanged += TextChanged;
-            var buttonArea = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), layoutGroup.RectTransform, Anchor.CenterRight) { MinSize = new Point(Rect.Height, 0) }, style: null);
+            var buttonArea = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight) { MinSize = new Point(Rect.Height, 0) }, style: null);
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+");
             PlusButton.OnButtonDown += () =>
             {

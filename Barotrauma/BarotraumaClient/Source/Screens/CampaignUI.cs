@@ -637,49 +637,52 @@ namespace Barotrauma
 
         private void CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width, 50), listBox.Content.RectTransform), style: "ListBoxElement")
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.Scale * 50)), listBox.Content.RectTransform), style: "ListBoxElement")
             {
                 UserData = pi,
                 ToolTip = pi.ItemPrefab.Description
             };
 
+            var content = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
+
             ScalableFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
-            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Rect.Width - (pi.Quantity > 0 ? 160 : 120), 25), frame.RectTransform, Anchor.CenterLeft)
-            {
-                AbsoluteOffset = new Point(40, 0),
-            }, pi.ItemPrefab.Name, font: font)
-            {                
-                ToolTip = pi.ItemPrefab.Description
-            };
-            textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
-
             Sprite itemIcon = pi.ItemPrefab.InventoryIcon ?? pi.ItemPrefab.sprite;
-
             if (itemIcon != null)
             {
-                GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), frame.RectTransform, Anchor.CenterLeft), itemIcon)
+                GUIImage img = new GUIImage(new RectTransform(new Point((int)(content.Rect.Height * 0.8f)), content.RectTransform, Anchor.CenterLeft), itemIcon, scaleToFit: true)
                 {
                     Color = itemIcon == pi.ItemPrefab.InventoryIcon ? pi.ItemPrefab.InventoryIconColor : pi.ItemPrefab.SpriteColor
                 };
-                img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
+                img.RectTransform.MaxSize = img.Rect.Size;
+                //img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
 
-            textBlock = new GUITextBlock(new RectTransform(new Point(60, 25), frame.RectTransform, Anchor.CenterRight)
-            { AbsoluteOffset = new Point(pi.Quantity > 0 ? 70 : 25, 0) }, 
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), content.RectTransform), 
+                pi.ItemPrefab.Name, font: font)
+            {
+                ToolTip = pi.ItemPrefab.Description
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), content.RectTransform),
                 priceInfo.BuyPrice.ToString(), font: font, textAlignment: Alignment.CenterRight)
             {
                 ToolTip = pi.ItemPrefab.Description
             };
 
             //If its the store menu, quantity will always be 0
+            GUINumberInput amountInput = null;
             if (pi.Quantity > 0)
             {
-                var amountInput = new GUINumberInput(new RectTransform(new Point(50, 40), frame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(20, 0) }, 
+                amountInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), content.RectTransform),
                     GUINumberInput.NumberType.Int)
                 {
                     MinValueInt = 0,
-                    MaxValueInt = 1000,
+                    MaxValueInt = 100,
                     UserData = pi,
                     IntValue = pi.Quantity
                 };
@@ -711,6 +714,11 @@ namespace Barotrauma
                     }
                 };
             }
+            listBox.RecalculateChildren();
+            content.Recalculate();
+            content.RectTransform.RecalculateChildren(true, true);
+            amountInput?.LayoutGroup.Recalculate();
+            textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
         }
 
         private bool BuyItem(GUIComponent component, object obj)
