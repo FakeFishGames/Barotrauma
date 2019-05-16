@@ -16,6 +16,11 @@ namespace Barotrauma
         private float waitUntilPathUnreachable;
         private bool getDivingGearIfNeeded;
 
+        public Func<bool> customCondition;
+
+        /// <summary>
+        /// Sim units
+        /// </summary>
         public float CloseEnough { get; set; } = 0.5f;
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
@@ -176,19 +181,35 @@ namespace Barotrauma
         private bool isCompleted;
         public override bool IsCompleted()
         {
+            // First check the distance
+            // Then the custom condition
+            // And finally check if can interact (heaviest)
             if (repeat) { return false; }
-            bool completed = false;
-            if (Target is Item item)
+            if (isCompleted) { return true; }
+            bool closeEnough = Vector2.DistanceSquared(Target != null ? Target.SimPosition : targetPos, character.SimPosition) < CloseEnough * CloseEnough;
+            if (closeEnough)
             {
-                if (item.IsInsideTrigger(character.WorldPosition)) { completed = true; }
+                if (customCondition == null || customCondition())
+                {
+                    if (Target is Item item)
+                    {
+                        if (character.CanInteractWith(item, out _, checkLinked: false)) { isCompleted = true; }
+                    }
+                    else if (Target is Character targetCharacter)
+                    {
+                        if (character.CanInteractWith(targetCharacter, ConvertUnits.ToDisplayUnits(CloseEnough))) { isCompleted = true; }
+                    }
+                    else
+                    {
+                        isCompleted = true;
+                    }
+                }
             }
-            else if (Target is Character targetCharacter)
+            if (isCompleted)
             {
-                if (character.CanInteractWith(targetCharacter)) { completed = true; }
+                character.AIController.SteeringManager.Reset();
             }
-            completed = completed || Vector2.DistanceSquared(Target != null ? Target.SimPosition : targetPos, character.SimPosition) < CloseEnough * CloseEnough;
-            if (completed) { character.AIController.SteeringManager.Reset(); }
-            return completed;
+            return isCompleted;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

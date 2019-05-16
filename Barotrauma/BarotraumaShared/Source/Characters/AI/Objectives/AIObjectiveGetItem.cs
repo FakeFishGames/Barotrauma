@@ -100,8 +100,7 @@ namespace Barotrauma
                 objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                 return;
             }
-            if (moveToTarget.CurrentHull == character.CurrentHull && 
-                Vector2.DistanceSquared(character.Position, moveToTarget.Position) < MathUtils.Pow(targetItem.InteractDistance, 2))
+            if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
                 if (IsTakenBySomeone(targetItem))
                 {
