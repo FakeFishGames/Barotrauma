@@ -834,6 +834,10 @@ namespace Barotrauma
                 {
                     VoiceSetting = voiceSetting;
                 }
+                foreach (ContentFile file in contentPackage.Files)
+                {
+                    ToolBox.IsProperFilenameCase(file.Path);
+                }
             }
             if (!SelectedContentPackages.Any())
             {
