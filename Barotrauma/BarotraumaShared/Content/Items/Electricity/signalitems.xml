@@ -582,7 +582,10 @@
     </ConnectionPanel>
   </Item>
 
-  <Item name="Light Component 90Deg" identifier="lightcomponent90" category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="Light Component 90Deg" identifier="lightcomponent90"         
+    nameidentifier="lightcomponent"
+    Aliases="Light Component 90Deg"
+    category="Electrical" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
