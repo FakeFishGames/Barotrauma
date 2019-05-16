@@ -70,7 +70,13 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        public string Name
+        public string Identifier
+        {
+            get;
+            protected set;
+        }
+
+        public string DisplayName
         {
             get;
             protected set;
@@ -159,8 +165,9 @@ namespace Barotrauma.Tutorials
         public Tutorial(XElement element)
         {
             configElement = element;
-            Name = element.GetAttributeString("name", "Unnamed");
-            completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
+            Identifier = element.GetAttributeString("identifier", "unknown");
+            DisplayName = TextManager.Get(Identifier);
+            completed = GameMain.Config.CompletedTutorialNames.Contains(Identifier);
             playableContentPath = element.GetAttributeString("playablecontentpath", "");
 
             segments = new List<TutorialSegment>();

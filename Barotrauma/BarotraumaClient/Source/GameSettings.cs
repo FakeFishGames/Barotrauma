@@ -132,7 +132,7 @@ namespace Barotrauma
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
             {
-                languageDD.AddItem(TextManager.Get("Language." + language), language);
+                languageDD.AddItem(TextManager.Get("Language." + language, returnNull: true) ?? Language, language);
             }
             languageDD.SelectItem(TextManager.Language);
             languageDD.OnSelected = (guiComponent, obj) =>
@@ -261,6 +261,18 @@ namespace Barotrauma
                     return true;
                 },
                 Selected = VSyncEnabled
+            };
+
+            //TODO: remove hardcoded texts after the texts have been added to localization
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), 
+                TextManager.Get("PauseOnFocusLost", returnNull: true) ?? "Pause on focus lost");
+            pauseOnFocusLostBox.Selected = PauseOnFocusLost;
+            pauseOnFocusLostBox.ToolTip = TextManager.Get("PauseOnFocusLostToolTip", returnNull: true) ?? "Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.";
+            pauseOnFocusLostBox.OnSelected = (tickBox) =>
+            {
+                PauseOnFocusLost = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
             };
 
             GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"));

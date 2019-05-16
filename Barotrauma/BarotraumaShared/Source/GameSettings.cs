@@ -43,6 +43,7 @@ namespace Barotrauma
         public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
+        public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
@@ -77,24 +78,17 @@ namespace Barotrauma
 
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
-        public bool UseSteam;
         public bool RequireSteamAuthentication
         {
-            get { return requireSteamAuthentication && UseSteam; }
+            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
             set { requireSteamAuthentication = value; }
         }
         public bool UseSteamMatchmaking
         {
-            get { return useSteamMatchmaking && UseSteam; }
+            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
             set { useSteamMatchmaking = value; }
         }
-
 #else
-        //steam functionality determined at compile time
-        public bool UseSteam
-        {
-            get { return Steam.SteamManager.USE_STEAM; }
-        }
         public bool RequireSteamAuthentication
         {
             get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
@@ -438,9 +432,6 @@ namespace Barotrauma
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
 
-#if DEBUG
-            UseSteam = doc.Root.GetAttributeBool("usesteam", true);
-#endif
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (doc == null)
@@ -850,6 +841,7 @@ namespace Barotrauma
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
 
+            PauseOnFocusLost = doc.Root.GetAttributeBool("pauseonfocuslost", PauseOnFocusLost);
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
             EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
 
@@ -1047,6 +1039,7 @@ namespace Barotrauma
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
+                new XAttribute("pauseonfocuslost", PauseOnFocusLost),
                 new XAttribute("aimassistamount", aimAssistAmount),
                 new XAttribute("enablemouselook", EnableMouseLook),
                 new XAttribute("chatopen", ChatOpen),
@@ -1155,9 +1148,9 @@ namespace Barotrauma
             {
                 foreach (Tutorial tutorial in Tutorial.Tutorials)
                 {
-                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Identifier))
                     {
-                        CompletedTutorialNames.Add(tutorial.Name);
+                        CompletedTutorialNames.Add(tutorial.Identifier);
                     }
                 }
             }

@@ -199,11 +199,5 @@ namespace Barotrauma
             float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance * 0.9f) : 0;
             CloseEnough = Math.Max(interactionDistance, CloseEnough);
         }
-
-        private void CalculateCloseEnough()
-        {
-            float interactionDistance = Target is Item i ? ConvertUnits.ToSimUnits(i.InteractDistance * 0.9f) : 0;
-            CloseEnough = Math.Max(interactionDistance, CloseEnough);
-        }
     }
 }

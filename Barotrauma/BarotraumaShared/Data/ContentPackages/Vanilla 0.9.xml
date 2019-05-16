@@ -80,7 +80,11 @@
   <Submarine file="Submarines/Humpback.sub" />
   <Submarine file="Submarines/Dugong.sub" />
   <Submarine file="Submarines/Venture.sub" />
+  <Submarine file="Submarines/Remora.sub" />
+  <Submarine file="Submarines/RemoraDrone.sub" />
   <Text file="Content/Texts/EnglishVanilla.xml" />
+  <Text file="Content/Texts/RussianVanillaTest.xml" />
+  <Text file="Content/Texts/ChineseVanillaTest.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />

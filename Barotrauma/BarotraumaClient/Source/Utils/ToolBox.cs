@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -106,36 +107,18 @@ namespace Barotrauma
 
             text = text.Replace("\n", " \n ");
 
-            List<string> words = new List<string>();
-            string currWord = "";
-            for (int i = 0; i < text.Length; i++)
+            string[] words;
+            if (TextManager.NoWhiteSpace)
             {
-                if (isCJK.IsMatch(text[i].ToString()))
+                words = new string[text.Length];
+                for (int i = 0; i < text.Length; i++)
                 {
-                    if (currWord.Length > 0)
-                    {
-                        words.Add(currWord);
-                        currWord = "";
-                    }
-                    words.Add(text[i].ToString());
-                }
-                else if (text[i] == ' ')
-                {
-                    if (currWord.Length > 0)
-                    {
-                        words.Add(currWord);
-                        currWord = "";
-                    }
-                }
-                else
-                {
-                    currWord += text[i];
+                    words[i] = text[i].ToString();
                 }
             }
-            if (currWord.Length > 0)
+            else
             {
-                words.Add(currWord);
-                currWord = "";
+                words = text.Split(' ');
             }
 
             StringBuilder wrappedText = new StringBuilder();
