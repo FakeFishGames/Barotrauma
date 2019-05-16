@@ -43,6 +43,17 @@ namespace Barotrauma
             }
         }
 
+        public bool PlayingSplashScreen
+        {
+            get
+            {
+                lock (loadMutex)
+                {
+                    return currSplashScreen != null;
+                }
+            }
+        }
+
         private float state;
         
         private string selectedTip;
@@ -107,7 +118,7 @@ namespace Barotrauma
                 try
                 {
                     DrawSplashScreen(spriteBatch, graphics);
-                    if (currSplashScreen != null || pendingSplashScreens.Count > 0) { return; }
+                    if (currSplashScreen != null || PendingSplashScreens.Count > 0) { return; }
                 }
                 catch (Exception e)
                 {
@@ -240,11 +251,11 @@ namespace Barotrauma
 
         private void DrawSplashScreen(SpriteBatch spriteBatch, GraphicsDevice graphics)
         {
-            if (currSplashScreen == null && pendingSplashScreens.Count == 0) { return; }
+            if (currSplashScreen == null && PendingSplashScreens.Count == 0) { return; }
 
             if (currSplashScreen == null)
             {
-                var newSplashScreen = pendingSplashScreens.Dequeue();
+                var newSplashScreen = PendingSplashScreens.Dequeue();
                 string fileName = newSplashScreen.First;
                 Point resolution = newSplashScreen.Second;
                 try
@@ -256,7 +267,7 @@ namespace Barotrauma
                 {
                     GameMain.Config.EnableSplashScreen = false;
                     DebugConsole.ThrowError("Playing the splash screen \"" + fileName + "\" failed.", e);
-                    pendingSplashScreens.Clear();
+                    PendingSplashScreens.Clear();
                     currSplashScreen = null;
                 }
             }

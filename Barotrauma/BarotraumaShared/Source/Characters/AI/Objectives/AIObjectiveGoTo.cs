@@ -18,6 +18,8 @@ namespace Barotrauma
         private AIObjectiveFindDivingGear findDivingGear;
 
         private AIObjectiveFindDivingGear findDivingGear;
+
+        private AIObjectiveFindDivingGear findDivingGear;
         private Vector2 targetPos;
         private bool repeat;
         private bool cannotReach;

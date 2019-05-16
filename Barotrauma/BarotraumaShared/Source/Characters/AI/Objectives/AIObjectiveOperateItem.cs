@@ -36,6 +36,10 @@ namespace Barotrauma
 
         private AIObjectiveGoTo gotoObjective;
 
+        private bool useController;
+
+        private AIObjectiveGoTo gotoObjective;
+
         public override bool CanBeCompleted
         {
             get
@@ -49,6 +53,8 @@ namespace Barotrauma
         }
 
         public Entity OperateTarget => operateTarget;
+        public ItemComponent Component => component;
+
         public ItemComponent Component => component;
 
         public ItemComponent Component => component;
@@ -122,12 +128,6 @@ namespace Barotrauma
             else
             {
                 if (component.Item.GetComponent<Pickable>() == null)
-                {
-                    //controller/target can't be selected and the item cannot be picked -> objective can't be completed
-                    canBeCompleted = false;
-                    return;
-                }
-                else if (!character.Inventory.Items.Contains(component.Item))
                 {
                     //controller/target can't be selected and the item cannot be picked -> objective can't be completed
                     canBeCompleted = false;
