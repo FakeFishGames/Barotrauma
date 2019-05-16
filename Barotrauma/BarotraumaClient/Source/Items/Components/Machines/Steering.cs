@@ -29,8 +29,6 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent statusContainer, dockingContainer;
 
-        private bool dockingNetworkMessagePending;
-
         private GUIButton dockingButton;
         private string dockText, undockText;
 
@@ -310,15 +308,7 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (GameMain.Client == null)
-                    {
-                        item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
-                    }
-                    else
-                    {
-                        dockingNetworkMessagePending = true;
-                        item.CreateClientEvent(this);
-                    }
+                    item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
                     return true;
                 }
             };

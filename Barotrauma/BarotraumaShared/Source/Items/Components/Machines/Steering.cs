@@ -144,23 +144,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public Vector2 SteeringInput
-        {
-            get { return steeringInput; }
-            set
-            {
-                if (!MathUtils.IsValid(value)) return;
-                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
-                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
-            }
-        }
-
         public SteeringPath SteeringPath
         {
             if (!CanBeSelected) return false;
 
             user = character;
             return true;
+        }
+
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
         }
 
         public Vector2? PosToMaintain
@@ -569,7 +564,6 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
-            bool dockingButtonClicked   = msg.ReadBoolean();
             Vector2 newSteeringInput    = targetVelocity;
             bool maintainPos            = false;
             Vector2? newPosToMaintain   = null;
@@ -595,6 +589,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (!item.CanClientAccess(c)) return;
+
+            user = c.Character;
 
             user = c.Character;
             AutoPilot = autoPilot;

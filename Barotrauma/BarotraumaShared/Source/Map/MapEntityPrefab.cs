@@ -115,7 +115,6 @@ namespace Barotrauma
                 Linkable = true
             };
             ep.AllowedLinks.Add("hull");
-            ep.Aliases = new HashSet<string> { "hull" };
             List.Add(ep);
 
             ep = new MapEntityPrefab
