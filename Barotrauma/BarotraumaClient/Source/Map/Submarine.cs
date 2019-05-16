@@ -476,7 +476,19 @@ namespace Barotrauma
 
             if (errorMsgs.Any())
             {
-                new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), 400, 0);
+                new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), new Vector2(0.25f, 0.0f), new Point(400, 200));
+            }
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
+                {
+                    //move disabled items (wires, items inside containers) inside the sub
+                    if (e is Item item && item.body != null && !item.body.Enabled)
+                    {
+                        item.SetTransform(ConvertUnits.ToSimUnits(HiddenSubPosition), 0.0f);
+                    }
+                }
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList)

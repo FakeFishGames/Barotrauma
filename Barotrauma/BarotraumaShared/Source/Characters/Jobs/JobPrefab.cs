@@ -24,10 +24,7 @@ namespace Barotrauma
     {
         public static List<JobPrefab> List;
 
-        public readonly XElement Items;
-        public readonly List<string> ItemNames = new List<string>();
-        public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
-        public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
+        public List<SkillPrefab> Skills;
         
         [Serialize("1,1,1,1", false)]
         public Color UIColor
@@ -118,6 +115,14 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public XElement ClothingElement { get; private set; }
+
+        public JobPrefab(XElement element)
+        {
+            SerializableProperty.DeserializeProperties(this, element);
+            Name = TextManager.Get("JobName." + Identifier);
+            Description = TextManager.Get("JobDescription." + Identifier);
 
         public XElement ClothingElement { get; private set; }
 

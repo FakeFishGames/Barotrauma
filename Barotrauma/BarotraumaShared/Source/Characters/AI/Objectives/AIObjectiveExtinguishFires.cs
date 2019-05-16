@@ -1,44 +1,62 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class AIObjectiveExtinguishFires : AIObjectiveLoop<Hull>
+    class AIObjectiveExtinguishFires : AIObjective
     {
         public override string DebugTag => "extinguish fires";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
 
-        public AIObjectiveExtinguishFires(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
+        private Dictionary<Hull, AIObjectiveExtinguishFire> extinguishObjectives = new Dictionary<Hull, AIObjectiveExtinguishFire>();
 
-        protected override void FindTargets()
+        public AIObjectiveExtinguishFires(Character character) : base(character, "") { }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            base.FindTargets();
-            if (targets.None() && objectiveManager.CurrentOrder == this)
+            if (character.Submarine == null) { return 0; }
+            int fireCount = character.Submarine.GetHulls(true).Sum(h => h.FireSources.Count);
+            if (objectiveManager.CurrentOrder == this && fireCount > 0)
             {
-                character.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
+                return AIObjectiveManager.OrderPriority;
             }
+
+            return MathHelper.Clamp(fireCount * 20, 0, 100);
         }
 
-        protected override bool Filter(Hull hull) => IsValidTarget(hull, character);
+        public override bool IsCompleted() => false;
+        public override bool CanBeCompleted => true;
 
-        protected override float TargetEvaluation() => objectiveManager.CurrentObjective == this ? 100 : targets.Sum(t => GetFireSeverity(t));
-
-        public static float GetFireSeverity(Hull hull) => hull.FireSources.Sum(fs => fs.Size.X);
-
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveExtinguishFires;
-        protected override IEnumerable<Hull> GetList() => Hull.hullList;
-
-        protected override AIObjective ObjectiveConstructor(Hull target) => new AIObjectiveExtinguishFire(character, target, objectiveManager, PriorityModifier);
-
-        public static bool IsValidTarget(Hull hull, Character character)
+        public override bool IsDuplicate(AIObjective otherObjective)
         {
-            if (hull == null) { return false; }
-            if (hull.FireSources.None()) { return false; }
-            if (hull.Submarine == null) { return false; }
-            if (hull.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { return false; }
-            return true;
+            return otherObjective is AIObjectiveExtinguishFires;
+        }
+
+        protected override void Act(float deltaTime)
+        {
+            SyncRemovedObjectives(extinguishObjectives, Hull.hullList);
+            if (character.Submarine == null) { return; }
+            foreach (Hull hull in Hull.hullList)
+            {
+                if (hull.FireSources.None()) { continue; }
+                if (hull.Submarine == null) { continue; }
+                if (hull.Submarine.TeamID != character.TeamID) { continue; }
+                // If the character is inside, only take connected hulls into account.
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                if (!extinguishObjectives.TryGetValue(hull, out AIObjectiveExtinguishFire objective))
+                {
+                    objective = new AIObjectiveExtinguishFire(character, hull);
+                    extinguishObjectives.Add(hull, objective);
+                    AddSubObjective(objective);
+                }
+            }
+            if (extinguishObjectives.None())
+            {
+                character?.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire", 30.0f);
+            }
         }
     }
 }

@@ -173,8 +173,8 @@ namespace Barotrauma
             var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition,
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));
             InitializeWatchman(spawnedCharacter);
-            var objectiveManager = (spawnedCharacter.AIController as HumanAIController)?.ObjectiveManager;
-            objectiveManager?.SetOrder(new AIObjectiveGoTo(watchmanSpawnpoint, spawnedCharacter, objectiveManager, repeat: true, getDivingGearIfNeeded: false));
+            (spawnedCharacter.AIController as HumanAIController)?.ObjectiveManager.SetOrder(
+                new AIObjectiveGoTo(watchmanSpawnpoint, spawnedCharacter, repeat: true, getDivingGearIfNeeded: false));
             if (watchmanJob != null)
             {
                 spawnedCharacter.GiveJobItems();
