@@ -135,26 +135,20 @@ namespace Barotrauma
             }
             else
             {
-                if (goToObjective == null || moveToTarget != goToObjective.Target)
-                {
-                    //check if we're already looking for a diving gear
-                    bool gettingDivingGear = (targetItem != null && targetItem.Prefab.Identifier == "divingsuit" || targetItem.HasTag("diving")) ||
-                                            (itemIdentifiers != null && (itemIdentifiers.Contains("diving") || itemIdentifiers.Contains("divingsuit")));
-
-                    //don't attempt to get diving gear to reach the destination if the item we're trying to get is diving gear
-                    goToObjective = new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: !gettingDivingGear);
-                    if (!subObjectives.Contains(goToObjective))
+                TryAddSubObjective(ref goToObjective,
+                    constructor: () =>
                     {
-                        AddSubObjective(goToObjective);
-                    }
-                }
-                else if (goToObjective != null && !goToObjective.CanBeCompleted)
-                {
-                    goToObjective = null;
-                    targetItem = null;
-                    moveToTarget = null;
-                    ignoredItems.Add(targetItem);
-                }
+                        //check if we're already looking for a diving gear
+                        bool gettingDivingGear = (targetItem != null && targetItem.Prefab.Identifier == "divingsuit" || targetItem.HasTag("diving")) ||
+                                                (itemIdentifiers != null && (itemIdentifiers.Contains("diving") || itemIdentifiers.Contains("divingsuit")));
+                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: !gettingDivingGear);
+                    },
+                    onAbandon: () =>
+                    {
+                        targetItem = null;
+                        moveToTarget = null;
+                        ignoredItems.Add(targetItem);
+                    });
             }
         }
 
@@ -189,9 +183,10 @@ namespace Barotrauma
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
 
-                // Don't allow to get items in rooms that have a fire (except fire extinguishers) or an enemy inside (except weapons)
-                if (!itemIdentifiers.Contains("extinguisher") && item.CurrentHull.FireSources.Count > 0 || 
-                    item.GetComponent<MeleeWeapon>() == null && item.GetComponent<RangedWeapon>() == null && Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { continue; }
+                // TODO: need to exclude items that already are in the inventory?
+                //// Don't allow to get items in rooms that have a fire (except fire extinguishers) or an enemy inside (except weapons)
+                //if (!itemIdentifiers.Contains("extinguisher") && item.CurrentHull.FireSources.Count > 0 || 
+                //    item.GetComponent<MeleeWeapon>() == null && item.GetComponent<RangedWeapon>() == null && Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c))) { continue; }
 
                 //if the item is inside a character's inventory, don't steal it unless the character is dead
                 if (item.ParentInventory is CharacterInventory)
