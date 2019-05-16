@@ -215,7 +215,7 @@
       </StatusEffect>
     </ItemContainer>
   </Item>
-  <Item name="Underwater Scooter" identifier="underwaterscooter" category="Equipment" Tags="smallitem,provocative" cargocontaineridentifier="metalcrate" description="A battery-powered underwater propulsion device." Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Underwater Scooter" identifier="underwaterscooter" category="Equipment" Tags="smallitem,provocative" cargocontaineridentifier="metalcrate" description="A battery-powered underwater propulsion device." Scale="0.32" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Military" buyprice="150" />
