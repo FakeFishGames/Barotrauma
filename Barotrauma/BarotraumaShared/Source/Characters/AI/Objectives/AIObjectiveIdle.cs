@@ -74,36 +74,6 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
-        {
-            if (objectiveManager.CurrentObjective == this)
-            {
-                if (randomTimer > 0)
-                {
-                    randomTimer -= deltaTime;
-                }
-                else
-                {
-                    SetRandom();
-                }
-            }
-        }
-
-        public override void Update(float deltaTime)
-        {
-            if (objectiveManager.CurrentObjective == this)
-            {
-                if (randomTimer > 0)
-                {
-                    randomTimer -= deltaTime;
-                }
-                else
-                {
-                    SetRandom();
-                }
-            }
-        }
-
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
