@@ -88,6 +88,21 @@ namespace Barotrauma
             }
         }
 
+        public override void Update(float deltaTime)
+        {
+            if (objectiveManager.CurrentObjective == this)
+            {
+                if (randomTimer > 0)
+                {
+                    randomTimer -= deltaTime;
+                }
+                else
+                {
+                    SetRandom();
+                }
+            }
+        }
+
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
@@ -316,8 +331,8 @@ namespace Barotrauma
         {
             if (hull == null) { return true; }
             string hullName = hull.RoomName?.ToLowerInvariant();
-            bool isForbidden = hullName.Contains("ballast") || hullName.Contains("airlock");
-            return isForbidden;
+            if (hullName == null) { return false; }
+            return hullName.Contains("ballast") || hullName.Contains("airlock");
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
