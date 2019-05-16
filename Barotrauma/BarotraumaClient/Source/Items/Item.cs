@@ -41,6 +41,8 @@ namespace Barotrauma
         {
             get { return activeSprite; }
         }
+              
+        public float SpriteRotation;
 
         private GUITextBlock itemInUseWarning;
         private GUITextBlock ItemInUseWarning
@@ -1117,7 +1119,15 @@ namespace Barotrauma
             var itemPrefab = string.IsNullOrEmpty(itemIdentifier) ?
                 MapEntityPrefab.Find(itemName, null, showErrorMessages: false) as ItemPrefab :
                 MapEntityPrefab.Find(itemName, itemIdentifier, showErrorMessages: false) as ItemPrefab;
-            if (itemPrefab == null) { return null; }
+            if (itemPrefab == null)
+            {
+                string errorMsg = "Failed to spawn item (name: " + (itemName ?? "null") + ", identifier: " + (itemIdentifier ?? "null");
+                GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:PrefabNotFound" + (itemName ?? "null") + (itemIdentifier ?? "null"),
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Critical,
+                    errorMsg);
+                DebugConsole.ThrowError(errorMsg);
+                return null;
+            }
 
             Inventory inventory = null;
 
