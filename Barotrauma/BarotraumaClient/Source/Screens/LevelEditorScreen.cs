@@ -675,6 +675,8 @@ namespace Barotrauma
                             doc.WriteTo(writer);
                             writer.Flush();
                         }
+                        // Recreate the prefab so that the sprite loads correctly: TODO: consider a better way to do this
+                        newPrefab = new LevelObjectPrefab(newElement);
                         break;
                     }
 
