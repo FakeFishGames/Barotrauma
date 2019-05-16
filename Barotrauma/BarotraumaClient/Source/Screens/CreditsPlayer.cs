@@ -9,6 +9,7 @@ namespace Barotrauma
         private GUIListBox listBox;
 
         private readonly float scrollSpeed;
+
         public CreditsPlayer(RectTransform rectT, string configFile) : base(null, rectT)
         {
             var doc = XMLExtensions.TryLoadXml(configFile);
@@ -111,11 +112,6 @@ namespace Barotrauma
                 float relativeHeight = element.GetAttributeFloat("relativeheight", 0.0f);
                 new GUIImage(new RectTransform(new Vector2(1.0f, relativeHeight), parent), sprite, scaleToFit: true);
             }
-        }
-
-        public void Restart()
-        {
-            listBox.BarScroll = 0.0f;
         }
 
         protected override void Update(float deltaTime)

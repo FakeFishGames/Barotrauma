@@ -1,20 +1,4 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.0.1
----------------------------------------------------------------------------------------------------------
-
-- Added a bunch of missing translations.
-- Fixed Steam Workshop on Mac.
-- Fixed docking interface button not working in the multiplayer.
-- Fixed medical doctor tutorial crashing on languages other than English.
-- Fixed a bug that caused AI characters to occasionally get stuck next to stairways.
-- Fixed animation and ragdoll file paths getting messed up if there are multiple content packages 
-installed that include monsters with the same name.
-- Fixed crashing when a StatusEffect causes an item to be used on a target. 
-- Fixed a gap between Remora and the drone.
-- Added more supplies to Remora.
-- Fixed watchman's dialogue getting muffled.
-
----------------------------------------------------------------------------------------------------------
 v0.9.0.0
 ---------------------------------------------------------------------------------------------------------
 

@@ -853,26 +853,15 @@ namespace Barotrauma
             {
                 if (characterConfigFiles == null)
                 {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true);
                 }
                 return characterConfigFiles;
             }
         }
 
-        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        public static string GetConfigFile(string speciesName)
         {
-            string configFile = null;
-            if (contentPackage == null)
-            {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
-            else
-            {
-                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
-
+            string configFile = CharacterConfigFiles.FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
             if (configFile == null)
             {
                 DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
@@ -1147,33 +1136,7 @@ namespace Barotrauma
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
-                SmoothedCursorPosition = cursorPosition;
-            }
-            else
-            {
-                //apply some smoothing to the cursor positions of remote players when playing as a client
-                //to make aiming look a little less choppy
-                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
-                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
-                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
-            }
-            
-            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
-            {
-                SmoothedCursorPosition = cursorPosition;
-            }
-            else
-            {
-                //apply some smoothing to the cursor positions of remote players when playing as a client
-                //to make aiming look a little less choppy
-                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
-                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
-                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
-            }
-            
-            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
-            {
-                if (speedMultipliers.Count == 0) return 1f;
+                Vector2 targetMovement = GetTargetMovement();
 
                 AnimController.TargetMovement = targetMovement;
                 AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;
@@ -2681,5 +2644,57 @@ namespace Barotrauma
         }
 
         public AttackContext GetAttackContext() => AnimController.CurrentAnimationParams.IsGroundedAnimation ? AttackContext.Ground : AttackContext.Water;
+
+        private List<Hull> visibleHulls = new List<Hull>();
+        private HashSet<Hull> tempList = new HashSet<Hull>();
+        /// <summary>
+        /// Returns hulls that are visible to the player, including the current hull.
+        /// Can be heavy if used every frame.
+        /// </summary>
+        public List<Hull> GetVisibleHulls()
+        {
+            visibleHulls.Clear();
+            tempList.Clear();
+            if (CurrentHull != null)
+            {
+                visibleHulls.Add(CurrentHull);
+                var adjacentHulls = CurrentHull.GetConnectedHulls(true, 1);
+                float maxDistance = 1000f;
+                foreach (var hull in adjacentHulls)
+                {
+                    if (hull.ConnectedGaps.Any(g => g.Open > 0.9f && g.linkedTo.Contains(CurrentHull) &&
+                        Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2)))
+                    {
+                        if (Vector2.DistanceSquared(hull.WorldPosition, WorldPosition) < Math.Pow(maxDistance, 2))
+                        {
+                            visibleHulls.Add(hull);
+                        }
+                    }
+                }
+                visibleHulls.AddRange(CurrentHull.GetLinkedEntities<Hull>(tempList, filter: h =>
+                {
+                    // Ignore adjacent hulls because they were already handled above
+                    if (adjacentHulls.Contains(h))
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        if (h.ConnectedGaps.Any(g =>
+                            g.Open > 0.9f &&
+                            Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2) &&
+                            CanSeeTarget(g)))
+                        {
+                            return Vector2.DistanceSquared(h.WorldPosition, WorldPosition) < Math.Pow(maxDistance, 2);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }));
+            }
+            return visibleHulls;
+        }
     }
 }

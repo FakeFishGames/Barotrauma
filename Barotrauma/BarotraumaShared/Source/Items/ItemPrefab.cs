@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -440,7 +441,6 @@ namespace Barotrauma
             configFile = filePath;
             ConfigElement = element;
 
-            string nonTranslatedName = element.GetAttributeString("name", "");
             identifier = element.GetAttributeString("identifier", "");
 
             //nameidentifier can be used to make multiple items use the same names and descriptions
@@ -448,21 +448,20 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(nameIdentifier))
             {
-                name = TextManager.Get("EntityName." + identifier, true) ?? nonTranslatedName;
+                name = TextManager.Get("EntityName." + identifier, true) ?? element.GetAttributeString("name", "");
             }
             else
             {
-                name = TextManager.Get("EntityName." + nameIdentifier, true) ?? nonTranslatedName;
+                name = TextManager.Get("EntityName." + nameIdentifier, true) ?? element.GetAttributeString("name", "");
             }
 
             if (name == "") { DebugConsole.ThrowError("Unnamed item in " + filePath + "!"); }
 
             DebugConsole.Log("    " + name);
 
-            Aliases = new HashSet<string>
-                (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
-                element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
-            Aliases.Add(nonTranslatedName.ToLowerInvariant());
+            Aliases = 
+                element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
+                element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true);
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
@@ -482,7 +481,7 @@ namespace Barotrauma
             }
 
             Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
-            if (!Tags.Any())
+            if (Tags.None())
             {
                 Tags = new HashSet<string>(element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true));
             }
@@ -720,42 +719,7 @@ namespace Barotrauma
             return prices[location.Type.Identifier.ToLowerInvariant()];
         }
 
-        public static ItemPrefab Find(string name, string identifier)
-        {
-            ItemPrefab prefab;
-            if (string.IsNullOrEmpty(identifier))
-            {
-                //legacy support: 
-                //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = Find(name, "", showErrorMessages: false) as ItemPrefab;
-                //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = Find(name) as ItemPrefab;
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
 
-            }
-            else
-            {
-                prefab = Find(null, identifier, showErrorMessages: false) as ItemPrefab;
-
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
-            }
-
-            if (prefab == null)
-            {
-                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
-            }
-            return prefab;
-        }
         public IEnumerable<PriceInfo> GetPrices()
         {
             return prices?.Values;

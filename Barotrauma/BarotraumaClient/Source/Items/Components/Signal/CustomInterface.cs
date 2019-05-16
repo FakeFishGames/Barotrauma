@@ -36,7 +36,6 @@ namespace Barotrauma.Items.Components
                     {
                         UserData = ciElement
                     };
-                    tickBox.TextBlock.AutoScale = true;
                     tickBox.OnSelected += (tBox) =>
                     {
                         if (GameMain.Client == null)
@@ -58,7 +57,6 @@ namespace Barotrauma.Items.Components
                     {
                         UserData = ciElement
                     };
-                    btn.TextBlock.AutoScale = true;
                     btn.OnClicked += (_, userdata) =>
                     {
                         if (GameMain.Client == null)

@@ -121,6 +121,61 @@ namespace Barotrauma
                             MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
                             MainLimb.PullJointEnabled = true;
                         }
+                        character.SelectedConstruction = character.MemState[0].SelectedItem;
+                    }
+
+                    if (character.MemState[0].Animation == AnimController.Animation.CPR)
+                    {
+                        character.AnimController.Anim = AnimController.Animation.CPR;
+                    }
+                    else if (character.AnimController.Anim == AnimController.Animation.CPR)
+                    {
+                        character.AnimController.Anim = AnimController.Animation.None;
+                    }
+
+                    Vector2 newVelocity = Collider.LinearVelocity;
+                    Vector2 newPosition = Collider.SimPosition;
+                    float newRotation = Collider.Rotation;
+                    float newAngularVelocity = Collider.AngularVelocity;
+                    Collider.CorrectPosition(character.MemState, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
+
+                    newVelocity = newVelocity.ClampLength(100.0f);
+                    if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
+                    overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
+
+                    Collider.LinearVelocity = newVelocity;
+                    Collider.AngularVelocity = newAngularVelocity;
+
+                    float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
+                    float errorTolerance = character.AllowInput ? 0.01f : 0.2f;
+                    if (distSqrd > errorTolerance)
+                    {
+                        if (distSqrd > 10.0f || !character.AllowInput)
+                        {
+                            Collider.TargetRotation = newRotation;
+                            SetPosition(newPosition, lerp: distSqrd < 5.0f, ignorePlatforms: false);
+                        }
+                        else
+                        {
+                            Collider.TargetRotation = newRotation;
+                            Collider.TargetPosition = newPosition;
+                            Collider.MoveToTargetPosition(true);
+                        }
+                    }
+                    
+                    //unconscious/dead characters can't correct their position using AnimController movement
+                    // -> we need to correct it manually
+                    if (!character.AllowInput)
+                    {
+                        float mainLimbDistSqrd = Vector2.DistanceSquared(MainLimb.PullJointWorldAnchorA, Collider.SimPosition);
+                        float mainLimbErrorTolerance = 0.1f;
+                        //if the main limb is roughly at the correct position and the collider isn't moving (much at least),
+                        //don't attempt to correct the position.
+                        if (mainLimbDistSqrd > mainLimbErrorTolerance || Collider.LinearVelocity.LengthSquared() > 0.05f)
+                        {
+                            MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                            MainLimb.PullJointEnabled = true;
+                        }
                     }
                 }
                 character.MemLocalState.Clear();
@@ -151,32 +206,34 @@ namespace Barotrauma
                     }
 
                 }
-
-                if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
-                character.MemState.Clear();
+                character.MemLocalState.Clear();
             }
-        }
-        
-        partial void ImpactProjSpecific(float impact, Body body)
-        {
-            float volume = MathHelper.Clamp(impact - 3.0f, 0.5f, 1.0f);
-
-            if (body.UserData is Limb limb && character.Stun <= 0f)
+            else
             {
-                if (impact > 3.0f) { PlayImpactSound(limb); }
-            }
-            else if (body.UserData is Limb || body == Collider.FarseerBody)
-            {
-                if (!character.IsRemotePlayer && impact > ImpactTolerance)
+                //remove states with a timestamp (there may still timestamp-based states 
+                //in the list if the controlled character switches from timestamp-based interpolation to ID-based)
+                character.MemState.RemoveAll(m => m.Timestamp > 0.0f);
+                
+                for (int i = 0; i < character.MemLocalState.Count; i++)
                 {
-                    SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
+                    if (character.Submarine == null)
+                    {
+                        //transform in-sub coordinates to outside coordinates
+                        if (character.MemLocalState[i].Position.Y > lowestSubPos)
+                        {                            
+                            character.MemLocalState[i].TransformInToOutside();
+                        }
+                    }
+                    else if (currentHull?.Submarine != null)
+                    {
+                        //transform outside coordinates to in-sub coordinates
+                        if (character.MemLocalState[i].Position.Y < lowestSubPos)
+                        {
+                            character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);
+                        }
+                    }
+
                 }
-            }
-            if (Character.Controlled == character)
-            {
-                GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
-            }
-        }
 
                 if (character.MemState.Count < 1) return;
 

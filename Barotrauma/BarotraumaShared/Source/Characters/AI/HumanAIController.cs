@@ -169,7 +169,15 @@ namespace Barotrauma
                 bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
                 bool shouldKeepTheGearOn = !ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>();
 
-                bool removeDivingSuit = (oxygenLow && !highPressure) || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 1 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs);
+                // Don't allow to drop the diving suit in water or while climbing or if the current path has stairs
+                bool removeDivingSuit = 
+                    (oxygenLow && !highPressure) || 
+                        (!shouldKeepTheGearOn && 
+                        Character.CurrentHull.WaterPercentage < 1 && 
+                        !Character.IsClimbing && 
+                        steeringManager == insideSteering && 
+                        !PathSteering.InStairs);
+
                 if (removeDivingSuit)
                 {
                     var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
@@ -495,8 +503,10 @@ namespace Barotrauma
 
         public static void DoForEachCrewMember(Character character, Action<HumanAIController> action)
         {
+            if (character == null) { return; }
             foreach (var c in Character.CharacterList)
             {
+                if (c == null || c.IsDead || c.Removed) { continue; }
                 if (c.AIController is HumanAIController humanAi && humanAi.IsFriendly(character))
                 {
                     action(humanAi);
