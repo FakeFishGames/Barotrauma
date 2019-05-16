@@ -148,6 +148,8 @@ namespace Barotrauma
 
         public bool IgnoreLayoutGroups;
 
+        public bool IgnoreLayoutGroups;
+
         public virtual ScalableFont Font
         {
             get;

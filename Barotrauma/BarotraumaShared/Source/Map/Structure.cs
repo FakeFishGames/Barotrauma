@@ -1203,6 +1203,9 @@ namespace Barotrauma
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
             if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
+            if (FlippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedY) element.Add(new XAttribute("flippedy", true));
+
             for (int i = 0; i < Sections.Length; i++)
             {
                 if (Sections[i].damage == 0.0f) continue;

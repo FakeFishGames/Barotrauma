@@ -319,6 +319,25 @@ namespace Barotrauma
                 OnSelected = TogglePlayYourself,
                 UserData = "playyourself"
             };
+
+            var toggleMyPlayerFrame = new GUIButton(new RectTransform(new Point(25, 70), myCharacterFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight), "", style: "GUIButtonHorizontalArrow");
+            toggleMyPlayerFrame.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                MyCharacterFrameOpen = !MyCharacterFrameOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = MyCharacterFrameOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
+                return true;
+            };
+
+            playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
+                TextManager.Get("PlayYourself"))
+            {
+                Selected = true,
+                OnSelected = TogglePlayYourself,
+                UserData = "playyourself"
+            };
             
             //player list ------------------------------------------------------------------
 

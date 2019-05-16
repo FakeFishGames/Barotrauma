@@ -295,8 +295,22 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 standPos = leak.IsHorizontal ? new Vector2(Math.Sign(-fromItemToLeak.X), 0.0f) : new Vector2(0.0f, Math.Sign(-fromItemToLeak.Y) * 0.5f);
                 standPos = leak.WorldPosition + standPos * Range;
-                Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
-                character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
+                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                {
+                    if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && indoorSteering.CurrentPath.Unreachable)
+                    {
+                        Vector2 dir = Vector2.Normalize(standPos - character.WorldPosition);
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, dir / 2);
+                    }
+                    else
+                    {
+                        character.AIController.SteeringManager.SteeringSeek(standPos);
+                    }
+                }
+                else
+                {
+                    character.AIController.SteeringManager.SteeringSeek(standPos);
+                }
             }
             else
             {
@@ -305,9 +319,14 @@ namespace Barotrauma.Items.Components
                     // Too close -> steer away
                     character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition) / 2);
                 }
+                else if (dist <= Range)
+                {
+                    // In range
+                    character.AIController.SteeringManager.Reset();
+                }
                 else
                 {
-                    character.AIController.SteeringManager.Reset();
+                    return false;
                 }
             }
 
@@ -319,8 +338,8 @@ namespace Barotrauma.Items.Components
             }
 
             // Press the trigger only when the tool is approximately facing the target.
-            // If the character is climbing, ignore the check, because we cannot aim while climbing.
-            if (VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak) < MathHelper.PiOver4)
+            var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
+            if (angle < MathHelper.PiOver4)
             {
                 character.SetInput(InputType.Shoot, false, true);
                 Use(deltaTime, character);
