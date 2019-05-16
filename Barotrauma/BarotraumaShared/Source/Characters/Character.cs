@@ -1379,35 +1379,25 @@ namespace Barotrauma
             else
             {
                 closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
-                if (!IsBlocking(closestBody))
+                if (closestBody != null)
                 {
-                    closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
-                }
-            }
-            return !IsBlocking(closestBody);
-
-            bool IsBlocking(Body body)
-            {
-                if (body == null) { return false; }
-                if (body.UserData is Structure wall && wall.CastShadow)
-                {
-                    return wall != target;
-                }
-                else if (body.UserData is Item item && item != target)
-                {
-                    var door = item.GetComponent<Door>();
-                    if (door != null)
+                    if (closestBody.UserData is Structure wall && wall.CastShadow)
                     {
-                        return !door.IsOpen;
+                        return false;
                     }
                 }
-                return false;
+                closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
             }
+            if (closestBody != null)
+            {
+                if (closestBody.UserData is Structure wall && wall.CastShadow)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
-        /// <summary>
-        /// TODO: ensure that works. CheckVisibility takes positions in sim space, but this method uses world positions
-        /// </summary>
         public bool CanSeeCharacter(Character target, Vector2 sourceWorldPos)
         {
             Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceWorldPos);
@@ -1422,28 +1412,6 @@ namespace Barotrauma
                 closestBody = Submarine.CheckVisibility(target.WorldPosition, target.WorldPosition - diff);
                 if (closestBody == null) return true;
             }
-            Structure wall = closestBody.UserData as Structure;
-            Item item = closestBody.UserData as Item;
-            Door door = item?.GetComponent<Door>();
-            return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
-        }
-
-        public bool CanSeeCharacter(Character character, Vector2 sourceWorldPos)
-        {
-            Vector2 diff = ConvertUnits.ToSimUnits(character.WorldPosition - sourceWorldPos);
-
-            Body closestBody = null;
-            if (character.Submarine == null)
-            {
-                closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
-                if (closestBody == null) return true;
-            }
-            else
-            {
-                closestBody = Submarine.CheckVisibility(character.WorldPosition, character.WorldPosition - diff);
-                if (closestBody == null) return true;
-            }
-
             Structure wall = closestBody.UserData as Structure;
             return wall == null || !wall.CastShadow;
         }

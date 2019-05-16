@@ -508,7 +508,7 @@ namespace Barotrauma.Tutorials
             mechanic.AddActiveObjectiveEntity(mechanic_brokenWall_2, mechanic_repairIcon, mechanic_repairIconColor);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_2));
             mechanic.RemoveActiveObjectiveEntity(mechanic_brokenWall_2);
-            TriggerTutorialSegment(9, GameMain.Config.KeyBind(InputType.Select)); // Repairing machinery (pump)
+            TriggerTutorialSegment(9, GameMain.Config.KeyBind(InputType.Use)); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
             Repairable repairablePumpComponent = mechanic_brokenPump.Item.GetComponent<Repairable>();
             do

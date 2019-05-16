@@ -24,8 +24,8 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.4f), LogFrame.RectTransform, Anchor.Center) { MinSize = new Point(600, 420) });
-            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.03f) }, style: null);
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), LogFrame.RectTransform, Anchor.Center) { MinSize = new Point(700, 500) });
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.03f) }, style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), TextManager.Get("ServerLog.Filter"), font: GUI.SmallFont);            
             GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), font: GUI.SmallFont);
@@ -45,20 +45,12 @@ namespace Barotrauma.Networking
 
             listBox = new GUIListBox(new RectTransform(new Vector2(0.75f, 0.95f), paddedFrame.RectTransform, Anchor.BottomRight));
 
-            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 0.95f), paddedFrame.RectTransform, Anchor.BottomLeft));
-
             var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 0.95f), paddedFrame.RectTransform, Anchor.BottomLeft));
             int y = 30;
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[(int)msgType]), font: GUI.SmallFont)
-                {
-                    Selected = true,
-                    TextColor = messageColor[(int)msgType]
-                };
-
-                tickBox.OnSelected += (GUITickBox tb) =>
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[(int)msgType]), font: GUI.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[(int)msgType],

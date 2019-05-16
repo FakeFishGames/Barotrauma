@@ -38,6 +38,8 @@ namespace Barotrauma.Items.Components
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
+        private bool? swapDestinationOrder;
+
         private bool levelStartSelected;
         public bool LevelStartSelected
         {
@@ -423,6 +425,15 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (swapDestinationOrder == null)
+            {
+                swapDestinationOrder = item.Submarine != null && item.Submarine.FlippedX;
+                if (swapDestinationOrder.Value)
+                {
+                    levelStartTickBox.RectTransform.SetAsLastChild();
+                }
+            }
+
             if (steerArea.Rect.Contains(PlayerInput.MousePosition))
             {
                 if (!PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))

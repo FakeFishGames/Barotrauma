@@ -78,7 +78,6 @@ namespace Barotrauma
 
             int i = 0;
             var tabValues = Enum.GetValues(typeof(Tab));
-            float minTextScale = 1.0f;
             foreach (Tab tab in tabValues)
             {
                 var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonContainer.RectTransform),
@@ -93,17 +92,12 @@ namespace Barotrauma
                 var buttonSprite = tabButton.Style.Sprites[GUIComponent.ComponentState.None][0];
                 tabButton.RectTransform.MaxSize = new Point(
                     (int)(tabButton.Rect.Height * (buttonSprite.Sprite.size.X / buttonSprite.Sprite.size.Y)), int.MaxValue);
+
                 tabButtons.Add(tabButton);
                 tabButton.Font = GUI.LargeFont;
-                tabButton.TextBlock.AutoScale = true;
-                minTextScale = Math.Min(tabButton.TextBlock.TextScale, minTextScale);
                 i++;
             }
-
-            foreach (GUIButton tabButton in tabButtons)
-            {
-                tabButton.TextBlock.TextScale = minTextScale;
-            }
+            GUITextBlock.AutoScaleAndNormalize(tabButtons.Select(t => t.TextBlock));
 
             // crew tab -------------------------------------------------------------------------
 
