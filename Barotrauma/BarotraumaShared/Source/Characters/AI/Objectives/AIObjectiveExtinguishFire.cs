@@ -33,7 +33,7 @@ namespace Barotrauma
             float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
             float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
             float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
-            float devotion = Math.Max(Priority, 10) / 100;
+            float devotion = Math.Min(Priority, 10) / 100;
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + severityFactor * distanceFactor, 0, 1));
         }
 

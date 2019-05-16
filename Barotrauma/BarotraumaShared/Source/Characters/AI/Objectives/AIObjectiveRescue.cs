@@ -228,7 +228,7 @@ namespace Barotrauma
             float dist = Math.Abs(character.WorldPosition.X - targetCharacter.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetCharacter.WorldPosition.Y) * 2.0f;
             float distanceFactor = MathHelper.Lerp(1, 0.5f, MathUtils.InverseLerp(0, 10000, dist));
             float vitalityFactor = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter);
-            float devotion = Math.Max(Priority, 10) / 100;
+            float devotion = Math.Min(Priority, 10) / 100;
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + vitalityFactor * distanceFactor, 0, 1));
         }
     }
