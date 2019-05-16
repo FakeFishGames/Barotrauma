@@ -66,7 +66,8 @@ namespace Barotrauma
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                    TextManager.Get("Mission") + ": " + GameMain.GameSession.Mission.Name, font: GUI.LargeFont);
+                   TextManager.AddPunctuation(':', TextManager.Get("Mission"), GameMain.GameSession.Mission.Name),
+                   font: GUI.LargeFont);
 
                 var missionInfo = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                     GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,

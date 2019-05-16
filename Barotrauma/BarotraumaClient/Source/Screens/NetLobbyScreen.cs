@@ -1049,7 +1049,8 @@ namespace Barotrauma
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
                     var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform),
-                        "  - " + TextManager.Get("SkillName." + skill.Identifier) + ": " + (int)skill.Level, textColor);
+                        "  - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), ((int)skill.Level).ToString()), 
+                        textColor);
                 }
 
                 //spacing

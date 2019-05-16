@@ -61,7 +61,8 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                    "   - " + TextManager.Get("SkillName." + requiredSkills[i].Identifier) + ": " + ((int)requiredSkills[i].Level), font: GUI.SmallFont)
+                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int)requiredSkills[i].Level).ToString()), 
+                    font: GUI.SmallFont)
                 {
                     UserData = requiredSkills[i]
                 };

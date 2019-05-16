@@ -499,7 +499,7 @@ namespace Barotrauma
                 if (Linkable)
                 {
                     var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
-                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("AllowedLinks") + ": ", font: GUI.SmallFont);
+                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("AllowedLinks"), font: GUI.SmallFont);
                     if (AllowedLinks.None())
                     {
                         itemsText.Text += TextManager.Get("None");

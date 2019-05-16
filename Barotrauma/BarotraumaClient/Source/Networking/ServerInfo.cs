@@ -79,8 +79,9 @@ namespace Barotrauma.Networking
 
             var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), titleHolder.RectTransform), ServerName, font: GUI.LargeFont, wrap: true);
 
-            new GUITextBlock(new RectTransform(Vector2.One, title.RectTransform), 
-                TextManager.Get("ServerListVersion") + ": " + (string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion), textAlignment: Alignment.Right);
+            new GUITextBlock(new RectTransform(Vector2.One, title.RectTransform),
+                TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"), string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion), 
+                textAlignment: Alignment.Right);
 
             var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), previewContainer.RectTransform), isHorizontal: true)
             {

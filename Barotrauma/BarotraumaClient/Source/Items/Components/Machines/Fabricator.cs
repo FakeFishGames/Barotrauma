@@ -374,7 +374,7 @@ namespace Barotrauma.Items.Components
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
             float requiredTime = user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user);
-            string requiredTimeText = TextManager.Get("FabricatorRequiredTime") + ": " + ToolBox.SecondsToReadableTime(requiredTime);
+            string requiredTimeText = TextManager.AddPunctuation(':', TextManager.Get("FabricatorRequiredTime"), ToolBox.SecondsToReadableTime(requiredTime));
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 requiredTimeText, textColor: ToolBox.GradientLerp(degreeOfSuccess, Color.Red, Color.Yellow, Color.LightGreen), font: GUI.SmallFont);
                         

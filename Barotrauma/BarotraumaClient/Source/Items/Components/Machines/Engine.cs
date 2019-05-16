@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
             string powerLabel = TextManager.Get("EngineForce");
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), "", textAlignment: Alignment.Center)
             {
-                TextGetter = () => { return powerLabel + ": " + (int)(targetForce) + " %"; }
+                TextGetter = () => { return TextManager.AddPunctuation(':', powerLabel, (int)(targetForce) + " %"); }
             };
 
             forceSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), barSize: 0.2f, style: "GUISlider")
