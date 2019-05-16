@@ -12,10 +12,6 @@ namespace Barotrauma
 
         private XElement configElement;
 
-        private GraphicsDevice graphicsDevice;
-
-        private ScalableFont defaultFont;
-
         public ScalableFont Font { get; private set; }
         public ScalableFont SmallFont { get; private set; }
         public ScalableFont LargeFont { get; private set; }
@@ -87,26 +83,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Returns the default font of the currently selected language
-        /// </summary>
-        public ScalableFont LoadCurrentDefaultFont()
-        {
-            defaultFont?.Dispose();
-            defaultFont = null;
-            foreach (XElement subElement in configElement.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "font":
-                        defaultFont = LoadFont(subElement, graphicsDevice);
-                        break;
-                }
-            }
-            return defaultFont;
-        }
-
-
         private void RescaleFonts()
         {
             foreach (XElement subElement in configElement.Elements())
@@ -137,10 +113,9 @@ namespace Barotrauma
 
         private ScalableFont LoadFont(XElement element, GraphicsDevice graphicsDevice)
         {
-            string file         = GetFontFilePath(element);
-            uint size           = GetFontSize(element);
-            bool dynamicLoading = GetFontDynamicLoading(element);
-            return new ScalableFont(file, size, graphicsDevice, dynamicLoading);
+            string file = GetFontFilePath(element);
+            uint size   = GetFontSize(element);
+            return new ScalableFont(file, size, graphicsDevice);
         }
 
         private uint GetFontSize(XElement element)
@@ -169,20 +144,6 @@ namespace Barotrauma
                 }
             }
             return element.GetAttributeString("file", "");
-        }
-
-        private bool GetFontDynamicLoading(XElement element)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
-                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
-                if (GameMain.Config.Language.ToLowerInvariant() == language)
-                {
-                    return subElement.GetAttributeBool("dynamicloading", false);
-                }
-            }
-            return element.GetAttributeBool("dynamicloading", false);
         }
 
         public GUIComponentStyle GetComponentStyle(string name)

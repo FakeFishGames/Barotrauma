@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         private static Regex csvSplit = new Regex("(?:^|,)(\"(?:[^\"])*\"|[^,]*)", RegexOptions.Compiled); // Handling commas inside data fields surrounded by ""
         private static List<int> conversationClosingIndent = new List<int>();
-        private static char[] separator = new char[1] { '|' };
+        private static char[] separator = new char[1] { ',' };
 
         private const string conversationsPath = "Content/NPCConversations";
         private const string infoTextPath = "Content/Texts";
@@ -48,7 +48,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + conversationFiles[i]);
                     continue;
                 }
-                string xmlFileFullPath = $"{conversationsPath}/NpcConversations_{language}_NEW.xml";
+                string xmlFileFullPath = $"{conversationsPath}/NPCConversations_{language}_NEW.xml";
                 File.WriteAllLines(xmlFileFullPath, xmlContent);
                 DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
             }
@@ -141,8 +141,7 @@ namespace Barotrauma
 
             for (int i = 0; i < NPCPersonalityTrait.List.Count; i++) // Traits
             {
-                //string[] split = SplitCSV(csvContent[traitStart + i].Trim(separator));
-                string[] split = csvContent[traitStart + i].Split(separator);
+                string[] split = SplitCSV(csvContent[traitStart + i].Trim(separator));
                 xmlContent.Add(
                     $"<PersonalityTrait " +
                     $"{GetVariable("name", split[1])}" +
@@ -152,10 +151,8 @@ namespace Barotrauma
 
             for (int i = traitStart + NPCPersonalityTrait.List.Count; i < csvContent.Length; i++) // Conversations
             {
-                //string[] presplit = csvContent[i].Split(separator); // Handling speaker index fetching, somehow doesn't work with the regex
-                //string[] split = SplitCSV(csvContent[i]);
-
-                string[] split = csvContent[i].Split(separator);
+                string[] presplit = csvContent[i].Split(','); // Handling speaker index fetching, somehow doesn't work with the regex
+                string[] split = SplitCSV(csvContent[i]);
 
                 int emptyFields = 0;
 
@@ -176,15 +173,15 @@ namespace Barotrauma
                     continue;
                 }
 
-                string speaker = split[1];
-                int depthIndex = int.Parse(split[2]);
+                string speaker = presplit[1];
+                int depthIndex = int.Parse(presplit[2]);
                 // 3 = original line
-                string line = split[3].Replace("\"", "");
-                string flags = split[4].Replace("\"", "");
-                string allowedJobs = split[5].Replace("\"", "");
-                string speakerTags = split[6].Replace("\"", "");
-                string minIntensity = split[7].Replace("\"", "").Replace(",", ".");
-                string maxIntensity = split[8].Replace("\"", "").Replace(",", ".");
+                string line = split[4].Replace("\"", "");
+                string flags = split[5].Replace("\"", "");
+                string allowedJobs = split[6].Replace("\"", "");
+                string speakerTags = split[7].Replace("\"", "");
+                string minIntensity = split[8].Replace("\"", "").Replace(",", ".");
+                string maxIntensity = split[9].Replace("\"", "").Replace(",", ".");
 
                 string element =
                     $"{GetIndenting(depthIndex)}" +
@@ -260,7 +257,7 @@ namespace Barotrauma
                     list.Add("");
                 }
 
-                list.Add(curr.TrimStart(separator));
+                list.Add(curr.TrimStart(','));
             }
 
             return list.ToArray();
