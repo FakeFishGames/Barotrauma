@@ -14,6 +14,12 @@ namespace Barotrauma
         public virtual bool ForceRun => false;
         public virtual bool KeepDivingGearOn => false;
 
+        /// <summary>
+        /// Run the main objective with all subobjectives concurrently?
+        /// If false, the main objective will continue only when all the subobjectives have been removed (done).
+        /// </summary>
+        public virtual bool ConcurrentObjectives => false;
+
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         public float Priority { get; set; }
         public float PriorityModifier { get; private set; }
@@ -93,7 +99,10 @@ namespace Barotrauma
             foreach (AIObjective objective in subObjectives)
             {
                 objective.TryComplete(deltaTime);
-                return;
+                if (!ConcurrentObjectives)
+                {
+                    return;
+                }
             }
 
             bool wasCompleted = IsCompleted();
@@ -194,7 +203,7 @@ namespace Barotrauma
 
         public virtual void OnSelected()
         {
-            SteeringManager.Reset();
+            //SteeringManager.Reset();
         }
 
         public virtual void Reset() { }

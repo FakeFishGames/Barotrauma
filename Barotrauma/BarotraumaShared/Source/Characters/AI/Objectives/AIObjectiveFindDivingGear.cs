@@ -53,28 +53,32 @@ namespace Barotrauma
             var containedItems = item.ContainedItems;
             if (containedItems == null)
             {
+                var containedItems = item.ContainedItems;
+                if (containedItems == null)
+                {
 #if DEBUG
-                DebugConsole.ThrowError("AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
+                    DebugConsole.ThrowError("AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
 #endif
-                abandon = true;
-                return;
-            }
-            // Drop empty tanks
-            foreach (Item containedItem in containedItems)
-            {
-                if (containedItem == null) { continue; }
-                if (containedItem.Condition <= 0.0f)
-                {
-                    containedItem.Drop(character);
+                    abandon = true;
+                    return;
                 }
-            }
-            if (containedItems.None(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f))
-            {
-                TryAddSubObjective(ref getOxygen, () =>
+                // Drop empty tanks
+                foreach (Item containedItem in containedItems)
                 {
-                    character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                    return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
-                });
+                    if (containedItem == null) { continue; }
+                    if (containedItem.Condition <= 0.0f)
+                    {
+                        containedItem.Drop(character);
+                    }
+                }
+                if (containedItems.None(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f))
+                {
+                    TryAddSubObjective(ref getOxygen, () =>
+                    {
+                        character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
+                        return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
+                    });
+                }
             }
         }
     }
