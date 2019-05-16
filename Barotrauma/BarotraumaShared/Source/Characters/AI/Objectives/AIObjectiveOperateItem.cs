@@ -25,7 +25,6 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (goToObjective != null && !goToObjective.CanBeCompleted) { return 0; }
             if (component.Item.ConditionPercentage <= 0) { return 0; }
             if (objectiveManager.CurrentOrder == this)
             {
@@ -69,6 +68,10 @@ namespace Barotrauma
                 if (inSameRoom && withinReach)
                 {
                     if (character.SelectedConstruction != target.Item)
+                    {
+                        isCompleted = true;
+                    }
+                    if (component.AIOperate(deltaTime, character, this))
                     {
                         isCompleted = true;
                     }

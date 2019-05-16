@@ -9,9 +9,6 @@ namespace Barotrauma
     {
         public override string DebugTag => "go to";
 
-        const float checkAccessInterval = 1;
-        private float accessCheckTimer;
-
         private AIObjectiveFindDivingGear findDivingGear;
         private Vector2 targetPos;
         private bool repeat;
@@ -34,43 +31,6 @@ namespace Barotrauma
                 return AIObjectiveManager.OrderPriority;
             }
             return 1.0f;
-        }
-
-        public override bool CanBeCompleted
-        {
-            get
-            {
-                if (!abandon)
-                {
-                    if (FollowControlledCharacter && Character.Controlled == null)
-                    {
-                        abandon = true;
-                    }
-                    else if (Target != null && Target.Removed)
-                    {
-                        abandon = true;
-                    }
-                    else if (!repeat && waitUntilPathUnreachable < 0)
-                    {
-                        if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
-                        {
-                            abandon = PathSteering.CurrentPath.Unreachable;
-                        }
-                    }
-                }
-                if (abandon)
-                {
-#if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {(Target != null ? Target.ToString() : TargetPos.ToString())}", Color.Yellow);
-#endif
-                    if (objectiveManager.CurrentOrder != null)
-                    {
-                        character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
-                    }
-                    character.AIController.SteeringManager.Reset();
-                }
-                return base.CanBeCompleted;
-            }
         }
 
         public Entity Target { get; private set; }
@@ -106,12 +66,17 @@ namespace Barotrauma
         {
             if (FollowControlledCharacter)
             {
-                if (Character.Controlled == null) { return; }
+                if (Character.Controlled == null)
+                {
+                    abandon = true;
+                    return;
+                }
                 Target = Character.Controlled;
             }
             if (Target == character)
             {
                 character.AIController.SteeringManager.Reset();
+                abandon = true;
                 return;
             }           
             waitUntilPathUnreachable -= deltaTime;
@@ -119,7 +84,17 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-            if (Target != null) { character.AIController.SelectTarget(Target.AiTarget); }
+            if (Target != null)
+            {
+                if (Target.Removed)
+                {
+                    abandon = true;
+                }
+                else
+                {
+                    character.AIController.SelectTarget(Target.AiTarget);
+                }
+            }
             Vector2 currTargetPos = Vector2.Zero;
             if (Target == null)
             {
@@ -153,30 +128,46 @@ namespace Barotrauma
                 if (isInside && targetIsOutside && !AllowGoingOutside)
                 {
                     abandon = true;
-                    return;
                 }
-                if (accessCheckTimer <= 0)
+                else if (!repeat && waitUntilPathUnreachable < 0)
                 {
-                    accessCheckTimer = checkAccessInterval;
-                    if (insideSteering && !PathSteering.HasAccessToPath(PathSteering.CurrentPath))
+                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
                     {
-                        abandon = true;
-                        return;
+                        abandon = PathSteering.CurrentPath.Unreachable;
                     }
+                }
+                if (abandon)
+                {
+#if DEBUG
+                    DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {(Target != null ? Target.ToString() : TargetPos.ToString())}", Color.Yellow);
+#endif
+                    if (objectiveManager.CurrentOrder != null)
+                    {
+                        character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
+                    }
+                    character.AIController.SteeringManager.Reset();
                 }
                 else
                 {
-                    accessCheckTimer -= deltaTime;
-                }
-                character.AIController.SteeringManager.SteeringSeek(currTargetPos);
-                if (getDivingGearIfNeeded)
-                {
-                    if (targetIsOutside ||
-                        Target is Hull h && HumanAIController.NeedsDivingGear(h) ||
-                        Target is Item i && HumanAIController.NeedsDivingGear(i.CurrentHull) ||
-                        Target is Character c && HumanAIController.NeedsDivingGear(c.CurrentHull))
+                    character.AIController.SteeringManager.SteeringSeek(currTargetPos);
+                    if (getDivingGearIfNeeded)
                     {
-                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, true, objectiveManager));
+                        var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
+                        bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
+                        bool needsDivingSuit = needsDivingGear && (targetIsOutside || targetHull.WaterPercentage > 90);
+                        bool needsEquipment = false;
+                        if (needsDivingSuit)
+                        {
+                            needsEquipment = !HumanAIController.HasDivingSuit(character);
+                        }
+                        else if (needsDivingGear)
+                        {
+                            needsEquipment = !HumanAIController.HasDivingMask(character);
+                        }
+                        if (needsEquipment)
+                        {
+                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager));
+                        }
                     }
                 }
             }
