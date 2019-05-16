@@ -155,6 +155,15 @@ namespace Barotrauma
                 ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
             }
 
+            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            reportButtonFrame = new GUILayoutGroup(new RectTransform(
+                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
+            {
+                AbsoluteSpacing = (int)(5 * GUI.Scale),
+                UserData = "reportbuttons",
+                CanBeFocused = false
+            };
+
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
@@ -695,7 +704,19 @@ namespace Barotrauma
                 characterListBox.BarScroll = roundedPos;
             }
 
-            characterInfos.Add(characterInfo);
+            CreateCharacterFrame(character, characterListBox.Content);
+            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
+
+            if (character is AICharacter)
+            {
+                var ai = character.AIController as HumanAIController;
+                if (ai == null)
+                {
+                    DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
+                    return;
+                }
+                character.SetOrder(ai.CurrentOrder, "", null, false);
+            }
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
