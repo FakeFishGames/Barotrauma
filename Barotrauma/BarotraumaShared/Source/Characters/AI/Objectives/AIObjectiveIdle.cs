@@ -52,25 +52,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            return 1;
             float max = Math.Min(Math.Min(AIObjectiveManager.RunPriority, AIObjectiveManager.OrderPriority) - 1, 100);
             float initiative = character.GetSkillLevel("initiative");
             Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, initiative * Random));
             return Priority;
-        }
-
-        public override void Update(float deltaTime)
-        {
-            if (objectiveManager.CurrentObjective == this)
-            {
-                if (randomTimer > 0)
-                {
-                    randomTimer -= deltaTime;
-                }
-                else
-                {
-                    SetRandom();
-                }
-            }
         }
 
         public override void Update(float deltaTime)
@@ -109,13 +95,6 @@ namespace Barotrauma
             {
                 character.SelectedConstruction = null;
             }
-            if (!character.IsClimbing)
-            {
-                character.SelectedConstruction = null;
-            }
-
-            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
-                (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
             bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
