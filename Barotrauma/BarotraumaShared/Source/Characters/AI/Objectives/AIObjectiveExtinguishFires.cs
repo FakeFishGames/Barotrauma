@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
@@ -19,15 +20,18 @@ namespace Barotrauma
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (character.Submarine == null) { return 0; }
-            int fireCount = character.Submarine.GetHulls(true).Sum(h => h.FireSources.Count);
-            if (objectiveManager.CurrentOrder == this && fireCount > 0)
+            float referenceSize = 100;
+            // If the fire sources of inside a hull are half the reference size in total(e.g.), the severity for that hull should be 50.
+            // The severity values for all hulls are added together. So three hulls with 50 severity, would be 150 in total.
+            // Thus the max priority of 100 is reached when one hull has firesources of size 100 in width, if the priority modifier is 1.
+            float severity = character.Submarine.GetHulls(true).Sum(h => h.FireSources.Sum(fs => fs.Size.X) / referenceSize * 100);
+            if (severity < 1) { return 0; }
+            if (objectiveManager.CurrentOrder == this)
             {
                 return AIObjectiveManager.OrderPriority;
             }
             float basePriority = MathHelper.Clamp(Priority, 0, 10);
-            float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
-            return MathHelper.Clamp(basePriority + fireCount * 20, 0, max);
+            return MathHelper.Clamp(basePriority + severity * PriorityModifier, 0, 99);
         }
 
         public override bool IsCompleted() => false;

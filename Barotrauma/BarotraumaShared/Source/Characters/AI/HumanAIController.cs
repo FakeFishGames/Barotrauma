@@ -188,7 +188,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (!(ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires) && !(ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire))
+            if (!(ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires) && !(ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFires) && !(ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire))
             {
                 var extinguisherItem = Character.Inventory.FindItemByIdentifier("extinguisher") ?? Character.Inventory.FindItemByTag("extinguisher");
                 if (extinguisherItem != null && Character.HasEquippedItem(extinguisherItem))
@@ -443,7 +443,7 @@ namespace Barotrauma
         public float GetHullSafety(Hull hull)
         {
             if (hull == null) { return 0; }
-            bool ignoreFire = ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
+            bool ignoreFire = ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFire || ObjectiveManager.CurrentObjective is AIObjectiveExtinguishFires || ObjectiveManager.CurrentOrder is AIObjectiveExtinguishFires;
             bool ignoreWater = HasDivingSuit(Character);
             bool ignoreOxygen = ignoreWater || HasDivingGear(Character);
             bool ignoreEnemies = ObjectiveManager.CurrentObjective is AIObjectiveCombat || ObjectiveManager.CurrentOrder is AIObjectiveCombat;
