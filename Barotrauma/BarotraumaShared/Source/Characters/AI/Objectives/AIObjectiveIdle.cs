@@ -74,6 +74,21 @@ namespace Barotrauma
             }
         }
 
+        public override void Update(float deltaTime)
+        {
+            if (objectiveManager.CurrentObjective == this)
+            {
+                if (randomTimer > 0)
+                {
+                    randomTimer -= deltaTime;
+                }
+                else
+                {
+                    SetRandom();
+                }
+            }
+        }
+
         public override bool IsCompleted() => false;
         public override bool CanBeCompleted => true;
 
@@ -84,7 +99,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (PathSteering == null) return;
+            if (PathSteering == null) { return; }
 
             //don't keep dragging others when idling
             if (character.SelectedCharacter != null)
@@ -136,7 +151,6 @@ namespace Barotrauma
                 {
                     //choose a random available hull
                     var randomHull = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-
                     bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
                     if (isCurrentHullOK)
                     {
@@ -269,7 +283,6 @@ namespace Barotrauma
 
         private void FindTargetHulls()
         {
-            bool isCurrentHullOK = !HumanAIController.UnsafeHulls.Contains(character.CurrentHull) && !IsForbidden(character.CurrentHull);
             targetHulls.Clear();
             hullWeights.Clear();
             foreach (var hull in Hull.hullList)

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    // TODO: Ensure that this works well enough. Consider using AIObjectiveLoop class.
+    // TODO: Refactor using AIObjectiveLoop class.
     class AIObjectiveRescueAll : AIObjective
     {
         public override string DebugTag => "rescue all";

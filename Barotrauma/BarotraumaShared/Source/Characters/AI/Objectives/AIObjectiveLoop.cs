@@ -133,9 +133,10 @@ namespace Barotrauma
         {
             foreach (T target in GetList())
             {
+                // The bots always find targets when the objective is an order.
                 if (objectiveManager.CurrentOrder != this)
                 {
-                    // Battery or pump states cannot be reported and therefore we must ignore them -> the bots always know if they require attention.
+                    // Battery or pump states cannot currently be reported (not implemented) and therefore we must ignore them -> the bots always know if they require attention.
                     bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater;
                     if (!ignore && !ReportedTargets.Contains(target)) { continue; }
                 }

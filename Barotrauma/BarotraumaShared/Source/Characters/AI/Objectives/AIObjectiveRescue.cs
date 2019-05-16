@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    // TODO: refactor
     class AIObjectiveRescue : AIObjective
     {
         public override string DebugTag => "rescue";
@@ -93,6 +94,7 @@ namespace Barotrauma
             }
         }
 
+        // TODO: remove and replace with the priority system
         protected override bool ShouldInterruptSubObjective(AIObjective subObjective)
         {
             if (subObjective is AIObjectiveFindSafety)
