@@ -602,7 +602,7 @@ namespace Barotrauma
             public GUIMessageBox Create()
             {
                 var box = new GUIMessageBox(TextManager.Get("LevelEditorCreateLevelObj"), string.Empty, 
-                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, new Vector2(0.5f, 0.8f));
+                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, GameMain.GraphicsWidth / 2, (int)(GameMain.GraphicsHeight * 0.8f));
 
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;

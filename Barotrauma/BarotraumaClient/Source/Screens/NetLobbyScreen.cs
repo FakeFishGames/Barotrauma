@@ -1212,7 +1212,7 @@ namespace Barotrauma
                 };
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", new Vector2(0.25f, 0.25f), new Point(500, 400)));
+                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 600));
                     return true;
                 };
             }
@@ -2005,8 +2005,7 @@ namespace Barotrauma
                     return false;
                 }
 
-                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, 
-                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, new string[] { TextManager.Get("Yes"), TextManager.Get("No") }, 400, 300)
                 {
                     UserData = "request" + subName
                 };
