@@ -620,6 +620,8 @@ namespace Barotrauma
 
         private GUILayoutGroup subPreviewContainer;
 
+        private GUILayoutGroup subPreviewContainer;
+
         private GUIButton loadGameButton;
         
         public Action<Submarine, string, string> StartNewGame;
