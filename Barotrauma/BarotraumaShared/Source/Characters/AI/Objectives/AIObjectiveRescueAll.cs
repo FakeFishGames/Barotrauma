@@ -31,13 +31,14 @@ namespace Barotrauma
 
         protected override AIObjective ObjectiveConstructor(Character target) => new AIObjectiveRescue(character, target, objectiveManager, PriorityModifier);
 
-        protected override float TargetEvaluation() => GetVitalityFactor(character) * 100;
+        protected override float TargetEvaluation() => targets.Max(t => GetVitalityFactor(t)) * 100;
 
         public static float GetVitalityFactor(Character character) => (character.MaxVitality - character.Vitality) / character.MaxVitality;
 
         public static bool IsValidTarget(Character target, Character character)
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
+            if (target == character) { return false; } // TODO: enable healing self
             if (!HumanAIController.IsFriendly(character, target)) { return false; }
             if (target.Vitality / target.MaxVitality > VitalityThreshold) { return false; }
             if (target.Submarine == null) { return false; }

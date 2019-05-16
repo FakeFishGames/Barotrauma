@@ -140,10 +140,7 @@ namespace Barotrauma
             {
                 if (UseController)
                 {
-                    //try finding the controller with the simpler non-recursive method first
-                    ConnectedController = 
-                        targetItem.Item.GetConnectedComponents<Controller>().FirstOrDefault() ?? 
-                        targetItem.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
+                    ConnectedController = targetItem.Item.GetConnectedComponents<Controller>().FirstOrDefault();
                 }
                 TargetEntity = targetItem.Item;
                 TargetItemComponent = targetItem;
