@@ -41,7 +41,7 @@ namespace Barotrauma
             if (leak.Open == 0.0f) { return 0.0f; }
             float priority = AIObjectiveFixLeaks.GetLeakSeverity(leak);
             float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
-            float max = MathHelper.Min((AIObjectiveManager.OrderPriority + 20) * maxMultiplier, 90);
+            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
             return MathHelper.Clamp(Priority + priority, 0, max);
         }
 

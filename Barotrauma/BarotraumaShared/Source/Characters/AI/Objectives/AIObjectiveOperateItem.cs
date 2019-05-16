@@ -51,7 +51,7 @@ namespace Barotrauma
             }
             float value = (Priority + (AIObjectiveManager.OrderPriority / 2)) * PriorityModifier;
             float maxMultiplier = MathHelper.Min(PriorityModifier, 1);
-            float max = MathHelper.Min(AIObjectiveManager.OrderPriority * maxMultiplier, 90);
+            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1) * maxMultiplier, 90);
             return MathHelper.Clamp(value, 0, max);
         }
 
