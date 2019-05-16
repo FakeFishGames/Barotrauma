@@ -356,7 +356,7 @@ namespace Barotrauma
 
             Point? minSize = null, maxSize = null;
             if (element.Attribute("minsize") != null) minSize = element.GetAttributePoint("minsize", Point.Zero);
-            if (element.Attribute("maxsize") != null) maxSize = element.GetAttributePoint("maxsize", new Point(1000, 1000));
+            //if (element.Attribute("maxsize") != null) maxSize = element.GetAttributePoint("maxsize", new Point(1000, 1000));
 
             RectTransform rectTransform;
             if (element.Attribute("relativesize") != null)
