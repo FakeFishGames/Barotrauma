@@ -129,7 +129,8 @@ namespace Barotrauma
             {
                 bool isInside = character.CurrentHull != null;
                 bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
-                bool targetIsOutside = (Target != null && Target.Submarine == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
+                var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
+                bool targetIsOutside = (Target != null && targetHull == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
                 if (isInside && targetIsOutside && !AllowGoingOutside)
                 {
                     abandon = true;
@@ -157,9 +158,8 @@ namespace Barotrauma
                     character.AIController.SteeringManager.SteeringSeek(currTargetPos);
                     if (getDivingGearIfNeeded)
                     {
-                        var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
                         bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
-                        bool needsDivingSuit = needsDivingGear && (targetIsOutside || targetHull.WaterPercentage > 90);
+                        bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90);
                         bool needsEquipment = false;
                         if (needsDivingSuit)
                         {
