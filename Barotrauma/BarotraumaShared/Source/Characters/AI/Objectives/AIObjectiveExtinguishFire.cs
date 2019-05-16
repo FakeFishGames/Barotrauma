@@ -51,10 +51,9 @@ namespace Barotrauma
             return otherExtinguishFire != null && otherExtinguishFire.targetHull == targetHull;
         }
 
-        public override bool CanBeCompleted
-        {
-            get { return getExtinguisherObjective == null || getExtinguisherObjective.IsCompleted() || getExtinguisherObjective.CanBeCompleted; }
-        }
+        public override bool CanBeCompleted =>
+            (getExtinguisherObjective == null || getExtinguisherObjective.IsCompleted() || getExtinguisherObjective.CanBeCompleted) &&
+            (gotoObjective == null || gotoObjective.IsCompleted() || gotoObjective.CanBeCompleted);
 
         protected override void Act(float deltaTime)
         {

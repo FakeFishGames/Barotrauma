@@ -161,31 +161,34 @@ namespace Barotrauma
             else
             {
                 bool isInside = character.CurrentHull != null;
-                bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null;
+                bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
                 bool targetIsOutside = (Target != null && Target.Submarine == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
                 if (isInside && targetIsOutside && !AllowGoingOutside)
                 {
                     cannotReach = true;
+                    return;
                 }
-                else
+                if (insideSteering && !PathSteering.HasAccessToPath(PathSteering.CurrentPath))
                 {
-                    character.AIController.SteeringManager.SteeringSeek(currTargetPos);
-                    if (getDivingGearIfNeeded)
+                    cannotReach = true;
+                    return;
+                }
+                character.AIController.SteeringManager.SteeringSeek(currTargetPos);
+                if (getDivingGearIfNeeded)
+                {
+                    if (targetIsOutside ||
+                        Target is Hull h && HumanAIController.NeedsDivingGear(h) ||
+                        Target is Item i && HumanAIController.NeedsDivingGear(i.CurrentHull) ||
+                        Target is Character c && HumanAIController.NeedsDivingGear(c.CurrentHull))
                     {
-                        if (targetIsOutside ||
-                            Target is Hull h && HumanAIController.NeedsDivingGear(h) ||
-                            Target is Item i && HumanAIController.NeedsDivingGear(i.CurrentHull) ||
-                            Target is Character c && HumanAIController.NeedsDivingGear(c.CurrentHull))
+                        if (findDivingGear == null)
                         {
-                            if (findDivingGear == null)
-                            {
-                                findDivingGear = new AIObjectiveFindDivingGear(character, true, objectiveManager);
-                                AddSubObjective(findDivingGear);
-                            }
-                            else if (!findDivingGear.CanBeCompleted)
-                            {
-                                abandon = true;
-                            }
+                            findDivingGear = new AIObjectiveFindDivingGear(character, true, objectiveManager);
+                            AddSubObjective(findDivingGear);
+                        }
+                        else if (!findDivingGear.CanBeCompleted)
+                        {
+                            abandon = true;
                         }
                     }
                 }
