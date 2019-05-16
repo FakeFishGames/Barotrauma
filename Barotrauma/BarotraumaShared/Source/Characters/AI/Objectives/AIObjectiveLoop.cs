@@ -160,7 +160,10 @@ namespace Barotrauma
                     objective = ObjectiveConstructor(target);
                     objective.Completed += () => ReportedTargets.Remove(target);
                     Objectives.Add(target, objective);
-                    AddSubObjective(objective);
+                    if (!subObjectives.Contains(objective))
+                    {
+                        subObjectives.Add(objective);
+                    }
                 }
             }
         }
