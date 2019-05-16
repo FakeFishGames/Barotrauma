@@ -331,11 +331,6 @@ namespace Barotrauma
 
         private void CheckDoorsInPath()
         {
-            closestButton = null;
-            if (currentNode == null) { return false; }
-            if (nextNode == null) { return false; }
-            var door = nextNode.ConnectedDoor;
-            if (door == null) { return true; }
             if (door.IsOpen) { return true; }
             if (canBreakDoors) { return true; }
             if (door.IsStuck) { return false; }

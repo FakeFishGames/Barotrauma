@@ -119,7 +119,7 @@ namespace Barotrauma
             subObjectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             if (ConcurrentObjectives)
             {
-                subObjectives.ForEach(so => SortSubObjectives());
+                subObjectives.ForEach(so => so.SortSubObjectives());
             }
             else
             {
