@@ -304,11 +304,11 @@ namespace Barotrauma
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
-                if (InStairs)
+                if (currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null)
                 {
                     float multiplierX = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
                     float multiplierY = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.Y) / 10, 0, 1));
-                    float verticalDistance = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
+                    float verticalDistance = Math.Abs(colliderBottom.Y - currentPath.CurrentNode.SimPosition.Y);
                     float targetDistX = collider.radius * multiplierX;
                     float targetDistY = collider.radius * multiplierY;
                     if (horizontalDistance < targetDistX && verticalDistance < targetDistY && isAboveFeet && isNotTooHigh)
