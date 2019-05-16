@@ -853,26 +853,15 @@ namespace Barotrauma
             {
                 if (characterConfigFiles == null)
                 {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true);
                 }
                 return characterConfigFiles;
             }
         }
 
-        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        public static string GetConfigFile(string speciesName)
         {
-            string configFile = null;
-            if (contentPackage == null)
-            {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
-            else
-            {
-                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
-
+            string configFile = CharacterConfigFiles.FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
             if (configFile == null)
             {
                 DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
@@ -1147,33 +1136,7 @@ namespace Barotrauma
             
             if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
             {
-                SmoothedCursorPosition = cursorPosition;
-            }
-            else
-            {
-                //apply some smoothing to the cursor positions of remote players when playing as a client
-                //to make aiming look a little less choppy
-                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
-                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
-                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
-            }
-            
-            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
-            {
-                SmoothedCursorPosition = cursorPosition;
-            }
-            else
-            {
-                //apply some smoothing to the cursor positions of remote players when playing as a client
-                //to make aiming look a little less choppy
-                Vector2 smoothedCursorDiff = cursorPosition - SmoothedCursorPosition;
-                smoothedCursorDiff = NetConfig.InterpolateCursorPositionError(smoothedCursorDiff);
-                SmoothedCursorPosition = cursorPosition - smoothedCursorDiff;
-            }
-            
-            if (!(this is AICharacter) || Controlled == this || IsRemotePlayer)
-            {
-                if (speedMultipliers.Count == 0) return 1f;
+                Vector2 targetMovement = GetTargetMovement();
 
                 AnimController.TargetMovement = targetMovement;
                 AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < -0.1f;

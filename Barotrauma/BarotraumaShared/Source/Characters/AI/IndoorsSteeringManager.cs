@@ -53,13 +53,9 @@ namespace Barotrauma
             (currentPath.NextNode != null && currentPath.NextNode.Ladders != null));
 
         /// <summary>
-        /// Returns true if the previous, current or the next node is in stairs.
+        /// Returns true if any node in the path is in stairs
         /// </summary>
-        public bool InStairs =>
-            currentPath != null && (
-            currentPath.PrevNode != null && currentPath.PrevNode.Stairs != null ||
-            currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null ||
-            currentPath.NextNode != null && currentPath.NextNode.Stairs != null);
+        public bool InStairs => currentPath != null && currentPath.Nodes.Any(n => n.Stairs != null);
 
         public bool IsNextNodeLadder
         {
@@ -304,7 +300,9 @@ namespace Barotrauma
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
-                if (currentPath.CurrentNode != null && currentPath.CurrentNode.Stairs != null)
+                float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
+                float targetDistance = collider.radius * margin;
+                if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh)
                 {
                     float multiplierX = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
                     float multiplierY = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.Y) / 10, 0, 1));

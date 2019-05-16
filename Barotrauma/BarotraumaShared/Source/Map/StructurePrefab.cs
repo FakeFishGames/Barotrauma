@@ -230,6 +230,12 @@ namespace Barotrauma
             {
                 sp.Tags.Add("wall");
             }
+
+            SerializableProperty.DeserializeProperties(sp, element);
+            if (sp.Body)
+            {
+                sp.Tags.Add("wall");
+            }
             string translatedDescription = TextManager.Get("EntityDescription." + sp.identifier, true);
             if (!string.IsNullOrEmpty(translatedDescription)) sp.Description = translatedDescription;
 

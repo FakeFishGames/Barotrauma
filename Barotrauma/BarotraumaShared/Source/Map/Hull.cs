@@ -78,8 +78,27 @@ namespace Barotrauma
 
         private float[] leftDelta;
         private float[] rightDelta;
-                
-        public List<Gap> ConnectedGaps;
+
+        public readonly List<Gap> ConnectedGaps = new List<Gap>();
+
+        private string roomName;
+        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
+        public string RoomName
+        {
+            get { return roomName; }
+            set
+            {
+                if (roomName == value) { return; }
+                roomName = value;
+                DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+            }
+        }
+
+        public string DisplayName
+        {
+            get;
+            private set;
+        }
 
         private string roomName;
         [Editable, Serialize("", true, translationTextTag: "RoomName.")]
@@ -608,9 +627,6 @@ namespace Barotrauma
             OxygenPercentage = 100.0f;
 
             FireSources = new List<FireSource>();
-            linkedTo = new System.Collections.ObjectModel.ObservableCollection<MapEntity>();
-
-            
 
             properties = SerializableProperty.GetProperties(this);
 
@@ -975,29 +991,83 @@ namespace Barotrauma
             FireSources.Remove(fire);
         }
 
-        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
+        private HashSet<Hull> adjacentHulls = new HashSet<Hull>();
+        public IEnumerable<Hull> GetConnectedHulls(bool includingThis, int? searchDepth = null)
         {
-            return GetAdjacentHulls(new HashSet<Hull>(), 0, searchDepth);
+            adjacentHulls.Clear();
+            int startStep = 0;
+            return GetAdjacentHulls(includingThis, adjacentHulls, ref startStep, searchDepth);
         }
 
-        private HashSet<Hull> GetAdjacentHulls(HashSet<Hull> connectedHulls, int steps, int? searchDepth)
+        private HashSet<Hull> GetAdjacentHulls(bool includingThis, HashSet<Hull> connectedHulls, ref int step, int? searchDepth)
         {
-            connectedHulls.Add(this);
-
-            if (searchDepth != null && steps >= searchDepth.Value) return connectedHulls;
-
+            if (includingThis)
+            {
+                connectedHulls.Add(this);
+            }
+            if (step > searchDepth.Value)
+            {
+                return connectedHulls;
+            }
             foreach (Gap g in ConnectedGaps)
             {
                 for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        hull.GetAdjacentHulls(connectedHulls, steps++, searchDepth);
+                        step++;
+                        hull.GetAdjacentHulls(true, connectedHulls, ref step, searchDepth);
+                    }
+                }
+            }
+            return connectedHulls;
+        }
+
+        /// <summary>
+        /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
+        /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
+        /// </summary>
+        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance)
+        {
+            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance);
+        }
+
+        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
+        {
+            if (distance >= maxDistance) return float.MaxValue;
+            if (this == target)
+            {
+                return distance + Vector2.Distance(startPos, endPos);
+            }
+
+            connectedHulls.Add(this);
+
+            foreach (Gap g in ConnectedGaps)
+            {
+                if (g.ConnectedDoor != null)
+                {
+                    //gap blocked if the door is not open or the predicted state is not open
+                    if (!g.ConnectedDoor.IsOpen || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    {
+                        if (g.ConnectedDoor.OpenState < 0.1f) continue;
+                    }
+                }
+                else if (g.Open <= 0.0f)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
+                {
+                    if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
+                    {
+                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position), maxDistance);
+                        if (dist < float.MaxValue) return dist;
                     }
                 }
             }
 
-            return connectedHulls;
+            return float.MaxValue;
         }
 
         /// <summary>
