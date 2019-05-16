@@ -12,7 +12,6 @@ namespace Barotrauma
 
         public abstract string DebugTag { get; }
         public virtual bool ForceRun => false;
-        public virtual bool KeepDivingGearOn => false;
 
         /// <summary>
         /// Run the main objective with all subobjectives concurrently?
