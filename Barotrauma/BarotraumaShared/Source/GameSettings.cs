@@ -45,7 +45,7 @@ namespace Barotrauma
 
         public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
-        public bool UseDirectionalVoiceChat { get; set; }
+        public bool UseDirectionalVoiceChat { get; set; } = true;
 
         public enum VoiceMode
         {
@@ -206,7 +206,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 5.0f);
 #endif
             }
         }

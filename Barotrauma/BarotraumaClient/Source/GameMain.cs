@@ -334,7 +334,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 5.0f);
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
@@ -666,7 +666,7 @@ namespace Barotrauma
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen)
+                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
                     {
                         GUI.TogglePauseMenu();
                         paused = true;
@@ -812,17 +812,19 @@ namespace Barotrauma
         // ToDo: Move texts/links to localization, when possible.
         public void ShowBugReporter()
         {
-            var msgBox = new GUIMessageBox("", "");
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
+            var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");
+            msgBox.UserData = "bugreporter";
+            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
+            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
 
             List<Pair<string, string>> links = new List<Pair<string, string>>()
                 {
-                    new Pair<string, string>("Barotrauma Feedback Form","https://barotraumagame.com/feedback"),
-                    new Pair<string, string>("Github Issue Form (Needs account)","https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
+                    new Pair<string, string>(TextManager.Get("bugreportfeedbackform"),"https://barotraumagame.com/feedback"),
+                    new Pair<string, string>(TextManager.Get("bugreportgithubform"),"https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
                 };
             foreach (var link in links)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
                 {
                     UserData = link.Second,
                     OnClicked = (btn, userdata) =>
@@ -833,6 +835,9 @@ namespace Barotrauma
                     }
                 };
             }
+
+            msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
+                msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + (int)(50 * GUI.Scale));
         }
 
         static bool waitForKeyHit = true;

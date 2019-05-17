@@ -362,6 +362,9 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+#if SERVER
+                    GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character));
+#endif
                 }
             }
         }
