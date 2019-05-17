@@ -2583,4 +2583,9 @@
 <privacypolicy>隐私政策</privacypolicy>
 
 <lightcomponent.lightcolor>颜色</lightcomponent.lightcolor>
+
+<connection.batterychargestatusout>充电中</connection.batterychargestatusout>
+<connection.batterychargepercentage>充电中分比</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>设置充电率</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>输出充电率</connection.batteryrechargespeedout>充电率
 </infotexts>
