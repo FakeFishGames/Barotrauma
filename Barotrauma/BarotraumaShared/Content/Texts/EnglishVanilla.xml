@@ -3258,6 +3258,7 @@
   <connection.stateout>state_out</connection.stateout>
   <connection.turretaimingout>position_out</connection.turretaimingout>
   <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
+  <connection.sonardataout>data_out</connection.sonardataout>
   
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
 
