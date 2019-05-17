@@ -396,8 +396,11 @@ namespace Barotrauma
             {
                 MouseOn.DrawToolTip(spriteBatch);
             }
-            
-            Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, 0, Scale / 2f);            
+
+            if (GameMain.WindowActive)
+            {
+                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, 0, Scale / 2f);
+            }
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
