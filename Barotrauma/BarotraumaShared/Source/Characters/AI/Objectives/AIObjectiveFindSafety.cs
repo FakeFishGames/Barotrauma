@@ -244,6 +244,7 @@ namespace Barotrauma
                             }
                         }
                     }
+                    // TODO: could we get a closest door to the outside and target the flowing hull if no airlock is found?
                     // Huge preference for closer targets
                     float distance = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
                     float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));
