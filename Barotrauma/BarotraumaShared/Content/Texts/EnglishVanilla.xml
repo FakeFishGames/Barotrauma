@@ -3237,4 +3237,26 @@
   <wificomponent.channel>Channel</wificomponent.channel>
 
   <quickuseaction.holdtounequip>Hold to unequip</quickuseaction.holdtounequip>
+  
+  <entityname.incendiumfueltank>Incendium Fuel Tank</entityname.incendiumfueltank>
+  <entityname.physicoriumammobox>Physicorium Ammunition Box</entityname.physicoriumammobox>
+  <entityname.physicoriumbolt>Physicorium Bolt</entityname.physicoriumbolt>
+
+  <statisticspromptheader>Do you want to help us make Barotrauma better?</statisticspromptheader>
+  <statisticsprompttext>Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.</statisticsprompttext>
+
+  <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
+  <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
+
+  <connection.chargebattery>charge</connection.chargebattery>
+  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+  <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
+  <connection.signalx>signal_[num]</connection.signalx>
+  <connection.set_text>signal_[num]</connection.set_text>
+
+  <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
+
+  <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
 </infotexts>
