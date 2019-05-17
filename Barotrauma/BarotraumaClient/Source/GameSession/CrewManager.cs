@@ -747,7 +747,7 @@ namespace Barotrauma
             {
                 if (orderGiver == null || orderGiver.CurrentHull == null) { return; }
                 var hull = orderGiver.CurrentHull;
-                AddOrder(new Order(order.Prefab, hull, null), order.Prefab.FadeOutTime);
+                AddOrder(new Order(order.Prefab, hull, null, orderGiver), order.Prefab.FadeOutTime);
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
@@ -1350,7 +1350,7 @@ namespace Barotrauma
                 bool hasFires = Character.Controlled.CurrentHull.FireSources.Count > 0;
                 ToggleReportButton("reportfire", hasFires);
 
-                bool hasLeaks = Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
+                bool hasLeaks = Character.Controlled.CurrentHull.Submarine != null && Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
                 ToggleReportButton("reportbreach", hasLeaks);
 
                 bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(Character.Controlled, c));

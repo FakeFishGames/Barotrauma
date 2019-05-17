@@ -298,7 +298,7 @@
       </StatusEffect>
       <StatusEffect type="OnFailure" target="Contained" Condition="-0.1" disabledeltatime="true"/>
       <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="800.0" loop="true" />
-      <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
+      <LightComponent AllowInGameEditing="false" LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
     </RepairTool>
@@ -330,7 +330,7 @@
         <Affliction identifier="burn" amount="0.7" />
       </StatusEffect>
       <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="800.0" loop="true" />
-      <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
+      <LightComponent AllowInGameEditing="false" LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
     </RepairTool>
@@ -401,6 +401,7 @@
   <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien,artifactholder">
     <Sprite texture="Content/Items/Alien/artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="alien" />
       <Containable identifiers="thermalartifact">
         <StatusEffect type="OnContaining" target="This" Charge="1000.0" />
@@ -409,7 +410,7 @@
         <StatusEffect type="OnContaining" target="This" Charge="10.0" />
       </Containable>
     </ItemContainer>
-    <LightComponent lightcolor="153,204,255,200" canbeselected="false" range="800.0" IsOn="true" castshadows="false">
+    <LightComponent AllowInGameEditing="false" lightcolor="153,204,255,200" canbeselected="false" range="800.0" IsOn="true" castshadows="false">
       <sprite texture="Content/Items/Alien/artifactholder_glow.png" depth="0.025" origin="0.5,0.5" alpha="1.0" />
     </LightComponent>
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0" />
@@ -422,8 +423,9 @@
     <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="167,583,178,178" depth="0.78" offset="6,-36" origin="0.5,0.5">
       <Conditional Charge="gt 1" targetitemcomponent="PowerContainer" />
     </DecorativeSprite>
-    <LightComponent lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true" />
+    <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="264,-321" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="alienpowercell">
         <StatusEffect type="OnContaining" target="This" Charge="100.0" />
       </Containable>
@@ -441,7 +443,7 @@
   </Item>
   <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien, smallitem" scale="0.3" impactsoundtag="impact_metal_light">
     <Sprite texture="Content/Items/Alien/AlienPowerCell.png" sourcerect="47,25,34,77" depth="0.7" origin="0.5,0.5" />
-    <LightComponent lightcolor="112,146,190,30" canbeselected="false" range="100.0" IsOn="true" castshadows="false" />
+    <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,30" canbeselected="false" range="100.0" IsOn="true" castshadows="false" />
     <Body radius="15" height="40" density="20" />
     <Holdable slots="RightHand,LeftHand,Any" msg="ItemMsgPickUpSelect">
       <!--<StatusEffect type="OnContained" target="Character">
@@ -497,7 +499,7 @@
       <sound file="Content/Items/Alien/AlienTurret1.ogg" range="10000" type="OnUse" />
       <sound file="Content/Items/Alien/AlienTurret2.ogg" range="10000" type="OnUse" />
       <BarrelSprite texture="Content/Items/Alien/AlienTurret.png" sourcerect="2,20,286,484" origin="0.5,0.73" depth="0.4" />
-      <LightComponent lightcolor="112,146,190,255" powerconsumption="10" Flicker="0.0" range="2500" IsOn="true">
+      <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,255" powerconsumption="10" Flicker="0.0" range="2500" IsOn="true">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,0.2" />
       </LightComponent>
     </Turret>
@@ -534,7 +536,7 @@
   <Item name="Alien Coil" identifier="aliencoil" Tags="alien" category="Alien">
     <!-- TODO: alien coil sprite -->
     <Sprite texture="Content/Items/Alien/AlienElectricCoil.png" depth="0.55" sourcerect="0,31,256,190" origin="0.5,0.4" />
-    <LightComponent lightcolor="112,146,190,100" flicker="0.2" canbeselected="false" range="800.0" IsOn="true" />
+    <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,100" flicker="0.2" canbeselected="false" range="800.0" IsOn="true" />
     <ElectricalDischarger duration="0.25" range="500" rangemultiplierinwalls="5" powerconsumption="9000" minvoltage="0.9">
       <Attack targetimpulse="50">
         <Affliction identifier="stun" strength="3" />
@@ -570,18 +572,20 @@
   <Item name="Small Alien Chest" identifier="alienitemcontainersmall" category="Alien" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="100,5,153,65" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Large Alien Chest" identifier="alienitemcontainerlarge" category="Alien" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="5,127,246,125" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Alien Light Component" identifier="alienlightcomponent" category="Alien" Tags="smallitem" cargocontaineridentifier="metalcrate">
     <Sprite texture="AlienLightComponent.png" depth="0.8" sourcerect="0,0,16,16" origin="0.5,0.5" />
-    <LightComponent canbeselected="true" color="1.0,0.0,0.0,0.5" castshadows="false">
+    <LightComponent AllowInGameEditing="false" color="1.0,0.0,0.0,0.5" castshadows="false">
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
       <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="68,35,23,24" origin="0.5,0.5" />
     </LightComponent>

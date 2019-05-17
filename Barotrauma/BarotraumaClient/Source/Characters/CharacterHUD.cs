@@ -370,7 +370,13 @@ namespace Barotrauma
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
         {
-            if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) { return; }
+            if (order.TargetAllCharacters)
+            {
+                if (order.OrderGiver != character && !order.HasAppropriateJob(character))
+                {
+                    return;
+                }
+            }
 
             Entity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetEntity;
             if (target == null) { return; }

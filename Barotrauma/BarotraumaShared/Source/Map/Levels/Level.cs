@@ -609,8 +609,7 @@ namespace Barotrauma
                 foreach (InterestingPosition pos in positionsOfInterest)
                 {
                     if (pos.PositionType != PositionType.MainPath || pos.Position.X < 5000 || pos.Position.X > Size.X - 5000) continue;
-                    if (Math.Abs(pos.Position.X - StartPosition.X) < 10000) continue;
-                    if (Math.Abs(pos.Position.Y - StartPosition.Y) < 10000) continue;
+                    if (Math.Abs(pos.Position.X - StartPosition.X) < minWidth * 2 || Math.Abs(pos.Position.X - EndPosition.X) < minWidth * 2) continue;
                     if (GetTooCloseCells(pos.Position.ToVector2(), minWidth * 0.7f).Count > 0) continue;
                     iceChunkPositions.Add(pos.Position);
                 }
