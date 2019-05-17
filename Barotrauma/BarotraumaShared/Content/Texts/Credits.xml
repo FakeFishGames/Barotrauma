@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Credits scrollspeed="50.0" spacing="10">
-  <spacing relativeheight="1.0"/>
+  <spacing relativeheight="0.85"/>
 
   <Image texture="Content/UI/titleText.png" sourcerect="0,520,1024,328" relativeheight="0.1"/>
   
@@ -13,7 +13,7 @@
   <spacing relativeheight="0.05"/>
   
   <Text font="VideoTitleFont" color="255,255,255,255">Programming</Text>
-  <Text font="Font" color="150,150,150,255">Joonas Rikkonen</Text>
+  <Text font="Font" color="150,150,150,255">Joonas Rikkonen ("Regalis")</Text>
   <Text font="Font" color="150,150,150,255">Eetu Pitkänen</Text>
   <Text font="Font" color="150,150,150,255">Lauri Härkänen</Text>
   <Text font="Font" color="150,150,150,255">Juan Pablo Arce</Text>
@@ -175,19 +175,7 @@
 
   <spacing relativeheight="0.05"/>
   
-  <Text font="Font" color="150,150,150,255">Aleksandr Varnavskii    -    Alfred_Donovan    -    Armadillo Sloth</Text>
-  <Text font="Font" color="150,150,150,255">"Bill Combs"    -    BillSoFat    -    Borna "Blue" Aberle</Text>
-  <Text font="Font" color="150,150,150,255">boynedmaster “boratboy12”    -    Caleb Yu    -    chesse20</Text>
-  <Text font="Font" color="150,150,150,255">Database    -    DataCrusader    -    David "Ol Stinky" Hockenbury</Text>
-  <Text font="Font" color="150,150,150,255">Eduardo "Chiko" Valenzuela    -    etet2    -    Fabevil</Text>
-  <Text font="Font" color="150,150,150,255">Faerdan    -    Garrett Brown    -    Glitch</Text>
-  <Text font="Font" color="150,150,150,255">Gramstaal    -    hubismal    -    Irontaco</Text>
-  <Text font="Font" color="150,150,150,255">JJRcop    -    Just James    -    Landon Strik</Text>
-  <Text font="Font" color="150,150,150,255">Mark Jarjour    -    Nathan "MR. NAIL BRAIN" S.    -    Nilanth Animosus</Text>
-  <Text font="Font" color="150,150,150,255">Pugie    -    Redeloper “rico6822”    -    Robert Sloan</Text>
-  <Text font="Font" color="150,150,150,255">Samuel Hammersberg    -    Sebastian Broberg    -    shoter</Text>
-  <Text font="Font" color="150,150,150,255">Sputnik    -    Trialtrex21    -    ursinewalrus</Text>
-  <Text font="Font" color="150,150,150,255">Weebyxanide Vendor    -    Zealan</Text>
+  <GridText font="Font" alignment="CenterLeft" color="150,150,150,255">Aleksandr Varnavskii,Alfred_Donovan,Armadillo Sloth,"Bill Combs",BillSoFat,Borna "Blue" Aberle,boynedmaster “boratboy12”,Caleb Yu,chesse20,Database,DataCrusader,David "Ol Stinky" Hockenbury,Eduardo "Chiko" Valenzuela,etet2,Fabevil,Faerdan,Garrett Brown,Glitch,Gramstaal,hubismal,Irontaco,JJRcop,Just James,Landon Strik,Mark Jarjour,Nathan "MR. NAIL BRAIN" S.,Nilanth Animosus,Pugie,Redeloper “rico6822”,Robert Sloan,Samuel Hammersberg,Sebastian Broberg,shoter,Sputnik,Trialtrex21,ursinewalrus,>Weebyxanide Vendor,Zealan</GridText>
 
   <spacing relativeheight="0.2"/>
 
@@ -239,15 +227,16 @@
 
   <spacing relativeheight="0.05"/>
   
-  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">To all of our community members who've been following and supporting the development through all these years, playing the old versions of the game, giving us feedback and ideas, reporting bugs, and being awesome in general. We wouldn't have gotten this far if it wasn't for you!</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">To all our community members!</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">All of you who have been following and supporting the development through all these years, playing the old versions of the game, giving us feedback and ideas, reporting bugs, and being awesome in general. We wouldn't have got this far if it wasn't for you!</Text>
 
   <spacing relativeheight="0.05"/>
 
-  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Regalis would like to thank</Text>
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Joonas would like to thank</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Exadv1 and everyone else who's worked on Space Station 13. Barotrauma would have never come to exist if it wasn't for SS13.</Text>
-  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">/v/ for coming up with the game concept called Pressure, and all the wonderful anons who took part in those early threads and play sessions back in the early years of Barotrauma/Subsurface.</Text>
-  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Celia for being so understanding when I've been busy with baro, and for listening to my work rants and helping me stay sane. The inventors of caffeine and nicotine for helping me get through this. Aku and everyone at FF for helping me take my hobby (and this particular hobby project) to the next level.</Text> 
-  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Everyone in the Barotrauma community! During the early years of the project I often looked at the barely playable game that wasn't very fun to play and thought about the huge amount of work ahead. Knowing there were people out there already having fun with those bare-bones pre-pre-alpha versions, waiting for the eventual full release has really helped me keep going.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">/v/ for coming up with Pressure, and all the wonderful anons who took part in those play sessions back in the early years of Subsurface.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Celia for being so understanding and supportive when I've been busy with baro. The inventors of caffeine and nicotine for helping me get through this. Aku and everyone at FF for helping me take my hobby (and this particular hobby project) to the next level.</Text> 
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">And of course, all of the Barotrauma/SCP/UTG fans who've been following and supporting the development through all these years!</Text>
  
   <spacing relativeheight="0.05"/>
   
@@ -255,8 +244,39 @@
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Marianna Jämsen, for putting up with the long hours and the frequently absent husband during this production, the hard times were easier because you were there.</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The Pegasus team @ Next Games for the hospitality and inspiration.</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Mikko Tyni for the rather good advice regarding certain beer related things.</Text>
-  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The fantastic people from Daedalic, AtomicTorch, Caligari Games, Indoor Astronaut, Kong Orange, and Unfrozen for the excellent company and companionship during our American adventure.</Text>
-  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The Barotrauma community, for whom making this game has been a real joy.</Text>
-  
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Nam-Anh would like to thank</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Frankie Truong who has always been supportive and willing to share professional advices.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">GD15S and the teachers of the Game Design department of South-Eastern Finland University of Applied Sciences.</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Dinh Tuan Anh would like to thank</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">His supportive family who has always been there for him throughout this project.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The Game Design department of South-Eastern Finland University of Applied Sciences for their guidance and inspiration.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The amazing people of Jukonese for their support during the production time. </Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Jussi would to thank</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Discord community, especially Hubismal for great notices and suggestions about the audio in Barotrauma.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Incredible Game Audio community around the world.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Natasha Trygg for making a lot of things possible.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Also, thanks to Sean Connery.</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Vilma tips her hat to</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">The local game developer and startup community, for its openness and willingness to take in new names and faces, teach and inspire them and point them to amazing new possibilities.</Text>
+
+  <spacing relativeheight="0.05"/>
+
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">Daniel would like to thank</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Anyone who has ever spent time in our small game studio making games and everyone still doing so.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Friends and family who keep asking me about when the game's going to be out.</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Community content creators for making awesome things that I'm constantly inspired by.</Text>
+
   <spacing relativeheight="1.0"/>
 </Credits>
