@@ -546,7 +546,7 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
-      <input name="signal_store" />
+      <input name="signal_store" displayname="connection.signalstore"/>
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
@@ -578,7 +578,7 @@
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <input name="set_color" />
+      <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
 
@@ -613,7 +613,7 @@
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <input name="set_color" />
+      <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
 
@@ -746,7 +746,7 @@
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="signal_in" displayname="connection.signalin" />
       <input name="set_output" displayname="connection.setoutput" />
-      <input name="set_targetsignal" />
+      <input name="set_targetsignal" displayname="connection.settargetsignal" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
@@ -800,8 +800,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="set_frequency" />
-      <input name="set_outputtype" />
+      <input name="set_frequency" displayname="connection.setfrequency"/>
+      <input name="set_outputtype" displayname="connection.setoutputtype" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
@@ -896,7 +896,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="control_in" />
+      <input name="control_in" displayname="connection.controlin"/>
     </ConnectionPanel>
   </Item>
   <Item name="Camera" category="Legacy" nameidentifier="camera" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
@@ -904,7 +904,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <input name="control_in" />
+      <input name="control_in" displayname="connection.controlin" />
     </ConnectionPanel>
   </Item>
 </Items>

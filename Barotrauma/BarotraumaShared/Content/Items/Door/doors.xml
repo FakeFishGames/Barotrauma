@@ -219,7 +219,7 @@
       <input name="set_state" displayname="connection.setstate" />
       <input name="power" displayname="connection.power"/>
       <output name="state_out" displayname="connection.stateout" />
-      <output name="proximity_sensor" />
+      <output name="proximity_sensor" displayname="connection.dockingproximitysensor"/>
     </ConnectionPanel>
   </Item>
   <Item name="Docking Hatch" identifier="dockinghatch" tags="dock" linkable="true" indestructible="true">
@@ -252,7 +252,7 @@
       <input name="set_state" displayname="connection.setstate" />
       <input name="power" displayname="connection.power"/>
       <output name="state_out" displayname="connection.stateout" />
-      <output name="proximity_sensor" />
+      <output name="proximity_sensor" displayname="connection.dockingproximitysensor"/>
     </ConnectionPanel>
   </Item>
   <Item name="Duct Block" identifier="ductblock" scale="0.5">

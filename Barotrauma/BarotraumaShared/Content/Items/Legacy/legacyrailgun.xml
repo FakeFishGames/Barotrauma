@@ -38,8 +38,8 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
-      <output name="position_out" />
-      <output name="trigger_out" />
+      <output name="position_out" displayname="connection.turretaimingout"/>
+      <output name="trigger_out" displayname="connection.turrettriggerout" />
     </ConnectionPanel>
   </Item>
   <Item name="Rear Railgun Controller" nameidentifier="periscope" aliases="Railgun Controller" tags="railgunequipment" category="Legacy" type="Controller" disableitemusagewhenselected="true">
@@ -54,8 +54,8 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
-      <output name="position_out" />
-      <output name="trigger_out" />
+      <output name="position_out" displayname="connection.turretaimingout"/>
+      <output name="trigger_out" displayname="connection.turrettriggerout" />
     </ConnectionPanel>
   </Item>
   <Item name="Forward Railgun Loader" nameidentifier="railgunloadersinglehorizontal" aliases="Forward Railgun Loader" tags="railgunequipment,railgunammosource" category="Legacy" linkable="true" allowedlinks="railgun">

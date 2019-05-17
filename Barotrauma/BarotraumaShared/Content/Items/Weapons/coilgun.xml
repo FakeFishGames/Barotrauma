@@ -32,7 +32,7 @@
       <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
-      <input name="toggle_light" />
+      <input name="toggle_light" displayname="connection.togglelight"/>
     </ConnectionPanel>
   </Item>
   

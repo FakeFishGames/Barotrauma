@@ -19,7 +19,7 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
-      <input name="activate" />
+      <input name="trigger_in" displayname="connection.turrettriggerin"/>
     </ConnectionPanel>
   </Item>
 </Items>
