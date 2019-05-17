@@ -45,7 +45,7 @@ namespace Barotrauma
 
         public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
-        public bool UseDirectionalVoiceChat { get; set; }
+        public bool UseDirectionalVoiceChat { get; set; } = true;
 
         public enum VoiceMode
         {
