@@ -3235,5 +3235,6 @@
   <waterdetector.output>Output</waterdetector.output>
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
-  
+
+  <quickuseaction.holdtounequip>Hold to unequip</quickuseaction.holdtounequip>
 </infotexts>
