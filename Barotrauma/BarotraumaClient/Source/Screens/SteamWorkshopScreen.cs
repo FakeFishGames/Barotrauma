@@ -478,7 +478,7 @@ namespace Barotrauma
             }
             else
             {
-                var downloadBtn = new GUIButton(new RectTransform(new Point(32, 32), rightColumn.RectTransform), "+", style: null)
+                var downloadBtn = new GUIButton(new RectTransform(new Point((int)(32 * GUI.Scale)), rightColumn.RectTransform), "+", style: null)
                 {
                     Font = GUI.LargeFont,
                     Color = new Color(38, 65, 86, 255),
