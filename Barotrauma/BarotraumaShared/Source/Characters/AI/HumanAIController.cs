@@ -536,6 +536,8 @@ namespace Barotrauma
 
         public static bool HasItem(Character character, string tag, string containedTag, float conditionPercentage = 0)
         {
+            if (character == null) { return false; }
+            if (character.Inventory == null) { return false; }
             var item = character.Inventory.FindItemByTag(tag);
             return item != null &&
                 item.ConditionPercentage > conditionPercentage &&
