@@ -530,39 +530,39 @@
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,432,359,159" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF1p3>
-  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="230" bodyheight="80" bodyrotation="-50" bodyoffset="30,0" castshadow="false" health="400">
+  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="180" bodyheight="121" bodyoffset="-40,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,752,270,121" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p1>
-  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="230" bodyheight="80" bodyrotation="50" bodyoffset="30,0" castshadow="false" health="400">
+  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="180" bodyheight="121" bodyoffset="-40,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="1,593,269,160" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p2>
-  <TailFinF1 name="Tail Fin F1" identifier="tailfinf1" description="Submarine tail" scale="1.5" body="false" bodywidth="260" bodyheight="60" bodyrotation="40" bodyoffset="-75,0" castshadow="false">
+  <TailFinF1 name="Tail Fin F1" identifier="tailfinf1" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="375,1,541,216" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF1>
-  <TailFinF2 name="Tail Fin F2" identifier="tailfinf2" description="Submarine tail" scale="1.5" body="false" bodywidth="150" bodyheight="120" bodyrotation="-20" bodyoffset="-5,10" castshadow="false">
+  <TailFinF2 name="Tail Fin F2" identifier="tailfinf2" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="378,456,229,124" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF2>
-  <TailFinF3 name="Tail Fin F3" identifier="tailfinf3" description="Submarine tail" scale="1.5" body="false" bodywidth="200" bodyheight="60" bodyrotation="40" bodyoffset="0,0" castshadow="false">
+  <TailFinF3 name="Tail Fin F3" identifier="tailfinf3" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="355,608,326,174" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF3>
-  <TailFinF4 name="Tail Fin F4" identifier="tailfinf4" description="Submarine tail" scale="1.5" body="false" bodywidth="200" bodyheight="60" bodyrotation="40" bodyoffset="0,0" castshadow="false">
+  <TailFinF4 name="Tail Fin F4" identifier="tailfinf4" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="692,419,269,169" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF4>
-  <TailFin name="Front F Chain A1" identifier="frontfchaina1" description="Submarine tail" scale="1" resizehorizontal="true" body="false" castshadow="false">
+  <TailFin name="Front F Chain A1" identifier="frontfchaina1" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,815,744,46" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="Front F Chain A2" identifier="frontfchaina2" description="Submarine tail" scale="1" resizehorizontal="true" body="false" castshadow="false">
+  <TailFin name="Front F Chain A2" identifier="frontfchaina2" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,869,745,24" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <frontpulley name="Front F Pulley" identifier="frontpulley" description="Submarine tail" scale="1" body="true" bodywidth="30" bodyheight="30" bodyrotation="0" bodyoffset="0,0" castshadow="false">
+  <frontpulley name="Front F Pulley" identifier="frontpulley" description="Decorative pulley" scale="1" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="281,893,95,80" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </frontpulley>
@@ -608,40 +608,40 @@
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="383,135,73,512" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/LargeInsideWallsBack.png" sourcerect="383,135,73,512" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="0,177,27,50" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap H2" identifier="inwalllcaph2" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L Cap H2" identifier="inwalllcaph2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="57,178,52,48" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap H3" identifier="inwalllcaph3" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L Cap H3" identifier="inwalllcaph3" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="186,178,51,58" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap V1" identifier="inwalllcapy1" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L Cap V1" identifier="inwalllcapy1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="309,182,49,52" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap V2" identifier="inwalllcapy2" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L Cap V2" identifier="inwalllcapy2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="310,248,48,27" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap V4" identifier="inwalllcapy4" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L Cap V4" identifier="inwalllcapy4" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="299,329,59,50" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie H1" identifier="inwallltieh1" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L tie H1" identifier="inwallltieh1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="0,235,74,48" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie H2" identifier="inwallltieh2" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L tie H2" identifier="inwallltieh2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="75,251,73,17" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie H3" identifier="inwallltieh3" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L tie H3" identifier="inwallltieh3" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="5,298,111,54" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie V1" identifier="inwallltiev1" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L tie V1" identifier="inwallltiev1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="301,397,48,72" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie V2" identifier="inwallltiev2" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L tie V2" identifier="inwallltiev2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="316,471,16,72" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie V3" identifier="inwallltiev3" description="A large wall cap" body="false" castshadow="false">
+  <structure name="InWall L tie V3" identifier="inwallltiev3" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="223,267,53,110" origin="0.5,0.5" />
   </structure>
   <!-- BACK WALLS START -->
@@ -719,7 +719,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1024,0,512,128" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 14 deg" identifier="shella14adeg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="512" bodyheight="60" bodyrotation="-14.5">
+  <shellA name="Shell A 14 deg" identifier="shella14adeg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="522" bodyheight="60" bodyrotation="-14.5">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1536,450,512,224" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
@@ -751,7 +751,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="802,900,159,125" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 14 deg B" identifier="shella14degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="514" bodyheight="60" bodyoffset="0,-12" bodyrotation="-14">
+  <shellA name="Shell A 14 deg B" identifier="shella14degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="524" bodyheight="60" bodyoffset="0,-12" bodyrotation="-14">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1025,154,512,208" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
@@ -925,19 +925,19 @@
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="454,544,207,53" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="454,544,207,53" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A17a" identifier="sshella17a" description="Shuttle wall" castshadow="true" health="100">
+  <sshellA name="Shuttle Shell A17a" identifier="sshella17a" description="Shuttle wall" castshadow="true" health="100" ishorizontal="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="636,156,23,51" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="636,156,23,51" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A17b" identifier="sshella17b" description="Shuttle wall" castshadow="true" health="100">
+  <sshellA name="Shuttle Shell A17b" identifier="sshella17b" description="Shuttle wall" castshadow="true" health="100" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="675,156,47,48" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="675,156,47,48" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A17c" identifier="sshella17c" description="Shuttle wall" castshadow="true" health="100">
+  <sshellA name="Shuttle Shell A17c" identifier="sshella17c" description="Shuttle wall" castshadow="true" health="100" ishorizontal="false" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="574,169,39,25" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="574,169,39,25" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A18" identifier="sshella18" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="Shuttle Shell A18" identifier="sshella18" description="Shuttle wall" body="true" castshadow="true" health="100" ishorizontal="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="731,152,44,51" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="731,152,44,51" depth="0.85" />
   </sshellA>
@@ -1091,19 +1091,19 @@
     <!-- <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="892,890,107,129" depth="0.85" /> -->
   </sshellA>
   <!-- Gromits / Shuttle Shells  -->
-  <sshellA name="Shuttle Gromit A" identifier="sshellagromita" description="Shuttle wall" castshadow="true">
+  <sshellA name="Shuttle Gromit A" identifier="sshellagromita" description="Shuttle wall" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="539,172,18,18" depth="0.1" origin="0.414694,0.4719137" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="539,172,18,18" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Gromit B" identifier="sshellagromitb" description="Shuttle gromit" castshadow="true">
+  <sshellA name="Shuttle Gromit B" identifier="sshellagromitb" description="Shuttle gromit" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="915,181,45,16" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="915,181,45,16" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Gromit C" identifier="sshellagromitc" description="Shuttle gromit" castshadow="true">
+  <sshellA name="Shuttle Gromit C" identifier="sshellagromitc" description="Shuttle gromit" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="914,158,39,14" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="914,158,39,14" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Gromit D" identifier="sshellagromitd" description="Shuttle gromit" castshadow="true">
+  <sshellA name="Shuttle Gromit D" identifier="sshellagromitd" description="Shuttle gromit" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="966,159,12,11" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="966,159,12,11" depth="0.85" />
   </sshellA>
