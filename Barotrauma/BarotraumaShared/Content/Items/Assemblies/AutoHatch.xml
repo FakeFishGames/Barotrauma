@@ -19,14 +19,14 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" />
-      <input name="signal_in1" displayname="connection.signalinx~[num]=1">
+      <input name="signal_in1">
         <link w="15" />
       </input>
-      <input name="signal_in2" displayname="connection.signalinx~[num]=2">
+      <input name="signal_in2">
         <link w="14" />
       </input>
-      <input name="set_output" displayname="connection.setoutput" />
-      <output name="signal_out" displayname="connection.signalout">
+      <input name="set_output" />
+      <output name="signal_out">
         <link w="16" />
       </output>
     </ConnectionPanel>
@@ -40,7 +40,7 @@
       <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" />
       <input name="set_frequency" />
       <input name="set_outputtype" />
-      <output name="signal_out" displayname="connection.signalout">
+      <output name="signal_out">
         <link w="14" />
       </output>
     </ConnectionPanel>
@@ -52,7 +52,7 @@
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" />
-      <output name="state_out" displayname="connection.stateout">
+      <output name="state_out">
         <link w="15" />
       </output>
     </ConnectionPanel>
@@ -67,11 +67,11 @@
     </Repairable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
-      <input name="toggle" displayname="connection.togglestate" />
-      <input name="set_state" displayname="connection.setstate">
+      <input name="toggle" />
+      <input name="set_state">
         <link w="16" />
       </input>
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" />
     </ConnectionPanel>
   </Item>
 </ItemAssembly>

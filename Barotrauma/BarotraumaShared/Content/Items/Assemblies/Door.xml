@@ -9,12 +9,12 @@
     </Repairable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" />
-      <input name="toggle" displayname="connection.togglestate">
+      <input name="toggle">
         <link w="9" />
         <link w="10" />
       </input>
-      <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <input name="set_state" />
+      <output name="state_out" />
     </ConnectionPanel>
   </Item>
   <Item name="Button" identifier="button" ID="8" rect="-40,15,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
@@ -23,7 +23,7 @@
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" />
-      <output name="signal_out" displayname="connection.signalout">
+      <output name="signal_out">
         <link w="10" />
       </output>
     </ConnectionPanel>
@@ -37,7 +37,7 @@
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" />
-      <output name="signal_out" displayname="connection.signalout">
+      <output name="signal_out">
         <link w="9" />
       </output>
     </ConnectionPanel>

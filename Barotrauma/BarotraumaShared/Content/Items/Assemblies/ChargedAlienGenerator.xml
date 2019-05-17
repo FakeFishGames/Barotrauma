@@ -10,8 +10,8 @@
     <PowerContainer indicatorposition="0,0" indicatorsize="0,0" maxoutput="10000" capacity="10" charge="0" maxrechargespeed="1000" rechargespeed="0" minvoltage="0.5" powerconsumption="0" isactive="True" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">
       <requireditem identifiers="screwdriver" type="Equipped" msg="" />
-      <input name="shutdown" displayname="connection.shutdown" />
-      <output name="power_out" displayname="connection.powerout" />
+      <input name="shutdown" />
+      <output name="power_out" />
     </ConnectionPanel>
   </Item>
 </ItemAssembly>
