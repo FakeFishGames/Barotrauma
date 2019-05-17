@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<infotexts language="English">
+<infotexts language="English" translatedname="English">
 
   <!-- Loading Screen -->
   <loading>Loading...</loading>
@@ -3235,5 +3235,6 @@
   <waterdetector.output>Output</waterdetector.output>
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
-  
+
+  <quickuseaction.holdtounequip>Hold to unequip</quickuseaction.holdtounequip>
 </infotexts>

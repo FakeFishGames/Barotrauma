@@ -300,7 +300,11 @@ namespace Barotrauma
             TextureScale = sp.TextureScale;
 #endif
             spriteColor = prefab.SpriteColor;
-            if (ResizeHorizontal && !ResizeVertical)
+            if (sp.IsHorizontal.HasValue)
+            {
+                IsHorizontal = sp.IsHorizontal.Value;
+            }
+            else if (ResizeHorizontal && !ResizeVertical)
             {
                 IsHorizontal = true;
             }
@@ -345,7 +349,7 @@ namespace Barotrauma
             }
 
             // Only add ai targets automatically to submarine/outpost walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null)
+            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !Prefab.NoAITarget)
             {
                 aiTarget = new AITarget(this);
             }

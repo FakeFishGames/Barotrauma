@@ -281,7 +281,8 @@ namespace Barotrauma
                         new Vector2(rect.Width, rect.Height),
                         color: color,
                         textureScale: TextureScale * Scale,
-                        startOffset: backGroundOffset);
+                        startOffset: backGroundOffset,
+                        depth: Math.Max(Prefab.BackgroundSprite.Depth, depth + 0.000001f));
 
                     if (UseDropShadow)
                     {

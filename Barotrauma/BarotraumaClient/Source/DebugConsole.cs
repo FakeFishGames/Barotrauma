@@ -903,6 +903,26 @@ namespace Barotrauma
             }, isCheat: false));
 
 #if DEBUG
+            commands.Add(new Command("checkmissingloca", "", (string[] args) =>
+            {
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    string name = TextManager.Get("entityname." + me.Identifier, returnNull: true);
+                    if (!string.IsNullOrEmpty(name)) { continue; }
+
+                    if (me is ItemPrefab itemPrefab)
+                    {
+                        string nameIdentifier = itemPrefab.ConfigElement?.GetAttributeString("nameidentifier", "");
+                        if (nameIdentifier != null)
+                        {
+                            name = TextManager.Get("entityname." + nameIdentifier, returnNull: true);
+                            if (!string.IsNullOrEmpty(name)) { continue; }
+                        }
+                    }
+                    NewMessage("Entity name not translated (" + me.Name + ", " + me.Identifier + ")!", me is ItemPrefab ? Color.Red : Color.Yellow);
+                }
+            }));
+
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
                 int msgCount = 1000;

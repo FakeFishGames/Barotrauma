@@ -19,7 +19,10 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Fluorescent M1" identifier="lightfluorescentm01" category="Electrical" Tags="smallitem,light" scale="0.5">
+  
+  <!-- TODO: add names for fluorescent lights -->
+  
+  <Item name="Light Fluorescent M1" nameidentifier="lamp" identifier="lightfluorescentm01" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="18,1,85,124" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -38,7 +41,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Fluorescent M2" identifier="lightfluorescentm02" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Fluorescent M2" nameidentifier="lamp" identifier="lightfluorescentm02" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="152,1,74,126" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -57,7 +60,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Fluorescent M3" identifier="lightfluorescentm03" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Fluorescent M3" nameidentifier="lamp" identifier="lightfluorescentm03" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="284,2,68,124" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -76,7 +79,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Fluorescent M4" identifier="lightfluorescentm04" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Fluorescent M4" nameidentifier="lamp" identifier="lightfluorescentm04" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="406,0,85,127" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -95,7 +98,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Fluorescent L1" identifier="lightfluorescentl01" category="Electrical" Tags="largeitem,light" scale="0.5">
+  <Item name="Light Fluorescent L1" nameidentifier="lamp" identifier="lightfluorescentl01" category="Electrical" Tags="largeitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="18,272,346,90" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -114,7 +117,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Fluorescent L2" identifier="lightfluorescentl02" category="Electrical" Tags="largeitem,light" scale="0.5">
+  <Item name="Light Fluorescent L2" nameidentifier="lamp" identifier="lightfluorescentl02" category="Electrical" Tags="largeitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="13,416,370,61" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -133,7 +136,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Halogen M1" identifier="lighthalogenmm01" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Halogen M1" nameidentifier="lamp" identifier="lighthalogenmm01" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="20,132,76,124" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -152,7 +155,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Halogen M2" identifier="lighthalogenmm02" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Halogen M2" nameidentifier="lamp" identifier="lighthalogenmm02" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="128,152,125,77" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -171,7 +174,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Halogen M3" identifier="lighthalogenmm03" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Halogen M3" nameidentifier="lamp" identifier="lighthalogenmm03" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="268,129,103,123" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -190,7 +193,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Halogen M4" identifier="lighthalogenm04" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Halogen M4" nameidentifier="lamp" identifier="lighthalogenm04" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="388,138,124,101" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
@@ -209,7 +212,7 @@
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>
   </Item>
-  <Item name="Light Led S1" identifier="lightleds01" category="Electrical" Tags="smallitem,light" scale="0.5">
+  <Item name="Light Led S1" nameidentifier="lamp" identifier="lightleds01" category="Electrical" Tags="smallitem,light" scale="0.5">
     <Sprite texture="Lamps.png" sourcerect="397,271,99,99" depth="0.8" origin="0.5,0.5" />
     <LightComponent lightcolor="1.0,1.0,1.0,0.5" range="800.0" powerconsumption="5">
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />

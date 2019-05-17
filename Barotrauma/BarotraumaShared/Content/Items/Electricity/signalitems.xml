@@ -899,7 +899,7 @@
       <input name="control_in" />
     </ConnectionPanel>
   </Item>
-  <Item name="Camera" category="Legacy" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
+  <Item name="Camera" category="Legacy" nameidentifier="camera" Tags="smallitem" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="1,123,16,32" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
