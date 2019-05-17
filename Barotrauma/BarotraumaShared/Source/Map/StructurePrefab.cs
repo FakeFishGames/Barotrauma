@@ -86,6 +86,15 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// If null, the orientation is determined automatically based on the dimensions of the structure instances
+        /// </summary>
+        public bool? IsHorizontal
+        {
+            get;
+            private set;
+        }
+
         [Serialize(Direction.None, false)]
         public Direction StairDirection
         {
@@ -166,6 +175,11 @@ namespace Barotrauma
             foreach (string tag in joinedTags.Split(','))
             {
                 sp.Tags.Add(tag.Trim().ToLowerInvariant());
+            }
+
+            if (element.Attribute("ishorizontal") != null)
+            {
+                sp.IsHorizontal = element.GetAttributeBool("ishorizontal", false);
             }
 
             foreach (XElement subElement in element.Elements())

@@ -300,7 +300,11 @@ namespace Barotrauma
             TextureScale = sp.TextureScale;
 #endif
             spriteColor = prefab.SpriteColor;
-            if (ResizeHorizontal && !ResizeVertical)
+            if (sp.IsHorizontal.HasValue)
+            {
+                IsHorizontal = sp.IsHorizontal.Value;
+            }
+            else if (ResizeHorizontal && !ResizeVertical)
             {
                 IsHorizontal = true;
             }
