@@ -3248,7 +3248,7 @@
   <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
   <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
 
-  <connection.chargebattery>charge</connection.chargebattery>
+  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
   <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
   <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
   <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
