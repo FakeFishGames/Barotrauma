@@ -1,7 +1,6 @@
-﻿using FarseerPhysics;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -46,7 +45,7 @@ namespace Barotrauma
         {
             this.Target = target;
             this.repeat = repeat;
-            waitUntilPathUnreachable = 2.0f;
+            waitUntilPathUnreachable = 3.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
             CalculateCloseEnough();
         }
@@ -132,6 +131,10 @@ namespace Barotrauma
                     }
                 }
                 character.AIController.SteeringManager.SteeringSeek(currTargetSimPos);
+                if (SteeringManager != PathSteering)
+                {
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
+                }
                 if (getDivingGearIfNeeded)
                 {
                     bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
