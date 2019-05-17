@@ -3255,7 +3255,8 @@
   <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
   <connection.signalx>signal_[num]</connection.signalx>
   <connection.set_text>signal_[num]</connection.set_text>
-
+  <connection.stateout>state_out</connection.stateout>
+  
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
 
   <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
