@@ -235,7 +235,7 @@ namespace Barotrauma.Tutorials
             patient1.CanSpeak = true;
             var newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient1.CurrentHull, null, orderGiver: patient1);
             GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
-            patient1.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
+            patient1.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
             patient1.AIController.Enabled = true;
 
             while (doctor.CurrentHull != patient1.CurrentHull)
@@ -319,7 +319,7 @@ namespace Barotrauma.Tutorials
             patient2.CanSpeak = true;
             newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient2.CurrentHull, null, orderGiver: patient2);
             GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
-            patient2.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
+            patient2.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
             patient2.AIController.Enabled = true;
             patient2.Oxygen = -50;
             CoroutineManager.StartCoroutine(KeepPatientAlive(patient2), "KeepPatient2Alive");
@@ -381,7 +381,7 @@ namespace Barotrauma.Tutorials
                         newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), subPatients[i].CurrentHull, null, orderGiver: subPatients[i]);
                         GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
 
-                        string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.RoomName, givingOrderToSelf: false);
+                        string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.DisplayName, givingOrderToSelf: false);
                         if (subPatients[i].CanSpeak)
                         {
                             subPatients[i].Speak(message, ChatMessageType.Order);                   
