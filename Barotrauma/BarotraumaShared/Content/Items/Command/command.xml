@@ -174,7 +174,7 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <requireditem identifier="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
-      <output name="data_out" displayname="connection.sonardataout"/>
+      <output name="data_out" displayname="connection.sonardataout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
 </Items>

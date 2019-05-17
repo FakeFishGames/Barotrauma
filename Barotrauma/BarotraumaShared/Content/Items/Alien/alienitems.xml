@@ -368,7 +368,7 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien">
@@ -383,7 +383,7 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien" scale="0.5">
@@ -395,7 +395,7 @@
     <MotionSensor range="300" output="0" onlyhumans="true" />
     <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
   <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien,artifactholder">
@@ -508,7 +508,7 @@
       <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
-      <input name="toggle_light" />
+      <input name="toggle_light" displayname="connection.togglelight"/>
     </ConnectionPanel>
   </Item>
   <Item name="Alien Projectile" identifier="alienturretammo" category="Alien">
@@ -594,7 +594,7 @@
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <input name="set_color" />
+      <input name="set_color" displayname="connection.setcolor" />
     </ConnectionPanel>
   </Item>
 </Items>

@@ -33,10 +33,10 @@
 
       <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power" displayname="connection.power"/>
-      <output name="signal_0" displayname="connection.signalx~[num]=0"/>
-      <output name="signal_1" displayname="connection.signalx~[num]=1"/>
-      <output name="signal_2" displayname="connection.signalx~[num]=2"/>
-      <output name="signal_3" displayname="connection.signalx~[num]=3"/>   
+      <output name="signal_0" displayname="connection.signalx~[num]=0" fallbackdisplayname="connection.signalinx~[num]=0"/>
+      <output name="signal_1" displayname="connection.signalx~[num]=1" fallbackdisplayname="connection.signalinx~[num]=1"/>
+      <output name="signal_2" displayname="connection.signalx~[num]=2" fallbackdisplayname="connection.signalinx~[num]=2"/>
+      <output name="signal_3" displayname="connection.signalx~[num]=3" fallbackdisplayname="connection.signalinx~[num]=3"/>   
     </ConnectionPanel>
   </Item>
 </Items>

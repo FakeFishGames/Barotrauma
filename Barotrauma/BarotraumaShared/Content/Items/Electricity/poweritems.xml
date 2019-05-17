@@ -19,10 +19,10 @@
       </StatusEffect>
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <output name="power" displayname="connection.power"/>
-      <output name="signal_0" displayname="connection.signalx~[num]=0"/>
-      <output name="signal_1" displayname="connection.signalx~[num]=1"/>
-      <output name="signal_2" displayname="connection.signalx~[num]=2"/>
-      <output name="signal_3" displayname="connection.signalx~[num]=3"/>
+      <output name="signal_0" displayname="connection.signalx~[num]=0" fallbackdisplayname="connection.signalinx~[num]=0"/>
+      <output name="signal_1" displayname="connection.signalx~[num]=1" fallbackdisplayname="connection.signalinx~[num]=1"/>
+      <output name="signal_2" displayname="connection.signalx~[num]=2" fallbackdisplayname="connection.signalinx~[num]=2"/>
+      <output name="signal_3" displayname="connection.signalx~[num]=3" fallbackdisplayname="connection.signalinx~[num]=3"/>
     </ConnectionPanel>
 	  <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="720" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />

@@ -79,9 +79,10 @@ namespace Barotrauma.Items.Components
 
             wires = new Wire[MaxLinked];
 
-            IsOutput = (element.Name.ToString() == "output");
-            Name = element.GetAttributeString("name", (IsOutput) ? "output" : "input");
+            IsOutput = element.Name.ToString() == "output";
+            Name = element.GetAttributeString("name", IsOutput ? "output" : "input");
 
+            string displayNameTag = "", fallbackTag = "";
             //if displayname is not present, attempt to find it from the prefab
             if (element.Attribute("displayname") == null)
             {
@@ -93,27 +94,44 @@ namespace Barotrauma.Items.Components
                     {
                         if (connectionElement.Name.ToString() != element.Name.ToString()) { continue; }
                         
-                        string prefabConnectionName = element.GetAttributeString("name", (IsOutput) ? "output" : "input");
+                        string prefabConnectionName = element.GetAttributeString("name", IsOutput ? "output" : "input");
                         if (prefabConnectionName == Name)
                         {
-                            DisplayName = TextManager.GetServerMessage(connectionElement.GetAttributeString("displayname", ""));
+                            displayNameTag = connectionElement.GetAttributeString("displayname", "");
+                            fallbackTag = connectionElement.GetAttributeString("fallbackdisplayname", "");
                         }
-                    }                    
+                    }
                 }
-#if DEBUG
-                if (string.IsNullOrEmpty(DisplayName))
-                {
-                    DebugConsole.ThrowError("Missing display name in connection " + item.Name + ": " + Name);
-                    DisplayName = Name;
-                }
-#endif
             }
             else
             {
-                DisplayName = TextManager.GetServerMessage(element.GetAttributeString("displayname", Name));
+                displayNameTag = element.GetAttributeString("displayname", "");
+                fallbackTag = element.GetAttributeString("fallbackdisplayname", null);
             }
 
+            if (!string.IsNullOrEmpty(displayNameTag))
+            {
+                //extract the tag parts in case the tags contains variables
+                string tagWithoutVariables = displayNameTag?.Split('~')?.FirstOrDefault();
+                string fallbackTagWithoutVariables = fallbackTag?.Split('~')?.FirstOrDefault();
+                //use displayNameTag if found, otherwise fallBack
+                if (TextManager.ContainsTag(tagWithoutVariables))
+                {
+                    DisplayName = TextManager.GetServerMessage(displayNameTag);
+                }
+                else if (TextManager.ContainsTag(fallbackTagWithoutVariables))
+                {
+                    DisplayName = TextManager.GetServerMessage(fallbackTag);
+                }
+            }
 
+            if (string.IsNullOrEmpty(DisplayName))
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Missing display name in connection " + item.Name + ": " + Name);
+#endif
+                DisplayName = Name;
+            }
 
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 

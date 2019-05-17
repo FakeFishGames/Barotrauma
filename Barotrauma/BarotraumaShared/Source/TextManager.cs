@@ -80,6 +80,26 @@ namespace Barotrauma
             }
         }
 
+        public static bool ContainsTag(string textTag)
+        {
+            if (string.IsNullOrEmpty(textTag)) { return false; }
+
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+            foreach (TextPack textPack in textPacks[Language])
+            {
+                if (textPack.Get(textTag) != null) { return true; }
+            }
+            return false;
+        }
+
         public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
         {
             if (!textPacks.ContainsKey(Language))
@@ -114,7 +134,13 @@ namespace Barotrauma
                 foreach (TextPack textPack in textPacks["English"])
                 {
                     string text = textPack.Get(textTag);
-                    if (text != null) return text;
+                    if (text != null)
+                    {
+#if DEBUG
+                        DebugConsole.NewMessage("Text \"" + textTag + "\" not found for the language \"" + Language + "\". Using the English text \"" + text + "\" instead.");
+#endif
+                        return text;
+                    }
                 }
             }
 
