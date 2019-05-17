@@ -144,7 +144,7 @@
   <label name="Label Number 2" Aliases="Label M Number 2" identifier="labelsnumber2" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 3" Aliases="Label M Number 3" identifier="labelsnumber3" scale="0.v">
+  <label name="Label Number 3" Aliases="Label M Number 3" identifier="labelsnumber3" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
   <label name="Label Number 4" Aliases="Label M Number 4" identifier="labelsnumber4" scale="0.35">
@@ -165,7 +165,7 @@
   <label name="Label Number 9" Aliases="Label M Number 9" identifier="labelsnumber9" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,511,121,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 0" Aliases="Label M Number 0" identifier="labelsnumber0" scale="0.75">
+  <label name="Label Number 0" Aliases="Label M Number 0" identifier="labelsnumber0" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="383,511,122,133" depth="0.85" origin="0.5,0.5" />
   </label>
   <label name="Label Arrow Vertical A" Aliases="Label M Arrow Vertical A" identifier="labelsarroverticala" scale="0.35">
