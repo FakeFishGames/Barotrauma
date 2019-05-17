@@ -570,7 +570,7 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt")
+            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" && GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
@@ -585,7 +585,7 @@ namespace Barotrauma
             }
 
             //the "are you sure you want to quit" prompts are drawn on top of everything else
-            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt")
+            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt" || GUIMessageBox.VisibleBox?.UserData as string == "bugreporter")
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
@@ -1447,7 +1447,16 @@ namespace Barotrauma
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("bugreportbutton"), style: "GUIButtonLarge")
+                {
+                    Color = Color.Red,
+                    HoverColor = Color.DarkRed,
+                    PressedColor = Color.White,
+                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+                };
+
+
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
                 {
                     OnClicked = TogglePauseMenu
                 };
