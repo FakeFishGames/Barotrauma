@@ -416,42 +416,11 @@ namespace Barotrauma
         }
 
         #region Load DefaultConfig
-        private void LoadDefaultConfig(bool setLanguage = true)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
-
-            if (setLanguage || string.IsNullOrEmpty(Language))
-            {
-                Language = doc.Root.GetAttributeString("language", "English");
-            }
-        }
-
-        #region Load DefaultConfig
         private void LoadDefaultConfig()
         {
             XDocument doc = XMLExtensions.TryLoadXml(savePath);
 
             Language = doc.Root.GetAttributeString("language", "English");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
@@ -848,6 +817,58 @@ namespace Barotrauma
                 {
                     VoiceSetting = voiceSetting;
                 }
+                foreach (ContentFile file in contentPackage.Files)
+                {
+                    ToolBox.IsProperFilenameCase(file.Path);
+                }
+            }
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+
+            //save to get rid of the invalid selected packages in the config file
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+        }
+        #endregion
+
+        #region Save DefaultConfig
+        private void SaveNewDefaultConfig()
+        {
+            XDocument doc = new XDocument();
+
+            if (doc.Root == null)
+            {
+                doc.Add(new XElement("config"));
+            }
+
+            doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
+                new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("autocheckupdates", AutoCheckUpdates),
+                new XAttribute("musicvolume", musicVolume),
+                new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("verboselogging", VerboseLogging),
+                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("quickstartsub", QuickStartSubmarineName),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
+
+            if (WasGameUpdated)
+            {
+                doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
             
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);

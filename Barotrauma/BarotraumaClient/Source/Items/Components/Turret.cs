@@ -317,7 +317,7 @@ namespace Barotrauma.Items.Components
 
             if (ShowProjectileIndicator)
             {
-                Point slotSize = new Point(60, 30);
+                Point slotSize = new Point((int)(60 * GUI.Scale), (int)(30 * GUI.Scale));
                 int spacing = 5;
                 int slotsPerRow = Math.Min(availableAmmo.Count, 6);
                 int totalWidth = slotSize.X * slotsPerRow + spacing * (slotsPerRow - 1);

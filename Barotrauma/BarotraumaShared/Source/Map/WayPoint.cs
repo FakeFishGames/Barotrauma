@@ -602,7 +602,7 @@ namespace Barotrauma
                 if (ladderItem != null) Ladders = ladderItem.GetComponent<Ladder>();
             }
 
-            Body pickedBody = Submarine.PickBody(SimPosition, SimPosition - Vector2.UnitY * 2.0f, null, Physics.CollisionStairs);
+            Body pickedBody = Submarine.PickBody(SimPosition, SimPosition - Vector2.UnitY * 2.0f, null, Physics.CollisionWall | Physics.CollisionStairs);
             if (pickedBody != null && pickedBody.UserData is Structure)
             {
                 Structure structure = (Structure)pickedBody.UserData;

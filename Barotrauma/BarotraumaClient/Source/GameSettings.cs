@@ -755,7 +755,7 @@ namespace Barotrauma
                 OnClicked = (button, data) =>
                 {
                     // TODO: add a prompt
-                    LoadDefaultConfig(setLanguage: false);
+                    LoadDefaultConfig();
                     CheckBindings(true);
                     RefreshItemMessages();
                     ApplySettings();

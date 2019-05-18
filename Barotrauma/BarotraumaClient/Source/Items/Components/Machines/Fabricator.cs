@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
 
             foreach (FabricationRecipe fi in fabricationRecipes)
             {
-                GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 30), itemList.Content.RectTransform), style: null)
+                GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, (int)(30 * GUI.yScale)), itemList.Content.RectTransform), style: null)
                 {
                     UserData = fi,
                     HoverColor = Color.Gold * 0.2f,
@@ -116,7 +116,7 @@ namespace Barotrauma.Items.Components
                     ToolTip = fi.TargetItem.Description
                 };
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.Zero, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(50, 0) },
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.Zero, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(50 * GUI.xScale), 0) },
                     fi.DisplayName)
                 {
                     ToolTip = fi.TargetItem.Description
@@ -125,7 +125,7 @@ namespace Barotrauma.Items.Components
                 var itemIcon = fi.TargetItem.InventoryIcon ?? fi.TargetItem.sprite;
                 if (itemIcon != null)
                 {
-                    GUIImage img = new GUIImage(new RectTransform(new Point(30, 30), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(3, 0) },
+                    GUIImage img = new GUIImage(new RectTransform(new Point((int)(30 * GUI.Scale)), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(3 * GUI.xScale), 0) },
                         itemIcon, scaleToFit: true)
                     {
                         Color = fi.TargetItem.InventoryIconColor,
