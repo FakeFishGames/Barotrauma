@@ -202,6 +202,10 @@ namespace Barotrauma
             {
                 CurrentObjective?.TryComplete(deltaTime);
             }
+            else
+            {
+                character.AIController.SteeringManager.Reset();
+            }
         }
         
         public void SetOrder(AIObjective objective)
