@@ -302,10 +302,6 @@ namespace Barotrauma
         public void SetDefaultBindings(XDocument doc = null, bool legacy = false)
         {
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
-            keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
-            keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
-            keyMapping[(int)InputType.Left] = new KeyOrMouse(Keys.A);
-            keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
             keyMapping[(int)InputType.Attack] = new KeyOrMouse(2);
             keyMapping[(int)InputType.Crouch] = new KeyOrMouse(Keys.LeftControl);
@@ -319,23 +315,27 @@ namespace Barotrauma
             keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.R);
             keyMapping[(int)InputType.CrewOrders] = new KeyOrMouse(Keys.C);
 
-            keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
-            keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
-
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
 
-            if (legacy)
+            if (Language == "French")
             {
-                keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
-                keyMapping[(int)InputType.Shoot] = new KeyOrMouse(0);
-                keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
-                keyMapping[(int)InputType.Deselect] = new KeyOrMouse(Keys.E);
+                keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.Z);
+                keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
+                keyMapping[(int)InputType.Left] = new KeyOrMouse(Keys.Q);
+                keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
+
+                keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.X);
+                keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.W);
             }
             else
             {
-                keyMapping[(int)InputType.Use] = new KeyOrMouse(Keys.E);
-                keyMapping[(int)InputType.Select] = new KeyOrMouse(0);
-                // shoot and deselect are handled in CheckBindings() so that we don't override the legacy settings.
+                keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
+                keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
+                keyMapping[(int)InputType.Left] = new KeyOrMouse(Keys.A);
+                keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
+
+                keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
+                keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
             }
             if (doc != null)
             {
@@ -368,6 +368,100 @@ namespace Barotrauma
         }
 
         private void CheckBindings(bool useDefaults)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                var binding = keyMapping[(int)inputType];
+                if (binding == null)
+                {
+                    switch (inputType)
+                    {
+                        case InputType.Deselect:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(1);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var selectKey = keyMapping[(int)InputType.Select];
+                                if (selectKey != null && selectKey.Key != Keys.None)
+                                {
+                                    binding = new KeyOrMouse(selectKey.Key);
+                                }
+                            }
+                            break;
+                        case InputType.Shoot:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(0);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var useKey = keyMapping[(int)InputType.Use];
+                                if (useKey != null && useKey.MouseButton.HasValue)
+                                {
+                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (binding == null)
+                    {
+                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
+                        binding = new KeyOrMouse(Keys.D1);
+                    }
+                    keyMapping[(int)inputType] = binding;
+                }
+            }
+        }
+
+        #region Load DefaultConfig
+        private void LoadDefaultConfig()
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(savePath);
+
+            Language = doc.Root.GetAttributeString("language", "English");
+
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
+
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
+
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
+
+            if (legacy)
+            {
+                keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
+                keyMapping[(int)InputType.Shoot] = new KeyOrMouse(0);
+                keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
+                keyMapping[(int)InputType.Deselect] = new KeyOrMouse(Keys.E);
+            }
+            else
+            {
+                keyMapping[(int)InputType.Use] = new KeyOrMouse(Keys.E);
+                keyMapping[(int)InputType.Select] = new KeyOrMouse(0);
+                // shoot and deselect are handled in CheckBindings() so that we don't override the legacy settings.
+            }
+            if (doc != null)
+            {
+                foreach (XElement subElement in doc.Root.Elements())
+                {
+                    if (subElement.Name.ToString().ToLowerInvariant() == "keymapping")
+                    {
+                        LoadKeyBinds(subElement);
+                    }
+                }
+            }
+        }
+
+        public void CheckBindings(bool useDefaults)
         {
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
@@ -843,23 +937,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "keymapping":
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
-                            {
-                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
-                                {
-                                    keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
-                                }
-                                else
-                                {
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
-                                    {
-                                        keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                    }
-                                }
-                            }
-                        }
+                        LoadKeyBinds(subElement);
                         break;
                     case "gameplay":
                         jobPreferences = new List<string>();
@@ -1188,6 +1266,26 @@ namespace Barotrauma
             }
         }
         #endregion
+
+        private void LoadKeyBinds(XElement element)
+        {
+            foreach (XAttribute attribute in element.Attributes())
+            {
+                if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
+                
+                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
+                {
+                    keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
+                }
+                else
+                {
+                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
+                    {
+                        keyMapping[(int)inputType] = new KeyOrMouse(key);
+                    }
+                }                
+            }
+        }
 
         public void ResetToDefault()
         {

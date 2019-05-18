@@ -242,6 +242,10 @@ namespace Barotrauma
                 if (hover && PlayerInput.LeftButtonClicked())
                 {
                     GameMain.Config.Language = language;
+                    //reload tip in the selected language
+                    selectedTip = TextManager.Get("LoadingScreenTip", true);
+                    GameMain.Config.SetDefaultBindings(legacy: false);
+                    GameMain.Config.CheckBindings(useDefaults: true);
                     WaitForLanguageSelection = false;
                 }
 
