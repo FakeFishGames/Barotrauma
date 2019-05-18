@@ -96,7 +96,7 @@ namespace Barotrauma.Items.Components
                         string prefabConnectionName = element.GetAttributeString("name", (IsOutput) ? "output" : "input");
                         if (prefabConnectionName == Name)
                         {
-                            DisplayName = TextManager.GetServerMessage(connectionElement.GetAttributeString("displayname", Name));
+                            DisplayName = TextManager.GetServerMessage(connectionElement.GetAttributeString("displayname", ""));
                         }
                     }                    
                 }
@@ -104,6 +104,7 @@ namespace Barotrauma.Items.Components
                 if (string.IsNullOrEmpty(DisplayName))
                 {
                     DebugConsole.ThrowError("Missing display name in connection " + item.Name + ": " + Name);
+                    DisplayName = Name;
                 }
 #endif
             }
