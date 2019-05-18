@@ -102,6 +102,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool NoAITarget
+        {
+            get;
+            private set;
+        }
+
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
