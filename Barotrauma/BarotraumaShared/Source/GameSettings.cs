@@ -337,68 +337,6 @@ namespace Barotrauma
                 keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
                 keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
             }
-            if (doc != null)
-            {
-                foreach (XElement subElement in doc.Root.Elements())
-                {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "keymapping")
-                    {
-                        LoadKeyBinds(subElement);
-                    }
-                }
-            }
-        }
-
-        public void CheckBindings(bool useDefaults)
-        {
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                var binding = keyMapping[(int)inputType];
-                if (binding == null)
-                {
-                    switch (inputType)
-                    {
-                        case InputType.Deselect:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(1);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var selectKey = keyMapping[(int)InputType.Select];
-                                if (selectKey != null && selectKey.Key != Keys.None)
-                                {
-                                    binding = new KeyOrMouse(selectKey.Key);
-                                }
-                            }
-                            break;
-                        case InputType.Shoot:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(0);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var useKey = keyMapping[(int)InputType.Use];
-                                if (useKey != null && useKey.MouseButton.HasValue)
-                                {
-                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    if (binding == null)
-                    {
-                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
-                        binding = new KeyOrMouse(Keys.D1);
-                    }
-                    keyMapping[(int)inputType] = binding;
-                }
-            }
         }
 
         #region Load DefaultConfig
