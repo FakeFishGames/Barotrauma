@@ -168,7 +168,11 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                FixBody(user, deltaTime, degreeOfSuccess, Submarine.PickBody(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true));
+                FixBody(user, deltaTime, degreeOfSuccess, 
+                    Submarine.PickBody(rayStart, rayEnd, 
+                    ignoredBodies, collisionCategories, ignoreSensors: false, 
+                    customPredicate: (Fixture f) => { return f?.Body?.UserData != null; },
+                    allowInsideFixture: true));
             }
             
             if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
