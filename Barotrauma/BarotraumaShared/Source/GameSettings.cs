@@ -337,24 +337,6 @@ namespace Barotrauma
                 keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
                 keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
             }
-        }
-
-        #region Load DefaultConfig
-        private void LoadDefaultConfig()
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
-
-            Language = doc.Root.GetAttributeString("language", "English");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (legacy)
             {
@@ -434,11 +416,32 @@ namespace Barotrauma
         }
 
         #region Load DefaultConfig
+        private void LoadDefaultConfig(bool setLanguage = true)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(savePath);
+
+            if (setLanguage || string.IsNullOrEmpty(Language))
+            {
+                Language = doc.Root.GetAttributeString("language", "English");
+            }
+        }
+
+        #region Load DefaultConfig
         private void LoadDefaultConfig()
         {
             XDocument doc = XMLExtensions.TryLoadXml(savePath);
 
             Language = doc.Root.GetAttributeString("language", "English");
+
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
+
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
+
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
