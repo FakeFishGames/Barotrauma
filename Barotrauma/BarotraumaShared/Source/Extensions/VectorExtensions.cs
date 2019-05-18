@@ -69,6 +69,7 @@ namespace Barotrauma.Extensions
         /// </summary>
         public static Vector2 TransformVector(this Vector2 v, Vector2 up)
         {
+            up = Vector2.Normalize(up);
             return (up * v.Y) + (up.Right() * v.X);
         }
 

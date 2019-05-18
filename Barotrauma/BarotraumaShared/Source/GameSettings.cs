@@ -424,79 +424,6 @@ namespace Barotrauma
             {
                 Language = doc.Root.GetAttributeString("language", "English");
             }
-            if (doc != null)
-            {
-                foreach (XElement subElement in doc.Root.Elements())
-                {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "keymapping")
-                    {
-                        LoadKeyBinds(subElement);
-                    }
-                }
-            }
-        }
-
-        public void CheckBindings(bool useDefaults)
-        {
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                var binding = keyMapping[(int)inputType];
-                if (binding == null)
-                {
-                    switch (inputType)
-                    {
-                        case InputType.Deselect:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(1);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var selectKey = keyMapping[(int)InputType.Select];
-                                if (selectKey != null && selectKey.Key != Keys.None)
-                                {
-                                    binding = new KeyOrMouse(selectKey.Key);
-                                }
-                            }
-                            break;
-                        case InputType.Shoot:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(0);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var useKey = keyMapping[(int)InputType.Use];
-                                if (useKey != null && useKey.MouseButton.HasValue)
-                                {
-                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    if (binding == null)
-                    {
-                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
-                        binding = new KeyOrMouse(Keys.D1);
-                    }
-                    keyMapping[(int)inputType] = binding;
-                }
-            }
-        }
-
-        #region Load DefaultConfig
-        private void LoadDefaultConfig(bool setLanguage = true)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
-
-            if (setLanguage || string.IsNullOrEmpty(Language))
-            {
-                Language = doc.Root.GetAttributeString("language", "English");
-            }
         }
 
         #region Load DefaultConfig
@@ -505,6 +432,16 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(savePath);
 
             Language = doc.Root.GetAttributeString("language", "English");
+
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
+
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
+
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
@@ -1020,70 +957,6 @@ namespace Barotrauma
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "keymapping":
-                        LoadKeyBinds(subElement);
-                        break;
-                    case "gameplay":
-                        jobPreferences = new List<string>();
-                        foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
-                        {
-                            string jobIdentifier = ele.GetAttributeString("identifier", "");
-                            if (string.IsNullOrEmpty(jobIdentifier)) continue;
-                            jobPreferences.Add(jobIdentifier);
-                        }
-                        break;
-                    case "player":
-                        defaultPlayerName = subElement.GetAttributeString("name", defaultPlayerName);
-                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
-                        {
-                            CharacterGender = g;
-                        }
-                        if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
-                        {
-                            CharacterRace = r;
-                        }
-                        else
-                        {
-                            CharacterRace = Race.White;
-                        }
-                        CharacterHairIndex = subElement.GetAttributeInt("hairindex", CharacterHairIndex);
-                        CharacterBeardIndex = subElement.GetAttributeInt("beardindex", CharacterBeardIndex);
-                        CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", CharacterMoustacheIndex);
-                        CharacterFaceAttachmentIndex = subElement.GetAttributeInt("faceattachmentindex", CharacterFaceAttachmentIndex);
-                        break;
-                    case "tutorials":
-                        foreach (XElement tutorialElement in subElement.Elements())
-                        {
-                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
-                        }
-                        break;
-                }
-            }
-
-            UnsavedSettings = false;
-
-            selectedContentPackagePaths = new HashSet<string>();
-
-            foreach (XElement subElement in doc.Root.Elements())
-            {
-                gSettings = new XElement("graphicssettings");
-                doc.Root.Add(gSettings);
-            }
-
-            gSettings.ReplaceAttributes(
-                new XAttribute("particlelimit", ParticleLimit),
-                new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("specularity", SpecularityEnabled),
-                new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
-                new XAttribute("losmode", LosMode),
-                new XAttribute("hudscale", HUDScale),
-                new XAttribute("inventoryscale", InventoryScale));
-
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                if (contentPackage.Path.Contains(vanillaContentPackagePath))
                 {
                     case "contentpackage":
                         string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
