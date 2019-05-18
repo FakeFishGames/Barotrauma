@@ -133,39 +133,6 @@ namespace Barotrauma.Items.Components
                 DisplayName = Name;
             }
 
-            //if displayname is not present, attempt to find it from the prefab
-            if (element.Attribute("displayname") == null)
-            {
-                foreach (XElement subElement in item.Prefab.ConfigElement.Elements())
-                {
-                    if (subElement.Name.ToString().ToLowerInvariant() != "connectionpanel") { continue; }
-                    
-                    foreach (XElement connectionElement in subElement.Elements())
-                    {
-                        if (connectionElement.Name.ToString() != element.Name.ToString()) { continue; }
-                        
-                        string prefabConnectionName = element.GetAttributeString("name", (IsOutput) ? "output" : "input");
-                        if (prefabConnectionName == Name)
-                        {
-                            DisplayName = TextManager.GetServerMessage(connectionElement.GetAttributeString("displayname", ""));
-                        }
-                    }                    
-                }
-#if DEBUG
-                if (string.IsNullOrEmpty(DisplayName))
-                {
-                    DebugConsole.ThrowError("Missing display name in connection " + item.Name + ": " + Name);
-                    DisplayName = Name;
-                }
-#endif
-            }
-            else
-            {
-                DisplayName = TextManager.GetServerMessage(element.GetAttributeString("displayname", Name));
-            }
-
-
-
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
             effects = new List<StatusEffect>();

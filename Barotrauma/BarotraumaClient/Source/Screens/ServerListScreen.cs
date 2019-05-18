@@ -218,6 +218,22 @@ namespace Barotrauma
             return true;
         }
 
+        private bool RefreshJoinButtonState(GUIComponent component, object obj)
+        {
+            if (obj == null || waitingForRefresh) { return false; }
+
+            if (!string.IsNullOrWhiteSpace(clientNameBox.Text) && !string.IsNullOrWhiteSpace(ipBox.Text))
+            {
+                joinButton.Enabled = true;
+            }
+            else
+            {
+                joinButton.Enabled = false;
+            }
+
+            return true;
+        }
+
         private bool SelectServer(GUIComponent component, object obj)
         {
             if (obj == null || waitingForRefresh) { return false; }
