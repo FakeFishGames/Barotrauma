@@ -790,7 +790,6 @@ namespace Barotrauma
                 for (int i = legalCrap.Length - 1; i >= 0; i--)
                 {
                     Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
-                    textSize = new Vector2((int)textSize.X, (int)textSize.Y);
                     bool mouseOn = i == 0 &&
                         PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
                         PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
