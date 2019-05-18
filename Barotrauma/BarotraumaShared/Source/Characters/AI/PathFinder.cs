@@ -165,8 +165,8 @@ namespace Barotrauma
             {
                 Vector2 nodePos = node.Position;
 
-                float xDiff = System.Math.Abs(start.X - nodePos.X);
-                float yDiff = System.Math.Abs(start.Y - nodePos.Y);
+                float xDiff = Math.Abs(start.X - nodePos.X);
+                float yDiff = Math.Abs(start.Y - nodePos.Y);
 
                 if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
                 {

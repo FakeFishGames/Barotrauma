@@ -331,11 +331,8 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(text))
             {
                 Vector2 pos = rect.Location.ToVector2() + textPos + TextOffset;
-                if (RoundToNearestPixel)
-                {
-                    pos.X = (int)pos.X;
-                    pos.Y = (int)pos.Y;
-                }
+                pos.X = (int)pos.X;
+                pos.Y = (int)pos.Y;
 
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
