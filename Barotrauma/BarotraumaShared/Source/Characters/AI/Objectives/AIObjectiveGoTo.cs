@@ -16,6 +16,9 @@ namespace Barotrauma
 
         public Func<bool> customCondition;
 
+        public bool followControlledCharacter;
+        public bool mimic;
+
         /// <summary>
         /// Display units
         /// </summary>
@@ -24,9 +27,11 @@ namespace Barotrauma
         public bool AllowGoingOutside { get; set; }
         public bool CheckVisibility { get; set; }
 
+        public ISpatialEntity Target { get; private set; }
+
         public override float GetPriority()
         {
-            if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
+            if (followControlledCharacter && Character.Controlled == null) { return 0.0f; }
             if (Target is Entity e && e.Removed) { return 0.0f; }
             if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }                     
             if (objectiveManager.CurrentOrder == this)
@@ -35,10 +40,6 @@ namespace Barotrauma
             }
             return 1.0f;
         }
-
-        public ISpatialEntity Target { get; private set; }
-
-        public bool FollowControlledCharacter;
 
         public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
             : base (character, objectiveManager, priorityModifier)
@@ -52,7 +53,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (FollowControlledCharacter)
+            if (followControlledCharacter)
             {
                 if (Character.Controlled == null)
                 {
@@ -137,8 +138,9 @@ namespace Barotrauma
                 }
                 if (getDivingGearIfNeeded)
                 {
-                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
-                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90);
+                    Character followTarget = Target as Character;
+                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull) || mimic && HumanAIController.HasDivingMask(followTarget);
+                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90) || mimic && HumanAIController.HasDivingSuit(followTarget);
                     bool needsEquipment = false;
                     if (needsDivingSuit)
                     {
