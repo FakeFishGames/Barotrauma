@@ -337,79 +337,6 @@ namespace Barotrauma
                 keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
                 keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
             }
-        }
-
-        public void CheckBindings(bool useDefaults)
-        {
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                var binding = keyMapping[(int)inputType];
-                if (binding == null)
-                {
-                    switch (inputType)
-                    {
-                        case InputType.Deselect:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(1);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var selectKey = keyMapping[(int)InputType.Select];
-                                if (selectKey != null && selectKey.Key != Keys.None)
-                                {
-                                    binding = new KeyOrMouse(selectKey.Key);
-                                }
-                            }
-                            break;
-                        case InputType.Shoot:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(0);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var useKey = keyMapping[(int)InputType.Use];
-                                if (useKey != null && useKey.MouseButton.HasValue)
-                                {
-                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    if (binding == null)
-                    {
-                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
-                        binding = new KeyOrMouse(Keys.D1);
-                    }
-                    keyMapping[(int)inputType] = binding;
-                }
-            }
-        }
-
-        #region Load DefaultConfig
-        private void LoadDefaultConfig(bool setLanguage = true)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
-
-            if (setLanguage || string.IsNullOrEmpty(Language))
-            {
-                Language = doc.Root.GetAttributeString("language", "English");
-            }
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (legacy)
             {
@@ -962,19 +889,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                .Replace("[packagename]", incompatiblePackage.Name)
-                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
-                                .Replace("[gameversion]", GameMain.Version.ToString()));
-            }
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "contentpackage":
                         string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
@@ -1088,7 +1003,6 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
@@ -1115,6 +1029,7 @@ namespace Barotrauma
                 gMode = new XElement("graphicsmode");
                 doc.Root.Add(gMode);
             }
+
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
             {
                 gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
