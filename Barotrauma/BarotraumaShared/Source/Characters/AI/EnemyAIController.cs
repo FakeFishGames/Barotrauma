@@ -543,6 +543,14 @@ namespace Barotrauma
                 {
                     attackSimPos -= Character.Submarine.SimPosition;
                 }
+                else if (Character.Submarine != SelectedAiTarget.Entity.Submarine)
+                {
+                    if (Character.Submarine != null && SelectedAiTarget.Entity.Submarine != null)
+                    {
+                        Vector2 diff = Character.Submarine.SimPosition - SelectedAiTarget.Entity.Submarine.SimPosition;
+                        attackSimPos -= diff;
+                    }
+                }
             }
 
             if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater &&
