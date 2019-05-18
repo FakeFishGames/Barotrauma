@@ -208,10 +208,11 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Health)); // Open health interface
             while (CharacterHealth.OpenHealthWindow == null)
             {
-                yield return new WaitForSeconds(1.0f, false);
+                doctor.CharacterHealth.HealthBarPulsateTimer = 1.0f;
+                yield return null;
             }
             RemoveCompletedObjective(segments[1]);
-
+            yield return new WaitForSeconds(1.0f, false);
             TriggerTutorialSegment(2); //Treat self
             while (doctor.CharacterHealth.GetAfflictionStrength("damage") > 0.01f)
             {
