@@ -543,10 +543,7 @@ namespace Barotrauma
                     //equipped item that can't be put in the inventory, use delayed dropping
                     if (quickUseAction == QuickUseAction.Drop)
                     {
-                        slots[i].QuickUseButtonToolTip =
-                            TextManager.Get("QuickUseAction.HoldToUnequip", returnNull: true) ??
-                            (GameMain.Config.Language == "English" ?  "Hold to unequip" : TextManager.Get("QuickUseAction.Unequip"));
-
+                        slots[i].QuickUseButtonToolTip = "Hold to unequip";
                         if (PlayerInput.LeftButtonHeld())
                         {
                             slots[i].QuickUseTimer = Math.Max(0.1f, slots[i].QuickUseTimer + deltaTime);

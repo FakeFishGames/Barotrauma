@@ -334,7 +334,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 5.0f);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
@@ -666,7 +666,7 @@ namespace Barotrauma
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
+                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen)
                     {
                         GUI.TogglePauseMenu();
                         paused = true;
