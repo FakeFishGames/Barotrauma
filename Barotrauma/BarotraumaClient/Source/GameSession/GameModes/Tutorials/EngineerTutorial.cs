@@ -358,6 +358,15 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_secondDoor.IsOpen);
             yield return new WaitForSeconds(1f, false);
             TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Select)); // Repair the junction box
+            do
+            {
+                if (!engineer.HasEquippedItem("screwdriver"))
+                {
+                    HighlightInventorySlot(engineer.Inventory, "screwdriver", highlightColor, .5f, .5f, 0f);
+                }
+                yield return null;
+            } while (!engineer.HasEquippedItem("screwdriver")); // Wait until equipped
+
             do { yield return null; } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
