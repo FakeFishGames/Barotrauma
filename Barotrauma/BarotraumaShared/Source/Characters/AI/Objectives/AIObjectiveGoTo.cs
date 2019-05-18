@@ -115,9 +115,9 @@ namespace Barotrauma
                 Vector2 currTargetSimPos = Vector2.Zero;
                 currTargetSimPos = Target.SimPosition;
                 // Take the sub position into account in the sim pos
-                if (character.Submarine == null && Target.Submarine != null)
+                if (SteeringManager != PathSteering && character.Submarine == null && Target.Submarine != null)
                 {
-                    //currTargetSimPos += Target.Submarine.SimPosition;
+                    currTargetSimPos += Target.Submarine.SimPosition;
                 }
                 else if (character.Submarine != null && Target.Submarine == null)
                 {
