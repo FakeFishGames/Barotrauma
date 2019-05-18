@@ -46,7 +46,7 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
-                Priority = 100;
+                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
                 return;
             }
             if (character.OxygenAvailable < CharacterHealth.LowOxygenThreshold) { Priority = 100; }
@@ -68,6 +68,8 @@ namespace Barotrauma
             }
         }
 
+        private Hull currentSafeHull;
+        private Hull previousSafeHull;
         protected override void Act(float deltaTime)
         {
             var currentHull = character.AnimController.CurrentHull;
@@ -107,15 +109,20 @@ namespace Barotrauma
                 else
                 {
                     searchHullTimer = SearchHullInterval;
-                    var bestHull = FindBestHull();
-                    if (bestHull != null && bestHull != currentHull)
+                    previousSafeHull = currentSafeHull;
+                    currentSafeHull = FindBestHull();
+                    if (currentSafeHull == null)
                     {
-                        if (goToObjective?.Target != bestHull)
+                        currentSafeHull = previousSafeHull;
+                    }
+                    if (currentSafeHull != null && currentSafeHull != currentHull)
+                    {
+                        if (goToObjective?.Target != currentSafeHull)
                         {
                             goToObjective = null;
                         }
                         TryAddSubObjective(ref goToObjective, 
-                            constructor: () => new AIObjectiveGoTo(bestHull, character, objectiveManager, getDivingGearIfNeeded: false)
+                            constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: false)
                             {
                                 // If we need diving gear, we should already have it, if possible.
                                 AllowGoingOutside = HumanAIController.HasDivingSuit(character)
@@ -127,7 +134,15 @@ namespace Barotrauma
                         goToObjective = null;
                     }
                 }
-                if (goToObjective != null) { return; }
+                if (goToObjective != null)
+                {
+                    if (goToObjective.IsCompleted())
+                    {
+                        objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
+                    }
+                    Priority = 0;
+                    return;
+                }
                 if (currentHull == null) { return; }
                 //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
                 // -> attempt to manually steer away from hazards
@@ -166,7 +181,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    character.AIController.SteeringManager.Reset();
+                    Priority = 0;
+                    objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                 }
             }
         }
@@ -179,11 +195,11 @@ namespace Barotrauma
             {
                 if (hull.Submarine == null) { continue; }
                 if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
+                if (unreachable.Contains(hull)) { continue; }
                 float hullSafety = 0;
-                if (character.Submarine != null && SteeringManager == PathSteering)
+                if (character.CurrentHull != null)
                 {
-                    // Inside or outside near the sub
-                    if (unreachable.Contains(hull)) { continue; }
+                    // Inside
                     if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
                     hullSafety = HumanAIController.GetHullSafety(hull, character);
                     // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
@@ -212,7 +228,7 @@ namespace Barotrauma
                 else
                 {
                     // Outside
-                    if (hull.RoomName?.ToLowerInvariant() == "airlock")
+                    if (hull.RoomName != null && hull.RoomName.ToLowerInvariant().Contains("airlock"))
                     {
                         hullSafety = 100;
                     }
@@ -221,13 +237,14 @@ namespace Barotrauma
                         // TODO: could also target gaps that get us inside?
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull == hull && item.HasTag("airlock"))
+                            if (item.CurrentHull != hull && item.HasTag("airlock"))
                             {
                                 hullSafety = 100;
                                 break;
                             }
                         }
                     }
+                    // TODO: could we get a closest door to the outside and target the flowing hull if no airlock is found?
                     // Huge preference for closer targets
                     float distance = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
                     float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));

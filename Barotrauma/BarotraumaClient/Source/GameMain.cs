@@ -334,7 +334,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 5.0f);
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
