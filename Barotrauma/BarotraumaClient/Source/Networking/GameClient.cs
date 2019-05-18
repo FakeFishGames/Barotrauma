@@ -903,7 +903,7 @@ namespace Barotrauma.Networking
                 connected = false;
                 ConnectToServer(serverIP);
             }
-            else
+            if (clientID == myID)
             {
                 string msg = "";
                 if (disconnectReason == DisconnectReason.Unknown)
@@ -921,8 +921,18 @@ namespace Barotrauma.Networking
                         msg += TextManager.GetServerMessage(splitMsg[i]);
                     }
                 }
-                var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
-                msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                
+                if (msg == NetConnection.NoResponseMessage)
+                {
+                    //display a generic "could not connect" popup if the message is Lidgren's "failed to establish connection"
+                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"));
+                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                }
+                else
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
+                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                }
             }
         }
 
