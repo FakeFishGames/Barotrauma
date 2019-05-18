@@ -198,6 +198,12 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
+            else
+            {
+                joinButton.Enabled = false;
+            }
+
+            return true;
         }
 
         private bool RefreshJoinButtonState(GUIComponent component, object obj)
@@ -219,16 +225,6 @@ namespace Barotrauma
         private bool SelectServer(GUIComponent component, object obj)
         {
             if (obj == null || waitingForRefresh) { return false; }
-
-            if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
-            {
-                joinButton.Enabled = true;
-            }
-            else
-            {
-                clientNameBox.Flash();
-                joinButton.Enabled = false;
-            }
 
             if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
