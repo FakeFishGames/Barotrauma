@@ -85,18 +85,12 @@ namespace Barotrauma
             
             if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
             {
-                if (steeringManager != insideSteering)
-                {
-                    insideSteering.Reset();
-                }
+                if (steeringManager != insideSteering) insideSteering.Reset();
                 steeringManager = insideSteering;
             }
             else
             {
-                if (steeringManager != outsideSteering)
-                {
-                    outsideSteering.Reset();
-                }
+                if (steeringManager != outsideSteering) outsideSteering.Reset();
                 steeringManager = outsideSteering;
             }
 
