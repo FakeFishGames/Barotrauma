@@ -293,7 +293,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Welding objective
+            TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Aim)); // Welding objective
             do
             {
                 if (!mechanic.HasEquippedItem("divingmask"))
@@ -334,13 +334,14 @@ namespace Barotrauma.Tutorials
             //TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Select)); // Ladder objective
             //do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
             //RemoveCompletedObjective(segments[11]);
+            yield return new WaitForSeconds(2f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(1f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
-            
+            yield return new WaitForSeconds(6f);
+
             // Room 4
             do { yield return null; } while (!mechanic_thirdDoor.IsOpen);
-            yield return new WaitForSeconds(1f);
             mechanic_fire = new DummyFireSource(new Vector2(20f, 2f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
             //do { yield return null; } while (!mechanic_craftingObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(4); // Deconstruct
