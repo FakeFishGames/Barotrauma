@@ -36,9 +36,7 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.05f
             };
 
-            int indicatorSize = (int)(30 * GUI.Scale);
-
-            powerIndicator = new GUITickBox(new RectTransform(new Point(indicatorSize, indicatorSize), content.RectTransform), 
+            powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), content.RectTransform), 
                 TextManager.Get("EnginePowered"), style: "IndicatorLightGreen")
             {
                 CanBeFocused = false

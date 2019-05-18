@@ -230,13 +230,6 @@ namespace Barotrauma
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
                     {
-                        // Doesn't seem to work
-                        //var body = Submarine.CheckVisibility(end, node.Waypoint.SimPosition);
-                        //if (body != null && body.UserData is Structure)
-                        //{
-                        //    continue;
-                        //}
-
                         var body = Submarine.PickBody(end, node.Waypoint.SimPosition, null,
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
 

@@ -36,16 +36,6 @@ namespace Barotrauma
             get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.HUDScale; }
         }
 
-        public static float xScale
-        {
-            get { return GameMain.GraphicsWidth / 1920.0f * GameSettings.HUDScale; }
-        }
-
-        public static float yScale
-        {
-            get { return GameMain.GraphicsHeight / 1080.0f * GameSettings.HUDScale; }
-        }
-
         public static GUIStyle Style;
 
         private static Texture2D t;
