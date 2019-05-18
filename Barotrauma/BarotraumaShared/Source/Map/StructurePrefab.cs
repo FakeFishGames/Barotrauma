@@ -184,6 +184,11 @@ namespace Barotrauma
                 sp.Tags.Add(tag.Trim().ToLowerInvariant());
             }
 
+            if (element.Attribute("ishorizontal") != null)
+            {
+                sp.IsHorizontal = element.GetAttributeBool("ishorizontal", false);
+            }
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())

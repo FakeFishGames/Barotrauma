@@ -273,7 +273,7 @@ namespace Barotrauma
             {
                 IsHorizontal = false
             };
-            cprButton = new GUIButton(new RectTransform(new Point(80, 80), GUI.Canvas), text: "", style: "CPRButton")
+            cprButton = new GUIButton(new RectTransform(new Point((int)(80 * GUI.Scale)), GUI.Canvas), text: "", style: "CPRButton")
             {
                 OnClicked = (button, userData) =>
                 {

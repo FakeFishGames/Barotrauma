@@ -45,7 +45,7 @@ namespace Barotrauma
 
         public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
-        public bool UseDirectionalVoiceChat { get; set; }
+        public bool UseDirectionalVoiceChat { get; set; } = true;
 
         public enum VoiceMode
         {
@@ -206,7 +206,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 5.0f);
 #endif
             }
         }
@@ -424,74 +424,6 @@ namespace Barotrauma
             {
                 Language = doc.Root.GetAttributeString("language", "English");
             }
-        }
-
-        #region Load DefaultConfig
-        private void LoadDefaultConfig()
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
-
-            Language = doc.Root.GetAttributeString("language", "English");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
