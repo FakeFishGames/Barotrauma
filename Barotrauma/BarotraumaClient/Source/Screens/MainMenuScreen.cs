@@ -440,21 +440,9 @@ namespace Barotrauma
                         GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
                         break;
                     case Tab.JoinServer:
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.JoinServer); });
-                            return true;
-                        }
                         GameMain.ServerListScreen.Select();
                         break;
                     case Tab.HostServer:
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
-                            return true;
-                        }
                         break;
                     case Tab.Tutorials:
                         if (!GameMain.Config.CampaignDisclaimerShown)

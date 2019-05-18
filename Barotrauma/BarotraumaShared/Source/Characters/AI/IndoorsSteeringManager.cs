@@ -144,9 +144,9 @@ namespace Barotrauma
 
         protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
         {
-            bool needsNewPath = currentPath != null && currentPath.Unreachable || Vector2.DistanceSquared(target, currentTarget) > 1;
+            bool isDifferentTarget = Vector2.DistanceSquared(target, currentTarget) > 1;
             //find a new path if one hasn't been found yet or the target is different from the current target
-            if (currentPath == null || needsNewPath || findPathTimer < -1.0f)
+            if (currentPath == null || isDifferentTarget || findPathTimer < -1.0f)
             {
                 IsPathDirty = true;
 
@@ -164,7 +164,7 @@ namespace Barotrauma
                 }
 
                 var newPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
-                if (currentPath == null || needsNewPath || !newPath.Unreachable && newPath.Cost < currentPath.Cost)
+                if (currentPath == null || isDifferentTarget || newPath.Cost < currentPath.Cost)
                 {
                     currentPath = newPath;
                 }
@@ -424,7 +424,7 @@ namespace Barotrauma
                                 // It's possible that we could reach another buttons.
                                 // If this becomes an issue, we could go through them here and check if any of them are reachable
                                 // (would have to cache a collection of buttons instead of a single reference in the CanAccess filter method above)
-                                //currentPath.Unreachable = true;
+                                currentPath.Unreachable = true;
                                 return;
                             }
                         }

@@ -117,7 +117,7 @@ namespace Barotrauma
                 // Take the sub position into account in the sim pos
                 if (character.Submarine == null && Target.Submarine != null)
                 {
-                    //currTargetSimPos += Target.Submarine.SimPosition;
+                    currTargetSimPos += Target.Submarine.SimPosition;
                 }
                 else if (character.Submarine != null && Target.Submarine == null)
                 {
@@ -159,6 +159,7 @@ namespace Barotrauma
             // First check the distance
             // Then the custom condition
             // And finally check if can interact (heaviest)
+            if (repeat) { return false; }
             if (isCompleted) { return true; }
             if (Target == null)
             {
@@ -166,16 +167,7 @@ namespace Barotrauma
                 return false;
             }
             bool closeEnough = Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
-            if (repeat)
-            {
-                if (closeEnough)
-                {
-                    character.AIController.SteeringManager.Reset();
-                    character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
-                }
-                return false;
-            }
-            else if (closeEnough)
+            if (closeEnough)
             {
                 if (customCondition == null || customCondition())
                 {
@@ -183,7 +175,7 @@ namespace Barotrauma
                     {
                         if (character.CanInteractWith(item, out _, checkLinked: false)) { isCompleted = true; }
                     }
-                    else if (Target is Character targetCharacter)
+                    else if (Target is Character targetCharacter && !FollowControlledCharacter)
                     {
                         if (character.CanInteractWith(targetCharacter, CloseEnough)) { isCompleted = true; }
                     }

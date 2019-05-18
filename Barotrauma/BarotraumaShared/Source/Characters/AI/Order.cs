@@ -39,9 +39,7 @@ namespace Barotrauma
         public Entity TargetEntity; 
         public ItemComponent TargetItemComponent;
         public readonly bool UseController;
-        public Controller ConnectedController;
-
-        public Character OrderGiver;
+        public Controller ConnectedController; 
         
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
@@ -122,7 +120,7 @@ namespace Barotrauma
             }
         }
         
-        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
+        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem)
         {
             Prefab = prefab;
 
@@ -136,7 +134,6 @@ namespace Barotrauma
             TargetAllCharacters = prefab.TargetAllCharacters;
             AppropriateJobs     = prefab.AppropriateJobs;
             FadeOutTime         = prefab.FadeOutTime;
-            OrderGiver          = orderGiver;
 
             TargetEntity = targetEntity;
             if (targetItem != null)
