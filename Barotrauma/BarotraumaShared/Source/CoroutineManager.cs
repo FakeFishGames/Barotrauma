@@ -198,19 +198,26 @@ namespace Barotrauma
         public readonly float TotalTime;
 
         float timer;
+        bool ignorePause;
 
-        public WaitForSeconds(float time)
+        public WaitForSeconds(float time, bool ignorePause = true)
         {
             timer = time;
             TotalTime = time;
+            this.ignorePause = ignorePause;
         }
 
         public bool CheckFinished(float deltaTime) 
         {
+#if !SERVER
+            if (ignorePause || !GUI.PauseMenuOpen)
+            {
+                timer -= deltaTime;
+            }
+#else
             timer -= deltaTime;
-            return timer<=0.0f;
+#endif
+            return timer <= 0.0f;
         }
     }
-
-
 }

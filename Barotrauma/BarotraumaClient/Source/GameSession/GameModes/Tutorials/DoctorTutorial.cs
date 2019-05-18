@@ -119,7 +119,7 @@ namespace Barotrauma.Tutorials
 
             // explosions and radio messages ------------------------------------------------------
 
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(3.0f, false);
 
             //SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition);
             //// Room 1
@@ -141,7 +141,7 @@ namespace Barotrauma.Tutorials
             explosion.Explode(Character.Controlled.WorldPosition - Vector2.UnitX * 25, null);
             SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition - Vector2.UnitX * 25);
 
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.5f, false);
 
             doctor.DamageLimb(
                 Character.Controlled.WorldPosition,
@@ -154,15 +154,15 @@ namespace Barotrauma.Tutorials
             {
                 shakeTimer -= 0.1f;
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.1f, false);
             }
 
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(3.0f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.KnockedDown"), ChatMessageType.Radio, null);
 
             // first tutorial segment, get medical supplies ------------------------------------------------------
 
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1.5f, false);
             SetHighlight(doctor_suppliesCabinet.Item, true);
 
             /*while (doctor.CurrentHull != doctor_suppliesCabinet.Item.CurrentHull)
@@ -190,19 +190,19 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             } while (doctor.Inventory.FindItemByIdentifier("antidama1") == null); // Wait until looted
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(1.0f, false);
 
             SetHighlight(doctor_suppliesCabinet.Item, false);
             RemoveCompletedObjective(segments[0]);
 
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(1.0f, false);
 
             // 2nd tutorial segment, treat self -------------------------------------------------------------------------
 
             TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Health)); // Open health interface
             while (CharacterHealth.OpenHealthWindow == null)
             {
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(1.0f, false);
             }
             RemoveCompletedObjective(segments[1]);
 
@@ -226,7 +226,7 @@ namespace Barotrauma.Tutorials
 
             while (CharacterHealth.OpenHealthWindow != null)
             {
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(1.0f, false);
             }
 
             // treat patient --------------------------------------------------------------------------------------------
@@ -240,9 +240,9 @@ namespace Barotrauma.Tutorials
 
             while (doctor.CurrentHull != patient1.CurrentHull)
             {
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(1.0f, false);
             }
-            yield return new WaitForSeconds(0.0f);
+            yield return new WaitForSeconds(0.0f, false);
 
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.AssistantBurns"), ChatMessageType.Radio, null);
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
@@ -250,7 +250,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddCharacter(patient1);
             GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
 
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(3.0f, false);
             TriggerTutorialSegment(3); // Get the patient to medbay
 
             while (patient1.CurrentOrder == null || patient1.CurrentOrder.AITag != "follow")
@@ -263,13 +263,13 @@ namespace Barotrauma.Tutorials
 
             while (patient1.CurrentHull != medBay)
             {
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(1.0f, false);
             }
             RemoveCompletedObjective(segments[3]);
             SetHighlight(doctor_medBayCabinet.Item, true);
             SetDoorAccess(doctor_thirdDoor, doctor_thirdDoorLight, true);
 
-            yield return new WaitForSeconds(2.0f);
+            yield return new WaitForSeconds(2.0f, false);
 
             TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Health)); // treat burns
 
@@ -309,7 +309,7 @@ namespace Barotrauma.Tutorials
             }
             RemoveCompletedObjective(segments[4]);
             SetHighlight(patient1, false);
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(1.0f, false);
 
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.AssistantBurnsHealed"), ChatMessageType.Radio, null);
 
@@ -329,7 +329,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(1.0f);
             }*/
             do { yield return null; } while (!tutorial_upperFinalDoor.IsOpen);
-            yield return new WaitForSeconds(2.0f);
+            yield return new WaitForSeconds(2.0f, false);
 
             TriggerTutorialSegment(5, GameMain.Config.KeyBind(InputType.Health)); // perform CPR
             SetHighlight(patient2, true);
@@ -350,12 +350,12 @@ namespace Barotrauma.Tutorials
 
             while (doctor.Submarine != Submarine.MainSub)
             {
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(1.0f, false);
             }
-            yield return new WaitForSeconds(5.0f);
+            yield return new WaitForSeconds(5.0f, false);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.EnteredSub"), ChatMessageType.Radio, null);
 
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(3.0f, false);
             TriggerTutorialSegment(6, GameMain.Config.KeyBind(InputType.Health)); // give treatment to anyone in need
 
             foreach (var patient in subPatients)
@@ -398,7 +398,7 @@ namespace Barotrauma.Tutorials
                         SetHighlight(subPatients[i], false);
                     }
                 }
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(1.0f, false);
             }
             RemoveCompletedObjective(segments[6]);
             foreach (var patient in subPatients)
