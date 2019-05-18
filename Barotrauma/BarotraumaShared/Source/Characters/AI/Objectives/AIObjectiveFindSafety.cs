@@ -134,7 +134,15 @@ namespace Barotrauma
                         goToObjective = null;
                     }
                 }
-                if (goToObjective != null) { return; }
+                if (goToObjective != null)
+                {
+                    if (goToObjective.IsCompleted())
+                    {
+                        objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
+                    }
+                    Priority = 0;
+                    return;
+                }
                 if (currentHull == null) { return; }
                 //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
                 // -> attempt to manually steer away from hazards
@@ -173,7 +181,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    character.AIController.SteeringManager.Reset();
+                    Priority = 0;
+                    objectiveManager.GetObjective<AIObjectiveIdle>()?.Wander(deltaTime);
                 }
             }
         }
