@@ -197,7 +197,7 @@ namespace Barotrauma.Tutorials
             {
                 shakeTimer -= 0.1f;
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.1f, false);
             }
 
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.WakeUp"), ChatMessageType.Radio, null);
@@ -205,7 +205,7 @@ namespace Barotrauma.Tutorials
             // Room 2
             do { yield return null; } while (!officer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Equipment"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(3f, false);
             //TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
             SetHighlight(officer_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
@@ -259,7 +259,7 @@ namespace Barotrauma.Tutorials
                 {
                     HighlightInventorySlot(officer.Inventory, "ballistichelmet", highlightColor, .5f, .5f, 0f);
                 }
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(1f, false);
             } while (!officer.HasEquippedItem("stunbaton") || !officer.HasEquippedItem("bodyarmor") || !officer.HasEquippedItem("ballistichelmet"));
             RemoveCompletedObjective(segments[1]);
             SetDoorAccess(officer_firstDoor, officer_firstDoorLight, true);
@@ -271,7 +271,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!officer_crawler.IsDead);
             RemoveCompletedObjective(segments[2]);
             Heal(officer);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.CrawlerDead"), ChatMessageType.Radio, null);
             SetDoorAccess(officer_secondDoor, officer_secondDoorLight, true);
 
@@ -296,7 +296,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_ammoShelf_1.Item, false);
             SetHighlight(officer_ammoShelf_2.Item, false);
             RemoveCompletedObjective(segments[3]);
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster(hammerheadCharacterFile, officer_hammerheadSpawnPos);
             officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
@@ -316,14 +316,14 @@ namespace Barotrauma.Tutorials
             Heal(officer);
             SetHighlight(officer_coilgunPeriscope, false);
             RemoveCompletedObjective(segments[4]);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.HammerheadDead"), ChatMessageType.Radio, null);
             SetDoorAccess(officer_thirdDoor, officer_thirdDoorLight, true);
 
             // Room 5
             //do { yield return null; } while (!officer_rangedWeaponSensor.MotionDetected);
             do { yield return null; } while (!officer_thirdDoor.IsOpen);
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(3f, false);
             TriggerTutorialSegment(5, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Ranged weapons
             SetHighlight(officer_rangedWeaponHolder.Item, true);
             do { yield return null; } while (!officer_rangedWeaponHolder.Inventory.IsEmpty()); // Wait until looted
@@ -430,7 +430,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[7]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Complete"), ChatMessageType.Radio, null);
 
-            yield return new WaitForSeconds(4f);
+            yield return new WaitForSeconds(4f, false);
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 

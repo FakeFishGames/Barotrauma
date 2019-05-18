@@ -230,25 +230,25 @@ namespace Barotrauma.Tutorials
             {
                 shakeTimer -= 0.1f;
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.1f, false);
             }
-            yield return new WaitForSeconds(2.5f);
+            yield return new WaitForSeconds(2.5f, false);
 
             mechanic_fabricator.RemoveFabricationRecipes(new List<string>() { "extinguisher", "wrench", "weldingtool", "weldingfuel", "divingmask", "railgunshell", "nuclearshell", "uex", "harpoongun" });
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
 
-            yield return new WaitForSeconds(2.5f);
+            yield return new WaitForSeconds(2.5f, false);
             TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Left), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Right), GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Select)); // Open door objective
-            yield return new WaitForSeconds(0.0f);
+            yield return new WaitForSeconds(0.0f, false);
             SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
             SetHighlight(mechanic_firstDoor.Item, true);
             do { yield return null; } while (!mechanic_firstDoor.IsOpen);
             SetHighlight(mechanic_firstDoor.Item, false);
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1.5f, false);
             RemoveCompletedObjective(segments[0]);
 
             // Room 2
-            yield return new WaitForSeconds(0.0f);
+            yield return new WaitForSeconds(0.0f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Equipment & inventory objective
@@ -287,7 +287,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null); // Wait until looted
             SetHighlight(mechanic_equipmentCabinet.Item, false);
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1.5f, false);
             RemoveCompletedObjective(segments[1]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
 
@@ -312,7 +312,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_1)); // Highlight until repaired
             mechanic.RemoveActiveObjectiveEntity(mechanic_brokenWall_1);
             RemoveCompletedObjective(segments[2]);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f, false);
             TriggerTutorialSegment(3, GameMain.Config.KeyBind(InputType.Select)); // Pump objective
             SetHighlight(mechanic_workingPump.Item, true);
             do
@@ -330,17 +330,17 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1.5f, false);
             //TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Select)); // Ladder objective
             //do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
             //RemoveCompletedObjective(segments[11]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Fire"), ChatMessageType.Radio, null);
             
             // Room 4
             do { yield return null; } while (!mechanic_thirdDoor.IsOpen);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f, false);
             mechanic_fire = new DummyFireSource(new Vector2(20f, 2f), Item.ItemList.Find(i => i.HasTag("mechanic_fire")).WorldPosition);
             //do { yield return null; } while (!mechanic_craftingObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(4); // Deconstruct
@@ -364,7 +364,7 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             } while (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null || mechanic.Inventory.FindItemByIdentifier("sodium") == null); // Wait until looted
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(1.0f, false);
             SetHighlight(mechanic_craftingCabinet.Item, false);
 
             SetHighlight(mechanic_deconstructor.Item, true);
@@ -409,7 +409,7 @@ namespace Barotrauma.Tutorials
 
             SetHighlight(mechanic_deconstructor.Item, false);
             RemoveCompletedObjective(segments[4]);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f, false);
             TriggerTutorialSegment(5); // Fabricate
             SetHighlight(mechanic_fabricator.Item, true);
             do
@@ -465,7 +465,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!mechanic_fireSensor.MotionDetected);
             TriggerTutorialSegment(6, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Using the extinguisher
             do { yield return null; } while (!mechanic_fire.Removed); // Wait until extinguished
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(3f, false);
             RemoveCompletedObjective(segments[6]);
 
             if (mechanic.HasEquippedItem("extinguisher")) // do not trigger if dropped already
