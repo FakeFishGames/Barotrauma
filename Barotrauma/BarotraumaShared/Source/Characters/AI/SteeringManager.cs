@@ -45,9 +45,9 @@ namespace Barotrauma
             steering += DoSteeringWander(weight);
         }
 
-        public void SteeringAvoid(float deltaTime, float lookAheadDistance, float weight = 1, Vector2? heading = null)
+        public void SteeringAvoid(float deltaTime, float lookAheadDistance, float weight = 1)
         {
-            steering += DoSteeringAvoid(deltaTime, lookAheadDistance, weight, heading);
+            steering += DoSteeringAvoid(deltaTime, lookAheadDistance, weight);
         }
 
         public void SteeringManual(float deltaTime, Vector2 velocity)
@@ -129,12 +129,10 @@ namespace Barotrauma
             return newSteering;
         }
 
-        protected virtual Vector2 DoSteeringAvoid(float deltaTime, float lookAheadDistance, float weight, Vector2? heading = null)
+        protected virtual Vector2 DoSteeringAvoid(float deltaTime, float lookAheadDistance, float weight)
         {
-            if (steering == Vector2.Zero || host.Steering == Vector2.Zero)
-            {
-                return Vector2.Zero;
-            }
+            if (steering == Vector2.Zero || host.Steering == Vector2.Zero) return Vector2.Zero;
+
             float maxDistance = lookAheadDistance;
             if (rayCastTimer <= 0.0f)
             {
@@ -160,11 +158,19 @@ namespace Barotrauma
                         {
                             obstaclePosition.X = closestStructure.SimPosition.X;
                         }
+
                         avoidObstaclePos = obstaclePosition;
+                        //avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - obstaclePosition);
                     }
+                    /*else if (closestBody.UserData is Item)
+                    {
+                        avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - item.SimPosition);
+                    }*/
                     else
                     {
+
                         avoidObstaclePos = Submarine.LastPickedPosition;
+                        //avoidSteering = Vector2.Normalize(host.SimPosition - Submarine.LastPickedPosition);
                     }
                 }
             }
@@ -179,26 +185,14 @@ namespace Barotrauma
             Vector2 diff = avoidObstaclePos.Value - host.SimPosition;
             float dist = diff.Length();
 
-            if (dist > maxDistance)
-            {
-                return Vector2.Zero;
-            }
-            if (heading.HasValue)
-            {
-                var f = heading ?? host.Steering;
-                // Avoid to left or right depending on the current heading
-                Vector2 relativeVector = Vector2.Normalize(diff) - Vector2.Normalize(f);
-                var dir = relativeVector.X > 0 ? diff.Right() : diff.Left();
-                float factor = 1.0f - Math.Min(dist / maxDistance, 1);
-                return dir * factor * weight;
-            }
-            else
-            {
-                // Doesn't work right because it effectively just slows down or reverses the movement, where as we'd like to go right or left to avoid the target.
-                // There's also another issue, which also affects going right or left: the raycast doesn't hit anything if we turn too much -> avoiding doesn't work well.
-                // Could probably "remember" the avoidance a bit longer so that the avoid steering is not immedieately disgarded, but kept for a while and reduced gradually?
-                return -diff * (1.0f - dist / maxDistance) * weight;
-            }
+            if (!avoidObstaclePos.HasValue) return Vector2.Zero;
+
+            Vector2 diff = avoidObstaclePos.Value - host.SimPosition;
+            float dist = diff.Length();
+
+            if (dist > maxDistance) return Vector2.Zero;
+
+            return -diff * (1.0f - dist / maxDistance) * weight;
         }
     }
 }

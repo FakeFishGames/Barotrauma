@@ -45,7 +45,7 @@ namespace Barotrauma
 
         public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
-        public bool UseDirectionalVoiceChat { get; set; }
+        public bool UseDirectionalVoiceChat { get; set; } = true;
 
         public enum VoiceMode
         {
@@ -206,7 +206,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 5.0f);
 #endif
             }
         }
@@ -424,6 +424,79 @@ namespace Barotrauma
             {
                 Language = doc.Root.GetAttributeString("language", "English");
             }
+        }
+
+        public void CheckBindings(bool useDefaults)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                var binding = keyMapping[(int)inputType];
+                if (binding == null)
+                {
+                    switch (inputType)
+                    {
+                        case InputType.Deselect:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(1);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var selectKey = keyMapping[(int)InputType.Select];
+                                if (selectKey != null && selectKey.Key != Keys.None)
+                                {
+                                    binding = new KeyOrMouse(selectKey.Key);
+                                }
+                            }
+                            break;
+                        case InputType.Shoot:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(0);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var useKey = keyMapping[(int)InputType.Use];
+                                if (useKey != null && useKey.MouseButton.HasValue)
+                                {
+                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (binding == null)
+                    {
+                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
+                        binding = new KeyOrMouse(Keys.D1);
+                    }
+                    keyMapping[(int)inputType] = binding;
+                }
+            }
+        }
+
+        #region Load DefaultConfig
+        private void LoadDefaultConfig(bool setLanguage = true)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(savePath);
+
+            if (setLanguage || string.IsNullOrEmpty(Language))
+            {
+                Language = doc.Root.GetAttributeString("language", "English");
+            }
+
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
+
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
+
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
@@ -821,54 +894,6 @@ namespace Barotrauma
                     VoiceSetting = voiceSetting;
                 }
             }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
-
-            //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
-        }
-        #endregion
-
-        #region Save DefaultConfig
-        private void SaveNewDefaultConfig()
-        {
-            XDocument doc = new XDocument();
-
-            if (doc.Root == null)
-            {
-                doc.Add(new XElement("config"));
-            }
-
-            doc.Root.Add(
-                new XAttribute("language", TextManager.Language),
-                new XAttribute("masterserverurl", MasterServerUrl),
-                new XAttribute("autocheckupdates", AutoCheckUpdates),
-                new XAttribute("musicvolume", musicVolume),
-                new XAttribute("soundvolume", soundVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
-                new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount));
-
-            if (!ShowUserStatisticsPrompt)
-            {
-                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
-
-            if (WasGameUpdated)
-            {
-                doc.Root.Add(new XAttribute("wasgameupdated", true));
-            }
             
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
@@ -884,55 +909,6 @@ namespace Barotrauma
 
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", false);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", false);
-
-            foreach (XElement subElement in doc.Root.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "keymapping":
-                        LoadKeyBinds(subElement);
-                        break;
-                    case "gameplay":
-                        jobPreferences = new List<string>();
-                        foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
-                        {
-                            string jobIdentifier = ele.GetAttributeString("identifier", "");
-                            if (string.IsNullOrEmpty(jobIdentifier)) continue;
-                            jobPreferences.Add(jobIdentifier);
-                        }
-                        break;
-                    case "player":
-                        defaultPlayerName = subElement.GetAttributeString("name", defaultPlayerName);
-                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
-                        {
-                            CharacterGender = g;
-                        }
-                        if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
-                        {
-                            CharacterRace = r;
-                        }
-                        else
-                        {
-                            CharacterRace = Race.White;
-                        }
-                        CharacterHairIndex = subElement.GetAttributeInt("hairindex", CharacterHairIndex);
-                        CharacterBeardIndex = subElement.GetAttributeInt("beardindex", CharacterBeardIndex);
-                        CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", CharacterMoustacheIndex);
-                        CharacterFaceAttachmentIndex = subElement.GetAttributeInt("faceattachmentindex", CharacterFaceAttachmentIndex);
-                        break;
-                    case "tutorials":
-                        foreach (XElement tutorialElement in subElement.Elements())
-                        {
-                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
-                        }
-                        break;
-                }
-            }
-
-            UnsavedSettings = false;
-
-            selectedContentPackagePaths = new HashSet<string>();
 
             foreach (XElement subElement in doc.Root.Elements())
             {
