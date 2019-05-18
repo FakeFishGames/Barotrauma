@@ -747,7 +747,7 @@ namespace Barotrauma
             {
                 if (orderGiver == null || orderGiver.CurrentHull == null) { return; }
                 var hull = orderGiver.CurrentHull;
-                AddOrder(new Order(order.Prefab, hull, null), order.Prefab.FadeOutTime);
+                AddOrder(new Order(order.Prefab, hull, null, orderGiver), order.Prefab.FadeOutTime);
                 if (IsSinglePlayer)
                 {
                     orderGiver.Speak(
