@@ -812,18 +812,17 @@ namespace Barotrauma
         // ToDo: Move texts/links to localization, when possible.
         public void ShowBugReporter()
         {
-            var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
-            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
+            var msgBox = new GUIMessageBox("", "");
+            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
 
             List<Pair<string, string>> links = new List<Pair<string, string>>()
                 {
-                    new Pair<string, string>(TextManager.Get("bugreportfeedbackform"),"https://barotraumagame.com/feedback"),
-                    new Pair<string, string>(TextManager.Get("bugreportgithubform"),"https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
+                    new Pair<string, string>("Barotrauma Feedback Form","https://barotraumagame.com/feedback"),
+                    new Pair<string, string>("Github Issue Form (Needs account)","https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
                 };
             foreach (var link in links)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
                 {
                     UserData = link.Second,
                     OnClicked = (btn, userdata) =>
@@ -834,9 +833,6 @@ namespace Barotrauma
                     }
                 };
             }
-
-            msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
-                msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + 10);
         }
 
         static bool waitForKeyHit = true;

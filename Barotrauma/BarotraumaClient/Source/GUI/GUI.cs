@@ -1434,16 +1434,7 @@ namespace Barotrauma
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("bugreportbutton"), style: "GUIButtonLarge")
-                {
-                    Color = Color.Red,
-                    HoverColor = Color.DarkRed,
-                    PressedColor = Color.White,
-                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
-                };
-
-
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
                 {
                     OnClicked = TogglePauseMenu
                 };

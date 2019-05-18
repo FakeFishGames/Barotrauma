@@ -302,10 +302,6 @@ namespace Barotrauma
         public void SetDefaultBindings(XDocument doc = null, bool legacy = false)
         {
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
-            keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
-            keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
-            keyMapping[(int)InputType.Left] = new KeyOrMouse(Keys.A);
-            keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
             keyMapping[(int)InputType.Attack] = new KeyOrMouse(2);
             keyMapping[(int)InputType.Crouch] = new KeyOrMouse(Keys.LeftControl);
@@ -319,10 +315,46 @@ namespace Barotrauma
             keyMapping[(int)InputType.RadioChat] = new KeyOrMouse(Keys.R);
             keyMapping[(int)InputType.CrewOrders] = new KeyOrMouse(Keys.C);
 
-            keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
-            keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
-
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
+
+            if (Language == "French")
+            {
+                keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.Z);
+                keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
+                keyMapping[(int)InputType.Left] = new KeyOrMouse(Keys.Q);
+                keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
+
+                keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.X);
+                keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.W);
+            }
+            else
+            {
+                keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
+                keyMapping[(int)InputType.Down] = new KeyOrMouse(Keys.S);
+                keyMapping[(int)InputType.Left] = new KeyOrMouse(Keys.A);
+                keyMapping[(int)InputType.Right] = new KeyOrMouse(Keys.D);
+
+                keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
+                keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
+            }
+        }
+
+        #region Load DefaultConfig
+        private void LoadDefaultConfig()
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(savePath);
+
+            Language = doc.Root.GetAttributeString("language", "English");
+
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
+
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
+
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (legacy)
             {
@@ -341,33 +373,15 @@ namespace Barotrauma
             {
                 foreach (XElement subElement in doc.Root.Elements())
                 {
-                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    if (subElement.Name.ToString().ToLowerInvariant() == "keymapping")
                     {
-                        case "keymapping":
-                            foreach (XAttribute attribute in subElement.Attributes())
-                            {
-                                if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
-                                {
-                                    if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
-                                    {
-                                        keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
-                                    }
-                                    else
-                                    {
-                                        if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
-                                        {
-                                            keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                        }
-                                    }
-                                }
-                            }
-                            break;
+                        LoadKeyBinds(subElement);
                     }
                 }
             }
         }
 
-        private void CheckBindings(bool useDefaults)
+        public void CheckBindings(bool useDefaults)
         {
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
@@ -505,23 +519,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "keymapping":
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
-                            {
-                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
-                                {
-                                    keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
-                                }
-                                else
-                                {
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
-                                    {
-                                        keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                    }
-                                }
-                            }
-                        }
+                        LoadKeyBinds(subElement);
                         break;
                     case "gameplay":
                         jobPreferences = new List<string>();
@@ -838,6 +836,54 @@ namespace Barotrauma
                     VoiceSetting = voiceSetting;
                 }
             }
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+
+            //save to get rid of the invalid selected packages in the config file
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+        }
+        #endregion
+
+        #region Save DefaultConfig
+        private void SaveNewDefaultConfig()
+        {
+            XDocument doc = new XDocument();
+
+            if (doc.Root == null)
+            {
+                doc.Add(new XElement("config"));
+            }
+
+            doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
+                new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("autocheckupdates", AutoCheckUpdates),
+                new XAttribute("musicvolume", musicVolume),
+                new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("verboselogging", VerboseLogging),
+                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("quickstartsub", QuickStartSubmarineName),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
+
+            if (WasGameUpdated)
+            {
+                doc.Root.Add(new XAttribute("wasgameupdated", true));
+            }
             
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
@@ -859,23 +905,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "keymapping":
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
-                            {
-                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
-                                {
-                                    keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
-                                }
-                                else
-                                {
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
-                                    {
-                                        keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                    }
-                                }
-                            }
-                        }
+                        LoadKeyBinds(subElement);
                         break;
                     case "gameplay":
                         jobPreferences = new List<string>();
@@ -1188,6 +1218,26 @@ namespace Barotrauma
             }
         }
         #endregion
+
+        private void LoadKeyBinds(XElement element)
+        {
+            foreach (XAttribute attribute in element.Attributes())
+            {
+                if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
+                
+                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
+                {
+                    keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
+                }
+                else
+                {
+                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
+                    {
+                        keyMapping[(int)inputType] = new KeyOrMouse(key);
+                    }
+                }                
+            }
+        }
 
         public void ResetToDefault()
         {
