@@ -552,7 +552,7 @@
     <ConnectionPanel canbeselected="true" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <!-- break the item when a shutdown signal is received -->
-      <input name="activate" />
+      <input name="activate" displayname="connection.turrettriggerin"/>
       <input name="shutdown" displayname="connection.shutdown">
         <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
       </input>

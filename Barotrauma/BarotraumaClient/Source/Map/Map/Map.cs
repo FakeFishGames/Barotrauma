@@ -624,10 +624,22 @@ namespace Barotrauma
 
                 if (mouseOn && PlayerInput.LeftButtonClicked() && !messageBoxOpen)
                 {
-                    //TODO: translate or replace
-                    var messageBox = new GUIMessageBox("Mysteries lie ahead...", "This area is unreachable in this version of Barotrauma. Please wait for future updates!");
-                    messageBoxOpen = true;
-                    CoroutineManager.StartCoroutine(WaitForMessageBoxClosed(messageBox));
+                    if (TextManager.ContainsTag("centerarealockedheader") && TextManager.ContainsTag("centerarealockedtext") )
+                    {
+                        var messageBox = new GUIMessageBox(
+                            TextManager.Get("centerarealockedheader"),
+                            TextManager.Get("centerarealockedtext"));
+                        messageBoxOpen = true;
+                        CoroutineManager.StartCoroutine(WaitForMessageBoxClosed(messageBox));
+                    }
+                    else
+                    {
+                        //if the message cannot be shown in the selected language, 
+                        //show the campaign roadmap (which mentions the center location not being reachable)
+                        var messageBox = new GUIMessageBox(TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("CampaignRoadMapText"));
+                        messageBoxOpen = true;
+                        CoroutineManager.StartCoroutine(WaitForMessageBoxClosed(messageBox));
+                    }
                 }
             }
             

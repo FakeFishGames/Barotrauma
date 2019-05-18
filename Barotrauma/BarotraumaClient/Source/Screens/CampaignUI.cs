@@ -74,15 +74,14 @@ namespace Barotrauma
             outpostBtn.TextBlock.Font = GUI.LargeFont;
             outpostBtn.TextBlock.AutoScale = true;
 
-            var tabButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.3f), topPanelContent.RectTransform, Anchor.BottomLeft), isHorizontal: true);
+            var tabButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.4f), topPanelContent.RectTransform, Anchor.BottomLeft), isHorizontal: true);
 
             int i = 0;
             var tabValues = Enum.GetValues(typeof(Tab));
             foreach (Tab tab in tabValues)
             {
                 var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tabButtonContainer.RectTransform),
-                    TextManager.Get(tab.ToString()),
-                    textAlignment: Alignment.Center,
+                    "",
                     style: i == 0 ? "GUISlopedTabButtonLeft" : (i == tabValues.Length - 1 ? "GUISlopedTabButtonRight" : "GUISlopedTabButtonMid"))
                 {
                     UserData = tab,
@@ -93,11 +92,32 @@ namespace Barotrauma
                 tabButton.RectTransform.MaxSize = new Point(
                     (int)(tabButton.Rect.Height * (buttonSprite.Sprite.size.X / buttonSprite.Sprite.size.Y)), int.MaxValue);
 
+                //the text needs to be positioned differently in the buttons at the edges due to the "slopes" in the button
+                if (i == 0 || i == tabValues.Length - 1)
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.9f), tabButton.RectTransform, i == 0 ? Anchor.CenterLeft : Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) },
+                        TextManager.Get(tab.ToString()), textColor: tabButton.TextColor, font: GUI.LargeFont, textAlignment: Alignment.Center, style: null)
+                    {
+                        UserData = "buttontext"
+                    };
+                }
+                else
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.9f), tabButton.RectTransform, Anchor.Center),
+                        TextManager.Get(tab.ToString()), textColor: tabButton.TextColor, font: GUI.LargeFont, textAlignment: Alignment.Center, style: null)
+                    {
+                        UserData = "buttontext"
+                    };
+                }
+
                 tabButtons.Add(tabButton);
-                tabButton.Font = GUI.LargeFont;
                 i++;
             }
-            GUITextBlock.AutoScaleAndNormalize(tabButtons.Select(t => t.TextBlock));
+            GUITextBlock.AutoScaleAndNormalize(tabButtons.Select(t => t.GetChildByUserData("buttontext") as GUITextBlock));
+            tabButtons.FirstOrDefault().RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(tabButtons.Select(t => t.GetChildByUserData("buttontext") as GUITextBlock));
+            };
 
             // crew tab -------------------------------------------------------------------------
 

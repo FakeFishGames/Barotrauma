@@ -287,29 +287,38 @@ namespace Barotrauma
         {
             if (GameSettings.ShowUserStatisticsPrompt)
             {
-                //TODO: translate
-                var userStatsPrompt = new GUIMessageBox(
-                    "Do you want to help us make Barotrauma better?",
-                    "Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, " +
-                    "does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.",
-                    new string[] { "Yes", "No" });
-                userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                if (TextManager.ContainsTag("statisticspromptheader") && TextManager.ContainsTag("statisticsprompttext"))
                 {
+                    var userStatsPrompt = new GUIMessageBox(
+                        TextManager.Get("statisticspromptheader"),
+                        TextManager.Get("statisticsprompttext"),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                    {
+                        GameSettings.ShowUserStatisticsPrompt = false;
+                        GameSettings.SendUserStatistics = true;
+                        GameAnalyticsManager.Init();
+                        Config.SaveNewPlayerConfig();
+                        return true;
+                    };
+                    userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
+                    userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                    {
+                        GameSettings.ShowUserStatisticsPrompt = false;
+                        GameSettings.SendUserStatistics = false;
+                        Config.SaveNewPlayerConfig();
+                        return true;
+                    };
+                    userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
+                }
+                else
+                {
+                    //user statistics enabled by default if the prompt cannot be shown in the user's language
                     GameSettings.ShowUserStatisticsPrompt = false;
                     GameSettings.SendUserStatistics = true;
                     GameAnalyticsManager.Init();
                     Config.SaveNewPlayerConfig();
-                    return true;
-                };
-                userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
-                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                {
-                    GameSettings.ShowUserStatisticsPrompt = false;
-                    GameSettings.SendUserStatistics = false;
-                    Config.SaveNewPlayerConfig();
-                    return true;
-                };
-                userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
+                }
             }
             else if (GameSettings.SendUserStatistics)
             {
@@ -374,10 +383,10 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
             }
 
-#if DEBUG
+/*#if DEBUG
             GameSettings.ShowUserStatisticsPrompt = false;
             GameSettings.SendUserStatistics = false;
-#endif
+#endif*/
 
             InitUserStats();
 

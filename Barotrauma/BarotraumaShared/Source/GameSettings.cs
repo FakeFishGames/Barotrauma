@@ -750,6 +750,7 @@ namespace Barotrauma
             if (!fileFound)
             {
                 ShowLanguageSelectionPrompt = true;
+                ShowUserStatisticsPrompt = true;
                 SaveNewPlayerConfig();
             }
         }
