@@ -100,6 +100,25 @@ namespace Barotrauma
                 steeringManager = outsideSteering;
             }
 
+            float maxDistanceToSub = 3000;
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 
+                    Vector2.DistanceSquared(Character.WorldPosition, SelectedAiTarget.Entity.Submarine.WorldPosition) < maxDistanceToSub * maxDistanceToSub)
+            {
+                if (steeringManager != insideSteering)
+                {
+                    insideSteering.Reset();
+                }
+                steeringManager = insideSteering;
+            }
+            else
+            {
+                if (steeringManager != outsideSteering)
+                {
+                    outsideSteering.Reset();
+                }
+                steeringManager = outsideSteering;
+            }
+
             AnimController.Crouching = shouldCrouch;
             CheckCrouching(deltaTime);
             Character.ClearInputs();
@@ -360,9 +379,6 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
-#if SERVER
-                    GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character));
-#endif
                 }
             }
         }

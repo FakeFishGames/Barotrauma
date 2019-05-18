@@ -91,7 +91,7 @@ namespace Barotrauma
                 }
 
                 InnerFrame.RectTransform.NonScaledSize = 
-                    new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + (int)(50 * GUI.yScale)));
+                    new Point(InnerFrame.Rect.Width, (int)Math.Max(height / Content.RectTransform.RelativeSize.Y, height + 50));
                 Content.RectTransform.NonScaledSize =
                     new Point(Content.Rect.Width, height);
             }
@@ -99,7 +99,7 @@ namespace Barotrauma
             Buttons = new List<GUIButton>(buttons.Length);
             for (int i = 0; i < buttons.Length; i++)
             {
-                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform), buttons[i], style: "GUIButtonLarge");
+                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform, maxSize: new Point(300, 35)), buttons[i], style: "GUIButtonLarge");
                 Buttons.Add(button);
             }
 

@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.05f
             };
 
-            var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
                 TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
             pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
             {
@@ -109,10 +109,9 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            var inLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
 
-            GUITextBlock.AutoScaleAndNormalize(outLabel, inLabel);
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
+                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);            
         }
 
         public override void OnItemLoaded()

@@ -396,11 +396,8 @@ namespace Barotrauma
             {
                 MouseOn.DrawToolTip(spriteBatch);
             }
-
-            if (GameMain.WindowActive)
-            {
-                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, 0, Scale / 2f);
-            }
+            
+            Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);            
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
@@ -570,7 +567,7 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" && GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
+            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt")
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
@@ -585,7 +582,7 @@ namespace Barotrauma
             }
 
             //the "are you sure you want to quit" prompts are drawn on top of everything else
-            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt" || GUIMessageBox.VisibleBox?.UserData as string == "bugreporter")
+            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt")
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
@@ -1447,16 +1444,7 @@ namespace Barotrauma
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("bugreportbutton"), style: "GUIButtonLarge")
-                {
-                    Color = Color.Red,
-                    HoverColor = Color.DarkRed,
-                    PressedColor = Color.White,
-                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
-                };
-
-
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
                 {
                     OnClicked = TogglePauseMenu
                 };
