@@ -405,6 +405,7 @@ namespace Barotrauma.Tutorials
         private void ReplaySegmentVideo(TutorialSegment segment)
         {
             if (ContentRunning) return;
+            Inventory.draggingItem = null;
             ContentRunning = true;
             LoadVideo(segment);
             //videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);

@@ -369,7 +369,7 @@ namespace Barotrauma.Tutorials
 
             double subEnterTime = Timing.TotalTime;
 
-            bool[] patientCalledHelp = new bool[] { false, false, false };
+            bool[] patientCalledHelp = new bool[] { false, false, false, false, false, false };
             while (subPatients.Any(p => p.Vitality < p.MaxVitality * 0.9f && !p.IsDead))
             {
                 for (int i = 0; i < subPatients.Count; i++)
