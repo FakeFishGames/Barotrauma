@@ -1003,7 +1003,6 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),

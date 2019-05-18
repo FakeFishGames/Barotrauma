@@ -903,7 +903,7 @@ namespace Barotrauma.Networking
                 connected = false;
                 ConnectToServer(serverIP);
             }
-            if (clientID == myID)
+            else
             {
                 string msg = "";
                 if (disconnectReason == DisconnectReason.Unknown)

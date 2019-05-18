@@ -198,8 +198,6 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
-
-            return true;
         }
 
         private bool RefreshJoinButtonState(GUIComponent component, object obj)

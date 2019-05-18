@@ -82,23 +82,6 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
-            
-            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
-            {
-                if (steeringManager != insideSteering)
-                {
-                    insideSteering.Reset();
-                }
-                steeringManager = insideSteering;
-            }
-            else
-            {
-                if (steeringManager != outsideSteering)
-                {
-                    outsideSteering.Reset();
-                }
-                steeringManager = outsideSteering;
-            }
 
             float maxDistanceToSub = 3000;
             if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 
