@@ -66,6 +66,26 @@ namespace Barotrauma
                 ForceUpperCase = true,
                 AutoScale = true
             };
+            clientNameBox.OnTextChanged += RefreshJoinButtonState;
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("ServerIP"));
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "");
+            ipBox.OnTextChanged += RefreshJoinButtonState;
+            ipBox.OnSelected += (sender, key) => 
+            {
+                if (sender.UserData is ServerInfo)
+                {
+                    sender.Text = "";
+                    sender.UserData = null;
+                }
+            };
+
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), filterHolder.RectTransform), "");
+
+            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), filterHolder.RectTransform));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")
@@ -198,44 +218,6 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
-
-            return true;
-        }
-
-        private bool RefreshJoinButtonState(GUIComponent component, object obj)
-        {
-            if (obj == null || waitingForRefresh) { return false; }
-
-            if (!string.IsNullOrWhiteSpace(clientNameBox.Text) && !string.IsNullOrWhiteSpace(ipBox.Text))
-            {
-                joinButton.Enabled = true;
-            }
-            else
-            {
-                joinButton.Enabled = false;
-            }
-
-            return true;
-        }
-
-        private bool SelectServer(GUIComponent component, object obj)
-        {
-            if (obj == null || waitingForRefresh) { return false; }
-
-            if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
-            {
-                joinButton.Enabled = true;
-            }
-            else
-            {
-                clientNameBox.Flash();
-                joinButton.Enabled = false;
-            }
-
-            if (!string.IsNullOrWhiteSpace(clientNameBox.Text) && !string.IsNullOrWhiteSpace(ipBox.Text))
-            {
-                joinButton.Enabled = true;
-            }
             else
             {
                 joinButton.Enabled = false;
@@ -263,16 +245,6 @@ namespace Barotrauma
         private bool SelectServer(GUIComponent component, object obj)
         {
             if (obj == null || waitingForRefresh) { return false; }
-
-            if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
-            {
-                joinButton.Enabled = true;
-            }
-            else
-            {
-                clientNameBox.Flash();
-                joinButton.Enabled = false;
-            }
 
             if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
