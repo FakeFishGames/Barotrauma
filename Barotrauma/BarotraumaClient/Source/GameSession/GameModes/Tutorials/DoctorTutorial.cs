@@ -379,15 +379,23 @@ namespace Barotrauma.Tutorials
 
             double subEnterTime = Timing.TotalTime;
 
-            for (int i = 0; i < subPatients.Count; i++)
-            {
-                doctor.AddActiveObjectiveEntity(subPatients[i], doctor_firstAidIcon, doctor_firstAidIconColor);
-            }
+            bool[] patientCalledHelp = new bool[] { false, false, false };
 
             while (subPatients.Any(p => p.Vitality < p.MaxVitality * 0.9f && !p.IsDead))
             {
                 for (int i = 0; i < subPatients.Count; i++)
                 {
+                    //make patients call for help to make sure the player finds them
+                    //(within 1 minute intervals of entering the sub)
+                    if (!patientCalledHelp[i] && Timing.TotalTime > subEnterTime + 60 * (i + 1))
+                    {
+                        doctor.AddActiveObjectiveEntity(subPatients[i], doctor_firstAidIcon, doctor_firstAidIconColor);
+                        newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), subPatients[i].CurrentHull, null, orderGiver: subPatients[i]);
+                        string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.DisplayName, givingOrderToSelf: false);
+                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(subPatients[i].Name, message, ChatMessageType.Order, null);
+                        patientCalledHelp[i] = true;
+                    }
+
                     if (subPatients[i].ExternalHighlight && subPatients[i].Vitality >= subPatients[i].MaxVitality * 0.9f)
                     {
                         doctor.RemoveActiveObjectiveEntity(subPatients[i]);
