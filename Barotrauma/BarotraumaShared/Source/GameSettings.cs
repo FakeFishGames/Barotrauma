@@ -341,33 +341,15 @@ namespace Barotrauma
             {
                 foreach (XElement subElement in doc.Root.Elements())
                 {
-                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    if (subElement.Name.ToString().ToLowerInvariant() == "keymapping")
                     {
-                        case "keymapping":
-                            foreach (XAttribute attribute in subElement.Attributes())
-                            {
-                                if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
-                                {
-                                    if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
-                                    {
-                                        keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
-                                    }
-                                    else
-                                    {
-                                        if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
-                                        {
-                                            keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                        }
-                                    }
-                                }
-                            }
-                            break;
+                        LoadKeyBinds(subElement);
                     }
                 }
             }
         }
 
-        private void CheckBindings(bool useDefaults)
+        public void CheckBindings(bool useDefaults)
         {
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
@@ -931,6 +913,55 @@ namespace Barotrauma
 
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", false);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", false);
+
+            foreach (XElement subElement in doc.Root.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "keymapping":
+                        LoadKeyBinds(subElement);
+                        break;
+                    case "gameplay":
+                        jobPreferences = new List<string>();
+                        foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
+                        {
+                            string jobIdentifier = ele.GetAttributeString("identifier", "");
+                            if (string.IsNullOrEmpty(jobIdentifier)) continue;
+                            jobPreferences.Add(jobIdentifier);
+                        }
+                        break;
+                    case "player":
+                        defaultPlayerName = subElement.GetAttributeString("name", defaultPlayerName);
+                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
+                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
+                        {
+                            CharacterGender = g;
+                        }
+                        if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
+                        {
+                            CharacterRace = r;
+                        }
+                        else
+                        {
+                            CharacterRace = Race.White;
+                        }
+                        CharacterHairIndex = subElement.GetAttributeInt("hairindex", CharacterHairIndex);
+                        CharacterBeardIndex = subElement.GetAttributeInt("beardindex", CharacterBeardIndex);
+                        CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", CharacterMoustacheIndex);
+                        CharacterFaceAttachmentIndex = subElement.GetAttributeInt("faceattachmentindex", CharacterFaceAttachmentIndex);
+                        break;
+                    case "tutorials":
+                        foreach (XElement tutorialElement in subElement.Elements())
+                        {
+                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
+                        }
+                        break;
+                }
+            }
+
+            UnsavedSettings = false;
+
+            selectedContentPackagePaths = new HashSet<string>();
 
             foreach (XElement subElement in doc.Root.Elements())
             {
