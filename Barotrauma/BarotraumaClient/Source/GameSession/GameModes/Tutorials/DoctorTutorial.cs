@@ -211,6 +211,7 @@ namespace Barotrauma.Tutorials
                 doctor.CharacterHealth.HealthBarPulsateTimer = 1.0f;
                 yield return null;
             }
+            yield return null;
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(1.0f, false);
             TriggerTutorialSegment(2); //Treat self
@@ -243,7 +244,6 @@ namespace Barotrauma.Tutorials
             doctor.AddActiveObjectiveEntity(patient1, doctor_firstAidIcon, doctor_firstAidIconColor);
             //GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(patient1.Name, newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order, null);
-            patient1.AIController.Enabled = true;
 
             while (doctor.CurrentHull != patient1.CurrentHull)
             {
@@ -258,6 +258,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
 
             yield return new WaitForSeconds(3.0f, false);
+            patient1.AIController.Enabled = true;
             doctor.RemoveActiveObjectiveEntity(patient1);
             TriggerTutorialSegment(3); // Get the patient to medbay
 
