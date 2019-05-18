@@ -114,9 +114,9 @@ namespace Barotrauma.Items.Components
                     Vector2 textSize = GUI.Font.MeasureString(text);
                     Vector2 textPos = child.Center;
                     if (textPos.X + textSize.X / 2 > submarineContainer.Rect.Right)
-                        textPos.X -= ((textPos.X + textSize.X / 2) - submarineContainer.Rect.Right) + 10;
+                        textPos.X -= ((textPos.X + textSize.X / 2) - submarineContainer.Rect.Right) + 10 * GUI.xScale;
                     if (textPos.X - textSize.X / 2 < submarineContainer.Rect.X)
-                        textPos.X += (submarineContainer.Rect.X - (textPos.X - textSize.X / 2)) + 10;
+                        textPos.X += (submarineContainer.Rect.X - (textPos.X - textSize.X / 2)) + 10 * GUI.xScale;
                     GUI.DrawString(spriteBatch, textPos - textSize / 2, text,
                        Color.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f);
                     break;
@@ -269,7 +269,7 @@ namespace Barotrauma.Items.Components
                     start.Y = -start.Y;
                     Vector2 end = (sub.HullVertices[(i + 1) % sub.HullVertices.Count] + offset) * displayScale;
                     end.Y = -end.Y;
-                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: 10);
+                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: (int)(10 * GUI.Scale));
                 }
             }
 
