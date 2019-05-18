@@ -31,6 +31,8 @@ namespace Barotrauma
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
 
+        private GUIButton refreshButton;
+
         private float[] columnRelativeWidth;
 
         //filters
@@ -140,7 +142,7 @@ namespace Barotrauma
                 OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
 
-			var refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
+			refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
 				"", style: "GUIButtonRefresh") {
 
 				ToolTip = TextManager.Get("ServerListRefresh"),
@@ -220,9 +222,19 @@ namespace Barotrauma
             return true;
         }
 
-        private bool RefreshJoinButtonState(GUIComponent component, object obj)
+        private bool SelectServer(GUIComponent component, object obj)
         {
-            if (obj == null || waitingForRefresh) return false;
+            if (obj == null || waitingForRefresh) { return false; }
+
+            if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
+            {
+                joinButton.Enabled = true;
+            }
+            else
+            {
+                clientNameBox.Flash();
+                joinButton.Enabled = false;
+            }
 
             if (!string.IsNullOrWhiteSpace(clientNameBox.Text) && !string.IsNullOrWhiteSpace(ipBox.Text))
             {
@@ -284,8 +296,11 @@ namespace Barotrauma
             ipBox.Text = null;
             joinButton.Enabled = false;
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
-                TextManager.Get("RefreshingServerList"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), serverList.Content.RectTransform),
+                TextManager.Get("RefreshingServerList"), textAlignment: Alignment.Center)
+            {
+                CanBeFocused = false
+            };
             
             CoroutineManager.StartCoroutine(WaitForRefresh());
 
@@ -306,16 +321,18 @@ namespace Barotrauma
                 if (!SteamManager.GetServers(AddToServerList, UpdateServerInfo, ServerQueryFinished))
                 {
                     serverList.ClearChildren();
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
-                        TextManager.Get("ServerListNoSteamConnection"));
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), serverList.Content.RectTransform),
+                        TextManager.Get("ServerListNoSteamConnection"), textAlignment: Alignment.Center)
+                    {
+                        CanBeFocused = false
+                    };
                 }
             }
             else
             {
                 CoroutineManager.StartCoroutine(SendMasterServerRequest());
+                waitingForRefresh = false;
             }
-
-            waitingForRefresh = false;
 
             refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
 
@@ -381,8 +398,11 @@ namespace Barotrauma
             serverList.Content.ClearChildren();
             if (serverInfos.Count() == 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
-                    TextManager.Get("NoServers"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), serverList.Content.RectTransform),
+                    TextManager.Get("NoServers"), textAlignment: Alignment.Center)
+                {
+                    CanBeFocused = false
+                };
                 return;
             }
             foreach (ServerInfo serverInfo in serverInfos)
@@ -522,6 +542,7 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
+            waitingForRefresh = false;
         }
 
         private IEnumerable<object> SendMasterServerRequest()

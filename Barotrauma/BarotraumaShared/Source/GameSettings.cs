@@ -45,7 +45,7 @@ namespace Barotrauma
 
         public bool PauseOnFocusLost { get; set; } = true;
         public bool MuteOnFocusLost { get; set; }
-        public bool UseDirectionalVoiceChat { get; set; }
+        public bool UseDirectionalVoiceChat { get; set; } = true;
 
         public enum VoiceMode
         {
@@ -820,6 +820,54 @@ namespace Barotrauma
                 {
                     VoiceSetting = voiceSetting;
                 }
+            }
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+
+            //save to get rid of the invalid selected packages in the config file
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+        }
+        #endregion
+
+        #region Save DefaultConfig
+        private void SaveNewDefaultConfig()
+        {
+            XDocument doc = new XDocument();
+
+            if (doc.Root == null)
+            {
+                doc.Add(new XElement("config"));
+            }
+
+            doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
+                new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("autocheckupdates", AutoCheckUpdates),
+                new XAttribute("musicvolume", musicVolume),
+                new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("verboselogging", VerboseLogging),
+                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("quickstartsub", QuickStartSubmarineName),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
+
+            if (WasGameUpdated)
+            {
+                doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
             
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
