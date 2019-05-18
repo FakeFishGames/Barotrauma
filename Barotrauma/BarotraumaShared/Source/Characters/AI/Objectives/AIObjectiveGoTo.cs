@@ -117,7 +117,7 @@ namespace Barotrauma
                 // Take the sub position into account in the sim pos
                 if (character.Submarine == null && Target.Submarine != null)
                 {
-                    //currTargetSimPos += Target.Submarine.SimPosition;
+                    currTargetSimPos += Target.Submarine.SimPosition;
                 }
                 else if (character.Submarine != null && Target.Submarine == null)
                 {
