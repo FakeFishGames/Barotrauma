@@ -424,7 +424,7 @@ namespace Barotrauma
                                 // It's possible that we could reach another buttons.
                                 // If this becomes an issue, we could go through them here and check if any of them are reachable
                                 // (would have to cache a collection of buttons instead of a single reference in the CanAccess filter method above)
-                                currentPath.Unreachable = true;
+                                //currentPath.Unreachable = true;
                                 return;
                             }
                         }
