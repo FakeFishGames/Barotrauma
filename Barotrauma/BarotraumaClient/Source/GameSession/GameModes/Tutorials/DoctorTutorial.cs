@@ -21,7 +21,7 @@ namespace Barotrauma.Tutorials
         private ItemContainer doctor_suppliesCabinet;
         private ItemContainer doctor_medBayCabinet;
         private Character patient1, patient2;
-        private List<Character> subPatients = new List<Character>();
+        private List<Character> subPatients;
         private Hull startRoom;
         private Hull medBay;
 
@@ -47,6 +47,7 @@ namespace Barotrauma.Tutorials
         {
             base.Start();
 
+            subPatients = new List<Character>();
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             doctor = Character.Controlled;
 
