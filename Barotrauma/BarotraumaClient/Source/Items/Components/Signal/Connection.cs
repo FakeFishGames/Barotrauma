@@ -57,15 +57,15 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 rightPos = new Vector2(x + width - 130, y + 80);
-            Vector2 leftPos = new Vector2(x + 130, y + 80);
+            Vector2 rightPos = new Vector2(x + width - 130 * GUI.xScale, y + 80 * GUI.yScale);
+            Vector2 leftPos = new Vector2(x + 130 * GUI.xScale, y + 80 * GUI.yScale);
 
-            Vector2 rightWirePos = new Vector2(x + width - 5, y + 30);
-            Vector2 leftWirePos = new Vector2(x + 5, y + 30);
+            Vector2 rightWirePos = new Vector2(x + width - 5 * GUI.xScale, y + 30 * GUI.yScale);
+            Vector2 leftWirePos = new Vector2(x + 5 * GUI.xScale, y + 30 * GUI.yScale);
 
-            int wireInterval = (height - 20) / Math.Max(totalWireCount, 1);
-            int connectorIntervalLeft = (height - 100) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
-            int connectorIntervalRight = (height - 100) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
+            int wireInterval = (height - (int)(20 * GUI.yScale)) / Math.Max(totalWireCount, 1);
+            int connectorIntervalLeft = (height - (int)(100 * GUI.yScale)) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
+            int connectorIntervalRight = (height - (int)(100 * GUI.yScale)) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
 
             foreach (Connection c in panel.Connections)
             {
@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
                 if (c.IsOutput)
                 {
                     c.Draw(spriteBatch, panel, rightPos,
-                        new Vector2(rightPos.X - GUI.SmallFont.MeasureString(c.DisplayName).X - 20, rightPos.Y + 3),
+                        new Vector2(rightPos.X - GUI.SmallFont.MeasureString(c.DisplayName).X - 20 * GUI.xScale, rightPos.Y + 3 * GUI.yScale),
                         rightWirePos,
                         mouseInRect, equippedWire,
                         wireInterval);
@@ -143,7 +143,7 @@ namespace Barotrauma.Items.Components
         private void Draw(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)
         {
             //spriteBatch.DrawString(GUI.SmallFont, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
-            GUI.DrawString(spriteBatch, labelPos, Name, IsPower ? Color.Red : Color.White, Color.Black, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, labelPos, DisplayName, IsPower ? Color.Red : Color.White, Color.Black, 0, GUI.SmallFont);
             
             connectionSprite.Draw(spriteBatch, position);
 

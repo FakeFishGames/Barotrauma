@@ -208,7 +208,7 @@ namespace Barotrauma
                     for (int i = 0; i < lines.Length; i++)
                     {
                         GUI.Font.DrawString(spriteBatch, lines[i],
-                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f, GameMain.GraphicsHeight * 0.78f + i * lineHeight), Color.White);
+                            new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.78f + i * lineHeight)), Color.White);
                     }
                 }
 
@@ -242,6 +242,10 @@ namespace Barotrauma
                 if (hover && PlayerInput.LeftButtonClicked())
                 {
                     GameMain.Config.Language = language;
+                    //reload tip in the selected language
+                    selectedTip = TextManager.Get("LoadingScreenTip", true);
+                    GameMain.Config.SetDefaultBindings(legacy: false);
+                    GameMain.Config.CheckBindings(useDefaults: true);
                     WaitForLanguageSelection = false;
                 }
 

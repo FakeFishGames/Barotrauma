@@ -233,9 +233,9 @@ namespace Barotrauma.Tutorials
 
             //patient 1 requests first aid
             patient1.CanSpeak = true;
-            var newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient1.CurrentHull, null);
+            var newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient1.CurrentHull, null, orderGiver: patient1);
             GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
-            patient1.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
+            patient1.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
             patient1.AIController.Enabled = true;
 
             while (doctor.CurrentHull != patient1.CurrentHull)
@@ -317,9 +317,9 @@ namespace Barotrauma.Tutorials
 
             //patient calls for help
             patient2.CanSpeak = true;
-            newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient2.CurrentHull, null);
+            newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient2.CurrentHull, null, orderGiver: patient2);
             GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
-            patient2.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.RoomName, givingOrderToSelf: false), ChatMessageType.Order);
+            patient2.Speak(newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
             patient2.AIController.Enabled = true;
             patient2.Oxygen = -50;
             CoroutineManager.StartCoroutine(KeepPatientAlive(patient2), "KeepPatient2Alive");
@@ -369,7 +369,7 @@ namespace Barotrauma.Tutorials
 
             double subEnterTime = Timing.TotalTime;
 
-            bool[] patientCalledHelp = new bool[] { false, false, false };
+            bool[] patientCalledHelp = new bool[] { false, false, false, false, false, false };
             while (subPatients.Any(p => p.Vitality < p.MaxVitality * 0.9f && !p.IsDead))
             {
                 for (int i = 0; i < subPatients.Count; i++)
@@ -378,10 +378,10 @@ namespace Barotrauma.Tutorials
                     //(within 1 minute intervals of entering the sub)
                     if (!patientCalledHelp[i] && Timing.TotalTime > subEnterTime + 60 * (i + 1))
                     {
-                        newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), subPatients[i].CurrentHull, null);
+                        newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), subPatients[i].CurrentHull, null, orderGiver: subPatients[i]);
                         GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
 
-                        string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.RoomName, givingOrderToSelf: false);
+                        string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.DisplayName, givingOrderToSelf: false);
                         if (subPatients[i].CanSpeak)
                         {
                             subPatients[i].Speak(message, ChatMessageType.Order);                   

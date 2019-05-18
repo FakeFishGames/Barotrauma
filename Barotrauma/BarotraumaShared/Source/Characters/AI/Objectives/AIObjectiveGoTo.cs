@@ -114,10 +114,22 @@ namespace Barotrauma
             {
                 Vector2 currTargetSimPos = Vector2.Zero;
                 currTargetSimPos = Target.SimPosition;
-                //if character is inside the sub and target isn't, transform the position
-                if (character.Submarine != null && Target.Submarine == null)
+                // Take the sub position into account in the sim pos
+                if (character.Submarine == null && Target.Submarine != null)
+                {
+                    //currTargetSimPos += Target.Submarine.SimPosition;
+                }
+                else if (character.Submarine != null && Target.Submarine == null)
                 {
                     currTargetSimPos -= character.Submarine.SimPosition;
+                }
+                else if (character.Submarine != Target.Submarine)
+                {
+                    if (character.Submarine != null && Target.Submarine != null)
+                    {
+                        Vector2 diff = character.Submarine.SimPosition - Target.Submarine.SimPosition;
+                        currTargetSimPos -= diff;
+                    }
                 }
                 character.AIController.SteeringManager.SteeringSeek(currTargetSimPos);
                 if (getDivingGearIfNeeded)
@@ -147,7 +159,6 @@ namespace Barotrauma
             // First check the distance
             // Then the custom condition
             // And finally check if can interact (heaviest)
-            if (repeat) { return false; }
             if (isCompleted) { return true; }
             if (Target == null)
             {
@@ -155,7 +166,16 @@ namespace Barotrauma
                 return false;
             }
             bool closeEnough = Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
-            if (closeEnough)
+            if (repeat)
+            {
+                if (closeEnough)
+                {
+                    character.AIController.SteeringManager.Reset();
+                    character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
+                }
+                return false;
+            }
+            else if (closeEnough)
             {
                 if (customCondition == null || customCondition())
                 {

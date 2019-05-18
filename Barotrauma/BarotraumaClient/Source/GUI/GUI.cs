@@ -36,6 +36,16 @@ namespace Barotrauma
             get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.HUDScale; }
         }
 
+        public static float xScale
+        {
+            get { return GameMain.GraphicsWidth / 1920.0f * GameSettings.HUDScale; }
+        }
+
+        public static float yScale
+        {
+            get { return GameMain.GraphicsHeight / 1080.0f * GameSettings.HUDScale; }
+        }
+
         public static GUIStyle Style;
 
         private static Texture2D t;
@@ -386,8 +396,11 @@ namespace Barotrauma
             {
                 MouseOn.DrawToolTip(spriteBatch);
             }
-            
-            Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);            
+
+            if (GameMain.WindowActive)
+            {
+                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, 0, Scale / 2f);
+            }
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
