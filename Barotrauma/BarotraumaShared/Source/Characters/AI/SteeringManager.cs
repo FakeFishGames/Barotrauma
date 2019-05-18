@@ -192,13 +192,6 @@ namespace Barotrauma
 
             if (dist > maxDistance) return Vector2.Zero;
 
-            if (!avoidObstaclePos.HasValue) return Vector2.Zero;
-
-            Vector2 diff = avoidObstaclePos.Value - host.SimPosition;
-            float dist = diff.Length();
-
-            if (dist > maxDistance) return Vector2.Zero;
-
             return -diff * (1.0f - dist / maxDistance) * weight;
         }
 
