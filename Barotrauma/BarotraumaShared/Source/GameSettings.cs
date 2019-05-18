@@ -337,89 +337,6 @@ namespace Barotrauma
                 keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
                 keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
             }
-            if (doc != null)
-            {
-                foreach (XElement subElement in doc.Root.Elements())
-                {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "keymapping")
-                    {
-                        LoadKeyBinds(subElement);
-                    }
-                }
-            }
-        }
-
-        public void CheckBindings(bool useDefaults)
-        {
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                var binding = keyMapping[(int)inputType];
-                if (binding == null)
-                {
-                    switch (inputType)
-                    {
-                        case InputType.Deselect:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(1);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var selectKey = keyMapping[(int)InputType.Select];
-                                if (selectKey != null && selectKey.Key != Keys.None)
-                                {
-                                    binding = new KeyOrMouse(selectKey.Key);
-                                }
-                            }
-                            break;
-                        case InputType.Shoot:
-                            if (useDefaults)
-                            {
-                                binding = new KeyOrMouse(0);
-                            }
-                            else
-                            {
-                                // Legacy support
-                                var useKey = keyMapping[(int)InputType.Use];
-                                if (useKey != null && useKey.MouseButton.HasValue)
-                                {
-                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    if (binding == null)
-                    {
-                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
-                        binding = new KeyOrMouse(Keys.D1);
-                    }
-                    keyMapping[(int)inputType] = binding;
-                }
-            }
-        }
-
-        #region Load DefaultConfig
-        private void LoadDefaultConfig(bool setLanguage = true)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
-
-            if (setLanguage || string.IsNullOrEmpty(Language))
-            {
-                Language = doc.Root.GetAttributeString("language", "English");
-            }
-
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (legacy)
             {
@@ -644,83 +561,6 @@ namespace Barotrauma
                         }
                         break;
                 }
-            }
-
-            TextManager.LoadTextPacks(SelectedContentPackages);
-
-            //display error messages after all content packages have been loaded
-            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
-            foreach (string missingPackagePath in missingPackagePaths)
-            {
-                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.Get(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                .Replace("[packagename]", incompatiblePackage.Name)
-                                .Replace("[packageversion]", incompatiblePackage.GameVersion.ToString())
-                                .Replace("[gameversion]", GameMain.Version.ToString()));
-            }
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
-                if (!packageOk)
-                {
-                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
-                    continue;
-                }
-                foreach (ContentFile file in contentPackage.Files)
-                {
-                    ToolBox.IsProperFilenameCase(file.Path);
-                }
-            }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
-
-            //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
-        }
-        #endregion
-
-        #region Save DefaultConfig
-        private void SaveNewDefaultConfig()
-        {
-            XDocument doc = new XDocument();
-
-            if (doc.Root == null)
-            {
-                doc.Add(new XElement("config"));
-            }
-
-            doc.Root.Add(
-                new XAttribute("language", TextManager.Language),
-                new XAttribute("masterserverurl", MasterServerUrl),
-                new XAttribute("autocheckupdates", AutoCheckUpdates),
-                new XAttribute("musicvolume", musicVolume),
-                new XAttribute("soundvolume", soundVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
-                new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount));
-
-            if (!ShowUserStatisticsPrompt)
-            {
-                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
-
-            if (WasGameUpdated)
-            {
-                doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
 
             TextManager.LoadTextPacks(SelectedContentPackages);
@@ -1049,55 +889,6 @@ namespace Barotrauma
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "keymapping":
-                        LoadKeyBinds(subElement);
-                        break;
-                    case "gameplay":
-                        jobPreferences = new List<string>();
-                        foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
-                        {
-                            string jobIdentifier = ele.GetAttributeString("identifier", "");
-                            if (string.IsNullOrEmpty(jobIdentifier)) continue;
-                            jobPreferences.Add(jobIdentifier);
-                        }
-                        break;
-                    case "player":
-                        defaultPlayerName = subElement.GetAttributeString("name", defaultPlayerName);
-                        CharacterHeadIndex = subElement.GetAttributeInt("headindex", CharacterHeadIndex);
-                        if (Enum.TryParse(subElement.GetAttributeString("gender", "none"), true, out Gender g))
-                        {
-                            CharacterGender = g;
-                        }
-                        if (Enum.TryParse(subElement.GetAttributeString("race", "white"), true, out Race r))
-                        {
-                            CharacterRace = r;
-                        }
-                        else
-                        {
-                            CharacterRace = Race.White;
-                        }
-                        CharacterHairIndex = subElement.GetAttributeInt("hairindex", CharacterHairIndex);
-                        CharacterBeardIndex = subElement.GetAttributeInt("beardindex", CharacterBeardIndex);
-                        CharacterMoustacheIndex = subElement.GetAttributeInt("moustacheindex", CharacterMoustacheIndex);
-                        CharacterFaceAttachmentIndex = subElement.GetAttributeInt("faceattachmentindex", CharacterFaceAttachmentIndex);
-                        break;
-                    case "tutorials":
-                        foreach (XElement tutorialElement in subElement.Elements())
-                        {
-                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
-                        }
-                        break;
-                }
-            }
-
-            UnsavedSettings = false;
-
-            selectedContentPackagePaths = new HashSet<string>();
-
-            foreach (XElement subElement in doc.Root.Elements())
-            {
                 DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
             }
             foreach (ContentPackage incompatiblePackage in incompatiblePackages)
@@ -1252,17 +1043,11 @@ namespace Barotrauma
                 doc.Root.Add(gMode);
             }
 
-            if (GraphicsWidth == 0 || GraphicsHeight == 0)
+            //display error messages after all content packages have been loaded
+            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
+            foreach (string missingPackagePath in missingPackagePaths)
             {
-                gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
-            }
-            else
-            {
-                gMode.ReplaceAttributes(
-                    new XAttribute("width", GraphicsWidth),
-                    new XAttribute("height", GraphicsHeight),
-                    new XAttribute("vsync", VSyncEnabled),
-                    new XAttribute("displaymode", windowMode));
+                DebugConsole.ThrowError(TextManager.Get("ContentPackageNotFound").Replace("[packagepath]", missingPackagePath));
             }
             
             XElement audio = doc.Root.Element("audio");
@@ -1301,18 +1086,17 @@ namespace Barotrauma
                 doc.Root.Add(new XElement("contentpackage",
                     new XAttribute("path", contentPackage.Path)));
             }
-
-            var keyMappingElement = new XElement("keymapping");
-            doc.Root.Add(keyMappingElement);
-            for (int i = 0; i < keyMapping.Length; i++)
+            foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                if (keyMapping[i].MouseButton == null)
+                bool packageOk = contentPackage.VerifyFiles(out List<string> errorMessages);
+                if (!packageOk)
                 {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
+                    DebugConsole.ThrowError("Error in content package \"" + contentPackage.Name + "\":\n" + string.Join("\n", errorMessages));
+                    continue;
                 }
-                else
+                foreach (ContentFile file in contentPackage.Files)
                 {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].MouseButton));
+                    ToolBox.IsProperFilenameCase(file.Path);
                 }
             }
 
@@ -1322,8 +1106,6 @@ namespace Barotrauma
             {
                 jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
             }
-            gameplay.Add(jobPreferences);
-            doc.Root.Add(gameplay);
 
             var playerElement = new XElement("player",
                 new XAttribute("name", defaultPlayerName ?? ""),
