@@ -85,18 +85,12 @@ namespace Barotrauma
             
             if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
             {
-                if (steeringManager != insideSteering)
-                {
-                    insideSteering.Reset();
-                }
+                if (steeringManager != insideSteering) insideSteering.Reset();
                 steeringManager = insideSteering;
             }
             else
             {
-                if (steeringManager != outsideSteering)
-                {
-                    outsideSteering.Reset();
-                }
+                if (steeringManager != outsideSteering) outsideSteering.Reset();
                 steeringManager = outsideSteering;
             }
 
@@ -301,7 +295,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
                             }
                         }
                     }
@@ -311,7 +305,7 @@ namespace Barotrauma
                         if (newOrder == null)
                         {
                             var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                            newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                            newOrder = new Order(orderPrefab, hull, null);
                         }
                     }
                     foreach (Character c in Character.CharacterList)
@@ -323,7 +317,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
                             }
                         }
                     }
@@ -335,7 +329,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                                newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                                newOrder = new Order(orderPrefab, hull, null);
                             }
                         }
                     }
@@ -349,7 +343,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
-                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
+                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault());
                             }
                         }
                     }
@@ -360,9 +354,6 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
-#if SERVER
-                    GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character));
-#endif
                 }
             }
         }
@@ -666,7 +657,7 @@ namespace Barotrauma
                 {
                     CurrentHullSafety = 0;
                 }
-                return CurrentHullSafety;
+                return 0;
             }
             if (character == Character)
             {

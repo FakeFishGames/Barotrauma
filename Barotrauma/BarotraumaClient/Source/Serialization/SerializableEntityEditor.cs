@@ -294,8 +294,7 @@ namespace Barotrauma
             {
                 value = "";
             }
-            string propertyName = (entity.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
-            string displayName = TextManager.Get(propertyName, returnNull: true) ?? property.GetAttribute<Editable>().DisplayName;
+            string displayName = property.GetAttribute<Editable>().DisplayName;
             if (displayName == null)
             {
                 displayName = property.Name.FormatCamelCaseWithSpaces();

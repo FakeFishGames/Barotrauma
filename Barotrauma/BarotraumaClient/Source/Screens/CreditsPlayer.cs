@@ -27,9 +27,6 @@ namespace Barotrauma
                     case "text":
                         AddTextElement(subElement, listBox.Content.RectTransform);
                         break;
-                    case "gridtext":
-                        AddGridTextElement(subElement, listBox.Content.RectTransform);
-                        break;
                     case "spacing":
                         AddSpacingElement(subElement, listBox.Content.RectTransform);
                         break;
@@ -41,9 +38,9 @@ namespace Barotrauma
             listBox.UpdateScrollBarSize();
         }
 
-        private GUIComponent AddTextElement(XElement element, RectTransform parent, string overrideText = null, Anchor anchor = Anchor.Center)
+        private void AddTextElement(XElement element, RectTransform parent)
         {
-            var text = overrideText ?? element.ElementInnerText().Replace(@"\n", "\n");
+            var text = element.ElementInnerText().Replace(@"\n", "\n");
             Color color = element.GetAttributeColor("color", Color.White);
             float scale = element.GetAttributeFloat("scale", 1.0f);
             Alignment alignment = Alignment.Center;
@@ -72,7 +69,7 @@ namespace Barotrauma
             }
 
             var textHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), parent), style: null);
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), textHolder.RectTransform, anchor),
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), textHolder.RectTransform, Anchor.Center),
                 text,
                 color,
                 font,
@@ -84,32 +81,6 @@ namespace Barotrauma
             textBlock.RectTransform.IsFixedSize = textHolder.RectTransform.IsFixedSize = true;
             textBlock.RectTransform.NonScaledSize = new Point(textBlock.Rect.Width, textBlock.Rect.Height);
             textHolder.RectTransform.NonScaledSize = new Point(textHolder.Rect.Width, textBlock.Rect.Height);
-            return textHolder;
-        }
-
-        private void AddGridTextElement(XElement element, RectTransform parent)
-        {
-            var text = element.ElementInnerText().Replace(@"\n", "\n");
-            string[] elements = text.Split(',');
-            RectTransform lineContainer = null;
-            for (int i = 0; i < elements.Length; i++)
-            {
-                switch (i % 3)
-                {
-                    case 0:
-                        lineContainer = AddTextElement(element, parent, elements[i], Anchor.CenterLeft).RectTransform;
-                        lineContainer.Anchor = Anchor.TopCenter;
-                        lineContainer.Pivot = Pivot.TopCenter;
-                        lineContainer.NonScaledSize = new Point((int)(parent.NonScaledSize.X * 0.7f), lineContainer.NonScaledSize.Y);
-                        break;
-                    case 1:
-                        AddTextElement(element, lineContainer, elements[i], Anchor.Center).GetChild<GUITextBlock>().TextAlignment = Alignment.Center;
-                        break;
-                    case 2:
-                        AddTextElement(element, lineContainer, elements[i], Anchor.CenterRight).GetChild<GUITextBlock>().TextAlignment = Alignment.CenterRight;
-                        break;
-                }
-            }
         }
 
         private void AddSpacingElement(XElement element, RectTransform parent)

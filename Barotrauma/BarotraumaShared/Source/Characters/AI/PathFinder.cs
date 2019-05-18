@@ -165,8 +165,8 @@ namespace Barotrauma
             {
                 Vector2 nodePos = node.Position;
 
-                float xDiff = Math.Abs(start.X - nodePos.X);
-                float yDiff = Math.Abs(start.Y - nodePos.Y);
+                float xDiff = System.Math.Abs(start.X - nodePos.X);
+                float yDiff = System.Math.Abs(start.Y - nodePos.Y);
 
                 if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
                 {
@@ -190,7 +190,7 @@ namespace Barotrauma
 
                         if (body != null)
                         {
-                            //if (body.UserData is Submarine) continue;
+                            if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
                         }
@@ -216,7 +216,7 @@ namespace Barotrauma
             {
                 Vector2 nodePos = node.Position;
 
-                float dist = Vector2.DistanceSquared(end, nodePos);
+                float dist = Vector2.Distance(end, nodePos);
                 if (insideSubmarine)
                 {
                     //much higher cost to waypoints that are outside
@@ -229,12 +229,19 @@ namespace Barotrauma
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
                     {
+                        // Doesn't seem to work
+                        //var body = Submarine.CheckVisibility(end, node.Waypoint.SimPosition);
+                        //if (body != null && body.UserData is Structure)
+                        //{
+                        //    continue;
+                        //}
+
                         var body = Submarine.PickBody(end, node.Waypoint.SimPosition, null,
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
 
                         if (body != null)
                         {
-                            //if (body.UserData is Submarine) continue;
+                            if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
 

@@ -441,8 +441,8 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
                 Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
-                DrawLine(spriteBatch, Vector2.Zero, sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
-                DrawLine(spriteBatch, Vector2.Zero, sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
+                DrawLine(spriteBatch, center, center + sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
+                DrawLine(spriteBatch, center, center + sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
             }
 
             if (GameMain.DebugDraw)

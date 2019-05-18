@@ -98,11 +98,6 @@ namespace Barotrauma
         public readonly AttributeCollection Attributes;
         public readonly Type PropertyType;
 
-        public PropertyInfo PropertyInfo
-        {
-            get { return propertyInfo; }
-        }
-
         public SerializableProperty(PropertyDescriptor property, object obj)
         {
             Name = property.Name;

@@ -339,7 +339,7 @@ namespace Barotrauma
 
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
-                    pos,
+                    rect.Location.ToVector2() + textPos + TextOffset,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);

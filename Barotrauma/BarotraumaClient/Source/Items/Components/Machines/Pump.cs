@@ -44,7 +44,7 @@ namespace Barotrauma.Items.Components
 
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
-            isActiveSlider = new GUIScrollBar(new RectTransform(new Point((int)(50 * GUI.Scale), (int)(100 * GUI.Scale)), paddedFrame.RectTransform, Anchor.CenterLeft),
+            isActiveSlider = new GUIScrollBar(new RectTransform(new Point(50, 100), paddedFrame.RectTransform, Anchor.CenterLeft),
                 barSize: 0.2f, style: "OnOffLever")
             {
                 IsBooleanSwitch = true,
@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
                 MaxValue = 0.75f
             };
             var sliderHandle = isActiveSlider.GetChild<GUIButton>();
-            sliderHandle.RectTransform.NonScaledSize = new Point((int)(84 * GUI.Scale), sliderHandle.Rect.Height);
+            sliderHandle.RectTransform.NonScaledSize = new Point(84, sliderHandle.Rect.Height);
             isActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 bool active = scrollBar.BarScroll < 0.5f;
@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
 
             var rightArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), paddedFrame.RectTransform, Anchor.CenterRight)) { RelativeSpacing = 0.1f };
 
-            powerIndicator = new GUITickBox(new RectTransform(new Point((int)(30 * GUI.Scale)), rightArea.RectTransform), TextManager.Get("PumpPowered"), style: "IndicatorLightGreen")
+            powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), rightArea.RectTransform), TextManager.Get("PumpPowered"), style: "IndicatorLightGreen")
             {
                 CanBeFocused = false
             };
@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.05f
             };
 
-            var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
                 TextManager.Get("PumpOut"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
             pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
             {
@@ -109,10 +109,9 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            var inLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), sliderArea.RectTransform), 
-                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);
 
-            GUITextBlock.AutoScaleAndNormalize(outLabel, inLabel);
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
+                TextManager.Get("PumpIn"), textAlignment: Alignment.Center, wrap: true, font: GUI.SmallFont);            
         }
 
         public override void OnItemLoaded()

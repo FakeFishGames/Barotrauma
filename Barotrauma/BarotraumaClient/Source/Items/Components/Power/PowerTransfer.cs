@@ -14,21 +14,19 @@ namespace Barotrauma.Items.Components
         {
             if (GuiFrame == null) return;
 
-            Point indicatorSize = new Point((int)(30 * GUI.Scale));
-
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.7f), GuiFrame.RectTransform, Anchor.Center), style: null);
-            powerIndicator = new GUITickBox(new RectTransform(indicatorSize, paddedFrame.RectTransform),
+            powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform),
                 TextManager.Get("PowerTransferPowered"), style: "IndicatorLightGreen")
             {
                 Enabled = false
             };
-            highVoltageIndicator = new GUITickBox(new RectTransform(indicatorSize, paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, (int)(40 * GUI.yScale)) },
+            highVoltageIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 40) },
                 TextManager.Get("PowerTransferHighVoltage"), style: "IndicatorLightRed")
             {
                 ToolTip = TextManager.Get("PowerTransferTipOvervoltage"),
                 Enabled = false
             };
-            lowVoltageIndicator = new GUITickBox(new RectTransform(indicatorSize, paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, (int)(80 * GUI.yScale)) },
+            lowVoltageIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 80) },
                 TextManager.Get("PowerTransferLowVoltage"), style: "IndicatorLightRed")
             {
                 ToolTip = TextManager.Get("PowerTransferTipLowvoltage"),

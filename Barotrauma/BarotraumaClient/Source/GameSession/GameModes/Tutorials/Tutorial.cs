@@ -405,7 +405,6 @@ namespace Barotrauma.Tutorials
         private void ReplaySegmentVideo(TutorialSegment segment)
         {
             if (ContentRunning) return;
-            Inventory.draggingItem = null;
             ContentRunning = true;
             LoadVideo(segment);
             //videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
@@ -527,7 +526,7 @@ namespace Barotrauma.Tutorials
                 titleBlock.RectTransform.IsFixedSize = true;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), " " + text, wrap: true);
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
             textBlock.RectTransform.IsFixedSize = true;
 
             infoBoxClosedCallback = callback;

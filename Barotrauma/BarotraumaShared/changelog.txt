@@ -1,19 +1,4 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.0.2
----------------------------------------------------------------------------------------------------------
-
-- Fixed a bug that caused frequent desync kicks when playing a multiplayer monster mission.
-- Fixed an index out of range error in DoctorTutorial if proceeding too fast to the submarine.
-- Fixes to missing translations and UI layout problems when using languages other than English.
-- More readable font and a fix to some texts appearing slightly "clipped".
-- Additions to the credits.
-- Fixed bots loading only half of the target items in the contain item objective.
-- Minor tweaks to subs and shuttles.
-- Fixed find safety AI objective not working properly.
-- Miscellaneous crew AI fixes and improvements.
-- Fixed incorrect reward amount in the "Chemical shipment" description.
-
----------------------------------------------------------------------------------------------------------
 v0.9.0.1
 ---------------------------------------------------------------------------------------------------------
 
