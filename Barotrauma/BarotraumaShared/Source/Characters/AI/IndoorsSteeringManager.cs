@@ -414,7 +414,7 @@ namespace Barotrauma
                     {
                         if (door.HasIntegratedButtons)
                         {
-                            door.Item.TryInteract(character, false, true, true);
+                            door.Item.TryInteract(character, false, true);
                             buttonPressCooldown = ButtonPressInterval;
                             break;
                         }
@@ -422,7 +422,7 @@ namespace Barotrauma
                         {
                             if (Vector2.DistanceSquared(closestButton.Item.WorldPosition, character.WorldPosition) < MathUtils.Pow(closestButton.Item.InteractDistance * 2, 2))
                             {
-                                closestButton.Item.TryInteract(character, false, true, false);
+                                closestButton.Item.TryInteract(character, false, true);
                                 buttonPressCooldown = ButtonPressInterval;
                                 break;
                             }
