@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public bool VSyncEnabled { get; set; }
 
-        public bool EnableSplashScreen { get { return true; } set { } }
+        public bool EnableSplashScreen { get; set; }
 
         public int ParticleLimit { get; set; }
 
