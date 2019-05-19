@@ -452,7 +452,7 @@ namespace Barotrauma
                         isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
                     }
                 }
-                if (!isOperatingButtons && character.SelectedConstruction == null)
+                if (!isOperatingButtons)
                 {
                     character.SetInput(InputType.Aim, false, true);
                 }
