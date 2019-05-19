@@ -320,7 +320,10 @@ namespace Barotrauma
             {
                 retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls);
             }
-            TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
+            if (character.CurrentHull != retreatTarget)
+            {
+                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
+            }
         }
 
         private void Engage()
