@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -163,7 +164,9 @@ namespace Barotrauma
                 }
 
                 var newPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
-                if (currentPath == null || needsNewPath || !newPath.Unreachable && newPath.Cost < currentPath.Cost)
+                // If the character is not moving and the new path costs more than the current path, it's possible that the current path was calculated from a start point that is no longer valid.
+                // Therefore, if the character is not moving, let's accept also paths with a greater cost than the current.
+                if (currentPath == null || needsNewPath || !newPath.Unreachable && (newPath.Cost < currentPath.Cost || character.AnimController.movement.NearlyEquals(Vector2.Zero)))
                 {
                     currentPath = newPath;
                 }
