@@ -439,7 +439,7 @@ namespace Barotrauma
             float squaredDistance = Vector2.DistanceSquared(character.Position, Enemy.Position);
             character.CursorPosition = Enemy.Position;
             float engageDistance = 500;
-            if (squaredDistance > engageDistance * engageDistance) { return; }
+            if (character.CurrentHull != Enemy.CurrentHull && squaredDistance > engageDistance * engageDistance) { return; }
             if (!character.CanSeeCharacter(Enemy)) { return; }
             if (Weapon.RequireAimToUse)
             {
