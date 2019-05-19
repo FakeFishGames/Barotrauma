@@ -318,7 +318,7 @@ namespace Barotrauma.Tutorials
             do
             {
                 yield return null;
-                if (IsSelectedItem(mechanic_brokenPump.Item))
+                if (IsSelectedItem(mechanic_workingPump.Item))
                 {
                     if (mechanic_workingPump.IsActiveSlider.FlashTimer <= 0)
                     {
@@ -524,6 +524,16 @@ namespace Barotrauma.Tutorials
                         if (repairablePumpComponent.RepairButton.Frame.FlashTimer <= 0)
                         {
                             repairablePumpComponent.RepairButton.Frame.Flash();
+                        }
+                    }
+                }
+                else
+                {
+                    if (IsSelectedItem(mechanic_brokenPump.Item))
+                    {
+                        if (mechanic_brokenPump.IsActiveSlider.FlashTimer <= 0)
+                        {
+                            mechanic_brokenPump.IsActiveSlider.Flash(uiHighlightColor, 1.5f, true);
                         }
                     }
                 }
