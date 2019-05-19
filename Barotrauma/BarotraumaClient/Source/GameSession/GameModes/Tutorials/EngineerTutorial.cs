@@ -357,6 +357,7 @@ namespace Barotrauma.Tutorials
             // Room 4
             do { yield return null; } while (!engineer_secondDoor.IsOpen);
             yield return new WaitForSeconds(1f, false);
+            Repairable repairableJunctionBoxComponent = engineer_brokenJunctionBox.GetComponent<Repairable>();
             TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Select)); // Repair the junction box
             do
             {
@@ -364,10 +365,15 @@ namespace Barotrauma.Tutorials
                 {
                     HighlightInventorySlot(engineer.Inventory, "screwdriver", highlightColor, .5f, .5f, 0f);
                 }
+                else if (IsSelectedItem(engineer_brokenJunctionBox) && repairableJunctionBoxComponent.CurrentFixer == null)
+                {
+                    if (repairableJunctionBoxComponent.RepairButton.Frame.FlashTimer <= 0)
+                    {
+                        repairableJunctionBoxComponent.RepairButton.Frame.Flash();
+                    }
+                }
                 yield return null;
-            } while (!engineer.HasEquippedItem("screwdriver")); // Wait until equipped
-
-            do { yield return null; } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
+            } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
