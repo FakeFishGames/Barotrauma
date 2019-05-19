@@ -3192,4 +3192,6 @@
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
   <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
 
+  <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
+  <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
 </infotexts>
