@@ -128,7 +128,7 @@ namespace Barotrauma
             if (seekAmmunition == null || !subObjectives.Contains(seekAmmunition))
             {
                 Move();
-                if (Weapon != null)
+                if (WeaponComponent != null)
                 {
                     OperateWeapon(deltaTime);
                 }
