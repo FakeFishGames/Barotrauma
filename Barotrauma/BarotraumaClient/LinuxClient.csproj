@@ -274,12 +274,106 @@
     <None Include="System.Xml.Linq.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="libvlccore.so.8.0.1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="plugins\plugins.dat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlc.so.5">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlc.so.5.5.1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlccore.so.8">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\plugins.dat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\access\libfilesystem_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\audio_filter\libaudio_format_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\audio_filter\libugly_resampler_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\audio_output\libamem_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\codec\libavcodec_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\codec\libva.so.1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\demux\libmp4_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\packetizer\libpacketizer_mpeg4audio_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\packetizer\libpacketizer_mpeg4video_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\packetizer\libpacketizer_mpegvideo_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\video_chroma\librv32_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\video_chroma\libswscale_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\video_output\libvmem_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libavcodec.so.56">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libavcodec.so.56.60.100">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libswscale.so.3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libswscale.so.3.1.101">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libavutil.so.54">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libavutil.so.54.31.100">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libswresample.so.1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libswresample.so.1.2.101">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libva.so.1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <EmbeddedResource Include="Icon.bmp">
       <LogicalName>Icon.bmp</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="plugins\video_output\" />
+    <Folder Include="plugins\video_chroma\" />
+    <Folder Include="plugins\packetizer\" />
+    <Folder Include="plugins\demux\" />
+    <Folder Include="plugins\codec\" />
+    <Folder Include="plugins\audio_output\" />
+    <Folder Include="plugins\audio_filter\" />
+    <Folder Include="plugins\access\" />
   </ItemGroup>
   <Import Project="ClientCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
@@ -304,6 +398,6 @@
     <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
         <Output TaskParameter="Assemblies" ItemName="CurrentAssembly" />
     </GetAssemblyIdentity>
-    <Exec Command="echo v%(CurrentAssembly.Version) > $(TargetDir)Version.txt"></Exec>
+    <Exec Command="echo v%(CurrentAssembly.Version) &gt; $(TargetDir)Version.txt"></Exec>
   </Target>
 </Project>
