@@ -25,7 +25,6 @@ namespace Barotrauma
         public float CloseEnough { get; set; } = 50;
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
-        public bool CheckVisibility { get; set; }
 
         public ISpatialEntity Target { get; private set; }
 

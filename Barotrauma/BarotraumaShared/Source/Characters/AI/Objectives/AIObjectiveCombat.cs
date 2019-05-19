@@ -336,8 +336,7 @@ namespace Barotrauma
                 constructor: () => new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
                 {
                     AllowGoingOutside = true,
-                    IgnoreIfTargetDead = true,
-                    CheckVisibility = true
+                    IgnoreIfTargetDead = true
                 },
                 onAbandon: () =>
                 {
