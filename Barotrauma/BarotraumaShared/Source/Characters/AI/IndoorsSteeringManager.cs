@@ -164,9 +164,15 @@ namespace Barotrauma
                 }
 
                 var newPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
-                // If the character is not moving and the new path costs more than the current path, it's possible that the current path was calculated from a start point that is no longer valid.
-                // Therefore, if the character is not moving, let's accept also paths with a greater cost than the current.
-                if (currentPath == null || needsNewPath || !newPath.Unreachable && (newPath.Cost < currentPath.Cost || character.AnimController.movement.NearlyEquals(Vector2.Zero)))
+                bool useNewPath = currentPath == null || needsNewPath;
+                if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
+                {
+                    // It's possible that the current path was calculated from a start point that is no longer valid.
+                    // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
+                    useNewPath = newPath.Cost < currentPath.Cost || 
+                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 2, 2);
+                }
+                if (useNewPath)
                 {
                     currentPath = newPath;
                 }
