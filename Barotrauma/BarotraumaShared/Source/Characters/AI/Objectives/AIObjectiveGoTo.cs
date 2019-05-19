@@ -91,11 +91,18 @@ namespace Barotrauma
             {
                 abandon = true;
             }
-            else if (!repeat && waitUntilPathUnreachable < 0)
+            else if (waitUntilPathUnreachable < 0)
             {
-                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
+                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.Unreachable)
                 {
-                    abandon = PathSteering.CurrentPath.Unreachable;
+                    if (repeat)
+                    {
+                        SteeringManager.Reset();
+                    }
+                    else
+                    {
+                        abandon = true;
+                    }
                 }
             }
             if (abandon)
