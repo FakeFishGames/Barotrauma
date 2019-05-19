@@ -43,12 +43,12 @@ namespace Facepunch.Steamworks
             //
 
             //kind of a hack: 
-            //use an outdated version number to hide private servers from the server list.
+            //use an invalid version number to hide private servers from the server list.
             //couldn't find a way to do it otherwise - using 1 as the eServerMode doesn't 
             //seem to work, the server info is still returned by the API calls
-            string versionString = isPublic ? init.VersionString : "0.0.0.0";
-            if ( !native.InitServer( this, ipaddress, init.SteamPort, init.GamePort, init.QueryPort, init.Secure ? 3 : 2,
-                isPublic ? init.VersionString : "0.0.0.0" ) )
+            string versionString = isPublic ? init.VersionString : "-1";
+            if ( !native.InitServer( this, ipaddress, init.SteamPort, init.GamePort, init.QueryPort, isPublic ? (init.Secure ? 3 : 2) : 1,
+                versionString) )
             {
                 native.Dispose();
                 native = null;
