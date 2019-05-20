@@ -128,7 +128,7 @@ namespace Barotrauma
             if (seekAmmunition == null || !subObjectives.Contains(seekAmmunition))
             {
                 Move();
-                if (Weapon != null)
+                if (WeaponComponent != null)
                 {
                     OperateWeapon(deltaTime);
                 }
@@ -320,7 +320,10 @@ namespace Barotrauma
             {
                 retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls);
             }
-            TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
+            if (character.CurrentHull != retreatTarget)
+            {
+                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true));
+            }
         }
 
         private void Engage()
@@ -336,8 +339,7 @@ namespace Barotrauma
                 constructor: () => new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
                 {
                     AllowGoingOutside = true,
-                    IgnoreIfTargetDead = true,
-                    CheckVisibility = true
+                    IgnoreIfTargetDead = true
                 },
                 onAbandon: () =>
                 {
@@ -347,7 +349,7 @@ namespace Barotrauma
             if (followTargetObjective != null && subObjectives.Contains(followTargetObjective))
             {
                 followTargetObjective.CloseEnough =
-                    WeaponComponent is RangedWeapon ? 3 :
+                    WeaponComponent is RangedWeapon ? 300 :
                     WeaponComponent is MeleeWeapon mw ? mw.Range :
                     WeaponComponent is RepairTool rt ? rt.Range : 50;
             }
@@ -437,7 +439,7 @@ namespace Barotrauma
             float squaredDistance = Vector2.DistanceSquared(character.Position, Enemy.Position);
             character.CursorPosition = Enemy.Position;
             float engageDistance = 500;
-            if (squaredDistance > engageDistance * engageDistance) { return; }
+            if (character.CurrentHull != Enemy.CurrentHull && squaredDistance > engageDistance * engageDistance) { return; }
             if (!character.CanSeeCharacter(Enemy)) { return; }
             if (Weapon.RequireAimToUse)
             {
@@ -450,7 +452,7 @@ namespace Barotrauma
                         isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
                     }
                 }
-                if (!isOperatingButtons && character.SelectedConstruction == null)
+                if (!isOperatingButtons)
                 {
                     character.SetInput(InputType.Aim, false, true);
                 }

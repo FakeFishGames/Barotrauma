@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -163,7 +164,15 @@ namespace Barotrauma
                 }
 
                 var newPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
-                if (currentPath == null || needsNewPath || !newPath.Unreachable && newPath.Cost < currentPath.Cost)
+                bool useNewPath = currentPath == null || needsNewPath;
+                if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
+                {
+                    // It's possible that the current path was calculated from a start point that is no longer valid.
+                    // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
+                    useNewPath = newPath.Cost < currentPath.Cost || 
+                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 2, 2);
+                }
+                if (useNewPath)
                 {
                     currentPath = newPath;
                 }
@@ -405,7 +414,7 @@ namespace Barotrauma
                     {
                         if (door.HasIntegratedButtons)
                         {
-                            door.Item.TryInteract(character, false, true, true);
+                            door.Item.TryInteract(character, false, true);
                             buttonPressCooldown = ButtonPressInterval;
                             break;
                         }
@@ -413,7 +422,7 @@ namespace Barotrauma
                         {
                             if (Vector2.DistanceSquared(closestButton.Item.WorldPosition, character.WorldPosition) < MathUtils.Pow(closestButton.Item.InteractDistance * 2, 2))
                             {
-                                closestButton.Item.TryInteract(character, false, true, false);
+                                closestButton.Item.TryInteract(character, false, true);
                                 buttonPressCooldown = ButtonPressInterval;
                                 break;
                             }

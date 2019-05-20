@@ -16,8 +16,8 @@ namespace Barotrauma
         private readonly Character targetCharacter;
 
         private AIObjectiveGoTo goToObjective;
-
         private float treatmentTimer;
+        private Hull safeHull;
 
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -84,15 +84,21 @@ namespace Barotrauma
                     {
                         goToObjective = null;
                     }
-                    var findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
-                    if (findSafety == null)
+                    if (safeHull == null)
                     {
-                        // Ensure that we have the find safety objective (should always be the case)
-                        objectiveManager.AddObjective(new AIObjectiveFindSafety(character, objectiveManager));
+                        var findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
+                        if (findSafety == null)
+                        {
+                            // Ensure that we have the find safety objective (should always be the case)
+                            objectiveManager.AddObjective(new AIObjectiveFindSafety(character, objectiveManager));
+                        }
+                        safeHull = findSafety.FindBestHull(HumanAIController.VisibleHulls);
                     }
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(findSafety.FindBestHull(HumanAIController.VisibleHulls), character, objectiveManager));
+                    if (character.CurrentHull != safeHull)
+                    {
+                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager));
+                    }
                 }
-                return;
             }
 
             if (subObjectives.Any()) { return; }
