@@ -90,7 +90,8 @@ namespace Barotrauma
                         if (findSafety == null)
                         {
                             // Ensure that we have the find safety objective (should always be the case)
-                            objectiveManager.AddObjective(new AIObjectiveFindSafety(character, objectiveManager));
+                            findSafety = new AIObjectiveFindSafety(character, objectiveManager);
+                            objectiveManager.AddObjective(findSafety);
                         }
                         safeHull = findSafety.FindBestHull(HumanAIController.VisibleHulls);
                     }
