@@ -121,8 +121,8 @@ namespace Barotrauma
 
                 if (value == null &&
                     Character.Controlled?.SelectedCharacter?.CharacterHealth != null &&
-                    Character.Controlled.SelectedCharacter.CharacterHealth == prevOpenHealthWindow &&
-                    !Character.Controlled.SelectedCharacter.CanInventoryBeAccessed)
+                    Character.Controlled.SelectedCharacter.CharacterHealth == prevOpenHealthWindow/* &&
+                    !Character.Controlled.SelectedCharacter.CanInventoryBeAccessed*/)
                 {
                     Character.Controlled.DeselectCharacter();
                 }
@@ -188,20 +188,26 @@ namespace Barotrauma
 
             afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), paddedInfoFrame.RectTransform, Anchor.BottomLeft));
 
-            lowSkillIndicator = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedInfoFrame.RectTransform, Anchor.TopRight),
-              TextManager.Get("LowMedicalSkillWarning"), Color.Orange, textAlignment: Alignment.TopRight, font: GUI.SmallFont, wrap: true)
-            {
-                Visible = false
-            };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedInfoFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.05f) }, TextManager.Get("SuitableTreatments"), textAlignment: Alignment.BottomRight);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), paddedInfoFrame.RectTransform, Anchor.TopRight), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopRight);
             
-            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.5f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.12f) });
+            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.28f, 0.47f), paddedInfoFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.15f) });
             dropItemArea = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.3f), paddedInfoFrame.RectTransform, Anchor.BottomRight)
             { RelativeOffset = new Vector2(0.02f, 0.0f) }, style: null)
             {
                 ToolTip = TextManager.Get("HealthItemUseTip")
             };
             dropItemArea.RectTransform.NonScaledSize = new Point(dropItemArea.Rect.Width);
+
+            lowSkillIndicator = new GUIImage(new RectTransform(new Vector2(0.5f, 0.22f), paddedInfoFrame.RectTransform, Anchor.TopRight, Pivot.Center) { RelativeOffset = new Vector2(0.16f, 0.12f) }, 
+                style: "GUINotificationButton")
+            {
+                ToolTip = TextManager.Get("lowmedicalskillwarning"),
+                Color = Color.OrangeRed,
+                HoverColor = Color.Orange,
+                PressedColor = Color.Orange,
+                Visible = false
+            };
+            lowSkillIndicator.RectTransform.MaxSize = new Point(lowSkillIndicator.Rect.Height);
 
             string[] healthCircleStyles = new string[] { "HealthCircleInner", "HealthCircleMid", "HealthCircleOuter" };
             foreach (string healthCircleStyle in healthCircleStyles)
@@ -657,7 +663,8 @@ namespace Barotrauma
                     openHealthWindow = null;
                 }
 
-                lowSkillIndicator.Visible = Timing.TotalTime % 1.0f < 0.8f && Character.Controlled != null && Character.Controlled.GetSkillLevel("medical") < 50.0f;
+                lowSkillIndicator.Visible = Character.Controlled != null && Character.Controlled.GetSkillLevel("medical") < 50.0f;
+                lowSkillIndicator.Color = new Color(lowSkillIndicator.Color, MathHelper.Lerp(0.1f, 1.0f, (float)(Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 2.0f));
 
                 float rotationSpeed = 0.25f;
                 int i = 0;
@@ -1053,10 +1060,10 @@ namespace Barotrauma
                 var itemSlot = new GUIFrame(new RectTransform(new Point(recommendedTreatmentContainer.Content.Rect.Width, slotSize), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopCenter),
                     style: "InnerGlow")
                 {
-                    UserData = item,
-                    CanBeFocused = false
+                    UserData = item
                 };
                 itemSlot.Color = ToolBox.GradientLerp(treatment.Value, Color.Red, Color.Orange, Color.LightGreen);
+                itemSlot.SelectedColor = itemSlot.HoverColor = itemSlot.Color;
 
                 Sprite itemSprite = item.InventoryIcon ?? item.sprite;
                 Color itemColor = itemSprite == item.sprite ? item.SpriteColor : item.InventoryIconColor;
@@ -1068,7 +1075,7 @@ namespace Barotrauma
                     HoverColor = itemColor,
                     SelectedColor = itemColor
                 };
-                itemSlot.ToolTip = item.Name + "\n" + item.Description;
+                itemSlot.ToolTip = item.Name;
             }
 
             afflictionInfoContainer.Content.RectTransform.SortChildren((r1, r2) =>

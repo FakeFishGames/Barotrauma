@@ -239,7 +239,8 @@ namespace Barotrauma
                         CloseEnough = 150,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
-                        FollowControlledCharacter = orderGiver == character
+                        followControlledCharacter = orderGiver == character,
+                        mimic = true
                     };
                     break;
                 case "wait":
@@ -258,7 +259,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveRescueAll(character, this, priorityModifier);
                     break;
                 case "repairsystems":
-                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier) { RequireAdequateSkills = option != "all" };
+                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier) { RequireAdequateSkills = option == "jobspecific" };
                     break;
                 case "pumpwater":
                     newObjective = new AIObjectivePumpWater(character, this, option, priorityModifier: priorityModifier);

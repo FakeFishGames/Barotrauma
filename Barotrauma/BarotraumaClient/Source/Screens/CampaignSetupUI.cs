@@ -435,6 +435,8 @@ namespace Barotrauma
                 saveTime = time.ToString();
             }
 
+            string mapseed = doc.Root.GetAttributeString("mapseed", "unknown");
+
             var saveFileFrame = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.6f), loadGameContainer.RectTransform, Anchor.TopRight)
             {
                 RelativeOffset = new Vector2(0.0f, 0.1f)

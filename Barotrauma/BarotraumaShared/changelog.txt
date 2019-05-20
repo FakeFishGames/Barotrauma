@@ -2,16 +2,42 @@
 v0.9.0.2
 ---------------------------------------------------------------------------------------------------------
 
-- Fixed a bug that caused frequent desync kicks when playing a multiplayer monster mission.
-- Fixed an index out of range error in DoctorTutorial if proceeding too fast to the submarine.
-- Fixes to missing translations and UI layout problems when using languages other than English.
+- Automatically set the keybinds to AZERTY when French is selected as the display language.
 - More readable font and a fix to some texts appearing slightly "clipped".
 - Additions to the credits.
-- Fixed bots loading only half of the target items in the contain item objective.
 - Minor tweaks to subs and shuttles.
-- Fixed find safety AI objective not working properly.
+- Added propeller damage to the shuttle engine.
+- Increased maximum voice chat volume.
+- Directional voice chat is enabled by default.
+- Display the language names in the respective languages in the initial language selection screen.
+- Playing the splash screens or tutorial videos doesn't require libvlc and libvlccore to be installed
+on the user's system in the Linux version anymore.
+
+Bugfixes: 
+- Fixed a bug that caused frequent desync kicks when playing a multiplayer monster mission.
+- Fixed private servers showing up in the server list.
+- Fixed an index out of range error in DoctorTutorial if proceeding too fast to the submarine.
+- Fixed report messages not going through to some clients when there are multiple clients on the server.
+- Fixed players not seeing reports made by bots in multiplayer.
+- Fixes to missing translations and UI layout problems when using languages other than English.
 - Miscellaneous crew AI fixes and improvements.
+- Fixed find safety AI objective not working properly.
+- Fixed bots loading only half of the target items in the contain item objective.
+- Fixed directional sonar indicators not being displayed on the sonar monitor.
+- Fixed floating ice chunks occasionally spawning too close to the start of a level, causing them to clip
+through the submarin and/or the outpost.
 - Fixed incorrect reward amount in the "Chemical shipment" description.
+- Fixed inability to use the underwater scooters with LMB.
+- Fixes to UI layouts on 4K resolution.
+- Fixed unnecessary silence at the end of the "Objective Complete" music track.
+- Fixed ruin walls being almost impossible to cut from inside the ruins.
+- Fixed the "report leaks" button being highlighted inside ruins.
+- Fixes to wall colliders.
+- Fixed "Pause on focus lost" setting being always treated as if being enabled.
+- Fixed dedicated server overwriting existing crash reports.
+- Fixed save time being displayed in UNIX time in the right-hand panel in the campaign setup UI.
+- Fixed "Praise the Honkmother" and "Extravehicular activity" achievements not unlocking in multiplayer.
+- Fixed "No fun allowed" achievement being possible to unlock by committing suicide while wearing a clown costume.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.0.1

@@ -337,6 +337,79 @@ namespace Barotrauma
                 keyMapping[(int)InputType.SelectNextCharacter] = new KeyOrMouse(Keys.Z);
                 keyMapping[(int)InputType.SelectPreviousCharacter] = new KeyOrMouse(Keys.X);
             }
+        }
+
+        public void CheckBindings(bool useDefaults)
+        {
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                var binding = keyMapping[(int)inputType];
+                if (binding == null)
+                {
+                    switch (inputType)
+                    {
+                        case InputType.Deselect:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(1);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var selectKey = keyMapping[(int)InputType.Select];
+                                if (selectKey != null && selectKey.Key != Keys.None)
+                                {
+                                    binding = new KeyOrMouse(selectKey.Key);
+                                }
+                            }
+                            break;
+                        case InputType.Shoot:
+                            if (useDefaults)
+                            {
+                                binding = new KeyOrMouse(0);
+                            }
+                            else
+                            {
+                                // Legacy support
+                                var useKey = keyMapping[(int)InputType.Use];
+                                if (useKey != null && useKey.MouseButton.HasValue)
+                                {
+                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (binding == null)
+                    {
+                        DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
+                        binding = new KeyOrMouse(Keys.D1);
+                    }
+                    keyMapping[(int)inputType] = binding;
+                }
+            }
+        }
+
+        #region Load DefaultConfig
+        private void LoadDefaultConfig(bool setLanguage = true)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(savePath);
+
+            if (setLanguage || string.IsNullOrEmpty(Language))
+            {
+                Language = doc.Root.GetAttributeString("language", "English");
+            }
+
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
+
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
+
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             if (legacy)
             {
@@ -639,6 +712,54 @@ namespace Barotrauma
             {
                 doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
+            if (!SelectedContentPackages.Any())
+            {
+                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
+                if (availablePackage != null)
+                {
+                    SelectedContentPackages.Add(availablePackage);
+                }
+            }
+
+            //save to get rid of the invalid selected packages in the config file
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
+        }
+        #endregion
+
+        #region Save DefaultConfig
+        private void SaveNewDefaultConfig()
+        {
+            XDocument doc = new XDocument();
+
+            if (doc.Root == null)
+            {
+                doc.Add(new XElement("config"));
+            }
+
+            doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
+                new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("autocheckupdates", AutoCheckUpdates),
+                new XAttribute("musicvolume", musicVolume),
+                new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("verboselogging", VerboseLogging),
+                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("quickstartsub", QuickStartSubmarineName),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
+
+            if (WasGameUpdated)
+            {
+                doc.Root.Add(new XAttribute("wasgameupdated", true));
+            }
             
             XElement gMode = doc.Root.Element("graphicsmode");
             if (gMode == null)
@@ -750,6 +871,7 @@ namespace Barotrauma
             if (!fileFound)
             {
                 ShowLanguageSelectionPrompt = true;
+                ShowUserStatisticsPrompt = true;
                 SaveNewPlayerConfig();
             }
         }
@@ -820,58 +942,6 @@ namespace Barotrauma
                 {
                     VoiceSetting = voiceSetting;
                 }
-                foreach (ContentFile file in contentPackage.Files)
-                {
-                    ToolBox.IsProperFilenameCase(file.Path);
-                }
-            }
-            if (!SelectedContentPackages.Any())
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    SelectedContentPackages.Add(availablePackage);
-                }
-            }
-
-            //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0) { SaveNewPlayerConfig(); }
-        }
-        #endregion
-
-        #region Save DefaultConfig
-        private void SaveNewDefaultConfig()
-        {
-            XDocument doc = new XDocument();
-
-            if (doc.Root == null)
-            {
-                doc.Add(new XElement("config"));
-            }
-
-            doc.Root.Add(
-                new XAttribute("language", TextManager.Language),
-                new XAttribute("masterserverurl", MasterServerUrl),
-                new XAttribute("autocheckupdates", AutoCheckUpdates),
-                new XAttribute("musicvolume", musicVolume),
-                new XAttribute("soundvolume", soundVolume),
-                new XAttribute("voicechatvolume", voiceChatVolume),
-                new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount));
-
-            if (!ShowUserStatisticsPrompt)
-            {
-                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
-
-            if (WasGameUpdated)
-            {
-                doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
             
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
@@ -940,7 +1010,22 @@ namespace Barotrauma
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                gSettings = new XElement("graphicssettings");
+                doc.Root.Add(gSettings);
+            }
+
+            gSettings.ReplaceAttributes(
+                new XAttribute("particlelimit", ParticleLimit),
+                new XAttribute("lightmapscale", LightMapScale),
+                new XAttribute("specularity", SpecularityEnabled),
+                new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
+                new XAttribute("losmode", LosMode),
+                new XAttribute("hudscale", HUDScale),
+                new XAttribute("inventoryscale", InventoryScale));
+
+            foreach (ContentPackage contentPackage in SelectedContentPackages)
+            {
+                if (contentPackage.Path.Contains(vanillaContentPackagePath))
                 {
                     case "contentpackage":
                         string path = System.IO.Path.GetFullPath(subElement.GetAttributeString("path", ""));
@@ -1054,6 +1139,7 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
