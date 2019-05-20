@@ -82,8 +82,10 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
-            
-            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
+
+            float maxDistanceToSub = 3000;
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 
+                    Vector2.DistanceSquared(Character.WorldPosition, SelectedAiTarget.Entity.Submarine.WorldPosition) < maxDistanceToSub * maxDistanceToSub)
             {
                 if (steeringManager != insideSteering)
                 {
@@ -483,7 +485,11 @@ namespace Barotrauma
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
                 {
-                    Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                    //TODO: re-enable on all languages after DialogNoRescueTargets has been translated
+                    if (TextManager.Language == "English")
+                    {
+                        Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                    }
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
                 {
@@ -534,6 +540,8 @@ namespace Barotrauma
 
         public static bool HasItem(Character character, string tag, string containedTag, float conditionPercentage = 0)
         {
+            if (character == null) { return false; }
+            if (character.Inventory == null) { return false; }
             var item = character.Inventory.FindItemByTag(tag);
             return item != null &&
                 item.ConditionPercentage > conditionPercentage &&

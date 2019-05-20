@@ -2583,4 +2583,9 @@
 <privacypolicy>Política de privacidade</privacypolicy>
 
 <lightcomponent.lightcolor>Cor</lightcomponent.lightcolor>
+
+<connection.batterychargestatusout>carga</connection.batterychargestatusout>
+<connection.batterychargepercentage>carga_%</connection.batterychargepercentage>  
+<connection.batterysetrechargespeed>definir_taxa_de_recarga</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>taxa_de_recarga_saída</connection.batteryrechargespeedout>
 </infotexts>

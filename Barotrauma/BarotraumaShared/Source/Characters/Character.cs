@@ -1527,7 +1527,7 @@ namespace Barotrauma
             return true;
         }
 
-        public bool CanInteractWith(Character c, float maxDist = 200.0f)
+        public bool CanInteractWith(Character c, float maxDist = 200.0f, bool checkVisibility = true)
         {
             if (c == this || Removed || !c.Enabled || !c.CanBeSelected) return false;
             if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged && c.onCustomInteract == null) return false;
@@ -1535,7 +1535,7 @@ namespace Barotrauma
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
 
-            return true;
+            return checkVisibility ? CanSeeCharacter(c) : true;
         }
         
         public bool CanInteractWith(Item item)

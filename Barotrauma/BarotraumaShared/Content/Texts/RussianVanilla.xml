@@ -2583,4 +2583,9 @@
 <privacypolicy>Политика конфиденциальности</privacypolicy>
 
 <lightcomponent.lightcolor>Цвет</lightcomponent.lightcolor>
+
+<connection.batterychargestatusout>заряд</connection.batterychargestatusout>
+<connection.batterychargepercentage>заряд_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>назначить_скорость перезарядки</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>скорость_перезарядки_выкл</connection.batteryrechargespeedout>
 </infotexts>

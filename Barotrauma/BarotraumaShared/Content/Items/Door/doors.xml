@@ -28,7 +28,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
   <Item name="Custom Windowed Door" identifier="windoweddoor" tags="door" scale="0.5" health="100">
@@ -58,7 +58,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
   <Item name="Custom Hatch" identifier="hatch" allowedlinks="gap, hull" tags="door" scale="0.5" health="100">
@@ -87,7 +87,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
 
@@ -121,7 +121,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
   <Item name="Windowed Door" identifier="windoweddoorwbuttons" tags="door" scale="0.5" health="100" requirebodyinsidetrigger="false">
@@ -153,7 +153,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
   <Item name="Hatch" identifier="hatchwbuttons" allowedlinks="gap, hull" tags="door" scale="0.5" health="100" requirebodyinsidetrigger="false">
@@ -185,7 +185,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
 
@@ -218,8 +218,8 @@
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="power" displayname="connection.power"/>
-      <output name="state_out" displayname="connection.stateout" />
-      <output name="proximity_sensor" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+      <output name="proximity_sensor" displayname="connection.dockingproximitysensor" fallbackdisplayname="label.readytodock"/>
     </ConnectionPanel>
   </Item>
   <Item name="Docking Hatch" identifier="dockinghatch" tags="dock" linkable="true" indestructible="true">
@@ -251,8 +251,8 @@
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
       <input name="power" displayname="connection.power"/>
-      <output name="state_out" displayname="connection.stateout" />
-      <output name="proximity_sensor" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
+      <output name="proximity_sensor" displayname="connection.dockingproximitysensor" fallbackdisplayname="label.readytodock"/>
     </ConnectionPanel>
   </Item>
   <Item name="Duct Block" identifier="ductblock" scale="0.5">
@@ -278,7 +278,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
-      <output name="state_out" displayname="connection.stateout" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout"/>
     </ConnectionPanel>
   </Item>
 </Items>

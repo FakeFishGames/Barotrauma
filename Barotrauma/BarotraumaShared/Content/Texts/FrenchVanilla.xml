@@ -2585,4 +2585,10 @@
 <playyourself>Jouer vous-même</playyourself>
 
 <lightcomponent.lightcolor>Couleur</lightcomponent.lightcolor>
+
+
+<connection.batterychargestatusout>charge</connection.batterychargestatusout>
+<connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>définir_cadence_de_recharge</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>sortie_cadence_de_recharge</connection.batteryrechargespeedout>
 </infotexts>

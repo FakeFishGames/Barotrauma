@@ -48,8 +48,8 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
-      <output name="position_out" />
-      <output name="trigger_out" />
+      <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim"/>
+      <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot"/>
     </ConnectionPanel>
   </Item>
   

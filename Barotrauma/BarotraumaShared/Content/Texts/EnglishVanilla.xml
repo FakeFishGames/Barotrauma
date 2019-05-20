@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" translatedname="English">
 
   <!-- Loading Screen -->
@@ -77,6 +77,7 @@
   <charactereditorbutton>Character Editor</charactereditorbutton>
   <settingsbutton>Settings</settingsbutton>
   <steamworkshopbutton>Steam Workshop</steamworkshopbutton>
+  <creditsbutton>Credits</creditsbutton>
   <quitbutton>Quit</quitbutton>
 
   <!-- Pause menu -->
@@ -210,6 +211,9 @@
   <incompatiblecontentpackageunknownversion>Content package '[packagename]' is not compatible with this version of Barotrauma. The package was made for an unknown version; your game version is [gameversion].</incompatiblecontentpackageunknownversion>
   <contentpackagemissingcorefiles>Content package '[packagename]' is marked as a core package but does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</contentpackagemissingcorefiles>
   <contentpackagecantmakecorepackage>Content package '[packagename]' cannot be marked as a core package because it does not contain all the required files for a core package. Missing content file types: [missingfiletypes]</contentpackagecantmakecorepackage>
+  <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
+  <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
+  <voipcapturedevicenotfound>Could not start voice capture; suitable capture device not found.</voipcapturedevicenotfound>
 
   <!-- Graphics tab -->
   <settingstab.graphics>Graphics</settingstab.graphics>
@@ -427,6 +431,7 @@
   <genericreplaceverification>Do you want to replace it?</genericreplaceverification>
   <dontshownotificationagain>Don't show this again</dontshownotificationagain>
   <video>Video</video>
+  <search>Search</search>
 
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
@@ -680,6 +685,8 @@
   <mute>Mute</mute>
   <mutedlocally>Muted Locally</mutedlocally>
   <mutedglobally>Muted Globally</mutedglobally>
+  <mutedbyserver>You have been muted by the server.</mutedbyserver>
+  <unmutedbyserver>You have been unmuted by the server.</unmutedbyserver>
 
   <!-- Server log -->
   <serverlog.filter>Filter</serverlog.filter>
@@ -824,6 +831,7 @@
   <missiondescription.cargovolatilecompoundn>A local arms dealer is offering [reward] credits in exchange for delivering two crates of high explosives to a customer in [location2].</missiondescription.cargovolatilecompoundn>
   <missionsuccess.cargovolatilecompoundn>The explosives have been successfully delivered.</missionsuccess.cargovolatilecompoundn>
   <missionname.cargochemicals>Chemical shipment</missionname.cargochemicals>
+  <missiondescription.cargochemicals>Researchersof [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 250 credits. </missiondescription.cargochemicals>
   <missionsuccess.cargochemicals>The chemicals have been successfully delivered.</missionsuccess.cargochemicals>
   <missionname.cargohuskeggs>Biohazard</missionname.cargohuskeggs>
   <missiondescription.cargohuskeggs>Local researchers are offering [reward] credits for delivering a container of husk parasite eggs to [location2].</missiondescription.cargohuskeggs>
@@ -1010,6 +1018,8 @@
   <entitydescription.plasmacutter>Cuts through various materials using a jet of ionized oxygen.</entitydescription.plasmacutter>
   <entityname.weldingfueltank>Welding Fuel Tank</entityname.weldingfueltank>
   <entitydescription.weldingfueltank>Fuel for the welding tool.</entitydescription.weldingfueltank>
+  <entityname.oxygentank>Oxygen Tank</entityname.oxygentank>
+  <entitydescription.oxygentank>Portable oxygen container.</entitydescription.oxygentank>
   <entityname.extinguisher>Fire Extinguisher</entityname.extinguisher>
   <entitydescription.extinguisher>A handheld carbon dioxide extinguisher.</entitydescription.extinguisher>
   <entityname.screwdriver>Screwdriver</entityname.screwdriver>
@@ -1106,6 +1116,22 @@
   <entitydescription.relaycomponent>When switched on, forwards all received signals from the input connections to the outputs.</entitydescription.relaycomponent>
   <entityname.delaycomponent>Delay Component</entityname.delaycomponent>
   <entitydescription.delaycomponent>Delays all received signals for a specific amount of time.</entitydescription.delaycomponent>
+  <entityname.equalscomponent>Equals Component</entityname.equalscomponent>
+  <entitydescription.equalscomponent>Sends a signal when both inputs receive the same signal.</entitydescription.equalscomponent>
+  <entityname.greatercomponent>Greater Component</entityname.greatercomponent>
+  <entitydescription.greatercomponent>Sends a signal if the value the signal_in1 input is larger than the signal_in2 input.</entitydescription.greatercomponent>
+  <entityname.colorcomponent>Color Component</entityname.colorcomponent>
+  <entitydescription.colorcomponent>Outputs a combined color signal for light control.</entitydescription.colorcomponent>
+  <entityname.subtractcomponent>Subtract Component</entityname.subtractcomponent>
+  <entitydescription.subtractcomponent>Outputs the subtracted value of the received signals.</entitydescription.subtractcomponent>
+  <entityname.multiplycomponent>Multiply Component</entityname.multiplycomponent>
+  <entitydescription.multiplycomponent>Outputs the product of the received signals.</entitydescription.multiplycomponent>
+  <entityname.dividecomponent>Divide Component</entityname.dividecomponent>
+  <entitydescription.dividecomponent>Outputs the divided value of the received signals.</entitydescription.dividecomponent>
+  <entityname.xorcomponent>Xor Component</entityname.xorcomponent>
+  <entitydescription.xorcomponent>Sends a signal if either of the inputs, but not both, receives a signal.</entitydescription.xorcomponent>
+  <entityname.memorycomponent>Memory Component</entityname.memorycomponent>
+  <entitydescription.memorycomponent>Outputs a stored value that can be updated from other sources. Use the signal_in connection to set the stored value, and the signal_store input to toggle whether the received signals should be stored.</entitydescription.memorycomponent>
   <entityname.oxygendetector>Oxygen Detector</entityname.oxygendetector>
   <entitydescription.oxygendetector>Sends out a value between 0-100 depending on the quality of the surrounding air.</entitydescription.oxygendetector>
   <entityname.waterdetector>Water Detector</entityname.waterdetector>
@@ -1274,6 +1300,14 @@
   <entitydescription.antinarc>An opioid antagonist for the treatment of opiate-based withdrawal and overdose.</entitydescription.antinarc>
   <entityname.morbusineantidote>Morbusine Antidote</entityname.morbusineantidote>
   <entitydescription.morbusineantidote>An antidote for acute morbusine poisoning.</entitydescription.morbusineantidote>
+  <entityname.cyanideantidote>Cyanide Antidote</entityname.cyanideantidote>
+  <entitydescription.cyanideantidote>An antidote for acute cyanide poisoning.</entitydescription.cyanideantidote>
+  <entityname.sufforinantidote>Sufforin Antidote</entityname.sufforinantidote>
+  <entitydescription.sufforinantidote>An antidote for acute sufforin poisoning.</entitydescription.sufforinantidote>
+  <entityname.deliriumineantidote>Deliriumine Antidote</entityname.deliriumineantidote>
+  <entitydescription.deliriumineantidote>An antidote for acute deliriumine poisoning.</entitydescription.deliriumineantidote>
+  <entityname.antirad>Antirad</entityname.antirad>
+  <entitydescription.antirad>Slows down cellular degradation caused by radiation.</entitydescription.antirad>
   <entityname.liquidoxygenite>Liquid Oxygenite</entityname.liquidoxygenite>
   <entitydescription.liquidoxygenite>A mildly toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping.</entitydescription.liquidoxygenite>
   <entityname.tonicliquid>Tonic Liquid</entityname.tonicliquid>
@@ -1645,6 +1679,8 @@
   <fabricatorrequiredskills>Skills required to calibrate</fabricatorrequiredskills>
   <fabricatorcreate>Create</fabricatorcreate>
   <fabricatorcancel>Cancel</fabricatorcancel>
+  <fabricatorinsufficientskills>Insufficient skills to fabricate</fabricatorinsufficientskills>
+  <fabricatorsufficientskills>Sufficient skills to fabricate</fabricatorsufficientskills>
   <uilabel.input>Input</uilabel.input>
   <uilabel.output>Output</uilabel.output>
   <deconstructornopower>Insufficient power</deconstructornopower>
@@ -1719,6 +1755,8 @@
   <requiredrepairskills>Required skills:</requiredrepairskills>
   <repairbutton>Repair</repairbutton>
   <repairing>Repairing</repairing>
+  <electricalrepairsheader>Electrical Repairs</electricalrepairsheader>
+  <mechanicalrepairsheader>Mechanical Repairs</mechanicalrepairsheader>
 
   <!-- Health interface -->
   <vitality>Vitality</vitality>
@@ -1866,6 +1904,20 @@
   <dialogtargethealed>[targetname] is back in shape!</dialogtargethealed>
   <dialogtargethealed>[targetname] is all right!</dialogtargethealed>
   <dialogtargethealed>[targetname] has been resuscitated!</dialogtargethealed>
+  <dialogcannotrepair>Cannot repair [itemname]!</dialogcannotrepair>
+  <dialogenemydown>Enemy down!</dialogenemydown>
+  <dialogenemydown>Another one eliminated.</dialogenemydown>
+  <dialognorepairtargets>There's nothing to repair.</dialognorepairtargets>
+  <dialognorepairtargets>What do you mean? Everything is working all right.</dialognorepairtargets>
+  <dialognopumps>The pumps are okay, aren't they?</dialognopumps>
+  <dialognopumps>None of the pumps require attention at the moment.</dialognopumps>
+  <dialognoenemies>Can't see any intruders onboard.</dialognoenemies>
+  <dialognoenemies>Enemies? Where?</dialognoenemies>
+  <dialognoleaks>Cannot find any leaks.</dialognoleaks>
+  <dialognoleaks>What leaks?</dialognoleaks>
+  <dialogfoundwoundedtarget>Giving first aid to [targetname] in [roomname]!</dialogfoundwoundedtarget>
+  <dialogfoundwoundedtarget>Treating [targetname] in [roomname]!</dialogfoundwoundedtarget>
+
   <orderdialog.follow>[name], follow me!</orderdialog.follow>
   <orderdialogself.follow>Lead the way!</orderdialogself.follow>
   <orderdialog.wait>[name], wait there!</orderdialog.wait>
@@ -1944,6 +1996,34 @@
   <orderdialog.reportbrokendevices>Need someone to repair devices in [roomname]!</orderdialog.reportbrokendevices>
   <orderdialog.requestfirstaid>Need a medic in [roomname]!</orderdialog.requestfirstaid>
   <orderdialog.requestfirstaid>Need medical assistance in [roomname]!</orderdialog.requestfirstaid>
+  <orderdialog.fightintruders>[name], eliminate all intruders!</orderdialog.fightintruders>
+  <orderdialog.fightintruders>[name], defend the crew!</orderdialog.fightintruders>
+  <orderdialogself.fightintruders>Taking care of the intruders!</orderdialogself.fightintruders>
+  <orderdialogself.fightintruders>Fighting the enemy!</orderdialogself.fightintruders>
+  <orderoptions.operatereactor>Power up, Shut down</orderoptions.operatereactor>
+  <orderoptions.operateweapons>Fire at will, Hold fire</orderoptions.operateweapons>
+  <orderoptions.steer>Maintain position, Navigate back, Navigate to destination</orderoptions.steer>
+  <orderoptions.chargebatteries>Charge, Stop charging</orderoptions.chargebatteries>
+  <orderoptions.pumpwater>Pump out, Stop pumping</orderoptions.pumpwater>
+  <orderoptions.repairsystems>Repair job specific, Repair everything</orderoptions.repairsystems>
+  <ordername.dismissed>Dismissed</ordername.dismissed>
+  <ordername.follow>Follow</ordername.follow>
+  <ordername.wait>Wait</ordername.wait>
+  <ordername.operatereactor>Operate Reactor</ordername.operatereactor>
+  <ordername.operateweapons>Operate Weapons</ordername.operateweapons>
+  <ordername.steer>Steer</ordername.steer>
+  <ordername.fixleaks>Fix Leaks</ordername.fixleaks>
+  <ordername.extinguishfires>Extinguish Fires</ordername.extinguishfires>
+  <ordername.fightintruders>Fight Intruders</ordername.fightintruders>
+  <ordername.chargebatteries>Charge Batteries</ordername.chargebatteries>
+  <ordername.pumpwater>Operate Pumps</ordername.pumpwater>
+  <ordername.rescue>Heal and Rescue</ordername.rescue>
+  <ordername.repairsystems>Repair Damaged Systems</ordername.repairsystems>
+  <ordername.reportfire>Report Fire</ordername.reportfire>
+  <ordername.reportbreach>Report Hull Breach</ordername.reportbreach>
+  <ordername.reportintruders>Report Intruders</ordername.reportintruders>
+  <ordername.reportbrokendevices>Report Broken Devices</ordername.reportbrokendevices>
+  <ordername.requestfirstaid>Request First Aid</ordername.requestfirstaid>
 
   <!-- Status -->
   <deceased>Deceased</deceased>
@@ -1982,6 +2062,8 @@
   <skillname.mechanical>Mechanical Engineering</skillname.mechanical>
   <skillname.electrical>Electrical Engineering</skillname.electrical>
   <skillname.medical>Medical</skillname.medical>
+  <skillname.initiative>Initiative</skillname.initiative>
+  <skillname.courage>Courage</skillname.courage>
 
   <!-- Item messages -->
   <itemmsginteractselect>[[select]] Interact</itemmsginteractselect>
@@ -2432,11 +2514,51 @@
   <campaignroadmaptext>- Explorable locations: As of now, the locations on the campaign map are essentially just menus where you can buy supplies and hire new crew members, but during the Early Access period they will become actual physical locations you can enter and explore.\n\n- Expanded story: You will be able to learn more about the world of Barotrauma by interacting with NPCs and by exploring the outposts and non-man-made locations.\n\n- New mission types: We have plans for several completely new mission types, including personnel transport missions and salvage missions into shipwrecks.\n\n- Balancing: Currently the campaign economy is not very well balanced, but we will start to put more focus into it when we have more of the content in.\n\n- End goal: At the moment it’s not possible to complete the campaign, but in future versions the mysterious location at the center of the map will become reachable...</campaignroadmaptext>
   <editordisclaimertitle>Editors</editordisclaimertitle>
   <editordisclaimertext>The submarine and character editors are modding tools that can be used to expand the core game by creating your own submarines and monsters. The custom creations can be shared in the Steam Workshop.\n\nAt the moment the editors are only available in English. The process of building a fully playable submarine or a functional monster can be quite involved, and unfortunately we don’t offer in-game tutorials or documentation for the editors yet. If you want to take a shot at creating your own custom content with the editors, you may be able to find help through the following links:</editordisclaimertext>
-
   <editordisclaimerwikilink>Barotrauma Wiki</editordisclaimerwikilink>
   <editordisclaimerdiscordlink>Barotrauma Discord Server</editordisclaimerdiscordlink>
   <editordisclaimerforumlink>Barotrauma Forums</editordisclaimerforumlink>
-  
+  <bugreportgithubform>GitHub issue form</bugreportgithubform>
+  <bugreportfeedbackform>Barotrauma feedback form</bugreportfeedbackform>
+  <bugreportbutton>Report a bug</bugreportbutton>
+
+  <!-- Connections -->
+  <connection.power>power</connection.power>
+  <connection.powerin>power_in</connection.powerin>
+  <connection.powerout>power_out</connection.powerout>
+  <connection.setstate>set_state</connection.setstate>
+  <connection.togglestate>toggle_state</connection.togglestate>
+  <connection.setpumpingspeed>set_speed</connection.setpumpingspeed>
+  <connection.settargetwaterlevel>set_targetlevel</connection.settargetwaterlevel>
+  <connection.signalin>signal_in</connection.signalin>
+  <connection.signalout>signal_out</connection.signalout>
+  <connection.signalinx>signal_in_[num]</connection.signalinx>
+  <connection.signaloutx>signal_out_[num]</connection.signaloutx>
+  <connection.turretaimingin>position_in</connection.turretaimingin>
+  <connection.turrettriggerin>trigger_in</connection.turrettriggerin>
+  <connection.togglelight>toggle_light</connection.togglelight>
+  <connection.setcolor>set_color</connection.setcolor>
+  <connection.shutdown>shutdown</connection.shutdown>
+  <connection.temperatureout>temperature_out</connection.temperatureout>
+  <connection.meltdownwarning>meltdown_warning</connection.meltdownwarning>
+  <connection.signalr>signal_r</connection.signalr>
+  <connection.signalg>signal_g</connection.signalg>
+  <connection.signalb>signal_b</connection.signalb>
+  <connection.signala>signal_a</connection.signala>
+  <connection.setoutput>set_output</connection.setoutput>
+  <connection.signalstore>signal_store</connection.signalstore>
+  <connection.settargetsignal>set_targetsignal</connection.settargetsignal>
+  <connection.setfrequency>set_frequency</connection.setfrequency>
+  <connection.setoutputtype>set_outputtype</connection.setoutputtype>
+  <connection.controlin>control_in</connection.controlin>
+  <connection.setforce>set_force</connection.setforce>
+  <connection.sonartransducerin>transducer_in</connection.sonartransducerin>
+  <connection.steeringvelocityin>velocity_in</connection.steeringvelocityin>
+  <connection.velocityxout>velocity_x_out</connection.velocityxout>
+  <connection.velocityyout>velocity_y_out</connection.velocityyout>
+  <connection.toggledocking>toggle_docking</connection.toggledocking>
+  <connection.waterdatain>water_data_in</connection.waterdatain>
+  <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
+
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerdiscordurl>https://discordapp.com/invite/xjeSzWU</editordisclaimerdiscordurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
@@ -3008,209 +3130,22 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
-  
-  
-  <!-- Changed values -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   <!-- New additions -->
-  <creditsbutton>Credits</creditsbutton>
-  
-  <fabricatorsufficientskills>Sufficient skills to fabricate</fabricatorsufficientskills>
-  <fabricatorinsufficientskills>Insufficient skills to fabricate</fabricatorinsufficientskills>
-  <VoipCaptureDeviceNotFound>Could not start voice capture, suitable capture device not found.</VoipCaptureDeviceNotFound>
-
-  <bugreportbutton>Report a bug</bugreportbutton>
-  <bugreportfeedbackform>Barotrauma Feedback Form</bugreportfeedbackform>
-  <bugreportgithubform>GitHub issue form</bugreportgithubform>
-
-  <dialognoleaks>What leaks?</dialognoleaks>
-  <dialognoleaks>Cannot find any leaks.</dialognoleaks>
-  <dialognoenemies>Enemies? Where?</dialognoenemies>
-  <dialognoenemies>Can't see any intruders onboard.</dialognoenemies>
-  <dialognopumps>None of the pumps require attention at the moment.</dialognopumps>
-  <dialognopumps>The pumps are OK, aren't they?</dialognopumps>
-  <dialognorepairtargets>What do you mean? Everything is working alright.</dialognorepairtargets>
-  <dialognorepairtargets>There's nothing to repair.</dialognorepairtargets>
-
-  <dialogcannotrepair>Cannot repair [itemname]!</dialogcannotrepair>
-  <dialogenemydown>Enemy down!</dialogenemydown>
-  <dialogenemydown>Another one eliminated.</dialogenemydown>
-
-  <orderdialog.fightintruders>[name], eliminate all intruders!</orderdialog.fightintruders>
-  <orderdialog.fightintruders>[name], defend the crew!</orderdialog.fightintruders>
-  <orderdialogself.fightintruders>Taking care of the intruders!</orderdialogself.fightintruders>
-  <orderdialogself.fightintruders>Fighting the enemy!</orderdialogself.fightintruders>
-
-  <orderdialog.rescue>[name], Check if anyone needs medical attention!</orderdialog.rescue>
-  <orderdialog.rescue>[name], Heal the wounded!</orderdialog.rescue>
-  <orderdialogself.rescue>Medical aid on the way!</orderdialogself.rescue>
-  <orderdialogself.rescue>Healing the wounded!</orderdialogself.rescue>
-  <dialognorescuetargets>Everyone seems healthy enough.</dialognorescuetargets>
-  <dialognorescuetargets>Nobody needs healing right now.</dialognorescuetargets>
-
-  <ordername.dismissed>Dismissed</ordername.dismissed>
-  <ordername.follow>Follow</ordername.follow>
-  <ordername.wait>Wait</ordername.wait>
-  <ordername.operatereactor>Operate Reactor</ordername.operatereactor>
-  <ordername.operateweapons>Operate Weapons</ordername.operateweapons>
-  <ordername.steer>Steer</ordername.steer>
-  <ordername.fixleaks>Fix Leaks</ordername.fixleaks>
-  <ordername.extinguishfires>Extinguish Fires</ordername.extinguishfires>
-  <ordername.fightintruders>Fight Intruders</ordername.fightintruders>
-  <ordername.chargebatteries>Charge Batteries</ordername.chargebatteries>
-  <ordername.pumpwater>Operate Pumps</ordername.pumpwater>
-  <ordername.rescue>Heal and Rescue</ordername.rescue>
-  <ordername.repairsystems>Repair Damaged Systems</ordername.repairsystems>
-  <ordername.reportfire>Report Fire</ordername.reportfire>
-  <ordername.reportbreach>Report Hull Breach</ordername.reportbreach>
-  <ordername.reportintruders>Report Intruders</ordername.reportintruders>
-  <ordername.reportbrokendevices>Report Broken Devices</ordername.reportbrokendevices>
-  <ordername.requestfirstaid>Request First Aid</ordername.requestfirstaid>
-
-  <orderoptions.dismissed></orderoptions.dismissed>
-  <orderoptions.follow></orderoptions.follow>
-  <orderoptions.wait></orderoptions.wait>
-  <orderoptions.operatereactor>Power up, Shutdown</orderoptions.operatereactor>
-  <orderoptions.operateweapons>Fire at will, Hold fire</orderoptions.operateweapons>
-  <orderoptions.steer>Maintain position, Navigate back, Navigate to destination</orderoptions.steer>
-  <orderoptions.fixleaks></orderoptions.fixleaks>
-  <orderoptions.extinguishfires></orderoptions.extinguishfires>
-  <orderoptions.fightintruders></orderoptions.fightintruders>
-  <orderoptions.chargebatteries>Charge, Stop charging</orderoptions.chargebatteries>
-  <orderoptions.pumpwater>Pump out, Stop pumping</orderoptions.pumpwater>
-  <orderoptions.rescue></orderoptions.rescue>
-  <orderoptions.repairsystems>Repair job specific, Repair everything</orderoptions.repairsystems>
-  <orderoptions.reportfire></orderoptions.reportfire>
-  <orderoptions.reportbreach></orderoptions.reportbreach>
-  <orderoptions.reportintruders></orderoptions.reportintruders>
-  <orderoptions.reportbrokendevices></orderoptions.reportbrokendevices>
-  <orderoptions.requestfirstaid></orderoptions.requestfirstaid>
-
-  <dialogfoundwoundedtarget>Giving first aid to [targetname] in [roomname]!</dialogfoundwoundedtarget>
-  <dialogfoundwoundedtarget>Treating [targetname] in [roomname]!</dialogfoundwoundedtarget>
-
-  <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
-  <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
-
-  <skillname.initiative>Initiative</skillname.initiative>
-  <skillname.resolution>Resolution</skillname.resolution>
-
-  <mutedbyserver>You have been muted by the server.</mutedbyserver>
-  <unmutedbyserver>You have been unmuted by the server.</unmutedbyserver>
-
-  <EntityName.equalscomponent>Equals Component</EntityName.equalscomponent>
-  <EntityDescription.equalscomponent>Sends a signal when both inputs receive the same signal.</EntityDescription.equalscomponent>
-  <EntityName.greatercomponent>Greater Component</EntityName.greatercomponent>
-  <EntityDescription.greatercomponent>Sends a signal if the value the signal_in1 input is larger than the signal_in2 input.</EntityDescription.greatercomponent>
-  <EntityName.colorcomponent>Color Component</EntityName.colorcomponent>
-  <EntityDescription.colorcomponent>Outputs a combined color signal for light control.</EntityDescription.colorcomponent>
-  <EntityName.subtractcomponent>Subtract Component</EntityName.subtractcomponent>
-  <EntityDescription.subtractcomponent>Outputs the subtracted value of the received signals.</EntityDescription.subtractcomponent>
-  <EntityName.multiplycomponent>Multiply Component</EntityName.multiplycomponent>
-  <EntityDescription.multiplycomponent>Outputs the product of the received signals.</EntityDescription.multiplycomponent>
-  <EntityName.dividecomponent>Divide Component</EntityName.dividecomponent>
-  <EntityDescription.dividecomponent>Outputs the divided value of the received signals.</EntityDescription.dividecomponent>
-  <EntityName.xorcomponent>Xor Component</EntityName.xorcomponent>
-  <EntityDescription.xorcomponent>Sends a signal if either of the inputs, but not both, receives a signal.</EntityDescription.xorcomponent>
-  <EntityName.memorycomponent>Memory Component</EntityName.memorycomponent>
-  <EntityDescription.memorycomponent>Outputs a stored value that can be updated from other sources. Use the signal_in connection to set the stored value, and the signal_store input to toggle whether the received signals should be stored.</EntityDescription.memorycomponent>
-
-  <search>Search</search>
-
-  <electricalrepairsheader>Electrical Repairs</electricalrepairsheader>
-  <mechanicalrepairsheader>Mechanical Repairs</mechanicalrepairsheader>
-  
-  <entityname.oxygentank>Oxygen Tank</entityname.oxygentank>
-  <entitydescription.oxygentank>Portable oxygen container.</entitydescription.oxygentank>
-
-  <entityname.cyanideantidote>Cyanide Antidote</entityname.cyanideantidote>
-  <entitydescription.cyanideantidote>An antidote for acute cyanide poisoning.</entitydescription.cyanideantidote>
-  
-  <entityname.sufforinantidote>Sufforin Antidote</entityname.sufforinantidote>
-  <entitydescription.sufforinantidote>An antidote for acute sufforin poisoning.</entitydescription.sufforinantidote>
-  
-  <entityname.deliriumineantidote>Deliriumine Antidote</entityname.deliriumineantidote>
-  <entitydescription.deliriumineantidote>An antidote for acute deliriumine poisoning.</entitydescription.deliriumineantidote>
-  
-  <entityname.antirad>Antirad</entityname.antirad>
-  <entitydescription.antirad>Slows down cellular degradation caused by radiation.</entitydescription.antirad>
-
-  <connection.power>power</connection.power>
-  <connection.powerin>power_in</connection.powerin>
-  <connection.powerout>power_out</connection.powerout>
-  <connection.setstate>set_state</connection.setstate>
-  <connection.togglestate>toggle_state</connection.togglestate>
-  <connection.setpumpingspeed>set_speed</connection.setpumpingspeed>
-  <connection.settargetwaterlevel>set_targetlevel</connection.settargetwaterlevel>
-  <connection.signalin>signal_in</connection.signalin>
-  <connection.signalout>signal_out</connection.signalout>
-  <connection.signalinx>signal_in_[num]</connection.signalinx>
-  <connection.signaloutx>signal_out_[num]</connection.signaloutx>
-  <connection.turretaimingin>position_in</connection.turretaimingin>
-  <connection.turrettriggerin>trigger_in</connection.turrettriggerin>
-  <connection.togglelight>toggle_light</connection.togglelight>
-  <connection.setcolor>set_color</connection.setcolor>
-  <connection.shutdown>shutdown</connection.shutdown>
-  <connection.temperatureout>temperature_out</connection.temperatureout>
-  <connection.meltdownwarning>meltdown_warning</connection.meltdownwarning>
-  <connection.signalr>signal_r</connection.signalr>
-  <connection.signalg>signal_g</connection.signalg>
-  <connection.signalb>signal_b</connection.signalb>
-  <connection.signala>signal_a</connection.signala>
-  <connection.setoutput>set_output</connection.setoutput>
-  <connection.signalstore>signal_store</connection.signalstore>
-  <connection.settargetsignal>set_targetsignal</connection.settargetsignal>
-  <connection.setfrequency>set_frequency</connection.setfrequency>
-  <connection.setoutputtype>set_outputtype</connection.setoutputtype>
-  <connection.controlin>control_in</connection.controlin>
-  <connection.setforce>set_force</connection.setforce>
-
-  <connection.sonartransducerin>transducer_in</connection.sonartransducerin>
-  <connection.steeringvelocityin>velocity_in</connection.steeringvelocityin>
-  <connection.velocityxout>velocity_x_out</connection.velocityxout>
-  <connection.velocityyout>velocity_y_out</connection.velocityyout>
-  <connection.toggledocking>toggle_docking</connection.toggledocking>
-  <connection.waterdatain>water_data_in</connection.waterdatain>
-  <connection.oxygendatain>oxygen_data_in</connection.oxygendatain>
-  
-  <!-- CHANGED VALUES -->
-  <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits. </missiondescription.cargochemicals>
-
-  <!-- Temporarily disable this because it hasn't been localized -->
-  <!-- <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill> -->
-  <itemmsgoxygenrefill></itemmsgoxygenrefill>
-  
-  <!-- NEW VALUES -->
+  <missiondescription.killcrawlerswarm1>A small swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
+  <missiondescription.killcrawlerswarm2>A large swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
+  <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
+  <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
   <privacypolicy>Privacy policy</privacypolicy>
   <missionfailed>Mission failed</missionfailed>
   <label.highpressurewarning>WARNING: High pressure</label.highpressurewarning>
   <label.reactortempwarning>Reactor temp. caution</label.reactortempwarning>
-
   <addercomponent.timeframe>Timeframe</addercomponent.timeframe>
   <addercomponent.clampmin>Clamp min</addercomponent.clampmin>
   <addercomponent.clampmax>Clamp max</addercomponent.clampmax>
   <equalscomponent.timeframe>Timeframe</equalscomponent.timeframe>
   <equalscomponent.output>Output</equalscomponent.output>
-  <equalscomponent.falseoutput>False output</equalscomponent.falseoutput>  
+  <equalscomponent.falseoutput>False output</equalscomponent.falseoutput>
   <andcomponent.timeframe>Timeframe</andcomponent.timeframe>
   <andcomponentcomponent.output>Output</andcomponentcomponent.output>
   <andcomponentcomponent.falseoutput>False output</andcomponentcomponent.falseoutput>
@@ -3235,6 +3170,28 @@
   <waterdetector.output>Output</waterdetector.output>
   <waterdetector.falseoutput>False output</waterdetector.falseoutput>
   <wificomponent.channel>Channel</wificomponent.channel>
-
   <quickuseaction.holdtounequip>Hold to unequip</quickuseaction.holdtounequip>
+  <entityname.incendiumfueltank>Incendium Fuel Tank</entityname.incendiumfueltank>
+  <entityname.physicoriumammobox>Physicorium Ammunition Box</entityname.physicoriumammobox>
+  <entityname.physicoriumbolt>Physicorium Bolt</entityname.physicoriumbolt>
+  <statisticspromptheader>Do you want to help us make Barotrauma better?</statisticspromptheader>
+  <statisticsprompttext>Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.</statisticsprompttext>
+  <centerarealockedheader>Mysteries lie ahead...</centerarealockedheader>
+  <centerarealockedtext>This area is unreachable in this version of Barotrauma. Please wait for future updates!</centerarealockedtext>
+  <connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+  <connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+  <connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+  <connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+  <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
+  <connection.signalx>signal_[num]</connection.signalx>
+  <connection.set_text>signal_[num]</connection.set_text>
+  <connection.stateout>state_out</connection.stateout>
+  <connection.turretaimingout>position_out</connection.turretaimingout>
+  <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
+  <connection.sonardataout>data_out</connection.sonardataout>
+  <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
+  <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
+
+  <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
+  <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
 </infotexts>

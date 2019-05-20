@@ -2583,4 +2583,9 @@
 <privacypolicy>Datenschutzerklärung</privacypolicy>
 
 <lightcomponent.lightcolor>Farbe</lightcomponent.lightcolor>
+
+<connection.batterychargestatusout>ladung</connection.batterychargestatusout>
+<connection.batterychargepercentage>ladung_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>aufladerate_festlegen</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>aufladerate_aus</connection.batteryrechargespeedout>
 </infotexts>
