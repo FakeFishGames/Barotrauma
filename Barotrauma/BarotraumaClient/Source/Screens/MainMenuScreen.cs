@@ -440,9 +440,21 @@ namespace Barotrauma
                         GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
                         break;
                     case Tab.JoinServer:
+                        if (!GameMain.Config.CampaignDisclaimerShown)
+                        {
+                            selectedTab = 0;
+                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.JoinServer); });
+                            return true;
+                        }
                         GameMain.ServerListScreen.Select();
                         break;
                     case Tab.HostServer:
+                        if (!GameMain.Config.CampaignDisclaimerShown)
+                        {
+                            selectedTab = 0;
+                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
+                            return true;
+                        }
                         break;
                     case Tab.Tutorials:
                         if (!GameMain.Config.CampaignDisclaimerShown)
@@ -790,6 +802,7 @@ namespace Barotrauma
                 for (int i = legalCrap.Length - 1; i >= 0; i--)
                 {
                     Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
+                    textSize = new Vector2((int)textSize.X, (int)textSize.Y);
                     bool mouseOn = i == 0 &&
                         PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
                         PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;

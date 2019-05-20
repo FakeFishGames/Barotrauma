@@ -66,13 +66,13 @@ namespace Barotrauma.Networking
                 if (order.TargetAllCharacters)
                 {
                     GameMain.GameSession?.CrewManager?.AddOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)), 
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter), 
                         order.Prefab.FadeOutTime);
                 }
                 else if (targetCharacter != null)
                 {
                     targetCharacter.SetOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter),
                             orderOption, senderCharacter);
                 }
 

@@ -16,7 +16,7 @@ namespace Barotrauma
         private RenderTarget2D renderTarget;
 
         private Sprite languageSelectionCursor;
-        private ScalableFont languageSelectionFont;
+        private ScalableFont languageSelectionFont, languageSelectionFontCJK;
 
         private Video currSplashScreen;
         private DateTime videoStartTime;
@@ -208,7 +208,7 @@ namespace Barotrauma
                     for (int i = 0; i < lines.Length; i++)
                     {
                         GUI.Font.DrawString(spriteBatch, lines[i],
-                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f, GameMain.GraphicsHeight * 0.78f + i * lineHeight), Color.White);
+                            new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.78f + i * lineHeight)), Color.White);
                     }
                 }
 
@@ -220,7 +220,13 @@ namespace Barotrauma
         {
             if (languageSelectionFont == null)
             {
-                languageSelectionFont = new ScalableFont("Content/Fonts/BebasNeue-Regular.otf", (uint)(30 * (GameMain.GraphicsHeight / 1080.0f)), graphicsDevice);
+                languageSelectionFont = new ScalableFont("Content/Fonts/NotoSans/NotoSans-Bold.ttf", 
+                    (uint)(30 * (GameMain.GraphicsHeight / 1080.0f)), graphicsDevice);
+            }
+            if (languageSelectionFontCJK == null)
+            {
+                languageSelectionFontCJK = new ScalableFont("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf", 
+                    (uint)(30 * (GameMain.GraphicsHeight / 1080.0f)), graphicsDevice, dynamicLoading: true);
             }
             if (languageSelectionCursor == null)
             {
@@ -231,24 +237,33 @@ namespace Barotrauma
             Vector2 textSpacing = new Vector2(0.0f, (GameMain.GraphicsHeight * 0.5f) / TextManager.AvailableLanguages.Count());
             foreach (string language in TextManager.AvailableLanguages)
             {
-                Vector2 textSize = languageSelectionFont.MeasureString(language);
+                string localizedLanguageName = TextManager.GetTranslatedLanguageName(language);
+                var font = TextManager.IsCJK(localizedLanguageName) ? languageSelectionFontCJK : languageSelectionFont;
+
+                Vector2 textSize = font.MeasureString(localizedLanguageName);
                 bool hover = 
                     Math.Abs(PlayerInput.MousePosition.X - textPos.X) < textSize.X / 2 && 
                     Math.Abs(PlayerInput.MousePosition.Y - textPos.Y) < textSpacing.Y / 2;
 
-                //TODO: display the name of the language in the target language?
-                languageSelectionFont.DrawString(spriteBatch, language, textPos - textSize / 2, 
+                font.DrawString(spriteBatch, localizedLanguageName, textPos - textSize / 2, 
                     hover ? Color.White : Color.White * 0.6f);
                 if (hover && PlayerInput.LeftButtonClicked())
                 {
                     GameMain.Config.Language = language;
+                    //reload tip in the selected language
+                    selectedTip = TextManager.Get("LoadingScreenTip", true);
+                    GameMain.Config.SetDefaultBindings(legacy: false);
+                    GameMain.Config.CheckBindings(useDefaults: true);
                     WaitForLanguageSelection = false;
+                    languageSelectionFont?.Dispose(); languageSelectionFont = null;
+                    languageSelectionFontCJK?.Dispose(); languageSelectionFontCJK = null;
+                    break;
                 }
 
                 textPos += textSpacing;
             }
 
-            languageSelectionCursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
+            languageSelectionCursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, scale: 0.5f);
         }
 
         private void DrawSplashScreen(SpriteBatch spriteBatch, GraphicsDevice graphics)

@@ -1,7 +1,6 @@
-﻿using FarseerPhysics;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -17,17 +16,21 @@ namespace Barotrauma
 
         public Func<bool> customCondition;
 
+        public bool followControlledCharacter;
+        public bool mimic;
+
         /// <summary>
         /// Display units
         /// </summary>
         public float CloseEnough { get; set; } = 50;
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
-        public bool CheckVisibility { get; set; }
+
+        public ISpatialEntity Target { get; private set; }
 
         public override float GetPriority()
         {
-            if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
+            if (followControlledCharacter && Character.Controlled == null) { return 0.0f; }
             if (Target is Entity e && e.Removed) { return 0.0f; }
             if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }                     
             if (objectiveManager.CurrentOrder == this)
@@ -37,23 +40,19 @@ namespace Barotrauma
             return 1.0f;
         }
 
-        public ISpatialEntity Target { get; private set; }
-
-        public bool FollowControlledCharacter;
-
         public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
             : base (character, objectiveManager, priorityModifier)
         {
             this.Target = target;
             this.repeat = repeat;
-            waitUntilPathUnreachable = 2.0f;
+            waitUntilPathUnreachable = 3.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
             CalculateCloseEnough();
         }
 
         protected override void Act(float deltaTime)
         {
-            if (FollowControlledCharacter)
+            if (followControlledCharacter)
             {
                 if (Character.Controlled == null)
                 {
@@ -92,11 +91,18 @@ namespace Barotrauma
             {
                 abandon = true;
             }
-            else if (!repeat && waitUntilPathUnreachable < 0)
+            else if (waitUntilPathUnreachable < 0)
             {
-                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
+                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.Unreachable)
                 {
-                    abandon = PathSteering.CurrentPath.Unreachable;
+                    if (repeat)
+                    {
+                        SteeringManager.Reset();
+                    }
+                    else
+                    {
+                        abandon = true;
+                    }
                 }
             }
             if (abandon)
@@ -114,16 +120,33 @@ namespace Barotrauma
             {
                 Vector2 currTargetSimPos = Vector2.Zero;
                 currTargetSimPos = Target.SimPosition;
-                //if character is inside the sub and target isn't, transform the position
-                if (character.Submarine != null && Target.Submarine == null)
+                // Take the sub position into account in the sim pos
+                if (SteeringManager != PathSteering && character.Submarine == null && Target.Submarine != null)
+                {
+                    currTargetSimPos += Target.Submarine.SimPosition;
+                }
+                else if (character.Submarine != null && Target.Submarine == null)
                 {
                     currTargetSimPos -= character.Submarine.SimPosition;
                 }
+                else if (character.Submarine != Target.Submarine)
+                {
+                    if (character.Submarine != null && Target.Submarine != null)
+                    {
+                        Vector2 diff = character.Submarine.SimPosition - Target.Submarine.SimPosition;
+                        currTargetSimPos -= diff;
+                    }
+                }
                 character.AIController.SteeringManager.SteeringSeek(currTargetSimPos);
+                if (SteeringManager != PathSteering)
+                {
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
+                }
                 if (getDivingGearIfNeeded)
                 {
-                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
-                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90);
+                    Character followTarget = Target as Character;
+                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull) || mimic && HumanAIController.HasDivingMask(followTarget);
+                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90) || mimic && HumanAIController.HasDivingSuit(followTarget);
                     bool needsEquipment = false;
                     if (needsDivingSuit)
                     {
@@ -147,7 +170,6 @@ namespace Barotrauma
             // First check the distance
             // Then the custom condition
             // And finally check if can interact (heaviest)
-            if (repeat) { return false; }
             if (isCompleted) { return true; }
             if (Target == null)
             {
@@ -155,7 +177,16 @@ namespace Barotrauma
                 return false;
             }
             bool closeEnough = Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
-            if (closeEnough)
+            if (repeat)
+            {
+                if (closeEnough)
+                {
+                    character.AIController.SteeringManager.Reset();
+                    character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
+                }
+                return false;
+            }
+            else if (closeEnough)
             {
                 if (customCondition == null || customCondition())
                 {

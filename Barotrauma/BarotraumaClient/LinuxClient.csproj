@@ -274,6 +274,63 @@
     <None Include="System.Xml.Linq.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="libvlc.so.5">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\access\libfilesystem_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\audio_filter\libaudio_format_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\audio_filter\libugly_resampler_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\audio_output\libamem_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\codec\libavcodec_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\codec\libva.so.1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\demux\libmp4_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\packetizer\libpacketizer_mpeg4audio_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\packetizer\libpacketizer_mpeg4video_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\packetizer\libpacketizer_mpegvideo_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\video_chroma\librv32_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\video_chroma\libswscale_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="vlc\plugins\video_output\libvmem_plugin.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlc.so.5.6.0">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlccore.la">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlccore.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlccore.so.9">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libvlccore.so.9.0.0">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -304,6 +361,6 @@
     <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
         <Output TaskParameter="Assemblies" ItemName="CurrentAssembly" />
     </GetAssemblyIdentity>
-    <Exec Command="echo v%(CurrentAssembly.Version) > $(TargetDir)Version.txt"></Exec>
+    <Exec Command="echo v%(CurrentAssembly.Version) &gt; $(TargetDir)Version.txt"></Exec>
   </Target>
 </Project>

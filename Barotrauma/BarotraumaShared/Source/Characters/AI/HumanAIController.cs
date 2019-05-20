@@ -82,15 +82,23 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
-            
-            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null)
+
+            float maxDistanceToSub = 3000;
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 
+                    Vector2.DistanceSquared(Character.WorldPosition, SelectedAiTarget.Entity.Submarine.WorldPosition) < maxDistanceToSub * maxDistanceToSub)
             {
-                if (steeringManager != insideSteering) insideSteering.Reset();
+                if (steeringManager != insideSteering)
+                {
+                    insideSteering.Reset();
+                }
                 steeringManager = insideSteering;
             }
             else
             {
-                if (steeringManager != outsideSteering) outsideSteering.Reset();
+                if (steeringManager != outsideSteering)
+                {
+                    outsideSteering.Reset();
+                }
                 steeringManager = outsideSteering;
             }
 
@@ -295,7 +303,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                             }
                         }
                     }
@@ -305,7 +313,7 @@ namespace Barotrauma
                         if (newOrder == null)
                         {
                             var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                            newOrder = new Order(orderPrefab, hull, null);
+                            newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                         }
                     }
                     foreach (Character c in Character.CharacterList)
@@ -317,7 +325,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null);
+                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
                             }
                         }
                     }
@@ -329,7 +337,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                                newOrder = new Order(orderPrefab, hull, null);
+                                newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
                             }
                         }
                     }
@@ -343,7 +351,7 @@ namespace Barotrauma
                             if (newOrder == null)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbrokendevices");
-                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault());
+                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
                             }
                         }
                     }
@@ -354,6 +362,9 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+#if SERVER
+                    GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character));
+#endif
                 }
             }
         }
@@ -474,7 +485,11 @@ namespace Barotrauma
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
                 {
-                    Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                    //TODO: re-enable on all languages after DialogNoRescueTargets has been translated
+                    if (TextManager.Language == "English")
+                    {
+                        Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                    }
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
                 {
@@ -525,6 +540,8 @@ namespace Barotrauma
 
         public static bool HasItem(Character character, string tag, string containedTag, float conditionPercentage = 0)
         {
+            if (character == null) { return false; }
+            if (character.Inventory == null) { return false; }
             var item = character.Inventory.FindItemByTag(tag);
             return item != null &&
                 item.ConditionPercentage > conditionPercentage &&
@@ -657,7 +674,7 @@ namespace Barotrauma
                 {
                     CurrentHullSafety = 0;
                 }
-                return 0;
+                return CurrentHullSafety;
             }
             if (character == Character)
             {

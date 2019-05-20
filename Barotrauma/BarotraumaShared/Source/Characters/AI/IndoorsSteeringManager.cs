@@ -144,8 +144,9 @@ namespace Barotrauma
 
         protected override Vector2 DoSteeringSeek(Vector2 target, float weight)
         {
+            bool needsNewPath = currentPath != null && currentPath.Unreachable || Vector2.DistanceSquared(target, currentTarget) > 1;
             //find a new path if one hasn't been found yet or the target is different from the current target
-            if (currentPath == null || Vector2.DistanceSquared(target, currentTarget) > 1.0f || findPathTimer < -1.0f)
+            if (currentPath == null || needsNewPath || findPathTimer < -1.0f)
             {
                 IsPathDirty = true;
 
@@ -162,7 +163,19 @@ namespace Barotrauma
                     }
                 }
 
-                currentPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
+                var newPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
+                bool useNewPath = currentPath == null || needsNewPath;
+                if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
+                {
+                    // It's possible that the current path was calculated from a start point that is no longer valid.
+                    // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
+                    useNewPath = newPath.Cost < currentPath.Cost || 
+                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 2, 2);
+                }
+                if (useNewPath)
+                {
+                    currentPath = newPath;
+                }
 
                 findPathTimer = Rand.Range(1.0f, 1.2f);
 
@@ -401,7 +414,7 @@ namespace Barotrauma
                     {
                         if (door.HasIntegratedButtons)
                         {
-                            door.Item.TryInteract(character, false, true, true);
+                            door.Item.TryInteract(character, false, true);
                             buttonPressCooldown = ButtonPressInterval;
                             break;
                         }
@@ -409,7 +422,7 @@ namespace Barotrauma
                         {
                             if (Vector2.DistanceSquared(closestButton.Item.WorldPosition, character.WorldPosition) < MathUtils.Pow(closestButton.Item.InteractDistance * 2, 2))
                             {
-                                closestButton.Item.TryInteract(character, false, true, false);
+                                closestButton.Item.TryInteract(character, false, true);
                                 buttonPressCooldown = ButtonPressInterval;
                                 break;
                             }
@@ -419,7 +432,7 @@ namespace Barotrauma
                                 // It's possible that we could reach another buttons.
                                 // If this becomes an issue, we could go through them here and check if any of them are reachable
                                 // (would have to cache a collection of buttons instead of a single reference in the CanAccess filter method above)
-                                currentPath.Unreachable = true;
+                                //currentPath.Unreachable = true;
                                 return;
                             }
                         }

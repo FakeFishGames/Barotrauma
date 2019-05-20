@@ -119,23 +119,40 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession != null && Character.Controlled != null)
+            if (GameMain.GameSession != null)
             {
-                if (Character.Controlled.HasEquippedItem("clownmask") &&
-                    Character.Controlled.HasEquippedItem("clowncostume"))
+#if CLIENT
+                if (Character.Controlled != null) { CheckMidRoundAchievements(Character.Controlled); }
+#else
+                foreach (Client client in GameMain.Server.ConnectedClients)
                 {
-                    UnlockAchievement(Character.Controlled, "clowncostume");
-                }
-
-                if (Submarine.MainSub != null && Character.Controlled.Submarine == null)
-                {
-                    float dist = 500 / Physics.DisplayToRealWorldRatio;
-                    if (Vector2.DistanceSquared(Character.Controlled.WorldPosition, Submarine.MainSub.WorldPosition) >
-                        dist * dist)
+                    if (client.Character != null)
                     {
-                        UnlockAchievement(Character.Controlled, "crewaway");
+                        CheckMidRoundAchievements(client.Character);
                     }
-                }                
+                }
+#endif          
+            }
+        }
+
+        private static void CheckMidRoundAchievements(Character c)
+        {
+            if (c == null || c.Removed) { return; }
+
+            if (c.HasEquippedItem("clownmask") &&
+                c.HasEquippedItem("clowncostume"))
+            {
+                UnlockAchievement(c, "clowncostume");
+            }
+
+            if (Submarine.MainSub != null && c.Submarine == null)
+            {
+                float dist = 500 / Physics.DisplayToRealWorldRatio;
+                if (Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition) >
+                    dist * dist)
+                {
+                    UnlockAchievement(c, "crewaway");
+                }
             }
         }
 
@@ -214,7 +231,8 @@ namespace Barotrauma
             }
 
             if (character.HasEquippedItem("clownmask") && 
-                character.HasEquippedItem("clowncostume"))
+                character.HasEquippedItem("clowncostume") &&
+                causeOfDeath.Killer != character)
             {
                 UnlockAchievement(causeOfDeath.Killer, "killclown");
             }

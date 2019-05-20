@@ -287,29 +287,38 @@ namespace Barotrauma
         {
             if (GameSettings.ShowUserStatisticsPrompt)
             {
-                //TODO: translate
-                var userStatsPrompt = new GUIMessageBox(
-                    "Do you want to help us make Barotrauma better?",
-                    "Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, " +
-                    "does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.",
-                    new string[] { "Yes", "No" });
-                userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                if (TextManager.ContainsTag("statisticspromptheader") && TextManager.ContainsTag("statisticsprompttext"))
                 {
+                    var userStatsPrompt = new GUIMessageBox(
+                        TextManager.Get("statisticspromptheader"),
+                        TextManager.Get("statisticsprompttext"),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                    {
+                        GameSettings.ShowUserStatisticsPrompt = false;
+                        GameSettings.SendUserStatistics = true;
+                        GameAnalyticsManager.Init();
+                        Config.SaveNewPlayerConfig();
+                        return true;
+                    };
+                    userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
+                    userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                    {
+                        GameSettings.ShowUserStatisticsPrompt = false;
+                        GameSettings.SendUserStatistics = false;
+                        Config.SaveNewPlayerConfig();
+                        return true;
+                    };
+                    userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
+                }
+                else
+                {
+                    //user statistics enabled by default if the prompt cannot be shown in the user's language
                     GameSettings.ShowUserStatisticsPrompt = false;
                     GameSettings.SendUserStatistics = true;
                     GameAnalyticsManager.Init();
                     Config.SaveNewPlayerConfig();
-                    return true;
-                };
-                userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
-                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                {
-                    GameSettings.ShowUserStatisticsPrompt = false;
-                    GameSettings.SendUserStatistics = false;
-                    Config.SaveNewPlayerConfig();
-                    return true;
-                };
-                userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
+                }
             }
             else if (GameSettings.SendUserStatistics)
             {
@@ -334,7 +343,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 5.0f);
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
@@ -374,10 +383,10 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
             }
 
-#if DEBUG
+/*#if DEBUG
             GameSettings.ShowUserStatisticsPrompt = false;
             GameSettings.SendUserStatistics = false;
-#endif
+#endif*/
 
             InitUserStats();
 
@@ -666,7 +675,7 @@ namespace Barotrauma
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen)
+                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
                     {
                         GUI.TogglePauseMenu();
                         paused = true;
@@ -812,17 +821,19 @@ namespace Barotrauma
         // ToDo: Move texts/links to localization, when possible.
         public void ShowBugReporter()
         {
-            var msgBox = new GUIMessageBox("", "");
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
+            var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");
+            msgBox.UserData = "bugreporter";
+            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
+            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
 
             List<Pair<string, string>> links = new List<Pair<string, string>>()
                 {
-                    new Pair<string, string>("Barotrauma Feedback Form","https://barotraumagame.com/feedback"),
-                    new Pair<string, string>("Github Issue Form (Needs account)","https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
+                    new Pair<string, string>(TextManager.Get("bugreportfeedbackform"),"https://barotraumagame.com/feedback"),
+                    new Pair<string, string>(TextManager.Get("bugreportgithubform"),"https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md")
                 };
             foreach (var link in links)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), link.First, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
                 {
                     UserData = link.Second,
                     OnClicked = (btn, userdata) =>
@@ -833,6 +844,9 @@ namespace Barotrauma
                     }
                 };
             }
+
+            msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
+                msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + (int)(50 * GUI.Scale));
         }
 
         static bool waitForKeyHit = true;

@@ -11,6 +11,8 @@ namespace Lidgren.Network
 {
 	public partial class NetConnection
 	{
+        public const string NoResponseMessage = "Failed to establish connection - no response from remote host";
+
 		internal bool m_connectRequested;
 		internal bool m_disconnectRequested;
 		internal bool m_disconnectReqSendBye;
@@ -69,7 +71,7 @@ namespace Lidgren.Network
 				if (m_handshakeAttempts >= m_peerConfiguration.m_maximumHandshakeAttempts)
 				{
 					// failed to connect
-					ExecuteDisconnect("Failed to establish connection - no response from remote host", true);
+					ExecuteDisconnect(NoResponseMessage, true);
 					return;
 				}
 

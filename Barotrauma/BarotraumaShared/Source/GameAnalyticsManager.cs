@@ -40,13 +40,13 @@ namespace Barotrauma
                 GameAnalytics.ConfigureBuild(GameMain.Version.ToString()
                     + (string.IsNullOrEmpty(exeName) ? "Unknown" : exeName) + ":"
                     + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash));
-            
+                GameAnalytics.ConfigureAvailableCustomDimensions01("singleplayer", "multiplayer", "editor");
+
+                GameAnalytics.Initialize("a3a073c20982de7c15d21e840e149122", "9010ad9a671233b8d9610d76cec8c897d9ff3ba7");
+
                 GameAnalytics.AddDesignEvent("Executable:"
                     + (string.IsNullOrEmpty(exeName) ? "Unknown" : exeName) + ":"
                     + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash));
-
-                GameAnalytics.ConfigureAvailableCustomDimensions01("singleplayer", "multiplayer", "editor");
-                GameAnalytics.Initialize("a3a073c20982de7c15d21e840e149122", "9010ad9a671233b8d9610d76cec8c897d9ff3ba7");
             }
             catch (Exception e)
             {

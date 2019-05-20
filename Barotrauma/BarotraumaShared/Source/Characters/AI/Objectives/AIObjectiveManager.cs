@@ -81,7 +81,11 @@ namespace Barotrauma
                     Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == orderPrefab.ItemComponentType));
                 matchingItems.RemoveAll(it => it.Submarine != character.Submarine);
                 var item = matchingItems.GetRandom();
-                var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType));
+                var order = new Order(
+                    orderPrefab, 
+                    item ?? character.CurrentHull as Entity, 
+                    item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType),
+                    orderGiver: character);
                 if (order == null) { continue; }
                 var objective = CreateObjective(order, automaticOrder.option, character, automaticOrder.priorityModifier);
                 if (objective != null)
@@ -198,6 +202,10 @@ namespace Barotrauma
             {
                 CurrentObjective?.TryComplete(deltaTime);
             }
+            else
+            {
+                character.AIController.SteeringManager.Reset();
+            }
         }
         
         public void SetOrder(AIObjective objective)
@@ -231,7 +239,8 @@ namespace Barotrauma
                         CloseEnough = 150,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
-                        FollowControlledCharacter = orderGiver == character
+                        followControlledCharacter = orderGiver == character,
+                        mimic = true
                     };
                     break;
                 case "wait":
@@ -250,7 +259,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveRescueAll(character, this, priorityModifier);
                     break;
                 case "repairsystems":
-                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier) { RequireAdequateSkills = option != "all" };
+                    newObjective = new AIObjectiveRepairItems(character, this, priorityModifier) { RequireAdequateSkills = option == "jobspecific" };
                     break;
                 case "pumpwater":
                     newObjective = new AIObjectivePumpWater(character, this, option, priorityModifier: priorityModifier);

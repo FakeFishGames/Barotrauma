@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma
 {
@@ -42,6 +43,26 @@ namespace Barotrauma
                 GetTextFilesRecursive(subDir, ref list);
             }
         }
+
+        /// <summary>
+        /// Returns the name of the language in the respective language
+        /// </summary>
+        public static string GetTranslatedLanguageName(string language)
+        {
+            if (!textPacks.ContainsKey(language))
+            {
+                return language;
+            }
+
+            foreach (var textPack in textPacks[language])
+            {
+                if (textPack.Language == language)
+                {
+                    return textPack.TranslatedName;
+                }
+            }
+            return language;
+        }
         
         public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
@@ -80,6 +101,26 @@ namespace Barotrauma
             }
         }
 
+        public static bool ContainsTag(string textTag)
+        {
+            if (string.IsNullOrEmpty(textTag)) { return false; }
+
+            if (!textPacks.ContainsKey(Language))
+            {
+                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                Language = "English";
+                if (!textPacks.ContainsKey(Language))
+                {
+                    throw new Exception("No text packs available in English!");
+                }
+            }
+            foreach (TextPack textPack in textPacks[Language])
+            {
+                if (textPack.Get(textTag) != null) { return true; }
+            }
+            return false;
+        }
+
         public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
         {
             if (!textPacks.ContainsKey(Language))
@@ -114,7 +155,13 @@ namespace Barotrauma
                 foreach (TextPack textPack in textPacks["English"])
                 {
                     string text = textPack.Get(textTag);
-                    if (text != null) return text;
+                    if (text != null)
+                    {
+#if DEBUG
+                        DebugConsole.NewMessage("Text \"" + textTag + "\" not found for the language \"" + Language + "\". Using the English text \"" + text + "\" instead.");
+#endif
+                        return text;
+                    }
                 }
             }
 
@@ -344,6 +391,25 @@ namespace Barotrauma
                     .Replace("[Genderpronounpossessive]",  Capitalize(Get("PronounPossessiveFemale")))
                     .Replace("[Genderpronounreflexive]",   Capitalize(Get("PronounReflexiveFemale")));
             }
+        }
+        
+        static Regex isCJK = new Regex(
+            @"\p{IsHangulJamo}|" +
+            @"\p{IsCJKRadicalsSupplement}|" +
+            @"\p{IsCJKSymbolsandPunctuation}|" +
+            @"\p{IsEnclosedCJKLettersandMonths}|" +
+            @"\p{IsCJKCompatibility}|" +
+            @"\p{IsCJKUnifiedIdeographsExtensionA}|" +
+            @"\p{IsCJKUnifiedIdeographs}|" +
+            @"\p{IsHangulSyllables}|" +
+            @"\p{IsCJKCompatibilityForms}");
+
+        /// <summary>
+        /// Does the string contain symbols from Chinese, Japanese or Korean languages
+        /// </summary>
+        public static bool IsCJK(string text)
+        {
+            return isCJK.IsMatch(text);
         }
 
 #if DEBUG

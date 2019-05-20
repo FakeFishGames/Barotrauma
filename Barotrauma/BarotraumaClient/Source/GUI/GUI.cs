@@ -36,6 +36,16 @@ namespace Barotrauma
             get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.HUDScale; }
         }
 
+        public static float xScale
+        {
+            get { return GameMain.GraphicsWidth / 1920.0f * GameSettings.HUDScale; }
+        }
+
+        public static float yScale
+        {
+            get { return GameMain.GraphicsHeight / 1080.0f * GameSettings.HUDScale; }
+        }
+
         public static GUIStyle Style;
 
         private static Texture2D t;
@@ -386,8 +396,11 @@ namespace Barotrauma
             {
                 MouseOn.DrawToolTip(spriteBatch);
             }
-            
-            Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);            
+
+            if (GameMain.WindowActive)
+            {
+                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, 0, Scale / 2f);
+            }
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
@@ -557,7 +570,7 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt")
+            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string != "verificationprompt" && GUIMessageBox.VisibleBox.UserData as string != "bugreporter")
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
@@ -572,7 +585,7 @@ namespace Barotrauma
             }
 
             //the "are you sure you want to quit" prompts are drawn on top of everything else
-            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt")
+            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt" || GUIMessageBox.VisibleBox?.UserData as string == "bugreporter")
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
@@ -1426,15 +1439,23 @@ namespace Barotrauma
             {
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
                     
-                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
+                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.35f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenuInner.RectTransform, Anchor.Center))
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.8f), pauseMenuInner.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) })
                 {
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
+                var button = new GUIButton(new RectTransform(new Vector2(0.12f, 0.12f), buttonContainer.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(-0.05f, -0.13f) }, 
+                    "", style: "GUIBugButton")
+                {
+                    IgnoreLayoutGroups = true,
+                    ToolTip = TextManager.Get("bugreportbutton"),
+                    OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+                };
+
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
                 {
                     OnClicked = TogglePauseMenu
                 };

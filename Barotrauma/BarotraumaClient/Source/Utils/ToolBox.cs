@@ -111,7 +111,7 @@ namespace Barotrauma
             string currWord = "";
             for (int i = 0; i < text.Length; i++)
             {
-                if (isCJK.IsMatch(text[i].ToString()))
+                if (TextManager.IsCJK(text[i].ToString()))
                 {
                     if (currWord.Length > 0)
                     {
@@ -200,24 +200,13 @@ namespace Barotrauma
                     linePos = size.X + spaceSize.X;
                 }
 
-                if (i < words.Count - 1 && !isCJK.IsMatch(words[i]) && !isCJK.IsMatch(words[i + 1]))
+                if (i < words.Count - 1 && !TextManager.IsCJK(words[i]) && !TextManager.IsCJK(words[i + 1]))
                 {
                     wrappedText.Append(" ");
                 }
             }
 
             return wrappedText.ToString().Replace(" \n ", "\n");
-        }
-
-        static Regex isCJK = new Regex(
-            @"\p{IsHangulJamo}|" +
-            @"\p{IsCJKRadicalsSupplement}|" +
-            @"\p{IsCJKSymbolsandPunctuation}|" +
-            @"\p{IsEnclosedCJKLettersandMonths}|" +
-            @"\p{IsCJKCompatibility}|" +
-            @"\p{IsCJKUnifiedIdeographsExtensionA}|" +
-            @"\p{IsCJKUnifiedIdeographs}|" +
-            @"\p{IsHangulSyllables}|" +
-            @"\p{IsCJKCompatibilityForms}");        
+        }     
     }
 }

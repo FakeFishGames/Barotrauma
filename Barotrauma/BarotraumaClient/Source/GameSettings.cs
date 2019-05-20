@@ -85,13 +85,6 @@ namespace Barotrauma
                 TextManager.Get("Settings"), textAlignment: Alignment.TopLeft, font: GUI.LargeFont)
             { ForceUpperCase = true };
 
-            //TODO: enable when new texts can be added
-            /*new GUIButton(new RectTransform(new Vector2(1.0f, 0.75f), settingsTitle.RectTransform, Anchor.CenterRight), style: "GUIBugButton")
-            {
-                ToolTip = "Bug Reporter",
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
-            };*/
-
             var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), leftPanel.RectTransform, Anchor.TopLeft));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
@@ -177,6 +170,12 @@ namespace Barotrauma
                     OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
                 };
             }
+
+            new GUIButton(new RectTransform(new Vector2(0.05f, 0.75f), tabButtonHolder.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.2f) }, style: "GUIBugButton")
+            {
+                ToolTip = TextManager.Get("bugreportbutton"),
+                OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
+            };
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform, Anchor.BottomCenter), style: null);
 
@@ -478,7 +477,7 @@ namespace Barotrauma
 
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
 #if (!OSX)
-            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), VoiceCaptureDevice, deviceNames.Count);
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.EnsureUTF8(VoiceCaptureDevice), deviceNames.Count);
             foreach (string name in deviceNames)
             {
                 deviceList.AddItem(TextManager.EnsureUTF8(name), name);
@@ -493,7 +492,7 @@ namespace Barotrauma
             };
 #else
             var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), 
-                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice))
+                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice)))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
                 TextAlignment = Alignment.CenterX
@@ -508,7 +507,7 @@ namespace Barotrauma
                     if (VoiceCaptureDevice == deviceNames[0]) return true;
 
                     VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice);
+                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice));
                     suavemente.Flash(Color.Blue);
 
                     return true;
@@ -751,7 +750,7 @@ namespace Barotrauma
                 OnClicked = (button, data) =>
                 {
                     // TODO: add a prompt
-                    LoadDefaultConfig();
+                    LoadDefaultConfig(setLanguage: false);
                     CheckBindings(true);
                     RefreshItemMessages();
                     ApplySettings();
