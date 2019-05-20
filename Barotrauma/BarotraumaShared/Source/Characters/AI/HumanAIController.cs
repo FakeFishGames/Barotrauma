@@ -485,7 +485,11 @@ namespace Barotrauma
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
                 {
-                    Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                    //TODO: re-enable on all languages after DialogNoRescueTargets has been translated
+                    if (TextManager.Language == "English")
+                    {
+                        Character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                    }
                 }
                 else if (ObjectiveManager.CurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
                 {
