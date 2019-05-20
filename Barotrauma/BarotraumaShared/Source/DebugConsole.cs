@@ -988,18 +988,6 @@ namespace Barotrauma
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
-
-            commands.Add(new Command("money", "", args =>
-            {
-                if (args.Length == 0) { return; }
-                if (GameMain.GameSession.GameMode is CampaignMode campaign)
-                {
-                    if (int.TryParse(args[0], out int money))
-                    {
-                        campaign.Money += money;
-                    }
-                }
-            }, isCheat: true));
 #endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
