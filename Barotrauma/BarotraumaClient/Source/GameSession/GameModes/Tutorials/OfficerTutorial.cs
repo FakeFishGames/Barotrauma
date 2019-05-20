@@ -387,8 +387,9 @@ namespace Barotrauma.Tutorials
             officer.AddActiveObjectiveEntity(officer_subAmmoBox_1, officer_gunIcon, officer_gunIconColor);
             officer.AddActiveObjectiveEntity(officer_subAmmoBox_2, officer_gunIcon, officer_gunIconColor);
             officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_1.Item, officer_gunIcon, officer_gunIconColor);
-            officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_1.Item, officer_gunIcon, officer_gunIconColor);
             officer.AddActiveObjectiveEntity(officer_subSuperCapacitor_2.Item, officer_gunIcon, officer_gunIconColor);
+            SetHighlight(officer_subSuperCapacitor_1.Item, true);
+            SetHighlight(officer_subSuperCapacitor_2.Item, true);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Submarine"), ChatMessageType.Radio, null);
             do
             {
@@ -409,8 +410,8 @@ namespace Barotrauma.Tutorials
                     officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_2.Item);
                 }
 
-                SetHighlight(officer_subAmmoBox_1, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
-                SetHighlight(officer_subAmmoBox_2, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
+                SetHighlight(officer_subAmmoBox_1, officer_subAmmoBox_1.ParentInventory != officer_subLoader_1.Inventory && officer_subAmmoBox_1.ParentInventory != officer_subLoader_2.Inventory);
+                SetHighlight(officer_subAmmoBox_2, officer_subAmmoBox_2.ParentInventory != officer_subLoader_1.Inventory && officer_subAmmoBox_2.ParentInventory != officer_subLoader_2.Inventory);
                 SetHighlight(officer_subAmmoShelf.Item, officer_subLoader_1.Item.ExternalHighlight || officer_subLoader_2.Item.ExternalHighlight);
                 if (officer_subAmmoBox_1.ParentInventory == officer_subLoader_1.Inventory || officer_subAmmoBox_1.ParentInventory == officer_subLoader_2.Inventory) officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_1);
                 if (officer_subAmmoBox_2.ParentInventory == officer_subLoader_1.Inventory || officer_subAmmoBox_2.ParentInventory == officer_subLoader_2.Inventory) officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_2);
