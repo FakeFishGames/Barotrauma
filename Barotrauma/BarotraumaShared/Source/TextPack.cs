@@ -10,6 +10,11 @@ namespace Barotrauma
     {
         public readonly string Language;
 
+        /// <summary>
+        /// The name of the language in the language this pack is written in
+        /// </summary>
+        public readonly string TranslatedName;
+
         private Dictionary<string, List<string>> texts;
         
         private readonly string filePath;
@@ -23,6 +28,7 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return;
 
             Language = doc.Root.GetAttributeString("language", "Unknown");
+            TranslatedName = doc.Root.GetAttributeString("translatedname", Language);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
