@@ -487,11 +487,11 @@
   <TailFinD3p3 name="Tail Fin D3 p3" identifier="tailfind3p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1523,535,484,492" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p3>
-  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="160" bodyheight="320" bodyoffset="-0,0" castshadow="true" health="400">
+  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="370" bodyoffset="-60,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="586,5,306,500" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="586,513,306,500" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="120" bodyheight="400" bodyoffset="0,0" castshadow="true" health="400">
+  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="60" bodyheight="850" bodyoffset="-30,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,0,271,975" depth="0.01" origin="0.238248,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="292,0,271,975" depth="0.85" origin="0.5,0.5" />
   </Front>
