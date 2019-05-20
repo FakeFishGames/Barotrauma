@@ -1439,22 +1439,21 @@ namespace Barotrauma
             {
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
                     
-                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
+                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.35f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenuInner.RectTransform, Anchor.Center))
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.8f), pauseMenuInner.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) })
                 {
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("bugreportbutton"), style: "GUIButtonLarge")
+                var button = new GUIButton(new RectTransform(new Vector2(0.12f, 0.12f), buttonContainer.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(-0.05f, -0.13f) }, 
+                    "", style: "GUIBugButton")
                 {
-                    Color = Color.Red,
-                    HoverColor = Color.DarkRed,
-                    PressedColor = Color.White,
+                    IgnoreLayoutGroups = true,
+                    ToolTip = TextManager.Get("bugreportbutton"),
                     OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
                 };
-
 
                 button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"), style: "GUIButtonLarge")
                 {
