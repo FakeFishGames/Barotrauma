@@ -133,13 +133,24 @@ namespace Barotrauma
                 }
             }
 
-            if (traitStart == -1)
+            int conversationStart = -1;
+            for (int i = 0; i < csvContent.Length; i++)
+            {
+                if (csvContent[i].StartsWith("Generic"))
+                {
+                    conversationStart = i + 1;
+                    break;
+                }
+            }
+
+            /*if (traitStart == -1)
             {
                 DebugConsole.ThrowError("Invalid formatting of NPCConversations, no traits found!");
                 return null;
-            }
+            }*/
 
-            for (int i = 0; i < NPCPersonalityTrait.List.Count; i++) // Traits
+            //DebugConsole.NewMessage("Count: " + NPCPersonalityTrait.List.Count);
+            /*for (int i = 0; i < conversationStart; i++) // Traits
             {
                 //string[] split = SplitCSV(csvContent[traitStart + i].Trim(separator));
                 string[] split = csvContent[traitStart + i].Split(separator);
@@ -148,9 +159,9 @@ namespace Barotrauma
                     $"{GetVariable("name", split[1])}" +
                     $"{GetVariable("alloweddialogtags", string.Join(",", NPCPersonalityTrait.List[i].AllowedDialogTags))}" +
                     $"{GetVariable("commonness", NPCPersonalityTrait.List[i].Commonness.ToString())}/>");
-            }
+            }*/
 
-            for (int i = traitStart + NPCPersonalityTrait.List.Count; i < csvContent.Length; i++) // Conversations
+            for (int i = conversationStart; i < csvContent.Length; i++) // Conversations
             {
                 //string[] presplit = csvContent[i].Split(separator); // Handling speaker index fetching, somehow doesn't work with the regex
                 //string[] split = SplitCSV(csvContent[i]);

@@ -12,17 +12,17 @@
 <PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="1" />
 
 <!-- Generic conversation -->
-<Conversation line="好吧夥計們，讓我們帶她出去兜兜風！" speaker="0" flags="Initial" allowedjobs="captain">
+<Conversation line="好吧夥計們，讓我們帶她出去兜兜風~" speaker="0" flags="Initial" allowedjobs="captain">
 	<Conversation line="" speaker="0"/>
 	<Conversation line="好啊好啊" speaker="1">
 		<Conversation line="收到，長官！" speaker="2"/>
-		<Conversation line="好嘞，走著！" speaker="2" speakertags="brokenenglish"/>
+		<Conversation line="好嘞，走著~" speaker="2" speakertags="brokenenglish"/>
 	</Conversation>
 </Conversation>
 
-<Conversation line="有些人乘船放洋" speaker="0" flags="Initial" allowedjobs="captain">
-	<Conversation line="在海上謀生" speaker="0">
-		<Conversation line="他們見過上得的所為，與深海的奇妙" speaker="0">
+<Conversation line="人們乘船下海" speaker="0" flags="Initial" allowedjobs="captain">
+	<Conversation line="人們要在大海裡謀生" speaker="0">
+		<Conversation line="人們見識過上帝的作為，與深海的奇妙" speaker="0">
 			<Conversation line="我們出發吧！祝各位好運，船員們！" speaker="0"/>
 			<Conversation line="就算上帝在這兒也無濟於事" speaker="1" speakertags="joker,tough,professional"/>
 		</Conversation>
@@ -43,7 +43,7 @@
 <Conversation line="準備好船員們，我們還有很長的路要走！" speaker="0" flags="Initial" allowedjobs="captain" speakertags="brokenenglish">
 	<Conversation line="收到，長官！" speaker="1"/>
 	<Conversation line="好啊好啊" speaker="1"/>
-	<Conversation line="鵝媽媽會憐憫我們的靈魂。" speaker="1" speakertags="crazy"/>
+	<Conversation line="願小丑聖母保佑我們。" speaker="1" speakertags="crazy"/>
 	<Conversation line="祝大家好運！" speaker="1" allowedjobs="watchman"/>
 </Conversation>
 
@@ -55,8 +55,8 @@
 </Conversation>
 
 <Conversation line="讓我們看看這次冰洋要用什麼來招待我們！" speaker="0" flags="Initial" allowedjobs="captain">
-	<Conversation line="我才是恐怖的怪物，絕望的死亡與永恆的黑暗。" speaker="1" speakertags="joker,fearful">
-		<Conversation line="閉嘴。我們對你的譏諷不敢興趣。" speaker="0" speakertags="professional"/>
+	<Conversation line="我猜是恐怖的怪物，絕望的死亡與永恆的黑暗。" speaker="1" speakertags="joker,fearful">
+		<Conversation line="閉嘴。我們對你的譏諷不感興趣。" speaker="0" speakertags="professional"/>
 	</Conversation>
 </Conversation>
 
@@ -88,12 +88,12 @@
 	<Conversation line="" speaker="1" speakertags="joker"/>
 </Conversation>
 
-<Conversation line="迫不及待地想回家，開一瓶慕斯獨酌。" speaker="0" speakertags="laid-back" maxintensity="0.2">
+<Conversation line="真想趕快回家喝光一瓶卡德摩斯。" speaker="0" speakertags="laid-back" maxintensity="0.2">
 	<Conversation line="專心工作，不然我可以把那瓶酒放到你的棺材裡。" speaker="1" speakertags="professional,tough,rude">
 		<Conversation line="哈哈！埋在棺材裡！上次是什麼時候來著？" speaker="2" speakertags="laid-back,joker"/>
 	</Conversation>
 	<Conversation line="現在不是想家的時候，前路漫漫。" speaker="1" speakertags="professional,tough"/>
-	<Conversation line="我覺得慕斯魚屎可能更好點兒,您說呢？" speaker="1" speakertags="brokenenglish"/>
+	<Conversation line="卡德摩斯一股魚尿味兒，我喜歡更烈的酒。" speaker="1" speakertags="brokenenglish"/>
 </Conversation>
 
 <Conversation line="早在地球海軍時代，就有這樣的說法…" speaker="0" allowedjobs="captain" speakertags="professional,tough" maxintensity="0.3">
@@ -104,14 +104,14 @@
 	</Conversation>
 </Conversation>
 
-<Conversation line="我是水手們的大力水手！" speaker="0" allowedjobs="medicaldoctor" speakertags="laid-back,joker" maxintensity="0.2">
-	<Conversation line="我有硬邦邦的肌肉，因為我愛吃菠菜！" speaker="0">
+<Conversation line="我是大力水手卜派！" speaker="0" allowedjobs="medicaldoctor" speakertags="laid-back,joker" maxintensity="0.2">
+	<Conversation line="我力大無比，我愛吃菠菜！" speaker="0">
 		<Conversation line="醫生，你又偷喝醫用酒精了？" speaker="1">
 			<Conversation line="好吧，以後不會了。" speaker="0"/>
-			<Conversation line="很抱歉，破壞了輕鬆的氛圍。" speaker="0"/>
+			<Conversation line="抱歉，我不該試圖緩解緊張的氣氛。" speaker="0"/>
 		</Conversation>
 	</Conversation>
-	<Conversation line="我的船上只有聲呐，沒有歌聲。" speaker="1" allowedjobs="captain" speakertags="professional,tough"/>
+	<Conversation line="不許在我的船上唱歌。" speaker="1" allowedjobs="captain" speakertags="professional,tough"/>
 </Conversation>
 
 <Conversation line="好懷念太陽" speaker="0" maxintensity="0.2">
@@ -133,11 +133,11 @@
 </Conversation>
 
 <Conversation line="你們聽說工會嗎？" speaker="0" maxintensity="0.2">
-	<Conversation line="一場交易，壟斷了壟斷，完備了完備，保證了保證。" speaker="0" flags="Psychosis">
-		<Conversation line="安全標準的討價還價，退休，退休，退休退休和工人們。改善工人生活的交易。" speaker="0" flags="Psychosis"/>
+	<Conversation line="一場交易，為了改善日益增長的壟斷了誠信的壟斷者的誠信的壟斷者的誠信。" speaker="0" flags="Psychosis">
+		<Conversation line="商討安全標準，退休，退休，退休，還有工人們。一場交易，為了改善工人們。" speaker="0" flags="Psychosis"/>
 	</Conversation>
-	<Conversation line="這是社會主義者的說法。木衛二聯盟是我們唯一需要的組織。" speaker="1" allowedjobs="captain" speakertags="professional,tough,rude"/>
-	<Conversation line="對，那又如何？" speaker="1">
+	<Conversation line="那是共產主義者的說辭。木衛二聯盟是我們唯一需要的組織。" speaker="1" allowedjobs="captain" speakertags="professional,tough,rude"/>
+	<Conversation line="聽說過，怎麼了？" speaker="1">
 		<Conversation line="我想我們應該建立一個工會。" speaker="0">
 			<Conversation line="我們應該有更好的安全標準，適當的工資，以及退休福利…" speaker="0">
 				<Conversation line="你覺得你能活到退休？" speaker="1">
@@ -154,7 +154,7 @@
 </Conversation>
 
 <Conversation line="你見過人體暴露在深海高壓下會發生什麼嗎？" speaker="0" speakertags="fearful" maxintensity="0.2">
-	<Conversation line="你很快就能看到。" speaker="0" flags="Psychosis">
+	<Conversation line="你很快就能見到了。" speaker="0" flags="Psychosis">
 		<Conversation line="是的，我在跟你說話。" speaker="0" flags="Psychosis"/>
 	</Conversation>
 	<Conversation line="可以想像到。" speaker="1">
@@ -168,7 +168,7 @@
 <Conversation line="對她再快點，再深點…" speaker="0" flags="Casual" speakertags="joker,laid-back" maxintensity="0.3">
 	<Conversation line="深入魚兒沉睡的地方！" speaker="0">
 		<Conversation line="該死的深度與壓力…" speaker="0">
-			<Conversation line="像虎尾一樣拿下她！" speaker="0">
+			<Conversation line="像長尾鯊一樣拿下她！" speaker="0">
 				<Conversation line="不要在我的船上唱歌。" speaker="1" allowedjobs="captain" speakertags="professional,tough">
 					<Conversation line="" speaker="0"/>
 					<Conversation line="好吧好吧，我不會再嘗試讓大家放鬆了。" speaker="0"/>
@@ -179,7 +179,7 @@
 	</Conversation>
 </Conversation>
 
-<Conversation line="小鬼們上路了？" speaker="0" speakertags="joker" maxintensity="0.2">
+<Conversation line="我們到站了嗎？" speaker="0" speakertags="joker" maxintensity="0.2">
 	<Conversation line="" speaker="0" flags="Casual"/>
 	<Conversation line="閉嘴" speaker="1" speakertags="rude"/>
 	<Conversation line="仍然不好笑" speaker="1"/>
@@ -193,7 +193,7 @@
 		<Conversation line="我喜歡聽他講的故事，儘管我知道其中大半都是虛構的。" speaker="1">
 			<Conversation line="你能想像嗎，只要走出你的房間，就能看到無垠的藍天！" speaker="1">
 				<Conversation line="聽起來很不可思議。" speaker="0">
-					<Conversation line="可以隨意向上看，不用擔心氣壓變化會壓垮你…" speaker="2"/>
+					<Conversation line="往天上看也不用擔心被木星的輻射烤焦…" speaker="2"/>
 				</Conversation>
 			</Conversation>
 			<Conversation line="我真的想看看鳥兒。" speaker="1">
@@ -228,7 +228,7 @@
 	<Conversation line="當然，水培農場成本高昂。" speaker="1">
 		<Conversation line="比起煙草來說，有更多有意義的作物需要生產。" speaker="1"/>
 		<Conversation line="水培是什麼玩意兒？" speaker="2" speakertags="brokenenglish">
-			<Conversation line="把植物種在水裡，就像我們現在一樣。" speaker="1"/>
+			<Conversation line="從水裡長出東西來，和這裡的其他東西一樣。" speaker="1"/>
 		</Conversation>
 	</Conversation>
 </Conversation>
@@ -256,7 +256,7 @@
 </Conversation>
 
 <Conversation line="你有沒有覺得，月亮在針對我們？" speaker="0" maxintensity="0.3">
-	<Conversation line="比如說你。" speaker="0" flags="Psychosis">
+	<Conversation line="你也在針對我們。" speaker="0" flags="Psychosis">
 		<Conversation line="沒錯，我在和你說話。" speaker="0" flags="Psychosis"/>
 	</Conversation>
 	<Conversation line="嗯，那裡肯定不宜居。" speaker="1">
@@ -264,7 +264,7 @@
 			<Conversation line="你知道我的意思。" speaker="1"/>
 		</Conversation>
 	</Conversation>
-	<Conversation line="人無法阻止潮起潮落,卻可以學會乘風破浪" speaker="1"/>
+	<Conversation line="人無法阻止潮起潮落,卻可以學會乘風破浪。" speaker="1"/>
 	<Conversation line="至少有一點——我們不屬於這裡。" speaker="1">
 		<Conversation line="" speaker="0" flags="Casual"/>
 		<Conversation line="無論我們做什麼，事情總會出錯。" speaker="0">
@@ -295,11 +295,11 @@
 <Conversation line="我們應該帶一台咖啡機上來的。" speaker="0" speakertags="laid-back" maxintensity="0.2">
 	<Conversation line="你以為我不知道你在暗示什麼嗎？" speaker="1" flags="PsychosisSelf">
 		<Conversation line="咖啡？啊，沒錯…" speaker="1" flags="PsychosisSelf">
-			<Conversation line="同意。" speaker="1" flags="PsychosisSelf"/>
+			<Conversation line="要不了多久，一切都會結束的。" speaker="1" flags="PsychosisSelf"/>
 		</Conversation>
 	</Conversation>
+	<Conversation line="同意。" speaker="1"/>
 	<Conversation line="我不喝咖啡。" speaker="1"/>
-	<Conversation line="" speaker="1"/>
 	<Conversation line="" speaker="0"/>
 </Conversation>
 
@@ -429,7 +429,7 @@
 
 <Conversation line="我們能做到的。" speaker="0" minintensity="0.3"/>
 
-<Conversation line="最終舉措！" speaker="0" speakertags="tough" minintensity="0.3"/>
+<Conversation line="總算是生效了！" speaker="0" speakertags="tough" minintensity="0.3"/>
 
 <Conversation line="恢復運轉了！" speaker="0" speakertags="crazy" minintensity="0.3" maxintensity="0.6"/>
 
@@ -447,7 +447,7 @@
 
 <Conversation line="事後我要喝一杯！" speaker="0" speakertags="joker,laid-back" minintensity="0.5"/>
 
-<Conversation line="好了船員們，讓我來看看你們有什麼收穫。" speaker="0" allowedjobs="captain" speakertags="professional,tough,laid-back" minintensity="0.5"/>
+<Conversation line="好了船員們，讓我見識下你們的本事！" speaker="0" allowedjobs="captain" speakertags="professional,tough,laid-back" minintensity="0.5"/>
 
 <Conversation line="我們還沒有脫離險境！" speaker="0" allowedjobs="captain" minintensity="0.5"/>
 
@@ -627,7 +627,7 @@
 </Conversation>
 
 <Conversation line="要離開了嗎？" speaker="0" flags="EnterStartOutpost" allowedjobs="watchman">
-	<Conversation line="如果你需要一些補給和船員，亦或是想回到贏一個網站，可以來找我。" speaker="0"/>
+	<Conversation line="如果你需要一些補給和船員，亦或是想回到另一個地點，可以來找我。" speaker="0"/>
 </Conversation>
 
 <Conversation line="好吧，想要來點什麼？" speaker="0" flags="WatchmanInteract" allowedjobs="watchman"/>
@@ -641,21 +641,5 @@
 <Conversation line="在你的潛艇停靠好或駛近前哨站之前，你不能進入前哨站。" speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
 
 <Conversation line="你想把潛艇留在這兒嗎？請將它駛近前哨站。" speaker="0" flags="WatchmanInteractNoLeavingSub" allowedjobs="watchman"/>
-
-<!-- Changed values -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- New additions -->
 
 </Conversations>
