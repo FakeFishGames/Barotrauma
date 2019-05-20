@@ -98,7 +98,7 @@
 
 <Conversation line="Quando eu estava na Marinha da Terra, eles tinham um ditado..." speaker="0" allowedjobs="captain" speakertags="professional,tough" maxintensity="0.3">
 	<Conversation line="Há apenas duas maneiras de fazer as coisas: fazer direito ou refazer." speaker="0">
-		<Conversation line="Mas aqui não. Não existe segunda chance no Europa." speaker="0">
+		<Conversation line="Mas aqui não. Não existe segunda chance na Europa." speaker="0">
 			<Conversation line="Então, pessoal, concentrem-se na tarefa em questão." speaker="0"/>
 		</Conversation>
 	</Conversation>
@@ -160,7 +160,7 @@
 	<Conversation line="Posso imaginar." speaker="1">
 		<Conversation line="Ainda não consigo tirar essa imagem da cabeça." speaker="0">
 			<Conversation line="Um saco de ossos e carne sob uma prensa hidráulica, é a única forma de descrever." speaker="0"/>
-			<Conversation line="O abraço carinhoso de Europa." speaker="2" speakertags="crazy"/>
+			<Conversation line="O abraço carinhoso da Europa." speaker="2" speakertags="crazy"/>
 		</Conversation>
 	</Conversation>
 </Conversation>
