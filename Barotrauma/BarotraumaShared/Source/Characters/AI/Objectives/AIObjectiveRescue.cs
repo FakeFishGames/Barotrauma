@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Barotrauma
@@ -16,22 +17,13 @@ namespace Barotrauma
         private readonly Character targetCharacter;
 
         private AIObjectiveGoTo goToObjective;
+
         private float treatmentTimer;
-        private Hull safeHull;
 
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
-            if (targetCharacter == null)
-            {
-                string errorMsg = "Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace;
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("AIObjectiveRescue:ctor:targetnull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                abandon = true;
-                return;
-            }
-
-            if (targetCharacter == character)
+            if (targetCharacter != character)
             {
                 // TODO: enable healing self too
                 abandon = true;
@@ -48,11 +40,6 @@ namespace Barotrauma
         
         protected override void Act(float deltaTime)
         {
-            if (targetCharacter == null || targetCharacter.Removed)
-            {
-                return;
-            }
-
             // Unconcious target is not in a safe place -> Move to a safe place first
             if (targetCharacter.IsUnconscious && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
             {
@@ -84,22 +71,15 @@ namespace Barotrauma
                     {
                         goToObjective = null;
                     }
-                    if (safeHull == null)
+                    var findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
+                    if (findSafety == null)
                     {
-                        var findSafety = objectiveManager.GetObjective<AIObjectiveFindSafety>();
-                        if (findSafety == null)
-                        {
-                            // Ensure that we have the find safety objective (should always be the case)
-                            findSafety = new AIObjectiveFindSafety(character, objectiveManager);
-                            objectiveManager.AddObjective(findSafety);
-                        }
-                        safeHull = findSafety.FindBestHull(HumanAIController.VisibleHulls);
+                        // Ensure that we have the find safety objective (should always be the case)
+                        objectiveManager.AddObjective(new AIObjectiveFindSafety(character, objectiveManager));
                     }
-                    if (character.CurrentHull != safeHull)
-                    {
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager));
-                    }
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(findSafety.FindBestHull(HumanAIController.VisibleHulls), character, objectiveManager));
                 }
+                return;
             }
 
             if (subObjectives.Any()) { return; }
@@ -227,19 +207,13 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            if (targetCharacter == null || targetCharacter.Removed)
-            {
-                abandon = true;
-                return true;
-            }
-
             bool isCompleted = targetCharacter.Bleeding <= 0 && targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
             if (isCompleted)
             {
                 character.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
                     null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
             }
-            return isCompleted || targetCharacter.IsDead;
+            return isCompleted || targetCharacter.Removed || targetCharacter.IsDead;
         }
 
         public override float GetPriority()

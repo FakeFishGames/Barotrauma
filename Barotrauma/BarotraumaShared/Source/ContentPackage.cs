@@ -240,11 +240,6 @@ namespace Barotrauma
             errorMessages = new List<string>();
             foreach (ContentFile file in Files)
             {
-#if SERVER
-                //dedicated server doesn't care if the client executable is present or not
-                if (file.Type == ContentType.Executable) { continue; }
-#endif
-
                 if (!File.Exists(file.Path))
                 {
                     errorMessages.Add("File \"" + file.Path + "\" not found.");

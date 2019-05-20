@@ -204,7 +204,6 @@ namespace Barotrauma
         {
             timer = time;
             TotalTime = time;
-            this.ignorePause = ignorePause;
         }
 
         public bool CheckFinished(float deltaTime) 

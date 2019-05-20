@@ -83,15 +83,11 @@ namespace Barotrauma
             Commonness  = element.GetAttributeInt("commonness", 1);
 
             SuccessMessage  = TextManager.Get("MissionSuccess." + Identifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
-            FailureMessage  = TextManager.Get("MissionFailure." + Identifier, true) ?? "";
-            if (string.IsNullOrEmpty(FailureMessage) && TextManager.ContainsTag("missionfailed"))
-            {
-                FailureMessage = TextManager.Get("missionfailed", returnNull: true) ?? "";
-            }
-            if (string.IsNullOrEmpty(FailureMessage) && GameMain.Config.Language == "English")
-            {
-                FailureMessage = element.GetAttributeString("failuremessage", "");
-            }
+            FailureMessage  = 
+                TextManager.Get("MissionFailure." + Identifier, true) ?? 
+                element.GetAttributeString("failuremessage", null) ??
+                TextManager.Get("missionfailed", returnNull: true) ??
+                "";
 
             SonarLabel      = TextManager.Get("MissionSonarLabel." + Identifier, true) ?? element.GetAttributeString("sonarlabel", "");
 

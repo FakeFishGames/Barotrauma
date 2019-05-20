@@ -1,6 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
-using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -16,21 +17,17 @@ namespace Barotrauma
 
         public Func<bool> customCondition;
 
-        public bool followControlledCharacter;
-        public bool mimic;
-
         /// <summary>
         /// Display units
         /// </summary>
         public float CloseEnough { get; set; } = 50;
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
-
-        public ISpatialEntity Target { get; private set; }
+        public bool CheckVisibility { get; set; }
 
         public override float GetPriority()
         {
-            if (followControlledCharacter && Character.Controlled == null) { return 0.0f; }
+            if (FollowControlledCharacter && Character.Controlled == null) { return 0.0f; }
             if (Target is Entity e && e.Removed) { return 0.0f; }
             if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }                     
             if (objectiveManager.CurrentOrder == this)
@@ -40,19 +37,23 @@ namespace Barotrauma
             return 1.0f;
         }
 
+        public ISpatialEntity Target { get; private set; }
+
+        public bool FollowControlledCharacter;
+
         public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1) 
             : base (character, objectiveManager, priorityModifier)
         {
             this.Target = target;
             this.repeat = repeat;
-            waitUntilPathUnreachable = 3.0f;
+            waitUntilPathUnreachable = 2.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
             CalculateCloseEnough();
         }
 
         protected override void Act(float deltaTime)
         {
-            if (followControlledCharacter)
+            if (FollowControlledCharacter)
             {
                 if (Character.Controlled == null)
                 {
@@ -91,18 +92,11 @@ namespace Barotrauma
             {
                 abandon = true;
             }
-            else if (waitUntilPathUnreachable < 0)
+            else if (!repeat && waitUntilPathUnreachable < 0)
             {
-                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && PathSteering.CurrentPath.Unreachable)
+                if (SteeringManager == PathSteering && PathSteering.CurrentPath != null)
                 {
-                    if (repeat)
-                    {
-                        SteeringManager.Reset();
-                    }
-                    else
-                    {
-                        abandon = true;
-                    }
+                    abandon = PathSteering.CurrentPath.Unreachable;
                 }
             }
             if (abandon)
@@ -121,9 +115,9 @@ namespace Barotrauma
                 Vector2 currTargetSimPos = Vector2.Zero;
                 currTargetSimPos = Target.SimPosition;
                 // Take the sub position into account in the sim pos
-                if (SteeringManager != PathSteering && character.Submarine == null && Target.Submarine != null)
+                if (character.Submarine == null && Target.Submarine != null)
                 {
-                    currTargetSimPos += Target.Submarine.SimPosition;
+                    //currTargetSimPos += Target.Submarine.SimPosition;
                 }
                 else if (character.Submarine != null && Target.Submarine == null)
                 {
@@ -138,15 +132,10 @@ namespace Barotrauma
                     }
                 }
                 character.AIController.SteeringManager.SteeringSeek(currTargetSimPos);
-                if (SteeringManager != PathSteering)
-                {
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1, heading: VectorExtensions.Forward(character.AnimController.Collider.Rotation));
-                }
                 if (getDivingGearIfNeeded)
                 {
-                    Character followTarget = Target as Character;
-                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull) || mimic && HumanAIController.HasDivingMask(followTarget);
-                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90) || mimic && HumanAIController.HasDivingSuit(followTarget);
+                    bool needsDivingGear = HumanAIController.NeedsDivingGear(targetHull);
+                    bool needsDivingSuit = needsDivingGear && (targetHull == null || targetIsOutside || targetHull.WaterPercentage > 90);
                     bool needsEquipment = false;
                     if (needsDivingSuit)
                     {

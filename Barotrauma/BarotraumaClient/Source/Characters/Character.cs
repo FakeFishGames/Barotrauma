@@ -504,7 +504,7 @@ namespace Barotrauma
 
             foreach (Character c in CharacterList)
             {
-                if (!CanInteractWith(c, checkVisibility: false)) continue;
+                if (!CanInteractWith(c)) continue;
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
                 if (dist < maxDist * maxDist && (closestCharacter == null || dist < closestDist))

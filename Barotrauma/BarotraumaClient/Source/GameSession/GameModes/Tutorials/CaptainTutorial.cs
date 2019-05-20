@@ -132,7 +132,7 @@ namespace Barotrauma.Tutorials
             {
                 shakeTimer -= 0.1f;
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(0.1f, false);
+                yield return new WaitForSeconds(0.1f);
             }
             
             // Room 2
@@ -142,7 +142,7 @@ namespace Barotrauma.Tutorials
             // Room 3
             do { yield return null; } while (!captain_medicObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(captain_medic.Info.DisplayName, TextManager.Get("Captain.Radio.Medic"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(2f, false);
+            yield return new WaitForSeconds(2f);
             GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
             GameMain.GameSession.CrewManager.AddCharacter(captain_medic);
             TriggerTutorialSegment(0);
@@ -157,7 +157,7 @@ namespace Barotrauma.Tutorials
 
             // Submarine
             do { yield return null; } while (!captain_enteredSubmarineSensor.MotionDetected);
-            yield return new WaitForSeconds(3f, false);
+            yield return new WaitForSeconds(3f);
             captain_mechanic.AIController.Enabled = captain_security.AIController.Enabled = captain_engineer.AIController.Enabled = true;
             TriggerTutorialSegment(1);
             GameMain.GameSession.CrewManager.AddCharacter(captain_mechanic);
@@ -169,7 +169,7 @@ namespace Barotrauma.Tutorials
             }
             while (!HasOrder(captain_mechanic, "repairsystems", "jobspecific"));
             RemoveCompletedObjective(segments[1]);
-            yield return new WaitForSeconds(2f, false);
+            yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(2);
             GameMain.GameSession.CrewManager.AddCharacter(captain_security);
             do
@@ -180,7 +180,7 @@ namespace Barotrauma.Tutorials
             }
             while (!HasOrder(captain_security, "operateweapons", "fireatwill"));
             RemoveCompletedObjective(segments[2]);
-            yield return new WaitForSeconds(4f, false);
+            yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(3);
             GameMain.GameSession.CrewManager.AddCharacter(captain_engineer);
             do
@@ -202,10 +202,10 @@ namespace Barotrauma.Tutorials
             do
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
-                yield return new WaitForSeconds(1.0f, false);
+                yield return new WaitForSeconds(1.0f);
             } while (Submarine.MainSub.DockedTo.Count > 0);
             RemoveCompletedObjective(segments[4]);
-            yield return new WaitForSeconds(2f, false);
+            yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(5); // Navigate to destination
             do
             {
@@ -221,15 +221,15 @@ namespace Barotrauma.Tutorials
             } while (!captain_sonar.IsActive);
             do { yield return null; } while (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 4000f);
             RemoveCompletedObjective(segments[5]);
-            yield return new WaitForSeconds(4f, false);
+            yield return new WaitForSeconds(4f);
             TriggerTutorialSegment(6); // Docking
             do
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
-                yield return new WaitForSeconds(1.0f, false);
+                yield return new WaitForSeconds(1.0f);
             } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
             RemoveCompletedObjective(segments[6]);
-            yield return new WaitForSeconds(3f, false);
+            yield return new WaitForSeconds(3f);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete").Replace("[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);

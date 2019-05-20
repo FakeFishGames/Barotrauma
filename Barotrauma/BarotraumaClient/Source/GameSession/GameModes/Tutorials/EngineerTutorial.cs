@@ -213,7 +213,7 @@ namespace Barotrauma.Tutorials
             {
                 shakeTimer -= 0.1f;
                 GameMain.GameScreen.Cam.Shake = shakeAmount;
-                yield return new WaitForSeconds(0.1f, false);
+                yield return new WaitForSeconds(0.1f);
             }
 
             //// Remove
@@ -231,7 +231,7 @@ namespace Barotrauma.Tutorials
             // Room 2
             do { yield return null; } while (!engineer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Equipment"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(0.5f, false);
+            yield return new WaitForSeconds(0.5f);
             TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -280,7 +280,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!IsSelectedItem(engineer_reactor.Item));
-            yield return new WaitForSeconds(0.5f, false);
+            yield return new WaitForSeconds(0.5f);
             TriggerTutorialSegment(1);
             do
             {
@@ -326,7 +326,7 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             } while (!reactorOperatedProperly);
-            yield return new WaitForSeconds(2f, false);
+            yield return new WaitForSeconds(2f);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.ReactorStable"), ChatMessageType.Radio, null);
             do
             {
@@ -343,7 +343,7 @@ namespace Barotrauma.Tutorials
             float wait = 1.5f;
             do
             {
-                yield return new WaitForSeconds(0.1f, false);
+                yield return new WaitForSeconds(0.1f);
                 wait -= 0.1f;
                 engineer_reactor.AutoTempSlider.BarScrollValue = 0.0f;
             } while (wait > 0.0f);
@@ -356,24 +356,9 @@ namespace Barotrauma.Tutorials
 
             // Room 4
             do { yield return null; } while (!engineer_secondDoor.IsOpen);
-            yield return new WaitForSeconds(1f, false);
-            Repairable repairableJunctionBoxComponent = engineer_brokenJunctionBox.GetComponent<Repairable>();
+            yield return new WaitForSeconds(1f);
             TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Select)); // Repair the junction box
-            do
-            {
-                if (!engineer.HasEquippedItem("screwdriver"))
-                {
-                    HighlightInventorySlot(engineer.Inventory, "screwdriver", highlightColor, .5f, .5f, 0f);
-                }
-                else if (IsSelectedItem(engineer_brokenJunctionBox) && repairableJunctionBoxComponent.CurrentFixer == null)
-                {
-                    if (repairableJunctionBoxComponent.RepairButton.Frame.FlashTimer <= 0)
-                    {
-                        repairableJunctionBoxComponent.RepairButton.Frame.Flash();
-                    }
-                }
-                yield return null;
-            } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
+            do { yield return null; } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
@@ -385,7 +370,7 @@ namespace Barotrauma.Tutorials
             // Room 5
             do { yield return null; } while (!engineer_thirdDoor.IsOpen);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(2f, false);
+            yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(3, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Connect the junction boxes
             do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             CheckGhostWires();
@@ -402,7 +387,7 @@ namespace Barotrauma.Tutorials
             // Submarine
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Submarine"), ChatMessageType.Radio, null);
-            yield return new WaitForSeconds(2f, false);
+            yield return new WaitForSeconds(2f);
             TriggerTutorialSegment(4); // Repair junction box
             while (ContentRunning) yield return null;
             SetHighlight(engineer_submarineJunctionBox_1, true);
@@ -458,7 +443,7 @@ namespace Barotrauma.Tutorials
                 tutorial_oxygenGenerator.PowerConsumption = reactorLoads[i];
                 while (timer > 0)
                 {
-                    yield return new WaitForSeconds(0.1f, false);
+                    yield return new WaitForSeconds(0.1f);
                     if (IsReactorPoweredUp(engineer_reactor))
                     {
                         timer -= 0.1f;

@@ -68,7 +68,6 @@ namespace Barotrauma
             sb.AppendLine("Game version " + GameMain.Version + " (debug build)");
 #else
             sb.AppendLine("Game version " + GameMain.Version);
-#endif
             sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
