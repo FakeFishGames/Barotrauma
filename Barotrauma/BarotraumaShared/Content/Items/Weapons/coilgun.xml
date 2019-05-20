@@ -110,12 +110,15 @@
   </Item>
   
   <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
+    <!--
+    TODO: reallow fabrication after the name has been translated
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem identifier="steel"/>
       <RequiredItem identifier="physicorium"/>
       <RequiredItem identifier="aluminium"/>
-    </Fabricate>
+    </Fabricate>-->
+    
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
     <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />
