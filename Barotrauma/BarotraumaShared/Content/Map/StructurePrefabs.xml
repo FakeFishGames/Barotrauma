@@ -219,6 +219,7 @@
   </arrowRight>
   <!--LABELS END-->
   <!--  FINS START-->
+  <!--
   <fin name="Fin S 01" identifier="fins01" description="Fin construction piece" body="true" health="200" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,0,192,192" depth="0.5" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
@@ -446,7 +447,7 @@
   <fin name="Fin L 15" identifier="finl15" description="Fin construction piece" body="true" health="200">
     <sprite texture="Content/Map/FinsA.png" sourcerect="920,1950,383,102" depth="0.5" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/FinsABack.png" depth="0.85" />
-  </fin>
+  </fin>-->
   <!-- TAILS START-->
   <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="80" bodyheight="330" bodyoffset="-20,0" castshadow="false" health="200">
     <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
@@ -486,23 +487,23 @@
   <TailFinD3p3 name="Tail Fin D3 p3" identifier="tailfind3p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1523,535,484,492" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p3>
-  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="160" bodyheight="320" bodyoffset="-0,0" castshadow="false" health="400">
+  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="160" bodyheight="320" bodyoffset="-0,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="586,5,306,500" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="586,513,306,500" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="120" bodyheight="400" bodyoffset="0,0" castshadow="false" health="400">
+  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="120" bodyheight="400" bodyoffset="0,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,0,271,975" depth="0.01" origin="0.238248,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="292,0,271,975" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front E p1" identifier="subfrontep1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="32" bodyoffset="-10,-10" castshadow="false" health="400">
+  <Front Name="Front E p1" identifier="subfrontep1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="32" bodyoffset="-10,-10" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="-1,0,260,163" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front E p2" identifier="subfrontep2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
+  <Front Name="Front E p2" identifier="subfrontep2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="-1,160,261,400" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front E p3" identifier="subfrontep3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="-20" bodyoffset="0,25" castshadow="false" health="400">
+  <Front Name="Front E p3" identifier="subfrontep3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="-20" bodyoffset="0,25" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="0,556,262,128" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.9" origin="0.5,0.5" />
   </Front>
@@ -831,19 +832,19 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1488,1312,560,338" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 0 deg A" identifier="shellacap0dega" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60">
+  <shellA name="Shell A Cap 0 deg A" identifier="shellacap0dega" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="585,1449,99,93" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 0 deg B" identifier="shellacap0degb" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60">
+  <shellA name="Shell A Cap 0 deg B" identifier="shellacap0degb" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="750,1443,115,103" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 90 deg A" identifier="shellacap90dega" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="60">
+  <shellA name="Shell A Cap 90 deg A" identifier="shellacap90dega" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="60" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="969,1368,93,101" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 90 deg B" identifier="shellacap90degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="60">
+  <shellA name="Shell A Cap 90 deg B" identifier="shellacap90degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="60" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="978,1185,93,107" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
