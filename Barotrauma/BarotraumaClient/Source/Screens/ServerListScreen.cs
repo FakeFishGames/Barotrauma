@@ -120,10 +120,11 @@ namespace Barotrauma
             serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center))
             {
                 OnSelected = (btn, obj) => {
-                    ServerInfo serverInfo = (ServerInfo)obj;
-
-                    serverInfo.CreatePreviewWindow(serverPreview);
-
+                    if (obj is ServerInfo)
+                    {
+                        ServerInfo serverInfo = (ServerInfo)obj;
+                        serverInfo.CreatePreviewWindow(serverPreview);
+                    }
                     return true;
                 }
             };
@@ -218,7 +219,7 @@ namespace Barotrauma
 
         private bool SelectServer(GUIComponent component, object obj)
         {
-            if (obj == null || waitingForRefresh) { return false; }
+            if (obj == null || waitingForRefresh || (!(obj is ServerInfo))) { return false; }
 
             if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
