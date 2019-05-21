@@ -206,7 +206,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 5.0f);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 20.0f);
 #endif
             }
         }
