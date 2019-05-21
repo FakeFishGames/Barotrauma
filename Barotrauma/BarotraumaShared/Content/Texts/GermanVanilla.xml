@@ -863,7 +863,6 @@
 <missiondescription2.pvpmission>Du bist Mitglied einer Gruppe von Abtrünnigen, die sich gegen die Europa-Koalition stellt. Nach Angaben deiner Informanten in [location1] wurde gerade ein Koalitionsschiff auf eine Mission geschickt, um dein Fahrzeug aufzubringen. Eliminiere ihre Besatzung mit allen dafür notwendigen Mitteln.</missiondescription2.pvpmission>
 <missionteam1.pvpmission>Koalition</missionteam1.pvpmission>
 <missionteam2.pvpmission>Abtrünnige</missionteam2.pvpmission>
-<missionsuccess.pvpmission>Das Gegengift wurde erfolgreich geliefert.</missionsuccess.pvpmission>
 <missionfailure.pvpmission>Beide Besatzungen wurden getötet.</missionfailure.pvpmission>
 
 <!-- Entity categories -->

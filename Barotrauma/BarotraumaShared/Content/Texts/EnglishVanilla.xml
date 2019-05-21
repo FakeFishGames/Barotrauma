@@ -870,7 +870,6 @@
   <missiondescription2.pvpmission>You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition vessel has just been dispatched on a mission to take down your boat. Eliminate their crew by any means necessary.</missiondescription2.pvpmission>
   <missionteam1.pvpmission>Coalition</missionteam1.pvpmission>
   <missionteam2.pvpmission>Renegade</missionteam2.pvpmission>
-  <missionsuccess.pvpmission>The antidote has been successfully delivered.</missionsuccess.pvpmission>
   <missionfailure.pvpmission>Both crews have perished.</missionfailure.pvpmission>
 
   <!-- Entity categories -->
@@ -3192,4 +3191,7 @@
 
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
   <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
+
+  <!-- MODIFIED -->
+  <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
 </infotexts>

@@ -862,7 +862,6 @@
 <missiondescription2.pvpmission>Vous êtes membre d'un groupe renégat qui s'oppose à la Coalition d'Europe. D'après vos informateurs du secteur [location1], un vaisseau de la Coalition vient de partir en mission pour détruire votre sous-marin. Éliminez cet équipage par tous les moyens nécessaires.</missiondescription2.pvpmission>
 <missionteam1.pvpmission>Coalition</missionteam1.pvpmission>
 <missionteam2.pvpmission>Renégats</missionteam2.pvpmission>
-<missionsuccess.pvpmission>L'antidote a été livré.</missionsuccess.pvpmission>
 <missionfailure.pvpmission>Les deux équipages ont péri.</missionfailure.pvpmission>
 
 <!-- Entity categories -->

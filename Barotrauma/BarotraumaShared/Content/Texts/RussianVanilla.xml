@@ -863,7 +863,6 @@
 <missiondescription2.pvpmission>Вы состоите в революционной организации, выступающей против Коалиции Европы. Ваши агенты в точке «[location1]» докладывают, что Коалиция отправила за вами одну из своих боевых подлодок. Уничтожьте противника любыми доступными средствами.</missiondescription2.pvpmission>
 <missionteam1.pvpmission>Коалиция</missionteam1.pvpmission>
 <missionteam2.pvpmission>Мятежники</missionteam2.pvpmission>
-<missionsuccess.pvpmission>Противоядие успешно доставлено</missionsuccess.pvpmission>
 <missionfailure.pvpmission>Обе команды погибли</missionfailure.pvpmission>
 
 <!-- Entity categories -->

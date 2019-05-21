@@ -863,7 +863,6 @@
   <missiondescription2.pvpmission>你是反木衛二聯盟革命組織的一員，根據你在[location1]的線人傳來的情報，一艘聯盟的軍艦剛剛接到剿滅你的任務。動用一切手段，消滅他們！</missiondescription2.pvpmission>
   <missionteam1.pvpmission>聯盟軍</missionteam1.pvpmission>
   <missionteam2.pvpmission>革命黨</missionteam2.pvpmission>
-  <missionsuccess.pvpmission>解毒劑及時送達。</missionsuccess.pvpmission>
   <missionfailure.pvpmission>雙方同歸於盡。</missionfailure.pvpmission>
 
   <!-- Entity categories -->

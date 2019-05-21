@@ -863,7 +863,6 @@
 <missiondescription2.pvpmission>Você é um membro de um grupo renegado que se opõe à Coalizão Europa. De acordo com seus informantes em [location1], uma embarcação da Coalizão foi enviada para destruir seu navio. Elimine a tripulação inimiga usando os meios necessários.</missiondescription2.pvpmission>
 <missionteam1.pvpmission>Coalizão</missionteam1.pvpmission>
 <missionteam2.pvpmission>Renegado</missionteam2.pvpmission>
-<missionsuccess.pvpmission>O antídoto foi entregue.</missionsuccess.pvpmission>
 <missionfailure.pvpmission>Ambas as tripulações morreram.</missionfailure.pvpmission>
 
 <!-- Entity categories -->
