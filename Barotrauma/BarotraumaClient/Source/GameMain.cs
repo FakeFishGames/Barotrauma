@@ -618,7 +618,7 @@ namespace Barotrauma
                     GameMain.ResetFrameTime();
 
                     if (TitleScreen.LoadState >= 100.0f &&
-                        (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
+                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;
                     }
@@ -637,7 +637,7 @@ namespace Barotrauma
                 {
                     SoundPlayer.Update((float)Timing.Step);
 
-                    if (PlayerInput.KeyHit(Keys.Escape))
+                    if (PlayerInput.KeyHit(Keys.Escape) && WindowActive)
                     {
                         // Check if a text input is selected.
                         if (GUI.KeyboardDispatcher.Subscriber != null)
