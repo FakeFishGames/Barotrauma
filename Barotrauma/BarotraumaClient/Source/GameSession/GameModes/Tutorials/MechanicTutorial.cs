@@ -347,22 +347,39 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_craftingCabinet.Item, true);
             do
             {
-                for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
-                {
-                    if (mechanic_craftingCabinet.Inventory.Items[i] != null)
-                    {
-                        HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
-                    }
-                }
                 if (mechanic.SelectedConstruction == mechanic_craftingCabinet.Item)
                 {
                     for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
                     {
                         if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
                     }
+
+                    if (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null && mechanic.Inventory.FindItemByIdentifier("aluminium") == null)
+                    {
+                        for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
+                        {
+                            Item item = mechanic_craftingCabinet.Inventory.Items[i];
+                            if (item != null && item.prefab.Identifier == "oxygentank")
+                            {
+                                HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
+                            }
+                        }
+                    }
+
+                    if (mechanic.Inventory.FindItemByIdentifier("sodium") == null)
+                    {
+                        for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
+                        {
+                            Item item = mechanic_craftingCabinet.Inventory.Items[i];
+                            if (item != null && item.prefab.Identifier == "sodium")
+                            {
+                                HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
+                            }
+                        }
+                    }
                 }
                 yield return null;
-            } while (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null || mechanic.Inventory.FindItemByIdentifier("sodium") == null); // Wait until looted
+            } while ((mechanic.Inventory.FindItemByIdentifier("oxygentank") == null && mechanic.Inventory.FindItemByIdentifier("aluminium") == null) || mechanic.Inventory.FindItemByIdentifier("sodium") == null); // Wait until looted
             yield return new WaitForSeconds(1.0f, false);
             SetHighlight(mechanic_craftingCabinet.Item, false);
             SetHighlight(mechanic_deconstructor.Item, true);
