@@ -584,11 +584,28 @@ namespace Barotrauma
         private void UpdateTutorialList()
         {
             var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
+
+            int completedTutorials = 0;
+
             foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
             {
                 if (((Tutorial)tutorialText.UserData).Completed)
                 {
-                    tutorialText.TextColor = Color.LightGreen;
+                    completedTutorials++;
+                }
+            }
+
+            for (int i = 0; i < tutorialList.Content.Children.Count(); i++)
+            {
+                if (i < completedTutorials + 1)
+                {
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.LightGreen;
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = true;
+                }
+                else
+                {
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.Gray;
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = false;
                 }
             }
         }
