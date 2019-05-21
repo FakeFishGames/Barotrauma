@@ -3132,8 +3132,6 @@
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
 
   <!-- New additions -->
-  <missiondescription.killcrawlerswarm1>A small swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm1>
-  <missiondescription.killcrawlerswarm2>A large swarm of [monster] has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it.</missiondescription.killcrawlerswarm2>
   <itemmsgoxygenrefill>Insert oxygen tank to refill it</itemmsgoxygenrefill>
   <missiondescription.cargochemicals>Researchers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of [reward] credits.</missiondescription.cargochemicals>
   <privacypolicy>Privacy policy</privacypolicy>
