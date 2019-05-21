@@ -1037,7 +1037,7 @@
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255">
 
-    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,0,400,200" tile="false"/>
+    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,0,400,200" slice="72,93,328,155" tile="false"/>
   </ConnectionPanelFront>
 
   <ConnectionPanelConnector
