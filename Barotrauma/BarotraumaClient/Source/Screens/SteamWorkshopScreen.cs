@@ -1,11 +1,11 @@
 ﻿using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Windows.Forms;
 
@@ -357,20 +357,25 @@ namespace Barotrauma
                         if (!pendingPreviewImageDownloads.Contains(item.PreviewImageUrl))
                         {
                             pendingPreviewImageDownloads.Add(item.PreviewImageUrl);
-                            using (WebClient client = new WebClient())
+
+                            if (File.Exists(imagePreviewPath))
                             {
-                                if (File.Exists(imagePreviewPath))
-                                {
-                                    File.Delete(imagePreviewPath);
-                                }
-                                Directory.CreateDirectory(SteamManager.WorkshopItemPreviewImageFolder);
-                                client.DownloadFileAsync(new Uri(item.PreviewImageUrl), imagePreviewPath);
-                                CoroutineManager.StartCoroutine(WaitForItemPreviewDownloaded(item, listBox, imagePreviewPath));
-                                client.DownloadFileCompleted += (sender, args) =>
-                                {
-                                    pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
-                                };
+                                File.Delete(imagePreviewPath);
                             }
+                            Directory.CreateDirectory(SteamManager.WorkshopItemPreviewImageFolder);
+
+                            Uri baseAddress = new Uri(item.PreviewImageUrl);
+                            Uri directory = new Uri(baseAddress, "."); // "." == current dir, like MS-DOS
+                            string fileName = Path.GetFileName(baseAddress.LocalPath);
+
+                            IRestClient client = new RestClient(directory);
+                            var request = new RestRequest(fileName, Method.GET);
+                            client.ExecuteAsync(request, response =>
+                            {
+                                pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
+                                OnPreviewImageDownloaded(response, imagePreviewPath);
+                                CoroutineManager.StartCoroutine(WaitForItemPreviewDownloaded(item, listBox, imagePreviewPath));
+                            });                            
                         }
                         else
                         {
@@ -537,6 +542,24 @@ namespace Barotrauma
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), innerFrame.RectTransform), contentPackage.Name, textAlignment: Alignment.CenterLeft);
+        }
+
+        private void OnPreviewImageDownloaded(IRestResponse response, string previewImagePath)
+        {
+            if (response.ResponseStatus == ResponseStatus.Completed)
+            {
+                try
+                {
+                    File.WriteAllBytes(previewImagePath, response.RawBytes);
+                }
+                catch (Exception e)
+                {
+                    string errorMsg = "Failed to save workshop item preview image to \"" + previewImagePath + "\".";
+                    GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.OnItemPreviewDownloaded:WriteAllBytesFailed" + previewImagePath,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
+                    return;
+                }
+            }
         }
 
         private IEnumerable<object> WaitForItemPreviewDownloaded(Facepunch.Steamworks.Workshop.Item item, GUIListBox listBox, string previewImagePath)
