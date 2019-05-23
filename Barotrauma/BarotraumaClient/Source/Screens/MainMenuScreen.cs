@@ -613,12 +613,16 @@ namespace Barotrauma
                 if (i < completedTutorials + 1)
                 {
                     (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.LightGreen;
+#if !DEBUG
                     (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = true;
+#endif
                 }
                 else
                 {
                     (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.Gray;
+#if !DEBUG
                     (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = false;
+#endif
                 }
             }
         }
