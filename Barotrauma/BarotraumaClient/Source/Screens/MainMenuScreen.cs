@@ -525,10 +525,6 @@ namespace Barotrauma
             {
                 Select();
             }
-            else
-            {
-                ResetButtonStates(button);
-            }
         }
 #endregion
 
@@ -618,33 +614,6 @@ namespace Barotrauma
 #endif
                 }
             }
-
-            for (int i = 0; i < tutorialList.Content.Children.Count(); i++)
-            {
-                if (i < completedTutorials + 1)
-                {
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.LightGreen;
-#if !DEBUG
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = true;
-#endif
-                }
-                else
-                {
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.Gray;
-#if !DEBUG
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = false;
-#endif
-                }
-            }
-        }
-
-        public void ResetSettingsFrame(GameSettings.Tab selectedTab = GameSettings.Tab.Graphics)
-        {
-            menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
-            GameMain.Config.ResetSettingsFrame();
-            GameMain.Config.CreateSettingsFrame(selectedTab);
-            GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
-            GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
         }
 
         public void ResetSettingsFrame(GameSettings.Tab selectedTab = GameSettings.Tab.Graphics)
