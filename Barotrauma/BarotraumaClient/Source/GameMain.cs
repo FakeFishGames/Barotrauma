@@ -206,6 +206,21 @@ namespace Barotrauma
 
         private void ApplyGraphicsSettings()
         {
+#if !OSX
+            if (Config.WindowMode == WindowMode.Fullscreen &&
+                GraphicsDeviceManager.IsFullScreen && !GraphicsDeviceManager.HardwareModeSwitch &&
+                (GraphicsDeviceManager.PreferredBackBufferWidth != Config.GraphicsWidth ||
+                GraphicsDeviceManager.PreferredBackBufferHeight != Config.GraphicsHeight))
+            {
+                DisplayMode minMode = GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(m => m.Format == SurfaceFormat.Color);
+                GraphicsDeviceManager.PreferredBackBufferWidth = minMode.Width;
+                GraphicsDeviceManager.PreferredBackBufferHeight = minMode.Height;
+                GraphicsDeviceManager.IsFullScreen = false;
+                GraphicsDeviceManager.ApplyChanges();
+                Thread.Sleep(100);
+            }
+#endif
+
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
             if (Config.WindowMode == WindowMode.BorderlessWindowed)
@@ -213,6 +228,7 @@ namespace Barotrauma
                 GraphicsWidth = GraphicsDevice.DisplayMode.Width;
                 GraphicsHeight = GraphicsDevice.DisplayMode.Height;
             }
+
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
@@ -318,8 +334,15 @@ namespace Barotrauma
         private void HandleDefocus(object sender, EventArgs e)
         {
             CoroutineManager.StopCoroutines("FocusCoroutine");
-            GraphicsDeviceManager.IsFullScreen = false;
-            GraphicsDeviceManager.ApplyChanges();
+            if (GraphicsDeviceManager.IsFullScreen && !GraphicsDeviceManager.HardwareModeSwitch)
+            {
+                DisplayMode minMode = GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(m => m.Format == SurfaceFormat.Color);
+                GraphicsDeviceManager.PreferredBackBufferWidth = minMode.Width;
+                GraphicsDeviceManager.PreferredBackBufferHeight = minMode.Height;
+                GraphicsDeviceManager.IsFullScreen = false;
+                GraphicsDeviceManager.ApplyChanges();
+                Thread.Sleep(100);
+            }
         }
 #endif
 

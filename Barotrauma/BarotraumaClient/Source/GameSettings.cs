@@ -192,6 +192,7 @@ namespace Barotrauma
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
             {
                 if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
+                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
 #if OSX
                 // Monogame currently doesn't support retina displays
                 // so we need to disable resolutions above the viewport size.
@@ -211,7 +212,6 @@ namespace Barotrauma
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
-                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
                 if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
@@ -244,6 +244,17 @@ namespace Barotrauma
             {
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+                if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+                {
+                    resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(
+                            m => m.Width == GameMain.Instance.GraphicsDevice.DisplayMode.Width &&
+                                 m.Height == GameMain.Instance.GraphicsDevice.DisplayMode.Height));
+                    resolutionDD.ButtonEnabled = false;
+                }
+                else
+                {
+                    resolutionDD.ButtonEnabled = true;
+                }
                 return true;
             };
 
