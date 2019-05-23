@@ -364,6 +364,10 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(1.0f, false);
             }
+
+            subPatients[2].Oxygen = -50;
+            CoroutineManager.StartCoroutine(KeepPatientAlive(subPatients[2]), "KeepPatient3Alive");
+
             yield return new WaitForSeconds(5.0f, false);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Doctor.Radio.EnteredSub"), ChatMessageType.Radio, null);
 
@@ -376,8 +380,6 @@ namespace Barotrauma.Tutorials
                 patient.AIController.Enabled = true;
                 SetHighlight(patient, true);
             }
-            subPatients[2].Oxygen = -50;
-            CoroutineManager.StartCoroutine(KeepPatientAlive(subPatients[2]), "KeepPatient3Alive");
 
             double subEnterTime = Timing.TotalTime;
 

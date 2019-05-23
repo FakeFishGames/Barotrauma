@@ -1,11 +1,11 @@
 ﻿using Barotrauma.Networking;
 using Facepunch.Steamworks;
+using RestSharp;
 using RestSharp.Extensions.MonoHttp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 
 namespace Barotrauma.Steam
 {
@@ -467,13 +467,29 @@ namespace Barotrauma.Steam
             string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
             itemEditor.PreviewImage = previewImagePath;
 
-            using (WebClient client = new WebClient())
+            try
             {
-                if (File.Exists(previewImagePath))
+                if (File.Exists(previewImagePath)) { File.Delete(previewImagePath); }
+
+                Uri baseAddress = new Uri(existingItem.PreviewImageUrl);
+                Uri directory = new Uri(baseAddress, "."); // "." == current dir, like MS-DOS
+                string fileName = Path.GetFileName(baseAddress.LocalPath);
+
+                IRestClient client = new RestClient(directory);
+                var request = new RestRequest(fileName, Method.GET);
+                var response = client.Execute(request);
+
+                if (response.ResponseStatus == ResponseStatus.Completed)
                 {
-                    File.Delete(previewImagePath);
+                    File.WriteAllBytes(previewImagePath, response.RawBytes);
                 }
-                client.DownloadFile(new Uri(existingItem.PreviewImageUrl), previewImagePath);
+            }
+
+            catch (Exception e)
+            {
+                string errorMsg = "Failed to save workshop item preview image to \"" + previewImagePath + "\" when creating workshop item staging folder.";
+                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CreateWorkshopItemStaging:WriteAllBytesFailed" + previewImagePath,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
             }
 
             ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));

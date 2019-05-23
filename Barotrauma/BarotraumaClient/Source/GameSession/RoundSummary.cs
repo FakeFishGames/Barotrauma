@@ -61,25 +61,27 @@ namespace Barotrauma
             }
 
             //don't show the mission info if the mission was not completed and there's no localized "mission failed" text available
-            if (GameMain.GameSession.Mission != null &&
-                (GameMain.GameSession.Mission.Completed || !string.IsNullOrEmpty(GameMain.GameSession.Mission.FailureMessage)))
+            if (GameMain.GameSession.Mission != null)
             {
-                //spacing
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                   TextManager.AddPunctuation(':', TextManager.Get("Mission"), GameMain.GameSession.Mission.Name),
-                   font: GUI.LargeFont);
-
-                var missionInfo = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                    GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
-                    wrap: true);
-                
-                if (GameMain.GameSession.Mission.Completed && singleplayer)
+                string message = GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage;
+                if (!string.IsNullOrEmpty(message))
                 {
-                    var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                        TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
-                }  
+                    //spacing
+                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
+
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
+                       TextManager.AddPunctuation(':', TextManager.Get("Mission"), GameMain.GameSession.Mission.Name),
+                       font: GUI.LargeFont);
+
+                    var missionInfo = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
+                        message, wrap: true);
+                
+                    if (GameMain.GameSession.Mission.Completed && singleplayer)
+                    {
+                        var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
+                            TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
+                    }  
+                }
             }
 
             foreach (GUIComponent child in infoTextBox.Content.Children)

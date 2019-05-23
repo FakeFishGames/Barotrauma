@@ -10,7 +10,17 @@ namespace Barotrauma
 
         private const float vitalityThreshold = 0.8f;
         private const float vitalityThresholdForOrders = 0.95f;
-        public static float GetVitalityThreshold(AIObjectiveManager manager) => manager.CurrentOrder is AIObjectiveRescueAll ? vitalityThresholdForOrders : vitalityThreshold;
+        public static float GetVitalityThreshold(AIObjectiveManager manager)
+        {
+            if (manager == null)
+            {
+                return vitalityThreshold;
+            }
+            else
+            {
+                return manager.CurrentOrder is AIObjectiveRescueAll ? vitalityThresholdForOrders : vitalityThreshold;
+            }
+        }
         
         public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
@@ -35,8 +45,14 @@ namespace Barotrauma
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
             if (!HumanAIController.IsFriendly(character, target)) { return false; }
-            if (!(character.AIController is HumanAIController humanAI)) { return false; }
-            if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
+            if (character.AIController is HumanAIController humanAI)
+            {
+                if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > GetVitalityThreshold(humanAI.ObjectiveManager)) { return false; }
+            }
+            else
+            {
+                if (target.Bleeding < 1 && target.Vitality / target.MaxVitality > vitalityThreshold) { return false; }
+            }
             if (target.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }

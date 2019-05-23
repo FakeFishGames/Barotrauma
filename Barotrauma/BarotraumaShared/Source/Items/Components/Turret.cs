@@ -489,24 +489,20 @@ namespace Barotrauma.Items.Components
                 closestDist = dist;                
             }
 
-            if (closestEnemy == null) return false;
+            if (closestEnemy == null) { return false; }
             
             character.AIController.SelectTarget(closestEnemy.AiTarget);
 
             character.CursorPosition = closestEnemy.WorldPosition;
-            if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
-
-            //force aim input even if the turret doesn't require it,
-            //because the cursor position (and consequently, turret aim direction) is only synced to clients when aiming
-            character.SetInput(InputType.Aim, false, true);
-
+            if (item.Submarine != null) { character.CursorPosition -= item.Submarine.Position; }
+            
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
 
-            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) return false;
+            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) { return false; }
 
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
-            if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
+            if (pickedBody != null && !(pickedBody.UserData is Limb)) { return false; }
 
             if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
