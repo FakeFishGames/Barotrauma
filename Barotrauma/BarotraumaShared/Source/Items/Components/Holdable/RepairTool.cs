@@ -40,9 +40,6 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false)]
         public bool RepairThroughWalls { get; set; }
 
-        [Serialize(false, false)]
-        public bool RepairMultiple { get; set; }
-
         public Vector2 TransformedBarrelPos
         {
             get
@@ -161,22 +158,12 @@ namespace Barotrauma.Items.Components
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
-            if (RepairMultiple)
+            if (RepairThroughWalls)
             {
                 var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true);
-                Type lastHitType = null;
                 foreach (Body body in bodies)
                 {
-                    Type bodyType = body.UserData?.GetType();
-                    if (!RepairThroughWalls && bodyType != null && bodyType != lastHitType)
-                    {
-                        //stop the ray if it already hit a door/wall and is now about to hit some other type of entity
-                        if (lastHitType == typeof(Item) || lastHitType == typeof(Structure)) { break; }
-                    }
-                    if (FixBody(user, deltaTime, degreeOfSuccess, body))
-                    {
-                        if (bodyType != null) { lastHitType = bodyType; }
-                    }
+                    FixBody(user, deltaTime, degreeOfSuccess, body);
                 }
             }
             else
@@ -215,19 +202,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
+        private void FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
         {
-            if (targetBody?.UserData == null) { return false; }
+            if (targetBody?.UserData == null) { return; }
 
             pickedPosition = Submarine.LastPickedPosition;
 
             if (targetBody.UserData is Structure targetStructure)
             {
-                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return false; }
-                if (targetStructure.IsPlatform) { return false; }
+                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) return;
+                if (targetStructure.IsPlatform) return;
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
-                if (sectionIndex < 0) { return false; }
+                if (sectionIndex < 0) return;
 
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
@@ -252,14 +239,12 @@ namespace Barotrauma.Items.Components
                 targetCharacter.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
-                return true;
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
                 targetLimb.character.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
-                return true;
             }
             else if (targetBody.UserData is Item targetItem)
             {
@@ -284,7 +269,6 @@ namespace Barotrauma.Items.Components
 #endif                    
                 }
                 FixItemProjSpecific(user, deltaTime, targetItem, prevCondition);
-                return true;
             }
             return false;
         }
