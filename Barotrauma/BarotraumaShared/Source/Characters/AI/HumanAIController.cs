@@ -321,11 +321,13 @@ namespace Barotrauma
                         if (c.CurrentHull != hull) { continue; }
                         if (AIObjectiveRescueAll.IsValidTarget(c, Character))
                         {
-                            AddTargets<AIObjectiveRescueAll, Character>(c, Character);
-                            if (newOrder == null)
+                            if (AddTargets<AIObjectiveRescueAll, Character>(c, Character))
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
+                                if (newOrder == null)
+                                {
+                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                                    newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
+                                }
                             }
                         }
                     }
