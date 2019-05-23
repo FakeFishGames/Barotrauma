@@ -468,8 +468,9 @@ namespace Barotrauma.Networking
                         reconnectBox = null;
                     }
 
-                    var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") });
-                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.Center))
+                    var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
+                        relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 20) })
                     {
                         IgnoreLayoutGroups = true,
                         UserData = "password"
