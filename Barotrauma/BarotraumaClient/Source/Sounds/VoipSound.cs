@@ -70,6 +70,11 @@ namespace Barotrauma.Sounds
             soundChannel = chn;
         }
 
+        public override float GetAmplitudeAtPlaybackPos(int playbackPos)
+        {
+            throw new NotImplementedException(); //TODO: implement?
+        }
+
         public void SetPosition(Vector3? pos)
         {
             soundChannel.Position = pos;

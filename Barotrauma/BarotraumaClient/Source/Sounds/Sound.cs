@@ -179,6 +179,8 @@ namespace Barotrauma.Sounds
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);
 
+        public abstract float GetAmplitudeAtPlaybackPos(int playbackPos);
+
         public virtual void Dispose()
         {
             if (disposed) { return; }

@@ -282,6 +282,36 @@ namespace Barotrauma.Sounds
             }
         }
 
+        private float streamAmplitude;
+        public float CurrentAmplitude
+        {
+            get
+            {
+                if (!IsPlaying) { return 0.0f; }
+
+                uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
+                if (!IsStream)
+                {
+                    int playbackPos; AL.GetSource(alSource, ALGetSourcei.SampleOffset, out playbackPos);
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to get source's playback position: " + AL.GetErrorString(alError));
+                    }
+                    return Sound.GetAmplitudeAtPlaybackPos(playbackPos);
+                }
+                else
+                {
+                    float retVal = -1.0f;
+                    lock (mutex)
+                    {
+                        retVal = streamAmplitude; //TODO: implement
+                    }
+                    return retVal;
+                }
+            }
+        }
+
         private string category;
         public string Category
         {
@@ -311,10 +341,11 @@ namespace Barotrauma.Sounds
             private set;
         }
         private int streamSeekPos;
-        private bool startedPlaying;
+        private int buffersToRequeue;
         private bool reachedEndSample;
+        private int queueStartIndex;
         private readonly uint[] streamBuffers;
-        private readonly List<uint> emptyBuffers;
+        private int[] unqueuedBuffers;
 
         private object mutex;
 
@@ -342,7 +373,7 @@ namespace Barotrauma.Sounds
             FilledByNetwork = sound is VoipSound;
             decayTimer = 0;
             streamSeekPos = 0; reachedEndSample = false;
-            startedPlaying = true;
+            buffersToRequeue = 4;
             
             mutex = new object();
 
@@ -403,7 +434,7 @@ namespace Barotrauma.Sounds
                         streamShortBuffer = new short[STREAM_BUFFER_SIZE];
 
                         streamBuffers = new uint[4];
-                        emptyBuffers = new List<uint>();
+                        unqueuedBuffers = new int[4];
                         for (int i = 0; i < 4; i++)
                         {
                             AL.GenBuffer(out streamBuffers[i]);
@@ -463,19 +494,17 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to stop streamed source: " + AL.GetErrorString(alError));
                         }
 
-                        int buffersToUnqueue = 0;
-                        int[] unqueuedBuffers = null;
-
-                        buffersToUnqueue = 0;
-                        AL.GetSource(alSource, ALGetSourcei.BuffersProcessed, out buffersToUnqueue);
+                        int buffersToRequeue = 0;
+                        
+                        buffersToRequeue = 0;
+                        AL.GetSource(alSource, ALGetSourcei.BuffersProcessed, out buffersToRequeue);
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
                             throw new Exception("Failed to determine processed buffers from streamed source: " + AL.GetErrorString(alError));
                         }
-
-                        unqueuedBuffers = new int[buffersToUnqueue];
-                        AL.SourceUnqueueBuffers((int)alSource, buffersToUnqueue, unqueuedBuffers);
+                        
+                        AL.SourceUnqueueBuffers((int)alSource, buffersToRequeue, unqueuedBuffers);
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
@@ -532,46 +561,28 @@ namespace Barotrauma.Sounds
                     {
                         throw new Exception("Failed to determine playing state from streamed source: " + AL.GetErrorString(alError));
                     }
-                    
-                    int buffersToUnqueue = 0;
-                    int[] unqueuedBuffers = null;
-                    if (!startedPlaying)
-                    {
-                        buffersToUnqueue = 0;
-                        AL.GetSource(alSource, ALGetSourcei.BuffersProcessed, out buffersToUnqueue);
-                        alError = AL.GetError();
-                        if (alError != ALError.NoError)
-                        {
-                            throw new Exception("Failed to determine processed buffers from streamed source: " + AL.GetErrorString(alError));
-                        }
 
-                        unqueuedBuffers = new int[buffersToUnqueue+emptyBuffers.Count];
-                        AL.SourceUnqueueBuffers((int)alSource, buffersToUnqueue, unqueuedBuffers);
-                        for (int i = 0; i < emptyBuffers.Count; i++)
-                        {
-                            unqueuedBuffers[buffersToUnqueue + i] = (int)emptyBuffers[i];
-                        }
-                        buffersToUnqueue += emptyBuffers.Count;
-                        emptyBuffers.Clear();
-                        alError = AL.GetError();
-                        if (alError != ALError.NoError)
-                        {
-                            throw new Exception("Failed to unqueue buffers from streamed source: " + AL.GetErrorString(alError));
-                        }
-                    }
-                    else
+                    int unqueuedBufferCount;
+                    AL.GetSource(alSource, ALGetSourcei.BuffersProcessed, out unqueuedBufferCount);
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
                     {
-                        startedPlaying = false;
-                        buffersToUnqueue = 4;
-                        unqueuedBuffers = new int[4];
-                        for (int i = 0; i < 4; i++)
-                        {
-                            unqueuedBuffers[i] = (int)streamBuffers[i];
-                        }
+                        throw new Exception("Failed to determine processed buffers from streamed source: " + AL.GetErrorString(alError));
+                    }
+                        
+                    AL.SourceUnqueueBuffers((int)alSource, unqueuedBufferCount, unqueuedBuffers);
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to unqueue buffers from streamed source: " + AL.GetErrorString(alError));
                     }
                     
-                    for (int i = 0; i < buffersToUnqueue; i++)
+                    buffersToRequeue += unqueuedBufferCount;
+
+                    int iterCount = buffersToRequeue;
+                    for (int k = 0; k < iterCount; k++)
                     {
+                        int index = queueStartIndex;
                         short[] buffer = streamShortBuffer;
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
                         if (FilledByNetwork)
@@ -612,30 +623,32 @@ namespace Barotrauma.Sounds
                         
                         if (readSamples > 0)
                         {
-                            AL.BufferData<short>(unqueuedBuffers[i], Sound.ALFormat, buffer, readSamples, Sound.SampleRate);
+                            AL.BufferData<short>((int)streamBuffers[index], Sound.ALFormat, buffer, readSamples, Sound.SampleRate);
 
                             alError = AL.GetError();
                             if (alError != ALError.NoError)
                             {
                                 throw new Exception("Failed to assign data to stream buffer: " +
-                                    AL.GetErrorString(alError) + ": " + unqueuedBuffers[i].ToString() + "/" + unqueuedBuffers.Length + ", readSamples: " + readSamples);
+                                    AL.GetErrorString(alError) + ": " + streamBuffers[index].ToString() + "/" + streamBuffers.Length + ", readSamples: " + readSamples);
                             }
 
-                            AL.SourceQueueBuffer((int)alSource, unqueuedBuffers[i]);
+                            AL.SourceQueueBuffer((int)alSource, (int)streamBuffers[index]);
+                            queueStartIndex = (queueStartIndex + 1) % 4;
                             alError = AL.GetError();
                             if (alError != ALError.NoError)
                             {
-                                throw new Exception("Failed to queue buffer[" + i.ToString() + "] to stream: " + AL.GetErrorString(alError));
+                                throw new Exception("Failed to queue streamBuffer[" + index.ToString() + "] to stream: " + AL.GetErrorString(alError));
                             }
-                        }
-                        else if (readSamples < 0)
-                        {
-                            reachedEndSample = true;
                         }
                         else
                         {
-                            emptyBuffers.Add((uint)unqueuedBuffers[i]);
+                            if (readSamples < 0)
+                            {
+                                reachedEndSample = true;
+                            }
+                            break;
                         }
+                        buffersToRequeue--;
                     }
 
                     if (AL.GetSourceState(alSource) != ALSourceState.Playing)

@@ -32,6 +32,11 @@ namespace Barotrauma.Sounds
             video = vid;
         }
 
+        public override float GetAmplitudeAtPlaybackPos(int playbackPos)
+        {
+            throw new NotImplementedException();
+        }
+
         public override bool IsPlaying()
         {
             bool retVal = false;
