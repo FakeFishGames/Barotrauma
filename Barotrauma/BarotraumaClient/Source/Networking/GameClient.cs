@@ -319,10 +319,11 @@ namespace Barotrauma.Networking
         }
 
         private bool connectCancelled;
-        private bool CancelConnect(GUIButton button, object obj)
+        private void CancelConnect()
         {
             connectCancelled = true;
-            return true;
+            steamAuthTicket?.Cancel();
+            steamAuthTicket = null;
         }
 
         // Before main looping starts, we loop here and wait for approval message
@@ -347,7 +348,7 @@ namespace Barotrauma.Networking
                 if (reconnectBox == null)
                 {
                     reconnectBox = new GUIMessageBox(connectingText, TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
-                    reconnectBox.Buttons[0].OnClicked += CancelConnect;
+                    reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
@@ -447,7 +448,7 @@ namespace Barotrauma.Networking
                             if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
                                 ReadDisconnectMessage(inc, false);
-                                connectCancelled = true;
+                                CancelConnect();
                             }
                             break;
                     }
@@ -489,7 +490,7 @@ namespace Barotrauma.Networking
                                     {
                                         ReadDisconnectMessage(inc, false);
                                         msgBox.Close(null, null);
-                                        connectCancelled = true;
+                                        CancelConnect();
                                     }
                                     break;
                             }
@@ -521,7 +522,7 @@ namespace Barotrauma.Networking
                         else if (cancelButton.Selected)
                         {
                             msgBox.Close(null, null);
-                            connectCancelled = true;
+                            CancelConnect();
                         }
                         else
                         {
@@ -1803,7 +1804,6 @@ namespace Barotrauma.Networking
         {
             client.Shutdown("");
             steamAuthTicket?.Cancel();
-
             steamAuthTicket = null;
 
             foreach (var fileTransfer in FileReceiver.ActiveTransfers)
