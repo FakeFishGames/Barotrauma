@@ -224,22 +224,6 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
 
-            displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
-            displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
-#if (!OSX)
-            displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
-            displayModeDD.SelectItem(GameMain.Config.WindowMode);
-#else
-            // Fullscreen option will just set itself to borderless on macOS.
-            if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
-            {
-                displayModeDD.SelectItem(WindowMode.Fullscreen);
-            }
-            else
-            {
-                displayModeDD.SelectItem(GameMain.Config.WindowMode);
-            }
-#endif
             displayModeDD.OnSelected = (guiComponent, obj) =>
             {
                 UnsavedSettings = true;
@@ -257,6 +241,24 @@ namespace Barotrauma
                 }
                 return true;
             };
+
+
+            displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
+            displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
+#if (!OSX)
+            displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
+            displayModeDD.SelectItem(GameMain.Config.WindowMode);
+#else
+            // Fullscreen option will just set itself to borderless on macOS.
+            if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(GameMain.Config.WindowMode);
+            }
+#endif
 
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
