@@ -967,7 +967,7 @@ namespace Barotrauma
                 {
                     try
                     {
-                        OpenFileDialog ofd = new OpenFileDialog()
+                        Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                         {
                             Multiselect = true,
                             InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
@@ -1078,7 +1078,7 @@ namespace Barotrauma
                 {
                     try
                     {
-                        OpenFileDialog ofd = new OpenFileDialog()
+                        Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                         {
                             InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
                             Title = TextManager.Get("workshopitemaddfiles"),
