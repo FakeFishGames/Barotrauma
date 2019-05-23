@@ -62,7 +62,16 @@ namespace Barotrauma
 
                 if (newItemIDs[i] == 0 || (newItem != Items[i]))
                 {
-                    if (Items[i] != null) Items[i].Drop(null);
+                    if (Items[i] != null)
+                    {
+                        Item droppedItem = Items[i];
+                        Entity prevOwner = Owner;
+                        droppedItem.Drop(null);
+                        if (droppedItem.body != null && prevOwner != null)
+                        {
+                            droppedItem.body.SetTransform(prevOwner.SimPosition, 0.0f);
+                        }
+                    }
                     System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
             }
@@ -79,7 +88,10 @@ namespace Barotrauma
                         var holdable = item.GetComponent<Holdable>();
                         if (holdable != null && !holdable.CanBeDeattached()) continue;
 
-                        if (!item.CanClientAccess(c)) continue;
+                        if (!prevItems.Contains(item) && !item.CanClientAccess(c))
+                        {
+                            continue;
+                        }
                     }
                     TryPutItem(item, i, true, true, c.Character, false);
                     for (int j = 0; j < capacity; j++)
