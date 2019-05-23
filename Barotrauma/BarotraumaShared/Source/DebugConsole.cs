@@ -615,7 +615,7 @@ namespace Barotrauma
                 NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
             }, isCheat: true));
 
-            commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
+            commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
             {
                 Hull.EditFire = !Hull.EditFire;
                 NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
