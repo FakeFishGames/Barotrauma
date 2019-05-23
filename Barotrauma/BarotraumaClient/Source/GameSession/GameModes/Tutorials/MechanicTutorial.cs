@@ -330,6 +330,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
+            yield return new WaitForSeconds(1.5f, false);
             //TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Select)); // Ladder objective
             //do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
             //RemoveCompletedObjective(segments[11]);
