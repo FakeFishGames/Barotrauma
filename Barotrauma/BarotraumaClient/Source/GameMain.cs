@@ -120,7 +120,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
+        
         public static int GraphicsWidth
         {
             get;
@@ -192,7 +192,19 @@ namespace Barotrauma
             FarseerPhysics.Settings.PositionIterations = 1;
         }
 
-        public void ApplyGraphicsSettings()
+        public void RequestGraphicsSettings()
+        {
+#if WINDOWS
+            if (WindowActive)
+            {
+#endif
+                ApplyGraphicsSettings();
+#if WINDOWS
+            }
+#endif
+        }
+
+        private void ApplyGraphicsSettings()
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
@@ -208,13 +220,14 @@ namespace Barotrauma
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
             SetWindowMode(Config.WindowMode);
+            GraphicsDeviceManager.ApplyChanges();
 
             defaultViewport = GraphicsDevice.Viewport;
 
             OnResolutionChanged?.Invoke();
         }
 
-        public void SetWindowMode(WindowMode windowMode)
+        private void SetWindowMode(WindowMode windowMode)
         {
             WindowMode = windowMode;
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
@@ -223,8 +236,6 @@ namespace Barotrauma
 
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-
-            GraphicsDeviceManager.ApplyChanges();
         }
 
         public void ResetViewPort()
@@ -242,7 +253,7 @@ namespace Barotrauma
         {
             base.Initialize();
 
-            ApplyGraphicsSettings();
+            RequestGraphicsSettings();
 
             ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
@@ -281,8 +292,37 @@ namespace Barotrauma
 #endif
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
+
+#if WINDOWS
+            var gameForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
+            gameForm.Activated += new EventHandler(HandleFocus);
+            gameForm.Deactivate += new EventHandler(HandleDefocus);
+            if (WindowActive) { HandleFocus(null, null); }
+#endif
         }
-        
+
+#if WINDOWS
+        private void HandleFocus(object sender, EventArgs e)
+        {
+            CoroutineManager.StopCoroutines("FocusCoroutine");
+            CoroutineManager.StartCoroutine(FocusCoroutine(),"FocusCoroutine");
+        }
+
+        private IEnumerable<object> FocusCoroutine()
+        {
+            yield return new WaitForSeconds(0.01f);
+            ApplyGraphicsSettings();
+            yield return CoroutineStatus.Success;
+        }
+
+        private void HandleDefocus(object sender, EventArgs e)
+        {
+            CoroutineManager.StopCoroutines("FocusCoroutine");
+            GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.ApplyChanges();
+        }
+#endif
+
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
