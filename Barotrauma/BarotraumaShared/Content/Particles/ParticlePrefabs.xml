@@ -742,7 +742,7 @@
   </risingbubbles>
   
   <weld
-    startsizemin="0.9,0.9" startsizemax="1.1,1.1"
+    startsizemin="1.5,0.9" startsizemax="1.75,1.1"
     sizechangemin="-4.0,-0.1" sizechangemax="-4.0,-0.5"
     startcolor="255,255,255,255" endcolor="255,255,255,0"
     lifetime="0.25"
@@ -811,7 +811,7 @@
   </weldsmoke>
 
   <plasma
-    startsizemin="0.9,0.9" startsizemax="1.1,1.1"
+    startsizemin="1.5,0.9" startsizemax="2.0,1.1"
     sizechange="-4.0,-0.5"
     startcolor="255,255,255,255" endcolor="255,255,255,0"
     lifetime="0.25"    
