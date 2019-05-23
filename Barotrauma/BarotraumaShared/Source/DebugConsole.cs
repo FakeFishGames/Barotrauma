@@ -615,7 +615,7 @@ namespace Barotrauma
                 NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
             }, isCheat: true));
 
-            commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
+            commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
             {
                 Hull.EditFire = !Hull.EditFire;
                 NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
@@ -988,6 +988,18 @@ namespace Barotrauma
 #endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
+
+            commands.Add(new Command("money", "", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (GameMain.GameSession.GameMode is CampaignMode campaign)
+                {
+                    if (int.TryParse(args[0], out int money))
+                    {
+                        campaign.Money += money;
+                    }
+                }
+            }, isCheat: true));
 #endif
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them

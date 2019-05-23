@@ -454,13 +454,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Watchman\watchman_gear.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Watchman\watchman_legs_female_2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Watchman\watchman_legs_male_2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Watchman\watchman_torso_female_2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Watchman\watchman_torso_male_2.png">
