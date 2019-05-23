@@ -609,13 +609,13 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
+            commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 Hull.EditWater = !Hull.EditWater;
                 NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
             }, isCheat: true));
 
-            commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
+            commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
             {
                 Hull.EditFire = !Hull.EditFire;
                 NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
