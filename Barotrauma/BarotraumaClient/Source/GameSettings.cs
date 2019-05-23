@@ -206,9 +206,8 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
-                OnSelected = SelectResolution,
-                ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
-        };
+                OnSelected = SelectResolution
+            };
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
@@ -245,9 +244,6 @@ namespace Barotrauma
             {
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
-#if !LINUX
-                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed;
-#endif
                 return true;
             };
 
