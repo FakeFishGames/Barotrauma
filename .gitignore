@@ -13,7 +13,7 @@ bld/
 [Rr]elease*/
 
 # Barotrauma content folder
-BarotraumaShared/Content/
+*/BarotraumaShared/Content/
 
 *.v12.suo
 *.suo

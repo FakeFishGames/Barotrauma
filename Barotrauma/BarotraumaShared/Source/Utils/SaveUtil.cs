@@ -18,7 +18,7 @@ namespace Barotrauma
 #if OSX
         //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
         public static string SaveFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
+            Environment.GetFolderPath(Environment.SpecialFolder.Personal),
             "Library",
             "Application Support",
             "Daedalic Entertainment GmbH",
@@ -33,7 +33,7 @@ namespace Barotrauma
 #endif
 
         public static string MultiplayerSaveFolder = Path.Combine(
-            SaveFolder, 
+            SaveFolder,
             "Multiplayer");
 
         public delegate void ProgressDelegate(string sMessage);
@@ -46,7 +46,7 @@ namespace Barotrauma
             get { return Path.Combine(SaveFolder, "temp"); }
 #endif
         }
-        
+
         public enum SaveType
         {
             Singleplayer,
@@ -206,11 +206,11 @@ namespace Barotrauma
             if (Directory.Exists(legacyFolder))
             {
                 files.AddRange(Directory.GetFiles(legacyFolder, "*.save"));
-            }            
+            }
 
             return files;
         }
-        
+
         public static string CreateSavePath(SaveType saveType, string fileName = "Save_Default")
         {
             fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
@@ -227,7 +227,7 @@ namespace Barotrauma
                 DebugConsole.Log("Save folder \"" + folder + "\" not found. Created new folder");
                 Directory.CreateDirectory(folder);
             }
-            
+
             string extension = ".save";
             string pathWithoutExtension = Path.Combine(folder, fileName);
 
@@ -244,7 +244,7 @@ namespace Barotrauma
 
             return pathWithoutExtension + " " + i + extension;
         }
-        
+
         public static void CompressStringToFile(string fileName, string value)
         {
             // A.

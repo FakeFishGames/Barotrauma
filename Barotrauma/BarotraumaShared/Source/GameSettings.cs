@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Xml;
+using System.IO;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
@@ -26,8 +27,23 @@ namespace Barotrauma
 
     public partial class GameSettings
     {
-        const string savePath = "config.xml";
-        const string playerSavePath = "config_player.xml";
+        private const string savePath = "config.xml";
+        public string SavePath
+        {
+            get
+            {
+                return Path.Combine(SaveUtil.SaveFolder, savePath);
+            }
+        }
+
+        private const string playerSavePath = "config_player.xml";
+        public string PlayerSavePath
+        {
+            get
+            {
+                return Path.Combine(SaveUtil.SaveFolder, playerSavePath);
+            }
+        }
         const string vanillaContentPackagePath = "Data/ContentPackages/Vanilla";
 
         public int GraphicsWidth { get; set; }
@@ -418,22 +434,11 @@ namespace Barotrauma
         #region Load DefaultConfig
         private void LoadDefaultConfig(bool setLanguage = true)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
-
-            if (setLanguage || string.IsNullOrEmpty(Language))
-            {
-                Language = doc.Root.GetAttributeString("language", "English");
+            if (!File.Exists(SavePath)) {
+                SaveNewDefaultConfig();
             }
 
-            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
-
-            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
-
-            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
-
-            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
+            XDocument doc = XMLExtensions.TryLoadXml(SavePath);
 
             if (doc == null)
             {
@@ -451,6 +456,21 @@ namespace Barotrauma
                 }
                 return;
             }
+
+            if (setLanguage || string.IsNullOrEmpty(Language))
+            {
+                Language = doc.Root.GetAttributeString("language", "English");
+            }
+
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
+
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
+
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+
+            QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", "");
 
             XElement graphicsMode = doc.Root.Element("graphicsmode");
             GraphicsWidth   = 0;
@@ -484,7 +504,7 @@ namespace Barotrauma
                 wm = WindowMode.Fullscreen;
             }
             WindowMode = wm;
-            
+
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
             AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", true);
@@ -616,8 +636,8 @@ namespace Barotrauma
             }
 
             doc.Root.Add(
-                new XAttribute("language", TextManager.Language),
-                new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("language", TextManager.Language ?? "English"),
+                new XAttribute("masterserverurl", MasterServerUrl ?? ""),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
@@ -626,7 +646,7 @@ namespace Barotrauma
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("quickstartsub", QuickStartSubmarineName),
+                new XAttribute("quickstartsub", QuickStartSubmarineName ?? ""),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
                 new XAttribute("aimassistamount", aimAssistAmount));
 
@@ -639,7 +659,7 @@ namespace Barotrauma
             {
                 doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
-            
+
             XElement gMode = doc.Root.Element("graphicsmode");
             if (gMode == null)
             {
@@ -686,8 +706,13 @@ namespace Barotrauma
 
             var keyMappingElement = new XElement("keymapping");
             doc.Root.Add(keyMappingElement);
+
+            if (keyMapping == null) { SetDefaultBindings(); }
+
             for (int i = 0; i < keyMapping.Length; i++)
             {
+                if (keyMapping[i] == null) { continue; }
+
                 if (keyMapping[i].MouseButton == null)
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
@@ -699,12 +724,15 @@ namespace Barotrauma
             }
 
             var gameplay = new XElement("gameplay");
-            var jobPreferences = new XElement("jobpreferences");
+            var jobPreferencesEle = new XElement("jobpreferences");
+
+            if (jobPreferences == null) { jobPreferences = new List<string>(); }
+
             foreach (string jobName in JobPreferences)
             {
-                jobPreferences.Add(new XElement("job", new XAttribute("identifier", jobName)));
+                jobPreferencesEle.Add(new XElement("job", new XAttribute("identifier", jobName)));
             }
-            gameplay.Add(jobPreferences);
+            gameplay.Add(jobPreferencesEle);
             doc.Root.Add(gameplay);
 
             var playerElement = new XElement("player",
@@ -727,7 +755,7 @@ namespace Barotrauma
 
             try
             {
-                using (var writer = XmlWriter.Create(savePath, settings))
+                using (var writer = XmlWriter.Create(SavePath, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();
@@ -761,7 +789,7 @@ namespace Barotrauma
         /// </summary>
         private bool LoadPlayerConfigInternal()
         {
-            XDocument doc = XMLExtensions.LoadXml(playerSavePath);
+            XDocument doc = XMLExtensions.LoadXml(PlayerSavePath);
 
             if (doc == null || doc.Root == null)
             {
@@ -792,7 +820,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (GraphicsWidth == 0 || GraphicsHeight == 0)
+            if (GraphicsWidth <= 0 || GraphicsHeight <= 0)
             {
                 GraphicsWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
                 GraphicsHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
@@ -822,7 +850,7 @@ namespace Barotrauma
                     VoiceSetting = voiceSetting;
                 }
             }
-            
+
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
             requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
 
@@ -1042,7 +1070,7 @@ namespace Barotrauma
                     new XAttribute("vsync", VSyncEnabled),
                     new XAttribute("displaymode", windowMode));
             }
-            
+
             XElement audio = doc.Root.Element("audio");
             if (audio == null)
             {
@@ -1142,7 +1170,7 @@ namespace Barotrauma
 
             try
             {
-                using (var writer = XmlWriter.Create(playerSavePath, settings))
+                using (var writer = XmlWriter.Create(PlayerSavePath, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();
@@ -1162,7 +1190,7 @@ namespace Barotrauma
             foreach (XAttribute attribute in element.Attributes())
             {
                 if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
-                
+
                 if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
                 {
                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
@@ -1173,7 +1201,7 @@ namespace Barotrauma
                     {
                         keyMapping[(int)inputType] = new KeyOrMouse(key);
                     }
-                }                
+                }
             }
         }
 

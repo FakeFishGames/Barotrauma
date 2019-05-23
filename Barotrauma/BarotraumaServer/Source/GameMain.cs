@@ -43,7 +43,7 @@ namespace Barotrauma
         //but they're checked for all over the place
         //TODO: maybe clean up instead of having these constants
         public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
-        
+
         public static bool ShouldRun = true;
 
         private static Stopwatch stopwatch;
@@ -85,8 +85,8 @@ namespace Barotrauma
             Config = new GameSettings();
 
             SteamManager.Initialize();
-            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
-            
+            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();
+
             GameScreen = new GameScreen();
         }
 
@@ -189,7 +189,7 @@ namespace Barotrauma
                 maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
                 ownerKey = 0;
             }
-            
+
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
                 switch (CommandLineArgs[i].Trim())
@@ -307,7 +307,7 @@ namespace Barotrauma
             stopwatch?.Reset();
             stopwatch?.Start();
         }
-        
+
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);
