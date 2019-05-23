@@ -336,7 +336,7 @@ namespace Barotrauma
                         if (AIObjectiveFixLeaks.IsValidTarget(gap, Character))
                         {
                             AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
-                            if (newOrder == null)
+                            if (newOrder == null && !gap.IsRoomToRoom)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
