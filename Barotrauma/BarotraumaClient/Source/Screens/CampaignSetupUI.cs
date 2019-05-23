@@ -253,7 +253,7 @@ namespace Barotrauma
 
         public void UpdateSubList(IEnumerable<Submarine> submarines)
         {
-#if DEBUG
+#if !DEBUG
             var subsToShow = submarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
 #else
             var subsToShow = submarines;
