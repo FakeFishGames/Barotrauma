@@ -165,9 +165,9 @@ namespace Barotrauma.Tutorials
             {
                 yield return null;
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
-                HighlightOrderOption("jobspecific");
+                //HighlightOrderOption("jobspecific");
             }
-            while (!HasOrder(captain_mechanic, "repairsystems", "jobspecific"));
+            while (!HasOrder(captain_mechanic, "repairsystems"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(2);
