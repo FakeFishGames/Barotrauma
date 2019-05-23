@@ -866,11 +866,11 @@
   </shellA>
   <!-- SUBMARINE WALLS aka *SHELLS" END -->
   <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS -->
-  <sshellA name="Shuttle Shell A01" identifier="sshella01" description="Shuttle wall" body="true" bodywidth="40" bodyheight="60" resizevertical="true" castshadow="true">
+  <sshellA name="Shuttle Shell A01" identifier="sshella01" description="Shuttle wall" body="true" bodywidth="40" resizevertical="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,0,45,208" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,0,45,208" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A02" identifier="sshella02" description="Shuttle wall" body="true" bodywidth="60" bodyheight="40" resizehorizontal="true" castshadow="true">
+  <sshellA name="Shuttle Shell A02" identifier="sshella02" description="Shuttle wall" body="true" bodyheight="40" resizehorizontal="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="65,0,207,45" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="65,0,207,45" depth="0.85" />
   </sshellA>
