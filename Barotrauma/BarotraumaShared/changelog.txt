@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.0.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed captain tutorial not continuing after the part where the mechanic has to be ordered to do repairs.
+- Fixed mechanic tutorial getting stuck if repairing the devices is interrupted before they're fully repaired.
+- Unlock tutorials one by one.
+- Fixed crashing when clicking on the "no matching servers found" message in the server list.
+- Fixed loading screen being dismissable when the window is not active.
+- Fixed connection panel overlay overlapping with the connections on resolutions higher than 1080p.
+- Fixed incorrect "mission completed" text in the combat missions.
+- Fixed "a swarm of [monster]" description in the crawler swarm mission.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.0.2
 ---------------------------------------------------------------------------------------------------------
 
