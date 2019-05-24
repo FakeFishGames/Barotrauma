@@ -59,7 +59,7 @@
     <targetpriority tag="husk" state="Attack" priority="0"/>
   </ai>
 
-  <inventory slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
+  <inventory slots="Card, Headset, Head, InnerClothes, OuterClothes, LeftHand, RightHand, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any"/>
 
 </Character>
 
