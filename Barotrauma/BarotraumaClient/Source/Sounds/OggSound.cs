@@ -45,8 +45,7 @@ namespace Barotrauma.Sounds
                         if (j >= bufferSize) { break; }
                         maxAmplitude = Math.Max(maxAmplitude, Math.Abs(floatBuffer[j]));
                     }
-                    double dB = Math.Min(20 * Math.Log10(maxAmplitude), 0.0);
-                    playbackAmplitude.Add((float)dB);
+                    playbackAmplitude.Add(maxAmplitude);
                 }
                 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
@@ -81,7 +80,7 @@ namespace Barotrauma.Sounds
         {
             if (playbackAmplitude == null) { return float.NegativeInfinity; }
             int index = playbackPos / AMPLITUDE_SAMPLE_COUNT;
-            if (index < 0) { return float.NegativeInfinity; }
+            if (index < 0) { return 0.0f; }
             if (index > playbackAmplitude.Count) { index = playbackAmplitude.Count - 1; }
             return playbackAmplitude[index];
         }
