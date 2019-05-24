@@ -298,7 +298,7 @@ namespace Barotrauma
             CloseServer();
 
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
         }
 
         public static void ResetFrameTime()
