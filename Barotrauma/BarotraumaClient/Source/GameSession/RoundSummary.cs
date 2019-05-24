@@ -44,12 +44,9 @@ namespace Barotrauma
 
             GUIListBox infoTextBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), paddedFrame.RectTransform));
             
-            string summaryText = TextManager.Get(gameOver ? "RoundSummaryGameOver" :
-                (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"));
-
-            summaryText = summaryText
-                .Replace("[sub]", Submarine.MainSub.Name)
-                .Replace("[location]", progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name);
+            string summaryText = TextManager.GetWithVariables(gameOver ? "RoundSummaryGameOver" :
+                (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"), new string[2] { "[sub]", "[location]" },
+                new string[2] { Submarine.MainSub.Name, progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name });
 
             var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                 summaryText, wrap: true);
@@ -79,7 +76,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.Mission.Completed && singleplayer)
                     {
                         var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                            TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
+                            TextManager.GetWithVariable("MissionReward", "[reward]", GameMain.GameSession.Mission.Reward.ToString()));
                     }  
                 }
             }
