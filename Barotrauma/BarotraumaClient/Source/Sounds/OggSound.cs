@@ -79,9 +79,9 @@ namespace Barotrauma.Sounds
 
         public override float GetAmplitudeAtPlaybackPos(int playbackPos)
         {
-            if (playbackAmplitude == null) { return -1; }
+            if (playbackAmplitude == null) { return float.NegativeInfinity; }
             int index = playbackPos / AMPLITUDE_SAMPLE_COUNT;
-            if (index < 0) { return -1; }
+            if (index < 0) { return float.NegativeInfinity; }
             if (index > playbackAmplitude.Count) { index = playbackAmplitude.Count - 1; }
             return playbackAmplitude[index];
         }
