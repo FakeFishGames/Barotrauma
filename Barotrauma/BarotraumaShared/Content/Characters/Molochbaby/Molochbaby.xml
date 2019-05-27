@@ -4,11 +4,12 @@
   <ragdolls folder="default"/>
   <animations folder="default"/>
 
+  <bloodemitter particle="blackwaterblood" particleamount="10" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10"/>
   <gibemitter particle="blackwaterblood" particleamount="40" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10"/>
 
   <health
     vitality="400"
-    doesbleed="false"/>
+    doesbleed="true"/>
 
   <sound file="Content/Characters/Molochbaby/MOLOCHBABY_attack1.ogg" state="Attack" range="5000"/>
   <sound file="Content/Characters/Molochbaby/MOLOCHBABY_attack2.ogg" state="Attack" range="5000"/>
@@ -20,7 +21,13 @@
   
   <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle1.ogg" state="Idle" range="8000"/>
   <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle2.ogg" state="Idle" range="8000"/>
-  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle3.ogg" state="Idle" range="8000"/>  
+  <sound file="Content/Characters/Molochbaby/MOLOCHBABY_idle3.ogg" state="Idle" range="8000"/>
+
+  <Inventory slots="Any, Any, Any" accessiblewhenalive="false">
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="brockite"/>
+  </Inventory>
 
   <ai
     combatstrength="900"

@@ -464,7 +464,8 @@ namespace Barotrauma.Networking
                 ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
                 return true;
             };
-            
+
+            InitMonstersEnabled();
             List<string> monsterNames = MonsterEnabled.Keys.ToList();
             tempMonsterEnabled = new Dictionary<string, bool>(MonsterEnabled);
             foreach (string s in monsterNames)
