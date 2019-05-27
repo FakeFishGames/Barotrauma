@@ -75,6 +75,8 @@ namespace Barotrauma
         {
             settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
 
+            Vector2 tickBoxScale = Vector2.One * 0.05f;
+
             var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.01f, IsHorizontal = true };
 
             /// General tab --------------------------------------------------------------
@@ -96,7 +98,7 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(32, 32), contentPackageList.Content.RectTransform), contentPackage.Name)
+                var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
                 {
                     UserData = contentPackage,
                     OnSelected = SelectContentPackage,
@@ -250,7 +252,7 @@ namespace Barotrauma
                 return true;
             };
 
-            GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
+            GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableVSync"))
             {
                 ToolTip = TextManager.Get("EnableVSyncToolTip"),
                 OnSelected = (GUITickBox box) =>
@@ -266,7 +268,7 @@ namespace Barotrauma
             };
 
             //TODO: remove hardcoded texts after the texts have been added to localization
-            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), 
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
                 TextManager.Get("PauseOnFocusLost", returnNull: true) ?? "Pause on focus lost");
             pauseOnFocusLostBox.Selected = PauseOnFocusLost;
             pauseOnFocusLostBox.ToolTip = TextManager.Get("PauseOnFocusLostToolTip", returnNull: true) ?? "Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.";
@@ -331,7 +333,7 @@ namespace Barotrauma
             };
             lightScrollBar.OnMoved(lightScrollBar, lightScrollBar.BarScroll);
 
-            new GUITickBox(new RectTransform(new Point(32, 32), rightColumn.RectTransform), TextManager.Get("SpecularLighting"))
+            new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("SpecularLighting"))
             {
                 ToolTip = TextManager.Get("SpecularLightingToolTip"),
                 Selected = SpecularityEnabled,
@@ -343,7 +345,7 @@ namespace Barotrauma
                 }
             };
 
-            new GUITickBox(new RectTransform(new Point(32, 32), rightColumn.RectTransform), TextManager.Get("ChromaticAberration"))
+            new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("ChromaticAberration"))
             {
                 ToolTip = TextManager.Get("ChromaticAberrationToolTip"),
                 Selected = ChromaticAberrationEnabled,
@@ -443,7 +445,7 @@ namespace Barotrauma
             };
             voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
 
-            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
+            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
             muteOnFocusLostBox.OnSelected = (tickBox) =>
@@ -461,7 +463,7 @@ namespace Barotrauma
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
             }
 
-            GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(new Point(32, 32), audioSliders.RectTransform), TextManager.Get("DirectionalVoiceChat"));
+            GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DirectionalVoiceChat"));
             directionalVoiceChat.Selected = UseDirectionalVoiceChat;
             directionalVoiceChat.ToolTip = TextManager.Get("DirectionalVoiceChatToolTip");
             directionalVoiceChat.OnSelected = (tickBox) =>
@@ -516,7 +518,7 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(new Point(32, 32), audioSliders.RectTransform), TextManager.Get(langStr))
+                var tick = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr))
                 {
                     ToolTip = TextManager.Get(langStr + "ToolTip")
                 };
@@ -650,7 +652,7 @@ namespace Barotrauma
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
 
-            new GUITickBox(new RectTransform(new Point(32, 32), controlsLayoutGroup.RectTransform), TextManager.Get("EnableMouseLook"))
+            new GUITickBox(new RectTransform(tickBoxScale, controlsLayoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableMouseLook"))
             {
                 ToolTip = TextManager.Get("EnableMouseLookToolTip"),
                 Selected = EnableMouseLook,
