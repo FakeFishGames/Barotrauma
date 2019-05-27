@@ -132,7 +132,7 @@ namespace Barotrauma
                 if (newLanguage == Language) return true;
                 
                 Language = newLanguage;
-                ApplySettings();
+                UnsavedSettings = true;
 
                 var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
                 //change fonts to the default font of the new language to make sure
