@@ -531,11 +531,11 @@
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,432,359,159" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF1p3>
-  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="180" bodyheight="121" bodyoffset="-40,0" castshadow="false" health="400">
+  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="250" bodyheight="30" bodyoffset="0,0" bodyrotation="-20" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,752,270,121" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p1>
-  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="151" bodyoffset="60,0" castshadow="false" ishorizontal="false" health="400">
+  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="158" bodyoffset="60,-3" castshadow="false" ishorizontal="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="1,593,269,160" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p2>
