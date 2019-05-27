@@ -656,7 +656,7 @@ namespace Barotrauma.Networking
             private set;
         } = new List<Pair<int, int>>();
 
-        public void ReadMonsterEnabled(NetBuffer inc)
+        private void InitMonstersEnabled()
         {
             //monster spawn settings
             if (MonsterEnabled == null)
@@ -673,7 +673,11 @@ namespace Barotrauma.Networking
                     if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
                 }
             }
+        }
 
+        public void ReadMonsterEnabled(NetBuffer inc)
+        {
+            InitMonstersEnabled();
             List<string> monsterNames = MonsterEnabled.Keys.ToList();
             foreach (string s in monsterNames)
             {
@@ -681,7 +685,7 @@ namespace Barotrauma.Networking
             }
             inc.ReadPadBits();
         }
-        
+
         public void WriteMonsterEnabled(NetBuffer msg, Dictionary<string, bool> monsterEnabled = null)
         {
             //monster spawn settings
