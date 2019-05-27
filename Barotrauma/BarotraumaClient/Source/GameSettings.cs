@@ -470,14 +470,13 @@ namespace Barotrauma
                 UnsavedSettings = true;
                 return true;
             };
-
-
+            
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
 #if (!OSX)
-            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), VoiceCaptureDevice, deviceNames.Count);
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), deviceNames.Count);
             foreach (string name in deviceNames)
             {
-                deviceList.AddItem(name, name);
+                deviceList.AddItem(TrimAudioDeviceName(name), name);
             }
             deviceList.OnSelected = (GUIComponent selected, object obj) =>
             {
@@ -489,7 +488,7 @@ namespace Barotrauma
             };
 #else
             var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), 
-                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice))
+                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice)))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
                 TextAlignment = Alignment.CenterX
@@ -500,11 +499,11 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
                 {
-                    deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+                    deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
                     if (VoiceCaptureDevice == deviceNames[0]) return true;
 
                     VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice);
+                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
                     suavemente.Flash(Color.Blue);
 
                     return true;
@@ -776,6 +775,19 @@ namespace Barotrauma
             SelectTab(selectedTab);
         }
 
+        private string TrimAudioDeviceName(string name)
+        {
+            string[] prefixes = { "OpenAL Soft on " };
+            foreach (string prefix in prefixes)
+            {
+                if (name.StartsWith(prefix, StringComparison.InvariantCulture))
+                {
+                    return name.Remove(0, prefix.Length);
+                }
+            }
+            return name;
+        }
+        
         private Tab currentTab;
         private void SelectTab(Tab tab)
         {
