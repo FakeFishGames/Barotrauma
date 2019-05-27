@@ -1986,16 +1986,17 @@ namespace Barotrauma
                 string errorMsg = "";
                 if (sub == null)
                 {
-                    errorMsg = TextManager.Get("SubNotFoundError").Replace("[subname]", subName) + " ";
+                    errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
                 }
                 else if (sub.MD5Hash.Hash == null)
                 {
-                    errorMsg = TextManager.Get("SubLoadError").Replace("[subname]", subName) + " ";
+                    errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
                     if (matchingListSub != null) matchingListSub.GetChild<GUITextBox>().TextColor = Color.Red;
                 }
                 else
                 {
-                    errorMsg = TextManager.Get("SubDoesntMatchError").Replace("[subname]", sub.Name).Replace("[myhash]", sub.MD5Hash.ShortHash).Replace("[serverhash]", Md5Hash.GetShortHash(md5Hash)) + " ";
+                    errorMsg = TextManager.GetWithVariables("SubDoesntMatchError", new string[3] { "[subname]" , "[myhash]", "[serverhash]" }, 
+                        new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
                 }
 
                 errorMsg += TextManager.Get("DownloadSubQuestion");

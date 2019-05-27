@@ -269,7 +269,7 @@ namespace Barotrauma.Networking
             catch
             {
                 new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"),
-                    TextManager.Get("InvalidIPAddress").Replace("[serverip]", serverIP).Replace("[port]", Port.ToString()));
+                    TextManager.GetWithVariables("InvalidIPAddress", new string[2] { "[serverip]", "[port]" }, new string[2] { serverIP, Port.ToString() }));
                 return;
             }
 
@@ -347,7 +347,7 @@ namespace Barotrauma.Networking
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox(connectingText, TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
+                    reconnectBox = new GUIMessageBox(connectingText, TextManager.GetWithVariable("ConnectingTo", "[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
@@ -667,7 +667,7 @@ namespace Barotrauma.Networking
                 string errorMsg = "Error while reading a message from server. {" + e + "}\n" + e.StackTrace;
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
-                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("MessageReadError").Replace("[message]", e.Message).Replace("[targetsite]", e.TargetSite.ToString()));
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
                 Disconnect();
                 GameMain.MainMenuScreen.Select();
                 return;
@@ -1686,7 +1686,7 @@ namespace Barotrauma.Networking
             switch (transfer.FileType)
             {
                 case FileTransferType.Submarine:
-                    new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.Get("FileDownloadedNotification").Replace("[filename]", transfer.FileName));
+                    new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.GetWithVariable("FileDownloadedNotification", "[filename]", transfer.FileName));
                     var newSub = new Submarine(transfer.FilePath);
                     var existingSubs = Submarine.SavedSubmarines.Where(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash).ToList();
                     foreach (Submarine existingSub in existingSubs)
@@ -2264,7 +2264,7 @@ namespace Barotrauma.Networking
 
                     GUI.DrawString(spriteBatch,
                         pos,
-                        ToolBox.LimitString(TextManager.Get("DownloadingFile").Replace("[filename]", transfer.FileName), GUI.SmallFont, (int)downloadBarSize.X),
+                        ToolBox.LimitString(TextManager.GetWithVariable("DownloadingFile", "[filename]", transfer.FileName), GUI.SmallFont, (int)downloadBarSize.X),
                         Color.White, null, 0, GUI.SmallFont);
                     GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - downloadBarSize.Y / 2), new Vector2(downloadBarSize.X * 0.7f, downloadBarSize.Y / 2), transfer.Progress, Color.Green);
                     GUI.DrawString(spriteBatch, pos + new Vector2(5, downloadBarSize.Y / 2),
@@ -2297,9 +2297,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    string endVoteText = TextManager.Get("EndRoundVotes")
-                        .Replace("[votes]", EndVoteCount.ToString())
-                        .Replace("[max]", EndVoteMax.ToString());
+                    string endVoteText = TextManager.GetWithVariables("EndRoundVotes", new string[2] { "[votes]", "[max]" }, new string[2] { EndVoteCount.ToString(), EndVoteMax.ToString() });
                     GUI.DrawString(spriteBatch, EndVoteTickBox.Rect.Center.ToVector2() - GUI.SmallFont.MeasureString(endVoteText) / 2,
                         endVoteText,
                         Color.White,
@@ -2317,14 +2315,13 @@ namespace Barotrauma.Networking
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
                     respawnManager.CountdownStarted)
                 {
-                    respawnInfo = TextManager.Get(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn");
-                    respawnInfo = respawnInfo.Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer));
+                    respawnInfo = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer));
                 }
                 else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
                 {
                     respawnInfo = respawnManager.TransportTimer <= 0.0f ?
                         "" :
-                        TextManager.Get("RespawnShuttleLeavingIn").Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
+                        TextManager.GetWithVariable("RespawnShuttleLeavingIn", "[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
                 }
 
                 if (respawnManager != null)

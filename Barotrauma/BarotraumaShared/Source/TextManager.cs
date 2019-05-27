@@ -209,7 +209,7 @@ namespace Barotrauma
                 {
                     if (formatCapitals[i])
                     {
-                        variableValues[i] = HandleCapitalization(text, variableTags[i], variableValues[i]);
+                        variableValues[i] = HandleVariableCapitalization(text, variableTags[i], variableValues[i]);
                     }
                 }
             }
@@ -240,13 +240,13 @@ namespace Barotrauma
 
             if (formatCapitals && !GameMain.Config.Language.Contains("Chinese"))
             {
-                variableValue = HandleCapitalization(text, variableTag, variableValue);
+                variableValue = HandleVariableCapitalization(text, variableTag, variableValue);
             }
 
             return text.Replace(variableTag, variableValue);
         }
 
-        private static string HandleCapitalization(string text, string variableTag, string variableValue)
+        private static string HandleVariableCapitalization(string text, string variableTag, string variableValue)
         {
             int index = text.IndexOf(variableTag) - 1;
             if (index == -1)
@@ -268,7 +268,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        variableValue = variableValue.First().ToString().ToUpper() + variableValue.Substring(1);
+                        variableValue = Capitalize(variableValue);
                         break;
                     }
                 }

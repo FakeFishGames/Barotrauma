@@ -3192,6 +3192,10 @@
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
   <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
 
+  <workshopitemupdated>Workshop item [itemname] was updated succesfully.</workshopitemupdated>
+  <workshopitemupdatefailed>Failed to update workshop item [itemname]. [errormessage]</workshopitemupdatefailed>
+  <workshopfilenotfound>File [path] not found.</workshopfilenotfound>
+
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
 </infotexts>
