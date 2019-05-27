@@ -3,7 +3,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -465,7 +465,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("VoiceChat"));
 
-            IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+            IList<string> deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
             foreach (string name in deviceNames)
             {
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
@@ -484,10 +484,10 @@ namespace Barotrauma
 
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
 #if (!OSX)
-            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.EnsureUTF8(VoiceCaptureDevice), deviceNames.Count);
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), VoiceCaptureDevice, deviceNames.Count);
             foreach (string name in deviceNames)
             {
-                deviceList.AddItem(TextManager.EnsureUTF8(name), name);
+                deviceList.AddItem(name, name);
             }
             deviceList.OnSelected = (GUIComponent selected, object obj) =>
             {
@@ -499,7 +499,7 @@ namespace Barotrauma
             };
 #else
             var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), 
-                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice)))
+                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
                 TextAlignment = Alignment.CenterX
@@ -514,7 +514,7 @@ namespace Barotrauma
                     if (VoiceCaptureDevice == deviceNames[0]) return true;
 
                     VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice));
+                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), VoiceCaptureDevice);
                     suavemente.Flash(Color.Blue);
 
                     return true;
