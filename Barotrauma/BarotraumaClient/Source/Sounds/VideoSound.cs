@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenAL;
+using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -21,7 +21,7 @@ namespace Barotrauma.Sounds
 
         public VideoSound(SoundManager owner, string filename, int sampleRate, Video vid) : base(owner, filename, true, false)
         {
-            ALFormat = Al.FormatStereo16;
+            ALFormat = ALFormat.Stereo16;
             SampleRate = sampleRate;
 
             sampleQueue = new Queue<short[]>();

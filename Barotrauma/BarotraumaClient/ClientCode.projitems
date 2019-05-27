@@ -202,8 +202,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\SubEditorScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\SerializableEntityEditor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\OggSound.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\OpenAL\Al.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\OpenAL\Alc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\Sound.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\SoundChannel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sounds\SoundFilters.cs" />

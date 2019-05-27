@@ -92,9 +92,6 @@ namespace Barotrauma
 
         public static GameSettings Config;
 
-        public static int DisplayWidth { get; private set; }
-        public static int DisplayHeight { get; private set; }
-
         private CoroutineHandle loadingCoroutine;
         private bool hasLoaded;
 
@@ -123,7 +120,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         public static int GraphicsWidth
         {
             get;
@@ -195,35 +192,8 @@ namespace Barotrauma
             FarseerPhysics.Settings.PositionIterations = 1;
         }
 
-        public void RequestGraphicsSettings()
+        public void ApplyGraphicsSettings()
         {
-#if WINDOWS
-            if (WindowActive)
-            {
-#endif
-                ApplyGraphicsSettings();
-#if WINDOWS
-            }
-#endif
-        }
-
-        private void ApplyGraphicsSettings()
-        {
-#if !OSX
-            if (Config.WindowMode == WindowMode.Fullscreen &&
-                GraphicsDeviceManager.IsFullScreen && !GraphicsDeviceManager.HardwareModeSwitch &&
-                (GraphicsDeviceManager.PreferredBackBufferWidth != Config.GraphicsWidth ||
-                GraphicsDeviceManager.PreferredBackBufferHeight != Config.GraphicsHeight))
-            {
-                DisplayMode minMode = GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(m => m.Format == SurfaceFormat.Color);
-                GraphicsDeviceManager.PreferredBackBufferWidth = minMode.Width;
-                GraphicsDeviceManager.PreferredBackBufferHeight = minMode.Height;
-                GraphicsDeviceManager.IsFullScreen = false;
-                GraphicsDeviceManager.ApplyChanges();
-                Thread.Sleep(100);
-            }
-#endif
-
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
             if (Config.WindowMode == WindowMode.BorderlessWindowed)
@@ -238,14 +208,13 @@ namespace Barotrauma
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
             SetWindowMode(Config.WindowMode);
-            GraphicsDeviceManager.ApplyChanges();
 
             defaultViewport = GraphicsDevice.Viewport;
 
             OnResolutionChanged?.Invoke();
         }
 
-        private void SetWindowMode(WindowMode windowMode)
+        public void SetWindowMode(WindowMode windowMode)
         {
             WindowMode = windowMode;
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using OpenAL;
+using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
 using System.Linq;
 using System.IO;
@@ -20,7 +20,7 @@ namespace Barotrauma.Sounds
         }
         
         private IntPtr alcDevice;
-        private IntPtr alcContext;
+        private OpenTK.ContextHandle alcContext;
         
         public enum SourcePoolIndex
         {
@@ -42,11 +42,11 @@ namespace Barotrauma.Sounds
             {
                 if (Disabled) { return; }
                 listenerPosition = value;
-                Al.Listener3f(Al.Position,value.X,value.Y,value.Z);
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                AL.Listener(ALListener3f.Position,value.X,value.Y,value.Z);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to set listener position: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set listener position: " + AL.GetErrorString(alError));
                 }
             }
         }
@@ -59,11 +59,11 @@ namespace Barotrauma.Sounds
             {
                 if (Disabled) { return; }
                 listenerOrientation[0] = value.X; listenerOrientation[1] = value.Y; listenerOrientation[2] = value.Z;
-                Al.Listenerfv(Al.Orientation, listenerOrientation);
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to set listener target vector: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set listener target vector: " + AL.GetErrorString(alError));
                 }
             }
         }
@@ -74,11 +74,11 @@ namespace Barotrauma.Sounds
             {
                 if (Disabled) { return; }
                 listenerOrientation[3] = value.X; listenerOrientation[4] = value.Y; listenerOrientation[5] = value.Z;
-                Al.Listenerfv(Al.Orientation, listenerOrientation);
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to set listener up vector: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set listener up vector: " + AL.GetErrorString(alError));
                 }
             }
         }
@@ -92,11 +92,11 @@ namespace Barotrauma.Sounds
                 if (Disabled) { return; }
                 if (Math.Abs(ListenerGain - value) < 0.001f) { return; }
                 listenerGain = value;
-                Al.Listenerf(Al.Gain, listenerGain);
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                AL.Listener(ALListenerf.Gain, listenerGain);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to set listener gain: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set listener gain: " + AL.GetErrorString(alError));
                 }
             }
         }
@@ -126,8 +126,8 @@ namespace Barotrauma.Sounds
                 return;
             }
 
-            int alcError = Alc.GetError(alcDevice);
-            if (alcError != Alc.NoError)
+            AlcError alcError = Alc.GetError(alcDevice);
+            if (alcError != AlcError.NoError)
             {
                 //The audio device probably wasn't ready, this happens quite often
                 //Just wait a while and try again
@@ -136,7 +136,7 @@ namespace Barotrauma.Sounds
                 alcDevice = Alc.OpenDevice(null);
 
                 alcError = Alc.GetError(alcDevice);
-                if (alcError != Alc.NoError)
+                if (alcError != AlcError.NoError)
                 {
                     DebugConsole.ThrowError("Error initializing ALC device: " + alcError.ToString() + ". Disabling audio playback...");
                     Disabled = true;
@@ -161,14 +161,14 @@ namespace Barotrauma.Sounds
             }
 
             alcError = Alc.GetError(alcDevice);
-            if (alcError != Alc.NoError)
+            if (alcError != AlcError.NoError)
             {
                 DebugConsole.ThrowError("Error after assigning ALC context: " + alcError.ToString() + ". Disabling audio playback...");
                 Disabled = true;
                 return;
             }
 
-            int alError = Al.NoError;
+            ALError alError = ALError.NoError;
 
             sourcePools = new SoundSourcePool[2];
             sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
@@ -177,12 +177,12 @@ namespace Barotrauma.Sounds
             sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(8);
             playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[8];
 
-            Al.DistanceModel(Al.LinearDistanceClamped);
+            AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
             
-            alError = Al.GetError();
-            if (alError != Al.NoError)
+            alError = AL.GetError();
+            if (alError != ALError.NoError)
             {
-                DebugConsole.ThrowError("Error setting distance model: " + Al.GetErrorString(alError) + ". Disabling audio playback...");
+                DebugConsole.ThrowError("Error setting distance model: " + AL.GetErrorString(alError) + ". Disabling audio playback...");
                 Disabled = true;
                 return;
             }
@@ -239,7 +239,7 @@ namespace Barotrauma.Sounds
         {
             if (Disabled || srcInd < 0 || srcInd >= sourcePools[(int)poolIndex].ALSources.Length) return 0;
 
-            if (!Al.IsSource(sourcePools[(int)poolIndex].ALSources[srcInd]))
+            if (!AL.IsSource(sourcePools[(int)poolIndex].ALSources[srcInd]))
             {
                 throw new Exception("alSources[" + srcInd.ToString() + "] is invalid!");
             }
@@ -276,8 +276,8 @@ namespace Barotrauma.Sounds
         {
             for (int i = 0; i < sourcePools[0].ALSources.Length; i++)
             {
-                Al.Sourcef(sourcePools[0].ALSources[i], Al.MaxGain, i == ind ? 1.0f : 0.0f);
-                Al.Sourcef(sourcePools[0].ALSources[i], Al.MinGain, 0.0f);
+                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
+                AL.Source(sourcePools[0].ALSources[i], ALSourcef.MinGain, 0.0f);
             }
         }
 #endif
@@ -514,7 +514,7 @@ namespace Barotrauma.Sounds
             sourcePools[(int)SourcePoolIndex.Default]?.Dispose();
             sourcePools[(int)SourcePoolIndex.Voice]?.Dispose();
 
-            if (!Alc.MakeContextCurrent(IntPtr.Zero))
+            if (!Alc.MakeContextCurrent(OpenTK.ContextHandle.Zero))
             {
                 throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
             }

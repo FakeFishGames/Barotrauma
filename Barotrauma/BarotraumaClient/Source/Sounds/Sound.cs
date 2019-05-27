@@ -1,5 +1,5 @@
 ﻿using System;
-using OpenAL;
+using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
 using System.IO;
 
@@ -57,7 +57,7 @@ namespace Barotrauma.Sounds
             get { return !Stream ? alMuffledBuffer : 0; }
         }
 
-        public int ALFormat
+        public ALFormat ALFormat
         {
             get;
             protected set;
@@ -91,26 +91,26 @@ namespace Barotrauma.Sounds
             
             if (!stream)
             {
-                Al.GenBuffer(out alBuffer);
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                AL.GenBuffer(out alBuffer);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
 
-                if (!Al.IsBuffer(alBuffer))
+                if (!AL.IsBuffer(alBuffer))
                 {
                     throw new Exception("Generated OpenAL buffer is invalid!");
                 }
 
-                Al.GenBuffer(out alMuffledBuffer);
-                alError = Al.GetError();
-                if (alError != Al.NoError)
+                AL.GenBuffer(out alMuffledBuffer);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
                 
-                if (!Al.IsBuffer(alMuffledBuffer))
+                if (!AL.IsBuffer(alMuffledBuffer))
                 {
                     throw new Exception("Generated OpenAL buffer is invalid!");
                 }
@@ -186,32 +186,32 @@ namespace Barotrauma.Sounds
             Owner.KillChannels(this);
             if (alBuffer != 0)
             {
-                if (!Al.IsBuffer(alBuffer))
+                if (!AL.IsBuffer(alBuffer))
                 {
                     throw new Exception("Buffer to delete is invalid!");
                 }
             
-                Al.DeleteBuffer(alBuffer); alBuffer = 0;
+                AL.DeleteBuffer(ref alBuffer); alBuffer = 0;
 
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
             }
             if (alMuffledBuffer != 0)
             {
-                if (!Al.IsBuffer(alMuffledBuffer))
+                if (!AL.IsBuffer(alMuffledBuffer))
                 {
                     throw new Exception("Buffer to delete is invalid!");
                 }
 
-                Al.DeleteBuffer(alMuffledBuffer); alMuffledBuffer = 0;
+                AL.DeleteBuffer(ref alMuffledBuffer); alMuffledBuffer = 0;
 
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
             }
 

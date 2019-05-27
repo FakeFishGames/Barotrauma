@@ -1,5 +1,5 @@
 ﻿using System;
-using OpenAL;
+using OpenTK.Audio.OpenAL;
 using NVorbis;
 using System.Collections.Generic;
 
@@ -21,7 +21,7 @@ namespace Barotrauma.Sounds
 
             reader = new VorbisReader(filename);
 
-            ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
+            ALFormat = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
             SampleRate = reader.SampleRate;
 
             if (!stream)
@@ -35,26 +35,26 @@ namespace Barotrauma.Sounds
                 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
                 
-                Al.BufferData(ALBuffer, ALFormat, shortBuffer,
+                AL.BufferData((int)ALBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! "+Al.GetErrorString(alError));
+                    throw new Exception("Failed to set buffer data for non-streamed audio! "+AL.GetErrorString(alError));
                 }
 
                 MuffleBuffer(floatBuffer, SampleRate, reader.Channels);
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                Al.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
+                AL.BufferData((int)ALMuffledBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
-                alError = Al.GetError();
-                if (alError != Al.NoError)
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set buffer data for non-streamed audio! " + AL.GetErrorString(alError));
                 }
 
                 reader.Dispose();

@@ -1,6 +1,6 @@
 ﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using OpenAL;
+using OpenTK.Audio.OpenAL;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -69,7 +69,7 @@ namespace Barotrauma.Networking
             VoipConfig.SetupEncoding();
 
             //set up capture device
-            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 5);
+            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
 
             if (captureDevice == IntPtr.Zero)
             {
@@ -88,20 +88,20 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            int alError = Al.GetError();
-            int alcError = Alc.GetError(captureDevice);
-            if (alcError != Alc.NoError)
+            ALError alError = AL.GetError();
+            AlcError alcError = Alc.GetError(captureDevice);
+            if (alcError != AlcError.NoError)
             {
                 throw new Exception("Failed to open capture device: " + alcError.ToString() + " (ALC)");
             }
-            if (alError != Al.NoError)
+            if (alError != ALError.NoError)
             {
                 throw new Exception("Failed to open capture device: " + alError.ToString() + " (AL)");
             }
 
             Alc.CaptureStart(captureDevice);
             alcError = Alc.GetError(captureDevice);
-            if (alcError != Alc.NoError)
+            if (alcError != AlcError.NoError)
             {
                 throw new Exception("Failed to start capturing: " + alcError.ToString());
             }
@@ -132,11 +132,11 @@ namespace Barotrauma.Networking
             short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
             while (capturing)
             {
-                int alcError;
-                Alc.GetInteger(captureDevice, Alc.EnumCaptureSamples, out int sampleCount);
+                AlcError alcError;
+                Alc.GetInteger(captureDevice, AlcGetInteger.CaptureSamples, 1, out int sampleCount);
 
                 alcError = Alc.GetError(captureDevice);
-                if (alcError != Alc.NoError)
+                if (alcError != AlcError.NoError)
                 {
                     throw new Exception("Failed to determine sample count: " + alcError.ToString());
                 }
@@ -160,7 +160,7 @@ namespace Barotrauma.Networking
                 }
 
                 alcError = Alc.GetError(captureDevice);
-                if (alcError != Alc.NoError)
+                if (alcError != AlcError.NoError)
                 {
                     throw new Exception("Failed to capture samples: " + alcError.ToString());
                 }
