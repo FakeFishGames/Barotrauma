@@ -448,7 +448,8 @@ namespace Barotrauma
 
         private float? GetNodePenalty(PathNode node, PathNode nextNode)
         {
-            if (character == null) { return 0.0f; }         
+            if (character == null) { return 0.0f; }
+            if (nextNode.Waypoint.isObstructed) { return null; }
             float penalty = 0.0f;
             if (nextNode.Waypoint.ConnectedGap != null && nextNode.Waypoint.ConnectedGap.Open < 0.9f)
             {

@@ -33,6 +33,7 @@ namespace Barotrauma.Items.Components
         private Body doorBody;
 
         private bool docked;
+        private bool obstructedWayPointsDisabled;
 
         private float forceLockTimer;
         //if the submarine isn't in the correct position to lock within this time after docking has been activated,
@@ -732,6 +733,9 @@ namespace Barotrauma.Items.Components
                 bodies = null;
             }
 
+            Item.Submarine.EnableObstructedWaypoints();
+            obstructedWayPointsDisabled = false;
+
 #if SERVER
             if (GameMain.Server != null)
             {
@@ -812,6 +816,11 @@ namespace Barotrauma.Items.Components
 
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }
+            }
+            if (!obstructedWayPointsDisabled && dockingState >= 0.99f)
+            {
+                Item.Submarine.DisableObstructedWayPoints(DockingTarget?.Item.Submarine);
+                obstructedWayPointsDisabled = true;
             }
         }
 
@@ -983,6 +992,5 @@ namespace Barotrauma.Items.Components
                 Undock();
             }
         }
-
     }
 }
