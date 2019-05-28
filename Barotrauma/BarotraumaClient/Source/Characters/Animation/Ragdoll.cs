@@ -219,7 +219,7 @@ namespace Barotrauma
                     {
                         //hull subs don't match => teleport the camera to the other sub
                         character.Submarine = serverHull.Submarine;
-                        character.CurrentHull = currentHull = serverHull;
+                        character.CurrentHull = CurrentHull = serverHull;
                         SetPosition(serverPos.Position);
                         character.MemLocalState.Clear();
                     }

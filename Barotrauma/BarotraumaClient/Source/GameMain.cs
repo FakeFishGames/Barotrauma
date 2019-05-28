@@ -159,14 +159,7 @@ namespace Barotrauma
 
         public GameMain()
         {
-/*#if !DEBUG && OSX
-            // Use a separate path for content that's editable due to macOS's .app bundles crashing when edited during runtime
-            string macPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Barotrauma");
-            Directory.SetCurrentDirectory(macPath);
-            Content.RootDirectory = macPath + "/Content";
-#else*/
             Content.RootDirectory = "Content";
-/*#endif*/
 
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
