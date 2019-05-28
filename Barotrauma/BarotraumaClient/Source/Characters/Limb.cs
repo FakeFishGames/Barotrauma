@@ -538,13 +538,10 @@ namespace Barotrauma
             if (wearable.InheritLimbDepth)
             {
                 depth = ActiveSprite.Depth - depthStep;
-                if (wearable.DepthLimb != LimbType.None)
+                Limb depthLimb = (wearable.DepthLimb == LimbType.None) ? this : character.AnimController.GetLimb(wearable.DepthLimb);
+                if (depthLimb != null)
                 {
-                    Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
-                    if (depthLimb != null)
-                    {
-                        depth = depthLimb.ActiveSprite.Depth - depthStep;
-                    }
+                    depth = depthLimb.ActiveSprite.Depth - depthStep;
                 }
             }
             var wearableItemComponent = wearable.WearableComponent;
