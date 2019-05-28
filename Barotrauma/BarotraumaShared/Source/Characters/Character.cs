@@ -2589,7 +2589,7 @@ namespace Barotrauma
             if (info != null) { info.Remove(); }
 
 #if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+            GameMain.GameSession?.CrewManager?.KillCharacter(this);
 #endif
 
             CharacterList.Remove(this);
