@@ -138,7 +138,7 @@ namespace Barotrauma
 
                         DebugConsole.NewMessage("Display size set to " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight, Microsoft.Xna.Framework.Color.Red);
 
-                        game.RequestGraphicsSettings();
+                        game.ApplyGraphicsSettings();
 
                         return true;
                     default:
