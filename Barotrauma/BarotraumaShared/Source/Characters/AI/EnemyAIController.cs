@@ -1182,7 +1182,7 @@ namespace Barotrauma
                 }
                 else if (target.Entity != null)
                 {
-                    //skip the target if it's a room and the character is already inside a sub
+                    // Ignore the target if it's a room and the character is already inside a sub
                     if (character.CurrentHull != null && target.Entity is Hull) { continue; }
                     
                     Door door = null;
@@ -1202,6 +1202,12 @@ namespace Barotrauma
                                 targetingTag = prio.TargetTag;
                                 break;
                             }
+                        }
+
+                        // Ignore the target if it's a decoy and the character is already inside a sub
+                        if (character.CurrentHull != null && targetingTag == "decoy")
+                        {
+                            continue;
                         }
                     }
                     else if (target.Entity is Structure s)
