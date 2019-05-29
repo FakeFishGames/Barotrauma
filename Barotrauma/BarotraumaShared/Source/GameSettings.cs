@@ -420,13 +420,9 @@ namespace Barotrauma
                 return;
             }
 
-            SetDefaultValues();
+            bool resetLanguage = setLanguage || string.IsNullOrEmpty(Language);
+            SetDefaultValues(resetLanguage);
             SetDefaultBindings(doc, legacy: false);
-
-            if (setLanguage || string.IsNullOrEmpty(Language))
-            {
-                Language = doc.Root.GetAttributeString("language", "English");
-            }
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", MasterServerUrl);
             WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", WasGameUpdated);
@@ -434,7 +430,7 @@ namespace Barotrauma
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", SaveDebugConsoleLogs);
             AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", AutoUpdateWorkshopItems);
 
-            LoadGeneralSettings(doc);
+            LoadGeneralSettings(doc, resetLanguage);
             LoadGraphicSettings(doc);
             LoadAudioSettings(doc);
             LoadControls(doc);
@@ -875,9 +871,12 @@ namespace Barotrauma
         #endregion
 
         #region Loading Configs
-        private void LoadGeneralSettings(XDocument doc)
+        private void LoadGeneralSettings(XDocument doc, bool setLanguage = true)
         {
-            Language = doc.Root.GetAttributeString("language", Language);
+            if (setLanguage)
+            {
+                Language = doc.Root.GetAttributeString("language", Language);
+            }
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsubmarine", "");
@@ -1039,7 +1038,7 @@ namespace Barotrauma
             return keyMapping[(int)inputType];
         }
 
-        private void SetDefaultValues()
+        private void SetDefaultValues(bool resetLanguage = true)
         {
             GraphicsWidth = 0;
             GraphicsHeight = 0;
@@ -1085,7 +1084,10 @@ namespace Barotrauma
             InventoryScale = 1;
             AutoUpdateWorkshopItems = true;
             CampaignDisclaimerShown = false;
-            Language = "English";
+            if (resetLanguage)
+            {
+                Language = "English";
+            }
             MasterServerUrl = "http://www.undertowgames.com/baromaster";
             WasGameUpdated = false;
             VerboseLogging = false;
