@@ -1042,8 +1042,8 @@ namespace Barotrauma
             //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
-                aiTarget.SightRange -= deltaTime * 1000.0f;
-                aiTarget.SoundRange -= deltaTime * 1000.0f;
+                aiTarget.SightRange -= deltaTime * (aiTarget.MaxSightRange / aiTarget.FadeOutTime);
+                aiTarget.SoundRange -= deltaTime * (aiTarget.MaxSoundRange / aiTarget.FadeOutTime);
             }
 
             bool broken = condition <= 0.0f;
