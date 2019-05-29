@@ -230,7 +230,7 @@ namespace Barotrauma.Networking
                 clients.Where(c => c.NeedsMidRoundSync).ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.FirstNewEventID)) lastSentToAll = (ushort)(c.FirstNewEventID - 1); });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
-                if (firstEventToResend != null && ((lastSentToAnyoneTime - firstEventToResend.CreateTime) > 10.0 || (Timing.TotalTime - lastSentToAnyoneTime) > 30.0))
+                if (firstEventToResend != null && ((lastSentToAnyoneTime - firstEventToResend.CreateTime) > 10.0 || (Timing.TotalTime - firstEventToResend.CreateTime) > 30.0))
                 {
                     //  This event is 10 seconds older than the last one we've successfully sent,
                     //  kick everyone that hasn't received it yet, this is way too old
