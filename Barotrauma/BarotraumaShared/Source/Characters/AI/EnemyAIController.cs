@@ -435,7 +435,7 @@ namespace Barotrauma
                     {
                         if (gap.Submarine != Character.Submarine) { continue; }
                         if (gap.Open < 1 || gap.IsRoomToRoom) { continue; }
-                        var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, gap.SimPosition);
+                        var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, gap.SimPosition, Character.Submarine);
                         if (!path.Unreachable)
                         {
                             if (escapePoint != Vector2.Zero)
