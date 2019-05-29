@@ -488,10 +488,10 @@ namespace Barotrauma
             {
                 //refresh store view
                 FillStoreItemList();
-                FilterStoreItems(MapEntityCategory.Equipment, searchBox.Text);
-            }            
+                FilterStoreItems(selectedItemCategory, searchBox.Text);
+            }
         }
-        
+
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
             GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer);
