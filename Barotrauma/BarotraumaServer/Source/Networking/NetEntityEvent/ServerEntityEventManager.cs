@@ -223,7 +223,7 @@ namespace Barotrauma.Networking
                 if ((Timing.TotalTime - lastSentToAnyoneTime) > 10.0 && (Timing.TotalTime - lastWarningTime) > 5.0)
                 {
                     lastWarningTime = Timing.TotalTime;
-                    DebugConsole.NewMessage("WARNING: ServerEntityEventManager is lagging behind! Last sent id: "+lastSentToAnyone.ToString()+", latest create id: "+ID.ToString(),Color.Yellow);
+                    GameServer.Log("WARNING: ServerEntityEventManager is lagging behind! Last sent id: " + lastSentToAnyone.ToString() + ", latest create id: " + ID.ToString(), ServerLog.MessageType.ServerMessage);
                     //TODO: reset clients if this happens, maybe do it if a majority are behind rather than all of them?
                 }
                 
