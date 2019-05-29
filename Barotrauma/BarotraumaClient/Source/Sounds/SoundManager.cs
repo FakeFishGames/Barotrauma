@@ -503,10 +503,7 @@ namespace Barotrauma.Sounds
                     }
                 }
             }
-            if (streamingThread != null && !streamingThread.ThreadState.HasFlag(ThreadState.Stopped))
-            {
-                streamingThread.Join();
-            }
+            streamingThread?.Join();
             for (int i = loadedSounds.Count - 1; i >= 0; i--)
             {
                 loadedSounds[i].Dispose();

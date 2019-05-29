@@ -89,6 +89,14 @@ namespace Barotrauma
         
         public static void StopCoroutines(string name)
         {
+            Coroutines.ForEach(c =>
+            {
+                if (c.Name == name)
+                {
+                    c.Thread?.Abort();
+                    c.Thread?.Join();
+                }
+            });
             Coroutines.RemoveAll(c => c.Name == name);
         }
 

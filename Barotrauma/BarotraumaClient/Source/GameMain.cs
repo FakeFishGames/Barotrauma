@@ -273,7 +273,7 @@ namespace Barotrauma
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
         
         private void InitUserStats()
@@ -534,7 +534,9 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
+            CoroutineManager.StopCoroutines("Load");
             Video.Close();
+            VoipCapture.Instance?.Dispose();
             SoundManager?.Dispose();
         }
 
