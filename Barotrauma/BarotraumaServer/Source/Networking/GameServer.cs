@@ -661,7 +661,13 @@ namespace Barotrauma.Networking
 
             if (GameMain.Config.UseSteamMatchmaking)
             {
-                SteamManager.RefreshServerDetails(this);
+                bool refreshSuccessful = SteamManager.RefreshServerDetails(this);
+                if (GameSettings.VerboseLogging)
+                {
+                    Log(refreshSuccessful ?
+                        "Refreshed server info on the server list." :
+                        "Refreshing server info on the server list failed.", ServerLog.MessageType.ServerMessage);
+                }
             }
             else
             {
