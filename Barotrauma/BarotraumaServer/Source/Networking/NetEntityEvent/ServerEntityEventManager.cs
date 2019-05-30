@@ -48,6 +48,9 @@ namespace Barotrauma.Networking
         private List<ServerEntityEvent> uniqueEvents;
 
         private UInt16 lastSentToAll;
+        private UInt16 lastSentToAnyone;
+        private double lastSentToAnyoneTime;
+        private double lastWarningTime;
 
         public List<ServerEntityEvent> Events
         {
@@ -99,6 +102,8 @@ namespace Barotrauma.Networking
             bufferedEvents = new List<BufferedEvent>();
 
             uniqueEvents = new List<ServerEntityEvent>();
+
+            lastWarningTime = -10.0;
         }
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
@@ -198,6 +203,7 @@ namespace Barotrauma.Networking
             var inGameClients = clients.FindAll(c => c.InGame && !c.NeedsMidRoundSync);
             if (inGameClients.Count > 0)
             {
+                lastSentToAnyone = inGameClients[0].LastRecvEntityEventID;
                 lastSentToAll = inGameClients[0].LastRecvEntityEventID;
                 if (server.OwnerConnection != null)
                 {
@@ -207,25 +213,39 @@ namespace Barotrauma.Networking
                         lastSentToAll = owner.LastRecvEntityEventID;
                     }
                 }
-                inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.LastRecvEntityEventID)) lastSentToAll = c.LastRecvEntityEventID; });
+                inGameClients.ForEach(c =>
+                {
+                    if (NetIdUtils.IdMoreRecent(lastSentToAll, c.LastRecvEntityEventID)) { lastSentToAll = c.LastRecvEntityEventID; }
+                    if (NetIdUtils.IdMoreRecent(c.LastRecvEntityEventID, lastSentToAnyone)) { lastSentToAnyone = c.LastRecvEntityEventID; }
+                });
+                lastSentToAnyoneTime = events.Find(e => e.ID == lastSentToAnyone)?.CreateTime ?? Timing.TotalTime;
 
+                if ((Timing.TotalTime - lastSentToAnyoneTime) > 10.0 && (Timing.TotalTime - lastWarningTime) > 5.0)
+                {
+                    lastWarningTime = Timing.TotalTime;
+                    GameServer.Log("WARNING: ServerEntityEventManager is lagging behind! Last sent id: " + lastSentToAnyone.ToString() + ", latest create id: " + ID.ToString(), ServerLog.MessageType.ServerMessage);
+                    //TODO: reset clients if this happens, maybe do it if a majority are behind rather than all of them?
+                }
+                
                 clients.Where(c => c.NeedsMidRoundSync).ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.FirstNewEventID)) lastSentToAll = (ushort)(c.FirstNewEventID - 1); });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
-                if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > 10.0f)
+                if (firstEventToResend != null && ((lastSentToAnyoneTime - firstEventToResend.CreateTime) > 10.0 || (Timing.TotalTime - firstEventToResend.CreateTime) > 30.0))
                 {
-                    //it's been 10 seconds since this event was created, kick everyone that hasn't received it yet, this is way too old
-                    //  UNLESS the event was created when the client was still midround syncing, in which case we'll wait until the timeout
-                    //  runs out before kicking the client
+                    //  This event is 10 seconds older than the last one we've successfully sent,
+                    //  kick everyone that hasn't received it yet, this is way too old
+                    //  UNLESS the event was created when the client was still midround syncing,
+                    //  in which case we'll wait until the timeout runs out before kicking the client
                     List<Client> toKick = inGameClients.FindAll(c => 
                         NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID) && 
-                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut));
+                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut));
                     toKick.ForEach(c =>
                         {
                             DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
                             GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event " 
                                 + (c.LastRecvEntityEventID + 1).ToString() +
-                                " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago)" +
+                                " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago, " +
+                                (lastSentToAnyoneTime - firstEventToResend.CreateTime).ToString("0.##") + " s older than last event sent to anyone)" +
                                 " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.Error);
                             server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncOldEvent");
                         }

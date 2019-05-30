@@ -712,11 +712,8 @@ namespace Barotrauma
                                     " -ownerkey " + ownerKey.ToString();
 
                 string filename = "DedicatedServer.exe";
-#if LINUX
+#if LINUX || OSX
                 filename = "./DedicatedServer";
-#elif OSX
-                filename = "mono";
-                arguments = "./DedicatedServer.exe " + arguments;
 #endif
                 var processInfo = new ProcessStartInfo
                 {

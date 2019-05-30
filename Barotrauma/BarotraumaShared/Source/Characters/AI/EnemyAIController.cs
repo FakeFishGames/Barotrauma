@@ -435,7 +435,7 @@ namespace Barotrauma
                     {
                         if (gap.Submarine != Character.Submarine) { continue; }
                         if (gap.Open < 1 || gap.IsRoomToRoom) { continue; }
-                        var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, gap.SimPosition);
+                        var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, gap.SimPosition, Character.Submarine);
                         if (!path.Unreachable)
                         {
                             if (escapePoint != Vector2.Zero)
@@ -1182,7 +1182,7 @@ namespace Barotrauma
                 }
                 else if (target.Entity != null)
                 {
-                    //skip the target if it's a room and the character is already inside a sub
+                    // Ignore the target if it's a room and the character is already inside a sub
                     if (character.CurrentHull != null && target.Entity is Hull) { continue; }
                     
                     Door door = null;
@@ -1202,6 +1202,12 @@ namespace Barotrauma
                                 targetingTag = prio.TargetTag;
                                 break;
                             }
+                        }
+
+                        // Ignore the target if it's a decoy and the character is already inside a sub
+                        if (character.CurrentHull != null && targetingTag == "decoy")
+                        {
+                            continue;
                         }
                     }
                     else if (target.Entity is Structure s)

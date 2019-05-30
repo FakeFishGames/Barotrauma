@@ -432,7 +432,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
-            if (inc.SenderConnection != OwnerConnection && Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
+            if (inc.SenderConnection != OwnerConnection && Homoglyphs.Compare(clName.ToLower(), Name.ToLower()))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NameTaken, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Error);

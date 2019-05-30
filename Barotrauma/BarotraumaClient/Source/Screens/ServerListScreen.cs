@@ -70,7 +70,9 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")
             {
-                Text = GameMain.Config.DefaultPlayerName
+                Text = GameMain.Config.DefaultPlayerName,
+                MaxTextLength = Client.MaxNameLength,
+                OverflowClip = true
             };
             clientNameBox.OnTextChanged += RefreshJoinButtonState;
 
@@ -236,7 +238,7 @@ namespace Barotrauma
             {
                 serverInfo = (ServerInfo)obj;
                 ipBox.UserData = serverInfo;
-                ipBox.Text = serverInfo.ServerName;
+                ipBox.Text = ToolBox.LimitString(serverInfo.ServerName, ipBox.Font, ipBox.Rect.Width);
             }
             catch (InvalidCastException)
             {
@@ -411,7 +413,6 @@ namespace Barotrauma
             };
 
 			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
-
 			var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[4], 0.4f), serverContent.RectTransform, Anchor.Center),
 				label: "", style: "GUIServerListRoundStartedTickBox") {
 				ToolTip = TextManager.Get((serverInfo.GameStarted) ? "ServerListRoundStarted" : "ServerListRoundNotStarted"),

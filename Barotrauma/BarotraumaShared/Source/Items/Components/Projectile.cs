@@ -174,6 +174,12 @@ namespace Barotrauma.Items.Components
 
         private void Launch(Vector2 impulse)
         {
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
+                item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
+            }
+
             item.Drop(null);
 
             item.body.Enabled = true;            

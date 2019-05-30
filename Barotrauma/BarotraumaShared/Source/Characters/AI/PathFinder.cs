@@ -157,13 +157,18 @@ namespace Barotrauma
             }
         }
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, string errorMsgStr = null)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null)
         {            
             float closestDist = 0.0f;
             PathNode startNode = null;
             foreach (PathNode node in nodes)
             {
                 Vector2 nodePos = node.Position;
+                if (hostSub != null)
+                {
+                    Vector2 diff = hostSub.SimPosition - node.Waypoint.Submarine.SimPosition;
+                    nodePos -= diff;
+                }
 
                 float xDiff = Math.Abs(start.X - nodePos.X);
                 float yDiff = Math.Abs(start.Y - nodePos.Y);
@@ -185,7 +190,7 @@ namespace Barotrauma
                     if (insideSubmarine)
                     {
                         var body = Submarine.PickBody(
-                            start, node.Waypoint.SimPosition, null, 
+                            start, nodePos, null, 
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
 
                         if (body != null)
@@ -215,7 +220,11 @@ namespace Barotrauma
             foreach (PathNode node in nodes)
             {
                 Vector2 nodePos = node.Position;
-
+                if (hostSub != null)
+                {
+                    Vector2 diff = hostSub.SimPosition - node.Waypoint.Submarine.SimPosition;
+                    nodePos -= diff;
+                }
                 float dist = Vector2.DistanceSquared(end, nodePos);
                 if (insideSubmarine)
                 {
@@ -229,7 +238,7 @@ namespace Barotrauma
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
                     {
-                        var body = Submarine.PickBody(end, node.Waypoint.SimPosition, null,
+                        var body = Submarine.PickBody(end, nodePos, null,
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
 
                         if (body != null)
@@ -237,7 +246,6 @@ namespace Barotrauma
                             //if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
-
                         }
                     }
 

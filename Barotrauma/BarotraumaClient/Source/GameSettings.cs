@@ -134,7 +134,7 @@ namespace Barotrauma
                 if (newLanguage == Language) return true;
                 
                 Language = newLanguage;
-                ApplySettings();
+                UnsavedSettings = true;
 
                 var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
                 //change fonts to the default font of the new language to make sure
@@ -489,14 +489,15 @@ namespace Barotrauma
                 return true;
             };
 #else
-            var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), 
-                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice)))
+            var defaultDeviceGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), audioSliders.RectTransform), true, Anchor.CenterLeft);
+            var suavemente = new GUITextBlock(new RectTransform(new Vector2(.7f, 0.75f), null), 
+                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice)))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
-                TextAlignment = Alignment.CenterX
+                TextAlignment = Alignment.CenterLeft
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.15f), audioSliders.RectTransform), TextManager.Get("RefreshDefaultDevice"))
+            new GUIButton(new RectTransform(new Vector2(.3f, 0.75f), defaultDeviceGroup.RectTransform), TextManager.Get("RefreshDefaultDevice"))
             {
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
@@ -511,6 +512,8 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            suavemente.RectTransform.Parent = defaultDeviceGroup.RectTransform;
 #endif
             //var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.12f), audioSliders.RectTransform));
 

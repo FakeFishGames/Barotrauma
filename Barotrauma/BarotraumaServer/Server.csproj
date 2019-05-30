@@ -273,10 +273,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup Condition="$(Configuration.EndsWith('Linux'))">
-    <None Include="Launch_BarotraumaServer">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  <ItemGroup Condition="$(Configuration.EndsWith('Linux')) Or $(Configuration.EndsWith('Mac'))">
     <None Include="DedicatedServer">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

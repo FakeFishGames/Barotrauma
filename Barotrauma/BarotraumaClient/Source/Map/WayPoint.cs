@@ -29,6 +29,10 @@ namespace Barotrauma
             drawPos.Y = -drawPos.Y;
 
             Color clr = currentHull == null ? Color.Blue : Color.White;
+            if (isObstructed)
+            {
+                clr = Color.Black;
+            }
             if (IsSelected) clr = Color.Red;
             if (IsHighlighted) clr = Color.DarkRed;
 
@@ -50,7 +54,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    Color.Green, width: 5);
+                    isObstructed ? Color.Gray : Color.Green, width: 5);
             }
 
             GUI.SmallFont.DrawString(spriteBatch,

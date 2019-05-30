@@ -85,7 +85,9 @@ namespace Barotrauma
             {
                 float totalSize = RectTransform.Children
                     .Where(c => !c.GUIComponent.IgnoreLayoutGroups)
-                    .Sum(c => isHorizontal ? c.Rect.Width : c.Rect.Height);
+                    .Sum(c => isHorizontal ? 
+                        MathHelper.Clamp(c.Rect.Width, c.MinSize.X, c.MaxSize.X) :
+                        MathHelper.Clamp(c.Rect.Height, c.MinSize.Y, c.MaxSize.Y));
 
                 totalSize += 
                     (RectTransform.Children.Count() - 1) * 
