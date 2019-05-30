@@ -453,6 +453,7 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
+                new XAttribute("microphonevolume", microphoneVolume),
                 new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
@@ -765,6 +766,8 @@ namespace Barotrauma
             audio.ReplaceAttributes(
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
+                new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("microphonevolume", microphoneVolume),
                 new XAttribute("muteonfocuslost", MuteOnFocusLost),
                 new XAttribute("usedirectionalvoicechat", UseDirectionalVoiceChat),
                 new XAttribute("voicesetting", VoiceSetting),
@@ -971,6 +974,7 @@ namespace Barotrauma
                 UseDirectionalVoiceChat = audioSettings.GetAttributeBool("usedirectionalvoicechat", UseDirectionalVoiceChat);
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice);
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
+                MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
                 var voiceSetting = VoiceMode.Disabled;
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");
                 if (Enum.TryParse(voiceSettingStr, out voiceSetting))
