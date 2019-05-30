@@ -1586,8 +1586,8 @@ namespace Barotrauma.Networking
             {
                 if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > client.Configuration.MaximumTransmissionUnit - 5)
                 {
-                    //not enough room in this packet
-                    return;
+                    //no more room in this packet
+                    break;
                 }
                 chatMsgQueue[i].ClientWrite(outmsg);
             }
@@ -1622,7 +1622,7 @@ namespace Barotrauma.Networking
                 if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > client.Configuration.MaximumTransmissionUnit - 5)
                 {
                     //not enough room in this packet
-                    return;
+                    break;
                 }
                 chatMsgQueue[i].ClientWrite(outmsg);
             }
