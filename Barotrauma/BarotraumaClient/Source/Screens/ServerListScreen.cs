@@ -70,7 +70,9 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")
             {
-                Text = GameMain.Config.DefaultPlayerName
+                Text = GameMain.Config.DefaultPlayerName,
+                MaxTextLength = Client.MaxNameLength,
+                OverflowClip = true
             };
             clientNameBox.OnTextChanged += RefreshJoinButtonState;
 

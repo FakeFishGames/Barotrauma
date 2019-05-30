@@ -147,6 +147,12 @@ namespace Barotrauma
             get { return playerList; }
         }
 
+        public GUITextBox CharacterNameBox
+        {
+            get;
+            private set;
+        }
+
         public GUIButton StartButton
         {
             get;
@@ -920,7 +926,26 @@ namespace Barotrauma
                 UserData = characterInfo
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
+            CharacterNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center)
+            {
+                MaxTextLength = Client.MaxNameLength,
+                OverflowClip = true
+            };
+            CharacterNameBox.OnEnterPressed += (tb, text) => { CharacterNameBox.Deselect(); return true; };
+            CharacterNameBox.OnDeselected += (tb, key) =>
+            {
+                if (GameMain.Client == null) { return; }
+                string newName = Client.SanitizeName(tb.Text);
+                if (string.IsNullOrWhiteSpace(newName))
+                {
+                    tb.Text = GameMain.Client.Name;
+                }
+                else
+                {
+                    ReadyToStartBox.Selected = false;
+                    GameMain.Client.Name = tb.Text;
+                };
+            };
 
             GUIComponent headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
             {
@@ -1309,6 +1334,7 @@ namespace Barotrauma
             {
                 Selected = true,
                 Enabled = false,
+                Visible = false,
                 ToolTip = TextManager.Get("ReadyToStartTickBox"),
                 UserData = "clientready"
             };

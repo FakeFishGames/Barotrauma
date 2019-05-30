@@ -194,8 +194,7 @@ namespace Barotrauma.Networking
             Hull.EditFire = false;
             Hull.EditWater = false;
 
-            newName = newName.Replace(":", "").Replace(";", "");
-            name = newName;
+            Name = newName;
 
             entityEventManager = new ClientEntityEventManager(this);
 
@@ -1303,6 +1302,11 @@ namespace Barotrauma.Networking
                     if (existingClient.ID == myID)
                     {
                         existingClient.SetPermissions(permissions, permittedConsoleCommands);
+                        name = tc.Name;
+                        if (GameMain.NetLobbyScreen.CharacterNameBox != null)
+                        {
+                            GameMain.NetLobbyScreen.CharacterNameBox.Text = name;
+                        }
                     }
                     currentClients.Add(existingClient);
                 }
@@ -1562,6 +1566,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(LastClientListUpdateID);
+            outmsg.Write(name);
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaign.LastSaveID == 0)
