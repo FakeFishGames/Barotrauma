@@ -173,7 +173,7 @@ namespace Barotrauma
 
             if (targetCharacterName == null) targetCharacterName = "";
             if (targetRoomName == null) targetRoomName = "";
-            string msg = TextManager.GetWithVariables(messageTag, new string[2] { "[name]", "[roomname]" }, new string[2] { targetCharacterName, targetRoomName }, new bool[2] { false, true });
+            string msg = TextManager.GetWithVariables(messageTag, new string[2] { "[name]", "[roomname]" }, new string[2] { targetCharacterName, targetRoomName }, new bool[2] { false, true }, true);
             if (msg == null) return "";
 
             return msg;
