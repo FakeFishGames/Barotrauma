@@ -232,7 +232,16 @@ namespace Barotrauma
                     "", style: "ItemCategory" + category.ToString())
                 {
                     UserData = category,
-                    OnClicked = (btn, userdata) => { FilterStoreItems((MapEntityCategory)userdata, searchBox.Text); return true; }
+                    OnClicked = (btn, userdata) => 
+                    {
+                        MapEntityCategory newCategory = (MapEntityCategory)userdata;
+                        if (newCategory != selectedItemCategory)
+                        {
+                            searchBox.Text = ""; 
+                        }
+                        FilterStoreItems((MapEntityCategory)userdata, searchBox.Text);
+                        return true;
+                    }
                 };
                 itemCategoryButtons.Add(categoryButton);
 
