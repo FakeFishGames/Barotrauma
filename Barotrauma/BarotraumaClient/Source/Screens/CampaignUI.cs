@@ -497,7 +497,12 @@ namespace Barotrauma
             {
                 //refresh store view
                 FillStoreItemList();
-                FilterStoreItems(selectedItemCategory, searchBox.Text);
+
+                MapEntityCategory? category = null;
+                //only select a specific category if the search box is empty
+                //(items from all categories are shown when searching)
+                if (string.IsNullOrEmpty(searchBox.Text)) { category = selectedItemCategory; }
+                FilterStoreItems(category, searchBox.Text);
             }
         }
 
