@@ -98,7 +98,7 @@ namespace Barotrauma
                     {
                         if (item.GetComponent<Items.Components.Repairable>() != null)
                         {
-                            item.Condition = item.Health;
+                            item.Condition = item.Prefab.Health;
                         }
                     }
                 }
