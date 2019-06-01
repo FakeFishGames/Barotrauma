@@ -74,6 +74,10 @@ namespace Barotrauma
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
             };
+            if (string.IsNullOrEmpty(clientNameBox.Text))
+            {
+                clientNameBox.Text = SteamManager.GetUsername();
+            }
             clientNameBox.OnTextChanged += RefreshJoinButtonState;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("ServerIP"));
