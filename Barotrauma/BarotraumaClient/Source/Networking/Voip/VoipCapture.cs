@@ -214,7 +214,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                Thread.Sleep(VoipConfig.BUFFER_SIZE * 800 / VoipConfig.FREQUENCY);
+                Thread.Sleep(10);
             }
         }
 
