@@ -2017,6 +2017,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
             item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
+            item.lastSentCondition = item.condition;
+
             item.SetActiveSprite();
 
             foreach (ItemComponent component in item.components)
