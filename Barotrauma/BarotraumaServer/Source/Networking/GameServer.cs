@@ -576,7 +576,7 @@ namespace Barotrauma.Networking
                                 HandleOwnership(msgContent, inc.SenderConnection);
                             }
 
-                            DebugConsole.NewMessage(packetHeader.ToString(), Color.Lime);
+                            DebugConsole.Log(packetHeader.ToString());
                             if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address, 0))
                             {
                                 inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
