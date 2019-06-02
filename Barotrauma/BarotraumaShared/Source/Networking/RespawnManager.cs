@@ -288,15 +288,12 @@ namespace Barotrauma.Networking
                         if (item == null) continue;
                         Spawner.AddToRemoveQueue(item);
                     }
-                }                
+                }
             }
 
             respawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + respawnShuttle.Borders.Height));
-
             respawnShuttle.Velocity = Vector2.Zero;
-
             respawnShuttle.PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.TopBarrier);
-
         }
 
         partial void RespawnCharactersProjSpecific();
@@ -323,6 +320,94 @@ namespace Barotrauma.Networking
             }
 
             msg.WritePadBits();
+        }
+
+        public Vector2 FindSpawnPos()
+        {
+            if (Level.Loaded == null || Submarine.MainSub == null) { return Vector2.Zero; }
+
+            Rectangle dockedBorders = respawnShuttle.GetDockedBorders();
+            Vector2 diffFromDockedBorders =
+                new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
+                - new Vector2(respawnShuttle.Borders.Center.X, respawnShuttle.Borders.Y - respawnShuttle.Borders.Height / 2);
+
+            int minWidth = Math.Max(dockedBorders.Width, 1000);
+            int minHeight = Math.Max(dockedBorders.Height, 1000);
+
+            List<Level.InterestingPosition> potentialSpawnPositions = new List<Level.InterestingPosition>();
+            foreach (Level.InterestingPosition potentialSpawnPos in Level.Loaded.PositionsOfInterest.Where(p => p.PositionType == Level.PositionType.MainPath))
+            {
+                bool invalid = false;
+                //make sure the shuttle won't overlap with any ruins
+                foreach (var ruin in Level.Loaded.Ruins)
+                {
+                    if (Math.Abs(ruin.Area.Center.X - potentialSpawnPos.Position.X) < (minWidth + ruin.Area.Width) / 2) { invalid = true; break; }
+                    if (Math.Abs(ruin.Area.Center.Y - potentialSpawnPos.Position.Y) < (minHeight + ruin.Area.Height) / 2) { invalid = true; break; }
+                }
+                if (invalid) { continue; }
+
+                //make sure there aren't any walls too close
+                var tooCloseCells = Level.Loaded.GetTooCloseCells(potentialSpawnPos.Position.ToVector2(), Math.Max(minWidth, minHeight));
+                if (tooCloseCells.Any()) { continue; }
+
+                //make sure the spawnpoint is far enough from other subs
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    if (sub == respawnShuttle || respawnShuttle.DockedTo.Contains(sub)) { continue; }
+
+                    float minDist = Math.Max(Math.Max(minWidth, minHeight) + Math.Max(sub.Borders.Width, sub.Borders.Height), 10000.0f);
+                    if (Vector2.DistanceSquared(sub.WorldPosition, potentialSpawnPos.Position.ToVector2()) < minDist * minDist)
+                    {
+                        invalid = true;
+                        break;
+                    }
+                }
+                if (invalid) { continue; }
+
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (character.IsDead)
+                    {
+                        //cannot spawn directly over dead bodies
+                        if (Math.Abs(character.WorldPosition.X - potentialSpawnPos.Position.X) < minWidth) { invalid = true; break; }
+                        if (Math.Abs(character.WorldPosition.Y - potentialSpawnPos.Position.Y) < minHeight) { invalid = true; break; }
+                    }
+                    else
+                    {
+                        //cannot spawn near alive characters (to prevent other players from seeing the shuttle 
+                        //appear out of nowhere, or monsters from immediatelly wrecking the shuttle)
+                        if (Vector2.DistanceSquared(character.WorldPosition, potentialSpawnPos.Position.ToVector2()) < 5000.0f * 5000.0f)
+                        {
+                            invalid = true;
+                            break;
+                        }
+                    }
+                }
+                if (invalid) { continue; }
+
+                potentialSpawnPositions.Add(potentialSpawnPos);
+            }
+            Vector2 bestSpawnPos = new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + respawnShuttle.Borders.Height);
+            float bestSpawnPosValue = 0.0f;
+            foreach (var potentialSpawnPos in potentialSpawnPositions)
+            {
+                //the closer the spawnpos is to the main sub, the better
+                float spawnPosValue = 100000.0f / Math.Max(Vector2.Distance(potentialSpawnPos.Position.ToVector2(), Submarine.MainSub.WorldPosition), 1.0f);
+
+                //prefer spawnpoints that are at the left side of the sub (so the shuttle doesn't have to go backwards)
+                if (potentialSpawnPos.Position.X > Submarine.MainSub.WorldPosition.X)
+                {
+                    spawnPosValue *= 0.1f;
+                }
+
+                if (spawnPosValue > bestSpawnPosValue)
+                {
+                    bestSpawnPos = potentialSpawnPos.Position.ToVector2();
+                    bestSpawnPosValue = spawnPosValue;
+                }
+            }
+
+            return bestSpawnPos;
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)

@@ -110,7 +110,15 @@ namespace Barotrauma.Networking
                 RespawnCharacters();
 
                 CoroutineManager.StopCoroutines("forcepos");
-                CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+                Vector2 spawnPos = FindSpawnPos();
+                if (spawnPos.Y > Level.Loaded.Size.Y)
+                {
+                    CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+                }
+                else
+                {
+                    respawnShuttle.SetPosition(spawnPos);
+                }
             }
             else
             {
