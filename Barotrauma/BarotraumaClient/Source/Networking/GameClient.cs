@@ -472,7 +472,8 @@ namespace Barotrauma.Networking
                     var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 20) })
                     {
                         IgnoreLayoutGroups = true,
-                        UserData = "password"
+                        UserData = "password",
+                        Censor = true
                     };
 
                     var okButton = msgBox.Buttons[0];
