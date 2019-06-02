@@ -62,9 +62,21 @@ namespace Barotrauma
         {
             frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) },
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
+
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 30), paddedFrame.RectTransform)
+            var toggleText = new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width-30, 20), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), new Color(150,150,200,255), GUI.SmallFont, Alignment.CenterLeft, style: null);
+
+            var closeButton = new GUIButton(new RectTransform(new Point(20, 20), paddedFrame.RectTransform, Anchor.TopRight), "X", color: Color.Red);
+            closeButton.OnClicked += (btn, userdata) =>
+            {
+                isOpen = false;
+                GUI.ForceMouseOn(null);
+                textBox.Deselect();
+                return true;
+            };
+
+            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 50), paddedFrame.RectTransform, Anchor.Center)
             {
                 IsFixedSize = false
             }, color: Color.Black * 0.9f);
@@ -80,9 +92,6 @@ namespace Barotrauma
                     ResetAutoComplete();
                 }
             };
-
-            NewMessage("Press F3 to open/close the debug console", Color.Cyan);
-            NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
         }
 
         public static void AddToGUIUpdateList()
@@ -129,6 +138,12 @@ namespace Barotrauma
                     GUI.ForceMouseOn(null);
                     textBox.Deselect();
                 }
+            }
+            else if (isOpen && PlayerInput.KeyHit(Keys.Escape))
+            {
+                isOpen = false;
+                GUI.ForceMouseOn(null);
+                textBox.Deselect();
             }
 
             if (isOpen)
