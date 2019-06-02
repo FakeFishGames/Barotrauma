@@ -309,17 +309,18 @@ namespace Barotrauma
 
         protected List<Tuple<Vector2, int>> GetAllPositions()
         {
+            string textDrawn = Censor ? textBlock.CensoredText : textBlock.WrappedText;
             var positions = new List<Tuple<Vector2, int>>();
-            if (textBlock.WrappedText.Contains("\n"))
+            if (textDrawn.Contains("\n"))
             {
-                string[] lines = textBlock.WrappedText.Split('\n');
+                string[] lines = textDrawn.Split('\n');
                 int index = 0;
                 int totalIndex = 0;
                 for (int i = 0; i < lines.Length; i++)
                 {
                     string line = lines[i];
                     totalIndex += line.Length;
-                    float totalTextHeight = Font.MeasureString(textBlock.WrappedText.Substring(0, totalIndex)).Y;
+                    float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y;
                     for (int j = 0; j <= line.Length; j++)
                     {
                         Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j));
@@ -332,9 +333,10 @@ namespace Barotrauma
             }
             else
             {
+                textDrawn = Censor ? textBlock.CensoredText : textBlock.Text;
                 for (int i = 0; i <= textBlock.Text.Length; i++)
                 {
-                    Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, i));
+                    Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i));
                     Vector2 indexPos = new Vector2(textSize.X + textBlock.Padding.X, textSize.Y + textBlock.Padding.Y) + textBlock.TextPos - textBlock.Origin;
                     //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
                     positions.Add(new Tuple<Vector2, int>(textBlock.Rect.Location.ToVector2() + indexPos, i));
@@ -833,6 +835,7 @@ namespace Barotrauma
 
         private void CalculateSelection()
         {
+            string textDrawn = Censor ? textBlock.CensoredText : textBlock.WrappedText;
             InitSelectionStart();
             selectionEndIndex = CaretIndex;
             selectionEndPos = caretPos;
@@ -840,12 +843,12 @@ namespace Barotrauma
             if (IsLeftToRight)
             {
                 selectedText = Text.Substring(selectionStartIndex, selectedCharacters);
-                selectionRectSize = Font.MeasureString(textBlock.WrappedText.Substring(selectionStartIndex, selectedCharacters));
+                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, selectedCharacters));
             }
             else
             {
                 selectedText = Text.Substring(selectionEndIndex, selectedCharacters);
-                selectionRectSize = Font.MeasureString(textBlock.WrappedText.Substring(selectionEndIndex, selectedCharacters));
+                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, selectedCharacters));
             }
         }
     }
