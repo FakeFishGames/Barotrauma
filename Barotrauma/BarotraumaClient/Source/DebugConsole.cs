@@ -142,7 +142,7 @@ namespace Barotrauma
                     textBox.Deselect();
                 }
             }
-            else if (PlayerInput.KeyHit(Keys.Escape))
+            else if (isOpen && PlayerInput.KeyHit(Keys.Escape))
             {
                 isOpen = false;
                 GUI.ForceMouseOn(null);
