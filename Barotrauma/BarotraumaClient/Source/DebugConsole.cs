@@ -65,7 +65,7 @@ namespace Barotrauma
 
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            var toggleText = new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width-30, 20), paddedFrame.RectTransform, Anchor.TopLeft), "Debug console - Press F3 to open/close", new Color(150,150,200,255), GUI.SmallFont, Alignment.CenterLeft, style: null);
+            var toggleText = new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width-30, 20), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), new Color(150,150,200,255), GUI.SmallFont, Alignment.CenterLeft, style: null);
 
             var closeButton = new GUIButton(new RectTransform(new Point(20, 20), paddedFrame.RectTransform, Anchor.TopRight), "X", color: Color.Red);
             closeButton.OnClicked += (btn, userdata) =>
@@ -92,9 +92,6 @@ namespace Barotrauma
                     ResetAutoComplete();
                 }
             };
-
-            NewMessage("Press F3 to open/close the debug console", Color.Cyan);
-            NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
         }
 
         public static void AddToGUIUpdateList()
