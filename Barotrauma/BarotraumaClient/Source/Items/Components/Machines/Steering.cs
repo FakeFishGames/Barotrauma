@@ -79,6 +79,19 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float steerRadius;
+        public float? SteerRadius
+        {
+            get
+            {
+                return steerRadius;
+            }
+            set
+            {
+                steerRadius = value ?? (steerArea.Rect.Width / 2);
+            }
+        }
+
         public List<DockingPort> DockingSources = new List<DockingPort>();
         public DockingPort ActiveDockingSource, DockingTarget;
 
@@ -297,6 +310,8 @@ namespace Barotrauma.Items.Components
 
             steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
+
+            steerRadius = steerArea.Rect.Width / 2;
 
             //docking interface ----------------------------------------------------
             dockingContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
@@ -641,7 +656,7 @@ namespace Barotrauma.Items.Components
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
-            if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerArea.Rect.Width / 2)
+            if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {

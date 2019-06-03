@@ -47,7 +47,12 @@ namespace Barotrauma.Items.Components
         //was the last ping sent with directional pinging
         private bool isLastPingDirectional;
 
-        private Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
+        private Sprite pingCircle, directionalPingCircle;
+        private Sprite directionalPingBackground;
+        private Sprite[] directionalPingButton;
+
+        private Sprite screenOverlay, screenBackground;
+
         private Sprite sonarBlip;
         private Sprite lineSprite;
 
