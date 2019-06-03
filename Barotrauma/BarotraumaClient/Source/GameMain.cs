@@ -610,7 +610,7 @@ namespace Barotrauma
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
                     GameMain.ResetFrameTime();
 
-                    if (TitleScreen.LoadState >= 100.0f &&
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
                         (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;
