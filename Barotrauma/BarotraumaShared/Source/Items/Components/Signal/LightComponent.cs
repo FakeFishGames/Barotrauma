@@ -165,6 +165,10 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             itemLoaded = true;
+#if CLIENT
+            light.Color = IsActive ? lightColor : Color.Transparent;
+            if (!IsActive) lightBrightness = 0.0f;
+#endif
         }
 
         public override void Update(float deltaTime, Camera cam)
