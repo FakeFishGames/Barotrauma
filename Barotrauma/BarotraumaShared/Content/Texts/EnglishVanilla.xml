@@ -214,6 +214,7 @@
   <pauseonfocuslost>Pause on focus lost</pauseonfocuslost>
   <pauseonfocuslosttooltip>Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.</pauseonfocuslosttooltip>
   <voipcapturedevicenotfound>Could not start voice capture; suitable capture device not found.</voipcapturedevicenotfound>
+  <voipnodevices>No audio capture devices found</voipnodevices>
 
   <!-- Graphics tab -->
   <settingstab.graphics>Graphics</settingstab.graphics>

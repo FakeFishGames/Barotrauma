@@ -472,25 +472,37 @@ namespace Barotrauma
                 UnsavedSettings = true;
                 return true;
             };
-            
-            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
+
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
+            {
+                VoiceCaptureDevice = deviceNames?.Count > 0 ? deviceNames[0] : null;
+            }
 #if (!OSX)
             var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), deviceNames.Count);
-            foreach (string name in deviceNames)
+            if (deviceNames?.Count > 0)
             {
-                deviceList.AddItem(TrimAudioDeviceName(name), name);
-            }
-            deviceList.OnSelected = (GUIComponent selected, object obj) =>
-            {
-                string name = obj as string;
-                if (VoiceCaptureDevice == name) { return true; }
+                foreach (string name in deviceNames)
+                {
+                    deviceList.AddItem(TrimAudioDeviceName(name), name);
+                }
+                deviceList.OnSelected = (GUIComponent selected, object obj) =>
+                {
+                    string name = obj as string;
+                    if (VoiceCaptureDevice == name) { return true; }
 
-                VoipCapture.ChangeCaptureDevice(name);
-                return true;
-            };
+                    VoipCapture.ChangeCaptureDevice(name);
+                    return true;
+                };
+            }
+            else
+            {
+                deviceList.AddItem(TextManager.Get("VoipNoDevices") ?? "N/A", null);
+                deviceList.ButtonEnabled = false;
+            }
+
 #else
             var defaultDeviceGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), audioSliders.RectTransform), true, Anchor.CenterLeft);
-            var suavemente = new GUITextBlock(new RectTransform(new Vector2(.7f, 0.75f), null), 
+            var currentDeviceButton = new GUITextBlock(new RectTransform(new Vector2(.7f, 0.75f), null), 
                 TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice)))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
@@ -504,17 +516,25 @@ namespace Barotrauma
                 OnClicked = (bt, userdata) =>
                 {
                     deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
-                    if (VoiceCaptureDevice == deviceNames[0]) return true;
+                    if (deviceNames?.Count > 0)
+                    {
+                        if (VoiceCaptureDevice == deviceNames[0]) return true;
 
-                    VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
-                    suavemente.Flash(Color.Blue);
+                        VoipCapture.ChangeCaptureDevice(deviceNames[0]);
+                        currentDeviceButton.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
+                        currentDeviceButton.Flash(Color.Blue);
+                    }
+                    else
+                    {
+                        currentDeviceButton.Text = TextManager.Get("VoipNoDevices");
+                        currentDeviceButton.Flash(Color.Red);
+                    }
 
                     return true;
                 }
             };
 
-            suavemente.RectTransform.Parent = defaultDeviceGroup.RectTransform;
+            currentDeviceButton.RectTransform.Parent = defaultDeviceGroup.RectTransform;
 #endif
             //var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.12f), audioSliders.RectTransform));
 
