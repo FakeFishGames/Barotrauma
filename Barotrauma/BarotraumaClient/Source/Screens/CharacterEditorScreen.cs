@@ -69,6 +69,7 @@ namespace Barotrauma
         private int spriteSheetOffsetX;
         private bool hideBodySheet;
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+        private Vector2 cameraOffset;
 
         private List<LimbJoint> selectedJoints = new List<LimbJoint>();
         private List<Limb> selectedLimbs = new List<Limb>();
@@ -158,6 +159,7 @@ namespace Barotrauma
             animationResetRequiresForceLoading = false;
             isExtrudingJoint = false;
             isDrawingJoint = false;
+            cameraOffset = Vector2.Zero;
             Wizard.instance = null;
         }
 
@@ -489,20 +491,18 @@ namespace Barotrauma
             }
             // Camera
             Cam.MoveCamera((float)deltaTime, allowMove: false);
-            bool movementInput = PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down) || PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right);
-            // 0.2f, because we want to allow the user to pan when the character is floating in the water without actively moving
-            if (!isFreezed && (character.AnimController.Collider.LinearVelocity.LengthSquared() > 0.2f || movementInput))
-            {
-                // Follow
-                Cam.Position = Vector2.SmoothStep(Cam.Position, character.WorldPosition, (float)deltaTime * cameraFollowSpeed);
-            }
-            else if (PlayerInput.MidButtonHeld())
+            Vector2 targetPos = character.WorldPosition;
+            if (PlayerInput.MidButtonHeld())
             {
                 // Pan
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / Cam.Zoom;
                 moveSpeed.X = -moveSpeed.X;
-                cam.Position += moveSpeed;
+                cameraOffset += moveSpeed;
+                Vector2 max = new Vector2(GameMain.GraphicsWidth * 0.3f, GameMain.GraphicsHeight * 0.38f);
+                Vector2 min = -max;
+                cameraOffset = Vector2.Clamp(cameraOffset, min, max);
             }
+            Cam.Position = targetPos + cameraOffset;
             MapEntity.mapEntityList.ForEach(e => e.IsHighlighted = false);
             // Update widgets
             jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
@@ -1201,6 +1201,7 @@ namespace Barotrauma
 
         private void OnPreSpawn()
         {
+            cameraOffset = Vector2.Zero;
             WayPoint wayPoint = null;
             if (!isEndlessRunner)
             {
