@@ -252,7 +252,7 @@ namespace Barotrauma
                 NewMessage(GameMain.Server.ServerSettings.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
             });
 
-            AssignOnExecute("autorestartinterval",(string[] args) =>
+            AssignOnExecute("autorestartinterval", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
@@ -306,6 +306,26 @@ namespace Barotrauma
                         GameMain.NetLobbyScreen.LastUpdateID++;
                     }
                 }
+            });
+
+            AssignOnExecute("startwhenclientsready", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+                bool enabled = GameMain.Server.ServerSettings.StartWhenClientsReady;
+                if (args.Length > 0)
+                {
+                    bool.TryParse(args[0], out enabled);
+                }
+                else
+                {
+                    enabled = !enabled;
+                }
+                if (enabled != GameMain.Server.ServerSettings.StartWhenClientsReady)
+                {
+                    GameMain.Server.ServerSettings.StartWhenClientsReady = enabled;
+                    GameMain.NetLobbyScreen.LastUpdateID++;
+                }
+                NewMessage(GameMain.Server.ServerSettings.StartWhenClientsReady ? "Enabled starting the round automatically when clients are ready." : "Disabled starting the round automatically when clients are ready.", Color.White);
             });
 
             AssignOnExecute("giveperm", (string[] args) =>
