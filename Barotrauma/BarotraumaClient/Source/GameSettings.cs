@@ -3,7 +3,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -75,7 +75,7 @@ namespace Barotrauma
         {
             settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
 
-            int tickBoxSize = (int)(32 * GUI.Scale);
+            Vector2 tickBoxScale = Vector2.One * 0.05f;
 
             var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.01f, IsHorizontal = true };
 
@@ -98,7 +98,7 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxSize), contentPackageList.Content.RectTransform), contentPackage.Name)
+                var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
                 {
                     UserData = contentPackage,
                     OnSelected = SelectContentPackage,
@@ -252,7 +252,7 @@ namespace Barotrauma
                 return true;
             };
 
-            GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Point(tickBoxSize), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
+            GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableVSync"))
             {
                 ToolTip = TextManager.Get("EnableVSyncToolTip"),
                 OnSelected = (GUITickBox box) =>
@@ -268,7 +268,7 @@ namespace Barotrauma
             };
 
             //TODO: remove hardcoded texts after the texts have been added to localization
-            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(new Point(tickBoxSize), leftColumn.RectTransform), 
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
                 TextManager.Get("PauseOnFocusLost", returnNull: true) ?? "Pause on focus lost");
             pauseOnFocusLostBox.Selected = PauseOnFocusLost;
             pauseOnFocusLostBox.ToolTip = TextManager.Get("PauseOnFocusLostToolTip", returnNull: true) ?? "Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.";
@@ -333,7 +333,7 @@ namespace Barotrauma
             };
             lightScrollBar.OnMoved(lightScrollBar, lightScrollBar.BarScroll);
 
-            new GUITickBox(new RectTransform(new Point(tickBoxSize), rightColumn.RectTransform), TextManager.Get("SpecularLighting"))
+            new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("SpecularLighting"))
             {
                 ToolTip = TextManager.Get("SpecularLightingToolTip"),
                 Selected = SpecularityEnabled,
@@ -345,7 +345,7 @@ namespace Barotrauma
                 }
             };
 
-            new GUITickBox(new RectTransform(new Point(tickBoxSize), rightColumn.RectTransform), TextManager.Get("ChromaticAberration"))
+            new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("ChromaticAberration"))
             {
                 ToolTip = TextManager.Get("ChromaticAberrationToolTip"),
                 Selected = ChromaticAberrationEnabled,
@@ -445,7 +445,7 @@ namespace Barotrauma
             };
             voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
 
-            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Point(tickBoxSize), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
+            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
             muteOnFocusLostBox.OnSelected = (tickBox) =>
@@ -457,13 +457,13 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("VoiceChat"));
 
-            IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+            IList<string> deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
             foreach (string name in deviceNames)
             {
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
             }
 
-            GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(new Point(tickBoxSize), audioSliders.RectTransform), TextManager.Get("DirectionalVoiceChat"));
+            GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DirectionalVoiceChat"));
             directionalVoiceChat.Selected = UseDirectionalVoiceChat;
             directionalVoiceChat.ToolTip = TextManager.Get("DirectionalVoiceChatToolTip");
             directionalVoiceChat.OnSelected = (tickBox) =>
@@ -472,14 +472,13 @@ namespace Barotrauma
                 UnsavedSettings = true;
                 return true;
             };
-
-
+            
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
 #if (!OSX)
-            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.EnsureUTF8(VoiceCaptureDevice), deviceNames.Count);
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), deviceNames.Count);
             foreach (string name in deviceNames)
             {
-                deviceList.AddItem(TextManager.EnsureUTF8(name), name);
+                deviceList.AddItem(TrimAudioDeviceName(name), name);
             }
             deviceList.OnSelected = (GUIComponent selected, object obj) =>
             {
@@ -498,16 +497,17 @@ namespace Barotrauma
                 TextAlignment = Alignment.CenterLeft
             };
 
-            new GUIButton(new RectTransform(new Vector2(.3f, 0.75f), defaultDeviceGroup.RectTransform), TextManager.Get("RefreshDefaultDevice"))
+            string refreshText = ToolBox.WrapText(TextManager.Get("RefreshDefaultDevice"), defaultDeviceGroup.RectTransform.Rect.Width * 0.3f, GUI.Font);
+            new GUIButton(new RectTransform(new Vector2(.3f, 0.75f), defaultDeviceGroup.RectTransform), refreshText)
             {
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
                 {
-                    deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+                    deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
                     if (VoiceCaptureDevice == deviceNames[0]) return true;
 
                     VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice));
+                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
                     suavemente.Flash(Color.Blue);
 
                     return true;
@@ -522,7 +522,7 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(new Point(tickBoxSize), audioSliders.RectTransform), TextManager.Get(langStr))
+                var tick = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr))
                 {
                     ToolTip = TextManager.Get(langStr + "ToolTip")
                 };
@@ -656,7 +656,7 @@ namespace Barotrauma
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
 
-            new GUITickBox(new RectTransform(new Point(tickBoxSize), controlsLayoutGroup.RectTransform), TextManager.Get("EnableMouseLook"))
+            new GUITickBox(new RectTransform(tickBoxScale, controlsLayoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableMouseLook"))
             {
                 ToolTip = TextManager.Get("EnableMouseLookToolTip"),
                 Selected = EnableMouseLook,
@@ -781,6 +781,19 @@ namespace Barotrauma
             SelectTab(selectedTab);
         }
 
+        private string TrimAudioDeviceName(string name)
+        {
+            string[] prefixes = { "OpenAL Soft on " };
+            foreach (string prefix in prefixes)
+            {
+                if (name.StartsWith(prefix, StringComparison.InvariantCulture))
+                {
+                    return name.Remove(0, prefix.Length);
+                }
+            }
+            return name;
+        }
+        
         private Tab currentTab;
         private void SelectTab(Tab tab)
         {
