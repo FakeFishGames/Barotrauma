@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
 
             //show a warning when there's 20 seconds until the shuttle leaves
             if ((ReturnTime - DateTime.Now).TotalSeconds < 20.0f && 
-                (DateTime.Now - lastShuttleLeavingWarningTime).TotalSeconds > 30.0f &&)
+                (DateTime.Now - lastShuttleLeavingWarningTime).TotalSeconds > 30.0f)
             {
                 lastShuttleLeavingWarningTime = DateTime.Now;
                 GameMain.Client.AddChatMessage("ServerMessage.ShuttleLeaving", ChatMessageType.Server);
