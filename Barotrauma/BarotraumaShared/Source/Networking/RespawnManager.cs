@@ -37,9 +37,15 @@ namespace Barotrauma.Networking
         /// <summary>
         /// When will the sub start heading back out of the level
         /// </summary>
-        public DateTime TransportTime { get; private set; }
+        public DateTime ReturnTime { get; private set; }
 
-        public bool CountdownStarted
+        public bool RespawnCountdownStarted
+        {
+            get;
+            private set;
+        }
+
+        public bool ReturnCountdownStarted
         {
             get;
             private set;
@@ -198,8 +204,8 @@ namespace Barotrauma.Networking
 
         private void ResetShuttle()
         {
-            TransportTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
-            despawnTime = TransportTime + new TimeSpan(0, 0, seconds: 30);
+            ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
+            despawnTime = ReturnTime + new TimeSpan(0, 0, seconds: 30);
 
             if (RespawnShuttle == null) return;
 

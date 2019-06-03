@@ -2321,14 +2321,15 @@ namespace Barotrauma.Networking
                 float textScale = 1.0f;
                 Color textColor = Color.White;
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.CountdownStarted)
+                    respawnManager.RespawnCountdownStarted)
                 {
                     float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
                     respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
                 }
-                else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
+                else if (respawnManager.CurrentState == RespawnManager.State.Transporting && 
+                    respawnManager.ReturnCountdownStarted)
                 {
-                    float timeLeft = (float)(respawnManager.TransportTime - DateTime.Now).TotalSeconds;
+                    float timeLeft = (float)(respawnManager.ReturnTime - DateTime.Now).TotalSeconds;
                     respawnText = timeLeft <= 0.0f ?
                         "" :
                         TextManager.GetWithVariable("RespawnShuttleLeavingIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));

@@ -54,25 +54,29 @@ namespace Barotrauma.Networking
             return botsToRespawn;
         }
 
-        partial void UpdateWaiting(float deltaTime)
+        private bool RespawnPending()
         {
             int characterToRespawnCount = GetClientsToRespawn().Count;
             int totalCharacterCount = GameMain.Server.ConnectedClients.Count;
-            bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * GameMain.Server.ServerSettings.MinRespawnRatio, 1.0f);
+            return (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * GameMain.Server.ServerSettings.MinRespawnRatio, 1.0f);
+        }
 
-            if (startCountdown != CountdownStarted)
+        partial void UpdateWaiting(float deltaTime)
+        {
+            bool respawnPending = RespawnPending();
+            if (respawnPending != RespawnCountdownStarted)
             {
-                CountdownStarted = startCountdown;
+                RespawnCountdownStarted = respawnPending;
                 RespawnTime = DateTime.Now + new TimeSpan(0,0,0,0, (int)(GameMain.Server.ServerSettings.RespawnInterval * 1000.0f));
                 GameMain.Server.CreateEntityEvent(this);                
             }
 
-            if (!CountdownStarted) { return; }
+            if (!RespawnCountdownStarted) { return; }
 
             if (DateTime.Now > RespawnTime)
             {
                 DispatchShuttle();
-                CountdownStarted = false;
+                RespawnCountdownStarted = false;
             }
 
             if (RespawnShuttle == null) { return; }
@@ -162,28 +166,44 @@ namespace Barotrauma.Networking
                 GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.Spawning);
                 GameMain.Server.CreateEntityEvent(this);
 
-                CountdownStarted = false;
+                RespawnCountdownStarted = false;
             }
         }
 
         partial void UpdateTransportingProjSpecific(float deltaTime)
         {
-            //if there are no living chracters inside, transporting can be stopped immediately
-            if (!Character.CharacterList.Any(c => c.Submarine == RespawnShuttle && !c.IsDead))
+            
+            if (!ReturnCountdownStarted)
             {
-                TransportTime = DateTime.Now;
+                //if there are no living chracters inside, transporting can be stopped immediately
+                if (!Character.CharacterList.Any(c => c.Submarine == RespawnShuttle && !c.IsDead))
+                {
+                    ReturnTime = DateTime.Now;
+                    ReturnCountdownStarted = true;
+                }
+                else if (!RespawnPending())
+                {
+                    //don't start counting down until someone else needs to respawn
+                    ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
+                    despawnTime = ReturnTime + new TimeSpan(0, 0, seconds: 30);
+                    return;
+                }
+                else
+                {
+                    ReturnCountdownStarted = true;
+                    GameMain.Server.CreateEntityEvent(this);
+                }
             }
 
-            if (DateTime.Now > TransportTime)
+            if (DateTime.Now > ReturnTime)
             {
                 GameServer.Log("The respawn shuttle is leaving.", ServerLog.MessageType.ServerMessage);
                 CurrentState = State.Returning;
 
                 GameMain.Server.CreateEntityEvent(this);
 
-                CountdownStarted = false;
+                RespawnCountdownStarted = false;
                 maxTransportTime = GameMain.Server.ServerSettings.MaxTransportTime;
-                despawnTime = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
             }
         }
 
@@ -304,11 +324,12 @@ namespace Barotrauma.Networking
             switch (CurrentState)
             {
                 case State.Transporting:
+                    msg.Write(ReturnCountdownStarted);
                     msg.Write(GameMain.Server.ServerSettings.MaxTransportTime);
-                    msg.Write((float)(TransportTime - DateTime.Now).TotalSeconds);
+                    msg.Write((float)(ReturnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Waiting:
-                    msg.Write(CountdownStarted);
+                    msg.Write(RespawnCountdownStarted);
                     msg.Write((float)(RespawnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Returning:
