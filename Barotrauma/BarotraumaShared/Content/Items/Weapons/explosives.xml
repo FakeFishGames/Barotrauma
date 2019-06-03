@@ -126,7 +126,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light">
+  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
