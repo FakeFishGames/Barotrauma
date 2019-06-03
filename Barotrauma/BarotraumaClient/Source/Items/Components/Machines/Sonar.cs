@@ -355,10 +355,10 @@ namespace Barotrauma.Items.Components
 
             if (steering != null)
             {
-                steering.SteerRadius = useDirectionalPing ?
-                        pingDragDirection != null ?
-                            -1.0f :
-                            (float?)((sonarView.Rect.Width/2) - (directionalPingButton[0].size.X * sonarView.Rect.Width / screenBackground.size.X)) :
+                steering.SteerRadius = useDirectionalPing && pingDragDirection != null ?
+                    -1.0f :
+                    PlayerInput.LeftButtonDown() || !PlayerInput.LeftButtonHeld() ?
+                        (float?)((sonarView.Rect.Width / 2) - (directionalPingButton[0].size.X * sonarView.Rect.Width / screenBackground.size.X)) :
                         null;
             }
 

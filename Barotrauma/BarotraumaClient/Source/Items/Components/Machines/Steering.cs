@@ -656,7 +656,7 @@ namespace Barotrauma.Items.Components
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
-            if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius)
+            if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius*steerRadius)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
