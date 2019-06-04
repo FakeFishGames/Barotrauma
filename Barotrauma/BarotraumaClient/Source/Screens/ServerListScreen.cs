@@ -217,6 +217,22 @@ namespace Barotrauma
             return true;
         }
 
+        private bool RefreshJoinButtonState(GUIComponent component, object obj)
+        {
+            if (obj == null || waitingForRefresh) { return false; }
+
+            if (!string.IsNullOrWhiteSpace(clientNameBox.Text) && !string.IsNullOrWhiteSpace(ipBox.Text))
+            {
+                joinButton.Enabled = true;
+            }
+            else
+            {
+                joinButton.Enabled = false;
+            }
+
+            return true;
+        }
+
         private bool SelectServer(GUIComponent component, object obj)
         {
             if (obj == null || waitingForRefresh || (!(obj is ServerInfo))) { return false; }
@@ -552,10 +568,6 @@ namespace Barotrauma
                     case System.Net.HttpStatusCode.NotFound:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
                            TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", NetConfig.MasterServerUrl));
-                        break;
-                    case System.Net.HttpStatusCode.ServiceUnavailable:
-                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
-                            TextManager.Get("MasterServerErrorUnavailable"));
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
