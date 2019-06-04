@@ -224,6 +224,25 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
 
+            displayModeDD.OnSelected = (guiComponent, obj) =>
+            {
+                UnsavedSettings = true;
+                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+                if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+                {
+                    resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(
+                            m => m.Width == GameMain.DisplayWidth &&
+                                 m.Height == GameMain.DisplayHeight));
+                    resolutionDD.ButtonEnabled = false;
+                }
+                else
+                {
+                    resolutionDD.ButtonEnabled = true;
+                }
+                return true;
+            };
+
+
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
 #if (!OSX)
@@ -240,51 +259,6 @@ namespace Barotrauma
                 displayModeDD.SelectItem(GameMain.Config.WindowMode);
             }
 #endif
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                displayModeDD.SelectItem(WindowMode.Fullscreen);
-            }
-            else
-            {
-                displayModeDD.SelectItem(GameMain.Config.WindowMode);
-            }
-#endif
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                displayModeDD.SelectItem(WindowMode.Fullscreen);
-            }
-            else
-            {
-                displayModeDD.SelectItem(GameMain.Config.WindowMode);
-            }
-#endif
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                displayModeDD.SelectItem(WindowMode.Fullscreen);
-            }
-            else
-            {
-                displayModeDD.SelectItem(GameMain.Config.WindowMode);
-            }
-#endif
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                PauseOnFocusLost = tickBox.Selected;
-                UnsavedSettings = true;
-                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
-                if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
-                {
-                    resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(
-                            m => m.Width == GameMain.DisplayWidth &&
-                                 m.Height == GameMain.DisplayHeight));
-                    resolutionDD.ButtonEnabled = false;
-                }
-                else
-                {
-                    resolutionDD.ButtonEnabled = true;
-                }
-                return true;
-            };
 
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
