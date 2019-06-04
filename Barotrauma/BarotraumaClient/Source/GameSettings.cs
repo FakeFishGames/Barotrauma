@@ -245,6 +245,15 @@ namespace Barotrauma
 #endif
             displayModeDD.OnSelected = (guiComponent, obj) =>
             {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(GameMain.Config.WindowMode);
+            }
+#endif
+            displayModeDD.OnSelected = (guiComponent, obj) =>
+            {
                 PauseOnFocusLost = tickBox.Selected;
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
