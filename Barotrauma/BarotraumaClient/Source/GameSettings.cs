@@ -207,9 +207,7 @@ namespace Barotrauma
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
                 OnSelected = SelectResolution,
-#if !LINUX
                 ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
-#endif
         };
 
             foreach (DisplayMode mode in supportedDisplayModes)

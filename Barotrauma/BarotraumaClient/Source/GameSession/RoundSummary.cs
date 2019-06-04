@@ -55,12 +55,6 @@ namespace Barotrauma
                 RelativeSpacing = 0.03f
             };
 
-            GUIListBox infoTextBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), paddedFrame.RectTransform));
-            
-            string summaryText = TextManager.GetWithVariables(gameOver ? "RoundSummaryGameOver" :
-                (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"), new string[2] { "[sub]", "[location]" },
-                new string[2] { Submarine.MainSub.Name, progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name });
-
             var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                 summaryText, wrap: true);
 

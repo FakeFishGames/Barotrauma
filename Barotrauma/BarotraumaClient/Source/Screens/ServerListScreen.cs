@@ -199,6 +199,10 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
+            else
+            {
+                joinButton.Enabled = false;
+            }
 
             return true;
         }
@@ -555,6 +559,13 @@ namespace Barotrauma
                     case System.Net.HttpStatusCode.NotFound:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
                            TextManager.Get("MasterServerError404")
+                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
+                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
+                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                        break;
+                    case System.Net.HttpStatusCode.ServiceUnavailable:
+                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
+                            TextManager.Get("MasterServerErrorUnavailable")
                                 .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
                                 .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
                                 .Replace("[statusdescription]", masterServerResponse.StatusDescription));
