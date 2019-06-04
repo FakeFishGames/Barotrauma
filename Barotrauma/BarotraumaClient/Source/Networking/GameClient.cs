@@ -1199,7 +1199,7 @@ namespace Barotrauma.Networking
                 {
                     secondsLeft -= CoroutineManager.UnscaledDeltaTime;
                     yield return CoroutineStatus.Running;
-                } while (secondsLeft > 0.0f);
+                } while (secondsLeft > 0.0f && Screen.Selected == GameMain.GameScreen);
             }
 
             Submarine.Unload();
