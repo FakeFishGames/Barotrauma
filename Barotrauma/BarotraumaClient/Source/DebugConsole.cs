@@ -1172,6 +1172,12 @@ namespace Barotrauma
                 if (args.Length == 0) return;
                 LocalizationCSVtoXML.Convert(args[0]);
             }));
+
+            commands.Add(new Command("guimessagebox", "guimessagebox [msg] -> Creates a message box with the parameter as a message.", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                var dialog = new GUIMessageBox("Message box", args[0]);
+            }));
 #endif
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
