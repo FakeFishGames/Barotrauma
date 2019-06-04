@@ -472,75 +472,49 @@ namespace Barotrauma
                 UnsavedSettings = true;
                 return true;
             };
-
-            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice) || !(deviceNames?.Contains(VoiceCaptureDevice) ?? false))
-            {
-                VoiceCaptureDevice = deviceNames?.Count > 0 ? deviceNames[0] : null;
-            }
-            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
-            {
-                VoiceSetting = VoiceMode.Disabled;
-            }
+            
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
 #if (!OSX)
             var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), deviceNames.Count);
-            if (deviceNames?.Count > 0)
+            foreach (string name in deviceNames)
             {
-                foreach (string name in deviceNames)
-                {
-                    deviceList.AddItem(TrimAudioDeviceName(name), name);
-                }
-                deviceList.OnSelected = (GUIComponent selected, object obj) =>
-                {
-                    string name = obj as string;
-                    if (VoiceCaptureDevice == name) { return true; }
-
-                    VoipCapture.ChangeCaptureDevice(name);
-                    return true;
-                };
+                deviceList.AddItem(TrimAudioDeviceName(name), name);
             }
-            else
+            deviceList.OnSelected = (GUIComponent selected, object obj) =>
             {
-                deviceList.AddItem(TextManager.Get("VoipNoDevices") ?? "N/A", null);
-                deviceList.ButtonEnabled = false;
-                deviceList.Select(0);
-            }
+                string name = obj as string;
+                if (VoiceCaptureDevice == name) { return true; }
 
+                VoipCapture.ChangeCaptureDevice(name);
+                return true;
+            };
 #else
             var defaultDeviceGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), audioSliders.RectTransform), true, Anchor.CenterLeft);
-            var currentDeviceTextBlock = new GUITextBlock(new RectTransform(new Vector2(.7f, 0.75f), null), 
-                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice)))
+            var suavemente = new GUITextBlock(new RectTransform(new Vector2(.7f, 0.75f), null), 
+                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice)))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
                 TextAlignment = Alignment.CenterLeft
             };
 
             string refreshText = ToolBox.WrapText(TextManager.Get("RefreshDefaultDevice"), defaultDeviceGroup.RectTransform.Rect.Width * 0.3f, GUI.Font);
-            var currentDeviceButton = new GUIButton(new RectTransform(new Vector2(.3f, 0.75f), defaultDeviceGroup.RectTransform), refreshText)
+            new GUIButton(new RectTransform(new Vector2(.3f, 0.75f), defaultDeviceGroup.RectTransform), refreshText)
             {
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
                 {
                     deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
-                    if (deviceNames?.Count > 0)
-                    {
-                        if (VoiceCaptureDevice == deviceNames[0]) return true;
+                    if (VoiceCaptureDevice == deviceNames[0]) return true;
 
-                        VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                        currentDeviceTextBlock.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
-                        currentDeviceTextBlock.Flash(Color.Blue);
-                    }
-                    else
-                    {
-                        currentDeviceTextBlock.Text = TextManager.Get("VoipNoDevices") ?? "N/A";
-                        currentDeviceTextBlock.Flash(Color.Red);
-                    }
+                    VoipCapture.ChangeCaptureDevice(deviceNames[0]);
+                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
+                    suavemente.Flash(Color.Blue);
 
                     return true;
                 }
             };
-            currentDeviceButton.OnClicked(currentDeviceButton, null);
 
-            currentDeviceTextBlock.RectTransform.Parent = defaultDeviceGroup.RectTransform;
+            suavemente.RectTransform.Parent = defaultDeviceGroup.RectTransform;
 #endif
             //var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.12f), audioSliders.RectTransform));
 
@@ -656,10 +630,6 @@ namespace Barotrauma
                 }
             };
             voiceMode.Selected = VoiceSetting;
-            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
-            {
-                voiceMode.Enabled = false;
-            }
 
             /// Controls tab -------------------------------------------------------------
             var controlsLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Controls].RectTransform, Anchor.TopCenter)
@@ -813,7 +783,6 @@ namespace Barotrauma
 
         private string TrimAudioDeviceName(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) { return string.Empty; }
             string[] prefixes = { "OpenAL Soft on " };
             foreach (string prefix in prefixes)
             {

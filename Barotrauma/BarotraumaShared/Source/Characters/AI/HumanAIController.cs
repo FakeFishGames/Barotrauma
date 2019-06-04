@@ -150,23 +150,7 @@ namespace Barotrauma
             bool run = objectiveManager.CurrentObjective.ForceRun || objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
-                if (Character.CurrentHull == null)
-                {
-                    run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
-                }
-                else
-                {
-                    float yDiff = goTo.Target.WorldPosition.Y - Character.WorldPosition.Y;
-                    if (Math.Abs(yDiff) > 100)
-                    {
-                        run = true;
-                    }
-                    else
-                    {
-                        float xDiff = goTo.Target.WorldPosition.X - Character.WorldPosition.X;
-                        run = Math.Abs(xDiff) > 300;
-                    }
-                }
+                run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
             }
             if (run)
             {
