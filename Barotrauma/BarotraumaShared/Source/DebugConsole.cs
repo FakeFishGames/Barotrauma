@@ -307,48 +307,6 @@ namespace Barotrauma
 
             //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
 
-            commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
-            {
-                HumanAIController.DisableCrewAI = false;
-                NewMessage("Crew AI enabled", Color.Green);
-            }, isCheat: true));
-
-            commands.Add(new Command("disableenemyai", "disableenemyai: Disable the AI of the Enemy characters (monsters).", (string[] args) =>
-            {
-                EnemyAIController.DisableEnemyAI = true;
-                NewMessage("Enemy AI disabled", Color.Red);
-            }, isCheat: true));
-
-            commands.Add(new Command("enableenemyai", "enableenemyai: Enable the AI of the Enemy characters (monsters).", (string[] args) =>
-            {
-                EnemyAIController.DisableEnemyAI = false;
-                NewMessage("Enemy AI enabled", Color.Green);
-            }, isCheat: true));
-
-            commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", null));
-
-            commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", null));
-
-            commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", null));
-
-            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", null));
-
-            commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", null));
-
-            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", null));
-
-            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", null));
-            
-            commands.Add(new Command("giverank", "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", null));
-
-            commands.Add(new Command("givecommandperm", "givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", null));
-
-            commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", null));
-            
-            commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
-
-            //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
-
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;

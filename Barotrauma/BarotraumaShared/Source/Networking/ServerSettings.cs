@@ -360,7 +360,7 @@ namespace Barotrauma.Networking
         public bool StartWhenClientsReady
         {
             get;
-            private set;
+            set;
         }
 
         [Serialize(0.8f, true)]
