@@ -226,7 +226,11 @@ namespace Barotrauma
 
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
-
+            if (Config.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                GraphicsWidth = GraphicsDevice.DisplayMode.Width;
+                GraphicsHeight = GraphicsDevice.DisplayMode.Height;
+            }
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
@@ -250,6 +254,8 @@ namespace Barotrauma
 
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
+
+            GraphicsDeviceManager.ApplyChanges();
         }
 
         public void ResetViewPort()
@@ -267,10 +273,7 @@ namespace Barotrauma
         {
             base.Initialize();
 
-            DisplayWidth = GraphicsDevice.DisplayMode.Width;
-            DisplayHeight = GraphicsDevice.DisplayMode.Height;
-
-            RequestGraphicsSettings();
+            ApplyGraphicsSettings();
 
             ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
@@ -309,45 +312,8 @@ namespace Barotrauma
 #endif
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
-
-#if WINDOWS
-            var gameForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
-            gameForm.Activated += new EventHandler(HandleFocus);
-            gameForm.Deactivate += new EventHandler(HandleDefocus);
-            if (WindowActive) { HandleFocus(null, null); }
-#endif
         }
-
-#if WINDOWS
-        private void HandleFocus(object sender, EventArgs e)
-        {
-            CoroutineManager.StopCoroutines("FocusCoroutine");
-            CoroutineManager.StartCoroutine(FocusCoroutine(),"FocusCoroutine");
-        }
-
-        private IEnumerable<object> FocusCoroutine()
-        {
-            yield return new WaitForSeconds(0.01f);
-            ApplyGraphicsSettings();
-            yield return CoroutineStatus.Success;
-        }
-#endif
-
-        private void HandleDefocus(object sender, EventArgs e)
-        {
-            CoroutineManager.StopCoroutines("FocusCoroutine");
-            if (GraphicsDeviceManager.IsFullScreen && !GraphicsDeviceManager.HardwareModeSwitch)
-            {
-                DisplayMode minMode = GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(m => m.Format == SurfaceFormat.Color);
-                GraphicsDeviceManager.PreferredBackBufferWidth = minMode.Width;
-                GraphicsDeviceManager.PreferredBackBufferHeight = minMode.Height;
-                GraphicsDeviceManager.IsFullScreen = false;
-                GraphicsDeviceManager.ApplyChanges();
-                Thread.Sleep(100);
-            }
-        }
-#endif
-
+        
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)

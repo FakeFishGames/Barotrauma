@@ -192,14 +192,13 @@ namespace Barotrauma
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
             {
                 if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
-                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
 #if OSX
                 // Monogame currently doesn't support retina displays
                 // so we need to disable resolutions above the viewport size.
 
                 // In a bundled .app you just disable HiDPI in the info.plist
                 // but that's probably not gonna happen.
-                if (mode.Width > GameMain.DisplayWidth || mode.Height > GameMain.DisplayHeight) { continue; }
+                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
 #endif
                 supportedDisplayModes.Add(mode);
             }
@@ -207,11 +206,15 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
-                OnSelected = SelectResolution
-            };
+                OnSelected = SelectResolution,
+#if !LINUX
+                ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
+#endif
+        };
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
+                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
                 if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
@@ -223,25 +226,6 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
-
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                UnsavedSettings = true;
-                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
-                if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
-                {
-                    resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(
-                            m => m.Width == GameMain.DisplayWidth &&
-                                 m.Height == GameMain.DisplayHeight));
-                    resolutionDD.ButtonEnabled = false;
-                }
-                else
-                {
-                    resolutionDD.ButtonEnabled = true;
-                }
-                return true;
-            };
-
 
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
@@ -259,6 +243,16 @@ namespace Barotrauma
                 displayModeDD.SelectItem(GameMain.Config.WindowMode);
             }
 #endif
+            displayModeDD.OnSelected = (guiComponent, obj) =>
+            {
+                PauseOnFocusLost = tickBox.Selected;
+                UnsavedSettings = true;
+                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+#if !LINUX
+                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed;
+#endif
+                return true;
+            };
 
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
@@ -534,10 +528,6 @@ namespace Barotrauma
 
                 voiceMode.AddRadioButton((VoiceMode)i, tick);
             }
-            deviceList.OnSelected = (GUIComponent selected, object obj) =>
-            {
-                string name = obj as string;
-                if (VoiceCaptureDevice == name) { return true; }
 
             var micVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("MicrophoneVolume"));
             var micVolumeSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform),
@@ -852,7 +842,7 @@ namespace Barotrauma
 
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
-            GameMain.Instance.RequestGraphicsSettings();
+            GameMain.Instance.ApplyGraphicsSettings();
             UnsavedSettings = true;
 
             return true;
@@ -991,7 +981,7 @@ namespace Barotrauma
 
             if (GameMain.WindowMode != GameMain.Config.WindowMode)
             {
-                GameMain.Instance.RequestGraphicsSettings();
+                GameMain.Instance.ApplyGraphicsSettings();
             }
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
