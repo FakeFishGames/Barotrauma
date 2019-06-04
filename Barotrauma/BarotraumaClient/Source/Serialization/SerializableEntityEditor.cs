@@ -536,12 +536,12 @@ namespace Barotrauma
                     if (translatedText == null)
                     {
                         propertyBox.TextColor = Color.Gray;
-                        propertyBox.ToolTip = TextManager.GetWithVariable("StringPropertyCannotTranslate", "[tag]", text ?? string.Empty);
+                        propertyBox.ToolTip = TextManager.Get("StringPropertyCannotTranslate").Replace("[tag]", text ?? "");
                     }
                     else
                     {
                         propertyBox.TextColor = Color.LightGreen;
-                        propertyBox.ToolTip = TextManager.GetWithVariable("StringPropertyTranslate", "[translation]", translatedText);
+                        propertyBox.ToolTip = TextManager.Get("StringPropertyTranslate").Replace("[translation]", translatedText);
                     }
                     return true;
                 };

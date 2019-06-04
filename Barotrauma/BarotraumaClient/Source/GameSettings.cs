@@ -106,15 +106,18 @@ namespace Barotrauma
                 {
                     tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
-                        new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
+                    tickBox.ToolTip = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
+                                    .Replace("[packagename]", contentPackage.Name)
+                                    .Replace("[packageversion]", contentPackage.GameVersion.ToString())
+                                    .Replace("[gameversion]", GameMain.Version.ToString());
                 }
                 else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
                 {
                     tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
-                        new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
+                    tickBox.ToolTip = TextManager.Get("ContentPackageMissingCoreFiles")
+                                    .Replace("[packagename]", contentPackage.Name)
+                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes));
                 }
             }
 
@@ -848,7 +851,7 @@ namespace Barotrauma
 
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
-            GameMain.Instance.ApplyGraphicsSettings();
+            GameMain.Instance.RequestGraphicsSettings();
             UnsavedSettings = true;
 
             return true;
@@ -987,7 +990,7 @@ namespace Barotrauma
 
             if (GameMain.WindowMode != GameMain.Config.WindowMode)
             {
-                GameMain.Instance.ApplyGraphicsSettings();
+                GameMain.Instance.RequestGraphicsSettings();
             }
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)

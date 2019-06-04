@@ -606,7 +606,7 @@ namespace Barotrauma
                         .ThenByDescending(a => a.Strength).FirstOrDefault();
                     if (affliction.DamagePerSecond > 0 || affliction.Strength > 0)
                     {
-                        var limbHealth = GetMatchingLimbHealth(affliction);
+                        var limbHealth = GetMathingLimbHealth(affliction);
                         if (limbHealth != null)
                         {
                             selectedLimbIndex = limbHealths.IndexOf(limbHealth);

@@ -209,6 +209,18 @@ namespace Barotrauma
 
         private void ApplyGraphicsSettings()
         {
+#if WINDOWS
+            if (WindowActive)
+            {
+#endif
+                ApplyGraphicsSettings();
+#if WINDOWS
+            }
+#endif
+        }
+
+        private void ApplyGraphicsSettings()
+        {
 #if !OSX
             if (Config.WindowMode == WindowMode.Fullscreen &&
                 GraphicsDeviceManager.IsFullScreen && !GraphicsDeviceManager.HardwareModeSwitch &&
@@ -254,8 +266,6 @@ namespace Barotrauma
 
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-
-            GraphicsDeviceManager.ApplyChanges();
         }
 
         public void ResetViewPort()
@@ -273,7 +283,7 @@ namespace Barotrauma
         {
             base.Initialize();
 
-            ApplyGraphicsSettings();
+            RequestGraphicsSettings();
 
             ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
@@ -309,6 +319,38 @@ namespace Barotrauma
             bool canLoadInSeparateThread = false;
 #if WINDOWS
             canLoadInSeparateThread = true;
+#endif
+
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
+
+#if WINDOWS
+            var gameForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(Window.Handle);
+            gameForm.Activated += new EventHandler(HandleFocus);
+            gameForm.Deactivate += new EventHandler(HandleDefocus);
+            if (WindowActive) { HandleFocus(null, null); }
+#endif
+        }
+
+#if WINDOWS
+        private void HandleFocus(object sender, EventArgs e)
+        {
+            CoroutineManager.StopCoroutines("FocusCoroutine");
+            CoroutineManager.StartCoroutine(FocusCoroutine(),"FocusCoroutine");
+        }
+
+        private IEnumerable<object> FocusCoroutine()
+        {
+            yield return new WaitForSeconds(0.01f);
+            ApplyGraphicsSettings();
+            yield return CoroutineStatus.Success;
+        }
+
+        private void HandleDefocus(object sender, EventArgs e)
+        {
+            CoroutineManager.StopCoroutines("FocusCoroutine");
+            GraphicsDeviceManager.IsFullScreen = false;
+            GraphicsDeviceManager.ApplyChanges();
+        }
 #endif
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
@@ -550,8 +592,10 @@ namespace Barotrauma
                 var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
                 if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
-                    var msgBox = new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("IncorrectExe",
-                        new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
+                    var msgBox = new GUIMessageBox(TextManager.Get("Error"),
+                        TextManager.Get("IncorrectExe")
+                            .Replace("[selectedpackage]", contentPackage.Name)
+                            .Replace("[exename]", exePaths.First()),
                         new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                     msgBox.Buttons[0].OnClicked += (_, userdata) =>
                     {
@@ -891,7 +935,7 @@ namespace Barotrauma
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
             base.OnExiting(sender, args);
         }
     }

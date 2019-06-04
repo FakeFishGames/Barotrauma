@@ -44,6 +44,19 @@ namespace Barotrauma
 
             GUIListBox infoTextBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), paddedFrame.RectTransform));
             
+            string summaryText = TextManager.Get(gameOver ? "RoundSummaryGameOver" :
+                (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"));
+
+            int width = 760, height = 500;
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), frame.RectTransform, Anchor.Center, minSize: new Point(width, height)));
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
+
+            GUIListBox infoTextBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), paddedFrame.RectTransform));
+            
             string summaryText = TextManager.GetWithVariables(gameOver ? "RoundSummaryGameOver" :
                 (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"), new string[2] { "[sub]", "[location]" },
                 new string[2] { Submarine.MainSub.Name, progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name });
@@ -76,7 +89,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.Mission.Completed && singleplayer)
                     {
                         var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                            TextManager.GetWithVariable("MissionReward", "[reward]", GameMain.GameSession.Mission.Reward.ToString()));
+                            TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
                     }  
                 }
             }

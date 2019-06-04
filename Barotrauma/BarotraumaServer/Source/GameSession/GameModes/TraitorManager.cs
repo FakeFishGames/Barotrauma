@@ -16,9 +16,10 @@ namespace Barotrauma
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            string greetingMessage = TextManager.GetWithVariable("TraitorStartMessage", "[targetname]", TargetCharacter.Name);
-            string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
-                new string[2] { "[codewords]", "[coderesponse]" }, new string[2] { codeWords, codeResponse });
+            string greetingMessage = TextManager.Get("TraitorStartMessage").Replace("[targetname]", TargetCharacter.Name);
+            string moreAgentsMessage = TextManager.Get("TraitorMoreAgentsMessage")
+                .Replace("[codewords]", codeWords)
+                .Replace("[coderesponse]", codeResponse);
             
             var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
             var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);
@@ -37,7 +38,7 @@ namespace Barotrauma
             {
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
-                    TextManager.GetWithVariables("TraitorStartMessageServer", new string[2] { "[targetname]", "[traitorname]" }, new string[2] { TargetCharacter.Name, Character.Name }),
+                    TextManager.Get("TraitorStartMessageServer").Replace("[targetname]", TargetCharacter.Name).Replace("[traitorname]", Character.Name),
                     ChatMessageType.MessageBox,
                     null
                 );

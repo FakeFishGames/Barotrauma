@@ -119,9 +119,11 @@ namespace Barotrauma
             if ((int)newLevel > (int)prevLevel)
             {
                 GUI.AddMessage(
-                    TextManager.GetWithVariables("SkillIncreased", new string[3] { "[name]", "[skillname]", "[newlevel]" },
-                    new string[3] { Name, TextManager.Get("SkillName." + skillIdentifier), ((int)newLevel).ToString() },
-                    new bool[3] { false, true, false }), Color.Green);
+                    TextManager.Get("SkillIncreased")
+                        .Replace("[name]", Name)
+                        .Replace("[skillname]", TextManager.Get("SkillName." + skillIdentifier))
+                        .Replace("[newlevel]", ((int)newLevel).ToString()),
+                    Color.Green);
             }
         }
 
