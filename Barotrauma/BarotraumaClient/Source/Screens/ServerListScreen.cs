@@ -199,12 +199,6 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
-            else
-            {
-                joinButton.Enabled = false;
-            }
-
-            return true;
         }
 
         private bool RefreshJoinButtonState(GUIComponent component, object obj)
@@ -475,16 +469,15 @@ namespace Barotrauma
             {
                 string toolTip = "";
                 if (serverInfo.GameVersion != GameMain.Version.ToString())
-                    toolTip = TextManager.Get("ServerListIncompatibleVersion").Replace("[version]", serverInfo.GameVersion);
+                    toolTip = TextManager.GetWithVariable("ServerListIncompatibleVersion", "[version]", serverInfo.GameVersion);
 
                 for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
                     if (!GameMain.SelectedPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]))
                     {
                         if (toolTip != "") toolTip += "\n";
-                        toolTip += TextManager.Get("ServerListIncompatibleContentPackage")
-                            .Replace("[contentpackage]", serverInfo.ContentPackageNames[i])
-                            .Replace("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]));
+                        toolTip += TextManager.GetWithVariables("ServerListIncompatibleContentPackage", new string[2] { "[contentpackage]", "[hash]" },
+                            new string[2] { serverInfo.ContentPackageNames[i], Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]) });
                     }
                 }
                 
@@ -558,17 +551,11 @@ namespace Barotrauma
                 {
                     case System.Net.HttpStatusCode.NotFound:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
-                           TextManager.Get("MasterServerError404")
-                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
-                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
-                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                           TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", NetConfig.MasterServerUrl));
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
-                            TextManager.Get("MasterServerErrorUnavailable")
-                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
-                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
-                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                            TextManager.Get("MasterServerErrorUnavailable"));
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 

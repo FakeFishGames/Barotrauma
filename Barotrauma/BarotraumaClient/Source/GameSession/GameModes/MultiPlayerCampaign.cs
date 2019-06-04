@@ -113,8 +113,8 @@ namespace Barotrauma
 
             if (GameMain.Client != null && interactor == Character.Controlled)
             {
-                var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
-                    .Replace("[locationname]", Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
+                var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("CampaignEnterOutpostPrompt", "[locationname]",
+                    Submarine.MainSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),                    
                     new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
                 {
                     UserData = "watchmanprompt"

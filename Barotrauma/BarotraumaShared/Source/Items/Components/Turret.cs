@@ -459,7 +459,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container, objective.objectiveManager);
-                character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
+                character?.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
                 containShellObjective.targetItemCount = usableProjectileCount + 1;
                 containShellObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
                 objective.AddSubObjective(containShellObjective);                
@@ -506,7 +506,7 @@ namespace Barotrauma.Items.Components
 
             if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
-                character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
+                character?.Speak(TextManager.GetWithVariable("DialogFireTurret", "[itemname]", item.Name, true), null, 0.0f, "fireturret", 5.0f);
                 character.SetInput(InputType.Shoot, true, true);
             }
 

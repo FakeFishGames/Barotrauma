@@ -121,8 +121,7 @@ namespace Barotrauma
                         if (!hasRequiredContentPackages)
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
-                                TextManager.Get("ContentPackageMismatchWarning")
-                                    .Replace("[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
+                                TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                             msgBox.Buttons[0].OnClicked = msgBox.Close;

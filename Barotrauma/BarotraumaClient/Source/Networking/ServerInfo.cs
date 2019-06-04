@@ -203,23 +203,20 @@ namespace Barotrauma.Networking
                         if (ContentPackage.List.Any(cp => cp.MD5hash.Hash == ContentPackageHashes[i]))
                         {
                             packageText.TextColor = Color.Orange;
-                            packageText.ToolTip = TextManager.Get("ServerListContentPackageNotEnabled")
-                                .Replace("[contentpackage]", ContentPackageNames[i]);
+                            packageText.ToolTip = TextManager.GetWithVariable("ServerListContentPackageNotEnabled", "[contentpackage]", ContentPackageNames[i]);
                         }
                         //workshop download link found
                         else if (i < ContentPackageWorkshopUrls.Count && !string.IsNullOrEmpty(ContentPackageWorkshopUrls[i]))
                         {
                             availableWorkshopUrls.Add(ContentPackageWorkshopUrls[i]);
                             packageText.TextColor = Color.Yellow;
-                            packageText.ToolTip = TextManager.Get("ServerListIncompatibleContentPackageWorkshopAvailable")
-                                .Replace("[contentpackage]", ContentPackageNames[i]);
+                            packageText.ToolTip = TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", ContentPackageNames[i]);
                         }
                         else //no package or workshop download link found, tough luck
                         {
                             packageText.TextColor = Color.Red;
-                            packageText.ToolTip = TextManager.Get("ServerListIncompatibleContentPackage")
-                                .Replace("[contentpackage]", ContentPackageNames[i])
-                                .Replace("[hash]", ContentPackageHashes[i]);
+                            packageText.ToolTip = TextManager.GetWithVariables("ServerListIncompatibleContentPackage",
+                                new string[2] { "[contentpackage]", "[hash]" }, new string[2] { ContentPackageNames[i], ContentPackageHashes[i] });
                         }
                     }
                 }

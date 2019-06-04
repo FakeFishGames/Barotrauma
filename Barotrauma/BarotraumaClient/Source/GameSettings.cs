@@ -106,18 +106,15 @@ namespace Barotrauma
                 {
                     tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                    .Replace("[packagename]", contentPackage.Name)
-                                    .Replace("[packageversion]", contentPackage.GameVersion.ToString())
-                                    .Replace("[gameversion]", GameMain.Version.ToString());
+                    tickBox.ToolTip = TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
+                        new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
                 }
                 else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
                 {
                     tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.Get("ContentPackageMissingCoreFiles")
-                                    .Replace("[packagename]", contentPackage.Name)
-                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes));
+                    tickBox.ToolTip = TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
+                        new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
                 }
             }
 
@@ -192,14 +189,13 @@ namespace Barotrauma
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
             {
                 if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
-                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
 #if OSX
                 // Monogame currently doesn't support retina displays
                 // so we need to disable resolutions above the viewport size.
 
                 // In a bundled .app you just disable HiDPI in the info.plist
                 // but that's probably not gonna happen.
-                if (mode.Width > GameMain.DisplayWidth || mode.Height > GameMain.DisplayHeight) { continue; }
+                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
 #endif
                 supportedDisplayModes.Add(mode);
             }
@@ -207,11 +203,15 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
-                OnSelected = SelectResolution
-            };
+                OnSelected = SelectResolution,
+#if !LINUX
+                ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
+#endif
+        };
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
+                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
                 if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
@@ -223,25 +223,6 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
-
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                UnsavedSettings = true;
-                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
-                if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
-                {
-                    resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(
-                            m => m.Width == GameMain.DisplayWidth &&
-                                 m.Height == GameMain.DisplayHeight));
-                    resolutionDD.ButtonEnabled = false;
-                }
-                else
-                {
-                    resolutionDD.ButtonEnabled = true;
-                }
-                return true;
-            };
-
 
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
@@ -259,6 +240,36 @@ namespace Barotrauma
                 displayModeDD.SelectItem(GameMain.Config.WindowMode);
             }
 #endif
+            displayModeDD.OnSelected = (guiComponent, obj) =>
+            {
+                ToolTip = TextManager.Get("EnableVSyncToolTip"),
+                OnSelected = (GUITickBox box) =>
+                {
+                    VSyncEnabled = box.Selected;
+                    GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
+                    GameMain.GraphicsDeviceManager.ApplyChanges();
+                    UnsavedSettings = true;
+
+                    return true;
+                },
+                Selected = VSyncEnabled
+            };
+
+            //TODO: remove hardcoded texts after the texts have been added to localization
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), 
+                TextManager.Get("PauseOnFocusLost", returnNull: true) ?? "Pause on focus lost");
+            pauseOnFocusLostBox.Selected = PauseOnFocusLost;
+            pauseOnFocusLostBox.ToolTip = TextManager.Get("PauseOnFocusLostToolTip", returnNull: true) ?? "Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.";
+            pauseOnFocusLostBox.OnSelected = (tickBox) =>
+            {
+                PauseOnFocusLost = tickBox.Selected;
+                UnsavedSettings = true;
+                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+#if !LINUX
+                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed;
+#endif
+                return true;
+            };
 
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
             {
@@ -848,7 +859,7 @@ namespace Barotrauma
 
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
-            GameMain.Instance.RequestGraphicsSettings();
+            GameMain.Instance.ApplyGraphicsSettings();
             UnsavedSettings = true;
 
             return true;
@@ -987,7 +998,7 @@ namespace Barotrauma
 
             if (GameMain.WindowMode != GameMain.Config.WindowMode)
             {
-                GameMain.Instance.RequestGraphicsSettings();
+                GameMain.Instance.ApplyGraphicsSettings();
             }
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)

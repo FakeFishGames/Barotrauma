@@ -81,7 +81,7 @@ namespace Barotrauma.Networking
 
                 new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.0f), paddedPlayerFrame.RectTransform),
                     bannedPlayer.ExpirationTime == null ? 
-                        TextManager.Get("BanPermanent") :  TextManager.Get("BanExpires").Replace("[time]", bannedPlayer.ExpirationTime.Value.ToString()),
+                        TextManager.Get("BanPermanent") :  TextManager.GetWithVariable("BanExpires", "[time]", bannedPlayer.ExpirationTime.Value.ToString()),
                     font: GUI.SmallFont);
 
                 var reasonText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.0f), paddedPlayerFrame.RectTransform),

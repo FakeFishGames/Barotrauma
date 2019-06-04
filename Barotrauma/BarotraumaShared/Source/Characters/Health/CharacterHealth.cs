@@ -232,13 +232,13 @@ namespace Barotrauma
         }
 
         private LimbHealth GetMatchingLimbHealth(Limb limb) => limbHealths[limb.HealthIndex];
-        private LimbHealth GetMathingLimbHealth(Affliction affliction) => GetMatchingLimbHealth(Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb));
+        private LimbHealth GetMatchingLimbHealth(Affliction affliction) => GetMatchingLimbHealth(Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb));
 
         /// <summary>
         /// Returns the limb afflictions and non-limbspecific afflictions that are set to be displayed on this limb.
         /// </summary>
         private IEnumerable<Affliction> GetMatchingAfflictions(LimbHealth limb, Func<Affliction, bool> predicate)
-            => limb.Afflictions.Where(predicate).Union(afflictions.Where(a => predicate(a) && GetMathingLimbHealth(a) == limb));
+            => limb.Afflictions.Where(predicate).Union(afflictions.Where(a => predicate(a) && GetMatchingLimbHealth(a) == limb));
 
         public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
         {

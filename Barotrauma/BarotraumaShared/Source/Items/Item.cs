@@ -1539,9 +1539,8 @@ namespace Barotrauma
             {
                 if (requiredSkill != null)
                 {
-                    GUI.AddMessage(TextManager.Get("InsufficientSkills")
-                        .Replace("[requiredskill]", TextManager.Get("SkillName." + requiredSkill.Identifier))
-                        .Replace("[requiredlevel]", ((int)requiredSkill.Level).ToString()), Color.Red);
+                    GUI.AddMessage(TextManager.GetWithVariables("InsufficientSkills", new string[2] { "[requiredskill]", "[requiredlevel]" },
+                        new string[2] { TextManager.Get("SkillName." + requiredSkill.Identifier), ((int)requiredSkill.Level).ToString() }, new bool[2] { true, false }), Color.Red);
                 }
             }
 #endif
@@ -2033,8 +2032,8 @@ namespace Barotrauma
             XElement element = new XElement("Item");
 
             element.Add(
-                new XAttribute("name", prefab.Name),
-                new XAttribute("identifier", prefab.Identifier),
+                new XAttribute("name", Prefab.OriginalName),
+                new XAttribute("identifier", Prefab.Identifier),
                 new XAttribute("ID", ID));
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));

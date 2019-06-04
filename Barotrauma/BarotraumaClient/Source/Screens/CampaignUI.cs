@@ -636,7 +636,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
-                TextManager.Get("Reward").Replace("[reward]", selectedMission.Reward.ToString()))
+                TextManager.GetWithVariable("Reward", "[reward]", selectedMission.Reward.ToString()))
             {
                 CanBeFocused = false
             };
@@ -860,8 +860,7 @@ namespace Barotrauma
 
         public string GetMoney()
         {
-            return TextManager.Get("PlayerCredits").Replace("[credits]",
-                ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", Campaign.Money)));
+            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", Campaign.Money));
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)
@@ -902,7 +901,7 @@ namespace Barotrauma
                     {
                         var confirmDialog = new GUIMessageBox(
                             TextManager.Get("FireWarningHeader"),
-                            TextManager.Get("FireWarningText").Replace("[charactername]", ((CharacterInfo)obj).Name),
+                            TextManager.GetWithVariable("FireWarningText", "[charactername]", ((CharacterInfo)obj).Name),
                             new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                         confirmDialog.Buttons[0].UserData = (CharacterInfo)obj;
                         confirmDialog.Buttons[0].OnClicked = FireCharacter;

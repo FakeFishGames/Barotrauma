@@ -415,14 +415,14 @@ namespace Barotrauma
                         {
                             if (SteamManager.UpdateWorkshopItem(item, out string errorMsg))
                             {
-                                new GUIMessageBox("", TextManager.Get("WorkshopItemUpdated").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
+                                new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", TextManager.EnsureUTF8(item.Title)));
                             }
                             else
                             {
                                 DebugConsole.ThrowError(errorMsg);
                                 new GUIMessageBox(
                                     TextManager.Get("Error"), 
-                                    TextManager.Get("WorkshopItemUpdateFailed").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)).Replace("[errormessage]", errorMsg));
+                                    TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { TextManager.EnsureUTF8(item.Title), errorMsg }));
                             }
                             btn.Enabled = false;
                             btn.Visible = false;
@@ -733,7 +733,7 @@ namespace Barotrauma
                 new GUIImage(new RectTransform(new Point(scoreContainer.Rect.Height), scoreContainer.RectTransform),
                     i < starCount ? "GUIStarIconBright" : "GUIStarIconDark");
             }
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemVotes").Replace("[votecount]", (item.VotesUp + item.VotesDown).ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.GetWithVariable("WorkshopItemVotes", "[votecount]", (item.VotesUp + item.VotesDown).ToString()));
 
             //tags ------------------------------------
             var tagContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
@@ -857,7 +857,7 @@ namespace Barotrauma
             if (!item.Installed)
             {
                 new GUIMessageBox(TextManager.Get("Error"), 
-                    TextManager.Get("WorkshopErrorInstallRequiredToEdit").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
+                    TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEdit", "[itemname]", TextManager.EnsureUTF8(item.Title)));
                 return;
             }
             SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
@@ -967,7 +967,7 @@ namespace Barotrauma
                 {
                     try
                     {
-                        OpenFileDialog ofd = new OpenFileDialog()
+                        Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                         {
                             Multiselect = true,
                             InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
@@ -1025,9 +1025,8 @@ namespace Barotrauma
                         {
                             new GUIMessageBox(
                                 TextManager.Get("Error"),
-                                TextManager.Get("ContentPackageCantMakeCorePackage")
-                                    .Replace("[packagename]", itemContentPackage.Name)
-                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes)));
+                                TextManager.GetWithVariables("ContentPackageCantMakeCorePackage", new string[2] { "[packagename]", "[missingfiletypes]" }, 
+                                new string[2] { itemContentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true }));
                             tickbox.Selected = false;
                         }
                         else
@@ -1078,7 +1077,7 @@ namespace Barotrauma
                 {
                     try
                     {
-                        OpenFileDialog ofd = new OpenFileDialog()
+                        Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                         {
                             InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
                             Title = TextManager.Get("workshopitemaddfiles"),
@@ -1154,7 +1153,7 @@ namespace Barotrauma
                     OnClicked = (btn, userData) =>
                     {
                         if (itemEditor == null) { return false; }
-                        var deleteVerification = new GUIMessageBox("", TextManager.Get("WorkshopItemDeleteVerification").Replace("[itemname]", itemEditor.Title),
+                        var deleteVerification = new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemDeleteVerification", "[itemname]", itemEditor.Title),
                             new string[] {  TextManager.Get("Yes"), TextManager.Get("No") });
                         deleteVerification.Buttons[0].OnClicked = (yesBtn, userdata) =>
                         {
@@ -1356,7 +1355,7 @@ namespace Barotrauma
             string pleaseWaitText = TextManager.Get("WorkshopPublishPleaseWait");
             var msgBox = new GUIMessageBox(
                 pleaseWaitText,
-                TextManager.Get("WorkshopPublishInProgress").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)), 
+                TextManager.GetWithVariable("WorkshopPublishInProgress", "[itemname]", TextManager.EnsureUTF8(item.Title)), 
                 new string[] { TextManager.Get("Cancel") });
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
@@ -1378,13 +1377,13 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(item.Error))
             {
-                new GUIMessageBox("", TextManager.Get("WorkshopItemPublished").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
+                new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemPublished", "[itemname]", TextManager.EnsureUTF8(item.Title)));
             }
             else
             {
                 new GUIMessageBox(
                     TextManager.Get("Error"), 
-                    TextManager.Get("WorkshopItemPublishFailed").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
+                    TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
             }
 
             createItemFrame.ClearChildren();
