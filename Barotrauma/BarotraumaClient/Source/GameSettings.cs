@@ -841,7 +841,7 @@ namespace Barotrauma
 
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
-            GameMain.Instance.RequestGraphicsSettings();
+            GameMain.Instance.ApplyGraphicsSettings();
             UnsavedSettings = true;
 
             return true;
@@ -980,7 +980,7 @@ namespace Barotrauma
 
             if (GameMain.WindowMode != GameMain.Config.WindowMode)
             {
-                GameMain.Instance.RequestGraphicsSettings();
+                GameMain.Instance.ApplyGraphicsSettings();
             }
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)

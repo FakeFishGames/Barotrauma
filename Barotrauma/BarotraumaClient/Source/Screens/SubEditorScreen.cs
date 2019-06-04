@@ -1074,7 +1074,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    OpenFileDialog ofd = new OpenFileDialog()
+                    Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                     {
                         InitialDirectory = Path.GetFullPath(Submarine.SavePath),
                         Filter = "PNG file|*.png",
