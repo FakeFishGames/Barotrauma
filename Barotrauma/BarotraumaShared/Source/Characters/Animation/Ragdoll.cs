@@ -17,6 +17,12 @@ namespace Barotrauma
     {
         public abstract RagdollParams RagdollParams { get; protected set; }
 
+        const float ImpactDamageMultiplayer = 10.0f;
+        /// <summary>
+        /// Maximum damage per impact (0.1 = 10% of the character's maximum health)
+        /// </summary>
+        const float MaxImpactDamage = 0.1f;
+
         private static List<Ragdoll> list = new List<Ragdoll>();
 
         protected Hull currentHull;
@@ -688,8 +694,10 @@ namespace Barotrauma
                         Vector2 impactPos = ConvertUnits.ToDisplayUnits(points[0]);
                         if (character.Submarine != null) impactPos += character.Submarine.Position;
 
+                        float impactDamage = Math.Min((impact - ImpactTolerance) * ImpactDamageMultiplayer, character.MaxVitality * MaxImpactDamage);
+
                         character.LastDamageSource = null;
-                        character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
+                        character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(impactDamage) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                         character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
                         //briefly disable impact damage
