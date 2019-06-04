@@ -598,9 +598,11 @@ namespace Barotrauma
             GameMain.Config.SaveNewPlayerConfig();
 
             string ip = null;
+            string serverName = null;
             if (ipBox.UserData is ServerInfo serverInfo)
             {
                 ip = serverInfo.IP + ":" + serverInfo.Port;
+                serverName = serverInfo.ServerName;
             }
             else if (!string.IsNullOrWhiteSpace(ipBox.Text))
             {
@@ -614,18 +616,18 @@ namespace Barotrauma
                 return false;
             }
 
-            CoroutineManager.StartCoroutine(ConnectToServer(ip));
+            CoroutineManager.StartCoroutine(ConnectToServer(ip, serverName));
 
             return true;
         }
         
-        private IEnumerable<object> ConnectToServer(string ip)
+        private IEnumerable<object> ConnectToServer(string ip, string serverName)
         {
 #if !DEBUG
             try
             {
 #endif
-                GameMain.Client = new GameClient(clientNameBox.Text, ip);
+                GameMain.Client = new GameClient(clientNameBox.Text, ip, serverName);
 #if !DEBUG
             }
             catch (Exception e)
