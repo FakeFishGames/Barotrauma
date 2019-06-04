@@ -233,7 +233,15 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             //base.AddToGUIUpdateList();
-            rightPanel.AddToGUIUpdateList();
+            //rightPanel.AddToGUIUpdateList();
+
+            // TODO: add toggleable hide elements
+            characterSelectionPanel.AddToGUIUpdateList();
+            //fileEditPanel.AddToGUIUpdateList();
+            //modesPanel.AddToGUIUpdateList();
+            //miscToolsPanel.AddToGUIUpdateList();
+
+
             Wizard.instance?.AddToGUIUpdateList();
             if (displayBackgroundColor)
             {
@@ -1417,9 +1425,14 @@ namespace Barotrauma
         #endregion
 
         #region GUI
-        private GUIFrame rightPanel;
-        private GUIFrame leftPanel;
-        private GUIFrame centerPanel;
+        private GUIFrame rightArea;
+        private GUIFrame leftArea;
+        private GUIFrame centerArea;
+
+        private GUIFrame characterSelectionPanel;
+        private GUIFrame fileEditPanel;
+        private GUIFrame modesPanel;
+        private GUIFrame miscToolsPanel;
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
         private GUIFrame limbControls;
@@ -1443,27 +1456,34 @@ namespace Barotrauma
 
         private void CreateGUI()
         {
+            // TODO: refactor
             CreateRightPanel();
             CreateCenterPanel();
+
+            //// Release the old panel
+            //if (rightArea != null)
+            //{
+            //    rightArea.RectTransform.Parent = null;
+            //}
         }
 
         private void CreateCenterPanel()
         {
             // Release the old panels
-            if (centerPanel != null)
+            if (centerArea != null)
             {
-                centerPanel.RectTransform.Parent = null;
+                centerArea.RectTransform.Parent = null;
             }
-            if (leftPanel != null)
+            if (leftArea != null)
             {
-                leftPanel.RectTransform.Parent = null;
+                leftArea.RectTransform.Parent = null;
             }
-            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
+            centerArea = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
             {
-                AbsoluteOffset = new Point((int)(rightPanel.RectTransform.ScaledSize.X + rightPanel.RectTransform.RelativeOffset.X * rightPanel.RectTransform.Parent.ScaledSize.X + 20), 20)
+                AbsoluteOffset = new Point((int)(rightArea.RectTransform.ScaledSize.X + rightArea.RectTransform.RelativeOffset.X * rightArea.RectTransform.Parent.ScaledSize.X + 20), 20)
 
             }, style: null) { CanBeFocused = false };
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
+            leftArea = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
             {
                 AbsoluteOffset = new Point(20, 0)
             }, style: null)
@@ -1473,7 +1493,7 @@ namespace Barotrauma
             Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
             // General controls
-            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerArea.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
             // Background color
             var frame = new GUIFrame(new RectTransform(new Point(500, 80), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, GetCharacterEditorTranslation("BackgroundColor") + ":", textColor: Color.WhiteSmoke);
@@ -1524,7 +1544,7 @@ namespace Barotrauma
                 }
             }
             // Spritesheet controls
-            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.BottomLeft), style: null)
+            spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerArea.RectTransform, Anchor.BottomLeft), style: null)
             {
                 CanBeFocused = false
             };
@@ -1591,7 +1611,7 @@ namespace Barotrauma
             //    }
             //};
             // Limb controls
-            limbControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            limbControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupLimbControls = new GUILayoutGroup(new RectTransform(Vector2.One, limbControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var lockSpriteOriginToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("LockSpriteOrigin"))
             {
@@ -1636,7 +1656,7 @@ namespace Barotrauma
             recalculateColliderToggle.TextColor = Color.White;
             // Ragdoll
             Point sliderSize = new Point(300, 20);
-            ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), GetCharacterEditorTranslation("UniformScale"))
             {
@@ -1730,7 +1750,7 @@ namespace Barotrauma
             };
 
             // Ragdoll manipulation
-            extraRagdollControls = new GUIFrame(new RectTransform(new Point(140, 30), centerPanel.RectTransform, Anchor.CenterRight), style: null) { CanBeFocused = false };
+            extraRagdollControls = new GUIFrame(new RectTransform(new Point(140, 30), centerArea.RectTransform, Anchor.CenterRight), style: null) { CanBeFocused = false };
             var extraRagdollLayout = new GUILayoutGroup(new RectTransform(Vector2.One, extraRagdollControls.RectTransform));
             duplicateLimbButton = new GUIButton(new RectTransform(new Point(140, 30), extraRagdollLayout.RectTransform), "Duplicate Limb")
             {
@@ -1759,7 +1779,7 @@ namespace Barotrauma
             };
 
             // Animation
-            animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            animationControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - 5, elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
             var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), GetCharacterEditorTranslation("SelectedAnimation") + ": ", Color.WhiteSmoke, textAlignment: Alignment.Center);
@@ -1834,29 +1854,33 @@ namespace Barotrauma
 
         private void CreateRightPanel()
         {
-            // Release the old panel
-            if (rightPanel != null)
-            {
-                rightPanel.RectTransform.Parent = null;
-            }
+            // TODO: change and replace
             Vector2 buttonSize = new Vector2(1, 0.04f);
             Vector2 toggleSize = new Vector2(0.03f, 0.03f);
-            Point margin = new Point(40, 60);
-            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), parent: Frame.RectTransform, anchor: Anchor.CenterRight), style: "GUIFrameRight");
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(rightPanel.Rect.Width - margin.X, rightPanel.Rect.Height - margin.Y), rightPanel.RectTransform, Anchor.Center))
+            Point margin = new Point(40, 40);
+            rightArea = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), parent: Frame.RectTransform, anchor: Anchor.TopRight), style: null) { CanBeFocused = false };
+
+            //new Point(rightArea.Rect.Width - margin.X, rightArea.Rect.Height - margin.Y)
+            characterSelectionPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), rightArea.RectTransform, Anchor.TopRight));
+            var padding = new GUIFrame(new RectTransform(new Point(characterSelectionPanel.Rect.Width - margin.X, characterSelectionPanel.Rect.Height - margin.Y),
+                characterSelectionPanel.RectTransform, Anchor.Center), style: null)
             {
-                Stretch = true
+                CanBeFocused = false
             };
 
-            var disclaimerBtnHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), layoutGroup.RectTransform), style: null);
-
+            // Disclaimer
+            var disclaimerBtnHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), padding.RectTransform), style: null);
             var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), disclaimerBtnHolder.RectTransform, Anchor.TopRight), style: "GUINotificationButton")
             {
                 OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
             };
             disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
 
-            var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.04f), layoutGroup.RectTransform), elementCount: 10, style: null);
+            // Character selection
+            var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), padding.RectTransform)
+            {
+                RelativeOffset = new Vector2(0, 0.2f)
+            }, elementCount: 10, style: null);
             characterDropDown.ListBox.Color = new Color(characterDropDown.ListBox.Color.R, characterDropDown.ListBox.Color.G, characterDropDown.ListBox.Color.B, byte.MaxValue);
             foreach (var file in AllFiles)
             {
@@ -1870,7 +1894,10 @@ namespace Barotrauma
             };
             if (currentCharacterConfig == Character.HumanConfigFile)
             {
-                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.04f), layoutGroup.RectTransform), elementCount: 7, style: null);
+                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), padding.RectTransform)
+                {
+                    RelativeOffset = new Vector2(0, 0.45f)
+                }, elementCount: 7, style: null);
                 jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
                 jobDropDown.AddItem("None");
                 JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
@@ -1886,7 +1913,7 @@ namespace Barotrauma
                     return true;
                 };
             }
-            var charButtons = new GUIFrame(new RectTransform(new Vector2(buttonSize.X, buttonSize.Y * 1.5f), parent: layoutGroup.RectTransform), style: null);
+            var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), parent: padding.RectTransform, anchor: Anchor.BottomLeft), style: null);
             var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("PreviousCharacter"));
             prevCharacterButton.TextBlock.AutoScale = true;
             prevCharacterButton.OnClicked += (b, obj) =>
@@ -1901,6 +1928,13 @@ namespace Barotrauma
                 SpawnCharacter(GetNextConfigFile());
                 return true;
             };
+
+            // Modes
+            modesPanel = new GUIFrame(new RectTransform(new Point(rightArea.Rect.Width - margin.X, rightArea.Rect.Height - margin.Y), rightArea.RectTransform, Anchor.Center));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, modesPanel.RectTransform))
+            {
+                Stretch = true
+            };
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowSpriteSheet")) { Selected = showSpritesheet };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowRagdoll")) { Selected = showRagdoll };
@@ -1908,14 +1942,6 @@ namespace Barotrauma
             editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
             jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditJoints")) { Selected = editJoints };
             var ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditIKTargets")) { Selected = editIK };
-            freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("Freeze")) { Selected = isFreezed };
-            var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoFreeze")) { Selected = autoFreeze };
-            var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LimbPairEditing"))
-            {
-                Selected = limbPairEditing,
-                Enabled = character.IsHumanoid  // TODO: remove when limb pair editing works for non-humanoids
-            };
-            animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AnimationTestPose")) { Selected = character.AnimController.AnimationTestPose };
             editAnimsToggle.OnSelected = box =>
             {
                 editAnimations = box.Selected;
@@ -1976,25 +2002,24 @@ namespace Barotrauma
                 showSpritesheet = box.Selected;
                 return true;
             };
-            freezeToggle.OnSelected = box =>
+
+            // Misc tools
+            miscToolsPanel = new GUIFrame(new RectTransform(new Point(rightArea.Rect.Width - margin.X, rightArea.Rect.Height - margin.Y), rightArea.RectTransform, Anchor.Center));
+            layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, miscToolsPanel.RectTransform))
             {
-                isFreezed = box.Selected;
-                return true;
+                Stretch = true
             };
-            autoFreezeToggle.OnSelected = box =>
+            freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("Freeze")) { Selected = isFreezed };
+            var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoFreeze")) { Selected = autoFreeze };
+            var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LimbPairEditing"))
             {
-                autoFreeze = box.Selected;
-                return true;
+                Selected = limbPairEditing,
+                Enabled = character.IsHumanoid  // TODO: remove when limb pair editing works for non-humanoids
             };
-            limbPairEditToggle.OnSelected = box =>
+            animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AnimationTestPose"))
             {
-                limbPairEditing = box.Selected;
-                return true;
-            };
-            animTestPoseToggle.OnSelected = box =>
-            {
-                character.AnimController.AnimationTestPose = box.Selected;
-                return true;
+                Selected = character.AnimController.AnimationTestPose,
+                Enabled = character.AnimController.AnimationTestPose
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoMove"))
             {
@@ -2032,7 +2057,33 @@ namespace Barotrauma
                     return true;
                 }
             };
+            freezeToggle.OnSelected = box =>
+            {
+                isFreezed = box.Selected;
+                return true;
+            };
+            autoFreezeToggle.OnSelected = box =>
+            {
+                autoFreeze = box.Selected;
+                return true;
+            };
+            limbPairEditToggle.OnSelected = box =>
+            {
+                limbPairEditing = box.Selected;
+                return true;
+            };
+            animTestPoseToggle.OnSelected = box =>
+            {
+                character.AnimController.AnimationTestPose = box.Selected;
+                return true;
+            };
 
+            // File Edit
+            fileEditPanel = new GUIFrame(new RectTransform(new Point(rightArea.Rect.Width - margin.X, rightArea.Rect.Height - margin.Y), rightArea.RectTransform, Anchor.BottomRight));
+            layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, fileEditPanel.RectTransform))
+            {
+                Stretch = true
+            };
             var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("QuickSaveAnimations"));
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
@@ -2735,11 +2786,11 @@ namespace Barotrauma
             }
             else if (height > width)
             {
-                spriteSheetMaxZoom = (centerPanel.Rect.Bottom - spriteSheetOffsetY - margin) / height;
+                spriteSheetMaxZoom = (centerArea.Rect.Bottom - spriteSheetOffsetY - margin) / height;
             }
             else
             {
-                spriteSheetMaxZoom = (centerPanel.Rect.Left - spriteSheetOffsetX - margin) / width;
+                spriteSheetMaxZoom = (centerArea.Rect.Left - spriteSheetOffsetX - margin) / width;
             }
             spriteSheetMinZoom = spriteSheetMinZoom > spriteSheetMaxZoom ? spriteSheetMaxZoom : 0.25f;
             spriteSheetZoom = MathHelper.Clamp(1, spriteSheetMinZoom, spriteSheetMaxZoom);
