@@ -217,7 +217,16 @@ namespace Barotrauma
                     limb.body.AngularVelocity = matchingLimb.body.AngularVelocity;
                 }
             }
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
+
+            if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
+            {
+                string errorMsg = "Failed to move items from a human's inventory into a humanhusk's inventory (inventory sizes don't match)";
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                yield return CoroutineStatus.Success;
+            }
+
+            for (int i = 0; i < character.Inventory.Items.Length && i < husk.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null) continue;
                 husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
