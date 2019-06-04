@@ -505,7 +505,10 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
-                    if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
+#if CLIENT
+                    if (GameMain.Client != null && Character.Controlled == null) { return false; }
+#endif
+                    if (Character.Controlled != null && Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
 
                     if (btn.GetChildByUserData("selected").Visible)
                     {
@@ -919,7 +922,9 @@ namespace Barotrauma
                             Font = GUI.SmallFont,
                             OnClicked = (btn, userData) =>
                             {
-                                if (Character.Controlled == null) return false;
+#if CLIENT
+                                if (GameMain.Client != null && Character.Controlled == null) { return false; }
+#endif
                                 SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                                 orderTargetFrame = null;
                                 OrderOptionButtons.Clear();
@@ -957,7 +962,9 @@ namespace Barotrauma
                         UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
                         OnClicked = (btn, userData) =>
                         {
-                            if (Character.Controlled == null) return false;
+#if CLIENT
+                            if (GameMain.Client != null && Character.Controlled == null) { return false; }
+#endif
                             SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                             orderTargetFrame = null;
                             OrderOptionButtons.Clear();
