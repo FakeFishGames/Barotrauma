@@ -171,12 +171,12 @@ namespace Barotrauma
             string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + AITag;
             if (!string.IsNullOrEmpty(orderOption)) messageTag += "." + orderOption;
 
-            if (targetCharacterName == null) targetCharacterName = "";
-            if (targetRoomName == null) targetRoomName = "";
-            string msg = TextManager.GetWithVariables(messageTag, new string[2] { "[name]", "[roomname]" }, new string[2] { targetCharacterName, targetRoomName }, true);
+            string msg = TextManager.Get(messageTag, true);
             if (msg == null) return "";
 
-            return msg;
+            if (targetCharacterName == null) targetCharacterName = "";
+            if (targetRoomName == null) targetRoomName = "";            
+            return msg.Replace("[name]", targetCharacterName).Replace("[roomname]", targetRoomName);
         }
     }
 

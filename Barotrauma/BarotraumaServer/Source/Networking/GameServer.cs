@@ -415,7 +415,7 @@ namespace Barotrauma.Networking
                 {
                     if (endRoundTimer <= 0.0f)
                     {
-                        SendChatMessage(TextManager.GetWithVariable("CrewDeadNoRespawns", "[time]", "60"), ChatMessageType.Server);
+                        SendChatMessage(TextManager.Get("CrewDeadNoRespawns").Replace("[time]", "60"), ChatMessageType.Server);
                     }
                     endRoundTimer += deltaTime;
                 }
@@ -728,7 +728,7 @@ namespace Barotrauma.Networking
                         if (matchingSub == null)
                         {
                             SendDirectChatMessage(
-                                TextManager.GetWithVariable("CampaignStartFailedSubNotFound", "[subname]", subName), 
+                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subname]", subName), 
                                 connectedClient, ChatMessageType.MessageBox);
                         }
                         else

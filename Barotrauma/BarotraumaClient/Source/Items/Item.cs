@@ -754,7 +754,7 @@ namespace Barotrauma
                         itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
                         if (itemInUseWarning.UserData != otherCharacter)
                         {
-                            itemInUseWarning.Text = TextManager.GetWithVariable("ItemInUse", "[character]", otherCharacter.Name);
+                            itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
                             itemInUseWarning.UserData = otherCharacter;
                         }
                         break;

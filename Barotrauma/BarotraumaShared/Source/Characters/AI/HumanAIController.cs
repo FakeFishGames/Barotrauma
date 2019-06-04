@@ -381,8 +381,8 @@ namespace Barotrauma
             }
 
             if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
-            {                
-                Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, true), null, 0, "pressure", 30.0f);
+            {
+                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.DisplayName), null, 0, "pressure", 30.0f);
             }
         }
 

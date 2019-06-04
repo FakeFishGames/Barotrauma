@@ -43,7 +43,7 @@ namespace Barotrauma
             {
                 return text;
             }
-            text = TextManager.GetWithVariable(textTag, "[key]", keyBind);
+            text = TextManager.Get(textTag).Replace("[key]", keyBind);
             cachedHudTexts.Add(textTag + keyBind, text);
             return text;
         }

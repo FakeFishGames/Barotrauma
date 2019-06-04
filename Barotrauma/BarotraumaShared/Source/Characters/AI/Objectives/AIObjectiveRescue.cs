@@ -57,10 +57,11 @@ namespace Barotrauma
             if (targetCharacter.IsUnconscious && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
             {
                 if (character.SelectedCharacter != targetCharacter)
-                {   
-                    character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" }, 
-                        new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                        null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                {
+                    character.Speak(TextManager.Get("DialogFoundUnconsciousTarget")
+                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", targetCharacter.CurrentHull.DisplayName),
+                        null, 1.0f,
+                        "foundunconscioustarget" + targetCharacter.Name, 60.0f);
 
                     // Go to the target and select it
                     if (!character.CanInteractWith(targetCharacter))
@@ -112,10 +113,11 @@ namespace Barotrauma
             {
                 // We can start applying treatment
                 if (character.SelectedCharacter != targetCharacter)
-                {                
-                    character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget", new string[2] { "[targetname]", "[roomname]" },
-                        new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                        null, 1.0f, "foundwoundedtarget" + targetCharacter.Name, 60.0f);
+                {
+                    character.Speak(TextManager.Get("DialogFoundWoundedTarget")
+                        .Replace("[targetname]", targetCharacter.Name).Replace("[roomname]", targetCharacter.CurrentHull.DisplayName),
+                        null, 1.0f,
+                        "foundwoundedtarget" + targetCharacter.Name, 60.0f);
 
                     character.SelectCharacter(targetCharacter);
                 }
@@ -189,10 +191,9 @@ namespace Barotrauma
                     {
                         itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
                     }
-                    
-
-                    character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments", new string[2] { "[targetname]", "[treatmentlist]" },
-                        new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
+                    character.Speak(TextManager.Get("DialogListRequiredTreatments")
+                        .Replace("[targetname]", targetCharacter.Name)
+                        .Replace("[treatmentlist]", itemListStr),
                         null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
                 }
                 character.DeselectCharacter();
@@ -234,8 +235,8 @@ namespace Barotrauma
 
             bool isCompleted = targetCharacter.Bleeding <= 0 && targetCharacter.Vitality / targetCharacter.MaxVitality > AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager);
             if (isCompleted)
-            {                
-                character.Speak(TextManager.GetWithVariable("DialogTargetHealed", "[targetname]", targetCharacter.Name),
+            {
+                character.Speak(TextManager.Get("DialogTargetHealed").Replace("[targetname]", targetCharacter.Name),
                     null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
             }
             return isCompleted || targetCharacter.IsDead;

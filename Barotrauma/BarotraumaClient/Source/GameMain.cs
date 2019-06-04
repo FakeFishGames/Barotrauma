@@ -893,7 +893,7 @@ namespace Barotrauma
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
             base.OnExiting(sender, args);
         }
     }
