@@ -550,10 +550,8 @@ namespace Barotrauma
                 var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
                 if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
-                    var msgBox = new GUIMessageBox(TextManager.Get("Error"),
-                        TextManager.Get("IncorrectExe")
-                            .Replace("[selectedpackage]", contentPackage.Name)
-                            .Replace("[exename]", exePaths.First()),
+                    var msgBox = new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("IncorrectExe",
+                        new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
                         new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                     msgBox.Buttons[0].OnClicked += (_, userdata) =>
                     {
@@ -893,7 +891,7 @@ namespace Barotrauma
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
             base.OnExiting(sender, args);
         }
     }

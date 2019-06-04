@@ -219,8 +219,10 @@ namespace Barotrauma.Items.Components
                 {
                     dialogTag = "DialogSonarTargetLarge";
                 }
-                character.Speak(TextManager.Get(dialogTag).Replace("[direction]", targetGroup.Key).Replace("[count]", targetGroup.Value.Count.ToString()),
-                    null, 0, "sonartarget" + targetGroup.Value[0].ID, 30);
+
+                character.Speak(TextManager.GetWithVariables(dialogTag, new string[2] { "[direction]", "[count]" }, 
+                    new string[2] { targetGroup.Key.ToString(), targetGroup.Value.Count.ToString() },
+                    new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 30);
 
                 //prevent the character from reporting other targets in the group
                 for (int i = 1; i < targetGroup.Value.Count; i++)
@@ -239,7 +241,7 @@ namespace Barotrauma.Items.Components
             int clockDir = (int)Math.Round((angle / MathHelper.TwoPi) * 12);
             if (clockDir == 0) clockDir = 12;
 
-            return TextManager.Get("roomname.subdiroclock").Replace("[dir]", clockDir.ToString());
+            return TextManager.GetWithVariable("roomname.subdiroclock", "[dir]", clockDir.ToString());
         }
 
         private Vector2 GetTransducerPos()

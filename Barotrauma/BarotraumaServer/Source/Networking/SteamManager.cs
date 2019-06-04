@@ -37,7 +37,7 @@ namespace Barotrauma.Steam
 
         public static bool RefreshServerDetails(Networking.GameServer server)
         {
-            if (instance?.server == null || !instance.isInitialized)
+            if (instance == null || !instance.isInitialized)
             {
                 return false;
             }
