@@ -199,7 +199,7 @@ namespace Barotrauma
 
                 // In a bundled .app you just disable HiDPI in the info.plist
                 // but that's probably not gonna happen.
-                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
+                if (mode.Width > GameMain.DisplayWidth || mode.Height > GameMain.DisplayHeight) { continue; }
 #endif
                 supportedDisplayModes.Add(mode);
             }
@@ -260,14 +260,23 @@ namespace Barotrauma
 #endif
             displayModeDD.OnSelected = (guiComponent, obj) =>
             {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(GameMain.Config.WindowMode);
+            }
+#endif
+            displayModeDD.OnSelected = (guiComponent, obj) =>
+            {
                 PauseOnFocusLost = tickBox.Selected;
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
                 if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
                 {
                     resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(
-                            m => m.Width == GameMain.Instance.GraphicsDevice.DisplayMode.Width &&
-                                 m.Height == GameMain.Instance.GraphicsDevice.DisplayMode.Height));
+                            m => m.Width == GameMain.DisplayWidth &&
+                                 m.Height == GameMain.DisplayHeight));
                     resolutionDD.ButtonEnabled = false;
                 }
                 else
