@@ -115,7 +115,7 @@ namespace Barotrauma
             {
                 if (buoyancyVol / selectedVol < 1.0f)
                 {
-                    retVal += " (" + TextManager.Get("OptimalBallastLevel").Replace("[value]", (buoyancyVol / selectedVol).ToString("0.000")) + ")";
+                    retVal += " (" + TextManager.GetWithVariable("OptimalBallastLevel", "[value]", (buoyancyVol / selectedVol).ToString("0.000")) + ")";
                 }
                 else
                 {
@@ -572,7 +572,7 @@ namespace Barotrauma
                             ItemAssemblyPrefab assemblyPrefab = userData as ItemAssemblyPrefab;
                             var msgBox = new GUIMessageBox(
                                 TextManager.Get("DeleteDialogLabel"),
-                                TextManager.Get("DeleteDialogQuestion").Replace("[file]", assemblyPrefab.Name),
+                                TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", assemblyPrefab.Name),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
                             msgBox.Buttons[0].OnClicked += (deleteBtn, userData2) =>
                             {
@@ -584,7 +584,7 @@ namespace Barotrauma
                                 }
                                 catch (Exception e)
                                 {
-                                    DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", assemblyPrefab.Name), e);
+                                    DebugConsole.ThrowError(TextManager.GetWithVariable("DeleteFileError", "[file]", assemblyPrefab.Name), e);
                                 }
                                 return true;
                             };
@@ -861,7 +861,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
+                    GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -907,7 +907,7 @@ namespace Barotrauma
             }
             Submarine.MainSub.CheckForErrors();
             
-            GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
+            GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", Submarine.MainSub.FilePath), Color.Green);
 
             Submarine.RefreshSavedSub(savePath);
             if (prevSavePath != null && prevSavePath != savePath)
@@ -1074,7 +1074,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    OpenFileDialog ofd = new OpenFileDialog()
+                    Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                     {
                         InitialDirectory = Path.GetFullPath(Submarine.SavePath),
                         Filter = "PNG file|*.png",
@@ -1259,7 +1259,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
+                    GUI.AddMessage(TextManager.GetWithVariable("ItemAssemblyNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -1476,7 +1476,7 @@ namespace Barotrauma
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),
-                TextManager.Get("DeleteDialogQuestion").Replace("[file]", sub.Name), 
+                TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", sub.Name), 
                 new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
             msgBox.Buttons[0].OnClicked += (btn, userData) => 
             {
@@ -1489,7 +1489,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", sub.FilePath), e);
+                    DebugConsole.ThrowError(TextManager.GetWithVariable("DeleteFileError", "[file]", sub.FilePath), e);
                 }
                 return true;
             };

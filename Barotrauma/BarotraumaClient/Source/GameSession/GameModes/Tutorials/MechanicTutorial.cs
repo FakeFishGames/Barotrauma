@@ -330,7 +330,6 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(segments[3]);
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
-            yield return new WaitForSeconds(1.5f, false);
             //TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Select)); // Ladder objective
             //do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
             //RemoveCompletedObjective(segments[11]);
@@ -348,52 +347,46 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_craftingCabinet.Item, true);
             do
             {
-                for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
-                {
-                    if (mechanic_craftingCabinet.Inventory.Items[i] != null)
-                    {
-                        HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
-                    }
-                }
                 if (mechanic.SelectedConstruction == mechanic_craftingCabinet.Item)
                 {
                     for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
                     {
                         if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
                     }
-                }
-                yield return null;
-            } while (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null || mechanic.Inventory.FindItemByIdentifier("sodium") == null); // Wait until looted
-            yield return new WaitForSeconds(1.0f, false);
-            SetHighlight(mechanic_craftingCabinet.Item, false);
 
-            SetHighlight(mechanic_deconstructor.Item, true);
-
-            do
-            {
-                if (IsSelectedItem(mechanic_deconstructor.Item))
-                {
-                    if (mechanic.Inventory.FindItemByIdentifier("oxygentank") != null)
+                    if (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null && mechanic.Inventory.FindItemByIdentifier("aluminium") == null)
                     {
-                        HighlightInventorySlot(mechanic.Inventory, "oxygentank", highlightColor, .5f, .5f, 0f);
-
-                        if (mechanic_deconstructor.InputContainer.Inventory.slots != null)
+                        for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
                         {
-                            for (int i = 0; i < mechanic_deconstructor.InputContainer.Inventory.slots.Length; i++)
+                            Item item = mechanic_craftingCabinet.Inventory.Items[i];
+                            if (item != null && item.prefab.Identifier == "oxygentank")
                             {
-                                HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                                HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
                             }
                         }
                     }
 
-                    if (mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null && !mechanic_deconstructor.IsActive)
+                    if (mechanic.Inventory.FindItemByIdentifier("sodium") == null)
                     {
-                        if (mechanic_deconstructor.ActivateButton.Frame.FlashTimer <= 0)
+                        for (int i = 0; i < mechanic_craftingCabinet.Inventory.Items.Length; i++)
                         {
-                            mechanic_deconstructor.ActivateButton.Frame.Flash(highlightColor, 1.5f, false);
+                            Item item = mechanic_craftingCabinet.Inventory.Items[i];
+                            if (item != null && item.prefab.Identifier == "sodium")
+                            {
+                                HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
+                            }
                         }
                     }
-
+                }
+                yield return null;
+            } while ((mechanic.Inventory.FindItemByIdentifier("oxygentank") == null && mechanic.Inventory.FindItemByIdentifier("aluminium") == null) || mechanic.Inventory.FindItemByIdentifier("sodium") == null); // Wait until looted
+            yield return new WaitForSeconds(1.0f, false);
+            SetHighlight(mechanic_craftingCabinet.Item, false);
+            SetHighlight(mechanic_deconstructor.Item, true);
+            do
+            {
+                if (IsSelectedItem(mechanic_deconstructor.Item))
+                {
                     if (mechanic_deconstructor.OutputContainer.Inventory.FindItemByIdentifier("aluminium") != null)
                     {
                         HighlightInventorySlot(mechanic_deconstructor.OutputContainer.Inventory, "aluminium", highlightColor, .5f, .5f, 0f);
@@ -401,6 +394,29 @@ namespace Barotrauma.Tutorials
                         for (int i = 0; i < mechanic.Inventory.slots.Length; i++)
                         {
                             if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        }
+                    }
+                    else
+                    {
+                        if (mechanic.Inventory.FindItemByIdentifier("oxygentank") != null && mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") == null)
+                        {
+                            HighlightInventorySlot(mechanic.Inventory, "oxygentank", highlightColor, .5f, .5f, 0f);
+
+                            if (mechanic_deconstructor.InputContainer.Inventory.slots != null)
+                            {
+                                for (int i = 0; i < mechanic_deconstructor.InputContainer.Inventory.slots.Length; i++)
+                                {
+                                    HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                                }
+                            }
+                        }
+
+                        if (mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null && !mechanic_deconstructor.IsActive)
+                        {
+                            if (mechanic_deconstructor.ActivateButton.Frame.FlashTimer <= 0)
+                            {
+                                mechanic_deconstructor.ActivateButton.Frame.Flash(highlightColor, 1.5f, false);
+                            }
                         }
                     }
                 }

@@ -193,6 +193,7 @@ namespace Barotrauma.Tutorials
             engineer_submarineJunctionBox_2 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_2"));
             engineer_submarineJunctionBox_3 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_3"));
             engineer_submarineReactor = Item.ItemList.Find(i => i.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
+            engineer_submarineReactor.OnOffSwitch.BarScrollValue = .25f;
             engineer_submarineReactor.IsActive = engineer_submarineReactor.AutoTemp = false;
 
             engineer_submarineJunctionBox_1.Indestructible = false;

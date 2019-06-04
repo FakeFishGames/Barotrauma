@@ -343,7 +343,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 5.0f);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f);
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
@@ -519,10 +519,8 @@ namespace Barotrauma
                 var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
                 if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
-                    var msgBox = new GUIMessageBox(TextManager.Get("Error"),
-                        TextManager.Get("IncorrectExe")
-                            .Replace("[selectedpackage]", contentPackage.Name)
-                            .Replace("[exename]", exePaths.First()),
+                    var msgBox = new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("IncorrectExe",
+                        new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
                         new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                     msgBox.Buttons[0].OnClicked += (_, userdata) =>
                     {
@@ -618,7 +616,7 @@ namespace Barotrauma
                     GameMain.ResetFrameTime();
 
                     if (TitleScreen.LoadState >= 100.0f &&
-                        (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
+                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;
                     }
@@ -637,7 +635,7 @@ namespace Barotrauma
                 {
                     SoundPlayer.Update((float)Timing.Step);
 
-                    if (PlayerInput.KeyHit(Keys.Escape))
+                    if (PlayerInput.KeyHit(Keys.Escape) && WindowActive)
                     {
                         // Check if a text input is selected.
                         if (GUI.KeyboardDispatcher.Subscriber != null)
@@ -862,7 +860,7 @@ namespace Barotrauma
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
             base.OnExiting(sender, args);
         }
     }

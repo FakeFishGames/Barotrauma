@@ -57,8 +57,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 rightPos = new Vector2(x + width - 130 * GUI.xScale, y + 80 * GUI.yScale);
-            Vector2 leftPos = new Vector2(x + 130 * GUI.xScale, y + 80 * GUI.yScale);
+            Vector2 rightPos = new Vector2(x + width - 110 * GUI.xScale, y + 80 * GUI.yScale);
+            Vector2 leftPos = new Vector2(x + 110 * GUI.xScale, y + 80 * GUI.yScale);
 
             Vector2 rightWirePos = new Vector2(x + width - 5 * GUI.xScale, y + 30 * GUI.yScale);
             Vector2 leftWirePos = new Vector2(x + 5 * GUI.xScale, y + 30 * GUI.yScale);

@@ -36,7 +36,10 @@ namespace Barotrauma
         {
             get 
             {
-                if (Winner == Character.TeamType.None) { return ""; }
+                if (Winner == Character.TeamType.None || string.IsNullOrEmpty(base.SuccessMessage)) { return ""; }
+
+                //disable success message for now if it hasn't been translated
+                if (!TextManager.ContainsTag("MissionSuccess." + Prefab.Identifier)) { return ""; }
 
                 var loser = Winner == Character.TeamType.Team1 ? 
                     Character.TeamType.Team2 : 

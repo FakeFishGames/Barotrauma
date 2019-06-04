@@ -128,9 +128,7 @@ namespace Barotrauma
                 var exePaths = contentPackage.GetFilesOfType(ContentType.ServerExecutable);
                 if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
-                    DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
-                            .Replace("[selectedpackage]", contentPackage.Name)
-                            .Replace("[exename]", exePaths.First()),
+                    DebugConsole.ShowQuestionPrompt(TextManager.GetWithVariables("IncorrectExe", new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
                         (option) =>
                         {
                             if (option.ToLower() == "y" || option.ToLower() == "yes")
@@ -298,7 +296,7 @@ namespace Barotrauma
             CloseServer();
 
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
         }
 
         public static void ResetFrameTime()

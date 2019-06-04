@@ -584,11 +584,32 @@ namespace Barotrauma
         private void UpdateTutorialList()
         {
             var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
+
+            int completedTutorials = 0;
+
             foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
             {
                 if (((Tutorial)tutorialText.UserData).Completed)
                 {
-                    tutorialText.TextColor = Color.LightGreen;
+                    completedTutorials++;
+                }
+            }
+
+            for (int i = 0; i < tutorialList.Content.Children.Count(); i++)
+            {
+                if (i < completedTutorials + 1)
+                {
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.LightGreen;
+#if !DEBUG
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = true;
+#endif
+                }
+                else
+                {
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.Gray;
+#if !DEBUG
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = false;
+#endif
                 }
             }
         }
@@ -691,11 +712,8 @@ namespace Barotrauma
                                     " -ownerkey " + ownerKey.ToString();
 
                 string filename = "DedicatedServer.exe";
-#if LINUX
+#if LINUX || OSX
                 filename = "./DedicatedServer";
-#elif OSX
-                filename = "mono";
-                arguments = "./DedicatedServer.exe " + arguments;
 #endif
                 var processInfo = new ProcessStartInfo
                 {

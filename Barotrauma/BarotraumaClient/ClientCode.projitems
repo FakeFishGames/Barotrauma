@@ -223,6 +223,7 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\OpenFileDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TextureLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
   </ItemGroup>

@@ -182,6 +182,10 @@ namespace Barotrauma.Networking
             if (SteamManager.USE_STEAM)
             {
                 SteamManager.CreateServer(this, isPublic);
+                if (isPublic)
+                {
+                    registeredToMaster = true;
+                }
             }
             if (isPublic && !GameMain.Config.UseSteamMatchmaking)
             {
@@ -411,7 +415,7 @@ namespace Barotrauma.Networking
                 {
                     if (endRoundTimer <= 0.0f)
                     {
-                        SendChatMessage(TextManager.Get("CrewDeadNoRespawns").Replace("[time]", "60"), ChatMessageType.Server);
+                        SendChatMessage(TextManager.GetWithVariable("CrewDeadNoRespawns", "[time]", "60"), ChatMessageType.Server);
                     }
                     endRoundTimer += deltaTime;
                 }
@@ -724,7 +728,7 @@ namespace Barotrauma.Networking
                         if (matchingSub == null)
                         {
                             SendDirectChatMessage(
-                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subname]", subName), 
+                                TextManager.GetWithVariable("CampaignStartFailedSubNotFound", "[subname]", subName), 
                                 connectedClient, ChatMessageType.MessageBox);
                         }
                         else

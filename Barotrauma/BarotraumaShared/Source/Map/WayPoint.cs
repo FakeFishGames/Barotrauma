@@ -91,7 +91,7 @@ namespace Barotrauma
         public WayPoint(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.MainSub)
         { 
-            if (prefab.Name.Contains("Spawn"))
+            if (prefab.Identifier.Contains("spawn"))
             {
                 spawnType = SpawnType.Human;
             }

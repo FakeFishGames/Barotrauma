@@ -51,7 +51,7 @@ namespace Barotrauma
                 {
                     itemInUseWarning = new GUITextBlock(new RectTransform(new Point(10), GUI.Canvas), "", 
                         textColor: Color.Orange, color: Color.Black, 
-                        textAlignment:Alignment.Center, style: "OuterGlow");
+                        textAlignment: Alignment.Center, style: "OuterGlow");
                 }
                 return itemInUseWarning;
             }
@@ -662,7 +662,7 @@ namespace Barotrauma
                 new Rectangle(
                     20, 20, 
                     GameMain.GraphicsWidth - 40, 
-                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 20 : GameMain.GraphicsHeight - 80));
+                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
 
             foreach (ItemComponent ic in activeHUDs)
             {
@@ -740,9 +740,9 @@ namespace Barotrauma
                 }
             }
 
-            if (itemInUseWarning != null && mergedHUDRect != Rectangle.Empty)
+            if (mergedHUDRect != Rectangle.Empty)
             {
-                itemInUseWarning.Visible = false;
+                if (itemInUseWarning != null) { itemInUseWarning.Visible = false; }
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
                     if (otherCharacter != character &&
@@ -754,7 +754,7 @@ namespace Barotrauma
                         itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
                         if (itemInUseWarning.UserData != otherCharacter)
                         {
-                            itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
+                            itemInUseWarning.Text = TextManager.GetWithVariable("ItemInUse", "[character]", otherCharacter.Name);
                             itemInUseWarning.UserData = otherCharacter;
                         }
                         break;

@@ -120,10 +120,11 @@ namespace Barotrauma
             serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center))
             {
                 OnSelected = (btn, obj) => {
-                    ServerInfo serverInfo = (ServerInfo)obj;
-
-                    serverInfo.CreatePreviewWindow(serverPreview);
-
+                    if (obj is ServerInfo)
+                    {
+                        ServerInfo serverInfo = (ServerInfo)obj;
+                        serverInfo.CreatePreviewWindow(serverPreview);
+                    }
                     return true;
                 }
             };
@@ -218,7 +219,7 @@ namespace Barotrauma
 
         private bool SelectServer(GUIComponent component, object obj)
         {
-            if (obj == null || waitingForRefresh) { return false; }
+            if (obj == null || waitingForRefresh || (!(obj is ServerInfo))) { return false; }
 
             if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
@@ -468,16 +469,15 @@ namespace Barotrauma
             {
                 string toolTip = "";
                 if (serverInfo.GameVersion != GameMain.Version.ToString())
-                    toolTip = TextManager.Get("ServerListIncompatibleVersion").Replace("[version]", serverInfo.GameVersion);
+                    toolTip = TextManager.GetWithVariable("ServerListIncompatibleVersion", "[version]", serverInfo.GameVersion);
 
                 for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
                     if (!GameMain.SelectedPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]))
                     {
                         if (toolTip != "") toolTip += "\n";
-                        toolTip += TextManager.Get("ServerListIncompatibleContentPackage")
-                            .Replace("[contentpackage]", serverInfo.ContentPackageNames[i])
-                            .Replace("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]));
+                        toolTip += TextManager.GetWithVariables("ServerListIncompatibleContentPackage", new string[2] { "[contentpackage]", "[hash]" },
+                            new string[2] { serverInfo.ContentPackageNames[i], Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]) });
                     }
                 }
                 
@@ -541,7 +541,7 @@ namespace Barotrauma
             if (masterServerResponse.ErrorException != null)
             {
                 serverList.ClearChildren();
-                new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.Get("MasterServerErrorException").Replace("[error]", masterServerResponse.ErrorException.ToString()));
+                new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.GetWithVariable("MasterServerErrorException", "[error]", masterServerResponse.ErrorException.ToString()));
             }
             else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
             {
@@ -551,24 +551,16 @@ namespace Barotrauma
                 {
                     case System.Net.HttpStatusCode.NotFound:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
-                           TextManager.Get("MasterServerError404")
-                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
-                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
-                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                           TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", NetConfig.MasterServerUrl));
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
-                            TextManager.Get("MasterServerErrorUnavailable")
-                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
-                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
-                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                            TextManager.Get("MasterServerErrorUnavailable"));
                         break;
                     default:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
-                            TextManager.Get("MasterServerError404")
-                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
-                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
-                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
+                            TextManager.GetWithVariables("MasterServerErrorDefault", new string[2] { "[statuscode]", "[statusdescription]" }, 
+                            new string[2] { masterServerResponse.StatusCode.ToString(), masterServerResponse.StatusDescription }));
                         break;
                 }
                 
