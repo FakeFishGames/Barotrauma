@@ -2030,6 +2030,11 @@ namespace Barotrauma
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             bool allowRagdoll = GameMain.NetworkMember != null ? GameMain.NetworkMember.ServerSettings.AllowRagdollButton : true;
+            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 1f;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                tooFastToUnragdoll = false;
+            }
             if (IsForceRagdolled)
             {
                 IsRagdolled = IsForceRagdolled;
@@ -2039,7 +2044,7 @@ namespace Barotrauma
                 IsRagdolled = IsKeyDown(InputType.Ragdoll);
             }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
-            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f))
+            else if (allowRagdoll && (!IsRagdolled || !tooFastToUnragdoll))
             {
                 if (ragdollingLockTimer > 0.0f)
                 {
@@ -2589,7 +2594,7 @@ namespace Barotrauma
             if (info != null) { info.Remove(); }
 
 #if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+            GameMain.GameSession?.CrewManager?.KillCharacter(this);
 #endif
 
             CharacterList.Remove(this);

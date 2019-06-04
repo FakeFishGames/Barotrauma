@@ -156,7 +156,7 @@ namespace Barotrauma
                     bool isRoomNameFound = currentTarget.DisplayName != null;
                     errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.DisplayName : currentTarget.ToString()) + ")";
 #endif
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsg);
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: errorMsg);
                     PathSteering.SetPath(path);
                 }
 

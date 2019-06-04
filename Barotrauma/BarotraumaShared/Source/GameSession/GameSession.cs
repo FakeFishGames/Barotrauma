@@ -241,6 +241,14 @@ namespace Barotrauma
                 }
             }
 
+            foreach (var sub in Submarine.Loaded)
+            {
+                if (sub.IsOutpost)
+                {
+                    sub.DisableObstructedWayPoints();
+                }
+            }
+
             Entity.Spawner = new EntitySpawner();
 
             if (GameMode.Mission != null) Mission = GameMode.Mission;

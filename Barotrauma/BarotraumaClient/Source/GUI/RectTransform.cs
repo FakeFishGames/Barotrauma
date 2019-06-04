@@ -21,6 +21,11 @@ namespace Barotrauma
         BottomLeft, BottomCenter, BottomRight
     }
 
+    public enum ScaleBasis
+    {
+        Normal, BothWidth, BothHeight
+    }
+
     public class RectTransform
     {
         #region Fields and Properties
@@ -286,6 +291,8 @@ namespace Barotrauma
             }
         }
 
+        private ScaleBasis scaleBasis;
+
         public bool IsLastChild
         {
             get
@@ -320,9 +327,10 @@ namespace Barotrauma
         #endregion
 
         #region Initialization
-        public RectTransform(Vector2 relativeSize, RectTransform parent, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null)
+        public RectTransform(Vector2 relativeSize, RectTransform parent, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null, ScaleBasis scaleBasis = ScaleBasis.Normal)
         {
             Init(parent, anchor, pivot);
+            this.scaleBasis = scaleBasis;
             this.relativeSize = relativeSize;
             this.minSize = minSize;
             this.maxSize = maxSize;
@@ -340,6 +348,7 @@ namespace Barotrauma
         public RectTransform(Point absoluteSize, RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Init(parent, anchor, pivot);
+            this.scaleBasis = ScaleBasis.Normal;
             this.nonScaledSize = absoluteSize;
             RecalculateScale();
             RecalculateRelativeSize();            
@@ -416,7 +425,16 @@ namespace Barotrauma
 
         protected void RecalculateAbsoluteSize()
         {
-            nonScaledSize = NonScaledParentRect.Size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
+            Point size = NonScaledParentRect.Size;
+            if (scaleBasis == ScaleBasis.BothWidth)
+            {
+                size.Y = size.X;
+            }
+            else if (scaleBasis == ScaleBasis.BothHeight)
+            {
+                size.X = size.Y;
+            }
+            nonScaledSize = size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
             recalculateRect = true;
             SizeChanged?.Invoke();
         }

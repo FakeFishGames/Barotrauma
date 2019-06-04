@@ -194,8 +194,7 @@ namespace Barotrauma.Networking
             Hull.EditFire = false;
             Hull.EditWater = false;
 
-            newName = newName.Replace(":", "").Replace(";", "");
-            name = newName;
+            Name = newName;
 
             entityEventManager = new ClientEntityEventManager(this);
 
@@ -473,7 +472,8 @@ namespace Barotrauma.Networking
                     var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 20) })
                     {
                         IgnoreLayoutGroups = true,
-                        UserData = "password"
+                        UserData = "password",
+                        Censor = true
                     };
 
                     var okButton = msgBox.Buttons[0];
@@ -1303,6 +1303,11 @@ namespace Barotrauma.Networking
                     if (existingClient.ID == myID)
                     {
                         existingClient.SetPermissions(permissions, permittedConsoleCommands);
+                        name = tc.Name;
+                        if (GameMain.NetLobbyScreen.CharacterNameBox != null)
+                        {
+                            GameMain.NetLobbyScreen.CharacterNameBox.Text = name;
+                        }
                     }
                     currentClients.Add(existingClient);
                 }
@@ -1562,6 +1567,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(LastClientListUpdateID);
+            outmsg.Write(name);
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaign.LastSaveID == 0)
@@ -1581,8 +1587,8 @@ namespace Barotrauma.Networking
             {
                 if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > client.Configuration.MaximumTransmissionUnit - 5)
                 {
-                    //not enough room in this packet
-                    return;
+                    //no more room in this packet
+                    break;
                 }
                 chatMsgQueue[i].ClientWrite(outmsg);
             }
@@ -1617,7 +1623,7 @@ namespace Barotrauma.Networking
                 if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > client.Configuration.MaximumTransmissionUnit - 5)
                 {
                     //not enough room in this packet
-                    return;
+                    break;
                 }
                 chatMsgQueue[i].ClientWrite(outmsg);
             }

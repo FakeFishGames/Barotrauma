@@ -71,15 +71,16 @@ namespace Barotrauma.Networking
                 Stretch = true
             };
 
-            var titleHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.07f), previewContainer.RectTransform))
+            var titleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), previewContainer.RectTransform))
             {
                 IsHorizontal = true,
                 Stretch = true
             };
 
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), titleHolder.RectTransform), ServerName, font: GUI.LargeFont, wrap: true);
+            var title = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), titleHolder.RectTransform), ServerName, font: GUI.LargeFont, wrap: true);
+            title.Text = ToolBox.LimitString(title.Text, title.Font, title.Rect.Width);
 
-            new GUITextBlock(new RectTransform(Vector2.One, title.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), titleHolder.RectTransform),
                 TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"), string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion), 
                 textAlignment: Alignment.Right);
 

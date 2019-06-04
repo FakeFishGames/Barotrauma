@@ -30,12 +30,13 @@ namespace Barotrauma
                 if (entities.Entity is Item)
                 {
                     message.Write((byte)SpawnableType.Item);
+                    DebugConsole.Log("Writing item spawn data " + entities.Entity.ToString() + " (ID: " + entities.Entity.ID + ")");
                     ((Item)entities.Entity).WriteSpawnData(message);
                 }
                 else if (entities.Entity is Character)
                 {
                     message.Write((byte)SpawnableType.Character);
-                    DebugConsole.NewMessage("WRITING CHARACTER DATA: " + (entities.Entity).ToString() + " (ID: " + entities.Entity.ID + ")", Color.Cyan);
+                    DebugConsole.Log("Writing character spawn data: " + entities.Entity.ToString() + " (ID: " + entities.Entity.ID + ")");
                     ((Character)entities.Entity).WriteSpawnData(message);
                 }
             }

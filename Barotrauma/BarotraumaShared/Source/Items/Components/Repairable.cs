@@ -122,6 +122,16 @@ namespace Barotrauma.Items.Components
             Update(deltaTime, cam);
         }
 
+        public void ResetDeterioration()
+        {
+            deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+            item.Condition = item.Prefab.Health;
+#if SERVER
+            //let the clients know the initial deterioration delay
+            item.CreateServerEvent(this);
+#endif
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);

@@ -413,7 +413,7 @@ namespace Barotrauma.Items.Components
             {
                 target = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
             }
-            steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition), target, "(Autopilot, target: " + target + ")");
+            steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition), target, errorMsgStr: "(Autopilot, target: " + target + ")");
         }
 
         public void SetDestinationLevelStart()

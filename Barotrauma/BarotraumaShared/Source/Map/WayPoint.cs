@@ -32,6 +32,8 @@ namespace Barotrauma
         public Ladder Ladders;
         public Structure Stairs;
 
+        public bool isObstructed;
+
         private ushort gapId;
         public Gap ConnectedGap
         {
