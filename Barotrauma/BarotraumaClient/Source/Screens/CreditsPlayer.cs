@@ -9,7 +9,6 @@ namespace Barotrauma
         private GUIListBox listBox;
 
         private XElement configElement;
-        private RectTransform parent;
 
         private float scrollSpeed;
 
