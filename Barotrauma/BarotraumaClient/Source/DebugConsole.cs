@@ -63,11 +63,17 @@ namespace Barotrauma
             frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) },
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
 
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.01f };
 
-            var toggleText = new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width-30, 20), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), new Color(150,150,200,255), GUI.SmallFont, Alignment.CenterLeft, style: null);
+            var toggleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), Color.GreenYellow, GUI.SmallFont, Alignment.CenterLeft, style: null);
 
-            var closeButton = new GUIButton(new RectTransform(new Point(20, 20), paddedFrame.RectTransform, Anchor.TopRight), "X", color: Color.Red);
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.025f, 1.0f), toggleText.RectTransform, Anchor.TopRight), "X", style: null)
+            {
+                Color = Color.DarkRed,
+                HoverColor = Color.Red,
+                TextColor = Color.White,
+                OutlineColor = Color.Red
+            };
             closeButton.OnClicked += (btn, userdata) =>
             {
                 isOpen = false;
@@ -76,12 +82,12 @@ namespace Barotrauma
                 return true;
             };
 
-            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 50), paddedFrame.RectTransform, Anchor.Center)
+            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 60), paddedFrame.RectTransform, Anchor.Center)
             {
                 IsFixedSize = false
-            }, color: Color.Black * 0.9f);
+            }, color: Color.Black * 0.9f) { ScrollBarVisible = true };
 
-            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft)
+            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 30), paddedFrame.RectTransform, Anchor.BottomLeft)
             {
                 IsFixedSize = false
             });
@@ -1003,6 +1009,184 @@ namespace Barotrauma
                 WaterRenderer.BlurAmount = blurAmount;
             }));
 
+
+            commands.Add(new Command("refreshrect", "Updates the dimensions of the selected items to match the ones defined in the prefab. Applied only in the subeditor.", (string[] args) =>
+            {
+                //TODO: maybe do this automatically during loading when possible?
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (!MapEntity.SelectedAny)
+                    {
+                        ThrowError("You have to select item(s) first!");
+                    }
+                    else
+                    {
+                        foreach (var mapEntity in MapEntity.SelectedList)
+                        {
+                            if (mapEntity is Item item)
+                            {
+                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale),
+                                    (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
+                            }
+                            else if (mapEntity is Structure structure)
+                            {
+                                if (!structure.ResizeHorizontal)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        (int)structure.Prefab.ScaledSize.X,
+                                        structure.Rect.Height);
+                                }
+                                if (!structure.ResizeVertical)
+                                {
+                                    structure.Rect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                        structure.Rect.Width,
+                                        (int)structure.Prefab.ScaledSize.Y);
+                                }
+                            }
+                        }
+                    }
+                }
+            }, isCheat: false));
+#endif
+
+            commands.Add(new Command("dumptexts", "dumptexts [filepath]: Extracts all the texts from the given text xml and writes them into a file (using the same filename, but with the .txt extension). If the filepath is omitted, the EnglishVanilla.xml file is used.", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.xml";
+                var doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc?.Root == null) return;
+                List<string> lines = new List<string>();
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    lines.Add(element.ElementInnerText());
+                }
+                File.WriteAllLines(Path.GetFileNameWithoutExtension(filePath) + ".txt", lines);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    TextManager.GetTextFiles().Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("loadtexts", "loadtexts [sourcefile] [destinationfile]: Loads all lines of text from a given .txt file and inserts them sequientially into the elements of an xml file. If the file paths are omitted, EnglishVanilla.txt and EnglishVanilla.xml are used.", (string[] args) =>
+            {
+                string sourcePath = args.Length > 0 ? args[0] : "Content/Texts/EnglishVanilla.txt";
+                string destinationPath = args.Length > 1 ? args[1] : "Content/Texts/EnglishVanilla.xml";
+
+                string[] lines;
+                try
+                {
+                    lines = File.ReadAllLines(sourcePath);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Reading the file \"" + sourcePath + "\" failed.", e);
+                    return;
+                }
+                var doc = XMLExtensions.TryLoadXml(destinationPath);
+                int i = 0;
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    if (i >= lines.Length)
+                    {
+                        ThrowError("Error while loading texts to the xml file. The xml has more elements than the number of lines in the text file.");
+                        return;
+                    }
+                    element.Value = lines[i];
+                    i++;
+                }
+                doc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                return new string[][]
+                {
+                    files.Where(f => Path.GetExtension(f)==".txt").ToArray(),
+                    files.Where(f => Path.GetExtension(f)==".xml").ToArray()
+                };
+            }));
+
+            commands.Add(new Command("updatetextfile", "updatetextfile [sourcefile] [destinationfile]: Inserts all the xml elements that are only present in the source file into the destination file. Can be used to update outdated translation files more easily.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+                string sourcePath = args[0];
+                string destinationPath = args[1];
+
+                var sourceDoc = XMLExtensions.TryLoadXml(sourcePath);
+                var destinationDoc = XMLExtensions.TryLoadXml(destinationPath);
+
+                XElement destinationElement = destinationDoc.Root.Elements().First();
+                foreach (XElement element in sourceDoc.Root.Elements())
+                {
+                    if (destinationDoc.Root.Element(element.Name) == null)
+                    {
+                        element.Value = "!!!!!!!!!!!!!" + element.Value;
+                        destinationElement.AddAfterSelf(element);
+                    }
+                    XNode nextNode = destinationElement.NextNode;
+                    while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
+                    destinationElement = nextNode as XElement;
+                }
+                destinationDoc.Save(destinationPath);
+            },
+            () =>
+            {
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                return new string[][]
+                {
+                    files,
+                    files
+                };
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "dumpentitytexts [filepath]: gets the names and descriptions of all entity prefabs and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EntityTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</EntityName." + me.Identifier + ">");
+                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</EntityDescription." + me.Identifier + ">");
+                }
+                File.WriteAllLines(filePath, lines);
+            }));
+#if DEBUG
+            commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
+            {
+                if (args.Length != 1) return;
+                TextManager.CheckForDuplicates(args[0]);
+            }));
+
+            commands.Add(new Command("writetocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
+            {
+                TextManager.WriteToCSV();
+                NPCConversation.WriteToCSV();
+            }));
+
+            commands.Add(new Command("csvtoxml", "csvtoxml [language] -> Converts .csv localization files in Content/NPCConversations & Content/Texts to .xml for use in-game.", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                LocalizationCSVtoXML.Convert(args[0]);
+            }));
+#endif
+
+            commands.Add(new Command("cleanbuild", "", (string[] args) =>
+            {
+                GameMain.Config.MusicVolume = 0.5f;
+                GameMain.Config.SoundVolume = 0.5f;
+                NewMessage("Music and sound volume set to 0.5", Color.Green);
+
+                GameMain.Config.GraphicsWidth = 0;
+                GameMain.Config.GraphicsHeight = 0;
+                GameMain.Config.WindowMode = WindowMode.Fullscreen;
+                NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
+                NewMessage("Fullscreen enabled", Color.Green);
+
+                GameSettings.ShowUserStatisticsPrompt = true;
 
             commands.Add(new Command("refreshrect", "Updates the dimensions of the selected items to match the ones defined in the prefab. Applied only in the subeditor.", (string[] args) =>
             {
