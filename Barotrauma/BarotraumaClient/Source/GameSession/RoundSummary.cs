@@ -44,12 +44,9 @@ namespace Barotrauma
 
             GUIListBox infoTextBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), paddedFrame.RectTransform));
             
-            string summaryText = TextManager.Get(gameOver ? "RoundSummaryGameOver" :
-                (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"));
-
-            summaryText = summaryText
-                .Replace("[sub]", Submarine.MainSub.Name)
-                .Replace("[location]", progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name);
+            string summaryText = TextManager.GetWithVariables(gameOver ? "RoundSummaryGameOver" :
+                (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"), new string[2] { "[sub]", "[location]" },
+                new string[2] { Submarine.MainSub.Name, progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name });
 
             var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                 summaryText, wrap: true);
@@ -79,7 +76,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.Mission.Completed && singleplayer)
                     {
                         var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
-                            TextManager.Get("MissionReward").Replace("[reward]", GameMain.GameSession.Mission.Reward.ToString()));
+                            TextManager.GetWithVariable("MissionReward", "[reward]", GameMain.GameSession.Mission.Reward.ToString()));
                     }  
                 }
             }
@@ -117,7 +114,11 @@ namespace Barotrauma
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    if (characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction && characterInfo.CauseOfDeath.Affliction == null)
+                    if (characterInfo.CauseOfDeath == null)
+                    {
+                        statusText = TextManager.Get("CauseOfDeathDescription.Unknown");
+                    }
+                    else if (characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction && characterInfo.CauseOfDeath.Affliction == null)
                     {
                         string errorMsg = "Character \"" + character.Name + "\" had an invalid cause of death (the type of the cause of death was Affliction, but affliction was not specified).";
                         DebugConsole.ThrowError(errorMsg);
@@ -129,7 +130,7 @@ namespace Barotrauma
                         statusText = characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction ?
                             characterInfo.CauseOfDeath.Affliction.CauseOfDeathDescription :
                             TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.Type.ToString());
-                    }                    
+                    }
                     statusColor = Color.DarkRed;
                 }
                 else

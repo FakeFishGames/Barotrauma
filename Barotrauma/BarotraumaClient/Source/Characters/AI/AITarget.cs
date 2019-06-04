@@ -39,10 +39,14 @@ namespace Barotrauma
                 else if (Entity is Item)
                 {
                     color = Color.CadetBlue;
+                    // disable the indicators for items, because they clutter the debug view
+                    return;
                 }
                 else
                 {
                     color = Color.WhiteSmoke;
+                    // disable the indicators for structures, because they clutter the debug view
+                    return;
                 }
                 ShapeExtensions.DrawCircle(spriteBatch, pos, SightRange, 100, color, thickness: 1 / Screen.Selected.Cam.Zoom);
                 ShapeExtensions.DrawCircle(spriteBatch, pos, 6, 8, color, thickness: 2 / Screen.Selected.Cam.Zoom);

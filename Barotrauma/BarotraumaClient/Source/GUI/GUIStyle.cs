@@ -35,8 +35,6 @@ namespace Barotrauma
             this.graphicsDevice = graphicsDevice;
             componentStyles = new Dictionary<string, GUIComponentStyle>();
 
-            GameMain.Instance.OnResolutionChanged += () => { RescaleFonts(); };
-
             XDocument doc;
             try
             {
@@ -89,6 +87,8 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            GameMain.Instance.OnResolutionChanged += () => { RescaleFonts(); };
         }
 
         /// <summary>

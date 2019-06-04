@@ -44,8 +44,8 @@ namespace Barotrauma
         {
             bool isCompleted = Item.IsFullCondition;
             if (isCompleted)
-            {
-                character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", Item.Name), null, 0.0f, "itemrepaired", 10.0f);
+            {                
+                character?.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, true), null, 0.0f, "itemrepaired", 10.0f);
             }
             return isCompleted;
         }
@@ -140,7 +140,7 @@ namespace Barotrauma
                         {
                             // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
                             abandon = true;
-                            character?.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f);
+                            character?.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
                         }
                     }
                     repairable.CurrentFixer = abandon && repairable.CurrentFixer == character ? null : character;
@@ -161,8 +161,8 @@ namespace Barotrauma
                             objective.CloseEnough = repairTool.Range * 0.75f;
                         }
                         return objective;
-                    },
-                    onAbandon: () => character.Speak(TextManager.Get("DialogCannotRepair").Replace("[itemname]", Item.Name), null, 0.0f, "cannotrepair", 10.0f));
+                    },                    
+                    onAbandon: () => character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f));
             }
         }
 

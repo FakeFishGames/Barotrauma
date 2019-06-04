@@ -127,7 +127,7 @@ namespace Barotrauma
 
             if (!File.Exists(pathBox.Text))
             {
-                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("ReloadLinkedSubError").Replace("[file]", pathBox.Text));
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariable("ReloadLinkedSubError", "[file]", pathBox.Text));
                 pathBox.Flash(Color.Red);
                 pathBox.Text = filePath;
                 return false;

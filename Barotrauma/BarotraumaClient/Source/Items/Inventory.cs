@@ -423,7 +423,14 @@ namespace Barotrauma
                     columns++;
                 }
 
-                int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing.X * ((columns - 1) / 2.0f));
+                int width = (int)(subRect.Width * columns + spacing.X * (columns - 1));
+                int startX = slot.Rect.Center.X - (int)(width / 2.0f);
+
+                //prevent the inventory from extending outside the left side of the screen
+                startX = Math.Max(startX, 10);
+                //same for the right side of the screen
+                startX -= Math.Max((startX + width) - GameMain.GraphicsWidth, 0);
+
                 subRect.X = startX;
                 int startY = dir < 0 ?
                     slot.EquipButtonRect.Y - subRect.Height - (int)(35 * UIScale) :
@@ -721,7 +728,7 @@ namespace Barotrauma
                         var shadowSprite = GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0];
                         string toolTip = mouseOnHealthInterface ? TextManager.Get("QuickUseAction.UseTreatment") :                            
                             Character.Controlled.FocusedItem != null ?
-                                TextManager.Get("PutItemIn").Replace("[itemname]", Character.Controlled.FocusedItem.Name) :
+                                TextManager.GetWithVariable("PutItemIn", "[itemname]", Character.Controlled.FocusedItem.Name, true) :
                                 TextManager.Get("DropItem");
                         int textWidth = (int)Math.Max(GUI.Font.MeasureString(draggingItem.Name).X, GUI.SmallFont.MeasureString(toolTip).X);
                         int textSpacing = (int)(15 * GUI.Scale);
@@ -771,11 +778,11 @@ namespace Barotrauma
                             {
                                 if (idJob == null)
                                 {
-                                    description = TextManager.Get("IDCardName").Replace("[name]", idName);
+                                    description = TextManager.GetWithVariable("IDCardName", "[name]", idName);
                                 }
                                 else
                                 {
-                                    description = TextManager.Get("IDCardNameJob").Replace("[name]", idName).Replace("[job]", idJob);
+                                    description = TextManager.GetWithVariables("IDCardNameJob", new string[2] { "[name]", "[job]" }, new string[2] { idName, idJob }, new bool[2] { false, true });
                                 }
                                 if (!string.IsNullOrEmpty(item.Description))
                                 {

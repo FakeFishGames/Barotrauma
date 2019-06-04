@@ -208,7 +208,13 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-        
+
+        /// <summary>
+        /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
+        /// </summary>
+        [Serialize(0f, false)]
+        public float CombatPriority { get; private set; }
+
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;
@@ -539,6 +545,7 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
+            float average = skillSuccessSum / requiredSkills.Count;
 
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)

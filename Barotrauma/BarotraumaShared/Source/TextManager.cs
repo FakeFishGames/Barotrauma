@@ -176,6 +176,107 @@ namespace Barotrauma
             }
         }
 
+        public static string GetWithVariables(string textTag, string[] variableTags, string[] variableValues, bool[] formatCapitals = null, bool returnNull = false, string fallBackTag = null)
+        {
+            string text = Get(textTag, returnNull, fallBackTag);
+
+            if (text == null || text.Length == 0 || variableTags.Length != variableValues.Length)
+            {
+#if DEBUG
+                if (variableTags.Length != variableValues.Length)
+                {
+                    DebugConsole.ThrowError("variableTags.Length and variableValues.Length do not match for \"" + textTag + "\".");
+                }
+
+                if (formatCapitals != null && formatCapitals.Length != variableTags.Length)
+                {
+                    DebugConsole.ThrowError("variableTags.Length and formatCapitals.Length do not match for \"" + textTag + "\".");
+                }
+#endif
+                if (returnNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    return textTag;
+                }
+            }
+
+            if (formatCapitals != null && !GameMain.Config.Language.Contains("Chinese"))
+            {
+                for (int i = 0; i < variableTags.Length; i++)
+                {
+                    if (formatCapitals[i])
+                    {
+                        variableValues[i] = HandleVariableCapitalization(text, variableTags[i], variableValues[i]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < variableTags.Length; i++)
+            {
+                text = text.Replace(variableTags[i], variableValues[i]);
+            }
+
+            return text;
+        }
+
+        public static string GetWithVariable(string textTag, string variableTag, string variableValue, bool formatCapitals = false, bool returnNull = false, string fallBackTag = null)
+        {
+            string text = Get(textTag, returnNull, fallBackTag);
+
+            if (text == null || text.Length == 0)
+            {
+                if (returnNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    return textTag;
+                }
+            }
+
+            if (formatCapitals && !GameMain.Config.Language.Contains("Chinese"))
+            {
+                variableValue = HandleVariableCapitalization(text, variableTag, variableValue);
+            }
+
+            return text.Replace(variableTag, variableValue);
+        }
+
+        private static string HandleVariableCapitalization(string text, string variableTag, string variableValue)
+        {
+            int index = text.IndexOf(variableTag) - 1;
+            if (index == -1)
+            {
+                return variableValue;
+            }
+
+            for (int i = index; i >= 0; i--)
+            {
+                if (text[i] == ' ')
+                {
+                    continue;
+                }
+                else
+                {
+                    if (text[i] != '.')
+                    {
+                        variableValue = variableValue.ToLower();
+                    }
+                    else
+                    {
+                        variableValue = Capitalize(variableValue);
+                        break;
+                    }
+                }
+            }
+
+            return variableValue;
+        }
+
         public static string ParseInputTypes(string text)
         {
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))

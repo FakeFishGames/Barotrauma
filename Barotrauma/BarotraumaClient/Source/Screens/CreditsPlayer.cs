@@ -8,19 +8,31 @@ namespace Barotrauma
     {
         private GUIListBox listBox;
 
-        private readonly float scrollSpeed;
+        private XElement configElement;
+
+        private float scrollSpeed;
+
         public CreditsPlayer(RectTransform rectT, string configFile) : base(null, rectT)
         {
-            var doc = XMLExtensions.TryLoadXml(configFile);
-            scrollSpeed = doc.Root.GetAttributeFloat("scrollspeed", 100.0f);
-            int spacing = doc.Root.GetAttributeInt("spacing", 0);
+            GameMain.Instance.OnResolutionChanged += () => { ClearChildren(); Load(); };
 
-            listBox = new GUIListBox(new RectTransform(Vector2.One, rectT), style: null)
+            var doc = XMLExtensions.TryLoadXml(configFile);
+            configElement = doc.Root;
+
+            Load();
+        }
+
+        private void Load()
+        {
+            scrollSpeed = configElement.GetAttributeFloat("scrollspeed", 100.0f);
+            int spacing = configElement.GetAttributeInt("spacing", 0);
+
+            listBox = new GUIListBox(new RectTransform(Vector2.One, RectTransform), style: null)
             {
                 Spacing = spacing
             };
 
-            foreach (XElement subElement in doc.Root.Elements())
+            foreach (XElement subElement in configElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

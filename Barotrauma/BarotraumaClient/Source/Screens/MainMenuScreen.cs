@@ -712,11 +712,8 @@ namespace Barotrauma
                                     " -ownerkey " + ownerKey.ToString();
 
                 string filename = "DedicatedServer.exe";
-#if LINUX
+#if LINUX || OSX
                 filename = "./DedicatedServer";
-#elif OSX
-                filename = "mono";
-                arguments = "./DedicatedServer.exe " + arguments;
 #endif
                 var processInfo = new ProcessStartInfo
                 {
@@ -730,7 +727,7 @@ namespace Barotrauma
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
+                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(), name, ownerKey);
             }
             catch (Exception e)
             {
@@ -971,7 +968,10 @@ namespace Barotrauma
             };
             
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
-            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            {
+                Censor = true
+            };
             
             isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
             {

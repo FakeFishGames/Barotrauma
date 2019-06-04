@@ -40,6 +40,9 @@ namespace Barotrauma.SpriteDeformations
         [Serialize(false, true)]
         public bool UseMovementSine { get; set; }
 
+        [Serialize(false, true)]
+        public bool StopWhenHostIsDead { get; set; }
+
         /// <summary>
         /// Only used if UseMovementSine is enabled. Multiplier for Pi.
         /// </summary>

@@ -1433,7 +1433,7 @@ namespace Barotrauma
 
             Submarine sub = new Submarine(path);
             sub.Load(unloadPrevious);
-            
+
             return sub;            
         }
         
@@ -1563,6 +1563,94 @@ namespace Barotrauma
             PreviewImage?.Remove();
             PreviewImage = null;
 #endif
+        }
+
+        private List<PathNode> outdoorNodes;
+        private List<PathNode> OutdoorNodes
+        {
+            get
+            {
+                if (outdoorNodes == null)
+                {
+                    outdoorNodes = PathNode.GenerateNodes(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path && wp.Submarine == this && wp.CurrentHull == null));
+                }
+                return outdoorNodes;
+            }
+        }
+        private HashSet<PathNode> obstructedNodes = new HashSet<PathNode>();
+
+        /// <summary>
+        /// Permanently disables obstructed waypoints obstructed by the level.
+        /// </summary>
+        public void DisableObstructedWayPoints()
+        {
+            // Check collisions to level
+            foreach (var node in OutdoorNodes)
+            {
+                if (node == null || node.Waypoint == null) { continue; }
+                var wp = node.Waypoint;
+                if (wp.isObstructed) { continue; }
+                foreach (var connection in node.connections)
+                {
+                    bool isObstructed = false;
+                    var connectedWp = connection.Waypoint;
+                    if (connectedWp.isObstructed) { continue; }
+                    Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
+                    Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition);
+                    var body = Submarine.PickBody(start, end, null, Physics.CollisionLevel, allowInsideFixture: false);
+                    if (body != null)
+                    {
+                        connectedWp.isObstructed = true;
+                        wp.isObstructed = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Temporarily disables waypoints obstructed by the other sub.
+        /// </summary>
+        public void DisableObstructedWayPoints(Submarine otherSub)
+        {
+            if (otherSub == null) { return; }
+            if (otherSub == this) { return; }
+            // Check collisions to other subs. Currently only walls are taken into account.
+            foreach (var node in OutdoorNodes)
+            {
+                if (node == null || node.Waypoint == null) { continue; }
+                var wp = node.Waypoint;
+                if (wp.isObstructed) { continue; }
+                foreach (var connection in node.connections)
+                {
+                    bool isObstructed = false;
+                    var connectedWp = connection.Waypoint;
+                    if (connectedWp.isObstructed) { continue; }
+                    Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
+                    Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
+                    var body = Submarine.PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: false);
+                    if (body != null && body.UserData is Structure && !((Structure)body.UserData).IsPlatform)
+                    {
+                        connectedWp.isObstructed = true;
+                        wp.isObstructed = true;
+                        obstructedNodes.Add(node);
+                        obstructedNodes.Add(connection);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Only affects temporarily disabled waypoints.
+        /// </summary>
+        public void EnableObstructedWaypoints()
+        {
+            foreach (var node in obstructedNodes)
+            {
+                node.Waypoint.isObstructed = false;
+            }
+            obstructedNodes.Clear();
         }
     }
 

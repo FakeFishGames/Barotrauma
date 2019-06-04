@@ -291,6 +291,8 @@ namespace Barotrauma
 
             commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", null));
 
+            commands.Add(new Command("startwhenclientsready", "startwhenclientsready [true/false]: Enable or disable automatically starting the round when clients are ready to start.", null));
+
             commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", null));
 
             commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", null));
@@ -1235,9 +1237,8 @@ namespace Barotrauma
         {
             if (args.Length == 0) return null;
 
-            int characterIndex;
             string characterName;
-            if (int.TryParse(args.Last(), out characterIndex) && args.Length > 1)
+            if (int.TryParse(args.Last(), out int characterIndex) && args.Length > 1)
             {
                 characterName = string.Join(" ", args.Take(args.Length - 1)).ToLowerInvariant();
             }
@@ -1391,51 +1392,32 @@ namespace Barotrauma
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
             
-            int extraParams = 0;
-            switch (args.Last().ToLowerInvariant())
+            if (args.Length > 1)
             {
-                case "cursor":
-                    extraParams = 1;
-                    spawnPos = cursorPos;
-                    break;
-                case "inventory":
-                    extraParams = 1;
-                    spawnInventory = controlledCharacter?.Inventory;
-                    break;
-                case "cargo":
-                    var wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
-                    spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
-                    break;
-                //Dont do a thing, random is basically Human points anyways - its in the help description.
-                case "random":
-                    extraParams = 1;
-                    return;
-                default:
-                    extraParams = 0;
-                    break;
-            }
-
-            string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
-
-            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-            if (itemPrefab == null && extraParams == 0)
-            {
-#if SERVER
-                if (GameMain.Server != null)
+                switch (args.Last())
                 {
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
-                    if (client != null)
-                    {
-                        extraParams += 1;
-                        itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
-                        if (client.Character != null && client.Character.Name == args.Last().ToLower()) spawnInventory = client.Character.Inventory;
-                        itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-                    }
+                    case "cursor":
+                        spawnPos = cursorPos;
+                        break;
+                    case "inventory":
+                        spawnInventory = controlledCharacter?.Inventory;
+                        break;
+                    case "cargo":
+                        var wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
+                        spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
+                        break;
+                    case "random":
+                        //Dont do a thing, random is basically Human points anyways - its in the help description.
+                        break;
+                    default:
+                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                        if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
+                        break;
                 }
-#endif
             }
-            //Check again if the item can be found again after having checked for a character
-            if (itemPrefab == null)
+
+            string itemName = args[0].ToLowerInvariant();
+            if (!(MapEntityPrefab.Find(itemName) is ItemPrefab itemPrefab))
             {
                 errorMsg = "Item \"" + itemName + "\" not found!";
                 return;

@@ -98,7 +98,7 @@ namespace Barotrauma
                     {
                         if (item.GetComponent<Items.Components.Repairable>() != null)
                         {
-                            item.Condition = item.Health;
+                            item.Condition = item.Prefab.Health;
                         }
                     }
                 }
@@ -176,7 +176,16 @@ namespace Barotrauma
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));
             InitializeWatchman(spawnedCharacter);
             var objectiveManager = (spawnedCharacter.AIController as HumanAIController)?.ObjectiveManager;
-            objectiveManager?.SetOrder(new AIObjectiveGoTo(watchmanSpawnpoint, spawnedCharacter, objectiveManager, repeat: true, getDivingGearIfNeeded: false));
+            if (objectiveManager != null)
+            {
+                var moveOrder = new AIObjectiveGoTo(watchmanSpawnpoint, spawnedCharacter, objectiveManager, repeat: true, getDivingGearIfNeeded: false);
+                moveOrder.Completed += () =>
+                {
+                    // Turn towards the center of the sub. Doesn't work in all possible cases, but this is the simplest solution for now.
+                    spawnedCharacter.AnimController.TargetDir = spawnedCharacter.Submarine.WorldPosition.X > spawnedCharacter.WorldPosition.X ? Direction.Right : Direction.Left;
+                };
+                objectiveManager.SetOrder(moveOrder);
+            }
             if (watchmanJob != null)
             {
                 spawnedCharacter.GiveJobItems();
@@ -193,7 +202,7 @@ namespace Barotrauma
             character.TeamID = Character.TeamType.FriendlyNPC;
             character.SetCustomInteract(
                 WatchmanInteract,
-                hudText: TextManager.Get("TalkHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
+                hudText: TextManager.GetWithVariable("TalkHint", "[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
         }
 
         protected abstract void WatchmanInteract(Character watchman, Character interactor);

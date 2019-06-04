@@ -280,7 +280,7 @@ namespace Barotrauma
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
 
         private void InitUserStats()
@@ -528,10 +528,8 @@ namespace Barotrauma
                 var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
                 if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
-                    var msgBox = new GUIMessageBox(TextManager.Get("Error"),
-                        TextManager.Get("IncorrectExe")
-                            .Replace("[selectedpackage]", contentPackage.Name)
-                            .Replace("[exename]", exePaths.First()),
+                    var msgBox = new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("IncorrectExe",
+                        new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
                         new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                     msgBox.Buttons[0].OnClicked += (_, userdata) =>
                     {
@@ -552,7 +550,9 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
+            CoroutineManager.StopCoroutines("Load");
             Video.Close();
+            VoipCapture.Instance?.Dispose();
             SoundManager?.Dispose();
         }
 
@@ -626,7 +626,7 @@ namespace Barotrauma
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
                     GameMain.ResetFrameTime();
 
-                    if (TitleScreen.LoadState >= 100.0f &&
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
                         (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;
@@ -871,7 +871,7 @@ namespace Barotrauma
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
             base.OnExiting(sender, args);
         }
     }
