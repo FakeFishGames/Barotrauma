@@ -181,6 +181,10 @@ namespace Barotrauma
             {
                 if (closeEnough)
                 {
+                    closeEnough = !(Target is Character) || Target is Character c && c.CurrentHull == character.CurrentHull;
+                }
+                if (closeEnough)
+                {
                     OnCompleted();
                 }
                 return false;
