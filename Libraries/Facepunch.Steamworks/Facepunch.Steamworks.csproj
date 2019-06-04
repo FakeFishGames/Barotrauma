@@ -9,6 +9,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions> 
     <Platforms>AnyCPU;x86</Platforms>
+    <ReleaseVersion>0.9.0.0</ReleaseVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -37,12 +38,6 @@
   
   <ItemGroup>
     <Compile Remove="*AssemblyInfo.cs" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Update="Server.cs">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Compile>
   </ItemGroup>
   
   <ItemGroup>
