@@ -2813,23 +2813,12 @@ namespace Barotrauma
             var foot = character.AnimController.GetLimb(LimbType.RightFoot) ?? character.AnimController.GetLimb(LimbType.LeftFoot);
             var hand = character.AnimController.GetLimb(LimbType.RightHand) ?? character.AnimController.GetLimb(LimbType.LeftHand);
             var arm = character.AnimController.GetLimb(LimbType.RightArm) ?? character.AnimController.GetLimb(LimbType.LeftArm);
-            int widgetDefaultSize = 10;
             // Note: the main collider rotates only when swimming
             float dir = character.AnimController.Dir;
-            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
-            //Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
-            Vector2 simSpaceForward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-            //Vector2 simSpaceLeft = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
-            Vector2 screenSpaceForward = VectorExtensions.BackwardFlipped(collider.Rotation, 1);
-            Vector2 screenSpaceLeft = screenSpaceForward.Right();
-            // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
-            Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
             Vector2 GetSimSpaceForward() => animParams.IsSwimAnimation ? Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)) : Vector2.UnitX * character.AnimController.Dir;
             Vector2 GetScreenSpaceForward() => animParams.IsSwimAnimation ? VectorExtensions.BackwardFlipped(collider.Rotation, 1) : Vector2.UnitX * character.AnimController.Dir;
             bool ShowCycleWidget() => PlayerInput.KeyDown(Keys.LeftAlt) && (CurrentAnimation is IHumanAnimation || CurrentAnimation is GroundedMovementParams);
-
-            bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
-            if (!altDown && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
+            if (!PlayerInput.KeyDown(Keys.LeftAlt) && (animParams is IHumanAnimation || animParams is GroundedMovementParams))
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 120, 100), GetCharacterEditorTranslation("HoldLeftAltToAdjustCycleSpeed"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
@@ -2960,14 +2949,26 @@ namespace Barotrauma
                                     isDirectionSet = true;
                                 }
                                 var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
-                                if (isHorizontal)
+                                if (PlayerInput.KeyDown(Keys.LeftAlt))
+                                {
+                                    if (isHorizontal)
+                                    {
+                                        TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * character.AnimController.Dir);
+                                        w.refresh();
+                                        w.DrawPos = new Vector2(PlayerInput.MousePosition.X, w.DrawPos.Y);
+                                    }
+                                    else
+                                    {
+                                        TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y / RagdollParams.JointScale);
+                                        w.refresh();
+                                        w.DrawPos = new Vector2(w.DrawPos.X, PlayerInput.MousePosition.Y);
+                                    }
+                                }
+                                else
                                 {
                                     TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * character.AnimController.Dir);
                                     w.refresh();
                                     w.DrawPos = new Vector2(PlayerInput.MousePosition.X, w.DrawPos.Y);
-                                }
-                                else
-                                {
                                     TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y / RagdollParams.JointScale);
                                     w.refresh();
                                     w.DrawPos = new Vector2(w.DrawPos.X, PlayerInput.MousePosition.Y);
@@ -2977,12 +2978,20 @@ namespace Barotrauma
                             {
                                 if (w.IsControlled && isDirectionSet)
                                 {
-                                    if (isHorizontal)
+                                    if (PlayerInput.KeyDown(Keys.LeftAlt))
                                     {
-                                        GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.Red);
+                                        if (isHorizontal)
+                                        {
+                                            GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.Red);
+                                        }
+                                        else
+                                        {
+                                            GUI.DrawLine(spriteBatch, new Vector2(w.DrawPos.X, 0), new Vector2(w.DrawPos.X, GameMain.GraphicsHeight), Color.Red);
+                                        }
                                     }
                                     else
                                     {
+                                        GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.Red);
                                         GUI.DrawLine(spriteBatch, new Vector2(w.DrawPos.X, 0), new Vector2(w.DrawPos.X, GameMain.GraphicsHeight), Color.Red);
                                     }
                                 }
@@ -3021,7 +3030,8 @@ namespace Barotrauma
                 referencePoint = torso.SimPosition;
                 if (animParams is HumanGroundedParams || animParams is HumanSwimParams)
                 {
-                    referencePoint -= simSpaceForward * 0.25f;
+                    var f = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
+                    referencePoint -= f * 0.25f;
                 }
                 // Torso angle
                 DrawRadialWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, GetCharacterEditorTranslation("TorsoAngle"), Color.White,
@@ -3048,14 +3058,26 @@ namespace Barotrauma
                                     isDirectionSet = true;
                                 }
                                 var scaledInput = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
-                                if (isHorizontal)
+                                if (PlayerInput.KeyDown(Keys.LeftAlt))
+                                {
+                                    if (isHorizontal)
+                                    {
+                                        TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + scaledInput.X * character.AnimController.Dir);
+                                        w.refresh();
+                                        w.DrawPos = new Vector2(PlayerInput.MousePosition.X, w.DrawPos.Y);
+                                    }
+                                    else
+                                    {
+                                        TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y / RagdollParams.JointScale);
+                                        w.refresh();
+                                        w.DrawPos = new Vector2(w.DrawPos.X, PlayerInput.MousePosition.Y);
+                                    }
+                                }
+                                else
                                 {
                                     TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + scaledInput.X * character.AnimController.Dir);
                                     w.refresh();
                                     w.DrawPos = new Vector2(PlayerInput.MousePosition.X, w.DrawPos.Y);
-                                }
-                                else
-                                {
                                     TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y / RagdollParams.JointScale);
                                     w.refresh();
                                     w.DrawPos = new Vector2(w.DrawPos.X, PlayerInput.MousePosition.Y);
@@ -3065,12 +3087,20 @@ namespace Barotrauma
                             {
                                 if (w.IsControlled && isDirectionSet)
                                 {
-                                    if (isHorizontal)
+                                    if (PlayerInput.KeyDown(Keys.LeftAlt))
                                     {
-                                        GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.DarkRed);
+                                        if (isHorizontal)
+                                        {
+                                            GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.DarkRed);
+                                        }
+                                        else
+                                        {
+                                            GUI.DrawLine(spriteBatch, new Vector2(w.DrawPos.X, 0), new Vector2(w.DrawPos.X, GameMain.GraphicsHeight), Color.DarkRed);
+                                        }
                                     }
                                     else
                                     {
+                                        GUI.DrawLine(spriteBatch, new Vector2(0, w.DrawPos.Y), new Vector2(GameMain.GraphicsWidth, w.DrawPos.Y), Color.DarkRed);
                                         GUI.DrawLine(spriteBatch, new Vector2(w.DrawPos.X, 0), new Vector2(w.DrawPos.X, GameMain.GraphicsHeight), Color.DarkRed);
                                     }
                                 }
@@ -3115,6 +3145,7 @@ namespace Barotrauma
             {
                 if (fishParams != null)
                 {
+                    Vector2 colliderBottom = character.AnimController.GetColliderBottom();
                     foreach (Limb limb in character.AnimController.Limbs)
                     {
                         if (limb.type != LimbType.LeftFoot && limb.type != LimbType.RightFoot) continue;
