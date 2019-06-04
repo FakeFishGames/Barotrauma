@@ -16,9 +16,18 @@ namespace Barotrauma
         public static void Init()
         {
 #if DEBUG
-            GameAnalytics.SetEnabledInfoLog(true);
+            try
+            {
+                GameAnalytics.SetEnabledInfoLog(true);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Initializing GameAnalytics failed. Disabling user statistics...", e);
+                GameSettings.SendUserStatistics = false;
+                return;
+            }
 #endif
-            
+
             string exePath = Assembly.GetEntryAssembly().Location;
             string exeName = null;
             Md5Hash exeHash = null;
