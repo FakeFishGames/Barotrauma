@@ -377,7 +377,7 @@ namespace Barotrauma
                 subParam.AddToEditor(editor);   
                 //TODO: divider sprite
                 new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform), 
-                    style: "ConnectionPanelWire");
+                    style: null, color: Color.Black);
             }
         }
 #endif
