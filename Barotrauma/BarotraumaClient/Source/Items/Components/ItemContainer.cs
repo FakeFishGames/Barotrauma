@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 i++;
-                if (Math.Abs(transformedItemInterval.X) > 0.001f && Math.Abs(transformedItemInterval.Y) > 0.001f)
+                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
                 {
                     //interval set on both axes -> use a grid layout
                     currentItemPos.X += transformedItemInterval.X;
@@ -206,7 +206,6 @@ namespace Barotrauma.Items.Components
                         currentItemPos.X = transformedItemPos.X;
                         currentItemPos.Y += transformedItemInterval.Y;
                     }
-
                 }
                 else
                 {
