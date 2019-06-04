@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
 
         private readonly List<Submarine> serverSubmarines = new List<Submarine>();
 
-        private string serverIP;
+        private string serverIP, serverName;
 
         private bool needAuth;
         private bool requiresPw;
@@ -99,8 +99,8 @@ namespace Barotrauma.Networking
         {
             get { return ownerKey > 0; }
         }
-
-        public GameClient(string newName, string ip, int ownerKey=0)
+        
+        public GameClient(string newName, string ip, string serverName = null, int ownerKey = 0)
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
@@ -211,7 +211,7 @@ namespace Barotrauma.Networking
 
             serverSettings = new ServerSettings("Server", 0, 0, 0, false, false);
 
-            ConnectToServer(ip);
+            ConnectToServer(ip, serverName);
 
             //ServerLog = new ServerLog("");
 
@@ -219,13 +219,15 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen = new NetLobbyScreen();
         }
 
-        private void ConnectToServer(string hostIP)
+        private void ConnectToServer(string hostIP, string hostName)
         {
             chatBox.InputBox.Enabled = false;
             if (GameMain.NetLobbyScreen?.TextBox != null)
             {
                 GameMain.NetLobbyScreen.TextBox.Enabled = false;
             }
+
+            serverName = hostName;
 
             string[] address = hostIP.Split(':');
             if (address.Length == 1)
@@ -301,7 +303,7 @@ namespace Barotrauma.Networking
         private bool RetryConnection(GUIButton button, object obj)
         {
             if (client != null) client.Shutdown(TextManager.Get("Disconnecting"));
-            ConnectToServer(serverIP);
+            ConnectToServer(serverIP, serverName);
             return true;
         }
 
@@ -346,7 +348,10 @@ namespace Barotrauma.Networking
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox(connectingText, TextManager.GetWithVariable("ConnectingTo", "[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
+                    reconnectBox = new GUIMessageBox(
+                        connectingText,
+                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", string.IsNullOrEmpty(serverName) ? serverIP : serverName),
+                        new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
@@ -903,7 +908,7 @@ namespace Barotrauma.Networking
                     TextManager.Get("ConnectionLost"),
                     msg, new string[0]);
                 connected = false;
-                ConnectToServer(serverIP);
+                ConnectToServer(serverIP, serverName);
             }
             else
             {
@@ -955,7 +960,7 @@ namespace Barotrauma.Networking
             {
                 if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
                 {
-                    ConnectToServer(serverIP);
+                    ConnectToServer(serverIP, serverName);
                     yield return new WaitForSeconds(2.0f);
                 }
                 yield return new WaitForSeconds(0.5f);
