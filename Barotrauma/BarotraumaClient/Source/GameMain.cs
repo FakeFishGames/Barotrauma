@@ -92,6 +92,9 @@ namespace Barotrauma
 
         public static GameSettings Config;
 
+        public static int DisplayWidth { get; private set; }
+        public static int DisplayHeight { get; private set; }
+
         private CoroutineHandle loadingCoroutine;
         private bool hasLoaded;
 
@@ -223,11 +226,6 @@ namespace Barotrauma
 
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
-            if (Config.WindowMode == WindowMode.BorderlessWindowed)
-            {
-                GraphicsWidth = GraphicsDevice.DisplayMode.Width;
-                GraphicsHeight = GraphicsDevice.DisplayMode.Height;
-            }
 
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
@@ -268,6 +266,9 @@ namespace Barotrauma
         protected override void Initialize()
         {
             base.Initialize();
+
+            DisplayWidth = GraphicsDevice.DisplayMode.Width;
+            DisplayHeight = GraphicsDevice.DisplayMode.Height;
 
             RequestGraphicsSettings();
 
@@ -330,6 +331,7 @@ namespace Barotrauma
             ApplyGraphicsSettings();
             yield return CoroutineStatus.Success;
         }
+#endif
 
         private void HandleDefocus(object sender, EventArgs e)
         {
@@ -346,9 +348,6 @@ namespace Barotrauma
         }
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
-        }
-        
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
