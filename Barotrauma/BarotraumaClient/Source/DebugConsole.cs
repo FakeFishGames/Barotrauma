@@ -63,17 +63,11 @@ namespace Barotrauma
             frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) },
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
 
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.01f };
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            var toggleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), Color.GreenYellow, GUI.SmallFont, Alignment.CenterLeft, style: null);
+            var toggleText = new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width-30, 20), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), new Color(150,150,200,255), GUI.SmallFont, Alignment.CenterLeft, style: null);
 
-            var closeButton = new GUIButton(new RectTransform(new Vector2(0.025f, 1.0f), toggleText.RectTransform, Anchor.TopRight), "X", style: null)
-            {
-                Color = Color.DarkRed,
-                HoverColor = Color.Red,
-                TextColor = Color.White,
-                OutlineColor = Color.Red
-            };
+            var closeButton = new GUIButton(new RectTransform(new Point(20, 20), paddedFrame.RectTransform, Anchor.TopRight), "X", color: Color.Red);
             closeButton.OnClicked += (btn, userdata) =>
             {
                 isOpen = false;
@@ -82,12 +76,12 @@ namespace Barotrauma
                 return true;
             };
 
-            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 60), paddedFrame.RectTransform, Anchor.Center)
+            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 50), paddedFrame.RectTransform, Anchor.Center)
             {
                 IsFixedSize = false
-            }, color: Color.Black * 0.9f) { ScrollBarVisible = true };
+            }, color: Color.Black * 0.9f);
 
-            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 30), paddedFrame.RectTransform, Anchor.BottomLeft)
+            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft)
             {
                 IsFixedSize = false
             });
