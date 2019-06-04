@@ -145,11 +145,6 @@ namespace Barotrauma
 
         private List<XElement> fabricationRecipeElements = new List<XElement>();
 
-        /// <summary>
-        /// Original, non-translated name as defined in the xml
-        /// </summary>
-        public readonly string OriginalName;
-
         public string ConfigFile
         {
             get { return configFile; }
@@ -445,7 +440,7 @@ namespace Barotrauma
             configFile = filePath;
             ConfigElement = element;
 
-            OriginalName = element.GetAttributeString("name", "");
+            string nonTranslatedName = element.GetAttributeString("name", "");
             identifier = element.GetAttributeString("identifier", "");
 
             //nameidentifier can be used to make multiple items use the same names and descriptions
@@ -453,11 +448,11 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(nameIdentifier))
             {
-                name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
+                name = TextManager.Get("EntityName." + identifier, true) ?? nonTranslatedName;
             }
             else
             {
-                name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                name = TextManager.Get("EntityName." + nameIdentifier, true) ?? nonTranslatedName;
             }
 
             if (name == "") { DebugConsole.ThrowError("Unnamed item in " + filePath + "!"); }
@@ -467,7 +462,7 @@ namespace Barotrauma
             Aliases = new HashSet<string>
                 (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
                 element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
-            Aliases.Add(OriginalName.ToLowerInvariant());
+            Aliases.Add(nonTranslatedName.ToLowerInvariant());
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {

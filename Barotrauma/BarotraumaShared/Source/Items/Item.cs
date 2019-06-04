@@ -2033,8 +2033,8 @@ namespace Barotrauma
             XElement element = new XElement("Item");
 
             element.Add(
-                new XAttribute("name", Prefab.OriginalName),
-                new XAttribute("identifier", Prefab.Identifier),
+                new XAttribute("name", prefab.Name),
+                new XAttribute("identifier", prefab.Identifier),
                 new XAttribute("ID", ID));
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));

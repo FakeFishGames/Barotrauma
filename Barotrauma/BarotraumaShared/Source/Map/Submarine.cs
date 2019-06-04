@@ -730,15 +730,7 @@ namespace Barotrauma
             return closestBody;
         }
 
-        private static readonly Dictionary<Body, float> bodyDist = new Dictionary<Body, float>();
-        private static readonly List<Body> bodies = new List<Body>();
-
-        /// <summary>
-        /// Returns a list of physics bodies the ray intersects with, sorted according to distance (the closest body is at the beginning of the list).
-        /// </summary>
-        /// <param name="customPredicate">Can be used to filter the bodies based on some condition. If the predicate returns false, the body isignored.</param>
-        /// <param name="allowInsideFixture">Should fixtures that the start of the ray is inside be returned</param>
-        public static IEnumerable<Body> PickBodies(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
+        public static List<Body> PickBodies(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -746,25 +738,20 @@ namespace Barotrauma
             }
 
             float closestFraction = 1.0f;
-            bodies.Clear();
-            bodyDist.Clear();
+            List<Body> bodies = new List<Body>();
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return -1; }
 
-                if (fixture.Body != null)
-                {
-                    bodies.Add(fixture.Body);
-                    bodyDist[fixture.Body] = fraction;
-                }
+                if (fixture.Body != null) { bodies.Add(fixture.Body); }
                 if (fraction < closestFraction)
                 {
                     lastPickedPosition = rayStart + (rayEnd - rayStart) * fraction;
                     lastPickedFraction = fraction;
                     lastPickedNormal = normal;
                 }
-                //continue
-                return -1;
+
+                return fraction;
             }, rayStart, rayEnd);
 
             if (allowInsideFixture)
@@ -783,12 +770,10 @@ namespace Barotrauma
                     lastPickedFraction = 0.0f;
                     lastPickedNormal = Vector2.Normalize(rayEnd - rayStart);
                     bodies.Add(fixture.Body);
-                    bodyDist[fixture.Body] = 0.0f;
                     return false;
                 }, ref aabb);
             }
 
-            bodies.Sort((b1, b2) => { return bodyDist[b1].CompareTo(bodyDist[b2]); });
             return bodies;
         }
 

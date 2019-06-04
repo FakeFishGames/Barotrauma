@@ -122,8 +122,9 @@ namespace Barotrauma
                             goToObjective = null;
                         }
                         TryAddSubObjective(ref goToObjective, 
-                            constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: true)
+                            constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: false)
                             {
+                                // If we need diving gear, we should already have it, if possible.
                                 AllowGoingOutside = HumanAIController.HasDivingSuit(character)
                             }, 
                             onAbandon: () => unreachable.Add(goToObjective.Target as Hull));
