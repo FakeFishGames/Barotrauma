@@ -703,13 +703,17 @@ namespace Barotrauma.Networking
             Dictionary<ItemPrefab, int> extraCargo = new Dictionary<ItemPrefab, int>();
             for (int i = 0; i < count; i++)
             {
+                string prefabIdentifier = msg.ReadString();
                 string prefabName = msg.ReadString();
                 byte amount = msg.ReadByte();
-                ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName, StringComparison.InvariantCulture)) as ItemPrefab;
-                if (ip != null && amount > 0)
+
+                var itemPrefab = string.IsNullOrEmpty(prefabIdentifier) ?
+                    MapEntityPrefab.Find(prefabName, null, showErrorMessages: false) as ItemPrefab :
+                    MapEntityPrefab.Find(prefabName, prefabIdentifier, showErrorMessages: false) as ItemPrefab;
+                if (itemPrefab != null && amount > 0)
                 {
-                    if (changed || !ExtraCargo.ContainsKey(ip) || ExtraCargo[ip] != amount) changed = true;
-                    extraCargo.Add(ip, amount);
+                    if (changed || !ExtraCargo.ContainsKey(itemPrefab) || ExtraCargo[itemPrefab] != amount) changed = true;
+                    extraCargo.Add(itemPrefab, amount);
                 }
             }
             if (changed) ExtraCargo = extraCargo;
@@ -727,7 +731,9 @@ namespace Barotrauma.Networking
             msg.Write((UInt32)ExtraCargo.Count);
             foreach (KeyValuePair<ItemPrefab, int> kvp in ExtraCargo)
             {
-                msg.Write(kvp.Key.Name); msg.Write((byte)kvp.Value);
+                msg.Write(kvp.Key.Identifier ?? "");
+                msg.Write(kvp.Key.OriginalName ?? "");
+                msg.Write((byte)kvp.Value);
             }
         }
     }
