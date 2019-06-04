@@ -212,6 +212,9 @@
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">HyperDescriptor</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Copyright (c) 2014 Pavel Nosovich. Released under the MIT license.</Text>
 
+  <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">OpenAL Soft</Text>
+  <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Released under the GNU Library General Public License, version 2. See OpenALSoft_LICENSE for the full license.</Text>
+
   <Text font="VideoTitleFont" color="255,255,255,255" alignment="CenterLeft">PK01, PK02 and Ancient Collection Texture packages</Text>
   <Text font="Font" color="150,150,150,255" alignment="CenterLeft">Textures by Philip Klevestav are used in some of the sprites in the game.\nLicensed under Creative Commons Attribution 3.0 Unported \nhttps://creativecommons.org/licenses/by/3.0/</Text>
 

@@ -3197,6 +3197,8 @@
   <workshopfilenotfound>File [path] not found.</workshopfilenotfound>
 
   <debugconsolehelptext> Debug console - Press F3 to open/close, enter "help" for a list of available commands</debugconsolehelptext>
+  
+  <voipnodevices>No audio capture devices found</voipnodevices>
 
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
