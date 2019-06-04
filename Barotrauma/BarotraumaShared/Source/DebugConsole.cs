@@ -1414,7 +1414,6 @@ namespace Barotrauma
                         if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
                         break;
                 }
-#endif
             }
 
             string itemName = args[0].ToLowerInvariant();
