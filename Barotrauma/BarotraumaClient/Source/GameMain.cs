@@ -209,18 +209,6 @@ namespace Barotrauma
 
         private void ApplyGraphicsSettings()
         {
-#if WINDOWS
-            if (WindowActive)
-            {
-#endif
-                ApplyGraphicsSettings();
-#if WINDOWS
-            }
-#endif
-        }
-
-        private void ApplyGraphicsSettings()
-        {
 #if !OSX
             if (Config.WindowMode == WindowMode.Fullscreen &&
                 GraphicsDeviceManager.IsFullScreen && !GraphicsDeviceManager.HardwareModeSwitch &&
@@ -243,6 +231,7 @@ namespace Barotrauma
                 GraphicsWidth = GraphicsDevice.DisplayMode.Width;
                 GraphicsHeight = GraphicsDevice.DisplayMode.Height;
             }
+
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
@@ -348,8 +337,15 @@ namespace Barotrauma
         private void HandleDefocus(object sender, EventArgs e)
         {
             CoroutineManager.StopCoroutines("FocusCoroutine");
-            GraphicsDeviceManager.IsFullScreen = false;
-            GraphicsDeviceManager.ApplyChanges();
+            if (GraphicsDeviceManager.IsFullScreen && !GraphicsDeviceManager.HardwareModeSwitch)
+            {
+                DisplayMode minMode = GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.First(m => m.Format == SurfaceFormat.Color);
+                GraphicsDeviceManager.PreferredBackBufferWidth = minMode.Width;
+                GraphicsDeviceManager.PreferredBackBufferHeight = minMode.Height;
+                GraphicsDeviceManager.IsFullScreen = false;
+                GraphicsDeviceManager.ApplyChanges();
+                Thread.Sleep(100);
+            }
         }
 #endif
 
