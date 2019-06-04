@@ -57,7 +57,6 @@ namespace Barotrauma
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
         private bool animationResetRequiresForceLoading;
-        private float cameraFollowSpeed = 20;
 
         private bool jointCreationMode;
         private bool useMouseOffset;
@@ -1476,7 +1475,7 @@ namespace Barotrauma
             // General controls
             backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerPanel.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
             // Background color
-            var frame = new GUIFrame(new RectTransform(new Point(400, 80), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
+            var frame = new GUIFrame(new RectTransform(new Point(500, 80), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, GetCharacterEditorTranslation("BackgroundColor") + ":", textColor: Color.WhiteSmoke);
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight)
             {
@@ -1490,7 +1489,7 @@ namespace Barotrauma
             string[] colorComponentLabels = { "R", "G", "B" };
             for (int i = 2; i >= 0; i--)
             {
-                var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform)
+                var element = new GUIFrame(new RectTransform(new Vector2(0.3f, 1), inputArea.RectTransform)
                 {
                     MinSize = new Point(40, 0),
                     MaxSize = new Point(100, 50)
@@ -1498,7 +1497,7 @@ namespace Barotrauma
                 var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
                     font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                    GUINumberInput.NumberType.Int, relativeButtonAreaWidth: 0.25f)
                 {
                     Font = GUI.SmallFont
                 };
@@ -1510,17 +1509,17 @@ namespace Barotrauma
                     case 0:
                         colorLabel.TextColor = Color.Red;
                         numberInput.IntValue = backgroundColor.R;
-                        numberInput.OnValueChanged += (numInput) => backgroundColor.R = (byte)(numInput.IntValue);
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.R = (byte)numInput.IntValue;
                         break;
                     case 1:
                         colorLabel.TextColor = Color.LightGreen;
                         numberInput.IntValue = backgroundColor.G;
-                        numberInput.OnValueChanged += (numInput) => backgroundColor.G = (byte)(numInput.IntValue);
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.G = (byte)numInput.IntValue;
                         break;
                     case 2:
                         colorLabel.TextColor = Color.DeepSkyBlue;
                         numberInput.IntValue = backgroundColor.B;
-                        numberInput.OnValueChanged += (numInput) => backgroundColor.B = (byte)(numInput.IntValue);
+                        numberInput.OnValueChanged += (numInput) => backgroundColor.B = (byte)numInput.IntValue;
                         break;
                 }
             }
