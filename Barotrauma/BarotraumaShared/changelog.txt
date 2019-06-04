@@ -1,4 +1,36 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.0.4
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "Steam authentication failed" errors when trying to reconnect to a server after cancelling the
+connection.
+- Fixed clients occasionally failing to spawn items when playing using a different language than the server,
+which caused them to get kicked.
+- Fixed extra cargo failing to spawn in multiplayer when playing using a different language than the server. 
+- Fixed legacy items failing to load if a sub is saved with a language other than English and the language 
+then changed to something else.
+- Fixed excessively small password input box when connecting to servers.
+- Fixed a bug that occasionally caused items to drop from the inventory when moving items between 
+inventory slots in the multiplayer.
+- Prevent junction boxes from getting damaged due to overvoltage in the engineering tutorial.
+- Fixed structures getting scaled incorrectly when cloning a structure with a non-default scale in the 
+submarine editor.
+- Fixed occasional crashes when leaving a multiplayer session while the "cinematic" at the end of the round
+is still playing.
+- Fixed items not being moved to the humanhusk's inventory when a huskified player dies (= clothes and
+other gear seemed to magically disappear when the character "resurrected" as an AI husk).
+- Fixed clients not seeing turrets rotating at their end when another client is operating the turret.
+- Fixed hitscan projectiles (revolver rounds) going through walls if the weapon is fired while its 
+barrel is partially inside the wall.
+- Fixed welding tools being able to weld doors and burn characters through walls.
+- Fixed bots reporting leaks when there are holes in the interior walls.
+- Fixes to the colliders of some of the shuttle wall pieces.
+- Fixed Linux version crashing when attempting to browse for files in the Steam Workshop menu.
+- Fixed credits not resizing when resolution is changed.
+- Added an upper limit to impact damage done to ragdolls, preventing characters from getting instakilled if
+a Moloch or another large monster smashes against the sub hard enough.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.0.3
 ---------------------------------------------------------------------------------------------------------
 
