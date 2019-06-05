@@ -875,7 +875,7 @@ namespace Barotrauma
                                 containedIndicatorArea.Width / (float)indicatorSprite.SourceRect.Width,
                                 containedIndicatorArea.Height / (float)indicatorSprite.SourceRect.Height);
 
-                            if (containedState > 0.0f && containedState < 0.25f)
+                            if (containedState >= 0.0f && containedState < 0.25f)
                             {
                                 indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.25f;
                             }
