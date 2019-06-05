@@ -73,6 +73,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(3.0f, true), Editable]
+        public float OpeningSpeed { get; private set; }
+
+        [Serialize(3.0f, true), Editable]
+        public float ClosingSpeed { get; private set; }
+
         public bool? PredictedState { get; private set; }
 
         public Gap LinkedGap
@@ -297,12 +303,12 @@ namespace Barotrauma.Items.Components
             {
                 if (PredictedState == null)
                 {
-                    OpenState += deltaTime * (isOpen ? 2.0f : -2.0f);
+                    OpenState += deltaTime * (isOpen ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
                 }
                 else
                 {
-                    OpenState += deltaTime * ((bool)PredictedState ? 2.0f : -2.0f);
+                    OpenState += deltaTime * ((bool)PredictedState ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !(bool)PredictedState;
 
                     resetPredictionTimer -= deltaTime;
