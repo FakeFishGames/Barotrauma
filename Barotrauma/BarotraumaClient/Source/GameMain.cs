@@ -48,6 +48,8 @@ namespace Barotrauma
 
         public static Sounds.SoundManager SoundManager;
 
+        public static Thread MainThread { get; private set; }
+
         public static HashSet<ContentPackage> SelectedPackages
         {
             get { return Config?.SelectedContentPackages; }
@@ -183,6 +185,8 @@ namespace Barotrauma
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
+
+            MainThread = Thread.CurrentThread;
         }
 
         public void ApplyGraphicsSettings()
@@ -272,6 +276,8 @@ namespace Barotrauma
 #if WINDOWS
             canLoadInSeparateThread = true;
 #endif
+
+            ApplyGraphicsSettings();
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
@@ -574,6 +580,9 @@ namespace Barotrauma
                 //otherwise it snowballs and becomes unplayable
                 Timing.Accumulator = Timing.Step;
             }
+
+            CrossThread.ProcessTasks();
+
             PlayerInput.UpdateVariable();
 
             bool paused = true;
