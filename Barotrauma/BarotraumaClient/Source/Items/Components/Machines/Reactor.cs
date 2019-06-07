@@ -186,7 +186,11 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("ReactorTipTurbineOutput")
             };
 
-            GUILayoutGroup sliderControls = new GUILayoutGroup(new RectTransform(new Point(columnMid.Rect.Width, (int)(114 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomCenter)) { Stretch = true };
+            GUILayoutGroup sliderControls = new GUILayoutGroup(new RectTransform(new Point(columnMid.Rect.Width, (int)(114 * GUI.Scale)), columnMid.RectTransform, Anchor.BottomCenter))
+            {
+                Stretch = true,
+                AbsoluteSpacing = (int)(5 * GUI.Scale)
+            };
             sliderControlsContainer = sliderControls;
 
             new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), sliderControls.RectTransform, Anchor.TopLeft),
@@ -204,7 +208,7 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), sliderControls.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, (int)(16 * GUI.Scale)) },
+            new GUITextBlock(new RectTransform(new Point(0, (int)(20 * GUI.Scale)), sliderControls.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("ReactorTurbineOutput"));
             turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(sliderControls.Rect.Width, (int)(30 * GUI.Scale)), sliderControls.RectTransform, Anchor.BottomCenter),
                 style: "GUISlider", barSize: 0.1f, isHorizontal: true)
