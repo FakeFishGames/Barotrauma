@@ -427,6 +427,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (target is Door door)
                     {
+                        if (!door.CanBeWelded) continue;
                         for (int i = 0; i < effect.propertyNames.Length; i++)
                         {
                             string propertyName = effect.propertyNames[i];

@@ -59,6 +59,8 @@ namespace Barotrauma.Items.Components
             get { return item.GetComponent<Repairable>()?.ShowRepairUIThreshold ?? 0.0f; }
         }
 
+        public bool CanBeWelded = true;
+
         private float stuck;
         [Serialize(0.0f, false)]
         public float Stuck
@@ -66,7 +68,7 @@ namespace Barotrauma.Items.Components
             get { return stuck; }
             set 
             {
-                if (isOpen || isBroken) return;
+                if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (stuck <= 0.0f) isStuck = false;
                 if (stuck >= 100.0f) isStuck = true;
