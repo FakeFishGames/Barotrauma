@@ -12,6 +12,11 @@ Additions and changes:
 - Flares are activated with the left mouse button instead of E.
 - Nerfed plasma cutters.
 - Made coilgun ammunition boxes deconstructable.
+- Allow to edit the door opening/closing speeds and increase the defaults.
+- Reduce the follow-up distance and require the bot to be in the same room than the player before stopping, 
+so that bots with a follow order don't stay on the doorways when the player is trying to enter the airlocks.
+- Stop "breathing" deformations when the character is dead.
+- Disable obstructed paths when the submarine docks to another submarine/outpost.
 
 Bugfixes:
 - Fixed crashing during startup due to faulty OpenAL installations.
@@ -47,6 +52,8 @@ in the leftmost inventory slot.
 - Fixed health interface not focusing to the most damaged limb when closing and reopening the interface.
 - Prevent welding doors shut during the tutorials (as the player doesn't have access to any tools to 
 reopen the door).
+- Fix AI pathfinding when the path is from a submarine to another submarine.
+- Fix Watchmen looking at the wrong direction.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.0.4
