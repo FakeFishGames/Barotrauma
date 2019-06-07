@@ -189,17 +189,21 @@ namespace Barotrauma
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
-            if (Config.WindowMode == WindowMode.BorderlessWindowed)
+            switch (Config.WindowMode)
             {
-                GraphicsWidth = GraphicsDevice.DisplayMode.Width;
-                GraphicsHeight = GraphicsDevice.DisplayMode.Height;
+                case WindowMode.BorderlessWindowed:
+                    GraphicsWidth = GraphicsDevice.DisplayMode.Width;
+                    GraphicsHeight = GraphicsDevice.DisplayMode.Height;
+                    break;
+                case WindowMode.Windowed:
+                    GraphicsWidth = Math.Min(GraphicsDevice.DisplayMode.Width, GraphicsWidth);
+                    GraphicsHeight = Math.Min(GraphicsDevice.DisplayMode.Height, GraphicsHeight);
+                    break;
             }
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
-            GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
-            GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
             SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
