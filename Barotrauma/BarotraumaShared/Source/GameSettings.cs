@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Xml;
+using System.IO;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
