@@ -163,7 +163,20 @@ namespace Barotrauma.Networking
                 expirationTime = DateTime.Now + duration.Value;
             }
 
-            bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
+            if (!string.IsNullOrEmpty(ip))
+            {
+                bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
+            }
+            else if (steamID > 0)
+            {
+                bannedPlayers.Add(new BannedPlayer(name, steamID, reason, expirationTime));
+            }
+            else
+            {
+                DebugConsole.ThrowError("Failed to ban a client (no valid IP or Steam ID given)");
+                return;
+            }
+
             Save();
         }
 
