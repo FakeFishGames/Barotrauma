@@ -274,7 +274,7 @@ namespace Barotrauma
 
             bool canLoadInSeparateThread = false;
 #if WINDOWS
-            canLoadInSeparateThread = true;
+            canLoadInSeparateThread = false;
 #endif
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
