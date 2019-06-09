@@ -74,7 +74,7 @@ namespace Barotrauma.Sounds
 
         public override SoundChannel Play()
         {
-            return Play(0.5f);
+            return Play(1.0f);
         }
 
         public override int FillStreamBuffer(int samplePos, short[] buffer)
