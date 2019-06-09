@@ -219,7 +219,7 @@ namespace Barotrauma
             set { TextManager.Language = value; }
         }
 
-        public HashSet<ContentPackage> SelectedContentPackages { get; set; }
+        public readonly HashSet<ContentPackage> SelectedContentPackages = new HashSet<ContentPackage>();
 
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
