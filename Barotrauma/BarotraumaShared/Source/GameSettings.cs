@@ -605,6 +605,18 @@ namespace Barotrauma
             LoadControls(doc);
             LoadContentPackages(doc);
 
+            //allow overriding the save paths in the config file
+            if (doc.Root.Attribute("overridesavefolder") != null)
+            {
+                string saveFolder = doc.Root.GetAttributeString("overridesavefolder", "");
+                SaveUtil.SaveFolder = saveFolder;
+                SaveUtil.MultiplayerSaveFolder = Path.Combine(saveFolder, "Multiplayer");
+            }
+            if (doc.Root.Attribute("overridemultiplayersavefolder") != null)
+            {
+                SaveUtil.MultiplayerSaveFolder = doc.Root.GetAttributeString("overridemultiplayersavefolder", "");
+            }
+
             XElement tutorialsElement = doc.Root.Element("tutorials");
             if (tutorialsElement != null)
             {
