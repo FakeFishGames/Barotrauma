@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="Alien Turret Assembly" description="" hideinmenus="false">
+<ItemAssembly name="Alien Turret Assembly" description="" hideinmenus="true">
   <Item name="Alien Turret" identifier="alienturret" ID="2" rect="-87,137,143,242" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="turret,alien" displaysidebysidewhenlinked="False" spritedepth="0.1" scale="0.5">
     <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="0" />
     <LightComponent range="2048" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="112,145,190,255" isactive="True" minvoltage="0.5" powerconsumption="50" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />

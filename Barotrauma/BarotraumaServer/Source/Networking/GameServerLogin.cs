@@ -418,7 +418,7 @@ namespace Barotrauma.Networking
                 return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
             }
 
-            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
+            if (inc.SenderConnection != OwnerConnection && !serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);

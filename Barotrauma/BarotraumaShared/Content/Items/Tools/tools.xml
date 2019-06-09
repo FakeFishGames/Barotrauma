@@ -381,7 +381,7 @@
     <AiTarget/>
   </Item>
   
-  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft">
+  <Item name="Flare" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft" isshootable="true">
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />

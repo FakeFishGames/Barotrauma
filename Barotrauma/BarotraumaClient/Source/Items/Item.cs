@@ -1007,7 +1007,13 @@ namespace Barotrauma
         {
             if (body == null)
             {
-                DebugConsole.ThrowError("Received a position update for an item with no physics body (" + Name + ")");
+                string errorMsg = "Received a position update for an item with no physics body (" + Name + ")";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#else
+                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
 

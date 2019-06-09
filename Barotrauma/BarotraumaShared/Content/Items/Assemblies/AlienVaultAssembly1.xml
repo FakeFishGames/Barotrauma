@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienVaultAssembly1" description="" hideinmenus="false">
+<ItemAssembly name="AlienVaultAssembly1" description="" hideinmenus="true">
   <Item name="Artifact Holder" identifier="artifactholder" ID="3" rect="-128,176,256,256" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien,artifactholder" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <ItemContainer itempos="128,-128" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" contained="0" />
     <LightComponent range="800" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="153,204,255,200" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />

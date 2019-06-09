@@ -1550,7 +1550,8 @@ namespace Barotrauma
                 }
 
 
-                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
+                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && 
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("VoteToKick"))
@@ -1561,7 +1562,8 @@ namespace Barotrauma
                     };
                 }
 
-                if (GameMain.Client.HasPermission(ClientPermissions.Kick))
+                if (GameMain.Client.HasPermission(ClientPermissions.Kick) &&
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("Kick"))
