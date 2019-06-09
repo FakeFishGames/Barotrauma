@@ -790,8 +790,7 @@ namespace Barotrauma
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
 
                 Color color = Color.Gray;
-                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
-                if (hasRequiredSkillsAndItems)
+                if (ic.HasRequiredItems(character, false))
                 {
                     if (ic is Repairable repairable)
                     {
