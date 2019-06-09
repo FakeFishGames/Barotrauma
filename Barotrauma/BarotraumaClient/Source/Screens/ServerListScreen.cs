@@ -205,6 +205,8 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
+
+            serverList.UpdateScrollBarSize();
         }
 
         private bool RefreshJoinButtonState(GUIComponent component, object obj)
