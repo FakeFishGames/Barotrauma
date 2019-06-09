@@ -1267,6 +1267,7 @@ namespace Barotrauma.Networking
                 string name         = inc.ReadString();
                 UInt16 characterID  = inc.ReadUInt16();
                 bool muted          = inc.ReadBoolean();
+                bool allowKicking   = inc.ReadBoolean();
                 inc.ReadPadBits();
 
                 tempClients.Add(new TempClient
@@ -1274,7 +1275,8 @@ namespace Barotrauma.Networking
                     ID = id,
                     Name = name,
                     CharacterID = characterID,
-                    Muted = muted
+                    Muted = muted,
+                    AllowKicking = allowKicking
                 });
             }
 
@@ -1290,13 +1292,15 @@ namespace Barotrauma.Networking
                     {
                         existingClient = new Client(tc.Name, tc.ID)
                         {
-                            Muted = tc.Muted
+                            Muted = tc.Muted,
+                            AllowKicking = tc.AllowKicking
                         };
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient);
                     }
                     existingClient.Character = null;
                     existingClient.Muted = tc.Muted;
+                    existingClient.AllowKicking = tc.AllowKicking;
                     if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
