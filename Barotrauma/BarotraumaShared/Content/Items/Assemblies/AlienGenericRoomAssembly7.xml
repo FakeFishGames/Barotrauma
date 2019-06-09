@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienGenericRoomAssembly7" description="" hideinmenus="false">
+<ItemAssembly name="AlienGenericRoomAssembly7" description="" hideinmenus="true">
   <Structure name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" ID="13" rect="-448,128,54,240" texturescale="1,1" specialtag="" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" usedropshadow="True" dropshadowoffset="0,0" scale="1" spritedepth="0.063" />
   <Structure name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" ID="12" rect="384,128,54,240" texturescale="1,1" specialtag="" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" usedropshadow="True" dropshadowoffset="0,0" scale="1" spritedepth="0.063" />
   <Structure name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" ID="11" rect="-448,160,368,54" texturescale="1,1" specialtag="" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" usedropshadow="True" dropshadowoffset="0,0" scale="1" spritedepth="0.062" />
