@@ -97,7 +97,15 @@ namespace Barotrauma
         public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
 
-            if (string.IsNullOrWhiteSpace(file)) { return new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1); }
+            if (string.IsNullOrWhiteSpace(file))
+            {
+                Texture2D t = null;
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    t = new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, 1, 1);
+                });
+                return t;
+            }
             file = Path.GetFullPath(file);
             foreach (Sprite s in list)
             {
@@ -305,16 +313,22 @@ namespace Barotrauma
             //check if another sprite is using the same texture
             if (!string.IsNullOrEmpty(FilePath)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
-                foreach (Sprite s in list)
+                lock (list)
                 {
-                    if (s.FullPath == FullPath) return;
+                    foreach (Sprite s in list)
+                    {
+                        if (s.FullPath == FullPath) return;
+                    }
                 }
             }
             
             //if not, free the texture
             if (texture != null)
             {
-                texture.Dispose();
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    texture.Dispose();
+                });
                 texture = null;
             }
         }

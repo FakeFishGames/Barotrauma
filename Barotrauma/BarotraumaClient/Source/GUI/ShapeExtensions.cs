@@ -18,8 +18,11 @@ namespace Barotrauma
         {
             if (_whitePixelTexture == null)
             {
-                _whitePixelTexture = new Texture2D(spriteBatch.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
-                _whitePixelTexture.SetData(new[] { Color.White });
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    _whitePixelTexture = new Texture2D(spriteBatch.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+                    _whitePixelTexture.SetData(new[] { Color.White });
+                });
             }
 
             return _whitePixelTexture;

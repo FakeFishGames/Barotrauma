@@ -202,7 +202,10 @@ namespace Barotrauma.Sounds
             }
 
             Sound newSound = new OggSound(this, filename, stream);
-            loadedSounds.Add(newSound);
+            lock (loadedSounds)
+            {
+                loadedSounds.Add(newSound);
+            }
             return newSound;
         }
 
@@ -225,7 +228,10 @@ namespace Barotrauma.Sounds
                 newSound.BaseFar = range;
             }
 
-            loadedSounds.Add(newSound);
+            lock (loadedSounds)
+            {
+                loadedSounds.Add(newSound);
+            }
             return newSound;
         }
 
@@ -352,12 +358,15 @@ namespace Barotrauma.Sounds
 
         public void RemoveSound(Sound sound)
         {
-            for (int i = 0; i < loadedSounds.Count; i++)
+            lock (loadedSounds)
             {
-                if (loadedSounds[i] == sound)
+                for (int i = 0; i < loadedSounds.Count; i++)
                 {
-                    loadedSounds.RemoveAt(i);
-                    return;
+                    if (loadedSounds[i] == sound)
+                    {
+                        loadedSounds.RemoveAt(i);
+                        return;
+                    }
                 }
             }
         }

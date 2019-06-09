@@ -272,10 +272,7 @@ namespace Barotrauma
                 WaitForLanguageSelection = Config.ShowLanguageSelectionPrompt
             };
 
-            bool canLoadInSeparateThread = false;
-#if WINDOWS
-            canLoadInSeparateThread = true;
-#endif
+            bool canLoadInSeparateThread = true;
 
             ApplyGraphicsSettings();
 

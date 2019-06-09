@@ -123,7 +123,10 @@ namespace Barotrauma
                 pixelBuffer[i] = 0;
             }
 
-            textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+            });
             int texIndex = 0;
 
             Vector2 currentCoords = Vector2.Zero;
@@ -178,8 +181,11 @@ namespace Barotrauma
                     {
                         currentCoords.X = 0;
                         currentCoords.Y = 0;
-                        textures[texIndex].SetData<uint>(pixelBuffer);
-                        textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                        CrossThread.RequestExecutionOnMainThread(() =>
+                        {
+                            textures[texIndex].SetData<uint>(pixelBuffer);
+                            textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                        });
                         texIndex++;
                         for (int k = 0; k < texDims * texDims; k++)
                         {
@@ -207,7 +213,10 @@ namespace Barotrauma
 
                     currentCoords.X += glyphWidth + 2;
                 }
-                textures[texIndex].SetData<uint>(pixelBuffer);
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    textures[texIndex].SetData<uint>(pixelBuffer);
+                });
             }
         }
 
@@ -220,7 +229,10 @@ namespace Barotrauma
                 face.SetPixelSizes(0, size);
                 face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
                 baseHeight = face.Glyph.Metrics.Height.ToInt32();
-                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                });
             }
 
             uint glyphIndex = face.GetCharIndex(character);
@@ -264,7 +276,10 @@ namespace Barotrauma
                 currentDynamicAtlasCoords.X = 0;
                 currentDynamicAtlasCoords.Y = 0;
                 currentDynamicAtlasNextY = 0;
-                textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                });
                 currentDynamicPixelBuffer = null;
             }
 
@@ -291,7 +306,10 @@ namespace Barotrauma
                     currentDynamicPixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | byteColor << 16 | byteColor << 8 | byteColor);
                 }
             }
-            textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
+            });
 
             currentDynamicAtlasCoords.X += glyphWidth + 2;
         }
