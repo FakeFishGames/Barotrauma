@@ -708,7 +708,7 @@ namespace Barotrauma
                                    " -queryport " + queryPort.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -upnp " + useUpnpBox.Selected +
-                                   " -playercount " + maxPlayersBox.Text +
+                                   " -maxplayers " + maxPlayersBox.Text +
                                     " -ownerkey " + ownerKey.ToString();
 
                 string filename = "DedicatedServer.exe";
