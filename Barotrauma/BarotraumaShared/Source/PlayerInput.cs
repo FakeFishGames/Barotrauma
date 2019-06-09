@@ -157,6 +157,33 @@ namespace Barotrauma
             get { return GameMain.Config.KeyBind(inputType); }
         }
 
+        private static bool AllowOnGUI(InputType input)
+        {
+            switch (input)
+            {
+                case InputType.Attack:
+                case InputType.Shoot:
+                    return GUI.MouseOn == null;
+                default:
+                    return true;
+            }
+        }
+
+        public KeyOrMouse State
+        {
+            get { return binding; }
+        }
+
+        public void SetState()
+        {
+            hit = binding.IsHit() && AllowOnGUI(inputType);
+            if (hit) hitQueue = true;
+
+            held = binding.IsDown() && AllowOnGUI(inputType);
+            if (held) heldQueue = true;
+        }
+#endif
+
         public KeyOrMouse State
         {
             get { return binding; }
