@@ -52,8 +52,9 @@ in the leftmost inventory slot.
 - Fixed health interface not focusing to the most damaged limb when closing and reopening the interface.
 - Prevent welding doors shut during the tutorials (as the player doesn't have access to any tools to 
 reopen the door).
-- Fix AI pathfinding when the path is from a submarine to another submarine.
-- Fix Watchmen looking at the wrong direction.
+- Fixed AI pathfinding when the path is from a submarine to another submarine.
+- Fixed Watchmen looking at the wrong direction.
+- Fixed crashing due to an invalid display resolution.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.0.4
