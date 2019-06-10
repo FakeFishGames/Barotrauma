@@ -426,7 +426,7 @@ namespace Barotrauma.Items.Components
             AutoTemp = autoTempSlider.BarScroll < 0.5f;
             shutDown = onOffSwitch.BarScroll > 0.5f;
 
-            if (sliderControlsContainer.Rect.Contains(PlayerInput.MousePosition) &&
+            if ((sliderControlsContainer.Rect.Contains(PlayerInput.MousePosition) || sliderControlsContainer.Children.Contains(GUIScrollBar.draggingBar)) &&
                 !PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
             {
                 Character.DisableControls = true;
