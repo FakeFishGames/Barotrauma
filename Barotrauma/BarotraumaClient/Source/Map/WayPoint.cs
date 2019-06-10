@@ -39,7 +39,15 @@ namespace Barotrauma
             int iconX = iconIndices[(int)spawnType] * IconSize % iconTexture.Width;
             int iconY = (int)(Math.Floor(iconIndices[(int)spawnType] * IconSize / (float)iconTexture.Width)) * IconSize;
 
-            int iconSize = ConnectedGap == null && Ladders == null ? IconSize : (int)(IconSize * 1.5f);
+            int iconSize = IconSize;
+            if (ConnectedGap != null)
+            {
+                iconSize = (int)(iconSize * 1.5f);
+            }
+            if (Ladders != null)
+            {
+                iconSize = (int)(iconSize * 1.5f);
+            }
 
             spriteBatch.Draw(iconTexture,
                 new Rectangle((int)(drawPos.X - iconSize / 2), (int)(drawPos.Y - iconSize / 2), iconSize, iconSize),
