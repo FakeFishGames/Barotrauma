@@ -11,6 +11,7 @@ namespace Barotrauma
     {
         private static List<ScalableFont> FontList = new List<ScalableFont>();
         private static Library Lib = null;
+        private static object mutex = new object();
 
         private string filename;
         private Face face;
@@ -63,33 +64,36 @@ namespace Barotrauma
 
         public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false)
         {
-            if (Lib == null) Lib = new Library();
-            this.filename = filename;
-            this.face = null;
-            foreach (ScalableFont font in FontList)
+            lock (mutex)
             {
-                if (font.filename == filename)
+                if (Lib == null) Lib = new Library();
+                this.filename = filename;
+                this.face = null;
+                foreach (ScalableFont font in FontList)
                 {
-                    this.face = font.face;
-                    break;
+                    if (font.filename == filename)
+                    {
+                        this.face = font.face;
+                        break;
+                    }
                 }
-            }
-            if (this.face == null)
-            {
-                this.face = new Face(Lib, filename);
-            }
-            this.size = size;
-            this.textures = new List<Texture2D>();
-            this.texCoords = new Dictionary<uint, GlyphData>();
-            this.DynamicLoading = dynamicLoading;
-            this.graphicsDevice = gd;
+                if (this.face == null)
+                {
+                    this.face = new Face(Lib, filename);
+                }
+                this.size = size;
+                this.textures = new List<Texture2D>();
+                this.texCoords = new Dictionary<uint, GlyphData>();
+                this.DynamicLoading = dynamicLoading;
+                this.graphicsDevice = gd;
 
-            if (gd != null && !dynamicLoading)
-            {
-                RenderAtlas(gd);
-            }
+                if (gd != null && !dynamicLoading)
+                {
+                    RenderAtlas(gd);
+                }
 
-            FontList.Add(this);
+                FontList.Add(this);
+            }
         }
 
         /// <summary>
