@@ -277,6 +277,11 @@ namespace Barotrauma
                         }
                         currentPath.SkipToNextNode();
                     }
+                    // next node's not a ladder, we should stop climbing
+                    if (!IsNextNodeLadder && Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < (collider.height / 2 + collider.radius) * 0.10f)
+                    {
+                        character.AnimController.Anim = AnimController.Animation.None;
+                    }
                 }
                 else if (nextLadderSameAsCurrent)
                 {
