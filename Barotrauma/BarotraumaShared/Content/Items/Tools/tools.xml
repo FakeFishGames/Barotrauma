@@ -61,7 +61,7 @@
       <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="5.0" Condition="3.0" />
       <!-- do burn damage to characters -->
       <StatusEffect type="OnUse" target="UseTarget">
-        <Affliction identifier="burn" amount="0.5" />        
+        <Affliction identifier="burn" amount="0.25" />        
       </StatusEffect>
       <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable identifier="structure" />
@@ -105,7 +105,7 @@
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="oxygenitetank" Condition="-0.5" />
       <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock,aliendoor,alienhatch" Stuck="-20.0" Condition="-3.0" />
       <StatusEffect type="OnUse" target="UseTarget">
-        <Affliction identifier="burn" amount="0.5" />
+        <Affliction identifier="burn" amount="0.25" />
       </StatusEffect>
       <ParticleEmitter particle="plasma" particlespersecond="50" />
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />

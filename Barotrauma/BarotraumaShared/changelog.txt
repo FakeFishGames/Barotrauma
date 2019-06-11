@@ -10,13 +10,19 @@ Additions and changes:
 - Added a close button to the debug console and a text that explains it can be opened/closed by pressing F3.
 - Electrical components are attached to walls with the left mouse button instead of E.
 - Flares are activated with the left mouse button instead of E.
-- Nerfed plasma cutters.
+- Nerfed plasma cutters and welding tools.
 - Made coilgun ammunition boxes deconstructable.
+- Removed minimum job count requirement from Captain, Engineer & Mechanic (i.e. it's not possible to play
+other jobs even when there's 3 or less players on the server).
+- Increased default respawn transport time to 5 minutes, decreased respawn interval to 3 minutes.
+- Allow muting players mid-round through the info menu.
 - Allow to edit the door opening/closing speeds and increase the defaults.
 - Reduce the follow-up distance and require the bot to be in the same room than the player before stopping, 
 so that bots with a follow order don't stay on the doorways when the player is trying to enter the airlocks.
 - Stop "breathing" deformations when the character is dead.
 - Disable obstructed paths when the submarine docks to another submarine/outpost.
+- The location of save files can be changed in config_player.xml using the attributes "overridesavefolder" 
+and "overridemultiplayersavefolder".
 
 Bugfixes:
 - Fixed crashing during startup due to faulty OpenAL installations.
@@ -28,8 +34,13 @@ excessive desync" error message.
 - Fixed items not being repaired after purchasing repairs in the campaign.
 - Removed outdated Launch_BarotraumaServer script from the Linux version (does not work anymore, the 
 dedicated server should be launched by running the file called "DedicatedServer").
+- Fixed server owners not being able to join their own server if whitelist is enabled and the owner is not
+on the whitelist.
+- Fixed inability to ban clients by their Steam ID using the console.
+- Fixed all servers showing up as "Round has not started" in the server list.
 - Fixed server ignoring the max players value set in the "host server" menu and using the setting 
 configured in "serversettings.xml" instead.
+- Fixed spectators not hearing the living players' voice chat.
 - VOIP improvements (less crackling and pops).
 - Increased oxygen output in vanilla submarines to prevent characters from suffocating when playing with
 an oversized crew.
@@ -37,6 +48,8 @@ an oversized crew.
 - Waypoint fixes in vanilla subs.
 - Disallow shooting and attacking when the cursor is over a UI element (to prevent, for example, 
 accidentally firing a gun when dismissing a message box).
+- Fixed "file not found" errors on Linux when attempting to enable a mod that defines file paths
+using a backslash instead of a slash.
 - Fixed monsters ignoring decoys.
 - Fixed store menu switching back to the equipment category every time something is bought/sold in 
 the multiplayer campaign.
@@ -53,8 +66,10 @@ in the leftmost inventory slot.
 - Prevent welding doors shut during the tutorials (as the player doesn't have access to any tools to 
 reopen the door).
 - Fixed AI pathfinding when the path is from a submarine to another submarine.
+- Fixed crashing when AI crew tries to find a path out of the ruins.
 - Fixed Watchmen looking at the wrong direction.
 - Fixed crashing due to an invalid display resolution.
+- Fixed alien item assemblies not being hidden from the sub editor.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.0.4

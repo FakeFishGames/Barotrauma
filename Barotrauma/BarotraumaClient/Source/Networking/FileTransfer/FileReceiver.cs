@@ -154,8 +154,8 @@ namespace Barotrauma.Networking
                 Dispose(true);
             }
         }
-
-        const int MaxFileSize = 1000000;
+        
+        const int MaxFileSize = 50000000; //50 MB
         
         public delegate void TransferInDelegate(FileTransferIn fileStreamReceiver);
         public TransferInDelegate OnFinished;
