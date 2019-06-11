@@ -620,6 +620,7 @@ namespace Barotrauma
                 {
                     if (DraggingItemToWorld &&
                         Character.Controlled.FocusedItem?.OwnInventory != null &&
+                        Character.Controlled.FocusedItem.OwnInventory.CanBePut(draggingItem) &&
                         Character.Controlled.FocusedItem.OwnInventory.TryPutItem(draggingItem, Character.Controlled))
                     {
                         GUI.PlayUISound(GUISoundType.PickItem);
