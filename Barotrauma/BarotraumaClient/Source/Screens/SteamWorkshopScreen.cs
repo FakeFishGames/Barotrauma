@@ -1081,6 +1081,7 @@ namespace Barotrauma
                         {
                             InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
                             Title = TextManager.Get("workshopitemaddfiles"),
+                            Multiselect = true
                         };
                         if (ofd.ShowDialog() == DialogResult.OK)
                         {
@@ -1228,7 +1229,7 @@ namespace Barotrauma
         private void OnAddFilesSelected(string[] fileNames)
         {
             if (fileNames == null) { return; }
-            for(int i = 0; i < fileNames.Length; i++)
+            for (int i = 0; i < fileNames.Length; i++)
             {
                 string file = fileNames[i];
                 if (string.IsNullOrEmpty(file)) { continue; }
@@ -1258,6 +1259,7 @@ namespace Barotrauma
                     itemContentPackage.AddFile(filePathRelativeToStagingFolder, ContentType.None);
                 }
             }
+            itemContentPackage.Save(itemContentPackage.Path);
             RefreshCreateItemFileList();
         }
         
@@ -1331,6 +1333,7 @@ namespace Barotrauma
                     OnClicked = (btn, userdata) =>
                     {
                         itemContentPackage.RemoveFile(contentFile);
+                        itemContentPackage.Save(itemContentPackage.Path);
                         RefreshCreateItemFileList();
                         return true;
                     }
@@ -1346,7 +1349,7 @@ namespace Barotrauma
         {
             if (itemContentPackage == null || itemEditor == null) return;
             
-            SteamManager.StartPublishItem(itemContentPackage, itemEditor);
+            SteamManager.StartPublishItem(itemContentPackage, itemEditor);            
             CoroutineManager.StartCoroutine(WaitForPublish(itemEditor), "WaitForPublish");
         }
 
