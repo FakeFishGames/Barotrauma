@@ -452,7 +452,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (listBox != publishedItemList && SteamManager.CheckWorkshopItemEnabled(item) && !SteamManager.CheckWorkshopItemUpToDate(item))
+                if (Rand.Range(0.0f, 1.0f) < 0.5f)//listBox != publishedItemList && SteamManager.CheckWorkshopItemEnabled(item) && !SteamManager.CheckWorkshopItemUpToDate(item))
                 {
                     new GUIButton(new RectTransform(new Vector2(0.4f, 0.5f), rightColumn.RectTransform, Anchor.BottomLeft), text: TextManager.Get("WorkshopItemUpdate"))
                     {
