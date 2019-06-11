@@ -285,7 +285,7 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
-        public bool IsFullCondition => Condition >= MaxCondition;
+        public bool IsFullCondition => MathUtils.NearlyEqual(Condition, MaxCondition);
         public float MaxCondition => Prefab.Health;
         public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
 
@@ -304,6 +304,7 @@ namespace Barotrauma
                 if (Indestructible) return;
 
                 float prev = condition;
+
                 condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
                 if (condition == 0.0f && prev > 0.0f)
                 {
