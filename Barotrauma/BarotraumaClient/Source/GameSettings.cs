@@ -201,15 +201,33 @@ namespace Barotrauma
 #endif
                 supportedDisplayModes.Add(mode);
             }
+            supportedDisplayModes.Sort((a, b) =>
+            {
+                if (a.Height < b.Height)
+                {
+                    return -1;
+                }
+                if (a.Height > b.Height)
+                {
+                    return 1;
+                }
+                if (a.Width < b.Width)
+                {
+                    return -1;
+                }
+                if (a.Width > b.Width)
+                {
+                    return 1;
+                }
+                return 0;
+            });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
             {
                 OnSelected = SelectResolution,
-#if !LINUX
-                ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
-#endif
-        };
+                ButtonEnabled = GameMain.Config.WindowMode != WindowMode.BorderlessWindowed
+            };
 
             foreach (DisplayMode mode in supportedDisplayModes)
             {
@@ -225,6 +243,25 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+
+            displayModeDD.OnSelected = (guiComponent, obj) =>
+            {
+                UnsavedSettings = true;
+                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode != WindowMode.BorderlessWindowed;
+                GameMain.Instance.ApplyGraphicsSettings();
+                if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+                {
+                    GraphicsWidth = GameMain.GraphicsWidth;
+                    GraphicsHeight = GameMain.GraphicsHeight;
+                    var displayMode = supportedDisplayModes.Find(m => m.Width == GameMain.GraphicsWidth && m.Height == GameMain.GraphicsHeight);
+                    if (displayMode != null)
+                    {
+                        resolutionDD.SelectItem(displayMode);
+                    }
+                }
+                return true;
+            };
 
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
@@ -242,15 +279,6 @@ namespace Barotrauma
                 displayModeDD.SelectItem(GameMain.Config.WindowMode);
             }
 #endif
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                UnsavedSettings = true;
-                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
-#if !LINUX
-                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed;
-#endif
-                return true;
-            };
 
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableVSync"))
             {
@@ -1024,12 +1052,12 @@ namespace Barotrauma
 
             SettingsFrame.Flash(Color.Green);
 
-            if (GameMain.WindowMode != GameMain.Config.WindowMode)
+            if (GameMain.WindowMode != GameMain.Config.WindowMode || GameMain.Config.GraphicsWidth != GameMain.GraphicsWidth || GameMain.Config.GraphicsHeight != GameMain.GraphicsHeight)
             {
                 GameMain.Instance.ApplyGraphicsSettings();
             }
 
-            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
+            /*if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
 #if OSX
                 if (GameMain.Config.WindowMode != WindowMode.BorderlessWindowed)
@@ -1039,7 +1067,7 @@ namespace Barotrauma
 #if OSX
                 }
 #endif
-            }
+            }*/
         }
 
         private bool ApplyClicked(GUIButton button, object userData)
