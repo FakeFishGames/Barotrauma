@@ -1519,10 +1519,9 @@ namespace Barotrauma
             if (inventory.Owner is Item)
             {
                 var owner = (Item)inventory.Owner;
-                if (!CanInteractWith(owner))
-                {
-                    return false;
-                }
+                if (!CanInteractWith(owner)) { return false; }
+                ItemContainer container = owner.GetComponents<ItemContainer>().FirstOrDefault(ic => ic.Inventory == inventory);
+                if (container != null && !container.HasRequiredItems(this, addMessage: false)) { return false; }
             }
             return true;
         }
