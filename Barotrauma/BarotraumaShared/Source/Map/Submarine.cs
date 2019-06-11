@@ -365,7 +365,9 @@ namespace Barotrauma
                         {
                             using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
                             {
-                                PreviewImage = new Sprite(TextureLoader.FromStream(mem, preMultiplyAlpha: false), null, null);
+                                var texture = TextureLoader.FromStream(mem, preMultiplyAlpha: false, path: filePath);
+                                if (texture == null) { throw new Exception("PreviewImage texture returned null"); }
+                                PreviewImage = new Sprite(texture, null, null);
                             }
                         }
                         catch (Exception e)

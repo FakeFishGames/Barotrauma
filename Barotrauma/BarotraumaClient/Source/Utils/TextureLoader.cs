@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
@@ -63,7 +63,7 @@ namespace Barotrauma
             {
                 using (Stream fileStream = File.OpenRead(path))
                 {
-                    return FromStream(fileStream, preMultiplyAlpha);
+                    return FromStream(fileStream, preMultiplyAlpha, path);
                 }
 
             }
@@ -74,12 +74,22 @@ namespace Barotrauma
             }
         }
 
-        public static Texture2D FromStream(Stream fileStream, bool preMultiplyAlpha = true)
+        public static Texture2D FromStream(Stream fileStream, bool preMultiplyAlpha = true, string path=null)
         {
             try
             {
-                int width; int height; int channels;
-                var textureData = Texture2D.TextureDataFromStream(fileStream, out width, out height, out channels);
+                int width = 0; int height = 0; int channels = 0;
+                byte[] textureData = null;
+                Task loadTask = Task.Run(() =>
+                {
+                    textureData = Texture2D.TextureDataFromStream(fileStream, out width, out height, out channels);
+                });
+                bool success = loadTask.Wait(10000);
+                if (!success)
+                {
+                    DebugConsole.ThrowError("Failed to load texture data from " + (path ?? "stream") + ": timed out");
+                    return null;
+                }
                 if (preMultiplyAlpha)
                 {
                     PreMultiplyAlpha(ref textureData);
