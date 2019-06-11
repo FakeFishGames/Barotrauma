@@ -93,6 +93,10 @@ namespace Barotrauma.Networking
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
+            if (name.Length > NetConfig.ServerNameMaxLength)
+            {
+                name = name.Substring(0, NetConfig.ServerNameMaxLength);
+            }
             
             this.name = name;
             
