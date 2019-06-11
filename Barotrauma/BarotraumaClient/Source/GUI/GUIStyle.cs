@@ -40,6 +40,9 @@ namespace Barotrauma
             {
                 ToolBox.IsProperFilenameCase(file);
                 doc = XDocument.Load(file, LoadOptions.SetBaseUri);
+                if (doc == null) { throw new Exception("doc is null"); }
+                if (doc.Root == null) { throw new Exception("doc.Root is null"); }
+                if (doc.Root.Elements() == null) { throw new Exception("doc.Root.Elements() is null"); }
             }
             catch (Exception e)
             {
@@ -113,26 +116,34 @@ namespace Barotrauma
 
         private void RescaleFonts()
         {
+            if (configElement == null) { return; }
+            if (configElement.Elements() == null) { return; }
             foreach (XElement subElement in configElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "font":
+                        if (Font == null) { continue; }
                         Font.Size = GetFontSize(subElement);
                         break;
                     case "smallfont":
+                        if (SmallFont == null) { continue; }
                         SmallFont.Size = GetFontSize(subElement);
                         break;
                     case "largefont":
+                        if (LargeFont == null) { continue; }
                         LargeFont.Size = GetFontSize(subElement);
                         break;
                     case "objectivetitle":
+                        if (ObjectiveTitleFont == null) { continue; }
                         ObjectiveTitleFont.Size = GetFontSize(subElement);
                         break;
                     case "objectivename":
+                        if (ObjectiveNameFont == null) { continue; }
                         ObjectiveNameFont.Size = GetFontSize(subElement);
                         break;
                     case "videotitle":
+                        if (VideoTitleFont == null) { continue; }
                         VideoTitleFont.Size = GetFontSize(subElement);
                         break;
                 }
