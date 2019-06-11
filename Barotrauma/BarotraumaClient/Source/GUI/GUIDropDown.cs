@@ -148,7 +148,14 @@ namespace Barotrauma
             //find the parent GUIListBox highest in the hierarchy
             for (int i = parentHierarchy.Count - 1; i >= 0; i--)
             {
-                if (parentHierarchy[i].GUIComponent is GUIListBox) return parentHierarchy[i]?.Parent ?? parentHierarchy[i];
+                if (parentHierarchy[i].GUIComponent is GUIListBox)
+                {
+                    if (parentHierarchy[i].Parent != null && parentHierarchy[i].Parent.GUIComponent != null)
+                    {
+                        return parentHierarchy[i].Parent;
+                    }
+                    return parentHierarchy[i];
+                }
             }
             //or just go with the direct parent if there are no listboxes in the hierarchy
             parentHierarchy.Clear();
