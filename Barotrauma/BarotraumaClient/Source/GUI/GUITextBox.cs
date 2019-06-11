@@ -58,7 +58,6 @@ namespace Barotrauma
 
         private bool isSelecting;
         private string selectedText = string.Empty;
-        private string clipboard = string.Empty;
         private int selectedCharacters;
         private int selectionStartIndex;
         private int selectionEndIndex;
@@ -777,11 +776,7 @@ namespace Barotrauma
 
         private void CopySelectedText()
         {
-#if WINDOWS
-            System.Windows.Clipboard.SetText(selectedText);
-#else
-            clipboard = selectedText;
-#endif
+            Clipboard.SetText(selectedText);
         }
 
         private void ClearSelection()
@@ -795,11 +790,8 @@ namespace Barotrauma
         private string GetCopiedText()
         {
             string t;
-#if WINDOWS
-            t = System.Windows.Clipboard.GetText();
-#else
-            t = clipboard;
-#endif
+            t = Clipboard.GetText();
+
             return t;
         }
 

@@ -318,7 +318,7 @@ namespace Barotrauma
                     if (!(mp is ItemPrefab)) continue;
                     sb.AppendLine(mp.Name);
                 }
-                System.Windows.Clipboard.SetText(sb.ToString());
+                Clipboard.SetText(sb.ToString());
             }));
 #endif
 

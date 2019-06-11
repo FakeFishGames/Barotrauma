@@ -4,7 +4,6 @@ using Barotrauma.Particles;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using System.Windows;
 using System.Xml;
 using System.Text;
 

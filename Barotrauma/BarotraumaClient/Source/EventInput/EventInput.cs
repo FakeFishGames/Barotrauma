@@ -100,7 +100,7 @@ namespace EventInput
             {
                 return;
             }
-
+            
             window.TextInput += ReceiveInput;
 
             initialized = true;
