@@ -367,14 +367,19 @@ namespace Barotrauma
                         foreach (MapEntity e in newSelection)
                         {
                             if (selectedList.Contains(e))
-                                selectedList.Remove(e);
+                            {
+                                RemoveSelection(e);
+                            }
                             else
-                                selectedList.Add(e);
+                            {
+                                AddSelection(e);
+                            }
                         }
                     }
                     else
                     {
-                        selectedList = newSelection;
+                        selectedList.Clear();
+                        newSelection.ForEach(e => AddSelection(e));
                     }
 
                     //select wire if both items it's connected to are selected
@@ -457,9 +462,13 @@ namespace Barotrauma
                     PlayerInput.KeyDown(Keys.RightControl))
                 {
                     if (selectedList.Contains(entity))
-                        selectedList.Remove(entity);
+                    {
+                        RemoveSelection(entity);
+                    }
                     else
-                        selectedList.Add(entity);
+                    {
+                        AddSelection(entity);
+                    }
                 }
                 else
                 {
@@ -468,6 +477,45 @@ namespace Barotrauma
 
                 return true;
             };
+        }
+
+        public static void AddSelection(MapEntity entity)
+        {
+            if (selectedList.Contains(entity)) { return; }
+            selectedList.Add(entity);
+            if (entity is Item i)
+            {
+                var door = i.GetComponent<Door>();
+                if (door != null)
+                {
+                    var gap = door.LinkedGap;
+                    if (gap != null)
+                    {
+                        door.RefreshLinkedGap();
+                        if (!selectedList.Contains(gap))
+                        {
+                            selectedList.Add(gap);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void RemoveSelection(MapEntity entity)
+        {
+            selectedList.Remove(entity);
+            if (entity is Item i)
+            {
+                var door = i.GetComponent<Door>();
+                if (door != null)
+                {
+                    var gap = door.LinkedGap;
+                    if (gap != null)
+                    {
+                        selectedList.Remove(gap);
+                    }
+                }
+            }
         }
         
         static partial void UpdateAllProjSpecific(float deltaTime)
@@ -533,8 +581,11 @@ namespace Barotrauma
             }
         }
 
+        public static List<MapEntity> FilteredSelectedList { get; private set; } = new List<MapEntity>();
+
         public static void UpdateEditor(Camera cam)
         {
+            FilteredSelectedList.Clear();
             if (highlightedListBox != null) highlightedListBox.UpdateManually((float)Timing.Step);
 
             if (editingHUD != null)
@@ -552,13 +603,18 @@ namespace Barotrauma
             }
 
             if (selectedList.Count == 0) return;
-
-            if (selectedList.Count == 1)
+            foreach (var e in selectedList)
             {
-                selectedList[0].UpdateEditing(cam);
-                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
+                if (e is Gap) { continue; }
+                FilteredSelectedList.Add(e);
+            }
+            var first = FilteredSelectedList.FirstOrDefault();
+            if (first != null)
+            {
+                first.UpdateEditing(cam);
+                if (first.ResizeHorizontal || first.ResizeVertical)
                 {
-                    selectedList[0].UpdateResizing(cam);
+                    first.UpdateResizing(cam);
                 }
             }
 
@@ -622,12 +678,10 @@ namespace Barotrauma
             selectedList.Clear();
         }
 
-
         public static void SelectEntity(MapEntity entity)
         {
             DeselectAll();
-
-            selectedList.Add(entity);
+            AddSelection(entity);
         }
 
         /// <summary>
