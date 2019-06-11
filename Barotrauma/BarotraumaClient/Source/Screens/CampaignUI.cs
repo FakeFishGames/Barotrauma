@@ -437,42 +437,48 @@ namespace Barotrauma
 
             if (characterPreviewFrame != null)
             {
-                characterPreviewFrame.Parent.RemoveChild(characterPreviewFrame);
+                characterPreviewFrame.Parent?.RemoveChild(characterPreviewFrame);
                 characterPreviewFrame = null;
             }
             
-            if (Campaign is SinglePlayerCampaign)
+            if (characterList != null)
             {
-                var hireableCharacters = location.GetHireableCharacters();
-                foreach (GUIComponent child in characterList.Content.Children.ToList())
+                if (Campaign is SinglePlayerCampaign)
                 {
-                    if (child.UserData is CharacterInfo character)
+                    var hireableCharacters = location.GetHireableCharacters();
+                    foreach (GUIComponent child in characterList.Content.Children.ToList())
                     {
-                        if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
+                        if (child.UserData is CharacterInfo character)
+                        {
+                            if (GameMain.GameSession.CrewManager != null)
+                            {
+                                if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
+                            }
+                        }
+                        else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
+                        {
+                            continue;
+                        }
+                        characterList.RemoveChild(child);
                     }
-                    else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
+                    if (!hireableCharacters.Any())
                     {
-                        continue;
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
+                        {
+                            CanBeFocused = false
+                        };
                     }
-                    characterList.RemoveChild(child);
-                }
-                if (!hireableCharacters.Any())
-                {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
+                    else
                     {
-                        CanBeFocused = false
-                    };
-                }
-                else
-                {
-                    foreach (CharacterInfo c in hireableCharacters)
-                    {
-                        var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
-                        new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                        foreach (CharacterInfo c in hireableCharacters)
+                        {
+                            var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
+                            new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                        }
                     }
                 }
+                characterList.UpdateScrollBarSize();
             }
-            characterList.UpdateScrollBarSize();
 
             RefreshMyItems();
 
