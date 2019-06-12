@@ -1668,7 +1668,13 @@ namespace Barotrauma
             Point elementSize = new Point(120, 20);
             int textAreaHeight = 20;
             // General controls
-            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerArea.RectTransform, Anchor.TopRight), style: null) { CanBeFocused = false };
+            backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerArea.RectTransform, Anchor.TopRight)
+            {
+                AbsoluteOffset = new Point(10, 0)
+            }, style: null)
+            {
+                CanBeFocused = false
+            };
             // Background color
             var frame = new GUIFrame(new RectTransform(new Point(500, 80), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, GetCharacterEditorTranslation("BackgroundColor") + ":", textColor: Color.WhiteSmoke);
