@@ -382,7 +382,6 @@ namespace Barotrauma
 
             DockedTo = new List<Submarine>();
 
-            ID = ushort.MaxValue;
             FreeID();
         }
 
@@ -1405,7 +1404,7 @@ namespace Barotrauma
             }
 
 
-            ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
+            ID = (ushort)(ushort.MaxValue - 1 - Submarine.loaded.IndexOf(this));
         }
 
         public static Submarine Load(XElement element, bool unloadPrevious)
