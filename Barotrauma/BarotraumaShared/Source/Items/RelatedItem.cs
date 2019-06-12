@@ -17,7 +17,8 @@ namespace Barotrauma
         }
 
         public bool IsOptional { get; set; }
-        
+        public bool MatchOnEmpty { get; set; }
+
         public bool IgnoreInEditor { get; set; }
 
         private string[] excludedIdentifiers;
@@ -98,6 +99,11 @@ namespace Barotrauma
 
                     var containedItems = parentItem.ContainedItems;
                     if (containedItems == null) return false;
+
+                    if (MatchOnEmpty && !containedItems.Any(ci => ci != null))
+                    {
+                        return true;
+                    }
 
                     foreach (Item contained in containedItems)
                     {
@@ -222,6 +228,7 @@ namespace Barotrauma
 
             ri.IsOptional = element.GetAttributeBool("optional", false);
             ri.IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
+            ri.MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
             return ri;
         }
     }
