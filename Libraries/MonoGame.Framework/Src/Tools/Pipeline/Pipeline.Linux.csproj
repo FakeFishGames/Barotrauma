@@ -1,0 +1,684 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{65706950-696C-656E-2E4C-696E75785069}</ProjectGuid>
+    <ApplicationIcon>App.ico</ApplicationIcon>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MonoGame.Tools.Pipeline</RootNamespace>
+    <AssemblyName>Pipeline</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>1591,0436</NoWarn>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    <LangVersion>Default</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <DebugType>full</DebugType>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+    <OutputPath>bin\Linux\AnyCPU\Debug</OutputPath>
+    <IntermediateOutputPath>obj\Linux\AnyCPU\Debug</IntermediateOutputPath>
+    <DocumentationFile>bin\Linux\AnyCPU\Debug\Pipeline.xml</DocumentationFile>
+    <DefineConstants>DEBUG;TRACE;LINUX;GTK3</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <OutputPath>bin\Linux\AnyCPU\Release</OutputPath>
+    <IntermediateOutputPath>obj\Linux\AnyCPU\Release</IntermediateOutputPath>
+    <DocumentationFile>bin\Linux\AnyCPU\Release\Pipeline.xml</DocumentationFile>
+    <DefineConstants>TRACE;LINUX;GTK3</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Eto.Forms">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\Eto.dll</HintPath>
+    </Reference>
+    <Reference Include="Eto.Gtk">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\Eto.Gtk.dll</HintPath>
+    </Reference>
+    <Reference Include="AtkSharp">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\AtkSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="CairoSharp">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\CairoSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="GdkSharp">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\GdkSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="GioSharp">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\GioSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="GLibSharp">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\GLibSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="GtkSharp">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\GtkSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="PangoSharp">
+      <HintPath>..\..\ThirdParty\Dependencies\Eto\PangoSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Numerics">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Globalization.Extensions">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Globalization.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Json">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.Serialization.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Dynamic.Runtime">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Dynamic.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.MemoryMappedFiles">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.MemoryMappedFiles.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.ReaderWriter">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Xml.ReaderWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Csp">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.Cryptography.Csp.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Extensions">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Reflection.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.FileSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.InteropServices.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.EventBasedAsync">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.ComponentModel.EventBasedAsync.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Queryable">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Linq.Queryable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.Serialization.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Threading.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Reader">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Resources.Reader.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.Compression.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.FileSystem.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.X509Certificates">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Parallel">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Linq.Parallel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Parallel">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Threading.Tasks.Parallel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.Cryptography.Encoding.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.ComponentModel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.NetworkInformation">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.NetworkInformation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.ResourceManager">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Resources.ResourceManager.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XmlSerializer">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Xml.XmlSerializer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.WebSockets">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.WebSockets.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Expressions">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Linq.Expressions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ObjectModel">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.ObjectModel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Threading.Tasks.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Claims">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.Claims.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.Principal.dll</HintPath>
+    </Reference>
+    <Reference Include="System.AppContext">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.AppContext.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.UnmanagedMemoryStream">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.UnmanagedMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="netstandard">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\netstandard.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.RegularExpressions">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Text.RegularExpressions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.WebSockets.Client">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.WebSockets.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Handles">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.Handles.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Console">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Process">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.Process.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.NonGeneric">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Collections.NonGeneric.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.StackTrace">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.StackTrace.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.FileVersionInfo">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.FileVersionInfo.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.TextWriterTraceListener">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.TextWriterTraceListener.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Ping">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.Ping.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.Common">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Data.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Sockets">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.Sockets.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Security">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Globalization">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Globalization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Contracts">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Reflection.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Watcher">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.FileSystem.Watcher.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.SecureString">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.SecureString.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.Cryptography.Algorithms.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Drawing.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.VisualC">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.CompilerServices.VisualC.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Debug">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.Debug.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.ThreadPool">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Threading.ThreadPool.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XPath">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Xml.XPath.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\Microsoft.Win32.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Overlapped">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Threading.Overlapped.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XmlDocument">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Xml.XmlDocument.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XDocument">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Xml.XDocument.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Writer">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Resources.Writer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Concurrent">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Collections.Concurrent.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.NameResolution">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.NameResolution.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Formatters">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.Serialization.Formatters.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.TypeConverter">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.ComponentModel.TypeConverter.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipes">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.Pipes.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression.ZipFile">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.Compression.ZipFile.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Thread">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Threading.Thread.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Requests">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.Requests.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Extensions">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.DriveInfo">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.FileSystem.DriveInfo.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XPath.XDocument">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Xml.XPath.XDocument.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Timer">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Threading.Timer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.WebHeaderCollection">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Net.WebHeaderCollection.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encoding.Extensions">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Text.Encoding.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Specialized">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Collections.Specialized.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Globalization.Calendars">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Globalization.Calendars.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encoding">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Text.Encoding.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Security.Cryptography.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Xml">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Runtime.Serialization.Xml.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.TraceSource">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.TraceSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.IsolatedStorage">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.IO.IsolatedStorage.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Tools">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.Tools.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Primitives">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.ComponentModel.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Tracing">
+      <HintPath>..\..\ThirdParty\Dependencies\NETStandard.Library.NETFramework\net461\System.Diagnostics.Tracing.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\MGCB\CommandLineParser.cs">
+      <Link>Common\CommandLineParser.cs</Link>
+    </Compile>
+    <Compile Include="Common\ActionStack.cs" />
+    <Compile Include="Common\ContentItem.cs" />
+    <Compile Include="Common\ContentItem.Importer.cs" />
+    <Compile Include="Common\ContentItem.Processor.cs" />
+    <Compile Include="Common\ContentItemTemplate.cs" />
+    <Compile Include="Common\DirectoryItem.cs" />
+    <Compile Include="Common\FileType.cs" />
+    <Compile Include="Common\ProjectState.cs" />
+    <Compile Include="Common\PipelineController.MoveAction.cs" />
+    <Compile Include="Common\PipelineController.ExcludeAction.cs" />
+    <Compile Include="Common\PipelineController.IncludeAction.cs" />
+    <Compile Include="Common\PipelineController.UpdateProcessorAction.cs" />
+    <Compile Include="Common\PipelineController.UpdatePropertyAction.cs" />
+    <Compile Include="Common\PipelineSettings.cs" />
+    <Compile Include="Common\IController.cs" />
+    <Compile Include="Common\IncludeItem.cs" />
+    <Compile Include="Common\IProjectAction.cs" />
+    <Compile Include="Common\IProjectItem.cs" />
+    <Compile Include="Common\IProjectObserver.cs" />
+    <Compile Include="Common\IView.cs" />
+    <Compile Include="Common\MenuInfo.cs" />
+    <Compile Include="Common\OutputParser.cs" />
+    <Compile Include="Common\PipelineProjectParser.cs" />
+    <Compile Include="Common\Util.cs" />
+    <Compile Include="Common\StringExtensions.cs" />
+    <Compile Include="Common\CustomPropertyDescriptors.cs" />
+    <Compile Include="Common\PipelineController.cs" />
+    <Compile Include="Common\PipelineProject.cs" />
+    <Compile Include="Common\PipelineTypes.cs" />
+    <Compile Include="Common\Extensions.cs" />
+    <Compile Include="Global.cs" />
+    <Compile Include="MainWindow.cs" />
+    <Compile Include="MainWindow.eto.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LogWindow.cs" />
+    <Compile Include="LogWindow.eto.cs">
+      <DependentUpon>LogWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Global.Linux.cs">
+      <DependentUpon>Global.cs</DependentUpon>
+      <Platforms>Linux</Platforms>
+    </Compile>
+    <Compile Include="Styles.Linux.cs">
+      <Platforms>Linux</Platforms>
+    </Compile>
+    <Compile Include="Controls\PropertyCells\CellBase.cs" />
+    <Compile Include="Controls\PropertyCells\CellBool.cs" />
+    <Compile Include="Controls\PropertyCells\CellChar.cs" />
+    <Compile Include="Controls\PropertyCells\CellColor.cs" />
+    <Compile Include="Controls\PropertyCells\CellCombo.cs" />
+    <Compile Include="Controls\PropertyCells\CellNumber.cs" />
+    <Compile Include="Controls\PropertyCells\CellPath.cs" />
+    <Compile Include="Controls\PropertyCells\CellRefs.cs" />
+    <Compile Include="Controls\PropertyCells\CellText.cs" />
+    <Compile Include="Controls\BuildItem.cs" />
+    <Compile Include="Controls\DrawInfo.cs" />
+    <Compile Include="Controls\Pad.cs" />
+    <Compile Include="Controls\Pad.eto.cs">
+      <DependentUpon>Pad.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BuildOutput.cs" />
+    <Compile Include="Controls\BuildOutput.eto.cs">
+      <DependentUpon>BuildOutput.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PropertyGridControl.cs" />
+    <Compile Include="Controls\PropertyGridControl.eto.cs">
+      <DependentUpon>PropertyGridControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PropertyGridTable.cs" />
+    <Compile Include="Controls\PropertyGridTable.eto.cs">
+      <DependentUpon>PropertyGridTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ProjectControl.eto.cs" />
+    <Compile Include="Dialogs\AddItemDialog.cs" />
+    <Compile Include="Dialogs\AddItemDialog.eto.cs">
+      <DependentUpon>AddItemDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\DeleteDialog.cs" />
+    <Compile Include="Dialogs\DeleteDialog.eto.cs">
+      <DependentUpon>DeleteDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\EditDialog.cs" />
+    <Compile Include="Dialogs\EditDialog.eto.cs">
+      <DependentUpon>EditDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\NewItemDialog.cs" />
+    <Compile Include="Dialogs\NewItemDialog.eto.cs">
+      <DependentUpon>NewItemDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\PathDialog.cs" />
+    <Compile Include="Dialogs\PathDialog.eto.cs">
+      <DependentUpon>PathDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ReferenceDialog.cs" />
+    <Compile Include="Dialogs\ReferenceDialog.eto.cs">
+      <DependentUpon>ReferenceDialog.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Templates\Effect.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\Effect.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\Effect.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\SpriteEffect.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\SpriteEffect.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\Xml.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\XmlContent.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\XmlContent.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\Font.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\SpriteFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\SpriteFont.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\LocalizedSpriteFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\LocalizedSpriteFont.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MainWindow.glade">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+      <LogicalName>MainWindow.glade</LogicalName>
+      <Platforms>Linux</Platforms>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AppMenu.glade">
+      <LogicalName>AppMenu.glade</LogicalName>
+      <Platforms>Linux</Platforms>
+    </EmbeddedResource>
+    <EmbeddedResource Include="App.ico" />
+    <EmbeddedResource Include="Icons\monogame.png">
+      <LogicalName>Icons.monogame.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Settings.png">
+      <LogicalName>Icons.Settings.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\LICENSE.txt">
+      <Link>LICENSE.txt</Link>
+      <LogicalName>LICENSE.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\TreeView\Root.png">
+      <LogicalName>TreeView.Root.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\TreeView\File.png">
+      <LogicalName>TreeView.File.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\TreeView\Folder.png">
+      <LogicalName>TreeView.Folder.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\TreeView\Link.png">
+      <LogicalName>TreeView.Link.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\EndFailed.png">
+      <LogicalName>Build.EndFailed.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\EndSucceed.png">
+      <LogicalName>Build.EndSucceed.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\Fail.png">
+      <LogicalName>Build.Fail.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\Information.png">
+      <LogicalName>Build.Information.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\Processing.png">
+      <LogicalName>Build.Processing.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\Skip.png">
+      <LogicalName>Build.Skip.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\Start.png">
+      <LogicalName>Build.Start.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\Succeed.png">
+      <LogicalName>Build.Succeed.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Build\SucceedWithWarnings.png">
+      <LogicalName>Build.SucceedWithWarnings.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Build.png">
+      <LogicalName>Commands.Build.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\CancelBuild.png">
+      <LogicalName>Commands.CancelBuild.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Clean.png">
+      <LogicalName>Commands.Clean.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Close.png">
+      <LogicalName>Commands.Close.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Delete.png">
+      <LogicalName>Commands.Delete.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\ExistingFolder.png">
+      <LogicalName>Commands.ExistingFolder.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\ExistingItem.png">
+      <LogicalName>Commands.ExistingItem.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Help.png">
+      <LogicalName>Commands.Help.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\New.png">
+      <LogicalName>Commands.New.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\NewFolder.png">
+      <LogicalName>Commands.NewFolder.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\NewItem.png">
+      <LogicalName>Commands.NewItem.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Open.png">
+      <LogicalName>Commands.Open.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\OpenItem.png">
+      <LogicalName>Commands.OpenItem.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Rebuild.png">
+      <LogicalName>Commands.Rebuild.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Redo.png">
+      <LogicalName>Commands.Redo.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Rename.png">
+      <LogicalName>Commands.Rename.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Save.png">
+      <LogicalName>Commands.Save.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\SaveAs.png">
+      <LogicalName>Commands.SaveAs.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Icons\Commands\Undo.png">
+      <LogicalName>Commands.Undo.png</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <_PostBuildHookTimestamp>@(IntermediateAssembly-&gt;'%(FullPath).timestamp')</_PostBuildHookTimestamp>
+    <_PostBuildHookHostPlatform>$(Platform)</_PostBuildHookHostPlatform>
+  </PropertyGroup>
+  <Target Name="PostBuildHooks" Inputs="@(IntermediateAssembly);@(ReferencePath)" Outputs="@(IntermediateAssembly);$(_PostBuildHookTimestamp)" AfterTargets="CoreCompile" BeforeTargets="AfterCompile">
+    <Touch Files="$(_PostBuildHookTimestamp)" AlwaysCreate="True" />
+  </Target>
+  <Import Project="Pipeline.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\MonoGame.Framework\MonoGame.Framework.Linux.csproj">
+      <Project>{35253CE1-C864-4CD3-8249-4D1319748E8F}</Project>
+      <Name>MonoGame.Framework.Linux</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\MonoGame.Framework.Content.Pipeline\MonoGame.Framework.Content.Pipeline.Linux.csproj">
+      <Project>{57696462-CE5E-4BC5-80AB-1B959E2420EA}</Project>
+      <Name>MonoGame.Framework.Content.Pipeline.Linux</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MGCB\MGCB.Linux.csproj">
+      <Project>{4243474D-4C2E-6E69-7578-4D4743422E4C}</Project>
+      <Name>MGCB.Linux</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MonoGame.Build.Tasks\MonoGame.Build.Tasks.Linux.csproj">
+      <Project>{E2D9E2AE-AD75-D3D6-A3BA-75696C642E54}</Project>
+      <Name>MonoGame.Build.Tasks.Linux</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties><Policies>
+  <TextStylePolicy inheritsSet="VisualStudio" inheritsScope="text/plain" scope="text/x-csharp" />
+  <CSharpFormattingPolicy IndentSwitchSection="True" NewLinesForBracesInProperties="True" NewLinesForBracesInAccessors="True" NewLinesForBracesInAnonymousMethods="True" NewLinesForBracesInControlBlocks="True" NewLinesForBracesInAnonymousTypes="True" NewLinesForBracesInObjectCollectionArrayInitializers="True" NewLinesForBracesInLambdaExpressionBody="True" NewLineForElse="True" NewLineForCatch="True" NewLineForFinally="True" NewLineForMembersInObjectInit="True" NewLineForMembersInAnonymousTypes="True" NewLineForClausesInQuery="True" SpacingAfterMethodDeclarationName="False" SpaceAfterMethodCallName="False" SpaceBeforeOpenSquareBracket="False" inheritsSet="Mono" inheritsScope="text/x-csharp" scope="text/x-csharp" />
+</Policies>
+</Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>
