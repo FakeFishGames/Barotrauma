@@ -478,60 +478,6 @@ namespace Barotrauma
                 return true;
             };
         }
-
-        public static void AddSelection(MapEntity entity)
-        {
-            if (selectedList.Contains(entity)) { return; }
-            selectedList.Add(entity);
-            HandleDoorGapLinks(entity, 
-                onGapFound: (door, gap) =>
-                {
-                    door.RefreshLinkedGap();
-                    if (!selectedList.Contains(gap))
-                    {
-                        selectedList.Add(gap);
-                    }
-                }, 
-                onDoorFound: (door, gap) => 
-                {
-                    if (!selectedList.Contains(door.Item))
-                    {
-                        selectedList.Add(door.Item);
-                    }
-                });
-        }
-
-        private static void HandleDoorGapLinks(MapEntity entity, Action<Door, Gap> onGapFound, Action<Door, Gap> onDoorFound)
-        {
-            if (entity is Item i)
-            {
-                var door = i.GetComponent<Door>();
-                if (door != null)
-                {
-                    var gap = door.LinkedGap;
-                    if (gap != null)
-                    {
-                        onGapFound(door, gap);
-                    }
-                }
-            }
-            else if (entity is Gap gap)
-            {
-                var door = gap.ConnectedDoor;
-                if (door != null)
-                {
-                    onDoorFound(door, gap);
-                }
-            }
-        }
-
-        public static void RemoveSelection(MapEntity entity)
-        {
-            selectedList.Remove(entity);
-            HandleDoorGapLinks(entity,
-                onGapFound: (door, gap) => selectedList.Remove(gap),
-                onDoorFound: (door, gap) => selectedList.Remove(door.Item));
-        }
         
         static partial void UpdateAllProjSpecific(float deltaTime)
         {
@@ -604,7 +550,24 @@ namespace Barotrauma
 
             if (editingHUD != null)
             {
-                if (FilteredSelectedList.Count == 0 || editingHUD.UserData != FilteredSelectedList[0])
+                if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
+                {
+                    foreach (GUIComponent component in editingHUD.Children)
+                    {
+                        var textBox = component as GUITextBox;
+                        if (textBox == null) continue;
+                        textBox.Deselect();
+                    }
+                    editingHUD = null;
+                }
+            }
+
+            if (selectedList.Count == 0) return;
+
+            if (editingHUD != null)
+            {
+                selectedList[0].UpdateEditing(cam);
+                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
                 {
                     foreach (GUIComponent component in editingHUD.Children)
                     {

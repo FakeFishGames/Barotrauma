@@ -167,8 +167,7 @@ namespace Barotrauma
                         RewriteInputToCommandLine(input);
                     }
                     
-                    //TODO: be more clever about it
-                    Thread.Sleep(10); //sleep for 10ms to not pin the CPU super hard
+                    Thread.Yield();
                 }
             }
             catch (ThreadAbortException)

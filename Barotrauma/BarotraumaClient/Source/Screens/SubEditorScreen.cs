@@ -2109,7 +2109,10 @@ namespace Barotrauma
         
         public override void AddToGUIUpdateList()
         {
-            MapEntity.FilteredSelectedList.FirstOrDefault()?.AddToGUIUpdateList();
+            if (MapEntity.SelectedList.Count == 1)
+            {
+                MapEntity.SelectedList[0].AddToGUIUpdateList();
+            }
             if (MapEntity.HighlightedListBox != null)
             {
                 MapEntity.HighlightedListBox.AddToGUIUpdateList();
@@ -2290,9 +2293,9 @@ namespace Barotrauma
                         dummyCharacter.SelectedConstruction = null;
                     }*/
                 }
-                else if (MapEntity.FilteredSelectedList.Count == 1)
+                else if (MapEntity.SelectedList.Count == 1)
                 {
-                    (MapEntity.FilteredSelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
+                    (MapEntity.SelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                 }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);

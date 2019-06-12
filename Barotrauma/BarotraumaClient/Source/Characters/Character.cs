@@ -442,8 +442,7 @@ namespace Barotrauma
                 if (draggingItemToWorld)
                 {
                     if (item.OwnInventory == null || 
-                        !item.OwnInventory.CanBePut(CharacterInventory.draggingItem) ||
-                        !CanAccessInventory(item.OwnInventory))
+                        !item.OwnInventory.CanBePut(CharacterInventory.draggingItem))
                     {
                         continue;
                     }

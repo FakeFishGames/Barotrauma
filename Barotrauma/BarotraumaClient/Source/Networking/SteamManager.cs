@@ -594,15 +594,8 @@ namespace Barotrauma.Steam
             }
 
             SaveUtil.ClearFolder(WorkshopItemStagingFolder);
+            Directory.Delete(WorkshopItemStagingFolder);
             File.Delete(PreviewImageName);
-            try
-            {
-                Directory.Delete(WorkshopItemStagingFolder);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to delete Workshop item staging folder.", e);
-            }
 
             yield return CoroutineStatus.Success;
         }
@@ -934,50 +927,28 @@ namespace Barotrauma.Steam
         {
             if (instance == null || !instance.isInitialized) { return false; }
 
-            bool? itemsUpdated = null;
-            bool timedOut = false;
-            var query = instance.client.Workshop.CreateQuery();
-            query.FileId = new List<ulong>(instance.client.Workshop.GetSubscribedItemIds());
-            query.UploaderAppId = AppID;
-            query.Run();
-            query.OnResult = (Workshop.Query q) =>
+            bool itemsUpdated = false;
+            foreach (ulong subscribedItemId in instance.client.Workshop.GetSubscribedItemIds())
             {
-                if (timedOut) { return; }
-                itemsUpdated = false;
-                foreach (var item in q.Items)
+                //TODO: fix this, GetItem doesn't query item.Modified
+                var item = instance.client.Workshop.GetItem(subscribedItemId);
+                if (item.Installed && CheckWorkshopItemEnabled(item) && !CheckWorkshopItemUpToDate(item))
                 {
-                    if (item.Installed && CheckWorkshopItemEnabled(item) && !CheckWorkshopItemUpToDate(item))
+                    if (!UpdateWorkshopItem(item, out string errorMsg))
                     {
-                        if (!UpdateWorkshopItem(item, out string errorMsg))
-                        {
-                            DebugConsole.ThrowError(errorMsg);
-                            new GUIMessageBox(
-                                TextManager.Get("Error"),
-                                TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, errorMsg }));
-                        }
-                        else
-                        {
-                            new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
-                            itemsUpdated = true;
-                        }
+                        DebugConsole.ThrowError(errorMsg);
+                        new GUIMessageBox(
+                            TextManager.Get("Error"),
+                            TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, errorMsg }));
+                    }
+                    else
+                    {
+                        new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
+                        itemsUpdated = true;
                     }
                 }
-            };
-
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-            while (!itemsUpdated.HasValue)
-            {
-                if (DateTime.Now > timeOut)
-                {
-                    itemsUpdated = false;
-                    timedOut = true;
-                    break;
-                }
-                instance.client.Update();
-                System.Threading.Thread.Sleep(10);
             }
-            
-            return itemsUpdated.Value;
+            return itemsUpdated;
         }
 
         public static bool UpdateWorkshopItem(Workshop.Item item, out string errorMsg)
