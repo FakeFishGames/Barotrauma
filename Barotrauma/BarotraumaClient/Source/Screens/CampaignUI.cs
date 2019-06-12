@@ -441,43 +441,36 @@ namespace Barotrauma
                 characterPreviewFrame = null;
             }
             
-            if (characterList != null)
+            if (Campaign is SinglePlayerCampaign)
             {
-                if (Campaign is SinglePlayerCampaign)
+                var hireableCharacters = location.GetHireableCharacters();
+                foreach (GUIComponent child in characterList.Content.Children.ToList())
                 {
-                    var hireableCharacters = location.GetHireableCharacters();
-                    foreach (GUIComponent child in characterList.Content.Children.ToList())
+                    if (child.UserData is CharacterInfo character)
                     {
-                        if (child.UserData is CharacterInfo character)
-                        {
-                            if (GameMain.GameSession.CrewManager != null)
-                            {
-                                if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
-                            }
-                        }
-                        else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
-                        {
-                            continue;
-                        }
-                        characterList.RemoveChild(child);
+                        if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
                     }
-                    if (!hireableCharacters.Any())
+                    else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
                     {
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
-                        {
-                            CanBeFocused = false
-                        };
+                        continue;
                     }
-                    else
+                    characterList.RemoveChild(child);
+                }
+                if (!hireableCharacters.Any())
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
                     {
-                        foreach (CharacterInfo c in hireableCharacters)
-                        {
-                            var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
-                            new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
-                        }
+                        CanBeFocused = false
+                    };
+                }
+                else
+                {
+                    foreach (CharacterInfo c in hireableCharacters)
+                    {
+                        var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
+                        new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
                     }
                 }
-                characterList.UpdateScrollBarSize();
             }
             characterList.UpdateScrollBarSize();
 

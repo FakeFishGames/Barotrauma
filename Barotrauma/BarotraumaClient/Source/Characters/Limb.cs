@@ -449,11 +449,12 @@ namespace Barotrauma
             {
                 float depth = ActiveSprite.Depth - 0.0000015f;
 
-                DamagedSprite.Draw(spriteBatch,
-                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
-                    -body.DrawRotation,
-                    1.0f, spriteEffect, depth);
+                // TODO: enable when the damage overlay textures have been remade.
+                //DamagedSprite.Draw(spriteBatch,
+                //    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                //    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
+                //    -body.DrawRotation,
+                //    1.0f, spriteEffect, depth);
             }
 
             if (GameMain.DebugDraw)
