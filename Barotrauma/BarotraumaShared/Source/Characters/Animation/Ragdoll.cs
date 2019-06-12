@@ -1427,7 +1427,7 @@ namespace Barotrauma
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 
-            var lowestLimb = FindLowestLimb();
+            //var lowestLimb = FindLowestLimb();
 
             float closestFraction = 1;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
@@ -1440,7 +1440,7 @@ namespace Barotrauma
                         break;
                     case Physics.CollisionPlatform:
                         Structure platform = fixture.Body.UserData as Structure;
-                        if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y) return -1;
+                        if (IgnorePlatforms && TargetMovement.Y < -0.5f || Collider.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
                     case Physics.CollisionLevel:
