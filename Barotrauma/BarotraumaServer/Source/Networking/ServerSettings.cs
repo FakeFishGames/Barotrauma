@@ -196,6 +196,8 @@ namespace Barotrauma.Networking
             
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
 
+            doc.Root.SetAttributeValue("GameMode", GameModeIdentifier);
+
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 Indent = true,
@@ -284,7 +286,9 @@ namespace Barotrauma.Networking
 
             ServerName = doc.Root.GetAttributeString("name", "");
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
-            
+
+            GameModeIdentifier = doc.Root.GetAttributeString("GameMode", "Sandbox");
+
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
             GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 
