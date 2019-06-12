@@ -375,7 +375,7 @@ namespace Barotrauma
             //Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
             body.BodyType = BodyType.Dynamic;
             body.CollisionCategories = Physics.CollisionItem;
-            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
             body.Friction = element.GetAttributeFloat("friction", 0.3f);
             body.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             body.UserData = this;
