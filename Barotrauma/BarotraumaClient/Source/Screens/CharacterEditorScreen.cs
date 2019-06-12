@@ -567,6 +567,10 @@ namespace Barotrauma
                     }
                 }
             }
+            miscToolsToggle?.UpdateOpenState((float)deltaTime, new Vector2(miscToolsPanel.Rect.Width + rightArea.RectTransform.AbsoluteOffset.X, 0), miscToolsPanel.RectTransform);
+            fileEditToggle?.UpdateOpenState((float)deltaTime, new Vector2(-fileEditPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), fileEditPanel.RectTransform);
+            characterPanelToggle?.UpdateOpenState((float)deltaTime, new Vector2(-characterSelectionPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), characterSelectionPanel.RectTransform);
+            modesToggle?.UpdateOpenState((float)deltaTime, new Vector2(-modesPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), modesPanel.RectTransform);
         }
 
         /// <summary>
@@ -1425,6 +1429,11 @@ namespace Barotrauma
         #endregion
 
         #region GUI
+        private static Point outerMargin = new Point(0, 0);
+        private static Point innerMargin = new Point(40, 40);
+        private static Color panelColor = new Color(20, 20, 20, 255);
+        private static Color toggleButtonColor = new Color(0.4f, 0.4f, 0.4f, 1);
+
         private GUIFrame rightArea;
         private GUIFrame leftArea;
         private GUIFrame centerArea;
@@ -1433,11 +1442,13 @@ namespace Barotrauma
         private GUIFrame fileEditPanel;
         private GUIFrame modesPanel;
         private GUIFrame miscToolsPanel;
+
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
         private GUIFrame limbControls;
         private GUIFrame spriteSheetControls;
         private GUIFrame backgroundColorPanel;
+
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
@@ -1458,6 +1469,11 @@ namespace Barotrauma
         private GUIButton deleteSelectedButton;
         private GUIButton createJointButton;
 
+        private ToggleButton modesToggle;
+        private ToggleButton miscToolsToggle;
+        private ToggleButton characterPanelToggle;
+        private ToggleButton fileEditToggle;
+
         private void CreateGUI()
         {
             // Release the old areas
@@ -1477,17 +1493,17 @@ namespace Barotrauma
             // Create the areas
             rightArea = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight)
             {
-                AbsoluteOffset = new Point(20, 0)
+                AbsoluteOffset = new Point(outerMargin.X, 0)
             }, style: null) { CanBeFocused = false };
             centerArea = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
             {
-                AbsoluteOffset = new Point((int)(rightArea.RectTransform.ScaledSize.X + rightArea.RectTransform.RelativeOffset.X * rightArea.RectTransform.Parent.ScaledSize.X + 20), 20)
+                AbsoluteOffset = new Point((int)(rightArea.RectTransform.ScaledSize.X + rightArea.RectTransform.RelativeOffset.X * rightArea.RectTransform.Parent.ScaledSize.X + 20), outerMargin.Y + 20)
 
             }, style: null)
             { CanBeFocused = false };
             leftArea = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
             {
-                AbsoluteOffset = new Point(20, 0)
+                AbsoluteOffset = new Point(outerMargin.X, 0)
             }, style: null)
             {
                 CanBeFocused = false
@@ -1495,19 +1511,18 @@ namespace Barotrauma
 
             Vector2 buttonSize = new Vector2(1, 0.04f);
             Vector2 toggleSize = new Vector2(0.03f, 0.03f);
-            Point margin = new Point(40, 60);
 
-            CreateCharacterSelectionPanel(margin);
-            CreateModesPanel(toggleSize, margin);
-            CreateFileEditPanel(margin);
-            CreateMiscToolsPanel(toggleSize, margin);
+            CreateCharacterSelectionPanel();
+            CreateModesPanel(toggleSize);
+            CreateFileEditPanel();
+            CreateMiscToolsPanel(toggleSize);
             CreateContextualControls();
         }
 
-        private void CreateModesPanel(Vector2 toggleSize, Point margin)
+        private void CreateModesPanel(Vector2 toggleSize)
         {
-            modesPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), leftArea.RectTransform, Anchor.BottomLeft));
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - margin.X, modesPanel.Rect.Height - margin.Y),
+            modesPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - innerMargin.X, modesPanel.Rect.Height - innerMargin.Y),
                 modesPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 2,
@@ -1581,15 +1596,16 @@ namespace Barotrauma
                 showSpritesheet = box.Selected;
                 return true;
             };
+            modesToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
         }
 
-        private void CreateMiscToolsPanel(Vector2 toggleSize, Point margin)
+        private void CreateMiscToolsPanel(Vector2 toggleSize)
         {
             miscToolsPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), rightArea.RectTransform, Anchor.Center)
             {
                 RelativeOffset = new Vector2(0, -0.075f)
-            });
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(miscToolsPanel.Rect.Width - margin.X, miscToolsPanel.Rect.Height - margin.Y),
+            }, style: null, color: panelColor);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(miscToolsPanel.Rect.Width - innerMargin.X, miscToolsPanel.Rect.Height - innerMargin.Y),
                 miscToolsPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 2,
@@ -1664,6 +1680,7 @@ namespace Barotrauma
                 character.AnimController.AnimationTestPose = box.Selected;
                 return true;
             };
+            miscToolsToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), miscToolsPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
         }
 
         private void CreateContextualControls()
@@ -1934,7 +1951,13 @@ namespace Barotrauma
             };
 
             // Ragdoll manipulation
-            extraRagdollControls = new GUIFrame(new RectTransform(new Point(140, 30), centerArea.RectTransform, Anchor.CenterRight), style: null) { CanBeFocused = false };
+            extraRagdollControls = new GUIFrame(new RectTransform(new Point(140, 30), centerArea.RectTransform, Anchor.BottomRight)
+            {
+                RelativeOffset = new Vector2(0.2f, 0.15f)
+            }, style: null)
+            {
+                CanBeFocused = false
+            };
             var extraRagdollLayout = new GUILayoutGroup(new RectTransform(Vector2.One, extraRagdollControls.RectTransform));
             duplicateLimbButton = new GUIButton(new RectTransform(new Point(140, 30), extraRagdollLayout.RectTransform), "Duplicate Limb")
             {
@@ -2036,10 +2059,10 @@ namespace Barotrauma
             };
         }
 
-        private void CreateCharacterSelectionPanel(Point margin)
+        private void CreateCharacterSelectionPanel()
         {
-            characterSelectionPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), rightArea.RectTransform, Anchor.TopRight));
-            var padding = new GUIFrame(new RectTransform(new Point(characterSelectionPanel.Rect.Width - margin.X, characterSelectionPanel.Rect.Height - margin.Y),
+            characterSelectionPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), rightArea.RectTransform, Anchor.TopRight), style: null, color: panelColor);
+            var padding = new GUIFrame(new RectTransform(new Point(characterSelectionPanel.Rect.Width - innerMargin.X, characterSelectionPanel.Rect.Height - innerMargin.Y),
                 characterSelectionPanel.RectTransform, Anchor.Center), style: null)
             {
                 CanBeFocused = false
@@ -2105,14 +2128,15 @@ namespace Barotrauma
                 SpawnCharacter(GetNextConfigFile());
                 return true;
             };
+            characterPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), characterSelectionPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
         }
 
-        private void CreateFileEditPanel(Point margin)
+        private void CreateFileEditPanel()
         {
             Vector2 buttonSize = new Vector2(1, 0.04f);
 
-            fileEditPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), rightArea.RectTransform, Anchor.BottomRight));
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(fileEditPanel.Rect.Width - margin.X, fileEditPanel.Rect.Height - margin.Y),
+            fileEditPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), rightArea.RectTransform, Anchor.BottomRight), style: null, color: panelColor);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(fileEditPanel.Rect.Width - innerMargin.X, fileEditPanel.Rect.Height - innerMargin.Y),
                 fileEditPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 1,
@@ -2540,7 +2564,75 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            fileEditToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), fileEditPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
         }
+        #endregion
+
+        #region ToggleButtons 
+
+        private enum Direction
+        {
+            Left,
+            Right
+        }
+
+        private class ToggleButton
+        {
+            public readonly Direction dir;
+            public readonly GUIButton toggleButton;
+
+            public float OpenState { get; private set; } = 1;
+
+            private bool isHidden;
+            public bool IsHidden
+            {
+                get { return isHidden; }
+                set
+                {
+                    isHidden = value;
+                    RefreshToggleButtonState();
+                }
+            }
+
+            public ToggleButton(RectTransform rectT, Direction dir)
+            {
+                toggleButton = new GUIButton(rectT, style: "UIToggleButton")
+                {
+                    Color = toggleButtonColor,
+                    OnClicked = (button, data) =>
+                    {
+                        IsHidden = !IsHidden;
+                        return true;
+                    }
+                };
+                this.dir = dir;
+                RefreshToggleButtonState();
+            }
+
+            public void RefreshToggleButtonState()
+            {
+                foreach (GUIComponent child in toggleButton.Children)
+                {
+                    switch (dir)
+                    {
+                        case Direction.Right:
+                            child.SpriteEffects = isHidden ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                            break;
+                        case Direction.Left:
+                            child.SpriteEffects = isHidden ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                            break;
+                    }
+                }
+            }
+
+            public void UpdateOpenState(float deltaTime, Vector2 hiddenPos, RectTransform panel)
+            {
+                panel.AbsoluteOffset = Vector2.SmoothStep(hiddenPos, Vector2.Zero, OpenState).ToPoint();
+                OpenState = isHidden ? Math.Max(OpenState - deltaTime * 2, 0) : Math.Min(OpenState + deltaTime * 2, 1);
+            }
+        }
+
         #endregion
 
         #region Params
