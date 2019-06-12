@@ -355,6 +355,8 @@ namespace Barotrauma
             }
 
             InsertToList();
+            
+            DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
 
         partial void InitProjSpecific();
