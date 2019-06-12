@@ -288,7 +288,7 @@ namespace Microsoft.Xna.Framework
             Sdl.Window.Show(Handle);
             Sdl.Window.Raise(Handle);
 
-            Sdl.Window.SetGrab(Handle, _willBeFullScreen);
+            Sdl.Window.SetGrab(Handle, _willBeFullScreen && _hardwareSwitch);
 
             if (IsFullScreen != _willBeFullScreen)
                 OnClientSizeChanged();
