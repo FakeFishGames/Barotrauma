@@ -41,7 +41,28 @@ namespace Barotrauma
                 OnSelected?.Invoke(this);
             }
         }
-        
+
+        private Color? defaultTextColor;
+
+        public override bool Enabled
+        {
+            get
+            {
+                return enabled;
+            }
+
+            set
+            {
+                if (value == enabled) { return; }
+                enabled = value;
+                if (color.A == 0)
+                {
+                    if (defaultTextColor == null) { defaultTextColor = TextBlock.TextColor; }
+                    TextBlock.TextColor = enabled ? defaultTextColor.Value : defaultTextColor.Value * 0.5f;
+                }
+            }
+        }
+
         public Color TextColor
         {
             get { return text.TextColor; }
