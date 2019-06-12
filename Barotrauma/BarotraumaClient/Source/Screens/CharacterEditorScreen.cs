@@ -146,7 +146,7 @@ namespace Barotrauma
             editIK = false;
             showRagdoll = false;
             showParamsEditor = false;
-            showSpritesheet = false;
+            showSpritesheet = true;
             isFreezed = false;
             autoFreeze = true;
             limbPairEditing = true;
