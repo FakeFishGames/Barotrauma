@@ -35,6 +35,7 @@ namespace Barotrauma.Networking
 
         public bool CompareTo(string ipCompare)
         {
+            if (string.IsNullOrEmpty(IP)) { return false; }
             if (!IsRangeBan)
             {
                 return ipCompare == IP;
@@ -49,6 +50,7 @@ namespace Barotrauma.Networking
 
         public bool CompareTo(IPAddress ipCompare)
         {
+            if (string.IsNullOrEmpty(IP)) { return false; }
             if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4().ToString()))
             {
                 return true;
