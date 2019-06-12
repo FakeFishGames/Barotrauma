@@ -483,6 +483,26 @@ namespace Barotrauma
         {
             if (selectedList.Contains(entity)) { return; }
             selectedList.Add(entity);
+            HandleDoorGapLinks(entity, 
+                onGapFound: (door, gap) =>
+                {
+                    door.RefreshLinkedGap();
+                    if (!selectedList.Contains(gap))
+                    {
+                        selectedList.Add(gap);
+                    }
+                }, 
+                onDoorFound: (door, gap) => 
+                {
+                    if (!selectedList.Contains(door.Item))
+                    {
+                        selectedList.Add(door.Item);
+                    }
+                });
+        }
+
+        private static void HandleDoorGapLinks(MapEntity entity, Action<Door, Gap> onGapFound, Action<Door, Gap> onDoorFound)
+        {
             if (entity is Item i)
             {
                 var door = i.GetComponent<Door>();
@@ -491,12 +511,16 @@ namespace Barotrauma
                     var gap = door.LinkedGap;
                     if (gap != null)
                     {
-                        door.RefreshLinkedGap();
-                        if (!selectedList.Contains(gap))
-                        {
-                            selectedList.Add(gap);
-                        }
+                        onGapFound(door, gap);
                     }
+                }
+            }
+            else if (entity is Gap gap)
+            {
+                var door = gap.ConnectedDoor;
+                if (door != null)
+                {
+                    onDoorFound(door, gap);
                 }
             }
         }
@@ -504,18 +528,9 @@ namespace Barotrauma
         public static void RemoveSelection(MapEntity entity)
         {
             selectedList.Remove(entity);
-            if (entity is Item i)
-            {
-                var door = i.GetComponent<Door>();
-                if (door != null)
-                {
-                    var gap = door.LinkedGap;
-                    if (gap != null)
-                    {
-                        selectedList.Remove(gap);
-                    }
-                }
-            }
+            HandleDoorGapLinks(entity,
+                onGapFound: (door, gap) => selectedList.Remove(gap),
+                onDoorFound: (door, gap) => selectedList.Remove(door.Item));
         }
         
         static partial void UpdateAllProjSpecific(float deltaTime)
@@ -585,12 +600,11 @@ namespace Barotrauma
 
         public static void UpdateEditor(Camera cam)
         {
-            FilteredSelectedList.Clear();
             if (highlightedListBox != null) highlightedListBox.UpdateManually((float)Timing.Step);
 
             if (editingHUD != null)
             {
-                if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
+                if (FilteredSelectedList.Count == 0 || editingHUD.UserData != FilteredSelectedList[0])
                 {
                     foreach (GUIComponent component in editingHUD.Children)
                     {
@@ -601,7 +615,7 @@ namespace Barotrauma
                     editingHUD = null;
                 }
             }
-
+            FilteredSelectedList.Clear();
             if (selectedList.Count == 0) return;
             foreach (var e in selectedList)
             {

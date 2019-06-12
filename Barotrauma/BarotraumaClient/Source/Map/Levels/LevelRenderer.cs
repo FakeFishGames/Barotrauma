@@ -142,24 +142,27 @@ namespace Barotrauma
             backgroundPos.Y = -backgroundPos.Y;
             backgroundPos *= 0.05f;
 
-
-            if (backgroundPos.Y < 1024)
+            if (level.GenerationParams.BackgroundTopSprite != null)
             {
-                if (backgroundPos.Y < 0 && level.GenerationParams.BackgroundTopSprite != null)
+                int backgroundSize = (int)level.GenerationParams.BackgroundTopSprite.size.Y;
+                if (backgroundPos.Y < backgroundSize)
                 {
-                    var backgroundTop = level.GenerationParams.BackgroundTopSprite;
-                    backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
-                    backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
-                        color: level.BackgroundTextureColor);
-                }
-                if (backgroundPos.Y > -1024 && level.GenerationParams.BackgroundSprite != null)
-                {
-                    var background = level.GenerationParams.BackgroundSprite;
-                    background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), 1024, 1024);
-                    background.DrawTiled(spriteBatch,
-                        (backgroundPos.Y < 0) ? new Vector2(0.0f, (int)-backgroundPos.Y) : Vector2.Zero,
-                        new Vector2(GameMain.GraphicsWidth, (int)Math.Ceiling(1024 - backgroundPos.Y)),
-                        color: level.BackgroundTextureColor);
+                    if (backgroundPos.Y < 0)
+                    {
+                        var backgroundTop = level.GenerationParams.BackgroundTopSprite;
+                        backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, backgroundSize, (int)Math.Min(-backgroundPos.Y, backgroundSize));
+                        backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
+                            color: level.BackgroundTextureColor);
+                    }
+                    if (-backgroundPos.Y < GameMain.GraphicsHeight && level.GenerationParams.BackgroundSprite != null)
+                    {
+                        var background = level.GenerationParams.BackgroundSprite;
+                        background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), backgroundSize, backgroundSize);
+                        background.DrawTiled(spriteBatch,
+                            (backgroundPos.Y < 0) ? new Vector2(0.0f, (int)-backgroundPos.Y) : Vector2.Zero,
+                            new Vector2(GameMain.GraphicsWidth, (int)Math.Min(Math.Ceiling(backgroundSize - backgroundPos.Y), backgroundSize)),
+                            color: level.BackgroundTextureColor);
+                    }
                 }
             }
 
