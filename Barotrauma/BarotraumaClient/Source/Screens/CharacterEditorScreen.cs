@@ -333,9 +333,12 @@ namespace Barotrauma
                 {
                     copyJointsToggle.Selected = !copyJointsToggle.Selected;
                 }
-                if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+                if (character.IsHumanoid)
                 {
-                    animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
+                    if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+                    {
+                        animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
+                    }
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
                 {
@@ -1603,7 +1606,7 @@ namespace Barotrauma
             animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AnimationTestPose"))
             {
                 Selected = character.AnimController.AnimationTestPose,
-                Enabled = character.AnimController.AnimationTestPose
+                Enabled = character.IsHumanoid
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoMove"))
             {
