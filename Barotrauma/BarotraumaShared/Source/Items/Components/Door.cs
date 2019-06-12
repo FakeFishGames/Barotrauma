@@ -22,7 +22,6 @@ namespace Barotrauma.Items.Components
         private float openState;
         private Sprite doorSprite, weldedSprite, brokenSprite;
         private bool scaleBrokenSprite, fadeBrokenSprite;
-        private bool createdNewGap;
         private bool autoOrientGap;
 
         private bool isStuck;
@@ -89,12 +88,7 @@ namespace Barotrauma.Items.Components
             {
                 if (linkedGap == null)
                 {
-                    linkedGap = e as Gap;
-                    if (linkedGap != null)
-                    {
-                        linkedGap.PassAmbientLight = Window != Rectangle.Empty;
-                        return linkedGap;
-                    }
+                    GetLinkedGap();
                 }
                 return linkedGap;
             }
@@ -116,16 +110,11 @@ namespace Barotrauma.Items.Components
                     rect.X -= 5;
                     rect.Width += 10;
                 }
-
                 linkedGap = new Gap(rect, !IsHorizontal, Item.Submarine)
                 {
-                    Submarine = item.Submarine,
-                    PassAmbientLight = Window != Rectangle.Empty,
-                    Open = openState
+                    Submarine = item.Submarine
                 };
                 item.linkedTo.Add(linkedGap);
-                createdNewGap = true;
-                return linkedGap;
             }
             RefreshLinkedGap();
         }
@@ -386,7 +375,8 @@ namespace Barotrauma.Items.Components
                 LinkedGap.AutoOrient();
             }
             LinkedGap.Open = openState;
-            if (createdNewGap && autoOrientGap) linkedGap.AutoOrient();
+            LinkedGap.PassAmbientLight = Window != Rectangle.Empty;
+        }
 
         public override void OnMapLoaded()
         {
