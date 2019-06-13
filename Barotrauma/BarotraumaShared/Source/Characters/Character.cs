@@ -840,15 +840,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
-                            .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == "human.xml");
-
-                    if (humanConfigFile == null)
-                    {
-                        DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
-                        DebugConsole.ThrowError($"(The config file must end with \"human.xml\")");
-                        return string.Empty;
-                    }
+                    humanConfigFile = GetConfigFile("Human");
                 }
                 return humanConfigFile;
             }
@@ -858,6 +850,42 @@ namespace Barotrauma
         private static IEnumerable<string> CharacterConfigFiles
         {
             get
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        public bool IsKeyHit(InputType inputType)
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
             {
                 if (characterConfigFiles == null)
                 {
@@ -952,6 +980,7 @@ namespace Barotrauma
                 configFile = contentPackage.GetFilesOfType(ContentType.Character)?
                     .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
             }
+#endif
 
             if (configFile == null)
             {
@@ -1098,13 +1127,6 @@ namespace Barotrauma
             if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
 
             ResetSpeedMultiplier(); // Reset, items will set the value before the next update
-
-            var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
-            if (rightFoot != null)
-            {
-                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
-                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
-            }
 
             return speed;
         }

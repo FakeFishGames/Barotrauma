@@ -2047,15 +2047,13 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void SetupNewCampaign(Submarine sub, string saveName, string mapSeed)
+        public void SetupNewCampaign(Submarine sub, string savePath, string mapSeed)
         {
-            saveName = Path.GetFileNameWithoutExtension(saveName);
-
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.CAMPAIGN_SETUP_INFO);
 
             msg.Write(true); msg.WritePadBits();
-            msg.Write(saveName);
+            msg.Write(savePath);
             msg.Write(mapSeed);
             msg.Write(sub.Name);
             msg.Write(sub.MD5Hash.Hash);
