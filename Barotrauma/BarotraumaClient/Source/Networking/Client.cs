@@ -12,6 +12,7 @@ namespace Barotrauma.Networking
         public byte ID;
         public UInt16 CharacterID;
         public bool Muted;
+        public bool AllowKicking;
     }
 
     partial class Client : IDisposable
@@ -36,6 +37,8 @@ namespace Barotrauma.Networking
 #endif
             }
         }
+
+        public bool AllowKicking;
 
         public void UpdateSoundPosition()
         {

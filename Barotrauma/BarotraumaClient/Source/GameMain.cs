@@ -159,14 +159,7 @@ namespace Barotrauma
 
         public GameMain()
         {
-/*#if !DEBUG && OSX
-            // Use a separate path for content that's editable due to macOS's .app bundles crashing when edited during runtime
-            string macPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Barotrauma");
-            Directory.SetCurrentDirectory(macPath);
-            Content.RootDirectory = macPath + "/Content";
-#else*/
             Content.RootDirectory = "Content";
-/*#endif*/
 
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
@@ -196,17 +189,21 @@ namespace Barotrauma
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
-            if (Config.WindowMode == WindowMode.BorderlessWindowed)
+            switch (Config.WindowMode)
             {
-                GraphicsWidth = GraphicsDevice.DisplayMode.Width;
-                GraphicsHeight = GraphicsDevice.DisplayMode.Height;
+                case WindowMode.BorderlessWindowed:
+                    GraphicsWidth = GraphicsDevice.DisplayMode.Width;
+                    GraphicsHeight = GraphicsDevice.DisplayMode.Height;
+                    break;
+                case WindowMode.Windowed:
+                    GraphicsWidth = Math.Min(GraphicsDevice.DisplayMode.Width, GraphicsWidth);
+                    GraphicsHeight = Math.Min(GraphicsDevice.DisplayMode.Height, GraphicsHeight);
+                    break;
             }
             GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
             GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
-            GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
-            GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
             SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
@@ -280,7 +277,7 @@ namespace Barotrauma
             canLoadInSeparateThread = true;
 #endif
 
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "", canLoadInSeparateThread);
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
         
         private void InitUserStats()
@@ -541,7 +538,9 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
+            CoroutineManager.StopCoroutines("Load");
             Video.Close();
+            VoipCapture.Instance?.Dispose();
             SoundManager?.Dispose();
         }
 
@@ -615,7 +614,7 @@ namespace Barotrauma
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
                     GameMain.ResetFrameTime();
 
-                    if (TitleScreen.LoadState >= 100.0f &&
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
                         (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;

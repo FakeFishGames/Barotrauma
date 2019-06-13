@@ -1366,6 +1366,11 @@ namespace Barotrauma
             }
 
             List<InterestingPosition> suitablePositions = positionsOfInterest.FindAll(p => positionType.HasFlag(p.PositionType));
+            //avoid floating ice chunks on the main path
+            if (positionType == PositionType.MainPath)
+            {
+                suitablePositions.RemoveAll(p => extraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(p.Position.ToVector2()))));
+            }
             if (!suitablePositions.Any())
             {
                 string errorMsg = "Could not find a suitable position of interest. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace;

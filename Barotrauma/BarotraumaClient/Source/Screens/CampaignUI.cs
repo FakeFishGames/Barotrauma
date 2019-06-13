@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -231,7 +232,16 @@ namespace Barotrauma
                     "", style: "ItemCategory" + category.ToString())
                 {
                     UserData = category,
-                    OnClicked = (btn, userdata) => { FilterStoreItems((MapEntityCategory)userdata, searchBox.Text); return true; }
+                    OnClicked = (btn, userdata) => 
+                    {
+                        MapEntityCategory newCategory = (MapEntityCategory)userdata;
+                        if (newCategory != selectedItemCategory)
+                        {
+                            searchBox.Text = ""; 
+                        }
+                        FilterStoreItems((MapEntityCategory)userdata, searchBox.Text);
+                        return true;
+                    }
                 };
                 itemCategoryButtons.Add(categoryButton);
 
@@ -487,10 +497,15 @@ namespace Barotrauma
             {
                 //refresh store view
                 FillStoreItemList();
-                FilterStoreItems(MapEntityCategory.Equipment, searchBox.Text);
-            }            
+
+                MapEntityCategory? category = null;
+                //only select a specific category if the search box is empty
+                //(items from all categories are shown when searching)
+                if (string.IsNullOrEmpty(searchBox.Text)) { category = selectedItemCategory; }
+                FilterStoreItems(category, searchBox.Text);
+            }
         }
-        
+
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
             GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer);
@@ -655,7 +670,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)
+        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)
         {
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.Scale * 50)), listBox.Content.RectTransform), style: "ListBoxElement")
             {
@@ -739,6 +754,10 @@ namespace Barotrauma
             content.RectTransform.RecalculateChildren(true, true);
             amountInput?.LayoutGroup.Recalculate();
             textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
+            content.RectTransform.IsFixedSize = true;
+            content.RectTransform.Children.ForEach(c => c.IsFixedSize = true);
+
+            return frame;
         }
 
         private bool BuyItem(GUIComponent component, object obj)
@@ -776,12 +795,24 @@ namespace Barotrauma
 
         private void RefreshMyItems()
         {
-            myItemList.Content.ClearChildren();
-
-            foreach (PurchasedItem ip in Campaign.CargoManager.PurchasedItems)
+            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
+            foreach (PurchasedItem pi in Campaign.CargoManager.PurchasedItems)
             {
-                CreateItemFrame(ip, ip.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList, myItemList.Rect.Width);
+                var itemFrame = myItemList.Content.GetChildByUserData(pi);
+                if (itemFrame == null)
+                {
+                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList, myItemList.Rect.Width);
+                }
+                itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
+                existingItemFrames.Add(itemFrame);
             }
+
+            var removedItemFrames = myItemList.Content.Children.Except(existingItemFrames).ToList();
+            foreach (GUIComponent removedItemFrame in removedItemFrames)
+            {
+                myItemList.Content.RemoveChild(removedItemFrame);
+            }
+
             myItemList.Content.RectTransform.SortChildren((x, y) =>
                 (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
             myItemList.Content.RectTransform.SortChildren((x, y) =>
@@ -821,17 +852,28 @@ namespace Barotrauma
 
         private void FillStoreItemList()
         {
-            storeItemList.ClearChildren();
-
             int width = storeItemList.Rect.Width;
+            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
                 if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
                 PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
-                if (priceInfo == null) continue;
+                if (priceInfo == null) { continue; }
 
-                CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList, width);
+                var itemFrame = myItemList.Content.GetChildByUserData(priceInfo);
+                if (itemFrame == null)
+                {
+                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList, width);
+                }
+                existingItemFrames.Add(itemFrame);
             }
+
+            var removedItemFrames = storeItemList.Content.Children.Except(existingItemFrames).ToList();
+            foreach (GUIComponent removedItemFrame in removedItemFrames)
+            {
+                storeItemList.Content.RemoveChild(removedItemFrame);
+            }
+
             storeItemList.Content.RectTransform.SortChildren(
                 (x, y) => (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
         }

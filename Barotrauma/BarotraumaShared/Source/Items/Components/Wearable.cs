@@ -286,6 +286,23 @@ namespace Barotrauma.Items.Components
                 if (!equipLimb.WearingItems.Contains(wearableSprite))
                 {
                     equipLimb.WearingItems.Add(wearableSprite);
+                    equipLimb.WearingItems.Sort((i1, i2) => { return i2.Sprite.Depth.CompareTo(i1.Sprite.Depth); });
+                    equipLimb.WearingItems.Sort((i1, i2) => 
+                    {
+                        if (i1?.WearableComponent == null && i2?.WearableComponent == null)
+                        {
+                            return 0;
+                        }
+                        else if (i1?.WearableComponent == null)
+                        {
+                            return -1;
+                        }
+                        else if (i2?.WearableComponent == null)
+                        {
+                            return 1;
+                        }
+                        return i1.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(i2.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
+                    });
                 }
             }
         }

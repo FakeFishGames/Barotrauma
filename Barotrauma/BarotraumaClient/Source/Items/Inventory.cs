@@ -423,7 +423,14 @@ namespace Barotrauma
                     columns++;
                 }
 
-                int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing.X * ((columns - 1) / 2.0f));
+                int width = (int)(subRect.Width * columns + spacing.X * (columns - 1));
+                int startX = slot.Rect.Center.X - (int)(width / 2.0f);
+
+                //prevent the inventory from extending outside the left side of the screen
+                startX = Math.Max(startX, 10);
+                //same for the right side of the screen
+                startX -= Math.Max((startX + width) - GameMain.GraphicsWidth, 0);
+
                 subRect.X = startX;
                 int startY = dir < 0 ?
                     slot.EquipButtonRect.Y - subRect.Height - (int)(35 * UIScale) :
@@ -868,7 +875,7 @@ namespace Barotrauma
                                 containedIndicatorArea.Width / (float)indicatorSprite.SourceRect.Width,
                                 containedIndicatorArea.Height / (float)indicatorSprite.SourceRect.Height);
 
-                            if (containedState > 0.0f && containedState < 0.25f)
+                            if (containedState >= 0.0f && containedState < 0.25f)
                             {
                                 indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.25f;
                             }

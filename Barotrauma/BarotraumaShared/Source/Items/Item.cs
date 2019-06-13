@@ -201,7 +201,7 @@ namespace Barotrauma
         public float PositionUpdateInterval
         {
             get;
-            private set;
+            set;
         } = float.PositiveInfinity;
 
         protected Color spriteColor;
@@ -1042,8 +1042,8 @@ namespace Barotrauma
             //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
-                aiTarget.SightRange -= deltaTime * 1000.0f;
-                aiTarget.SoundRange -= deltaTime * 1000.0f;
+                aiTarget.SightRange -= deltaTime * (aiTarget.MaxSightRange / aiTarget.FadeOutTime);
+                aiTarget.SoundRange -= deltaTime * (aiTarget.MaxSoundRange / aiTarget.FadeOutTime);
             }
 
             bool broken = condition <= 0.0f;
@@ -2017,6 +2017,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
             item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
+            item.lastSentCondition = item.condition;
+
             item.SetActiveSprite();
 
             foreach (ItemComponent component in item.components)

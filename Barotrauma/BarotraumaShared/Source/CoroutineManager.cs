@@ -89,6 +89,14 @@ namespace Barotrauma
         
         public static void StopCoroutines(string name)
         {
+            Coroutines.ForEach(c =>
+            {
+                if (c.Name == name)
+                {
+                    c.Thread?.Abort();
+                    c.Thread?.Join();
+                }
+            });
             Coroutines.RemoveAll(c => c.Name == name);
         }
 
@@ -99,31 +107,42 @@ namespace Barotrauma
 
         public static void ExecuteCoroutineThread(CoroutineHandle handle)
         {
-            while (true)
+            try
             {
-                if (handle.Coroutine.Current != null)
+                while (true)
                 {
-                    WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
-                    if (wfs != null)
+                    if (handle.Coroutine.Current != null)
                     {
-                        Thread.Sleep((int)(wfs.TotalTime * 1000));
-                    }
-                    else
-                    {
-                        switch ((CoroutineStatus)handle.Coroutine.Current)
+                        WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
+                        if (wfs != null)
                         {
-                            case CoroutineStatus.Success:
-                                return;
+                            Thread.Sleep((int)(wfs.TotalTime * 1000));
+                        }
+                        else
+                        {
+                            switch ((CoroutineStatus)handle.Coroutine.Current)
+                            {
+                                case CoroutineStatus.Success:
+                                    return;
 
-                            case CoroutineStatus.Failure:
-                                DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
-                                return;
+                                case CoroutineStatus.Failure:
+                                    DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
+                                    return;
+                            }
                         }
                     }
-                }
 
-                Thread.Yield();
-                if (!handle.Coroutine.MoveNext()) return;
+                    Thread.Yield();
+                    if (!handle.Coroutine.MoveNext()) return;
+                }
+            }
+            catch (ThreadAbortException tae)
+            {
+                //not an error, don't worry about it
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has thrown an exception", e);
             }
         }
 

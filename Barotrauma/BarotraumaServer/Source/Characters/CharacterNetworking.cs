@@ -82,7 +82,7 @@ namespace Barotrauma
                     dequeuedInput = memInput[memInput.Count - 1].states;
 
                     double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
-                    cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+                    cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 500.0f;
 
                     //reset focus when attempting to use/select something
                     if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||

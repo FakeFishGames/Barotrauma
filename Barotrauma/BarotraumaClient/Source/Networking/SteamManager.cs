@@ -63,6 +63,15 @@ namespace Barotrauma.Steam
             return instance.client.SteamId;
         }
 
+        public static string GetUsername()
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return "";
+            }
+            return instance.client.Username;
+        }
+
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
             try

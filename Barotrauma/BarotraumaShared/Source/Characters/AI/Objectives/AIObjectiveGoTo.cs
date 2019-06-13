@@ -181,8 +181,11 @@ namespace Barotrauma
             {
                 if (closeEnough)
                 {
-                    character.AIController.SteeringManager.Reset();
-                    character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
+                    closeEnough = !(Target is Character) || Target is Character c && c.CurrentHull == character.CurrentHull;
+                }
+                if (closeEnough)
+                {
+                    OnCompleted();
                 }
                 return false;
             }
@@ -204,11 +207,6 @@ namespace Barotrauma
                     }
                 }
             }
-            if (isCompleted)
-            {
-                character.AIController.SteeringManager.Reset();
-                character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
-            }
             return isCompleted;
         }
 
@@ -222,6 +220,16 @@ namespace Barotrauma
         {
             float interactionDistance = Target is Item i ? i.InteractDistance * 0.9f : 0;
             CloseEnough = Math.Max(interactionDistance, CloseEnough);
+        }
+
+        protected override void OnCompleted()
+        {
+            character.AIController.SteeringManager.Reset();
+            if (Target != null)
+            {
+                character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
+            }
+            base.OnCompleted();
         }
     }
 }

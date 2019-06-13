@@ -70,8 +70,14 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
             clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")
             {
-                Text = GameMain.Config.DefaultPlayerName
+                Text = GameMain.Config.DefaultPlayerName,
+                MaxTextLength = Client.MaxNameLength,
+                OverflowClip = true
             };
+            if (string.IsNullOrEmpty(clientNameBox.Text))
+            {
+                clientNameBox.Text = SteamManager.GetUsername();
+            }
             clientNameBox.OnTextChanged += RefreshJoinButtonState;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("ServerIP"));
@@ -236,7 +242,7 @@ namespace Barotrauma
             {
                 serverInfo = (ServerInfo)obj;
                 ipBox.UserData = serverInfo;
-                ipBox.Text = serverInfo.ServerName;
+                ipBox.Text = ToolBox.LimitString(serverInfo.ServerName, ipBox.Font, ipBox.Rect.Width);
             }
             catch (InvalidCastException)
             {
@@ -411,7 +417,6 @@ namespace Barotrauma
             };
 
 			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
-
 			var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[4], 0.4f), serverContent.RectTransform, Anchor.Center),
 				label: "", style: "GUIServerListRoundStartedTickBox") {
 				ToolTip = TextManager.Get((serverInfo.GameStarted) ? "ServerListRoundStarted" : "ServerListRoundNotStarted"),
@@ -593,9 +598,11 @@ namespace Barotrauma
             GameMain.Config.SaveNewPlayerConfig();
 
             string ip = null;
+            string serverName = null;
             if (ipBox.UserData is ServerInfo serverInfo)
             {
                 ip = serverInfo.IP + ":" + serverInfo.Port;
+                serverName = serverInfo.ServerName;
             }
             else if (!string.IsNullOrWhiteSpace(ipBox.Text))
             {
@@ -609,18 +616,18 @@ namespace Barotrauma
                 return false;
             }
 
-            CoroutineManager.StartCoroutine(ConnectToServer(ip));
+            CoroutineManager.StartCoroutine(ConnectToServer(ip, serverName));
 
             return true;
         }
         
-        private IEnumerable<object> ConnectToServer(string ip)
+        private IEnumerable<object> ConnectToServer(string ip, string serverName)
         {
 #if !DEBUG
             try
             {
 #endif
-                GameMain.Client = new GameClient(clientNameBox.Text, ip);
+                GameMain.Client = new GameClient(clientNameBox.Text, ip, serverName);
 #if !DEBUG
             }
             catch (Exception e)

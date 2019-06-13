@@ -23,8 +23,8 @@ namespace Barotrauma
             var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
             var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);
 
-            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
             var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
+            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
             GameMain.Server.SendDirectChatMessage(greetingChatMsg, traitorClient);
