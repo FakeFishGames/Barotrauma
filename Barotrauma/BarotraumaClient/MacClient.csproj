@@ -181,6 +181,9 @@
     <None Include="Content\Effects\solidcolor_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="libfreetype.6.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Shaders\Content_opengl.mgcb" />
     <None Include="Content\Effects\blurshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
