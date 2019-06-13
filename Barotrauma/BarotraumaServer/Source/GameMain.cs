@@ -50,9 +50,8 @@ namespace Barotrauma
 
         public static HashSet<ContentPackage> SelectedPackages
         {
-            get { return Config.SelectedContentPackages; }
+            get { return Config?.SelectedContentPackages; }
         }
-
 
         private static ContentPackage vanillaContent;
         public static ContentPackage VanillaContent

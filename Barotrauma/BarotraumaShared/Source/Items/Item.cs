@@ -201,7 +201,7 @@ namespace Barotrauma
         public float PositionUpdateInterval
         {
             get;
-            private set;
+            set;
         } = float.PositiveInfinity;
 
         protected Color spriteColor;

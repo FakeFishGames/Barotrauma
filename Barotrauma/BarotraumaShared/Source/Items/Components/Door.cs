@@ -59,6 +59,8 @@ namespace Barotrauma.Items.Components
             get { return item.GetComponent<Repairable>()?.ShowRepairUIThreshold ?? 0.0f; }
         }
 
+        public bool CanBeWelded = true;
+
         private float stuck;
         [Serialize(0.0f, false)]
         public float Stuck
@@ -66,12 +68,18 @@ namespace Barotrauma.Items.Components
             get { return stuck; }
             set 
             {
-                if (isOpen || isBroken) return;
+                if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (stuck <= 0.0f) isStuck = false;
                 if (stuck >= 100.0f) isStuck = true;
             }
         }
+
+        [Serialize(3.0f, true), Editable]
+        public float OpeningSpeed { get; private set; }
+
+        [Serialize(3.0f, true), Editable]
+        public float ClosingSpeed { get; private set; }
 
         public bool? PredictedState { get; private set; }
 
@@ -297,12 +305,12 @@ namespace Barotrauma.Items.Components
             {
                 if (PredictedState == null)
                 {
-                    OpenState += deltaTime * (isOpen ? 2.0f : -2.0f);
+                    OpenState += deltaTime * (isOpen ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
                 }
                 else
                 {
-                    OpenState += deltaTime * ((bool)PredictedState ? 2.0f : -2.0f);
+                    OpenState += deltaTime * ((bool)PredictedState ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !(bool)PredictedState;
 
                     resetPredictionTimer -= deltaTime;

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienHatchAssembly" description="" hideinmenus="false">
+<ItemAssembly name="AlienHatchAssembly" description="" hideinmenus="true">
   <Item name="Alien Hatch" identifier="alienhatch" ID="3" rect="-144,48,260,95" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="False" msg="itemmsgforceopencrowbar">
       <requireditem identifiers="crowbar" type="Equipped" optional="false" ignoreineditor="false" />

@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
 
         private readonly List<Submarine> serverSubmarines = new List<Submarine>();
 
-        private string serverIP;
+        private string serverIP, serverName;
 
         private bool needAuth;
         private bool requiresPw;
@@ -99,8 +99,8 @@ namespace Barotrauma.Networking
         {
             get { return ownerKey > 0; }
         }
-
-        public GameClient(string newName, string ip, int ownerKey=0)
+        
+        public GameClient(string newName, string ip, string serverName = null, int ownerKey = 0)
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
@@ -211,7 +211,7 @@ namespace Barotrauma.Networking
 
             serverSettings = new ServerSettings("Server", 0, 0, 0, false, false);
 
-            ConnectToServer(ip);
+            ConnectToServer(ip, serverName);
 
             //ServerLog = new ServerLog("");
 
@@ -219,13 +219,15 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen = new NetLobbyScreen();
         }
 
-        private void ConnectToServer(string hostIP)
+        private void ConnectToServer(string hostIP, string hostName)
         {
             chatBox.InputBox.Enabled = false;
             if (GameMain.NetLobbyScreen?.TextBox != null)
             {
                 GameMain.NetLobbyScreen.TextBox.Enabled = false;
             }
+
+            serverName = hostName;
 
             string[] address = hostIP.Split(':');
             if (address.Length == 1)
@@ -301,7 +303,7 @@ namespace Barotrauma.Networking
         private bool RetryConnection(GUIButton button, object obj)
         {
             if (client != null) client.Shutdown(TextManager.Get("Disconnecting"));
-            ConnectToServer(serverIP);
+            ConnectToServer(serverIP, serverName);
             return true;
         }
 
@@ -346,7 +348,10 @@ namespace Barotrauma.Networking
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox(connectingText, TextManager.GetWithVariable("ConnectingTo", "[serverip]", serverIP), new string[] { TextManager.Get("Cancel") });
+                    reconnectBox = new GUIMessageBox(
+                        connectingText,
+                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", string.IsNullOrEmpty(serverName) ? serverIP : serverName),
+                        new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
@@ -903,7 +908,7 @@ namespace Barotrauma.Networking
                     TextManager.Get("ConnectionLost"),
                     msg, new string[0]);
                 connected = false;
-                ConnectToServer(serverIP);
+                ConnectToServer(serverIP, serverName);
             }
             else
             {
@@ -955,7 +960,7 @@ namespace Barotrauma.Networking
             {
                 if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
                 {
-                    ConnectToServer(serverIP);
+                    ConnectToServer(serverIP, serverName);
                     yield return new WaitForSeconds(2.0f);
                 }
                 yield return new WaitForSeconds(0.5f);
@@ -1262,6 +1267,7 @@ namespace Barotrauma.Networking
                 string name         = inc.ReadString();
                 UInt16 characterID  = inc.ReadUInt16();
                 bool muted          = inc.ReadBoolean();
+                bool allowKicking   = inc.ReadBoolean();
                 inc.ReadPadBits();
 
                 tempClients.Add(new TempClient
@@ -1269,7 +1275,8 @@ namespace Barotrauma.Networking
                     ID = id,
                     Name = name,
                     CharacterID = characterID,
-                    Muted = muted
+                    Muted = muted,
+                    AllowKicking = allowKicking
                 });
             }
 
@@ -1285,13 +1292,15 @@ namespace Barotrauma.Networking
                     {
                         existingClient = new Client(tc.Name, tc.ID)
                         {
-                            Muted = tc.Muted
+                            Muted = tc.Muted,
+                            AllowKicking = tc.AllowKicking
                         };
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient);
                     }
                     existingClient.Character = null;
                     existingClient.Muted = tc.Muted;
+                    existingClient.AllowKicking = tc.AllowKicking;
                     if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
@@ -2375,9 +2384,23 @@ namespace Barotrauma.Networking
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
                 if (client == null) return false;
 
+                var mute = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.1f), characterFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
+                    TextManager.Get("Mute"))
+                {
+                    Selected = client.MutedLocally,
+                    OnSelected = (tickBox) => { client.MutedLocally = tickBox.Selected; return true; }
+                };
+
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.1f), characterFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true)
+                {
+                    RelativeSpacing = 0.05f,
+                    ChildAnchor = Anchor.CenterLeft,
+                    Stretch = true
+                };
+
                 if (HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight),
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("Ban"))
                     {
                         UserData = character.Name,
@@ -2386,7 +2409,7 @@ namespace Barotrauma.Networking
                 }
                 if (HasPermission(ClientPermissions.Kick))
                 {
-                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomLeft),
+                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("Kick"))
                     {
                         UserData = character.Name,
@@ -2395,7 +2418,7 @@ namespace Barotrauma.Networking
                 }
                 else if (serverSettings.Voting.AllowVoteKick)
                 {
-                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.16f) },
+                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("VoteToKick"))
                     {
                         UserData = character,

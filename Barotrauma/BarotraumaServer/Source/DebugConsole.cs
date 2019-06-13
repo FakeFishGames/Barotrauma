@@ -178,22 +178,33 @@ namespace Barotrauma
 
         private static void RewriteInputToCommandLine(string input)
         {
+            if (Console.WindowWidth == 0 || Console.WindowHeight == 0) { return; }
+
             int consoleWidth = Math.Max(Console.WindowWidth, 5);
             int inputLines = Math.Max((int)Math.Ceiling(input.Length / (float)consoleWidth), 1);
             int cursorLine = Math.Max((int)Math.Ceiling((input.Length + 1) / (float)consoleWidth), 1);
 
-            Console.WriteLine(""); Console.CursorTop -= inputLines;
-
-            string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
-            ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.CursorLeft = 0;
-            Console.Write(ln);
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.CursorLeft = 0;
-            Console.CursorTop -= cursorLine;
-            Console.Write(input);
-            Console.CursorLeft = input.Length % consoleWidth;
+            try
+            {
+                Console.WriteLine(""); Console.CursorTop -= inputLines;
+                       
+                string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
+                ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.CursorLeft = 0;
+                Console.Write(ln);
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.CursorLeft = 0;
+                Console.CursorTop -= cursorLine;
+                Console.Write(input);
+                Console.CursorLeft = input.Length % consoleWidth;
+            }
+            catch (Exception e)
+            {
+                string errorMsg = "Failed to write input to command line (window width: " + Console.WindowWidth + ", window height: " + Console.WindowHeight + ", inputLines:" + inputLines + ")\n"
+                    + e.Message + "\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
         }
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
@@ -252,7 +263,7 @@ namespace Barotrauma
                 NewMessage(GameMain.Server.ServerSettings.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
             });
 
-            AssignOnExecute("autorestartinterval",(string[] args) =>
+            AssignOnExecute("autorestartinterval", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
@@ -306,6 +317,26 @@ namespace Barotrauma
                         GameMain.NetLobbyScreen.LastUpdateID++;
                     }
                 }
+            });
+
+            AssignOnExecute("startwhenclientsready", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+                bool enabled = GameMain.Server.ServerSettings.StartWhenClientsReady;
+                if (args.Length > 0)
+                {
+                    bool.TryParse(args[0], out enabled);
+                }
+                else
+                {
+                    enabled = !enabled;
+                }
+                if (enabled != GameMain.Server.ServerSettings.StartWhenClientsReady)
+                {
+                    GameMain.Server.ServerSettings.StartWhenClientsReady = enabled;
+                    GameMain.NetLobbyScreen.LastUpdateID++;
+                }
+                NewMessage(GameMain.Server.ServerSettings.StartWhenClientsReady ? "Enabled starting the round automatically when clients are ready." : "Disabled starting the round automatically when clients are ready.", Color.White);
             });
 
             AssignOnExecute("giveperm", (string[] args) =>

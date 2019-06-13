@@ -80,7 +80,7 @@
       <requireditem identifiers="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" />
+      <requireditem identifiers="screwdriver" type="Equipped" />
       <input name="signal_in1">
         <link w="57" />
       </input>
@@ -99,7 +99,7 @@
       <requireditem identifiers="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" />
+      <requireditem identifiers="screwdriver" type="Equipped" />
       <input name="signal_in">
         <link w="58" />
       </input>
@@ -114,7 +114,7 @@
       <requireditem identifiers="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" />
+      <requireditem identifiers="screwdriver" type="Equipped" />
       <input name="signal_in">
         <link w="51" />
         <link w="53" />
@@ -132,7 +132,7 @@
       <requireditem identifiers="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" />
+      <requireditem identifiers="screwdriver" type="Equipped" />
       <input name="signal_in1">
         <link w="54" />
       </input>
@@ -151,7 +151,7 @@
       <requireditem identifiers="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" />
+      <requireditem identifiers="screwdriver" type="Equipped" />
       <output name="state_out">
         <link w="55" />
         <link w="58" />

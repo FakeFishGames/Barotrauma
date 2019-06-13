@@ -1,4 +1,84 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.0.6
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients failing to connect to servers that have banned clients based on their Steam ID.
+- Removed Berilia (vanilla sub that's not ready for release).
+
+---------------------------------------------------------------------------------------------------------
+v0.9.0.5
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Automatically fill the client name textbox with the player's Steam username.
+- Allow clients (including the host) to change their name in the server lobby.
+- Censor password boxes to make joining servers a little more streamer-friendly.
+- Show the name of the server in the "connecting to..." popup instead of the IP address.
+- Added a close button to the debug console and a text that explains it can be opened/closed by pressing F3.
+- Electrical components are attached to walls with the left mouse button instead of E.
+- Flares are activated with the left mouse button instead of E.
+- Nerfed plasma cutters and welding tools.
+- Made coilgun ammunition boxes deconstructable.
+- Removed minimum job count requirement from Captain, Engineer & Mechanic (i.e. it's not possible to play
+other jobs even when there's 3 or less players on the server).
+- Increased default respawn transport time to 5 minutes, decreased respawn interval to 3 minutes.
+- Allow muting players mid-round through the info menu.
+- Allow to edit the door opening/closing speeds and increase the defaults.
+- Reduce the follow-up distance and require the bot to be in the same room than the player before stopping, 
+so that bots with a follow order don't stay on the doorways when the player is trying to enter the airlocks.
+- Stop "breathing" deformations when the character is dead.
+- Disable obstructed paths when the submarine docks to another submarine/outpost.
+- The location of save files can be changed in config_player.xml using the attributes "overridesavefolder" 
+and "overridemultiplayersavefolder".
+
+Bugfixes:
+- Fixed crashing during startup due to faulty OpenAL installations.
+- Fixed inability to select the voice capture device if the name of the device contains non-latin symbols
+(Cyrillic or Chinese characters for example).
+- Fixed a networking issue that occasionally caused clients to get kicked with a "disconnected due to 
+excessive desync" error message.
+- Fixed fires being very hard to put out completely in multiplayer.
+- Fixed items not being repaired after purchasing repairs in the campaign.
+- Removed outdated Launch_BarotraumaServer script from the Linux version (does not work anymore, the 
+dedicated server should be launched by running the file called "DedicatedServer").
+- Fixed server owners not being able to join their own server if whitelist is enabled and the owner is not
+on the whitelist.
+- Fixed inability to ban clients by their Steam ID using the console.
+- Fixed all servers showing up as "Round has not started" in the server list.
+- Fixed server ignoring the max players value set in the "host server" menu and using the setting 
+configured in "serversettings.xml" instead.
+- Fixed spectators not hearing the living players' voice chat.
+- VOIP improvements (less crackling and pops).
+- Increased oxygen output in vanilla submarines to prevent characters from suffocating when playing with
+an oversized crew.
+- Fixed occasional console errors when ending a round (causing the round end summary not to appear).
+- Waypoint fixes in vanilla subs.
+- Disallow shooting and attacking when the cursor is over a UI element (to prevent, for example, 
+accidentally firing a gun when dismissing a message box).
+- Fixed "file not found" errors on Linux when attempting to enable a mod that defines file paths
+using a backslash instead of a slash.
+- Fixed monsters ignoring decoys.
+- Fixed store menu switching back to the equipment category every time something is bought/sold in 
+the multiplayer campaign.
+- Fixed "push to talk" field going outside the audio settings menu on some aspect ratios.
+- Fixed long server names overflowing in the server list menu.
+- Fixed the character saying "OrderDialogSelf.dismissed" when a player removes an order from themselves.
+- Fixed subinventory slots going outside the screen when for example grabbing someone with a toolbox 
+in the leftmost inventory slot.
+- Fixed monsters sometimes spawning inside the floating ice chunks within the levels.
+- Fixed physicorium shells not being containable in railgun shell racks.
+- Fixed physicorium ammo box not being containable in coilgun ammunition shelves.
+- Fixed inability to spawn items in characters' inventories with the "spawnitem" console command.
+- Fixed health interface not focusing to the most damaged limb when closing and reopening the interface.
+- Prevent welding doors shut during the tutorials (as the player doesn't have access to any tools to 
+reopen the door).
+- Fixed AI pathfinding when the path is from a submarine to another submarine.
+- Fixed crashing when AI crew tries to find a path out of the ruins.
+- Fixed Watchmen looking at the wrong direction.
+- Fixed crashing due to an invalid display resolution.
+- Fixed alien item assemblies not being hidden from the sub editor.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.0.4
 ---------------------------------------------------------------------------------------------------------
 

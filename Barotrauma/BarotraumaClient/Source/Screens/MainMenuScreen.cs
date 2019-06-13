@@ -708,7 +708,7 @@ namespace Barotrauma
                                    " -queryport " + queryPort.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -upnp " + useUpnpBox.Selected +
-                                   " -playercount " + maxPlayersBox.Text +
+                                   " -maxplayers " + maxPlayersBox.Text +
                                     " -ownerkey " + ownerKey.ToString();
 
                 string filename = "DedicatedServer.exe";
@@ -727,7 +727,7 @@ namespace Barotrauma
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
+                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(), name, ownerKey);
             }
             catch (Exception e)
             {

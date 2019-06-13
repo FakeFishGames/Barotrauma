@@ -1227,22 +1227,22 @@
   <bunk name="Bunk" identifier="bunk" width="173" height="129">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,129,173,129" depth="0.9" />
   </bunk>
-  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="2000">
+  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="200">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,384,256,80" depth="0.06" />
   </RuinWallHorizontal>
-  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="2000">
+  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="200">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="128,0,80,256" depth="0.061" />
   </RuinWallVertical>
-  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="15000">
+  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="10000">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,256,256,128" depth="0.06" />
   </RuinWallHeavyHorizontal>
-  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="15000">
+  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="10000">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,0,128,256" depth="0.061" />
   </RuinWallHeavyVertical>
-  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="500">
+  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="100">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,464,256,48" depth="0.062" />
   </RuinWallHorizontalSmall>
-  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="500">
+  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="100">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="202,0,54,256" depth="0.063" />
   </RuinWallVerticalSmall>
   <RuinBack1 name="Ruin BackWall 1" identifier="RuinBack1" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">

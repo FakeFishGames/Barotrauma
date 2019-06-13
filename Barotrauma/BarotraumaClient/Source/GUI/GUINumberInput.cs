@@ -86,7 +86,25 @@ namespace Barotrauma
             }
         }
 
-        public int? MinValueInt, MaxValueInt;
+        private int? minValueInt, maxValueInt;
+        public int? MinValueInt
+        {
+            get { return minValueInt; }
+            set
+            {
+                minValueInt = value;
+                ClampIntValue();
+            }
+        }
+        public int? MaxValueInt
+        {
+            get { return maxValueInt; }
+            set
+            {
+                maxValueInt = value;
+                ClampIntValue();
+            }
+        }
 
         private int intValue;
         public int IntValue

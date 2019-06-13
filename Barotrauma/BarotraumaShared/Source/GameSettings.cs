@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Xml;
+using System.IO;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
@@ -219,7 +220,7 @@ namespace Barotrauma
             set { TextManager.Language = value; }
         }
 
-        public HashSet<ContentPackage> SelectedContentPackages { get; set; }
+        public readonly HashSet<ContentPackage> SelectedContentPackages = new HashSet<ContentPackage>();
 
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
@@ -277,7 +278,6 @@ namespace Barotrauma
 
         public GameSettings()
         {
-            SelectedContentPackages = new HashSet<ContentPackage>();
             ContentPackage.LoadAll(ContentPackage.Folder);
             CompletedTutorialNames = new List<string>();
 
@@ -604,6 +604,18 @@ namespace Barotrauma
             LoadAudioSettings(doc);
             LoadControls(doc);
             LoadContentPackages(doc);
+
+            //allow overriding the save paths in the config file
+            if (doc.Root.Attribute("overridesavefolder") != null)
+            {
+                string saveFolder = doc.Root.GetAttributeString("overridesavefolder", "");
+                SaveUtil.SaveFolder = saveFolder;
+                SaveUtil.MultiplayerSaveFolder = Path.Combine(saveFolder, "Multiplayer");
+            }
+            if (doc.Root.Attribute("overridemultiplayersavefolder") != null)
+            {
+                SaveUtil.MultiplayerSaveFolder = doc.Root.GetAttributeString("overridemultiplayersavefolder", "");
+            }
 
             XElement tutorialsElement = doc.Root.Element("tutorials");
             if (tutorialsElement != null)

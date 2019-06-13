@@ -790,8 +790,7 @@ namespace Barotrauma
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
 
                 Color color = Color.Gray;
-                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
-                if (hasRequiredSkillsAndItems)
+                if (ic.HasRequiredItems(character, false))
                 {
                     if (ic is Repairable repairable)
                     {
@@ -1008,7 +1007,13 @@ namespace Barotrauma
         {
             if (body == null)
             {
-                DebugConsole.ThrowError("Received a position update for an item with no physics body (" + Name + ")");
+                string errorMsg = "Received a position update for an item with no physics body (" + Name + ")";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#else
+                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
 

@@ -210,6 +210,11 @@ namespace Barotrauma.Items.Components
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) { return; }
 
+            if (user != null && user.Removed)
+            {
+                user = null;
+            }
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             if (autoPilot)

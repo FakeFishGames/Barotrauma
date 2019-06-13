@@ -1488,6 +1488,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 outmsg.Write(client.Muted);
+                outmsg.Write(client.Connection != OwnerConnection); //is kicking the player allowed
                 outmsg.WritePadBits();
             }
         }

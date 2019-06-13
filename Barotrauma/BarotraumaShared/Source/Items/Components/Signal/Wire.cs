@@ -338,15 +338,19 @@ namespace Barotrauma.Items.Components
                 canPlaceNode = true;
             }
 
-            Vector2 relativeNodePos = newNodePos - item.Position;
-            if (sub != null)
+            if (item != null)
             {
-                relativeNodePos += sub.HiddenSubPosition;
-            }
+                Vector2 relativeNodePos = newNodePos - item.Position;
 
-            sectionExtents = new Vector2(
-                Math.Max(Math.Abs(relativeNodePos.X), sectionExtents.X),
-                Math.Max(Math.Abs(relativeNodePos.Y), sectionExtents.Y));
+                if (sub != null)
+                {
+                    relativeNodePos += sub.HiddenSubPosition;
+                }
+
+                sectionExtents = new Vector2(
+                    Math.Max(Math.Abs(relativeNodePos.X), sectionExtents.X),
+                    Math.Max(Math.Abs(relativeNodePos.Y), sectionExtents.Y));
+            }
         }
         
         public override bool Use(float deltaTime, Character character = null)
