@@ -897,45 +897,10 @@ namespace Barotrauma
         private static IEnumerable<string> characterConfigFiles;
         private static IEnumerable<string> CharacterConfigFiles
         {
-            get
-            {
-                if (characterConfigFiles == null)
-                {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-                }
-                return characterConfigFiles;
-            }
-        }
-
-        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
-        {
-            string configFile = null;
-            if (contentPackage == null)
-            {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
-            else
-            {
-                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
-
-            if (configFile == null)
-            {
-                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
-                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
-                return string.Empty;
-            }
-            return configFile;
-        }
-
-        public bool IsKeyHit(InputType inputType)
-        {
 #if SERVER
             if (GameMain.Server != null && IsRemotePlayer)
             {
-                switch (inputType)
+                if (characterConfigFiles == null)
                 {
                     case InputType.Left:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
@@ -966,13 +931,39 @@ namespace Barotrauma
                     default:
                         return false;
                 }
+                return characterConfigFiles;
             }
 #endif
 
-            return keys[(int)inputType].Hit;
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
         }
 
-        public bool IsKeyDown(InputType inputType)
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
         {
 #if SERVER
             if (GameMain.Server != null && IsRemotePlayer)
@@ -1108,7 +1099,14 @@ namespace Barotrauma
 
             ResetSpeedMultiplier(); // Reset, items will set the value before the next update
 
-            return targetMovement;
+            var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
+            if (rightFoot != null)
+            {
+                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
+                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
+            }
+
+            return speed;
         }
 
         /// <summary>
