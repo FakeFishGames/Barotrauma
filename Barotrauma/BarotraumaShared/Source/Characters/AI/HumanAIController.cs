@@ -428,16 +428,24 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float currentVitality = Character.CharacterHealth.Vitality;
-                    float dmgPercentage = damage / currentVitality * 100;
-                    if (dmgPercentage < currentVitality / 10)
+                    // If not on the same team, always stay defensive
+                    if (attacker.TeamID != Character.TeamID)
                     {
-                        // Don't retaliate on minor (accidental) dmg done by friendly characters
-                        AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
                     }
                     else
                     {
-                        AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        float currentVitality = Character.CharacterHealth.Vitality;
+                        float dmgPercentage = damage / currentVitality * 100;
+                        if (dmgPercentage < currentVitality / 10)
+                        {
+                            // Don't retaliate on minor (accidental) dmg done by characters that are in the same team
+                            AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        }
+                        else
+                        {
+                            AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        }
                     }
                 }
             }
