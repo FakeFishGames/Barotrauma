@@ -1386,9 +1386,20 @@ namespace Barotrauma
             }
             else
             {
-                new GUIMessageBox(
-                    TextManager.Get("Error"), 
-                    TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
+                string errorMsg = item.ErrorCode.HasValue ?
+                    TextManager.Get("WorkshopPublishError." + item.ErrorCode.Value.ToString(), returnNull: true) :
+                    null;
+
+                if (errorMsg == null)
+                {
+                    new GUIMessageBox(
+                        TextManager.Get("Error"), 
+                        TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
+                }
+                else
+                {
+                    new GUIMessageBox(TextManager.Get("Error"), errorMsg);
+                }
             }
 
             createItemFrame.ClearChildren();

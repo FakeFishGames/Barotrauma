@@ -20,7 +20,7 @@ namespace SteamNative
 	//
 	// EResult
 	//
-	internal enum Result : int
+	public enum Result : int
 	{
 		OK = 1,
 		Fail = 2,

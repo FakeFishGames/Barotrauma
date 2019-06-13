@@ -590,7 +590,7 @@ namespace Barotrauma.Steam
             }
             else
             {
-                DebugConsole.ThrowError("Publishing workshop item " + item.Title + " failed. " + item.Error);
+                DebugConsole.NewMessage("Publishing workshop item " + item.Title + " failed. " + item.Error, Microsoft.Xna.Framework.Color.Red);
             }
 
             SaveUtil.ClearFolder(WorkshopItemStagingFolder);
