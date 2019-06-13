@@ -90,7 +90,16 @@ namespace Barotrauma
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
-                                
+                                if (GameSettings.SaveDebugConsoleLogs)
+                                {
+                                    unsavedMessages.Add(msg);
+                                    if (unsavedMessages.Count >= messagesPerFile)
+                                    {
+                                        SaveLogs();
+                                        unsavedMessages.Clear();
+                                    }
+                                }
+
                                 string msgTxt = msg.Text;
 
                                 if (msg.IsCommand) commandMemory.Add(msgTxt);
