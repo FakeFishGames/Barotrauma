@@ -61,6 +61,7 @@ namespace Barotrauma.Networking
 
                     localEnabled = box.Selected;
 
+
                     return true;
                 }
             };
@@ -145,16 +146,12 @@ namespace Barotrauma.Networking
         {
             if (obj is WhiteListedPlayer)
             {
-                WhiteListedPlayer wlp = obj as WhiteListedPlayer;
-                if (wlp == null) return false;
-
+                if (!(obj is WhiteListedPlayer wlp)) return false;
                 if (!localRemoved.Contains(wlp.UniqueIdentifier)) localRemoved.Add(wlp.UniqueIdentifier);
             }
             else if (obj is LocalAdded)
             {
-                LocalAdded lad = obj as LocalAdded;
-                if (lad == null) return false;
-
+                if (!(obj is LocalAdded lad)) return false;
                 if (localAdded.Contains(lad)) localAdded.Remove(lad);
             }
 
