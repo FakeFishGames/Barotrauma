@@ -164,7 +164,7 @@ namespace Microsoft.Xna.Framework.Input
         public static char ApplyModifiers(char chr, Sdl.Keyboard.Keymod mods)
         {
             //TODO: this is not by any means comprehensive
-            if ((mods | Sdl.Keyboard.Keymod.Ctrl) == Sdl.Keyboard.Keymod.None) return chr;
+            if ((mods & Sdl.Keyboard.Keymod.Ctrl) == Sdl.Keyboard.Keymod.None) return chr;
             switch (chr)
             {
                 case 'a':
