@@ -748,7 +748,7 @@ namespace Barotrauma
             for (int i = 0; i < item.Tags.Length && i < 5; i++)
             {
                 if (string.IsNullOrEmpty(item.Tags[i])) { continue; }
-                string tag = TextManager.Get("Workshop.ContentTag." + item.Tags[i], true);
+                string tag = TextManager.Get("Workshop.ContentTag." + item.Tags[i].Replace(" ", ""), true);
                 if (string.IsNullOrEmpty(tag)) { tag = item.Tags[i].CapitaliseFirstInvariant(); }
                 tags.Add(tag);
             }
@@ -1386,9 +1386,20 @@ namespace Barotrauma
             }
             else
             {
-                new GUIMessageBox(
-                    TextManager.Get("Error"), 
-                    TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
+                string errorMsg = item.ErrorCode.HasValue ?
+                    TextManager.Get("WorkshopPublishError." + item.ErrorCode.Value.ToString(), returnNull: true) :
+                    null;
+
+                if (errorMsg == null)
+                {
+                    new GUIMessageBox(
+                        TextManager.Get("Error"), 
+                        TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
+                }
+                else
+                {
+                    new GUIMessageBox(TextManager.Get("Error"), errorMsg);
+                }
             }
 
             createItemFrame.ClearChildren();

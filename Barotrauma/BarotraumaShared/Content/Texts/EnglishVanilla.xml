@@ -3190,7 +3190,13 @@
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
   <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
 
-  <workshopitemupdated>Workshop item [itemname] was updated succesfully.</workshopitemupdated>
+  <workshoppublisherror.limitexceeded>Publishing the workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
+  <workshoppublisherror.limiteduseraccount>Publishing the workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
+  <workshoppublisherror.banned>Publishing the workshop item failed because your account has been banned.</workshoppublisherror.banned>
+  <workshoppublisherror.insufficientprivilege>Publishing the workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
+  <workshoppublisherror.serviceunavailable>Publishing the workshop item failed (service unavailable). The workshop servers may be having issues, please try again in a moment.</workshoppublisherror.serviceunavailable>
+
+  <workshopitemupdated>Workshop item [itemname] was updated successfully.</workshopitemupdated>
   <workshopitemupdatefailed>Failed to update workshop item [itemname]. [errormessage]</workshopitemupdatefailed>
   <workshopfilenotfound>File [path] not found.</workshopfilenotfound>
 
@@ -3202,4 +3208,9 @@
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
   <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
+
+  <workshop.contenttag.eventset>Event set</workshop.contenttag.eventset>
+  <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
+  <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
+  <workshop.contenttag.language>Language</workshop.contenttag.language>
 </infotexts>
