@@ -45,7 +45,7 @@
       <sprite name="Medic Left Shoe" texture="medic_legs_[GENDER]_[VARIANT].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
     <ItemContainer capacity="3">
-      <Containable identifiers="chem,medical" />
+      <Containable identifiers="chem,medical" excludedidentifiers="toolbox" />
     </ItemContainer>
   </Item>
 </Items>

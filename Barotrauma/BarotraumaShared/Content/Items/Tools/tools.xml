@@ -18,7 +18,7 @@
       </Attack>
     </MeleeWeapon>
     <ItemContainer capacity="12">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem" excludedidentifiers="toolbox"/>
     </ItemContainer>
   </Item>
   
