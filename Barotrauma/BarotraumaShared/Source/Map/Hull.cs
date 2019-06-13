@@ -242,6 +242,8 @@ namespace Barotrauma
             WaterVolume = 0.0f;
 
             InsertToList();
+
+            DebugConsole.Log("Created hull (" + ID + ")");
         }
 
         public static Rectangle GetBorders()

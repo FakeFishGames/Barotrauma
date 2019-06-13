@@ -902,6 +902,75 @@ namespace Barotrauma
             {
                 if (characterConfigFiles == null)
                 {
+                    case InputType.Left:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                    case InputType.Right:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                    case InputType.Up:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                    case InputType.Down:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                    case InputType.Run:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                    case InputType.Crouch:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
+                    case InputType.Select:
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
+                    case InputType.Health:
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);
+                    case InputType.Grab:
+                        return dequeuedInput.HasFlag(InputNetFlags.Grab);
+                    case InputType.Use:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Shoot:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
+                    case InputType.Ragdoll:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
+                    default:
+                        return false;
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+#endif
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
                     characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
                 }
                 return characterConfigFiles;

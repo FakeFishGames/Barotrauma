@@ -627,6 +627,8 @@ namespace Barotrauma
                     ic.OnItemLoaded();
                 }
             }
+
+            DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
 
         partial void InitProjSpecific();
