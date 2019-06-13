@@ -186,61 +186,16 @@ namespace Barotrauma
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.TopRight)
             { RelativeOffset = new Vector2(0.025f, 0.02f) })
             { RelativeSpacing = 0.01f };
-
-            var supportedDisplayModes = new List<DisplayMode>();
-            foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
-            {
-                if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
-#if OSX
-                // Monogame currently doesn't support retina displays
-                // so we need to disable resolutions above the viewport size.
-
-                // In a bundled .app you just disable HiDPI in the info.plist
-                // but that's probably not gonna happen.
-                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
-#endif
-                supportedDisplayModes.Add(mode);
-            }
-            supportedDisplayModes.Sort((a, b) =>
-            {
-                if (a.Height < b.Height)
-                {
-                    return -1;
-                }
-                if (a.Height > b.Height)
-                {
-                    return 1;
-                }
-                if (a.Width < b.Width)
-                {
-                    return -1;
-                }
-                if (a.Width > b.Width)
-                {
-                    return 1;
-                }
-                return 0;
-            });
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
-            var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
+            var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform))
             {
                 OnSelected = SelectResolution,
                 ButtonEnabled = GameMain.Config.WindowMode != WindowMode.BorderlessWindowed
             };
 
-            foreach (DisplayMode mode in supportedDisplayModes)
-            {
-                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
-                resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
-                if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
-            }
-
-            if (resolutionDD.SelectedItemData == null)
-            {
-                resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
-            }
-
+            var supportedDisplayModes = UpdateResolutionDD(resolutionDD);
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
 
@@ -248,6 +203,7 @@ namespace Barotrauma
             {
                 UnsavedSettings = true;
                 GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+                supportedDisplayModes = UpdateResolutionDD(resolutionDD);
                 resolutionDD.ButtonEnabled = GameMain.Config.WindowMode != WindowMode.BorderlessWindowed;
                 GameMain.Instance.ApplyGraphicsSettings();
                 if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
@@ -837,6 +793,62 @@ namespace Barotrauma
 
             UnsavedSettings = false; // Reset unsaved settings to false once the UI has been created
             SelectTab(selectedTab);
+        }
+
+        private List<DisplayMode> UpdateResolutionDD(GUIDropDown resolutionDD)
+        {
+            var supportedDisplayModes = new List<DisplayMode>();
+            foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
+            {
+                if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
+#if OSX
+                // Monogame currently doesn't support retina displays
+                // so we need to disable resolutions above the viewport size.
+
+                // In a bundled .app you just disable HiDPI in the info.plist
+                // but that's probably not gonna happen.
+                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
+#endif
+                supportedDisplayModes.Add(mode);
+            }
+            supportedDisplayModes.Sort((a, b) =>
+            {
+                if (a.Width < b.Width)
+                {
+                    return -1;
+                }
+                if (a.Width > b.Width)
+                {
+                    return 1;
+                }
+                if (a.Height < b.Height)
+                {
+                    return -1;
+                }
+                if (a.Height > b.Height)
+                {
+                    return 1;
+                }
+                return 0;
+            });
+
+            resolutionDD.ClearChildren();
+
+            foreach (DisplayMode mode in supportedDisplayModes)
+            {
+                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
+                resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
+                if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
+            }
+
+            if (resolutionDD.SelectedItemData == null)
+            {
+                resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
+            }
+
+            resolutionDD.ListBox.RectTransform.Resize(new Point(resolutionDD.Rect.Width, resolutionDD.Rect.Height * MathHelper.Clamp(supportedDisplayModes.Count, 2, 10)));
+
+            return supportedDisplayModes;
         }
 
         private string TrimAudioDeviceName(string name)
