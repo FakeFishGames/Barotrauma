@@ -3190,7 +3190,7 @@
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
   <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
 
-  <workshoppublisherror.limitexceeded>Publishing the workshop item failed (limit exceeded). Make sure you have enabled Steam Could and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
+  <workshoppublisherror.limitexceeded>Publishing the workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
   <workshoppublisherror.limiteduseraccount>Publishing the workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
   <workshoppublisherror.banned>Publishing the workshop item failed because your account has been banned.</workshoppublisherror.banned>
   <workshoppublisherror.insufficientprivilege>Publishing the workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
