@@ -641,14 +641,14 @@ namespace Barotrauma
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
-                            limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                            limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
                     }
                     else if (target is Limb limb)
                     {
-                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f);
+                        limb.character.DamageLimb(entity.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                     }
                 }
 
