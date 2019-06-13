@@ -2975,7 +2975,7 @@
   <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
-  <charactereditor.displaycolliders>Display Colliders</charactereditor.displaycolliders>
+  <charactereditor.showcolliders>Show Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
   <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
   <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
@@ -3055,6 +3055,10 @@
   <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
   <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
+  <charactereditor.modespanel>Modes</charactereditor.modespanel>
+  <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
+  <charactereditor.misctoolspanel>Tools and Options</charactereditor.misctoolspanel>
+  <charactereditor.characterpanel>Character</charactereditor.characterpanel>
 
   <!-- Submarine editor -->
   <items>Items</items>

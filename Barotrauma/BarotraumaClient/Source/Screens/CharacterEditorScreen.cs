@@ -52,7 +52,7 @@ namespace Barotrauma
         private bool lockSpriteSize;
         private bool recalculateCollider;
         private bool copyJointSettings;
-        private bool displayColliders;
+        private bool showColliders;
         private bool displayWearables;
         private bool displayBackgroundColor;
         private bool ragdollResetRequiresForceLoading;
@@ -156,7 +156,7 @@ namespace Barotrauma
             lockSpriteSize = false;
             recalculateCollider = false;
             copyJointSettings = false;
-            displayColliders = false;
+            showColliders = false;
             displayWearables = true;
             displayBackgroundColor = false;
             ragdollResetRequiresForceLoading = false;
@@ -611,7 +611,7 @@ namespace Barotrauma
             {
                 character.AnimController.DebugDraw(spriteBatch);
             }
-            else if (displayColliders)
+            else if (showColliders)
             {
                 character.AnimController.Collider.DebugDraw(spriteBatch, Color.White, forceColor: true);
                 character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen, forceColor: true));
@@ -1452,7 +1452,7 @@ namespace Barotrauma
         private GUIDropDown animSelection;
         private GUITickBox freezeToggle;
         private GUITickBox animTestPoseToggle;
-        private GUITickBox displayCollidersToggle;
+        private GUITickBox showCollidersToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
         private GUIScrollBar spriteSheetZoomBar;
@@ -1521,7 +1521,7 @@ namespace Barotrauma
 
         private void CreateModesPanel(Vector2 toggleSize)
         {
-            modesPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
+            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.25f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - innerMargin.X, modesPanel.Rect.Height - innerMargin.Y),
                 modesPanel.RectTransform, Anchor.Center))
             {
@@ -1529,9 +1529,19 @@ namespace Barotrauma
                 Stretch = true
             };
 
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ModesPanel"), font: GUI.LargeFont);
             paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
             spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowSpriteSheet")) { Selected = showSpritesheet };
             ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowRagdoll")) { Selected = showRagdoll };
+            showCollidersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowColliders"))
+            {
+                Selected = showColliders,
+                OnSelected = box =>
+                {
+                    showColliders = box.Selected;
+                    return true;
+                }
+            };
             editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditAnimations")) { Selected = editAnimations };
             editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
             jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditJoints")) { Selected = editJoints };
@@ -1596,7 +1606,7 @@ namespace Barotrauma
                 showSpritesheet = box.Selected;
                 return true;
             };
-            modesToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            modesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
         }
 
         private void CreateMiscToolsPanel(Vector2 toggleSize)
@@ -1612,6 +1622,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("MiscToolsPanel"), font: GUI.LargeFont);
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("Freeze")) { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("AutoFreeze")) { Selected = autoFreeze };
             var limbPairEditToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("LimbPairEditing"))
@@ -1639,15 +1650,6 @@ namespace Barotrauma
                 OnSelected = box =>
                 {
                     character.dontFollowCursor = !box.Selected;
-                    return true;
-                }
-            };
-            displayCollidersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("DisplayColliders"))
-            {
-                Selected = displayColliders,
-                OnSelected = box =>
-                {
-                    displayColliders = box.Selected;
                     return true;
                 }
             };
@@ -1850,7 +1852,7 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     recalculateCollider = box.Selected;
-                    displayCollidersToggle.Selected = recalculateCollider;
+                    showCollidersToggle.Selected = recalculateCollider;
                     return true;
                 }
             };
@@ -2061,7 +2063,7 @@ namespace Barotrauma
 
         private void CreateCharacterSelectionPanel()
         {
-            characterSelectionPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), rightArea.RectTransform, Anchor.TopRight), style: null, color: panelColor);
+            characterSelectionPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), rightArea.RectTransform, Anchor.TopRight), style: null, color: panelColor);
             var padding = new GUIFrame(new RectTransform(new Point(characterSelectionPanel.Rect.Width - innerMargin.X, characterSelectionPanel.Rect.Height - innerMargin.Y),
                 characterSelectionPanel.RectTransform, Anchor.Center), style: null)
             {
@@ -2077,7 +2079,9 @@ namespace Barotrauma
             disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
 
             // Character selection
-            var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), padding.RectTransform)
+            new GUITextBlock(new RectTransform(new Vector2(1, 0.2f), padding.RectTransform), GetCharacterEditorTranslation("CharacterPanel"), font: GUI.LargeFont);
+
+            var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.2f), padding.RectTransform)
             {
                 RelativeOffset = new Vector2(0, 0.2f)
             }, elementCount: 10, style: null);
@@ -2094,7 +2098,7 @@ namespace Barotrauma
             };
             if (currentCharacterConfig == Character.HumanConfigFile)
             {
-                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), padding.RectTransform)
+                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.15f), padding.RectTransform)
                 {
                     RelativeOffset = new Vector2(0, 0.45f)
                 }, elementCount: 7, style: null);
@@ -2113,7 +2117,7 @@ namespace Barotrauma
                     return true;
                 };
             }
-            var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), parent: padding.RectTransform, anchor: Anchor.BottomLeft), style: null);
+            var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), parent: padding.RectTransform, anchor: Anchor.BottomLeft), style: null);
             var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("PreviousCharacter"));
             prevCharacterButton.TextBlock.AutoScale = true;
             prevCharacterButton.OnClicked += (b, obj) =>
@@ -2143,6 +2147,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("FileEditPanel"), font: GUI.LargeFont);
             var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("QuickSaveAnimations"));
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
