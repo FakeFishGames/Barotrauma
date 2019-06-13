@@ -456,24 +456,25 @@ namespace Barotrauma
 
             void AddCombatObjective(AIObjectiveCombat.CombatMode mode, float delay = 0)
             {
+                bool holdPosition = Character.Info?.Job?.Prefab.Identifier == "watchman";
                 if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
                 {
                     if (combatObjective.Enemy != attacker || (combatObjective.Enemy == null && attacker == null))
                     {
                         // Replace the old objective with the new.
                         ObjectiveManager.Objectives.Remove(combatObjective);
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition});
                     }
                 }
                 else
                 {
                     if (delay > 0)
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager), delay);
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition }, delay);
                     }
                     else
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition });
                     }
                 }
             }
