@@ -17,7 +17,8 @@ namespace Barotrauma
         const float coolDown = 10.0f;
 
         public Character Enemy { get; private set; }
-        
+        public bool HoldPosition { get; set; }
+
         private Item _weapon;
         private Item Weapon
         {
@@ -125,7 +126,10 @@ namespace Barotrauma
             TryArm();
             if (seekAmmunition == null || !subObjectives.Contains(seekAmmunition))
             {
-                Move();
+                if (!HoldPosition)
+                {
+                    Move();
+                }
                 if (WeaponComponent != null)
                 {
                     OperateWeapon(deltaTime);
@@ -160,7 +164,7 @@ namespace Barotrauma
                 else if (!WeaponComponent.HasRequiredContainedItems(false))
                 {
                     // Seek ammunition only if cannot find a new weapon
-                    if (!Reload(true, () => GetWeapon(out _) == null))
+                    if (!Reload(!HoldPosition, () => GetWeapon(out _) == null))
                     {
                         if (seekAmmunition != null && subObjectives.Contains(seekAmmunition))
                         {
