@@ -226,6 +226,14 @@ namespace Barotrauma
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
 
             GraphicsDeviceManager.ApplyChanges();
+
+            if (windowMode == WindowMode.BorderlessWindowed)
+            {
+                GraphicsWidth = GraphicsDevice.PresentationParameters.Bounds.Width;
+                GraphicsHeight = GraphicsDevice.PresentationParameters.Bounds.Height;
+                GraphicsDevice.Viewport = new Viewport(0,0,GraphicsWidth,GraphicsHeight);
+                GraphicsDevice.ScissorRectangle = new Rectangle(0,0,GraphicsWidth,GraphicsHeight);
+            }
         }
 
         public void ResetViewPort()

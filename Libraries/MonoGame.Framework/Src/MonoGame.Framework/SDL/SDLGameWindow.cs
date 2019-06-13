@@ -221,10 +221,6 @@ namespace Microsoft.Xna.Framework
             _screenDeviceName = screenDeviceName;
 
             var prevBounds = ClientBounds;
-            var displayIndex = Sdl.Window.GetDisplayIndex(Handle);
-
-            Sdl.Rectangle displayRect;
-            Sdl.Display.GetBounds(displayIndex, out displayRect);
 
             if (_willBeFullScreen != IsFullScreen || _hardwareSwitch != _game.graphicsDeviceManager.HardwareModeSwitch)
             {
@@ -240,6 +236,11 @@ namespace Microsoft.Xna.Framework
                 Sdl.SetHint("SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS", _willBeFullScreen && _hardwareSwitch ? "1" : "0");
             }
 
+            var displayIndex = Sdl.Window.GetDisplayIndex(Handle);
+
+            Sdl.Rectangle displayRect;
+            Sdl.Display.GetBounds(displayIndex, out displayRect);
+
             if (!_willBeFullScreen || _game.graphicsDeviceManager.HardwareModeSwitch)
             {
                 Sdl.Window.SetSize(Handle, clientWidth, clientHeight);
@@ -248,15 +249,16 @@ namespace Microsoft.Xna.Framework
             }
             else
             {
+                Sdl.Window.SetSize(Handle, displayRect.Width, displayRect.Height);
                 _width = displayRect.Width;
                 _height = displayRect.Height;
             }
 
+            Sdl.Window.GetSize(Handle, out _width, out _height);
+
             _game.GraphicsDevice.PresentationParameters.BackBufferWidth = _width;
             _game.GraphicsDevice.PresentationParameters.BackBufferHeight = _height;
             _game.GraphicsDevice.Viewport = new Viewport(0, 0, _width, _height);
-
-            Sdl.Window.GetSize(Handle, out _width, out _height);
 
             OnClientSizeChanged();
 
