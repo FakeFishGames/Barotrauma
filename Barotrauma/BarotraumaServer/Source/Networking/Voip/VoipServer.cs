@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
             if (recipientSpectating && senderSpectating) { return true; }
 
             //spectators can hear non-spectators
-            if (!senderSpectating && recipientSpectating) { return false; }
+            if (!senderSpectating && recipientSpectating) { return true; }
 
             //sender can't speak
             if (sender.Character != null && sender.Character.SpeechImpediment >= 100.0f) { return false; }
