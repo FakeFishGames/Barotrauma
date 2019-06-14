@@ -4904,10 +4904,11 @@ namespace Barotrauma
                     // Limbs
                     var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
                     new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbsElement.RectTransform), $"{GetCharacterEditorTranslation("Limbs")}: ");
-                    var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), limbsElement.RectTransform)
+                    var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(0.8f, 1f), limbsElement.RectTransform)
                         { RelativeOffset = new Vector2(0.25f, 0) }, style: null) { CanBeFocused = false };
+                    var limbEditLayout = new GUILayoutGroup(new RectTransform(Vector2.One, limbButtonElement.RectTransform), isHorizontal: true);
                     var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
-                    var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform), "-")
+                    var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), "-")
                     {
                         OnClicked = (b, d) =>
                         {
@@ -4918,10 +4919,7 @@ namespace Barotrauma
                             return true;
                         }
                     };
-                    var addLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbButtonElement.RectTransform)
-                    {
-                        AbsoluteOffset = new Point(removeLimbButton.Rect.Width + 10, 0)
-                    }, "+")
+                    var addLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), "+")
                     {
                         OnClicked = (b, d) =>
                         {
@@ -4939,27 +4937,31 @@ namespace Barotrauma
                             return true;
                         }
                     };
-                    // TODO: change so that gives a new popup
-                    new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Width / 2, limbButtonElement.Rect.Height), limbButtonElement.RectTransform)
-                    {
-                        AbsoluteOffset = new Point(removeLimbButton.Rect.Width + 10 + addLimbButton.Rect.Width + 10, 0)
-                    }, "Multiple")
+                    var xInput = new GUINumberInput(new RectTransform(new Point(100, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), GUINumberInput.NumberType.Int);
+                    var yInput = new GUINumberInput(new RectTransform(new Point(100, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), GUINumberInput.NumberType.Int);
+                    new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Width / 4, limbButtonElement.Rect.Height), limbEditLayout.RectTransform)
+                        , GetCharacterEditorTranslation("AddMultipleLimbsButton"))
                     {
                         OnClicked = (b, d) =>
                         {
-                            for (int i = 0; i < 10; i++)
+                            int x = MathHelper.Clamp(xInput.IntValue, 1, 100);
+                            int y = MathHelper.Clamp(yInput.IntValue, 1, 100);
+                            for (int i = 0; i < x; i++)
                             {
-                                LimbType limbType = LimbType.None;
-                                switch (LimbGUIElements.Count)
+                                for (int j = 0; j < y; j++)
                                 {
-                                    case 0:
-                                        limbType = LimbType.Torso;
-                                        break;
-                                    case 1:
-                                        limbType = LimbType.Head;
-                                        break;
+                                    LimbType limbType = LimbType.None;
+                                    switch (LimbGUIElements.Count)
+                                    {
+                                        case 0:
+                                            limbType = LimbType.Torso;
+                                            break;
+                                        case 1:
+                                            limbType = LimbType.Head;
+                                            break;
+                                    }
+                                    CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType, sourceRect: new Rectangle(100 * i, 100 * j, 100, 100));
                                 }
-                                CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType);
                             }
                             return true;
                         }
