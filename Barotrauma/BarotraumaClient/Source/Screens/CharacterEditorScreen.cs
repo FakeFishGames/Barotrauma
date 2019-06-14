@@ -2191,7 +2191,34 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("FileEditPanel"), font: GUI.LargeFont);
+
+            var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ReloadTextures"));
+            reloadTexturesButton.OnClicked += (button, userData) =>
+            {
+                foreach (var limb in character.AnimController.Limbs)
+                {
+                    limb.ActiveSprite.ReloadTexture();
+                    limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                    limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
+                }
+                CreateTextures();
+                return true;
+            };
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("RecreateRagdoll"))
+            {
+                ToolTip = GetCharacterEditorTranslation("RecreateRagdollTooltip"),
+                OnClicked = (button, data) =>
+                {
+                    RecreateRagdoll();
+                    character.AnimController.ResetLimbs();
+                    return true;
+                }
+            };
+
+            // Spacing
+            new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("QuickSaveAnimations"));
+            quickSaveAnimButton.Color = Color.LightGreen;
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
@@ -2207,6 +2234,7 @@ namespace Barotrauma
                 return true;
             };
             var quickSaveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("QuickSaveRagdoll"));
+            quickSaveRagdollButton.Color = Color.LightGreen;
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
@@ -2221,54 +2249,8 @@ namespace Barotrauma
                 GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font);
                 return true;
             };
-            var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetAnimations"));
-            resetAnimButton.OnClicked += (button, userData) =>
-            {
-                AnimParams.ForEach(p => p.Reset(true));
-                ResetParamsEditor();
-                GUI.AddMessage(GetCharacterEditorTranslation("AllAnimationsReset"), Color.WhiteSmoke, font: GUI.Font);
-                animationResetRequiresForceLoading = false;
-                return true;
-            };
-            var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetRagdoll"));
-            resetRagdollButton.OnClicked += (button, userData) =>
-            {
-                if (ragdollResetRequiresForceLoading)
-                {
-                    character.AnimController.ResetRagdoll(forceReload: true);
-                    RecreateRagdoll();
-                    ragdollResetRequiresForceLoading = false;
-                }
-                else
-                {
-                    character.AnimController.ResetRagdoll(forceReload: false);
-                    // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
-                    var selectedJointParams = selectedJoints.Select(j => j.jointParams).ToList();
-                    var selectedLimbParams = selectedLimbs.Select(l => l.limbParams).ToList();
-                    ClearWidgets();
-                    ClearSelection();
-                    foreach (var joint in character.AnimController.LimbJoints)
-                    {
-                        if (selectedJointParams.Contains(joint.jointParams))
-                        {
-                            selectedJoints.Add(joint);
-                        }
-                    }
-                    foreach (var limb in character.AnimController.Limbs)
-                    {
-                        if (selectedLimbParams.Contains(limb.limbParams))
-                        {
-                            selectedLimbs.Add(limb);
-                        }
-                    }
-                    ResetParamsEditor();
-                }
-                jointCreationMode = false;
-                closestSelectedLimb = null;
-                CreateGUI();
-                GUI.AddMessage(GetCharacterEditorTranslation("RagdollReset"), Color.WhiteSmoke, font: GUI.Font);
-                return true;
-            };
+            // Spacing
+            new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             Vector2 messageBoxRelSize = new Vector2(0.5f, 0.5f);
             int messageBoxWidth = GameMain.GraphicsWidth / 2;
             int messageBoxHeight = GameMain.GraphicsHeight / 2;
@@ -2577,28 +2559,62 @@ namespace Barotrauma
                 };
                 return true;
             };
-            var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ReloadTextures"));
-            reloadTexturesButton.OnClicked += (button, userData) =>
+
+            // Spacing
+            new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
+            var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetAnimations"));
+            resetAnimButton.Color = Color.Red;
+            resetAnimButton.OnClicked += (button, userData) =>
             {
-                foreach (var limb in character.AnimController.Limbs)
-                {
-                    limb.ActiveSprite.ReloadTexture();
-                    limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
-                    limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
-                }
-                CreateTextures();
+                AnimParams.ForEach(p => p.Reset(true));
+                ResetParamsEditor();
+                GUI.AddMessage(GetCharacterEditorTranslation("AllAnimationsReset"), Color.WhiteSmoke, font: GUI.Font);
+                animationResetRequiresForceLoading = false;
                 return true;
             };
-            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("RecreateRagdoll"))
+            var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetRagdoll"));
+            resetRagdollButton.Color = Color.Red;
+            resetRagdollButton.OnClicked += (button, userData) =>
             {
-                ToolTip = GetCharacterEditorTranslation("RecreateRagdollTooltip"),
-                OnClicked = (button, data) =>
+                if (ragdollResetRequiresForceLoading)
                 {
+                    character.AnimController.ResetRagdoll(forceReload: true);
                     RecreateRagdoll();
-                    character.AnimController.ResetLimbs();
-                    return true;
+                    ragdollResetRequiresForceLoading = false;
                 }
+                else
+                {
+                    character.AnimController.ResetRagdoll(forceReload: false);
+                    // For some reason Enumerable.Contains() method does not find the match, threfore the conversion to a list.
+                    var selectedJointParams = selectedJoints.Select(j => j.jointParams).ToList();
+                    var selectedLimbParams = selectedLimbs.Select(l => l.limbParams).ToList();
+                    ClearWidgets();
+                    ClearSelection();
+                    foreach (var joint in character.AnimController.LimbJoints)
+                    {
+                        if (selectedJointParams.Contains(joint.jointParams))
+                        {
+                            selectedJoints.Add(joint);
+                        }
+                    }
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (selectedLimbParams.Contains(limb.limbParams))
+                        {
+                            selectedLimbs.Add(limb);
+                        }
+                    }
+                    ResetParamsEditor();
+                }
+                jointCreationMode = false;
+                closestSelectedLimb = null;
+                CreateGUI();
+                GUI.AddMessage(GetCharacterEditorTranslation("RagdollReset"), Color.WhiteSmoke, font: GUI.Font);
+                return true;
             };
+
+            // Spacing
+            new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("CreateNewCharacter"))
             {
                 OnClicked = (button, data) =>
@@ -4754,6 +4770,7 @@ namespace Barotrauma
                 protected override GUIMessageBox Create()
                 {
                     var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), TextManager.Get("Next") }, new Vector2(0.5f, 1.0f));
+                    box.Header.Font = GUI.LargeFont;
                     box.Content.ChildAnchor = Anchor.TopCenter;
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;
