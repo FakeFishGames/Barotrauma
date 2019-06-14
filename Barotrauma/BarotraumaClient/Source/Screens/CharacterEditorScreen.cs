@@ -4939,6 +4939,31 @@ namespace Barotrauma
                             return true;
                         }
                     };
+                    // TODO: change so that gives a new popup
+                    new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Width / 2, limbButtonElement.Rect.Height), limbButtonElement.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(removeLimbButton.Rect.Width + 10 + addLimbButton.Rect.Width + 10, 0)
+                    }, "Multiple")
+                    {
+                        OnClicked = (b, d) =>
+                        {
+                            for (int i = 0; i < 10; i++)
+                            {
+                                LimbType limbType = LimbType.None;
+                                switch (LimbGUIElements.Count)
+                                {
+                                    case 0:
+                                        limbType = LimbType.Torso;
+                                        break;
+                                    case 1:
+                                        limbType = LimbType.Head;
+                                        break;
+                                }
+                                CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType);
+                            }
+                            return true;
+                        }
+                    };
                     // Joints
                     new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
                     var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
