@@ -4929,10 +4929,10 @@ namespace Barotrauma
                             switch (LimbGUIElements.Count)
                             {
                                 case 0:
-                                    limbType = LimbType.Head;
+                                    limbType = LimbType.Torso;
                                     break;
                                 case 1:
-                                    limbType = LimbType.Torso;
+                                    limbType = LimbType.Head;
                                     break;
                             }
                             CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType);
