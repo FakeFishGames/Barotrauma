@@ -42,7 +42,7 @@ namespace Barotrauma
         public float GetAverageElapsedMillisecs(string identifier)
         {
             if (!avgTicksPerFrame.ContainsKey(identifier)) return 0.0f;
-            return avgTicksPerFrame[identifier] / TimeSpan.TicksPerMillisecond;
+            return avgTicksPerFrame[identifier] / (float)TimeSpan.TicksPerMillisecond;
         }
 
         public bool Update(double deltaTime)

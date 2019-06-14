@@ -82,7 +82,7 @@ namespace Barotrauma
                     dequeuedInput = memInput[memInput.Count - 1].states;
 
                     double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
-                    cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+                    cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 500.0f;
 
                     //reset focus when attempting to use/select something
                     if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
@@ -354,12 +354,10 @@ namespace Barotrauma
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
                     }
                     tempBuffer.Write(attack);
-
-                    if (aiming)
-                    {
-                        Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
-                        tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
-                    }
+                    
+                    Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
+                    tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
+                    
                     tempBuffer.Write(IsRagdolled || IsUnconscious || Stun > 0.0f || IsDead);
 
                     tempBuffer.Write(AnimController.Dir > 0.0f);

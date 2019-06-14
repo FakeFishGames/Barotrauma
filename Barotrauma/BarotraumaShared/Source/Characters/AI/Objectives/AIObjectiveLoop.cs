@@ -21,6 +21,7 @@ namespace Barotrauma
 
         public bool AddTarget(T target)
         {
+            if (character.IsDead) { return false; }
             if (ReportedTargets.Contains(target))
             {
                 return false;

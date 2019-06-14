@@ -201,7 +201,7 @@ namespace Barotrauma
         public float PositionUpdateInterval
         {
             get;
-            private set;
+            set;
         } = float.PositiveInfinity;
 
         protected Color spriteColor;
@@ -285,7 +285,7 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
-        public bool IsFullCondition => Condition >= MaxCondition;
+        public bool IsFullCondition => MathUtils.NearlyEqual(Condition, MaxCondition);
         public float MaxCondition => Prefab.Health;
         public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
 
@@ -304,6 +304,7 @@ namespace Barotrauma
                 if (Indestructible) return;
 
                 float prev = condition;
+
                 condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
                 if (condition == 0.0f && prev > 0.0f)
                 {
@@ -626,6 +627,8 @@ namespace Barotrauma
                     ic.OnItemLoaded();
                 }
             }
+
+            DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
 
         partial void InitProjSpecific();
@@ -1042,8 +1045,8 @@ namespace Barotrauma
             //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
-                aiTarget.SightRange -= deltaTime * 1000.0f;
-                aiTarget.SoundRange -= deltaTime * 1000.0f;
+                aiTarget.SightRange -= deltaTime * (aiTarget.MaxSightRange / aiTarget.FadeOutTime);
+                aiTarget.SoundRange -= deltaTime * (aiTarget.MaxSoundRange / aiTarget.FadeOutTime);
             }
 
             bool broken = condition <= 0.0f;
@@ -1539,9 +1542,8 @@ namespace Barotrauma
             {
                 if (requiredSkill != null)
                 {
-                    GUI.AddMessage(TextManager.Get("InsufficientSkills")
-                        .Replace("[requiredskill]", TextManager.Get("SkillName." + requiredSkill.Identifier))
-                        .Replace("[requiredlevel]", ((int)requiredSkill.Level).ToString()), Color.Red);
+                    GUI.AddMessage(TextManager.GetWithVariables("InsufficientSkills", new string[2] { "[requiredskill]", "[requiredlevel]" },
+                        new string[2] { TextManager.Get("SkillName." + requiredSkill.Identifier), ((int)requiredSkill.Level).ToString() }, new bool[2] { true, false }), Color.Red);
                 }
             }
 #endif
@@ -1553,7 +1555,7 @@ namespace Barotrauma
 
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
-            if (RequireAimToUse && !character.IsKeyDown(InputType.Aim))
+            if (RequireAimToUse && (character == null || !character.IsKeyDown(InputType.Aim)))
             {
                 return;
             }
@@ -2018,6 +2020,8 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
 
             item.condition = element.GetAttributeFloat("condition", item.Prefab.Health);
+            item.lastSentCondition = item.condition;
+
             item.SetActiveSprite();
 
             foreach (ItemComponent component in item.components)
@@ -2033,8 +2037,8 @@ namespace Barotrauma
             XElement element = new XElement("Item");
 
             element.Add(
-                new XAttribute("name", prefab.Name),
-                new XAttribute("identifier", prefab.Identifier),
+                new XAttribute("name", Prefab.OriginalName),
+                new XAttribute("identifier", Prefab.Identifier),
                 new XAttribute("ID", ID));
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));

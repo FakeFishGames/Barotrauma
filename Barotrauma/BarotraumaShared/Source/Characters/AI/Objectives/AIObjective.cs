@@ -215,11 +215,12 @@ namespace Barotrauma
 
         protected virtual void OnCompleted()
         {
-            if (Completed != null)
-            {
-                Completed();
-                Completed = null;
-            }
+            Completed?.Invoke();
+            //if (Completed != null)
+            //{
+            //    Completed();
+            //    Completed = null;
+            //}
         }
 
         public virtual void Reset() { }

@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -21,8 +20,8 @@ namespace Barotrauma
         /// </summary>
         const float CharacterWaitOnSwitch = 10.0f;
 
-        private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-        private List<Character> characters = new List<Character>();
+        private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private readonly List<Character> characters = new List<Character>();
 
         private Point screenResolution;
 
@@ -505,7 +504,10 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
-                    if (Character.Controlled == null || Character.Controlled.SpeechImpediment >= 100.0f) return false;
+#if CLIENT
+                    if (GameMain.Client != null && Character.Controlled == null) { return false; }
+#endif
+                    if (Character.Controlled != null && Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
 
                     if (btn.GetChildByUserData("selected").Visible)
                     {
@@ -919,7 +921,9 @@ namespace Barotrauma
                             Font = GUI.SmallFont,
                             OnClicked = (btn, userData) =>
                             {
-                                if (Character.Controlled == null) return false;
+#if CLIENT
+                                if (GameMain.Client != null && Character.Controlled == null) { return false; }
+#endif
                                 SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                                 orderTargetFrame = null;
                                 OrderOptionButtons.Clear();
@@ -957,7 +961,9 @@ namespace Barotrauma
                         UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
                         OnClicked = (btn, userData) =>
                         {
-                            if (Character.Controlled == null) return false;
+#if CLIENT
+                            if (GameMain.Client != null && Character.Controlled == null) { return false; }
+#endif
                             SetCharacterOrder(character, userData as Order, option, Character.Controlled);
                             orderTargetFrame = null;
                             OrderOptionButtons.Clear();
@@ -1312,7 +1318,7 @@ namespace Barotrauma
             GUIComponent existingPreview = crewFrame.FindChild("SelectedCharacter");
             if (existingPreview != null) crewFrame.RemoveChild(existingPreview);
 
-            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
+            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.9f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
             {
                 UserData = "SelectedCharacter"
             };
@@ -1353,7 +1359,7 @@ namespace Barotrauma
                 bool hasLeaks = Character.Controlled.CurrentHull.Submarine != null && Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
                 ToggleReportButton("reportbreach", hasLeaks);
 
-                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(Character.Controlled, c));
+                bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(c, Character.Controlled));
                 ToggleReportButton("reportintruders", hasIntruders);
 
                 foreach (GUIComponent reportButton in reportButtonFrame.Children)

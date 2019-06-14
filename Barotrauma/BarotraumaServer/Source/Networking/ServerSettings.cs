@@ -236,8 +236,8 @@ namespace Barotrauma.Networking
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
 
-            var botSpawnMode = BotSpawnMode.Fill;
-            Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Fill"), out botSpawnMode);
+            var botSpawnMode = BotSpawnMode.Normal;
+            Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Normal"), out botSpawnMode);
             BotSpawnMode = botSpawnMode;
 
             //"65-90", "97-122", "48-59" = upper and lower case english alphabet and numbers

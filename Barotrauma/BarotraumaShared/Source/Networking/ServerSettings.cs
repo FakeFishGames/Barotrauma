@@ -360,7 +360,7 @@ namespace Barotrauma.Networking
         public bool StartWhenClientsReady
         {
             get;
-            private set;
+            set;
         }
 
         [Serialize(0.8f, true)]
@@ -656,7 +656,7 @@ namespace Barotrauma.Networking
             private set;
         } = new List<Pair<int, int>>();
 
-        public void ReadMonsterEnabled(NetBuffer inc)
+        private void InitMonstersEnabled()
         {
             //monster spawn settings
             if (MonsterEnabled == null)
@@ -673,7 +673,11 @@ namespace Barotrauma.Networking
                     if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
                 }
             }
+        }
 
+        public void ReadMonsterEnabled(NetBuffer inc)
+        {
+            InitMonstersEnabled();
             List<string> monsterNames = MonsterEnabled.Keys.ToList();
             foreach (string s in monsterNames)
             {
@@ -681,7 +685,7 @@ namespace Barotrauma.Networking
             }
             inc.ReadPadBits();
         }
-        
+
         public void WriteMonsterEnabled(NetBuffer msg, Dictionary<string, bool> monsterEnabled = null)
         {
             //monster spawn settings
@@ -703,13 +707,17 @@ namespace Barotrauma.Networking
             Dictionary<ItemPrefab, int> extraCargo = new Dictionary<ItemPrefab, int>();
             for (int i = 0; i < count; i++)
             {
+                string prefabIdentifier = msg.ReadString();
                 string prefabName = msg.ReadString();
                 byte amount = msg.ReadByte();
-                ItemPrefab ip = MapEntityPrefab.List.Find(p => p is ItemPrefab && p.Name.Equals(prefabName, StringComparison.InvariantCulture)) as ItemPrefab;
-                if (ip != null && amount > 0)
+
+                var itemPrefab = string.IsNullOrEmpty(prefabIdentifier) ?
+                    MapEntityPrefab.Find(prefabName, null, showErrorMessages: false) as ItemPrefab :
+                    MapEntityPrefab.Find(prefabName, prefabIdentifier, showErrorMessages: false) as ItemPrefab;
+                if (itemPrefab != null && amount > 0)
                 {
-                    if (changed || !ExtraCargo.ContainsKey(ip) || ExtraCargo[ip] != amount) changed = true;
-                    extraCargo.Add(ip, amount);
+                    if (changed || !ExtraCargo.ContainsKey(itemPrefab) || ExtraCargo[itemPrefab] != amount) changed = true;
+                    extraCargo.Add(itemPrefab, amount);
                 }
             }
             if (changed) ExtraCargo = extraCargo;
@@ -727,7 +735,9 @@ namespace Barotrauma.Networking
             msg.Write((UInt32)ExtraCargo.Count);
             foreach (KeyValuePair<ItemPrefab, int> kvp in ExtraCargo)
             {
-                msg.Write(kvp.Key.Name); msg.Write((byte)kvp.Value);
+                msg.Write(kvp.Key.Identifier ?? "");
+                msg.Write(kvp.Key.OriginalName ?? "");
+                msg.Write((byte)kvp.Value);
             }
         }
     }

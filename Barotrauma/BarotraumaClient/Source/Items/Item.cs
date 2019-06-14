@@ -51,7 +51,7 @@ namespace Barotrauma
                 {
                     itemInUseWarning = new GUITextBlock(new RectTransform(new Point(10), GUI.Canvas), "", 
                         textColor: Color.Orange, color: Color.Black, 
-                        textAlignment:Alignment.Center, style: "OuterGlow");
+                        textAlignment: Alignment.Center, style: "OuterGlow");
                 }
                 return itemInUseWarning;
             }
@@ -451,7 +451,7 @@ namespace Barotrauma
 
         public override void UpdateEditing(Camera cam)
         {
-            if (editingHUD == null || editingHUD.UserData as Item != this)
+            if (editingHUD == null || editingHUD.UserData == null)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
@@ -662,7 +662,7 @@ namespace Barotrauma
                 new Rectangle(
                     20, 20, 
                     GameMain.GraphicsWidth - 40, 
-                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 20 : GameMain.GraphicsHeight - 80));
+                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
 
             foreach (ItemComponent ic in activeHUDs)
             {
@@ -740,9 +740,9 @@ namespace Barotrauma
                 }
             }
 
-            if (itemInUseWarning != null && mergedHUDRect != Rectangle.Empty)
+            if (mergedHUDRect != Rectangle.Empty)
             {
-                itemInUseWarning.Visible = false;
+                if (itemInUseWarning != null) { itemInUseWarning.Visible = false; }
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
                     if (otherCharacter != character &&
@@ -754,7 +754,7 @@ namespace Barotrauma
                         itemInUseWarning.RectTransform.NonScaledSize = new Point(mergedHUDRect.Width, (int)(50 * GUI.Scale));
                         if (itemInUseWarning.UserData != otherCharacter)
                         {
-                            itemInUseWarning.Text = TextManager.Get("ItemInUse").Replace("[character]", otherCharacter.Name);
+                            itemInUseWarning.Text = TextManager.GetWithVariable("ItemInUse", "[character]", otherCharacter.Name);
                             itemInUseWarning.UserData = otherCharacter;
                         }
                         break;
@@ -790,8 +790,7 @@ namespace Barotrauma
                 if (ic is Holdable holdable && !holdable.CanBeDeattached()) continue;
 
                 Color color = Color.Gray;
-                bool hasRequiredSkillsAndItems = ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false);
-                if (hasRequiredSkillsAndItems)
+                if (ic.HasRequiredItems(character, false))
                 {
                     if (ic is Repairable repairable)
                     {
@@ -1008,7 +1007,13 @@ namespace Barotrauma
         {
             if (body == null)
             {
-                DebugConsole.ThrowError("Received a position update for an item with no physics body (" + Name + ")");
+                string errorMsg = "Received a position update for an item with no physics body (" + Name + ")";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#else
+                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:nophysicsbody", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
 

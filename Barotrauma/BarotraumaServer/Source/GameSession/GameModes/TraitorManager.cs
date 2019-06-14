@@ -16,16 +16,15 @@ namespace Barotrauma
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            string greetingMessage = TextManager.Get("TraitorStartMessage").Replace("[targetname]", TargetCharacter.Name);
-            string moreAgentsMessage = TextManager.Get("TraitorMoreAgentsMessage")
-                .Replace("[codewords]", codeWords)
-                .Replace("[coderesponse]", codeResponse);
+            string greetingMessage = TextManager.GetWithVariable("TraitorStartMessage", "[targetname]", TargetCharacter.Name);
+            string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
+                new string[2] { "[codewords]", "[coderesponse]" }, new string[2] { codeWords, codeResponse });
             
             var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
             var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);
 
-            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
             var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
+            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
             GameMain.Server.SendDirectChatMessage(greetingChatMsg, traitorClient);
@@ -38,7 +37,7 @@ namespace Barotrauma
             {
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
-                    TextManager.Get("TraitorStartMessageServer").Replace("[targetname]", TargetCharacter.Name).Replace("[traitorname]", Character.Name),
+                    TextManager.GetWithVariables("TraitorStartMessageServer", new string[2] { "[targetname]", "[traitorname]" }, new string[2] { TargetCharacter.Name, Character.Name }),
                     ChatMessageType.MessageBox,
                     null
                 );
@@ -168,9 +167,8 @@ namespace Barotrauma
                     }
                 }
 
-                endMessage += (TextManager.ReplaceGenderPronouns(TextManager.Get(messageTag), traitorCharacter.Info.Gender) + "\n")
-                    .Replace("[traitorname]", traitorCharacter.Name)
-                    .Replace("[targetname]", targetCharacter.Name);
+                endMessage += (TextManager.ReplaceGenderPronouns(TextManager.GetWithVariables(messageTag, new string[2] { "[traitorname]", "[targetname]" },
+                    new string[2] { traitorCharacter.Name, targetCharacter.Name }), traitorCharacter.Info.Gender) + "\n");
             }
 
             return endMessage;

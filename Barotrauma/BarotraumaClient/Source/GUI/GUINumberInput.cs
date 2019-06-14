@@ -86,7 +86,25 @@ namespace Barotrauma
             }
         }
 
-        public int? MinValueInt, MaxValueInt;
+        private int? minValueInt, maxValueInt;
+        public int? MinValueInt
+        {
+            get { return minValueInt; }
+            set
+            {
+                minValueInt = value;
+                ClampIntValue();
+            }
+        }
+        public int? MaxValueInt
+        {
+            get { return maxValueInt; }
+            set
+            {
+                maxValueInt = value;
+                ClampIntValue();
+            }
+        }
 
         private int intValue;
         public int IntValue
@@ -117,7 +135,9 @@ namespace Barotrauma
         {
             LayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), isHorizontal: true) { Stretch = true };
 
-            TextBox = new GUITextBox(new RectTransform(Vector2.One, LayoutGroup.RectTransform), textAlignment: textAlignment, style: style)
+            float relativeButtonAreaWidth = MathHelper.Clamp(Rect.Height / (float)Rect.Width, 0.1f, 0.5f);
+
+            TextBox = new GUITextBox(new RectTransform(new Vector2(1.0f - relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform), textAlignment: textAlignment, style: style)
             {
                 ClampText = false,
                 // For some reason the caret in the number inputs is dimmer than it should.
@@ -126,7 +146,7 @@ namespace Barotrauma
                 CaretColor = Color.White
             };
             TextBox.OnTextChanged += TextChanged;
-            var buttonArea = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight) { MinSize = new Point(Rect.Height, 0) }, style: null);
+            var buttonArea = new GUIFrame(new RectTransform(new Vector2(relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight) { MinSize = new Point(Rect.Height, 0) }, style: null);
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+");
             PlusButton.OnButtonDown += () =>
             {
@@ -201,6 +221,8 @@ namespace Barotrauma
                     TextBox.textFilterFunction = text => new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
                     break;
             }
+
+            LayoutGroup.Recalculate();
         }
 
         private void ReduceValue()

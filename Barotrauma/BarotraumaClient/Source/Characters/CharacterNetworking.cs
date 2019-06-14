@@ -181,13 +181,11 @@ namespace Barotrauma
                         bool attackInput = msg.ReadBoolean();
                         keys[(int)InputType.Attack].Held = attackInput;
                         keys[(int)InputType.Attack].SetState(false, attackInput);
-
-                        if (aimInput)
-                        {
-                            double aimAngle = ((double)msg.ReadUInt16() / 65535.0) * 2.0 * Math.PI;
-                            cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
-                            TransformCursorPos();
-                        }
+                        
+                        double aimAngle = msg.ReadUInt16() / 65535.0 * 2.0 * Math.PI;
+                        cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 500.0f;
+                        TransformCursorPos();
+                        
                         bool ragdollInput = msg.ReadBoolean();
                         keys[(int)InputType.Ragdoll].Held = ragdollInput;
                         keys[(int)InputType.Ragdoll].SetState(false, ragdollInput);

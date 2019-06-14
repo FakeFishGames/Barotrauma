@@ -459,7 +459,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container, objective.objectiveManager);
-                character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
+                character?.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
                 containShellObjective.targetItemCount = usableProjectileCount + 1;
                 containShellObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
                 objective.AddSubObjective(containShellObjective);                
@@ -489,28 +489,24 @@ namespace Barotrauma.Items.Components
                 closestDist = dist;                
             }
 
-            if (closestEnemy == null) return false;
+            if (closestEnemy == null) { return false; }
             
             character.AIController.SelectTarget(closestEnemy.AiTarget);
 
             character.CursorPosition = closestEnemy.WorldPosition;
-            if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
-
-            //force aim input even if the turret doesn't require it,
-            //because the cursor position (and consequently, turret aim direction) is only synced to clients when aiming
-            character.SetInput(InputType.Aim, false, true);
-
+            if (item.Submarine != null) { character.CursorPosition -= item.Submarine.Position; }
+            
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
 
-            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) return false;
+            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) { return false; }
 
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
-            if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
+            if (pickedBody != null && !(pickedBody.UserData is Limb)) { return false; }
 
             if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
-                character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
+                character?.Speak(TextManager.GetWithVariable("DialogFireTurret", "[itemname]", item.Name, true), null, 0.0f, "fireturret", 5.0f);
                 character.SetInput(InputType.Shoot, true, true);
             }
 

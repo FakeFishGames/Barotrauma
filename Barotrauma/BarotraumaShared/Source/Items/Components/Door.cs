@@ -22,7 +22,6 @@ namespace Barotrauma.Items.Components
         private float openState;
         private Sprite doorSprite, weldedSprite, brokenSprite;
         private bool scaleBrokenSprite, fadeBrokenSprite;
-        private bool createdNewGap;
         private bool autoOrientGap;
 
         private bool isStuck;
@@ -59,6 +58,8 @@ namespace Barotrauma.Items.Components
             get { return item.GetComponent<Repairable>()?.ShowRepairUIThreshold ?? 0.0f; }
         }
 
+        public bool CanBeWelded = true;
+
         private float stuck;
         [Serialize(0.0f, false)]
         public float Stuck
@@ -66,12 +67,18 @@ namespace Barotrauma.Items.Components
             get { return stuck; }
             set 
             {
-                if (isOpen || isBroken) return;
+                if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (stuck <= 0.0f) isStuck = false;
                 if (stuck >= 100.0f) isStuck = true;
             }
         }
+
+        [Serialize(3.0f, true), Editable]
+        public float OpeningSpeed { get; private set; }
+
+        [Serialize(3.0f, true), Editable]
+        public float ClosingSpeed { get; private set; }
 
         public bool? PredictedState { get; private set; }
 
@@ -79,17 +86,19 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (linkedGap != null) return linkedGap;
-
-                foreach (MapEntity e in item.linkedTo)
+                if (linkedGap == null)
                 {
-                    linkedGap = e as Gap;
-                    if (linkedGap != null)
-                    {
-                        linkedGap.PassAmbientLight = Window != Rectangle.Empty;
-                        return linkedGap;
-                    }
+                    GetLinkedGap();
                 }
+                return linkedGap;
+            }
+        }
+
+        private void GetLinkedGap()
+        {
+            linkedGap = item.linkedTo.FirstOrDefault(e => e is Gap) as Gap;
+            if (linkedGap == null)
+            {
                 Rectangle rect = item.Rect;
                 if (IsHorizontal)
                 {
@@ -101,17 +110,13 @@ namespace Barotrauma.Items.Components
                     rect.X -= 5;
                     rect.Width += 10;
                 }
-
                 linkedGap = new Gap(rect, !IsHorizontal, Item.Submarine)
                 {
-                    Submarine = item.Submarine,
-                    PassAmbientLight = Window != Rectangle.Empty,
-                    Open = openState
+                    Submarine = item.Submarine
                 };
                 item.linkedTo.Add(linkedGap);
-                createdNewGap = true;
-                return linkedGap;
             }
+            RefreshLinkedGap();
         }
 
         public bool IsHorizontal { get; private set; }
@@ -297,12 +302,12 @@ namespace Barotrauma.Items.Components
             {
                 if (PredictedState == null)
                 {
-                    OpenState += deltaTime * (isOpen ? 2.0f : -2.0f);
+                    OpenState += deltaTime * (isOpen ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
                 }
                 else
                 {
-                    OpenState += deltaTime * ((bool)PredictedState ? 2.0f : -2.0f);
+                    OpenState += deltaTime * ((bool)PredictedState ? OpeningSpeed : -ClosingSpeed);
                     isClosing = openState > 0.0f && openState < 1.0f && !(bool)PredictedState;
 
                     resetPredictionTimer -= deltaTime;
@@ -362,12 +367,20 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void OnMapLoaded()
+        public void RefreshLinkedGap()
         {
             LinkedGap.ConnectedDoor = this;
+            if (autoOrientGap)
+            {
+                LinkedGap.AutoOrient();
+            }
             LinkedGap.Open = openState;
-            if (createdNewGap && autoOrientGap) linkedGap.AutoOrient();
+            LinkedGap.PassAmbientLight = Window != Rectangle.Empty;
+        }
 
+        public override void OnMapLoaded()
+        {
+            RefreshLinkedGap();
 #if CLIENT
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
 

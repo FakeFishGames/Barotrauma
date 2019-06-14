@@ -174,6 +174,12 @@ namespace Barotrauma.Items.Components
 
         private void Launch(Vector2 impulse)
         {
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
+                item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
+            }
+
             item.Drop(null);
 
             item.body.Enabled = true;            
@@ -276,12 +282,34 @@ namespace Barotrauma.Items.Components
         private List<HitscanResult> DoRayCast(Vector2 rayStart, Vector2 rayEnd)
         {
             List<HitscanResult> hits = new List<HitscanResult>();
+
+            Vector2 dir = rayEnd - rayStart;
+            dir = dir.LengthSquared() < 0.00001f ? Vector2.UnitY : Vector2.Normalize(dir);
+
+            //do an AABB query first to see if the start of the ray is inside a fixture
+            var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.One * 0.001f, rayStart + Vector2.One * 0.001f);
+            GameMain.World.QueryAABB((fixture) =>
+            {
+                //ignore sensors and items
+                if (fixture?.Body == null || fixture.IsSensor) return true;
+                if (fixture.UserData is Item) return true;
+
+                //ignore everything else than characters, sub walls and level walls
+                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return true;
+
+                hits.Add(new HitscanResult(fixture, rayStart, -dir, 0.0f));
+                return true;
+            }, ref aabb);
+
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null || fixture.IsSensor) return -1;
-
+                //ignore sensors and items
+                if (fixture?.Body == null || fixture.IsSensor) return -1;
                 if (fixture.UserData is Item) return -1;
 
+                //ignore everything else than characters, sub walls and level walls
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;

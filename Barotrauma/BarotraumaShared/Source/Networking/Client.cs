@@ -7,6 +7,8 @@ namespace Barotrauma.Networking
 {
     partial class Client : IDisposable
     {
+        public const int MaxNameLength = 20;
+
         public string Name;
         public byte ID;
         
@@ -203,6 +205,21 @@ namespace Barotrauma.Networking
             List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
             ReadPermissions(inc, out permissions, out permittedCommands);
             SetPermissions(permissions, permittedCommands);
+        }
+
+        public static string SanitizeName(string name)
+        {
+            name = name.Trim();
+            if (name.Length > MaxNameLength)
+            {
+                name = name.Substring(0, MaxNameLength);
+            }
+            string rName = "";
+            for (int i = 0; i < name.Length; i++)
+            {
+                rName += name[i] < 32 ? '?' : name[i];
+            }
+            return rName;
         }
 
         public void Dispose()

@@ -230,11 +230,18 @@ namespace Barotrauma
             if (GameMain.ShowPerf)
             {
                 int y = 10;
-                DrawString(spriteBatch, new Vector2(300, y), "Draw - Max val: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue()+" ms", Color.Green, Color.Black * 0.8f, font: GUI.SmallFont);
+                DrawString(spriteBatch, new Vector2(300, y), 
+                    "Draw - Avg: " + GameMain.PerformanceCounter.DrawTimeGraph.Average().ToString("0.00") + " ms" +
+                    " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms", 
+                    Color.Green, Color.Black * 0.8f, font: SmallFont);
                 y += 15;
                 GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.Green);
                 y += 50;
-                DrawString(spriteBatch, new Vector2(300, y), "Update - Max val: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue() + " ms", Color.LightBlue, Color.Black * 0.8f, font: GUI.SmallFont);
+
+                DrawString(spriteBatch, new Vector2(300, y),
+                    "Update - Avg: " + GameMain.PerformanceCounter.UpdateTimeGraph.Average().ToString("0.00") + " ms" +
+                    " Max: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue().ToString("0.00") + " ms", 
+                    Color.LightBlue, Color.Black * 0.8f, font: SmallFont);
                 y += 15;
                 GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.LightBlue);
                 GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), 20, 0, Color.Red);
@@ -243,7 +250,7 @@ namespace Barotrauma
                 {
                     float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
                     DrawString(spriteBatch, new Vector2(300, y),
-                        key + ": " + elapsedMillisecs,
+                        key + ": " + elapsedMillisecs.ToString("0.00"),
                         Color.Lerp(Color.LightGreen, Color.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, SmallFont);
 
                     y += 15;

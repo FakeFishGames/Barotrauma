@@ -150,7 +150,23 @@ namespace Barotrauma
             bool run = objectiveManager.CurrentObjective.ForceRun || objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
-                run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
+                if (Character.CurrentHull == null)
+                {
+                    run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
+                }
+                else
+                {
+                    float yDiff = goTo.Target.WorldPosition.Y - Character.WorldPosition.Y;
+                    if (Math.Abs(yDiff) > 100)
+                    {
+                        run = true;
+                    }
+                    else
+                    {
+                        float xDiff = goTo.Target.WorldPosition.X - Character.WorldPosition.X;
+                        run = Math.Abs(xDiff) > 300;
+                    }
+                }
             }
             if (run)
             {
@@ -202,22 +218,18 @@ namespace Barotrauma
             if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
             Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
             Character.AnimController.TargetMovement = targetMovement;
-
             if (!NeedsDivingGear(Character.CurrentHull))
             {
                 bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
                 bool highPressure = Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 0 && Character.PressureProtection <= 0;
                 bool shouldKeepTheGearOn = !ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>();
-
-                // Don't allow to drop the diving suit in water or while climbing or if the current path has stairs
-                bool removeDivingSuit = 
-                    (oxygenLow && !highPressure) || 
-                        (!shouldKeepTheGearOn && 
-                        Character.CurrentHull.WaterPercentage < 1 && 
-                        !Character.IsClimbing && 
-                        steeringManager == insideSteering && 
-                        !PathSteering.InStairs);
-
+                bool removeDivingSuit = oxygenLow && !highPressure;
+                if (!removeDivingSuit)
+                {
+                    bool targetHasNoSuit = objectiveManager.CurrentOrder is AIObjectiveGoTo gtObj && gtObj.mimic && !HasDivingSuit(gtObj.Target as Character);
+                    bool canDropTheSuit = Character.CurrentHull.WaterPercentage < 1 && !Character.IsClimbing && steeringManager == insideSteering && !PathSteering.InStairs;
+                    removeDivingSuit = (!shouldKeepTheGearOn || targetHasNoSuit) && canDropTheSuit;
+                }
                 if (removeDivingSuit)
                 {
                     var divingSuit = Character.Inventory.FindItemByIdentifier("divingsuit") ?? Character.Inventory.FindItemByTag("divingsuit");
@@ -227,7 +239,8 @@ namespace Barotrauma
                         divingSuit.Drop(Character);
                     }
                 }
-                bool takeMaskOff = oxygenLow || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 20);
+                bool targetHasNoMask = objectiveManager.CurrentOrder is AIObjectiveGoTo gotoObjective && gotoObjective.mimic && !HasDivingMask(gotoObjective.Target as Character);
+                bool takeMaskOff = oxygenLow || (!shouldKeepTheGearOn && Character.CurrentHull.WaterPercentage < 20) || targetHasNoMask;
                 if (takeMaskOff)
                 {
                     var mask = Character.Inventory.FindItemByIdentifier("divingmask");
@@ -321,11 +334,13 @@ namespace Barotrauma
                         if (c.CurrentHull != hull) { continue; }
                         if (AIObjectiveRescueAll.IsValidTarget(c, Character))
                         {
-                            AddTargets<AIObjectiveRescueAll, Character>(c, Character);
-                            if (newOrder == null)
+                            if (AddTargets<AIObjectiveRescueAll, Character>(c, Character))
                             {
-                                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
+                                if (newOrder == null)
+                                {
+                                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                                    newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
+                                }
                             }
                         }
                     }
@@ -334,7 +349,7 @@ namespace Barotrauma
                         if (AIObjectiveFixLeaks.IsValidTarget(gap, Character))
                         {
                             AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
-                            if (newOrder == null)
+                            if (newOrder == null && !gap.IsRoomToRoom)
                             {
                                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
@@ -382,8 +397,8 @@ namespace Barotrauma
             }
 
             if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
-            {
-                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.DisplayName), null, 0, "pressure", 30.0f);
+            {                
+                Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, true), null, 0, "pressure", 30.0f);
             }
         }
 

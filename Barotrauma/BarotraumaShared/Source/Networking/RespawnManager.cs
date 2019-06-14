@@ -158,40 +158,10 @@ namespace Barotrauma.Networking
 
             shuttleTransportTimer -= deltaTime;
 
-#if CLIENT
-            GameClient nClient = networkMember as GameClient;
-            if (shuttleTransportTimer + deltaTime > 15.0f && shuttleTransportTimer <= 15.0f &&
-                nClient.Character != null &&
-                nClient.Character.Submarine == respawnShuttle)
-            {
-                nClient.AddChatMessage("ServerMessage.ShuttleLeaving", ChatMessageType.Server);
-            }
-#endif
-
-#if SERVER
-            var server = networkMember as GameServer;
-            if (server == null) return;
-
-            //if there are no living chracters inside, transporting can be stopped immediately
-            if (!Character.CharacterList.Any(c => c.Submarine == respawnShuttle && !c.IsDead))
-            {
-                shuttleTransportTimer = 0.0f;
-            }
-
-            if (shuttleTransportTimer <= 0.0f)
-            {
-                GameServer.Log("The respawn shuttle is leaving.", ServerLog.MessageType.ServerMessage);
-                state = State.Returning;
-
-                server.CreateEntityEvent(this);
-
-                CountdownStarted = false;
-                maxTransportTime = server.ServerSettings.MaxTransportTime;
-                shuttleReturnTimer = maxTransportTime;
-                shuttleTransportTimer = maxTransportTime;
-            }
-#endif
+            UpdateTransportingProjSpecific(deltaTime);
         }
+
+        partial void UpdateTransportingProjSpecific(float deltaTime);
 
         private void UpdateReturning(float deltaTime)
         {
@@ -216,56 +186,13 @@ namespace Barotrauma.Networking
                 {
                     shuttleSteering.SetDestinationLevelStart();
                 }
-
-
-#if SERVER
-                var server = networkMember as GameServer;
-                if (server == null) return;
-
-                foreach (Door door in shuttleDoors)
-                {
-                    if (door.IsOpen) door.TrySetState(false, false, true);
-                }
-                
-                var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
-                shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
-
-                var dockingPorts = Item.ItemList.FindAll(i => i.Submarine == respawnShuttle && i.GetComponent<DockingPort>() != null);
-                dockingPorts.ForEach(d => d.GetComponent<DockingPort>().Undock());
-
-                //shuttle has returned if the path has been traversed or the shuttle is close enough to the exit
-
-                if (!CoroutineManager.IsCoroutineRunning("forcepos"))
-                {
-                    if ((shuttleSteering?.SteeringPath != null && shuttleSteering.SteeringPath.Finished)
-                        || (respawnShuttle.WorldPosition.Y + respawnShuttle.Borders.Y > Level.Loaded.StartPosition.Y - Level.ShaftHeight &&
-                            Math.Abs(Level.Loaded.StartPosition.X - respawnShuttle.WorldPosition.X) < 1000.0f))
-                    {
-                        CoroutineManager.StopCoroutines("forcepos");
-                        CoroutineManager.StartCoroutine(
-                            ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f), "forcepos");
-
-                    }
-                }
-
-                if (respawnShuttle.WorldPosition.Y > Level.Loaded.Size.Y || shuttleReturnTimer <= 0.0f)
-                {
-                    CoroutineManager.StopCoroutines("forcepos");
-
-                    ResetShuttle();
-
-                    state = State.Waiting;
-                    GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.Spawning);
-                    server.CreateEntityEvent(this);
-
-                    respawnTimer = server.ServerSettings.RespawnInterval;
-                    CountdownStarted = false;
-                }
-#endif
+                UpdateReturningProjSpecific();
             }
         }
 
         partial void DispatchShuttle();
+
+        partial void UpdateReturningProjSpecific();
         
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {
@@ -314,6 +241,7 @@ namespace Barotrauma.Networking
 
                 //restore other items to full condition and recharge batteries
                 item.Condition = item.Prefab.Health;
+                item.GetComponent<Repairable>()?.ResetDeterioration();
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {

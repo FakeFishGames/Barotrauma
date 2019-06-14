@@ -121,8 +121,7 @@ namespace Barotrauma
                         if (!hasRequiredContentPackages)
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
-                                TextManager.Get("ContentPackageMismatchWarning")
-                                    .Replace("[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
+                                TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                             msgBox.Buttons[0].OnClicked = msgBox.Close;
@@ -253,7 +252,7 @@ namespace Barotrauma
 
         public void UpdateSubList(IEnumerable<Submarine> submarines)
         {
-#if DEBUG
+#if !DEBUG
             var subsToShow = submarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
 #else
             var subsToShow = submarines;
@@ -336,12 +335,6 @@ namespace Barotrauma
                     }
                     subName =  doc.Root.GetAttributeString("submarine", "");
                     saveTime = doc.Root.GetAttributeString("savetime", "");
-
-                    if (long.TryParse(saveTime, out long unixTime))
-                    {
-                        DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
-                        saveTime = time.ToString();
-                    }
                 }
                 else
                 {
@@ -350,6 +343,11 @@ namespace Barotrauma
                     fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
                     if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
                     if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
+                }
+                if (!string.IsNullOrEmpty(saveTime) && long.TryParse(saveTime, out long unixTime))
+                {
+                    DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
+                    saveTime = time.ToString();
                 }
                 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),

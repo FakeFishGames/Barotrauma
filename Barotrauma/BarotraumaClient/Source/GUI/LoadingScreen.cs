@@ -295,7 +295,7 @@ namespace Barotrauma
                 spriteBatch.Draw(currSplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
                 spriteBatch.End();
 
-                if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
+                if (GameMain.WindowActive && (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown()))
                 {
                     currSplashScreen.Dispose(); currSplashScreen = null;
                 }

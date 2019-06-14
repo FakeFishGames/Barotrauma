@@ -36,7 +36,8 @@ namespace Barotrauma
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
         public float JointScale { get; set; }
 
-        [Serialize(1f, true), Editable(DecimalCount = 2)]
+        // Don't show in the editor, because shouldn't be edited in runtime.  Requires that the limb scale and the collider sizes are adjusted. TODO: automatize.
+        [Serialize(1f, false)]
         public float TextureScale { get; set; }
 
         [Serialize(45f, true), Editable(0f, 1000f)]

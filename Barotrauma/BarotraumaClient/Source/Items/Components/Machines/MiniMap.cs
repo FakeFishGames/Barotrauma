@@ -110,7 +110,7 @@ namespace Barotrauma.Items.Components
                 if (child.UserData is Hull hull)
                 {
                     if (hull.Submarine == null || !hull.Submarine.IsOutpost) { continue; }
-                    string text = TextManager.Get("MiniMapOutpostDockingInfo").Replace("[outpost]", hull.Submarine.Name);
+                    string text = TextManager.GetWithVariable("MiniMapOutpostDockingInfo", "[outpost]", hull.Submarine.Name);
                     Vector2 textSize = GUI.Font.MeasureString(text);
                     Vector2 textPos = child.Center;
                     if (textPos.X + textSize.X / 2 > submarineContainer.Rect.Right)

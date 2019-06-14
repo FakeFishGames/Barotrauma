@@ -165,9 +165,9 @@ namespace Barotrauma.Tutorials
             {
                 yield return null;
                 GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
-                HighlightOrderOption("jobspecific");
+                //HighlightOrderOption("jobspecific");
             }
-            while (!HasOrder(captain_mechanic, "repairsystems", "jobspecific"));
+            while (!HasOrder(captain_mechanic, "repairsystems"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(2);
@@ -230,7 +230,7 @@ namespace Barotrauma.Tutorials
             } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
             RemoveCompletedObjective(segments[6]);
             yield return new WaitForSeconds(3f, false);
-            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete").Replace("[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.GetWithVariable("Captain.Radio.Complete", "[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);
             SetHighlight(captain_statusMonitor, false);

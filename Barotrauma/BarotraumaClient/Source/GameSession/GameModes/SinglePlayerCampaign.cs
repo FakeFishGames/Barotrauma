@@ -125,12 +125,12 @@ namespace Barotrauma
             }
             else if (leavingSub.AtEndPosition)
             {
-                endRoundButton.Text = ToolBox.LimitString(TextManager.Get("EnterLocation").Replace("[locationname]", Map.SelectedLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.Text = ToolBox.LimitString(TextManager.GetWithVariable("EnterLocation", "[locationname]", Map.SelectedLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 endRoundButton.Visible = true;
             }
             else if (leavingSub.AtStartPosition)
             {
-                endRoundButton.Text = ToolBox.LimitString(TextManager.Get("EnterLocation").Replace("[locationname]", Map.CurrentLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.Text = ToolBox.LimitString(TextManager.GetWithVariable("EnterLocation", "[locationname]", Map.CurrentLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 endRoundButton.Visible = true;
             }
             else
@@ -189,8 +189,8 @@ namespace Barotrauma
             {
                 return;
             }
-            var msgBox = new GUIMessageBox("", TextManager.Get("CampaignEnterOutpostPrompt")
-                .Replace("[locationname]", leavingSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
+            var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("CampaignEnterOutpostPrompt", "[locationname]",
+                leavingSub.AtStartPosition ? Map.CurrentLocation.Name : Map.SelectedLocation.Name),
                 new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
             {
                 UserData = "watchmanprompt"
@@ -256,6 +256,18 @@ namespace Barotrauma
                 {
                     if (c.Info == null || c.Inventory == null) { continue; }
                     var inventoryElement = new XElement("inventory");
+
+                    // Recharge headset batteries
+                    var headset = c.Inventory.FindItemByIdentifier("headset");
+                    if (headset != null)
+                    {
+                        var battery = headset.OwnInventory.FindItemByTag("loadable");
+                        if (battery != null)
+                        {
+                            battery.Condition = battery.MaxCondition;
+                        }
+                    }
+
                     c.SaveInventory(c.Inventory, inventoryElement);
                     c.Info.InventoryData = inventoryElement;
                     c.Inventory?.DeleteAllItems();

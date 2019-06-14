@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -231,7 +232,16 @@ namespace Barotrauma
                     "", style: "ItemCategory" + category.ToString())
                 {
                     UserData = category,
-                    OnClicked = (btn, userdata) => { FilterStoreItems((MapEntityCategory)userdata, searchBox.Text); return true; }
+                    OnClicked = (btn, userdata) => 
+                    {
+                        MapEntityCategory newCategory = (MapEntityCategory)userdata;
+                        if (newCategory != selectedItemCategory)
+                        {
+                            searchBox.Text = ""; 
+                        }
+                        FilterStoreItems((MapEntityCategory)userdata, searchBox.Text);
+                        return true;
+                    }
                 };
                 itemCategoryButtons.Add(categoryButton);
 
@@ -427,40 +437,47 @@ namespace Barotrauma
 
             if (characterPreviewFrame != null)
             {
-                characterPreviewFrame.Parent.RemoveChild(characterPreviewFrame);
+                characterPreviewFrame.Parent?.RemoveChild(characterPreviewFrame);
                 characterPreviewFrame = null;
             }
             
-            if (Campaign is SinglePlayerCampaign)
+            if (characterList != null)
             {
-                var hireableCharacters = location.GetHireableCharacters();
-                foreach (GUIComponent child in characterList.Content.Children.ToList())
+                if (Campaign is SinglePlayerCampaign)
                 {
-                    if (child.UserData is CharacterInfo character)
+                    var hireableCharacters = location.GetHireableCharacters();
+                    foreach (GUIComponent child in characterList.Content.Children.ToList())
                     {
-                        if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
+                        if (child.UserData is CharacterInfo character)
+                        {
+                            if (GameMain.GameSession.CrewManager != null)
+                            {
+                                if (GameMain.GameSession.CrewManager.GetCharacterInfos().Contains(character)) { continue; }
+                            }
+                        }
+                        else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
+                        {
+                            continue;
+                        }
+                        characterList.RemoveChild(child);
                     }
-                    else if (child.UserData as string == "mycrew" || child.UserData as string == "hire")
+                    if (!hireableCharacters.Any())
                     {
-                        continue;
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
+                        {
+                            CanBeFocused = false
+                        };
                     }
-                    characterList.RemoveChild(child);
-                }
-                if (!hireableCharacters.Any())
-                {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
+                    else
                     {
-                        CanBeFocused = false
-                    };
-                }
-                else
-                {
-                    foreach (CharacterInfo c in hireableCharacters)
-                    {
-                        var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
-                        new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                        foreach (CharacterInfo c in hireableCharacters)
+                        {
+                            var frame = c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ")", c);
+                            new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
+                        }
                     }
                 }
+                characterList.UpdateScrollBarSize();
             }
             characterList.UpdateScrollBarSize();
 
@@ -487,10 +504,15 @@ namespace Barotrauma
             {
                 //refresh store view
                 FillStoreItemList();
-                FilterStoreItems(MapEntityCategory.Equipment, searchBox.Text);
-            }            
+
+                MapEntityCategory? category = null;
+                //only select a specific category if the search box is empty
+                //(items from all categories are shown when searching)
+                if (string.IsNullOrEmpty(searchBox.Text)) { category = selectedItemCategory; }
+                FilterStoreItems(category, searchBox.Text);
+            }
         }
-        
+
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
             GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer);
@@ -636,7 +658,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
-                TextManager.Get("Reward").Replace("[reward]", selectedMission.Reward.ToString()))
+                TextManager.GetWithVariable("Reward", "[reward]", selectedMission.Reward.ToString()))
             {
                 CanBeFocused = false
             };
@@ -655,7 +677,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)
+        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)
         {
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.Scale * 50)), listBox.Content.RectTransform), style: "ListBoxElement")
             {
@@ -739,6 +761,10 @@ namespace Barotrauma
             content.RectTransform.RecalculateChildren(true, true);
             amountInput?.LayoutGroup.Recalculate();
             textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
+            content.RectTransform.IsFixedSize = true;
+            content.RectTransform.Children.ForEach(c => c.IsFixedSize = true);
+
+            return frame;
         }
 
         private bool BuyItem(GUIComponent component, object obj)
@@ -776,12 +802,24 @@ namespace Barotrauma
 
         private void RefreshMyItems()
         {
-            myItemList.Content.ClearChildren();
-
-            foreach (PurchasedItem ip in Campaign.CargoManager.PurchasedItems)
+            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
+            foreach (PurchasedItem pi in Campaign.CargoManager.PurchasedItems)
             {
-                CreateItemFrame(ip, ip.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList, myItemList.Rect.Width);
+                var itemFrame = myItemList.Content.GetChildByUserData(pi);
+                if (itemFrame == null)
+                {
+                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList, myItemList.Rect.Width);
+                }
+                itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
+                existingItemFrames.Add(itemFrame);
             }
+
+            var removedItemFrames = myItemList.Content.Children.Except(existingItemFrames).ToList();
+            foreach (GUIComponent removedItemFrame in removedItemFrames)
+            {
+                myItemList.Content.RemoveChild(removedItemFrame);
+            }
+
             myItemList.Content.RectTransform.SortChildren((x, y) =>
                 (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
             myItemList.Content.RectTransform.SortChildren((x, y) =>
@@ -821,17 +859,28 @@ namespace Barotrauma
 
         private void FillStoreItemList()
         {
-            storeItemList.ClearChildren();
-
             int width = storeItemList.Rect.Width;
+            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
                 if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
                 PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
-                if (priceInfo == null) continue;
+                if (priceInfo == null) { continue; }
 
-                CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList, width);
+                var itemFrame = myItemList.Content.GetChildByUserData(priceInfo);
+                if (itemFrame == null)
+                {
+                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList, width);
+                }
+                existingItemFrames.Add(itemFrame);
             }
+
+            var removedItemFrames = storeItemList.Content.Children.Except(existingItemFrames).ToList();
+            foreach (GUIComponent removedItemFrame in removedItemFrames)
+            {
+                storeItemList.Content.RemoveChild(removedItemFrame);
+            }
+
             storeItemList.Content.RectTransform.SortChildren(
                 (x, y) => (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
         }
@@ -860,8 +909,7 @@ namespace Barotrauma
 
         public string GetMoney()
         {
-            return TextManager.Get("PlayerCredits").Replace("[credits]",
-                ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", Campaign.Money)));
+            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", Campaign.Money));
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)
@@ -902,7 +950,7 @@ namespace Barotrauma
                     {
                         var confirmDialog = new GUIMessageBox(
                             TextManager.Get("FireWarningHeader"),
-                            TextManager.Get("FireWarningText").Replace("[charactername]", ((CharacterInfo)obj).Name),
+                            TextManager.GetWithVariable("FireWarningText", "[charactername]", ((CharacterInfo)obj).Name),
                             new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                         confirmDialog.Buttons[0].UserData = (CharacterInfo)obj;
                         confirmDialog.Buttons[0].OnClicked = FireCharacter;

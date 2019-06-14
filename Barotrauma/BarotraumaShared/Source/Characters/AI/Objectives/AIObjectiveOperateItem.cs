@@ -60,7 +60,7 @@ namespace Barotrauma
             ItemComponent target = useController ? controller : component;
             if (useController && controller == null)
             {
-                character.Speak(TextManager.Get("DialogCantFindController").Replace("[item]", component.Item.Name), null, 2.0f, "cantfindcontroller", 30.0f);
+                character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
                 abandon = true;
                 return;
             }

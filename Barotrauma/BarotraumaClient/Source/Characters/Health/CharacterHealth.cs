@@ -115,6 +115,12 @@ namespace Barotrauma
 
                 var prevOpenHealthWindow = openHealthWindow;
 
+                if (prevOpenHealthWindow != null)
+                {
+                    prevOpenHealthWindow.selectedLimbIndex = -1;
+                    prevOpenHealthWindow.highlightedLimbIndex = -1;
+                }
+
                 openHealthWindow = value;
                 toggledThisFrame = true;
                 if (Character.Controlled == null) { return; }
@@ -606,7 +612,7 @@ namespace Barotrauma
                         .ThenByDescending(a => a.Strength).FirstOrDefault();
                     if (affliction.DamagePerSecond > 0 || affliction.Strength > 0)
                     {
-                        var limbHealth = GetMathingLimbHealth(affliction);
+                        var limbHealth = GetMatchingLimbHealth(affliction);
                         if (limbHealth != null)
                         {
                             selectedLimbIndex = limbHealths.IndexOf(limbHealth);

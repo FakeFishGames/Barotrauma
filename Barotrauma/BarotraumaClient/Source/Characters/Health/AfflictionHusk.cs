@@ -26,7 +26,7 @@ namespace Barotrauma
             }
             else if (state != InfectionState.Active && Character.Controlled == character)
             {
-                GUI.AddMessage(TextManager.Get("HuskActivate").Replace("[Attack]", GameMain.Config.KeyBind(InputType.Attack).ToString()),
+                GUI.AddMessage(TextManager.GetWithVariable("HuskActivate", "[Attack]", GameMain.Config.KeyBind(InputType.Attack).ToString()),
                     Color.Red);
             }
         }

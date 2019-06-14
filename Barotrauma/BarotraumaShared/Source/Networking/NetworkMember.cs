@@ -174,8 +174,8 @@ namespace Barotrauma.Networking
             get { return name; }
             set
             {
-                if (string.IsNullOrEmpty(value)) return;
-                name = value;
+                if (string.IsNullOrEmpty(value)) { return; }
+                name = value.Replace(":", "").Replace(";", "");
             }
         }
 

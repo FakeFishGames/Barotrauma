@@ -1022,12 +1022,12 @@ namespace Barotrauma.RuinGeneration
                     {
                         targetEntity = ruinEntities.GetRandom(e =>
                             e.Room == targetRoom &&
-                            e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier)?.Entity;
+                            e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier, Rand.RandSync.Server)?.Entity;
                     }
                 }
                 else
                 {
-                    targetEntity = ruinEntities.GetRandom(e => e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier)?.Entity;
+                    targetEntity = ruinEntities.GetRandom(e => e.Entity.prefab?.Identifier == connection.TargetEntityIdentifier, Rand.RandSync.Server)?.Entity;
                 }
 
                 if (targetEntity == null) continue;

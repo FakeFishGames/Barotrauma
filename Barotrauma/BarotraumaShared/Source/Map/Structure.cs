@@ -355,6 +355,8 @@ namespace Barotrauma
             }
 
             InsertToList();
+            
+            DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
 
         partial void InitProjSpecific();
@@ -366,14 +368,18 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            var clone = new Structure(rect, Prefab, Submarine);
+            var clone = new Structure(rect, Prefab, Submarine)
+            {
+                defaultRect = defaultRect
+            };
             foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
             {
-                if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
+                if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
                 clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
             if (FlippedX) clone.FlipX(false);
             if (FlippedY) clone.FlipY(false);
+
             return clone;
         }
 

@@ -35,6 +35,7 @@ namespace Barotrauma.Networking
 
         public bool CompareTo(string ipCompare)
         {
+            if (string.IsNullOrEmpty(IP)) { return false; }
             if (!IsRangeBan)
             {
                 return ipCompare == IP;
@@ -49,6 +50,7 @@ namespace Barotrauma.Networking
 
         public bool CompareTo(IPAddress ipCompare)
         {
+            if (string.IsNullOrEmpty(IP)) { return false; }
             if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4().ToString()))
             {
                 return true;
@@ -163,7 +165,20 @@ namespace Barotrauma.Networking
                 expirationTime = DateTime.Now + duration.Value;
             }
 
-            bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
+            if (!string.IsNullOrEmpty(ip))
+            {
+                bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
+            }
+            else if (steamID > 0)
+            {
+                bannedPlayers.Add(new BannedPlayer(name, steamID, reason, expirationTime));
+            }
+            else
+            {
+                DebugConsole.ThrowError("Failed to ban a client (no valid IP or Steam ID given)");
+                return;
+            }
+
             Save();
         }
 

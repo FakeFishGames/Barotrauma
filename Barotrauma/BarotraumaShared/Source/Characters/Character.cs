@@ -836,13 +836,21 @@ namespace Barotrauma
         private static string humanConfigFile;
         public static string HumanConfigFile
         {
-            get 
+            get
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    humanConfigFile = GetConfigFile("Human");
+                    humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
+                            .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == "human.xml");
+
+                    if (humanConfigFile == null)
+                    {
+                        DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
+                        DebugConsole.ThrowError($"(The config file must end with \"human.xml\")");
+                        return string.Empty;
+                    }
                 }
-                return humanConfigFile; 
+                return humanConfigFile;
             }
         }
 
@@ -859,12 +867,16 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
         public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
         {
             string configFile = null;
             if (contentPackage == null)
             {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
                     .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
             }
             else
@@ -882,12 +894,54 @@ namespace Barotrauma
             return configFile;
         }
 
-        public bool IsKeyHit(InputType inputType)
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
         {
 #if SERVER
             if (GameMain.Server != null && IsRemotePlayer)
             {
-                switch (inputType)
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
                 {
                     case InputType.Left:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
@@ -918,13 +972,475 @@ namespace Barotrauma
                     default:
                         return false;
                 }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
             }
 #endif
 
-            return keys[(int)inputType].Hit;
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
         }
 
-        public bool IsKeyDown(InputType inputType)
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    case InputType.Left:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                    case InputType.Right:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                    case InputType.Up:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                    case InputType.Down:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                    case InputType.Run:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                    case InputType.Crouch:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
+                    case InputType.Select:
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
+                    case InputType.Health:
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);
+                    case InputType.Grab:
+                        return dequeuedInput.HasFlag(InputNetFlags.Grab);
+                    case InputType.Use:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Shoot:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
+                    case InputType.Ragdoll:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
+                    default:
+                        return false;
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+#endif
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    case InputType.Left:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                    case InputType.Right:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                    case InputType.Up:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                    case InputType.Down:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                    case InputType.Run:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                    case InputType.Crouch:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
+                    case InputType.Select:
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
+                    case InputType.Health:
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);
+                    case InputType.Grab:
+                        return dequeuedInput.HasFlag(InputNetFlags.Grab);
+                    case InputType.Use:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Shoot:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
+                    case InputType.Ragdoll:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
+                    default:
+                        return false;
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+#endif
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    case InputType.Left:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                    case InputType.Right:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                    case InputType.Up:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                    case InputType.Down:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                    case InputType.Run:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                    case InputType.Crouch:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
+                    case InputType.Select:
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
+                    case InputType.Health:
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);
+                    case InputType.Grab:
+                        return dequeuedInput.HasFlag(InputNetFlags.Grab);
+                    case InputType.Use:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Shoot:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
+                    case InputType.Ragdoll:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
+                    default:
+                        return false;
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+#endif
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        public bool IsKeyHit(InputType inputType)
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                if (characterConfigFiles == null)
+                {
+                    case InputType.Left:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                    case InputType.Right:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                    case InputType.Up:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                    case InputType.Down:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                    case InputType.Run:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                    case InputType.Crouch:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
+                    case InputType.Select:
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
+                    case InputType.Health:
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);
+                    case InputType.Grab:
+                        return dequeuedInput.HasFlag(InputNetFlags.Grab);
+                    case InputType.Use:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Shoot:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
+                    case InputType.Ragdoll:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
+                    default:
+                        return false;
+                }
+                return characterConfigFiles;
+            }
+#endif
+
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+#endif
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
         {
 #if SERVER
             if (GameMain.Server != null && IsRemotePlayer)
@@ -1060,7 +1576,7 @@ namespace Barotrauma
 
             ResetSpeedMultiplier(); // Reset, items will set the value before the next update
 
-            return targetMovement;
+            return speed;
         }
 
         /// <summary>
@@ -1519,10 +2035,9 @@ namespace Barotrauma
             if (inventory.Owner is Item)
             {
                 var owner = (Item)inventory.Owner;
-                if (!CanInteractWith(owner))
-                {
-                    return false;
-                }
+                if (!CanInteractWith(owner)) { return false; }
+                ItemContainer container = owner.GetComponents<ItemContainer>().FirstOrDefault(ic => ic.Inventory == inventory);
+                if (container != null && !container.HasRequiredItems(this, addMessage: false)) { return false; }
             }
             return true;
         }
@@ -2030,6 +2545,11 @@ namespace Barotrauma
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             bool allowRagdoll = GameMain.NetworkMember != null ? GameMain.NetworkMember.ServerSettings.AllowRagdollButton : true;
+            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 1f;
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                tooFastToUnragdoll = false;
+            }
             if (IsForceRagdolled)
             {
                 IsRagdolled = IsForceRagdolled;
@@ -2039,7 +2559,7 @@ namespace Barotrauma
                 IsRagdolled = IsKeyDown(InputType.Ragdoll);
             }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
-            else if (allowRagdoll && (!IsRagdolled || AnimController.Collider.LinearVelocity.LengthSquared() < 1f))
+            else if (allowRagdoll && (!IsRagdolled || !tooFastToUnragdoll))
             {
                 if (ragdollingLockTimer > 0.0f)
                 {
@@ -2589,7 +3109,7 @@ namespace Barotrauma
             if (info != null) { info.Remove(); }
 
 #if CLIENT
-            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+            GameMain.GameSession?.CrewManager?.KillCharacter(this);
 #endif
 
             CharacterList.Remove(this);

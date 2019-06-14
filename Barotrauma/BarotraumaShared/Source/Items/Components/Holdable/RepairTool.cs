@@ -40,6 +40,9 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false)]
         public bool RepairThroughWalls { get; set; }
 
+        [Serialize(false, false)]
+        public bool RepairMultiple { get; set; }
+
         public Vector2 TransformedBarrelPos
         {
             get
@@ -154,16 +157,45 @@ namespace Barotrauma.Items.Components
 
         partial void UseProjSpecific(float deltaTime);
 
-        private List<FireSource> fireSourcesInRange = new List<FireSource>();
+        private readonly HashSet<Character> hitCharacters = new HashSet<Character>();
+        private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
-            if (RepairThroughWalls)
+            if (RepairMultiple)
             {
                 var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true);
+                Type lastHitType = null;
+                hitCharacters.Clear();
                 foreach (Body body in bodies)
                 {
-                    FixBody(user, deltaTime, degreeOfSuccess, body);
+                    Type bodyType = body.UserData?.GetType();
+                    if (!RepairThroughWalls && bodyType != null && bodyType != lastHitType)
+                    {
+                        //stop the ray if it already hit a door/wall and is now about to hit some other type of entity
+                        if (lastHitType == typeof(Item) || lastHitType == typeof(Structure)) { break; }
+                    }
+
+                    Character hitCharacter = null;
+                    if (body.UserData is Limb limb)
+                    {
+                        hitCharacter = limb.character;
+                    }
+                    else if (body.UserData is Character character)
+                    {
+                        hitCharacter = character;
+                    }
+                    //only do damage once to each character even if they ray hit multiple limbs
+                    if (hitCharacter != null)
+                    {
+                        if (hitCharacters.Contains(hitCharacter)) { continue; }
+                        hitCharacters.Add(hitCharacter);
+                    }
+
+                    if (FixBody(user, deltaTime, degreeOfSuccess, body))
+                    {
+                        if (bodyType != null) { lastHitType = bodyType; }
+                    }
                 }
             }
             else
@@ -202,19 +234,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
+        private bool FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
         {
-            if (targetBody?.UserData == null) { return; }
+            if (targetBody?.UserData == null) { return false; }
 
             pickedPosition = Submarine.LastPickedPosition;
 
             if (targetBody.UserData is Structure targetStructure)
             {
-                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) return;
-                if (targetStructure.IsPlatform) return;
+                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return false; }
+                if (targetStructure.IsPlatform) { return false; }
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
-                if (sectionIndex < 0) return;
+                if (sectionIndex < 0) { return false; }
 
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
@@ -232,18 +264,21 @@ namespace Barotrauma.Items.Components
                         targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
                     }
                 }
+                return true;
             }
             else if (targetBody.UserData is Character targetCharacter)
             {
                 targetCharacter.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
+                return true;
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
                 targetLimb.character.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
+                return true;
             }
             else if (targetBody.UserData is Item targetItem)
             {
@@ -268,7 +303,9 @@ namespace Barotrauma.Items.Components
 #endif                    
                 }
                 FixItemProjSpecific(user, deltaTime, targetItem, prevCondition);
+                return true;
             }
+            return false;
         }
     
         partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
@@ -378,11 +415,12 @@ namespace Barotrauma.Items.Components
                 sinTime = 0;
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
                 {
-                    character.Speak(TextManager.Get("DialogLeaksFixed").Replace("[roomname]", leak.FlowTargetHull.DisplayName), null, 0.0f, "leaksfixed", 10.0f);
+                    
+                    character.Speak(TextManager.GetWithVariable("DialogLeaksFixed", "[roomname]", leak.FlowTargetHull.DisplayName, true), null, 0.0f, "leaksfixed", 10.0f);
                 }
                 else
                 {
-                    character.Speak(TextManager.Get("DialogLeakFixed").Replace("[roomname]", leak.FlowTargetHull.DisplayName), null, 0.0f, "leakfixed", 10.0f);
+                    character.Speak(TextManager.GetWithVariable("DialogLeakFixed", "[roomname]", leak.FlowTargetHull.DisplayName, true), null, 0.0f, "leakfixed", 10.0f);
                 }
             }
 
@@ -408,6 +446,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (target is Door door)
                     {
+                        if (!door.CanBeWelded) continue;
                         for (int i = 0; i < effect.propertyNames.Length; i++)
                         {
                             string propertyName = effect.propertyNames[i];

@@ -10,6 +10,8 @@ namespace Barotrauma.Networking
 
         public const int MaxPlayers = 16;
 
+        public const int ServerNameMaxLength = 60;
+
         public static string MasterServerUrl = GameMain.Config.MasterServerUrl;
 
         //if a Character is further than this from the sub and the players, the server will disable it

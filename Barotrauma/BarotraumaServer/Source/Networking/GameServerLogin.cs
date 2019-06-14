@@ -418,7 +418,7 @@ namespace Barotrauma.Networking
                 return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
             }
 
-            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
+            if (inc.SenderConnection != OwnerConnection && !serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
@@ -432,7 +432,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
-            if (inc.SenderConnection != OwnerConnection && Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
+            if (inc.SenderConnection != OwnerConnection && Homoglyphs.Compare(clName.ToLower(), Name.ToLower()))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NameTaken, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Error);

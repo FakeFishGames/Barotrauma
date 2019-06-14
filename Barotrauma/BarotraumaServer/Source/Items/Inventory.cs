@@ -43,8 +43,8 @@ namespace Barotrauma
                 CreateNetworkEvent();
                 for (int i = 0; i < capacity; i++)
                 {
-                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
-                    if (item == null) continue;
+                    if (!(Entity.FindEntityByID(newItemIDs[i]) is Item item)) { continue; }
+                    item.PositionUpdateInterval = 0.0f;
                     if (item.ParentInventory != null && item.ParentInventory != this)
                     {
                         item.ParentInventory.CreateNetworkEvent();
@@ -62,7 +62,16 @@ namespace Barotrauma
 
                 if (newItemIDs[i] == 0 || (newItem != Items[i]))
                 {
-                    if (Items[i] != null) Items[i].Drop(null);
+                    if (Items[i] != null)
+                    {
+                        Item droppedItem = Items[i];
+                        Entity prevOwner = Owner;
+                        droppedItem.Drop(null);
+                        if (droppedItem.body != null && prevOwner != null)
+                        {
+                            droppedItem.body.SetTransform(prevOwner.SimPosition, 0.0f);
+                        }
+                    }
                     System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
             }
@@ -71,15 +80,18 @@ namespace Barotrauma
             {
                 if (newItemIDs[i] > 0)
                 {
-                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
-                    if (item == null || item == Items[i]) continue;
+                    if (!(Entity.FindEntityByID(newItemIDs[i]) is Item item) || item == Items[i]) { continue; }
 
                     if (GameMain.Server != null)
                     {
                         var holdable = item.GetComponent<Holdable>();
-                        if (holdable != null && !holdable.CanBeDeattached()) continue;
+                        if (holdable != null && !holdable.CanBeDeattached()) { continue; }
 
-                        if (!item.CanClientAccess(c)) continue;
+                        if (!prevItems.Contains(item) && !item.CanClientAccess(c))
+                        {
+                            item.PositionUpdateInterval = 0.0f;                            
+                            continue;
+                        }
                     }
                     TryPutItem(item, i, true, true, c.Character, false);
                     for (int j = 0; j < capacity; j++)
@@ -100,7 +112,7 @@ namespace Barotrauma
 
             foreach (Item item in Items.Distinct())
             {
-                if (item == null) continue;
+                if (item == null) { continue; }
                 if (!prevItems.Contains(item))
                 {
                     if (Owner == c.Character)
@@ -115,7 +127,7 @@ namespace Barotrauma
             }
             foreach (Item item in prevItems.Distinct())
             {
-                if (item == null) continue;
+                if (item == null) { continue; }
                 if (!Items.Contains(item))
                 {
                     if (Owner == c.Character)

@@ -35,7 +35,7 @@ namespace Barotrauma
                 inputThread.Start();
                 game.Run();
                 inputThread.Abort(); inputThread.Join();
-                if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+                if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
                 SteamManager.ShutDown();
 #if !DEBUG
             }
@@ -105,7 +105,7 @@ namespace Barotrauma
             if (GameSettings.SendUserStatistics)
             {
                 GameAnalytics.AddErrorEvent(EGAErrorSeverity.Error, crashReport);
-                GameAnalytics.OnStop();
+                GameAnalytics.OnQuit();
                 Console.Write("A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
             }
             else

@@ -1274,6 +1274,8 @@ namespace Barotrauma
                 }
             }
 
+            DebugConsole.Log("Generating level resources...");
+
             for (int i = 0; i < generationParams.ItemCount; i++)
             {
                 var selectedPrefab = ToolBox.SelectWeightedRandom(
@@ -1285,6 +1287,7 @@ namespace Barotrauma
                 var selectedCell = cells[Rand.Int(cells.Count, Rand.RandSync.Server)];
                 var selectedEdge = selectedCell.Edges.GetRandom(e => e.IsSolid && !e.OutsideLevel, Rand.RandSync.Server);
                 if (selectedEdge == null) continue;
+
 
                 float edgePos = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
                 Vector2 selectedPos = Vector2.Lerp(selectedEdge.Point1, selectedEdge.Point2, edgePos);
@@ -1306,6 +1309,8 @@ namespace Barotrauma
 #endif
                 }
             }
+
+            DebugConsole.Log("Level resources generated");
         }
 
         public Vector2 GetRandomItemPos(PositionType spawnPosType, float randomSpread, float minDistFromSubs, float offsetFromWall = 10.0f)
@@ -1366,6 +1371,11 @@ namespace Barotrauma
             }
 
             List<InterestingPosition> suitablePositions = positionsOfInterest.FindAll(p => positionType.HasFlag(p.PositionType));
+            //avoid floating ice chunks on the main path
+            if (positionType == PositionType.MainPath)
+            {
+                suitablePositions.RemoveAll(p => extraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(p.Position.ToVector2()))));
+            }
             if (!suitablePositions.Any())
             {
                 string errorMsg = "Could not find a suitable position of interest. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace;

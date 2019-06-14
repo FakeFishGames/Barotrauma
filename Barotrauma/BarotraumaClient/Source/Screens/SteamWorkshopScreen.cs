@@ -1,11 +1,11 @@
 ﻿using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Windows.Forms;
 
@@ -49,7 +49,7 @@ namespace Barotrauma
         {
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
+            menu = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
             var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
 
@@ -357,20 +357,25 @@ namespace Barotrauma
                         if (!pendingPreviewImageDownloads.Contains(item.PreviewImageUrl))
                         {
                             pendingPreviewImageDownloads.Add(item.PreviewImageUrl);
-                            using (WebClient client = new WebClient())
+
+                            if (File.Exists(imagePreviewPath))
                             {
-                                if (File.Exists(imagePreviewPath))
-                                {
-                                    File.Delete(imagePreviewPath);
-                                }
-                                Directory.CreateDirectory(SteamManager.WorkshopItemPreviewImageFolder);
-                                client.DownloadFileAsync(new Uri(item.PreviewImageUrl), imagePreviewPath);
-                                CoroutineManager.StartCoroutine(WaitForItemPreviewDownloaded(item, listBox, imagePreviewPath));
-                                client.DownloadFileCompleted += (sender, args) =>
-                                {
-                                    pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
-                                };
+                                File.Delete(imagePreviewPath);
                             }
+                            Directory.CreateDirectory(SteamManager.WorkshopItemPreviewImageFolder);
+
+                            Uri baseAddress = new Uri(item.PreviewImageUrl);
+                            Uri directory = new Uri(baseAddress, "."); // "." == current dir, like MS-DOS
+                            string fileName = Path.GetFileName(baseAddress.LocalPath);
+
+                            IRestClient client = new RestClient(directory);
+                            var request = new RestRequest(fileName, Method.GET);
+                            client.ExecuteAsync(request, response =>
+                            {
+                                pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
+                                OnPreviewImageDownloaded(response, imagePreviewPath);
+                                CoroutineManager.StartCoroutine(WaitForItemPreviewDownloaded(item, listBox, imagePreviewPath));
+                            });                            
                         }
                         else
                         {
@@ -389,6 +394,7 @@ namespace Barotrauma
             {
                 IsHorizontal = true,
                 Stretch = true,
+                RelativeSpacing = 0.05f,
                 CanBeFocused = false
             };
 
@@ -400,32 +406,6 @@ namespace Barotrauma
 
             if (item.Installed)
             {
-                if (listBox != publishedItemList && SteamManager.CheckWorkshopItemEnabled(item) && !SteamManager.CheckWorkshopItemUpToDate(item))
-                {
-                    new GUIButton(new RectTransform(new Vector2(0.4f, 0.5f), rightColumn.RectTransform, Anchor.BottomLeft), text: "Update")
-                    {
-                        UserData = "updatebutton",
-                        IgnoreLayoutGroups = true,
-                        OnClicked = (btn, userdata) =>
-                        {
-                            if (SteamManager.UpdateWorkshopItem(item, out string errorMsg))
-                            {
-                                new GUIMessageBox("", TextManager.Get("WorkshopItemUpdated").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
-                            }
-                            else
-                            {
-                                DebugConsole.ThrowError(errorMsg);
-                                new GUIMessageBox(
-                                    TextManager.Get("Error"), 
-                                    TextManager.Get("WorkshopItemUpdateFailed").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)).Replace("[errormessage]", errorMsg));
-                            }
-                            btn.Enabled = false;
-                            btn.Visible = false;
-                            return true;
-                        }
-                    };
-                }
-
                 GUITickBox enabledTickBox = null;
                 try
                 {
@@ -471,6 +451,33 @@ namespace Barotrauma
                         };
                     }
                 }
+
+                if (listBox != publishedItemList && SteamManager.CheckWorkshopItemEnabled(item) && !SteamManager.CheckWorkshopItemUpToDate(item))
+                {
+                    new GUIButton(new RectTransform(new Vector2(0.4f, 0.5f), rightColumn.RectTransform, Anchor.BottomLeft), text: TextManager.Get("WorkshopItemUpdate"))
+                    {
+                        UserData = "updatebutton",
+                        Font = GUI.SmallFont,
+                        OnClicked = (btn, userdata) =>
+                        {
+                            if (SteamManager.UpdateWorkshopItem(item, out string errorMsg))
+                            {
+                                new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", TextManager.EnsureUTF8(item.Title)));
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError(errorMsg);
+                                new GUIMessageBox(
+                                    TextManager.Get("Error"),
+                                    TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { TextManager.EnsureUTF8(item.Title), errorMsg }));
+                            }
+                            btn.Enabled = false;
+                            btn.Visible = false;
+                            return true;
+                        }
+                    };
+                }
+
             }
             else if (item.Downloading)
             {
@@ -537,6 +544,24 @@ namespace Barotrauma
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), innerFrame.RectTransform), contentPackage.Name, textAlignment: Alignment.CenterLeft);
+        }
+
+        private void OnPreviewImageDownloaded(IRestResponse response, string previewImagePath)
+        {
+            if (response.ResponseStatus == ResponseStatus.Completed)
+            {
+                try
+                {
+                    File.WriteAllBytes(previewImagePath, response.RawBytes);
+                }
+                catch (Exception e)
+                {
+                    string errorMsg = "Failed to save workshop item preview image to \"" + previewImagePath + "\".";
+                    GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.OnItemPreviewDownloaded:WriteAllBytesFailed" + previewImagePath,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + "\n" + e.Message);
+                    return;
+                }
+            }
         }
 
         private IEnumerable<object> WaitForItemPreviewDownloaded(Facepunch.Steamworks.Workshop.Item item, GUIListBox listBox, string previewImagePath)
@@ -710,7 +735,7 @@ namespace Barotrauma
                 new GUIImage(new RectTransform(new Point(scoreContainer.Rect.Height), scoreContainer.RectTransform),
                     i < starCount ? "GUIStarIconBright" : "GUIStarIconDark");
             }
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemVotes").Replace("[votecount]", (item.VotesUp + item.VotesDown).ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.GetWithVariable("WorkshopItemVotes", "[votecount]", (item.VotesUp + item.VotesDown).ToString()));
 
             //tags ------------------------------------
             var tagContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
@@ -834,7 +859,7 @@ namespace Barotrauma
             if (!item.Installed)
             {
                 new GUIMessageBox(TextManager.Get("Error"), 
-                    TextManager.Get("WorkshopErrorInstallRequiredToEdit").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
+                    TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEdit", "[itemname]", TextManager.EnsureUTF8(item.Title)));
                 return;
             }
             SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
@@ -877,7 +902,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemDescription"));
 
             var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), topRightColumn.RectTransform));
-            var descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, wrap: true);
+            var descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), itemEditor.Description, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true);
             descriptionBox.OnTextChanged += (textBox, text) => 
             {
                 Vector2 textSize = textBox.Font.MeasureString(descriptionBox.WrappedText);
@@ -942,34 +967,38 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    OpenFileDialog ofd = new OpenFileDialog()
+                    try
                     {
-                        InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
-                        Filter = TextManager.Get("WorkshopItemPreviewImage")+"|*.png",
-                        Title = TextManager.Get("WorkshopItemPreviewImageDialogTitle")
-                    };
-                    if (ofd.ShowDialog() == DialogResult.OK)
+                        Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
+                        {
+                            Multiselect = true,
+                            InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
+                            Filter = TextManager.Get("WorkshopItemPreviewImage") + "|*.png",
+                            Title = TextManager.Get("WorkshopItemPreviewImageDialogTitle")
+                        };
+                        if (ofd.ShowDialog() == DialogResult.OK)
+                        {
+                            OnPreviewImageSelected(previewIcon, ofd.FileName);
+                        }
+                    }
+                    catch
                     {
-                        string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
-                        if (new FileInfo(ofd.FileName).Length > 1024 * 1024)
-                        {
-                            new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
-                            return false;
-                        }
-                        
-                        if (ofd.FileName != previewImagePath)
-                        {
-                            File.Copy(ofd.FileName, previewImagePath, overwrite: true);
-                        }
+                        //use a custom prompt if OpenFileDialog fails (Linux/Mac)
+                        var msgBox = new GUIMessageBox(TextManager.Get("WorkshopItemPreviewImageDialogTitle"), "", relativeSize: new Vector2(0.4f, 0.2f),
+                            buttons: new string[] { TextManager.Get("Cancel"), TextManager.Get("OK") });
 
-                        if (itemPreviewSprites.ContainsKey(previewImagePath))
+                        var pathBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform, Anchor.Center) { MinSize = new Point(0,25) });
+
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked += (btn2, userdata2) =>
                         {
-                            itemPreviewSprites[previewImagePath].Remove();
-                        }
-                        var newPreviewImage = new Sprite(previewImagePath, sourceRectangle: null);
-                        previewIcon.Sprite = newPreviewImage;
-                        itemPreviewSprites[previewImagePath] = newPreviewImage;
-                        itemEditor.PreviewImage = previewImagePath;
+                            if (File.Exists(pathBox.Text))
+                            {
+                                OnPreviewImageSelected(previewIcon, pathBox.Text);
+                            };
+                            return true;
+                        };
                     }
                     return true;
                 }
@@ -998,9 +1027,8 @@ namespace Barotrauma
                         {
                             new GUIMessageBox(
                                 TextManager.Get("Error"),
-                                TextManager.Get("ContentPackageCantMakeCorePackage")
-                                    .Replace("[packagename]", itemContentPackage.Name)
-                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes)));
+                                TextManager.GetWithVariables("ContentPackageCantMakeCorePackage", new string[2] { "[packagename]", "[missingfiletypes]" }, 
+                                new string[2] { itemContentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true }));
                             tickbox.Selected = false;
                         }
                         else
@@ -1049,40 +1077,41 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    OpenFileDialog ofd = new OpenFileDialog()
+                    try
                     {
-                        InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
-                        Title = "Select the files you want to add to the Steam Workshop item",
-                    };
-                    if (ofd.ShowDialog() == DialogResult.OK)
-                    {
-                        foreach (string file in ofd.FileNames)
+                        Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                         {
-                            string filePathRelativeToStagingFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, SteamManager.WorkshopItemStagingFolder));
-                            string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
-                            //file is not inside the staging folder
-                            if (filePathRelativeToStagingFolder.StartsWith(".."))
-                            {
-                                //submarines can be included in the content package directly
-                                string basePath = Path.GetDirectoryName(filePathRelativeToBaseFolder.Replace("..", ""));
-                                if (basePath == "Submarines")
-                                {
-                                    string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(file));
-                                    File.Copy(file, destinationPath);
-                                    itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.Submarine);
-                                }
-                                else
-                                {
-                                    itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
-                                }
-                            }
-                            else
-                            {
-                                itemContentPackage.AddFile(filePathRelativeToStagingFolder, ContentType.None);
-                            }
+                            InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
+                            Title = TextManager.Get("workshopitemaddfiles"),
+                            Multiselect = true
+                        };
+                        if (ofd.ShowDialog() == DialogResult.OK)
+                        {
+                            OnAddFilesSelected(ofd.FileNames);
                         }
-                        RefreshCreateItemFileList();
                     }
+                    catch
+                    {
+                        //use a custom prompt if OpenFileDialog fails (Linux/Mac)
+                        var msgBox = new GUIMessageBox(TextManager.Get("workshopitemaddfiles"), "", relativeSize: new Vector2(0.4f, 0.2f),
+                            buttons: new string[] { TextManager.Get("Cancel"), TextManager.Get("OK") });
+
+                        var pathBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform, Anchor.Center) { MinSize = new Point(0, 25) });
+
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked += (btn2, userdata2) => 
+                        {
+                            if (string.IsNullOrEmpty(pathBox?.Text)) { return true; }
+                            string[] filePaths = pathBox.Text.Split(',');
+                            if (File.Exists(pathBox.Text))
+                            {
+                                OnAddFilesSelected(filePaths);
+                            };
+                            return true;
+                        };
+                    }
+
                     return true;
                 }
             };
@@ -1127,7 +1156,7 @@ namespace Barotrauma
                     OnClicked = (btn, userData) =>
                     {
                         if (itemEditor == null) { return false; }
-                        var deleteVerification = new GUIMessageBox("", TextManager.Get("WorkshopItemDeleteVerification").Replace("[itemname]", itemEditor.Title),
+                        var deleteVerification = new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemDeleteVerification", "[itemname]", itemEditor.Title),
                             new string[] {  TextManager.Get("Yes"), TextManager.Get("No") });
                         deleteVerification.Buttons[0].OnClicked = (yesBtn, userdata) =>
                         {
@@ -1144,7 +1173,7 @@ namespace Barotrauma
                     }
                 };
             }
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform, Anchor.CenterRight),
+            var publishBtn = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform, Anchor.CenterRight),
                 TextManager.Get(itemEditor.Id > 0 ? "WorkshopItemUpdate" : "WorkshopItemPublish"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
@@ -1172,7 +1201,68 @@ namespace Barotrauma
                     return true;
                 }
             };
+            publishBtn.TextBlock.AutoScale = true;
+        }
 
+        private void OnPreviewImageSelected(GUIImage previewImageElement, string filePath)
+        {
+            string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+            if (new FileInfo(filePath).Length > 1024 * 1024)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                return;
+            }
+
+            if (filePath != previewImagePath)
+            {
+                File.Copy(filePath, previewImagePath, overwrite: true);
+            }
+
+            if (itemPreviewSprites.ContainsKey(previewImagePath))
+            {
+                itemPreviewSprites[previewImagePath].Remove();
+            }
+            var newPreviewImage = new Sprite(previewImagePath, sourceRectangle: null);
+            previewImageElement.Sprite = newPreviewImage;
+            itemPreviewSprites[previewImagePath] = newPreviewImage;
+            itemEditor.PreviewImage = previewImagePath;
+        }
+
+        private void OnAddFilesSelected(string[] fileNames)
+        {
+            if (fileNames == null) { return; }
+            for (int i = 0; i < fileNames.Length; i++)
+            {
+                string file = fileNames[i];
+                if (string.IsNullOrEmpty(file)) { continue; }
+                file = file.Trim();
+                if (!File.Exists(file)) { continue; }
+
+                string filePathRelativeToStagingFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, SteamManager.WorkshopItemStagingFolder));
+                string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
+                //file is not inside the staging folder
+                if (filePathRelativeToStagingFolder.StartsWith(".."))
+                {
+                    //submarines can be included in the content package directly
+                    string basePath = Path.GetDirectoryName(filePathRelativeToBaseFolder.Replace("..", ""));
+                    if (basePath == "Submarines")
+                    {
+                        string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(file));
+                        File.Copy(file, destinationPath);
+                        itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.Submarine);
+                    }
+                    else
+                    {
+                        itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
+                    }
+                }
+                else
+                {
+                    itemContentPackage.AddFile(filePathRelativeToStagingFolder, ContentType.None);
+                }
+            }
+            itemContentPackage.Save(itemContentPackage.Path);
+            RefreshCreateItemFileList();
         }
         
         private void RefreshCreateItemFileList()
@@ -1245,6 +1335,7 @@ namespace Barotrauma
                     OnClicked = (btn, userdata) =>
                     {
                         itemContentPackage.RemoveFile(contentFile);
+                        itemContentPackage.Save(itemContentPackage.Path);
                         RefreshCreateItemFileList();
                         return true;
                     }
@@ -1260,7 +1351,7 @@ namespace Barotrauma
         {
             if (itemContentPackage == null || itemEditor == null) return;
             
-            SteamManager.StartPublishItem(itemContentPackage, itemEditor);
+            SteamManager.StartPublishItem(itemContentPackage, itemEditor);            
             CoroutineManager.StartCoroutine(WaitForPublish(itemEditor), "WaitForPublish");
         }
 
@@ -1269,7 +1360,7 @@ namespace Barotrauma
             string pleaseWaitText = TextManager.Get("WorkshopPublishPleaseWait");
             var msgBox = new GUIMessageBox(
                 pleaseWaitText,
-                TextManager.Get("WorkshopPublishInProgress").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)), 
+                TextManager.GetWithVariable("WorkshopPublishInProgress", "[itemname]", TextManager.EnsureUTF8(item.Title)), 
                 new string[] { TextManager.Get("Cancel") });
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
@@ -1291,13 +1382,13 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(item.Error))
             {
-                new GUIMessageBox("", TextManager.Get("WorkshopItemPublished").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)));
+                new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemPublished", "[itemname]", TextManager.EnsureUTF8(item.Title)));
             }
             else
             {
                 new GUIMessageBox(
                     TextManager.Get("Error"), 
-                    TextManager.Get("WorkshopItemPublishFailed").Replace("[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
+                    TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
             }
 
             createItemFrame.ClearChildren();

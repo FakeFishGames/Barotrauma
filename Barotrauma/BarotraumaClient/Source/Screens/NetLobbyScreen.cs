@@ -147,6 +147,12 @@ namespace Barotrauma
             get { return playerList; }
         }
 
+        public GUITextBox CharacterNameBox
+        {
+            get;
+            private set;
+        }
+
         public GUIButton StartButton
         {
             get;
@@ -329,8 +335,12 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null);
 
             //server info ------------------------------------------------------------------
-            
-            ServerName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), infoFrameContent.RectTransform));
+
+            ServerName = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.05f), infoFrameContent.RectTransform))
+            {
+                MaxTextLength = NetConfig.ServerNameMaxLength,
+                OverflowClip = true
+            };
             ServerName.OnDeselected += (textBox, key) =>
             {
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
@@ -920,7 +930,26 @@ namespace Barotrauma
                 UserData = characterInfo
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
+            CharacterNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center)
+            {
+                MaxTextLength = Client.MaxNameLength,
+                OverflowClip = true
+            };
+            CharacterNameBox.OnEnterPressed += (tb, text) => { CharacterNameBox.Deselect(); return true; };
+            CharacterNameBox.OnDeselected += (tb, key) =>
+            {
+                if (GameMain.Client == null) { return; }
+                string newName = Client.SanitizeName(tb.Text);
+                if (string.IsNullOrWhiteSpace(newName))
+                {
+                    tb.Text = GameMain.Client.Name;
+                }
+                else
+                {
+                    ReadyToStartBox.Selected = false;
+                    GameMain.Client.Name = tb.Text;
+                };
+            };
 
             GUIComponent headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
             {
@@ -1309,6 +1338,7 @@ namespace Barotrauma
             {
                 Selected = true,
                 Enabled = false,
+                Visible = false,
                 ToolTip = TextManager.Get("ReadyToStartTickBox"),
                 UserData = "clientready"
             };
@@ -1524,7 +1554,8 @@ namespace Barotrauma
                 }
 
 
-                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
+                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && 
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("VoteToKick"))
@@ -1535,7 +1566,8 @@ namespace Barotrauma
                     };
                 }
 
-                if (GameMain.Client.HasPermission(ClientPermissions.Kick))
+                if (GameMain.Client.HasPermission(ClientPermissions.Kick) &&
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("Kick"))
@@ -1986,16 +2018,17 @@ namespace Barotrauma
                 string errorMsg = "";
                 if (sub == null)
                 {
-                    errorMsg = TextManager.Get("SubNotFoundError").Replace("[subname]", subName) + " ";
+                    errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
                 }
                 else if (sub.MD5Hash.Hash == null)
                 {
-                    errorMsg = TextManager.Get("SubLoadError").Replace("[subname]", subName) + " ";
+                    errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
                     if (matchingListSub != null) matchingListSub.GetChild<GUITextBox>().TextColor = Color.Red;
                 }
                 else
                 {
-                    errorMsg = TextManager.Get("SubDoesntMatchError").Replace("[subname]", sub.Name).Replace("[myhash]", sub.MD5Hash.ShortHash).Replace("[serverhash]", Md5Hash.GetShortHash(md5Hash)) + " ";
+                    errorMsg = TextManager.GetWithVariables("SubDoesntMatchError", new string[3] { "[subname]" , "[myhash]", "[serverhash]" }, 
+                        new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
                 }
 
                 errorMsg += TextManager.Get("DownloadSubQuestion");

@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     partial class Hull : MapEntity, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        private float lastSentVolume, lastSentOxygen;
+        private float lastSentVolume, lastSentOxygen, lastSentFireCount;
         private float sendUpdateTimer;
 
         public override bool IsMouseOn(Vector2 position)
@@ -34,6 +34,7 @@ namespace Barotrauma
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f ||
+                lastSentFireCount != FireSources.Count ||
                 FireSources.Count > 0)
             {
                 sendUpdateTimer -= deltaTime;
@@ -42,6 +43,7 @@ namespace Barotrauma
                     GameMain.NetworkMember.CreateEntityEvent(this);
                     lastSentVolume = waterVolume;
                     lastSentOxygen = OxygenPercentage;
+                    lastSentFireCount = FireSources.Count;
                     sendUpdateTimer = NetConfig.HullUpdateInterval;
                 }
             }

@@ -210,6 +210,11 @@ namespace Barotrauma.Items.Components
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) { return; }
 
+            if (user != null && user.Removed)
+            {
+                user = null;
+            }
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             if (autoPilot)
@@ -413,7 +418,7 @@ namespace Barotrauma.Items.Components
             {
                 target = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
             }
-            steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition), target, "(Autopilot, target: " + target + ")");
+            steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition), target, errorMsgStr: "(Autopilot, target: " + target + ")");
         }
 
         public void SetDestinationLevelStart()

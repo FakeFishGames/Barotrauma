@@ -1,4 +1,124 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.0.5
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Automatically fill the client name textbox with the player's Steam username.
+- Allow clients (including the host) to change their name in the server lobby.
+- Censor password boxes to make joining servers a little more streamer-friendly.
+- Show the name of the server in the "connecting to..." popup instead of the IP address.
+- Added a close button to the debug console and a text that explains it can be opened/closed by pressing F3.
+- Electrical components are attached to walls with the left mouse button instead of E.
+- Flares are activated with the left mouse button instead of E.
+- Nerfed plasma cutters and welding tools.
+- Made coilgun ammunition boxes deconstructable.
+- Removed minimum job count requirement from Captain, Engineer & Mechanic (i.e. it's not possible to play
+other jobs even when there's 3 or less players on the server).
+- Increased default respawn transport time to 5 minutes, decreased respawn interval to 3 minutes.
+- Allow muting players mid-round through the info menu.
+- Allow to edit the door opening/closing speeds and increase the defaults.
+- Reduce the follow-up distance and require the bot to be in the same room than the player before stopping, 
+so that bots with a follow order don't stay on the doorways when the player is trying to enter the airlocks.
+- Stop "breathing" deformations when the character is dead.
+- Disable obstructed paths when the submarine docks to another submarine/outpost.
+- The location of save files can be changed in config_player.xml using the attributes "overridesavefolder" 
+and "overridemultiplayersavefolder".
+
+Bugfixes:
+- Fixed crashing during startup due to faulty OpenAL installations.
+- Fixed inability to select the voice capture device if the name of the device contains non-latin symbols
+(Cyrillic or Chinese characters for example).
+- Fixed a networking issue that occasionally caused clients to get kicked with a "disconnected due to 
+excessive desync" error message.
+- Fixed fires being very hard to put out completely in multiplayer.
+- Fixed items not being repaired after purchasing repairs in the campaign.
+- Removed outdated Launch_BarotraumaServer script from the Linux version (does not work anymore, the 
+dedicated server should be launched by running the file called "DedicatedServer").
+- Fixed server owners not being able to join their own server if whitelist is enabled and the owner is not
+on the whitelist.
+- Fixed inability to ban clients by their Steam ID using the console.
+- Fixed all servers showing up as "Round has not started" in the server list.
+- Fixed server ignoring the max players value set in the "host server" menu and using the setting 
+configured in "serversettings.xml" instead.
+- Fixed spectators not hearing the living players' voice chat.
+- VOIP improvements (less crackling and pops).
+- Increased oxygen output in vanilla submarines to prevent characters from suffocating when playing with
+an oversized crew.
+- Fixed occasional console errors when ending a round (causing the round end summary not to appear).
+- Waypoint fixes in vanilla subs.
+- Disallow shooting and attacking when the cursor is over a UI element (to prevent, for example, 
+accidentally firing a gun when dismissing a message box).
+- Fixed "file not found" errors on Linux when attempting to enable a mod that defines file paths
+using a backslash instead of a slash.
+- Fixed monsters ignoring decoys.
+- Fixed store menu switching back to the equipment category every time something is bought/sold in 
+the multiplayer campaign.
+- Fixed "push to talk" field going outside the audio settings menu on some aspect ratios.
+- Fixed long server names overflowing in the server list menu.
+- Fixed the character saying "OrderDialogSelf.dismissed" when a player removes an order from themselves.
+- Fixed subinventory slots going outside the screen when for example grabbing someone with a toolbox 
+in the leftmost inventory slot.
+- Fixed monsters sometimes spawning inside the floating ice chunks within the levels.
+- Fixed physicorium shells not being containable in railgun shell racks.
+- Fixed physicorium ammo box not being containable in coilgun ammunition shelves.
+- Fixed inability to spawn items in characters' inventories with the "spawnitem" console command.
+- Fixed health interface not focusing to the most damaged limb when closing and reopening the interface.
+- Prevent welding doors shut during the tutorials (as the player doesn't have access to any tools to 
+reopen the door).
+- Fixed AI pathfinding when the path is from a submarine to another submarine.
+- Fixed crashing when AI crew tries to find a path out of the ruins.
+- Fixed Watchmen looking at the wrong direction.
+- Fixed crashing due to an invalid display resolution.
+- Fixed alien item assemblies not being hidden from the sub editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.0.4
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "Steam authentication failed" errors when trying to reconnect to a server after cancelling the
+connection.
+- Fixed clients occasionally failing to spawn items when playing using a different language than the server,
+which caused them to get kicked.
+- Fixed extra cargo failing to spawn in multiplayer when playing using a different language than the server. 
+- Fixed legacy items failing to load if a sub is saved with a language other than English and the language 
+then changed to something else.
+- Fixed excessively small password input box when connecting to servers.
+- Fixed a bug that occasionally caused items to drop from the inventory when moving items between 
+inventory slots in the multiplayer.
+- Prevent junction boxes from getting damaged due to overvoltage in the engineering tutorial.
+- Fixed structures getting scaled incorrectly when cloning a structure with a non-default scale in the 
+submarine editor.
+- Fixed occasional crashes when leaving a multiplayer session while the "cinematic" at the end of the round
+is still playing.
+- Fixed items not being moved to the humanhusk's inventory when a huskified player dies (= clothes and
+other gear seemed to magically disappear when the character "resurrected" as an AI husk).
+- Fixed clients not seeing turrets rotating at their end when another client is operating the turret.
+- Fixed hitscan projectiles (revolver rounds) going through walls if the weapon is fired while its 
+barrel is partially inside the wall.
+- Fixed welding tools being able to weld doors and burn characters through walls.
+- Fixed bots reporting leaks when there are holes in the interior walls.
+- Fixes to the colliders of some of the shuttle wall pieces.
+- Fixed Linux version crashing when attempting to browse for files in the Steam Workshop menu.
+- Fixed credits not resizing when resolution is changed.
+- Added an upper limit to impact damage done to ragdolls, preventing characters from getting instakilled if
+a Moloch or another large monster smashes against the sub hard enough.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.0.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed captain tutorial not continuing after the part where the mechanic has to be ordered to do repairs.
+- Fixed mechanic tutorial getting stuck if repairing the devices is interrupted before they're fully repaired.
+- Fixed Workshop item preview images not working on Mac or Linux.
+- Fixed "Add file" and "Browse preview image" file dialogs crashing some Mac/Linux systems.
+- Unlock tutorials one by one.
+- Fixed crashing when clicking on the "no matching servers found" message in the server list.
+- Fixed loading screen being dismissable when the window is not active.
+- Fixed connection panel overlay overlapping with the connections on resolutions higher than 1080p.
+- Fixed incorrect "mission completed" text in the combat missions.
+- Fixed "a swarm of [monster]" description in the crawler swarm mission.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.0.2
 ---------------------------------------------------------------------------------------------------------
 
