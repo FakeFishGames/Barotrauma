@@ -4922,8 +4922,8 @@ namespace Barotrauma
                     var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
                     new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbsElement.RectTransform), $"{GetCharacterEditorTranslation("Limbs")}: ");
                     var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(0.8f, 1f), limbsElement.RectTransform)
-                        { RelativeOffset = new Vector2(0.25f, 0) }, style: null) { CanBeFocused = false };
-                    var limbEditLayout = new GUILayoutGroup(new RectTransform(Vector2.One, limbButtonElement.RectTransform), isHorizontal: true);
+                        { RelativeOffset = new Vector2(0.1f, 0) }, style: null) { CanBeFocused = false };
+                    var limbEditLayout = new GUILayoutGroup(new RectTransform(Vector2.One, limbButtonElement.RectTransform), isHorizontal: true) { AbsoluteSpacing = 10 };
                     var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
                     var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), "-")
                     {
@@ -4954,15 +4954,65 @@ namespace Barotrauma
                             return true;
                         }
                     };
-                    var xInput = new GUINumberInput(new RectTransform(new Point(100, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), GUINumberInput.NumberType.Int);
-                    var yInput = new GUINumberInput(new RectTransform(new Point(100, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), GUINumberInput.NumberType.Int);
+
+                    int x = 1, y = 1, w = 100, h = 100;
+                    int otherElements = limbButtonElement.Rect.Width / 4 + 10 + limbButtonElement.Rect.Height * 2 + 10 + limbButtonElement.RectTransform.AbsoluteOffset.X;
+                    var frame = new GUIFrame(new RectTransform(new Point(limbEditLayout.Rect.Width - otherElements, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), color: Color.Transparent);
+                    var inputArea = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
+                    {
+                        Stretch = true,
+                        RelativeSpacing = 0.01f
+                    };
+                    for (int i = 3; i >= 0; i--)
+                    {
+                        var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
+                        new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
+                        GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Int)
+                        {
+                            Font = GUI.SmallFont
+                        };
+                        switch (i)
+                        {
+                            case 0:
+                            case 1:
+                                numberInput.IntValue = 1;
+                                numberInput.MinValueInt = 1;
+                                numberInput.MaxValueInt = 100;
+                                break;
+                            case 2:
+                            case 3:
+                                numberInput.IntValue = 100;
+                                numberInput.MinValueInt = 0;
+                                numberInput.MaxValueInt = 999;
+                                break;
+
+                        }
+                        int comp = i;
+                        numberInput.OnValueChanged += (numInput) =>
+                        {
+                            switch (comp)
+                            {
+                                case 0:
+                                    x = numInput.IntValue;
+                                    break;
+                                case 1:
+                                    y = numInput.IntValue;
+                                    break;
+                                case 2:
+                                    w = numInput.IntValue;
+                                    break;
+                                case 3:
+                                    h = numInput.IntValue;
+                                    break;
+                            }
+                        };
+                    }
+
                     new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Width / 4, limbButtonElement.Rect.Height), limbEditLayout.RectTransform)
                         , GetCharacterEditorTranslation("AddMultipleLimbsButton"))
                     {
                         OnClicked = (b, d) =>
                         {
-                            int x = MathHelper.Clamp(xInput.IntValue, 1, 100);
-                            int y = MathHelper.Clamp(yInput.IntValue, 1, 100);
                             for (int i = 0; i < x; i++)
                             {
                                 for (int j = 0; j < y; j++)
@@ -4977,7 +5027,7 @@ namespace Barotrauma
                                             limbType = LimbType.Head;
                                             break;
                                     }
-                                    CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType, sourceRect: new Rectangle(100 * i, 100 * j, 100, 100));
+                                    CreateLimbGUIElement(limbsList.Content.RectTransform, elementSize, id: LimbGUIElements.Count, limbType: limbType, sourceRect: new Rectangle(i * w, j * h, w, h));
                                 }
                             }
                             return true;
@@ -4988,7 +5038,7 @@ namespace Barotrauma
                     var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
                     new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), $"{GetCharacterEditorTranslation("Joints")}: ");
                     var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), jointsElement.RectTransform)
-                        { RelativeOffset = new Vector2(0.25f, 0) }, style: null) { CanBeFocused = false };
+                        { RelativeOffset = new Vector2(0.1f, 0) }, style: null) { CanBeFocused = false };
                     var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
                     var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), "-")
                     {
@@ -5071,7 +5121,7 @@ namespace Barotrauma
                     {
                         ParseLimbsFromGUIElements();
                         ParseJointsFromGUIElements();
-                        var torsoAttributes = LimbXElements.Values.Select(x => x.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso");
+                        var torsoAttributes = LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso");
                         if (torsoAttributes.Count() != 1)
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("MultipleTorsosDefined"), Color.Red);
