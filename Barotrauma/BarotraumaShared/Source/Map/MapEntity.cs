@@ -555,7 +555,7 @@ namespace Barotrauma
             }
         }
         
-        [Serialize(1f, false), Editable(0.1f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
+        [Serialize(1f, true), Editable(0.1f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
         public virtual float Scale { get; set; } = 1;
         #endregion
     }
