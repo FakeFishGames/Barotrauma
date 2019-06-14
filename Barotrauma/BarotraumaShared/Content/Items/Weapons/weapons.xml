@@ -152,6 +152,22 @@
       </Attack>
     </Projectile>
   </Item>
+
+  <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="15" />
+    <Price locationtype="City" buyprice="30" />
+    <Price locationtype="Outpost" buyprice="30" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" />
+    <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
+    <Body width="8" height="3" density="40" />
+    <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
+    <Projectile characterusable="false" hitscan="true" removeonhit="true">
+      <Attack structuredamage="2.5" stun="0.125" targetforce="10">
+        <Affliction identifier="gunshotwound" strength="15" />
+        <Affliction identifier="internaldamage" strength="10" />
+      </Attack>
+    </Projectile>
+  </Item>
   
   <Item name="Revolver" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="75" />
@@ -177,6 +193,33 @@
     <ItemContainer capacity="6" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable identifiers="revolverround" />
+    </ItemContainer>
+  </Item>
+
+  <Item name="SMG" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="75" />
+    <Price locationtype="City" buyprice="150" />
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+      <Item identifier="plastic" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64" />
+    <Sprite texture="weapons_new.png" sourcerect="0,0,117,64" depth="0.55" />
+    <Body width="28" height="20" density="50" />
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect"/>
+    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="60">
+      <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
+      <Sound file="Content/Items/Weapons/Revolver2.ogg" type="OnUse" range="3000" />
+      <Sound file="Content/Items/Weapons/Revolver3.ogg" type="OnUse" range="3000" />
+      <StatusEffect type="OnUse">
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="12.0" />
+      </StatusEffect>
+      <RequiredItems identifier="smground" type="Contained" msg="ItemMsgAmmoRequired" />
+      <RequiredSkill identifier="weapons" level="50" />
+    </RangedWeapon>
+    <ItemContainer capacity="15" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <Containable identifiers="smground" />
     </ItemContainer>
   </Item>
   
