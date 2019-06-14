@@ -4765,7 +4765,7 @@ namespace Barotrauma
             private class CharacterView : View
             {
                 private static CharacterView instance;
-                public static CharacterView Get() => Get(instance);
+                public static CharacterView Get() => Get(ref instance);
 
                 protected override GUIMessageBox Create()
                 {
@@ -4905,7 +4905,7 @@ namespace Barotrauma
             private class RagdollView : View
             {
                 private static RagdollView instance;
-                public static RagdollView Get() => Get(instance);
+                public static RagdollView Get() => Get(ref instance);
 
                 protected override GUIMessageBox Create()
                 {
@@ -5315,7 +5315,7 @@ namespace Barotrauma
                 }
 
                 protected abstract GUIMessageBox Create();
-                protected static T Get<T>(T instance) where T : View, new()
+                protected static T Get<T>(ref T instance) where T : View, new()
                 {
                     if (instance == null)
                     {
