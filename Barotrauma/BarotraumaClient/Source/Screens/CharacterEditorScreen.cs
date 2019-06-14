@@ -5109,6 +5109,7 @@ namespace Barotrauma
                         if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackageName, ragdollParams))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
+                            CharacterEditorScreen.instance.editLimbsToggle.Selected = true;
                         }
                         Wizard.Instance.SelectTab(Tab.None);
                         return true;
