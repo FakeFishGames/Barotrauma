@@ -126,6 +126,10 @@ namespace Barotrauma.Networking
 
         public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionmult = 2.0f)
         {
+            if (listener == null || sender == null)
+            {
+                return 0.0f;
+            }
             if (listener.WorldPosition == sender.WorldPosition) { return 0.0f; }
 
             float dist = Vector2.Distance(listener.WorldPosition, sender.WorldPosition);
