@@ -70,7 +70,9 @@ namespace Barotrauma
                 
         private Inventory parentInventory;
         private Inventory ownInventory;
-        
+
+        private Rectangle defaultRect;
+
         private Dictionary<string, Connection> connections;
 
         private List<Repairable> repairables;
@@ -195,6 +197,26 @@ namespace Barotrauma
             get
             {
                 return WorldRect;
+            }
+        }
+
+        private float scale = 1.0f;
+        public override float Scale
+        {
+            get { return scale; }
+            set
+            {
+                if (scale == value) { return; }
+                scale = MathHelper.Clamp(value, 0.1f, 10.0f);
+
+                float relativeScale = scale / prefab.Scale;
+
+                if (!ResizeHorizontal || !ResizeVertical)
+                {
+                    int newWidth = ResizeHorizontal ? rect.Width : (int)(defaultRect.Width * relativeScale);
+                    int newHeight = ResizeVertical ? rect.Height : (int)(defaultRect.Height * relativeScale);
+                    Rect = new Rectangle(rect.X, rect.Y, newWidth, newHeight);
+                }
             }
         }
 
@@ -499,9 +521,10 @@ namespace Barotrauma
             drawableComponents  = new List<IDrawableComponent>();
             tags                = new HashSet<string>();
             repairables         = new List<Repairable>();
-                       
+
+            defaultRect = newRect;
             rect = newRect;
-                        
+
             condition = itemPrefab.Health;
             lastSentCondition = condition;
 
@@ -634,7 +657,10 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            Item clone = new Item(rect, Prefab, Submarine, callOnItemLoaded: false);
+            Item clone = new Item(rect, Prefab, Submarine, callOnItemLoaded: false)
+            {
+                defaultRect = defaultRect
+            };
             foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
@@ -2052,11 +2078,11 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Submarine != null || rootContainer.ParentInventory?.Owner is Character);
 
             Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
-
+            
             element.Add(new XAttribute("rect",
                 (int)(rect.X - subPosition.X) + "," +
                 (int)(rect.Y - subPosition.Y) + "," +
-                rect.Width + "," + rect.Height));
+                defaultRect.Width + "," + defaultRect.Height));
             
             if (linkedTo != null && linkedTo.Count > 0)
             {
