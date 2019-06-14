@@ -159,14 +159,14 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
+        
         public Door(Item item, XElement element)
             : base(item, element)
         {
             IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 string texturePath = subElement.GetAttributeString("texture", "");
@@ -389,6 +389,18 @@ namespace Barotrauma.Items.Components
 
             UpdateConvexHulls();
 #endif
+        }
+
+        public override void OnScaleChanged()
+        {
+#if CLIENT
+            UpdateConvexHulls();
+#endif
+            if (linkedGap != null)
+            {
+                RefreshLinkedGap();
+                linkedGap.Rect = item.Rect;
+            }
         }
 
         protected override void RemoveComponentSpecific()

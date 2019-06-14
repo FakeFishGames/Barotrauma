@@ -217,6 +217,14 @@ namespace Barotrauma
                     int newHeight = ResizeVertical ? rect.Height : (int)(defaultRect.Height * relativeScale);
                     Rect = new Rectangle(rect.X, rect.Y, newWidth, newHeight);
                 }
+
+                if (components != null)
+                {
+                    foreach (ItemComponent component in components)
+                    {
+                        component.OnScaleChanged();
+                    }
+                }
             }
         }
 
