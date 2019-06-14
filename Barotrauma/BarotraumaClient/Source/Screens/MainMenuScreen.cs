@@ -724,7 +724,14 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                int ownerKey = Math.Max(CryptoRandom.Instance.Next(),1);
+                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault();
+                if (string.IsNullOrEmpty(exeName))
+                {
+                    DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");
+                    exeName = "DedicatedServer.exe";
+                }
+
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
 
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -port " + port.ToString() +
@@ -734,16 +741,15 @@ namespace Barotrauma
                                    " -maxplayers " + maxPlayersBox.Text +
                                     " -ownerkey " + ownerKey.ToString();
 
-                string filename = "DedicatedServer.exe";
+                string filename = exeName;
 #if LINUX || OSX
-                filename = "./DedicatedServer";
+                filename = "./" + Path.GetFileNameWithoutExtension(exeName);
 #endif
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = filename,
-                    Arguments = arguments
+                    Arguments = arguments,
 #if !DEBUG
-                    ,
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif
                 };
