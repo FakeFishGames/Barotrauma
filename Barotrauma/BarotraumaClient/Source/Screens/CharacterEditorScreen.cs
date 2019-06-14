@@ -1332,14 +1332,31 @@ namespace Barotrauma
 
         private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, params object[] ragdollConfig)
         {
+            var vanilla = GameMain.VanillaContent;
             var contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
+            // TODO: add a prompt about creating a new content package or using the existing package
+            bool createNewContentPackage = contentPackage == null;
+#if !DEBUG
+            if (!createNewContentPackage)
+            {
+                createNewContentPackage = contentPackage == vanilla;
+            }
+#endif
+            if (createNewContentPackage)
+            {
+                // TODO: allow to define the name
+                string modName = "NewMod";
+                contentPackage = ContentPackage.CreatePackage(modName, Path.Combine(ContentPackage.Folder, $"{modName}.xml"), false);
+                ContentPackage.List.Add(contentPackage);
+                GameMain.Config.SelectedContentPackages.Add(contentPackage);
+                GameMain.Config.SaveNewPlayerConfig();
+            }
             if (contentPackage == null)
             {
-                // This should not normally happen.
+                // This should not be possible.
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("NoContentPackageSelected"));
                 return false;
             }
-            var vanilla = GameMain.VanillaContent;
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
             {
@@ -1347,7 +1364,6 @@ namespace Barotrauma
                 return false;
             }
 #endif
-
             string speciesName = name;
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
