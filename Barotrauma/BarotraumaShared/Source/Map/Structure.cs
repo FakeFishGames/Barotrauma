@@ -183,6 +183,29 @@ namespace Barotrauma
             }
         }
 
+
+        protected Vector2 textureScale = Vector2.One;
+
+        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", false)]
+        public Vector2 TextureScale
+        {
+            get { return textureScale; }
+            set
+            {
+                textureScale = new Vector2(
+                    MathHelper.Clamp(value.X, 0.01f, 10),
+                    MathHelper.Clamp(value.Y, 0.01f, 10));
+            }
+        }
+
+        protected Vector2 textureOffset = Vector2.Zero;
+        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
+        public Vector2 TextureOffset
+        {
+            get { return textureOffset; }
+            set { textureOffset = value; }
+        }
+
         private Rectangle defaultRect;
 
         public override Rectangle Rect
@@ -296,9 +319,8 @@ namespace Barotrauma
             defaultRect = rectangle;
 
             rect = rectangle;
-#if CLIENT
             TextureScale = sp.TextureScale;
-#endif
+
             spriteColor = prefab.SpriteColor;
             if (sp.IsHorizontal.HasValue)
             {
