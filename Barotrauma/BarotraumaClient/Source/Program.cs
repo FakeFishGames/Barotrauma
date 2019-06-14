@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
+using System.Diagnostics;
 
 #if WINDOWS
 using System.Windows.Forms;
@@ -28,7 +29,7 @@ namespace Barotrauma
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             SteamManager.Initialize();
             GameMain game = null;
@@ -36,7 +37,7 @@ namespace Barotrauma
             try
             {
 #endif
-                game = new GameMain();
+                game = new GameMain(args);
                 //game.GraphicsDevice.PresentationParameters.IsFullScreen = false;
 #if !DEBUG
             }
@@ -152,11 +153,14 @@ namespace Barotrauma
             return false;
         }
 
-        public static void CrashMessageBox(string message)
+        public static void CrashMessageBox(string message, string filePath)
         {
 #if WINDOWS
             MessageBox.Show(message, "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
 #endif
+
+            // Open the crash log.
+            Process.Start(filePath);
         }
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
@@ -279,14 +283,14 @@ namespace Barotrauma
 
             if (GameSettings.SendUserStatistics)
             {
-                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.");
+                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.", filePath);
                 GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
                 GameAnalytics.OnQuit();
             }
             else
             {
                 CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
-                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");
+                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/", filePath);
             }
         }
     }

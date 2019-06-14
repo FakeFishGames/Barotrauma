@@ -30,6 +30,8 @@ namespace Barotrauma
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
+        public static string[] ConsoleArguments;
+
         public static GameScreen GameScreen;
         public static MainMenuScreen MainMenuScreen;
         public static LobbyScreen LobbyScreen;
@@ -114,7 +116,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         public static WindowMode WindowMode
         {
             get;
@@ -157,7 +159,7 @@ namespace Barotrauma
             get { return loadingScreenOpen; }
         }
 
-        public GameMain()
+        public GameMain(string[] args)
         {
             Content.RootDirectory = "Content";
 
@@ -168,6 +170,8 @@ namespace Barotrauma
             Instance = this;
 
             Config = new GameSettings();
+
+            ConsoleArguments = args;
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -279,7 +283,7 @@ namespace Barotrauma
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
-        
+
         private void InitUserStats()
         {
             if (GameSettings.ShowUserStatisticsPrompt)
@@ -341,6 +345,11 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
             SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f);
+
+            if (ConsoleArguments.Contains("skipintro")) {
+                Config.EnableSplashScreen = false;
+            }
+
             if (Config.EnableSplashScreen)
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
@@ -388,7 +397,7 @@ namespace Barotrauma
             InitUserStats();
 
         yield return CoroutineStatus.Running;
-            
+
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
             TitleScreen.LoadState = 1.0f;
@@ -646,7 +655,7 @@ namespace Barotrauma
                             GUI.KeyboardDispatcher.Subscriber = null;
                         }
                         //if a verification prompt (are you sure you want to x) is open, close it
-                        else if (GUIMessageBox.VisibleBox as GUIMessageBox != null && 
+                        else if (GUIMessageBox.VisibleBox as GUIMessageBox != null &&
                                 GUIMessageBox.VisibleBox.UserData as string == "verificationprompt")
                         {
                             ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
@@ -808,8 +817,8 @@ namespace Barotrauma
                     }
                 };
             }
-            
-            msgBox.InnerFrame.RectTransform.MinSize = new Point(0, 
+
+            msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
                 msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + 10);
             Config.EditorDisclaimerShown = true;
             Config.SaveNewPlayerConfig();
