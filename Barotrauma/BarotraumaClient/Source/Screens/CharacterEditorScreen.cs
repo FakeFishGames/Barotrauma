@@ -1333,13 +1333,28 @@ namespace Barotrauma
         private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, string contentPackageName = null, params object[] ragdollConfig)
         {
             var vanilla = GameMain.VanillaContent;
+            ContentPackage contentPackage = null;
+            if (string.IsNullOrWhiteSpace(contentPackageName))
+            {
+                contentPackageName = null;
+            }
+            if (contentPackageName == null)
+            {
 #if DEBUG
-            var contentPackage = ContentPackage.List.LastOrDefault(cp => contentPackageName == null || cp.Name == contentPackageName);
+                contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
 #else
-            var contentPackage = ContentPackage.List.LastOrDefault(cp => cp != vanilla && (contentPackageName == null || cp.Name == contentPackageName));
+                contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault(cp => cp != vanilla);
 #endif
-            bool createNewContentPackage = contentPackage == null || string.IsNullOrWhiteSpace(contentPackageName);
-            if (createNewContentPackage)
+            }
+            else
+            {
+#if DEBUG
+                contentPackage = ContentPackage.List.LastOrDefault(cp => cp.Name == contentPackageName);
+#else
+                contentPackage = ContentPackage.List.LastOrDefault(cp => cp != vanilla && cp.Name == contentPackageName);
+#endif
+            }
+            if (contentPackage == null)
             {
                 string modName = contentPackageName ?? "NewCharacterMod";
                 contentPackage = ContentPackage.CreatePackage(modName, Path.Combine(ContentPackage.Folder, $"{modName}.xml"), false);
