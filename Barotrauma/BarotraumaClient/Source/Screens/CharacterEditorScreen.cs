@@ -4811,6 +4811,13 @@ namespace Barotrauma
                             texturePathElement.Flash(Color.Red);
                             return false;
                         }
+                        var path = Path.GetFileName(TexturePath);
+                        if (!path.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            GUI.AddMessage(TextManager.Get("WrongFileType"), Color.Red);
+                            texturePathElement.Flash(Color.Red);
+                            return false;
+                        }
                         Wizard.Instance.SelectTab(Tab.Ragdoll);
                         return true;
                     };

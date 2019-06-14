@@ -3204,6 +3204,8 @@
   
   <voipnodevices>No audio capture devices found</voipnodevices>
 
+  <wrongfiletype>Wrong file type!</wrongfiletype>
+
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
 </infotexts>
