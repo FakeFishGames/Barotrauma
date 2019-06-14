@@ -4739,9 +4739,12 @@ namespace Barotrauma
                     {
                         string pathBase = $"Mods/Characters/{Name}/{Name}";
                         XMLPath = $"{pathBase}.xml";
-                        TexturePath = $"{pathBase}.png";
-                        texturePathElement.Text = TexturePath;
                         xmlPathElement.Text = XMLPath;
+                        if (string.IsNullOrWhiteSpace(TexturePath))
+                        {
+                            TexturePath = $"{pathBase}.png";
+                            texturePathElement.Text = TexturePath;
+                        }
                     }
                     for (int i = 0; i < 6; i++)
                     {
