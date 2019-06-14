@@ -290,6 +290,8 @@ namespace Barotrauma.Items.Components
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (item.Removed) { return; }
+
             Rectangle graphArea = new Rectangle(container.Rect.X + 30, container.Rect.Y, container.Rect.Width - 30, container.Rect.Height);
 
             float maxLoad = loadGraph.Max();
@@ -359,6 +361,8 @@ namespace Barotrauma.Items.Components
 
         private void DrawFissionRateMeter(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (item.Removed) { return; }
+
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
             spriteBatch.GraphicsDevice.ScissorRectangle = container.Rect;
@@ -384,6 +388,8 @@ namespace Barotrauma.Items.Components
 
         private void DrawTurbineOutputMeter(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (item.Removed) { return; }
+
             DrawMeter(spriteBatch, container.Rect,
                 turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
         }
@@ -514,7 +520,7 @@ namespace Barotrauma.Items.Components
 
                 Vector2 newPoint = new Vector2(currX, rect.Bottom - graph[i] * yScale);
                 
-                if (graphLine == null)
+                if (graphLine?.Texture == null)
                 {
                     GUI.DrawLine(spriteBatch, prevPoint, newPoint - new Vector2(1.0f, 0), color);
                 }
@@ -530,7 +536,7 @@ namespace Barotrauma.Items.Components
             Vector2 lastPoint = new Vector2(rect.X,
                 rect.Bottom - (graph[graph.Count - 1] + (graph[graph.Count - 2] - graph[graph.Count - 1]) * xOffset) * yScale);
 
-            if (graphLine == null)
+            if (graphLine?.Texture == null)
             {
                 GUI.DrawLine(spriteBatch, prevPoint, lastPoint, color);
             }
