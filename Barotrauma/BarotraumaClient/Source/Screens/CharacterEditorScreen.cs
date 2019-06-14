@@ -1330,32 +1330,31 @@ namespace Barotrauma
             Cam.Position = character.WorldPosition;
         }
 
-        private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, params object[] ragdollConfig)
+        private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, string contentPackageName = null, params object[] ragdollConfig)
         {
             var vanilla = GameMain.VanillaContent;
-            var contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
-            // TODO: add a prompt about creating a new content package or using the existing package
-            bool createNewContentPackage = contentPackage == null;
-#if !DEBUG
-            if (!createNewContentPackage)
-            {
-                createNewContentPackage = contentPackage == vanilla;
-            }
+#if DEBUG
+            var contentPackage = ContentPackage.List.LastOrDefault(cp => contentPackageName == null || cp.Name == contentPackageName);
+#else
+            var contentPackage = ContentPackage.List.LastOrDefault(cp => cp != vanilla && (contentPackageName == null || cp.Name == contentPackageName));
 #endif
+            bool createNewContentPackage = contentPackage == null || string.IsNullOrWhiteSpace(contentPackageName);
             if (createNewContentPackage)
             {
-                // TODO: allow to define the name
-                string modName = "NewMod";
+                string modName = contentPackageName ?? "NewCharacterMod";
                 contentPackage = ContentPackage.CreatePackage(modName, Path.Combine(ContentPackage.Folder, $"{modName}.xml"), false);
                 ContentPackage.List.Add(contentPackage);
-                GameMain.Config.SelectedContentPackages.Add(contentPackage);
-                GameMain.Config.SaveNewPlayerConfig();
             }
             if (contentPackage == null)
             {
                 // This should not be possible.
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("NoContentPackageSelected"));
                 return false;
+            }
+            if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
+            {
+                GameMain.Config.SelectedContentPackages.Add(contentPackage);
+                GameMain.Config.SaveNewPlayerConfig();
             }
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
@@ -4672,6 +4671,7 @@ namespace Barotrauma
             private bool canEnterSubmarine = true;
             private string texturePath;
             private string xmlPath;
+            private string contentPackageName;
             private Dictionary<string, XElement> limbXElements = new Dictionary<string, XElement>();
             private List<GUIComponent> limbGUIElements = new List<GUIComponent>();
             private List<XElement> jointXElements = new List<XElement>();
@@ -4734,6 +4734,7 @@ namespace Barotrauma
                     var fields = new List<GUIComponent>();
                     GUITextBox texturePathElement = null;
                     GUITextBox xmlPathElement = null;
+                    GUITextBox contentPackageNameElement = null;
                     void UpdatePaths()
                     {
                         string pathBase = $"Mods/Characters/{Name}/{Name}";
@@ -4742,7 +4743,7 @@ namespace Barotrauma
                         texturePathElement.Text = TexturePath;
                         xmlPathElement.Text = XMLPath;
                     }
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < 6; i++)
                     {
                         var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                         fields.Add(mainElement);
@@ -4803,6 +4804,18 @@ namespace Barotrauma
                                 texturePathElement.OnTextChanged += (tb, text) =>
                                 {
                                     TexturePath = text;
+                                    return true;
+                                };
+                                break;
+                            case 5:
+                                new GUITextBlock(leftElement, GetCharacterEditorTranslation("ContentPackageName"));
+                                contentPackageNameElement = new GUITextBox(rightElement, string.Empty)
+                                {
+                                    CaretColor = Color.White,
+                                };
+                                contentPackageNameElement.OnTextChanged += (tb, text) =>
+                                {
+                                    ContentPackageName = text;
                                     return true;
                                 };
                                 break;
@@ -5062,7 +5075,7 @@ namespace Barotrauma
                                 LimbXElements.Values,
                                 JointXElements
                         };
-                        if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ragdollParams))
+                        if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackageName, ragdollParams))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                         }
@@ -5175,6 +5188,11 @@ namespace Barotrauma
                 {
                     get => Instance.canEnterSubmarine;
                     set => Instance.canEnterSubmarine = value;
+                }
+                public string ContentPackageName
+                {
+                    get => Instance.contentPackageName;
+                    set => Instance.contentPackageName = value;
                 }
                 public string TexturePath
                 {
