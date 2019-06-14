@@ -693,6 +693,8 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public virtual void OnItemLoaded() { }
 
+        public virtual void OnScaleChanged() { }
+
         // TODO: Consider using generics, interfaces, or inheritance instead of reflection -> would be easier to debug when something changes/goes wrong.
         // For example, currently we can edit the constructors but they will fail in runtime because the parameters are not changed here.
         // It's also painful to find where the constructors are used, because the references exist only at runtime.
