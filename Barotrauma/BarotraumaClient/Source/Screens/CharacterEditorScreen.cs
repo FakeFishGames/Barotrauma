@@ -1357,6 +1357,19 @@ namespace Barotrauma
             if (contentPackage == null)
             {
                 string modName = contentPackageName ?? "NewCharacterMod";
+                if (ContentPackage.List.Any(cp => cp.Name == modName))
+                {
+                    string tempName = modName;
+                    for (int i = 0; i < 100; i++)
+                    {
+                        tempName = modName + i.ToString();
+                        if (ContentPackage.List.None(cp => cp.Name == tempName))
+                        {
+                            modName = tempName;
+                            break;
+                        }
+                    }
+                }
                 contentPackage = ContentPackage.CreatePackage(modName, Path.Combine(ContentPackage.Folder, $"{modName}.xml"), false);
                 ContentPackage.List.Add(contentPackage);
             }
