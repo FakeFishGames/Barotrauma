@@ -218,6 +218,35 @@ namespace Barotrauma
             if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
             Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
             Character.AnimController.TargetMovement = targetMovement;
+
+            if (!Character.LockHands)
+            {
+                DropUnnecessaryItems();
+            }
+
+            if (Character.IsKeyDown(InputType.Aim))
+            {
+                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
+                if (cursorDiffX > 10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Right;
+                }
+                else if (cursorDiffX < -10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Left;
+                }
+
+                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
+
+            }
+            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
+            {
+                Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
+            }
+        }
+
+        private void DropUnnecessaryItems()
+        {
             if (!NeedsDivingGear(Character.CurrentHull))
             {
                 bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
@@ -277,26 +306,6 @@ namespace Barotrauma
                         }
                     }
                 }
-            }
-
-            if (Character.IsKeyDown(InputType.Aim))
-            {
-                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
-                if (cursorDiffX > 10.0f)
-                {
-                    Character.AnimController.TargetDir = Direction.Right;
-                }
-                else if (cursorDiffX < -10.0f)
-                {
-                    Character.AnimController.TargetDir = Direction.Left;
-                }
-
-                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
-
-            }
-            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
-            {
-                Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
         }
 

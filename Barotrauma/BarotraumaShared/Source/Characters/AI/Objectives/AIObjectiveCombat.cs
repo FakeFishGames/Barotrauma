@@ -155,6 +155,8 @@ namespace Barotrauma
 
         private bool TryArm()
         {
+            if (character.LockHands) { return false; }
+
             if (Weapon != null)
             {
                 if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
@@ -270,7 +272,7 @@ namespace Barotrauma
 
         private void Unequip()
         {
-            if (character.SelectedItems.Contains(Weapon))
+            if (!character.LockHands && character.SelectedItems.Contains(Weapon))
             {
                 if (!Weapon.AllowedSlots.Contains(InvSlotType.Any) || !character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Any }))
                 {
@@ -281,6 +283,7 @@ namespace Barotrauma
 
         private bool Equip()
         {
+            if (character.LockHands) { return false; }
             if (!WeaponComponent.HasRequiredContainedItems(false))
             {
                 Mode = CombatMode.Retreat;
@@ -326,6 +329,13 @@ namespace Barotrauma
 
         private void Engage()
         {
+            if (character.LockHands)
+            {
+                Mode = CombatMode.Retreat;
+                SteeringManager.Reset();
+                return;
+            }
+
             retreatTarget = null;
             RemoveSubObjective(ref retreatObjective);
             RemoveSubObjective(ref seekAmmunition);
