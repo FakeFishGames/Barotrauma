@@ -946,12 +946,11 @@ namespace Barotrauma
                     break;
                 }
                 var limb = selectedLimbs[i];
-                //if (limb == character.AnimController.MainLimb)
-                //{
-                //    // TODO: this should be possible now -> test
-                //    DebugConsole.ThrowError("Can't remove the main limb, because it will crash the game.");
-                //    continue;
-                //}
+                if (limb == character.AnimController.MainLimb)
+                {
+                    DebugConsole.ThrowError("Can't remove the main limb, because it will cause unreveratable issues.");
+                    continue;
+                }
                 removedIDs.Add(limb.limbParams.ID);
                 limb.limbParams.Element.Remove();
                 RagdollParams.Limbs.Remove(limb.limbParams);
