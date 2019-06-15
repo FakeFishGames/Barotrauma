@@ -270,25 +270,26 @@ namespace Microsoft.Xna.Framework
             var centerX = Math.Max(prevBounds.X + ((prevBounds.Width - clientWidth) / 2), minx);
             var centerY = Math.Max(prevBounds.Y + ((prevBounds.Height - clientHeight) / 2), miny);
 
-            if (IsFullScreen && !_willBeFullScreen)
-            {
-                // We need to get the display information again in case
-                // the resolution of it was changed.
-                Sdl.Display.GetBounds (displayIndex, out displayRect);
+            /*if (IsFullScreen && !_willBeFullScreen)
+            {*/
+            // We need to get the display information again in case
+            // the resolution of it was changed.
+            Sdl.Display.GetBounds (displayIndex, out displayRect);
 
-                // This centering only occurs when exiting fullscreen
-                // so it should center the window on the current display.
-                centerX = displayRect.X + displayRect.Width / 2 - clientWidth / 2;
-                centerY = displayRect.Y + displayRect.Height / 2 - clientHeight / 2;
-            }
+            // This centering only occurs when exiting fullscreen
+            // so it should center the window on the current display.
+            centerX = displayRect.X + displayRect.Width / 2 - clientWidth / 2;
+            centerY = displayRect.Y + displayRect.Height / 2 - clientHeight / 2;
+            //}
 
             // If this window is resizable, there is a bug in SDL 2.0.4 where
             // after the window gets resized, window position information
             // becomes wrong (for me it always returned 10 8). Solution is
             // to not try and set the window position because it will be wrong.
-            if ((Sdl.Patch > 4 || !AllowUserResizing) && !_wasMoved)
-                Sdl.Window.SetPosition(Handle, centerX, centerY);
-            
+            //if ((Sdl.Patch > 4 || !AllowUserResizing) && !_wasMoved)
+            Sdl.Window.SetPosition(Handle, centerX, centerY);
+            Sdl.Window.SetBordered(Handle, _borderless ? 0 : 1);
+
             Sdl.Window.Show(Handle);
             Sdl.Window.Raise(Handle);
 
