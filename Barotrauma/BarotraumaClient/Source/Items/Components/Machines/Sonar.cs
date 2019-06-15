@@ -612,6 +612,16 @@ namespace Barotrauma.Items.Components
             {
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
+                //don't show the docking ports of the opposing team on the sonar
+                if (item.Submarine != null && dockingPort.Item.Submarine != null)
+                {
+                    if ((dockingPort.Item.Submarine.TeamID == Character.TeamType.Team1 && item.Submarine.TeamID == Character.TeamType.Team2) ||
+                        (dockingPort.Item.Submarine.TeamID == Character.TeamType.Team2 && item.Submarine.TeamID == Character.TeamType.Team1))
+                    {
+                        continue;
+                    }
+                }
+
                 Vector2 offset = (dockingPort.Item.WorldPosition - transducerCenter) * scale;
                 offset.Y = -offset.Y;
                 if (offset.LengthSquared() > DisplayRadius * DisplayRadius) { continue; }
