@@ -184,7 +184,8 @@ namespace Barotrauma.Networking
 
         public void UnbanPlayer(string name)
         {
-            var player = bannedPlayers.Find(bp => bp.Name == name);
+            name = name.ToLower();
+            var player = bannedPlayers.Find(bp => bp.Name.ToLower() == name);
             if (player == null)
             {
                 DebugConsole.Log("Could not unban player \"" + name + "\". Matching player not found.");

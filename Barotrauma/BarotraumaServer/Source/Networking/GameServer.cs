@@ -2190,7 +2190,6 @@ namespace Barotrauma.Networking
 
         public override void UnbanPlayer(string playerName, string playerIP)
         {
-            playerName = playerName.ToLowerInvariant();
             if (!string.IsNullOrEmpty(playerIP))
             {
                 serverSettings.BanList.UnbanIP(playerIP);
