@@ -174,8 +174,8 @@ namespace Barotrauma.Sounds
             sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
 
-            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(8);
-            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[8];
+            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
+            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
             Al.DistanceModel(Al.LinearDistanceClamped);
             
