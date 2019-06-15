@@ -5672,8 +5672,8 @@ namespace SteamNative
 		internal bool Secure; // m_bSecure _Bool
 		internal uint TimeLastPlayed; // m_ulTimeLastPlayed uint32
 		internal int ServerVersion; // m_nServerVersion int
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-		internal string ServerName; // m_szServerName char [64]
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+		internal byte[] ServerName; // m_szServerName char [64]
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
 		internal string GameTags; // m_szGameTags char [128]
 		internal ulong SteamID; // m_steamID class CSteamID
@@ -5721,8 +5721,8 @@ namespace SteamNative
 			internal bool Secure; // m_bSecure _Bool
 			internal uint TimeLastPlayed; // m_ulTimeLastPlayed uint32
 			internal int ServerVersion; // m_nServerVersion int
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-			internal string ServerName; // m_szServerName char [64]
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)]
+			internal byte[] ServerName; // m_szServerName char [64]
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
 			internal string GameTags; // m_szGameTags char [128]
 			internal ulong SteamID; // m_steamID class CSteamID
@@ -5749,7 +5749,7 @@ namespace SteamNative
 					Secure = d.Secure,
 					TimeLastPlayed = d.TimeLastPlayed,
 					ServerVersion = d.ServerVersion,
-					ServerName = d.ServerName,
+					ServerName = (byte[])d.ServerName.Clone(),
 					GameTags = d.GameTags,
 					SteamID = d.SteamID,
 				};

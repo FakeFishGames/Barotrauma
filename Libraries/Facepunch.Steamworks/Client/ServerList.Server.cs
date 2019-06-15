@@ -52,7 +52,7 @@ namespace Facepunch.Steamworks
                     Address = Utility.Int32ToIp( item.NetAdr.IP ), 
                     ConnectionPort = item.NetAdr.ConnectionPort,
                     QueryPort = item.NetAdr.QueryPort,
-                    Name = item.ServerName,
+                    Name = Encoding.UTF8.GetString(item.ServerName),
                     Ping = item.Ping,
                     GameDir = item.GameDir,
                     Map = item.Map,
