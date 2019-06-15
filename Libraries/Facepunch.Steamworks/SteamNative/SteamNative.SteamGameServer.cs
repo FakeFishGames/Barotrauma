@@ -260,7 +260,7 @@ namespace SteamNative
             byte[] bytesKey = Encoding.UTF8.GetBytes(pKey);
             GCHandle handleKey = GCHandle.Alloc(bytesKey, GCHandleType.Pinned);
             byte[] bytesValue = Encoding.UTF8.GetBytes(pValue);
-            GCHandle handleValue = GCHandle.Alloc(bytesKey, GCHandleType.Pinned);
+            GCHandle handleValue = GCHandle.Alloc(bytesValue, GCHandleType.Pinned);
             platform.ISteamGameServer_SetKeyValue( handleKey.AddrOfPinnedObject(), handleValue.AddrOfPinnedObject() );
             handleKey.Free(); handleValue.Free();
 		}
