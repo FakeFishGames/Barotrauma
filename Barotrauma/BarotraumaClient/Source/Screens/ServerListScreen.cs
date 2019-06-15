@@ -185,9 +185,15 @@ namespace Barotrauma
                 if (!(child.UserData is ServerInfo)) continue;
                 ServerInfo serverInfo = (ServerInfo)child.UserData;
 
+                Version remoteVersion = null;
+                if (!string.IsNullOrEmpty(serverInfo.GameVersion))
+                {
+                    Version.TryParse(serverInfo.GameVersion, out remoteVersion);
+                }
+
                 bool incompatible =
                     (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch(GameMain.Config.SelectedContentPackages)) ||
-                    (!string.IsNullOrEmpty(serverInfo.GameVersion) && serverInfo.GameVersion != GameMain.Version.ToString());
+                    (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
 
                 child.Visible =
                     serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&

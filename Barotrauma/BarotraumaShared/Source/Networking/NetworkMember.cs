@@ -241,6 +241,30 @@ namespace Barotrauma.Networking
         public virtual void Update(float deltaTime) { }
 
         public virtual void Disconnect() { }
-    }
 
+        /// <summary>
+        /// Check if the two version are compatible (= if they can play together in multiplayer). 
+        /// Returns null if compatibility could not be determined (invalid/unknown version number).
+        /// </summary>
+        public static bool? IsCompatible(string myVersion, string remoteVersion)
+        {
+            if (!Version.TryParse(myVersion, out Version myVersionNumber)) { return null; }
+            if (!Version.TryParse(remoteVersion, out Version remoteVersionNumber)) { return null; }
+
+            return IsCompatible(myVersionNumber, remoteVersionNumber);
+        }
+
+        /// <summary>
+        /// Check if the two version are compatible (= if they can play together in multiplayer).
+        /// </summary>
+        public static bool IsCompatible(Version myVersion, Version remoteVersion)
+        {
+            //major.minor.build.revision
+            //revision number is ignored, other values have to match
+            return
+                myVersion.Major == remoteVersion.Major &&
+                myVersion.Minor == remoteVersion.Minor &&
+                myVersion.Build == remoteVersion.Build;
+        }
+    }
 }
