@@ -210,6 +210,7 @@ namespace Barotrauma.Networking
                 {
                     ip = "IP concealed by host";
                 }
+                DebugConsole.NewMessage("nerd: " + name, Color.Lime);
                 whitelistedPlayers.Add(new WhiteListedPlayer(name, uniqueIdentifier, ip));
             }
 

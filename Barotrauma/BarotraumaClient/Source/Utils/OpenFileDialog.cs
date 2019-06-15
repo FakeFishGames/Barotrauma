@@ -18,33 +18,34 @@ namespace Barotrauma
         public string FileName { get; private set; }
         public string[] FileNames { get; private set; }
 
-        public OpenFileDialog() { }
+        public OpenFileDialog()
+        {
+            ofd = new System.Windows.Forms.OpenFileDialog();
+        }
 
         public System.Windows.Forms.DialogResult ShowDialog()
         {
-            ofd = new System.Windows.Forms.OpenFileDialog();
             ofd.Multiselect = Multiselect;
             ofd.InitialDirectory = InitialDirectory;
             ofd.Filter = Filter;
             ofd.Title = Title;
 
-            System.Windows.Forms.DialogResult result;
-#if LINUX || OSX
+#if LINUX
             var wrapperForm = new WrapperForm(ofd);
             System.Windows.Forms.Application.Run(wrapperForm);
+            System.Windows.Forms.Application.Exit();
             FileName = wrapperForm.FileName;
             FileNames = wrapperForm.FileNames;
-            result = wrapperForm.Result;
+            return wrapperForm.Result;
 #else
-            result = ofd.ShowDialog();
+            var result = ofd.ShowDialog();
             FileName = ofd.FileName;
             FileNames = ofd.FileNames;
-#endif
-            ofd = null;
             return result;
+#endif
         }
 
-#if LINUX || OSX
+#if LINUX
         private class WrapperForm : System.Windows.Forms.Form
         {
             private System.Windows.Forms.OpenFileDialog ofd;
@@ -65,7 +66,7 @@ namespace Barotrauma
                 FileName = ofd.FileName;
                 FileNames = ofd.FileNames;
                 System.Threading.Thread.Sleep(100);
-                System.Windows.Forms.Application.Exit();
+                this.Close();
             }
         }
 #endif

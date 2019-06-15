@@ -90,16 +90,7 @@ namespace Barotrauma
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
-                                if (GameSettings.SaveDebugConsoleLogs)
-                                {
-                                    unsavedMessages.Add(msg);
-                                    if (unsavedMessages.Count >= messagesPerFile)
-                                    {
-                                        SaveLogs();
-                                        unsavedMessages.Clear();
-                                    }
-                                }
-
+                                
                                 string msgTxt = msg.Text;
 
                                 if (msg.IsCommand) commandMemory.Add(msgTxt);
@@ -176,8 +167,7 @@ namespace Barotrauma
                         RewriteInputToCommandLine(input);
                     }
                     
-                    //TODO: be more clever about it
-                    Thread.Sleep(10); //sleep for 10ms to not pin the CPU super hard
+                    Thread.Yield();
                 }
             }
             catch (ThreadAbortException)

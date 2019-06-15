@@ -107,7 +107,7 @@ namespace Barotrauma
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 MapEntity.SelectedList.Clear();
-                entities.ForEach(e => MapEntity.AddSelection(e));
+                MapEntity.SelectedList.AddRange(entities);
             }
 #endif   
             return entities;

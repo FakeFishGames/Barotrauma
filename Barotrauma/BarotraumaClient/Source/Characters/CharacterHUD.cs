@@ -139,7 +139,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (!item.Repairables.Any(r => item.Condition < r.ShowRepairUIThreshold)) { continue; }
-                    if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
+                    if (!Submarine.VisibleEntities.Contains(item)) { continue; }
 
                     Vector2 diff = item.WorldPosition - character.WorldPosition;
                     if (Submarine.CheckVisibility(character.SimPosition, character.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
