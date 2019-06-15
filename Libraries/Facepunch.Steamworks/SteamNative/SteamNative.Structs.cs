@@ -5658,8 +5658,8 @@ namespace SteamNative
 		internal bool DoNotRefresh; // m_bDoNotRefresh _Bool
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
 		internal string GameDir; // m_szGameDir char [32]
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-		internal string Map; // m_szMap char [32]
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+		internal byte[] Map; // m_szMap char [32]
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
 		internal string GameDescription; // m_szGameDescription char [64]
 		internal uint AppID; // m_nAppID uint32
@@ -5707,8 +5707,8 @@ namespace SteamNative
 			internal bool DoNotRefresh; // m_bDoNotRefresh _Bool
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
 			internal string GameDir; // m_szGameDir char [32]
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-			internal string Map; // m_szMap char [32]
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+			internal byte[] Map; // m_szMap char [32]
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
 			internal string GameDescription; // m_szGameDescription char [64]
 			internal uint AppID; // m_nAppID uint32
@@ -5739,7 +5739,7 @@ namespace SteamNative
 					HadSuccessfulResponse = d.HadSuccessfulResponse,
 					DoNotRefresh = d.DoNotRefresh,
 					GameDir = d.GameDir,
-					Map = d.Map,
+					Map = (byte[])d.Map.Clone(),
 					GameDescription = d.GameDescription,
 					AppID = d.AppID,
 					Players = d.Players,
