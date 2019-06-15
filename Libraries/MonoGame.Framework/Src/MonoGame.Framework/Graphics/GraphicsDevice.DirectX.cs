@@ -590,7 +590,7 @@ namespace Microsoft.Xna.Framework.Graphics
             _graphicsDebug = new GraphicsDebug(this);
         }
 
-        internal void SetHardwareFullscreen()
+        /*internal void SetHardwareFullscreen()
         {
             _swapChain.SetFullscreenState(PresentationParameters.IsFullScreen && PresentationParameters.HardwareModeSwitch, null);
         }
@@ -598,7 +598,7 @@ namespace Microsoft.Xna.Framework.Graphics
         internal void ClearHardwareFullscreen()
         {
             _swapChain.SetFullscreenState(false, null);
-        }
+        }*/
 
         internal void ResizeTargets()
         {
@@ -739,7 +739,7 @@ namespace Microsoft.Xna.Framework.Graphics
                 {
                     wasFullScreen = _swapChain.IsFullScreen;
                     // Before releasing a swap chain, first switch to windowed mode
-                    _swapChain.SetFullscreenState(false, null);
+                    //_swapChain.SetFullscreenState(false, null);
                     _swapChain.Dispose();
                 }
 
@@ -783,9 +783,9 @@ namespace Microsoft.Xna.Framework.Graphics
                     dxgiDevice.MaximumFrameLatency = 1;
                 }
                 // Preserve full screen state, after swap chain is re-created 
-                if (PresentationParameters.HardwareModeSwitch
+                /*if (PresentationParameters.HardwareModeSwitch
                     && wasFullScreen)
-                    SetHardwareFullscreen();
+                    SetHardwareFullscreen();*/
             }
 
             // Obtain the backbuffer for this window which will be the final 3D rendertarget.
