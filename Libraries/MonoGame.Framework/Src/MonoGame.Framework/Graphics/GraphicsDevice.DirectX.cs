@@ -469,7 +469,6 @@ namespace Microsoft.Xna.Framework.Graphics
 
         partial void PlatformReset()
         {
-            CreateSizeDependentResources();
 #if WINDOWS
             CorrectBackBufferSize();
 #endif
@@ -719,7 +718,7 @@ namespace Microsoft.Xna.Framework.Graphics
                 PresentationParameters.MultiSampleCount);
 
             // If the swap chain already exists... update it.
-            if (_swapChain != null
+            if (false && _swapChain != null
                 // check if multisampling hasn't changed
                 && _swapChain.Description.SampleDescription.Count == multisampleDesc.Count
                 && _swapChain.Description.SampleDescription.Quality == multisampleDesc.Quality)
