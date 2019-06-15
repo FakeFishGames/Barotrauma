@@ -224,7 +224,7 @@ namespace Barotrauma
 
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-
+            
             GraphicsDeviceManager.ApplyChanges();
 
             if (windowMode == WindowMode.BorderlessWindowed)

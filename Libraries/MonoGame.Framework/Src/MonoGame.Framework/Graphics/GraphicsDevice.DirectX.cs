@@ -469,6 +469,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
         partial void PlatformReset()
         {
+            CreateSizeDependentResources();
 #if WINDOWS
             CorrectBackBufferSize();
 #endif
