@@ -388,20 +388,6 @@ namespace Barotrauma
             return Name;
         }
 
-        partial void InitProjSpecific();
-
-        public override string ToString()
-        {
-            return Name;
-        }
-
-        partial void InitProjSpecific();
-
-        public override string ToString()
-        {
-            return Name;
-        }
-
         public override MapEntity Clone()
         {
             var clone = new Structure(rect, Prefab, Submarine)

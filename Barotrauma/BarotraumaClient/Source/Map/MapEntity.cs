@@ -482,6 +482,60 @@ namespace Barotrauma
                 return true;
             };
         }
+
+        public static void AddSelection(MapEntity entity)
+        {
+            if (selectedList.Contains(entity)) { return; }
+            selectedList.Add(entity);
+            HandleDoorGapLinks(entity, 
+                onGapFound: (door, gap) =>
+                {
+                    door.RefreshLinkedGap();
+                    if (!selectedList.Contains(gap))
+                    {
+                        selectedList.Add(gap);
+                    }
+                }, 
+                onDoorFound: (door, gap) => 
+                {
+                    if (!selectedList.Contains(door.Item))
+                    {
+                        selectedList.Add(door.Item);
+                    }
+                });
+        }
+
+        private static void HandleDoorGapLinks(MapEntity entity, Action<Door, Gap> onGapFound, Action<Door, Gap> onDoorFound)
+        {
+            if (entity is Item i)
+            {
+                var door = i.GetComponent<Door>();
+                if (door != null)
+                {
+                    var gap = door.LinkedGap;
+                    if (gap != null)
+                    {
+                        onGapFound(door, gap);
+                    }
+                }
+            }
+            else if (entity is Gap gap)
+            {
+                var door = gap.ConnectedDoor;
+                if (door != null)
+                {
+                    onDoorFound(door, gap);
+                }
+            }
+        }
+
+        public static void RemoveSelection(MapEntity entity)
+        {
+            selectedList.Remove(entity);
+            HandleDoorGapLinks(entity,
+                onGapFound: (door, gap) => selectedList.Remove(gap),
+                onDoorFound: (door, gap) => selectedList.Remove(door.Item));
+        }
         
         static partial void UpdateAllProjSpecific(float deltaTime)
         {
@@ -554,7 +608,7 @@ namespace Barotrauma
 
             if (editingHUD != null)
             {
-                if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
+                if (FilteredSelectedList.Count == 0 || editingHUD.UserData != FilteredSelectedList[0])
                 {
                     foreach (GUIComponent component in editingHUD.Children)
                     {
@@ -563,59 +617,6 @@ namespace Barotrauma
                         textBox.Deselect();
                     }
                     editingHUD = null;
-                }
-            }
-
-            if (selectedList.Count == 0) return;
-
-            if (editingHUD != null)
-            {
-                selectedList[0].UpdateEditing(cam);
-                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
-                {
-                    foreach (GUIComponent component in editingHUD.Children)
-                    {
-                        var textBox = component as GUITextBox;
-                        if (textBox == null) continue;
-                        textBox.Deselect();
-                    }
-                    editingHUD = null;
-                }
-            }
-
-            if ((PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl)))
-            {
-                if (PlayerInput.KeyHit(Keys.N))
-                {
-                    float minX = selectedList[0].WorldRect.X, maxX = selectedList[0].WorldRect.Right;
-                    for (int i = 0; i < selectedList.Count; i++)
-                    {
-                        minX = Math.Min(minX, selectedList[i].WorldRect.X);
-                        maxX = Math.Max(maxX, selectedList[i].WorldRect.Right);
-                    }
-
-                    float centerX = (minX + maxX) / 2.0f;
-                    foreach (MapEntity me in selectedList)
-                    {
-                        me.FlipX(false);
-                        me.Move(new Vector2((centerX - me.WorldPosition.X) * 2.0f, 0.0f));
-                    }
-                }
-                else if (PlayerInput.KeyHit(Keys.M))
-                {
-                    float minY = selectedList[0].WorldRect.Y - selectedList[0].WorldRect.Height, maxY = selectedList[0].WorldRect.Y;
-                    for (int i = 0; i < selectedList.Count; i++)
-                    {
-                        minY = Math.Min(minY, selectedList[i].WorldRect.Y - selectedList[i].WorldRect.Height);
-                        maxY = Math.Max(maxY, selectedList[i].WorldRect.Y);
-                    }
-
-                    float centerY = (minY + maxY) / 2.0f;
-                    foreach (MapEntity me in selectedList)
-                    {
-                        me.FlipY(false);
-                        me.Move(new Vector2(0.0f, (centerY - me.WorldPosition.Y) * 2.0f));
-                    }
                 }
             }
             FilteredSelectedList.Clear();

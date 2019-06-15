@@ -278,7 +278,6 @@ namespace Barotrauma
 
         public GameSettings()
         {
-            SelectedContentPackages = new HashSet<ContentPackage>();
             ContentPackage.LoadAll(ContentPackage.Folder);
             CompletedTutorialNames = new List<string>();
 
