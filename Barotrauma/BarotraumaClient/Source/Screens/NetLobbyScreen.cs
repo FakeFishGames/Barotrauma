@@ -1605,24 +1605,21 @@ namespace Barotrauma
 
         public bool KickPlayer(GUIButton button, object userData)
         {
-            Client client = userData as Client;
-            if (client == null || GameMain.NetworkMember == null) return false;
+            if (!(userData is Client client) || GameMain.NetworkMember == null) return false;
             GameMain.Client.CreateKickReasonPrompt(client.Name, false);            
             return false;
         }
 
         public bool BanPlayer(GUIButton button, object userData)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
+            if (!(userData is Client client) || GameMain.NetworkMember == null) return false;
             GameMain.Client.CreateKickReasonPrompt(client.Name, true);
             return false;
         }
 
         public bool BanPlayerRange(GUIButton button, object userData)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
+            if (!(userData is Client client) || GameMain.NetworkMember == null) return false;
             GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
             return false;
         }
