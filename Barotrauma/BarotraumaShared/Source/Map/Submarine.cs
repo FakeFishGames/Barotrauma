@@ -1404,7 +1404,6 @@ namespace Barotrauma
             }
 
 
-
             ID = (ushort)(ushort.MaxValue - 1 - Submarine.loaded.IndexOf(this));
         }
 

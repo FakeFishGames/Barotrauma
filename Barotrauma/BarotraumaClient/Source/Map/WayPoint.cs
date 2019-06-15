@@ -51,6 +51,10 @@ namespace Barotrauma
             {
                 iconSize = (int)(iconSize * 1.5f);
             }
+            if (Stairs != null)
+            {
+                iconSize = (int)(iconSize * 1.5f);
+            }
 
             spriteBatch.Draw(iconTexture,
                 new Rectangle((int)(drawPos.X - iconSize / 2), (int)(drawPos.Y - iconSize / 2), iconSize, iconSize),
@@ -93,7 +97,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD();
             }
             
-            if (PlayerInput.LeftButtonClicked())
+            if (IsSelected && PlayerInput.LeftButtonClicked())
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
@@ -145,6 +149,23 @@ namespace Barotrauma
 
                     linkedTo.Add(e);
                     e.linkedTo.Add(this);
+                }
+            }
+        }
+
+        private void UpdateLinkedEntity<T>(Vector2 worldPos, IEnumerable<T> list, Action<T> match, Action<T> noMatch, int inflate = 0) where T : MapEntity
+        {
+            foreach (var entity in list)
+            {
+                var rect = entity.WorldRect;
+                rect.Inflate(inflate, inflate);
+                if (Submarine.RectContains(rect, worldPos))
+                {
+                    match(entity);
+                }
+                else
+                {
+                    noMatch(entity);
                 }
             }
         }

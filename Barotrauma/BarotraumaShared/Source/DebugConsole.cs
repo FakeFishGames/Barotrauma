@@ -380,7 +380,7 @@ namespace Barotrauma
                 };
             }));
                        
-            commands.Add(new Command("banid", "banid [id]: Kick and ban the player with the specified client ID from the server.", (string[] args) =>
+            commands.Add(new Command("banid", "banid [id]: Kick and ban the player with the specified client ID from the server. You can see the IDs of the clients using the command \"clientlist\".", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 

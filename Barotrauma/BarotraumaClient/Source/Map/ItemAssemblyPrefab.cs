@@ -82,7 +82,7 @@ namespace Barotrauma
             center.Y -= center.Y % Submarine.GridSize.Y;
 
             MapEntity.SelectedList.Clear();
-            MapEntity.SelectedList.AddRange(assemblyEntities);
+            assemblyEntities.ForEach(e => MapEntity.AddSelection(e));
 
             foreach (MapEntity mapEntity in assemblyEntities)
             {

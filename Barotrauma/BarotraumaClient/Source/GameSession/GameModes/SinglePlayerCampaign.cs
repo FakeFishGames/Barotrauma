@@ -256,6 +256,18 @@ namespace Barotrauma
                 {
                     if (c.Info == null || c.Inventory == null) { continue; }
                     var inventoryElement = new XElement("inventory");
+
+                    // Recharge headset batteries
+                    var headset = c.Inventory.FindItemByIdentifier("headset");
+                    if (headset != null)
+                    {
+                        var battery = headset.OwnInventory.FindItemByTag("loadable");
+                        if (battery != null)
+                        {
+                            battery.Condition = battery.MaxCondition;
+                        }
+                    }
+
                     c.SaveInventory(c.Inventory, inventoryElement);
                     c.Info.InventoryData = inventoryElement;
                     c.Inventory?.DeleteAllItems();
