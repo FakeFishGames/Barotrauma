@@ -224,9 +224,10 @@ namespace Microsoft.Xna.Framework
 
             var prevBounds = ClientBounds;
 
+            int fullscreenFlag;
             if (_willBeFullScreen != IsFullScreen || _hardwareSwitch != _game.graphicsDeviceManager.HardwareModeSwitch)
             {
-                var fullscreenFlag = _game.graphicsDeviceManager.HardwareModeSwitch ? Sdl.Window.State.Fullscreen : Sdl.Window.State.FullscreenDesktop;
+                fullscreenFlag = _game.graphicsDeviceManager.HardwareModeSwitch ? Sdl.Window.State.Fullscreen : Sdl.Window.State.FullscreenDesktop;
                 Sdl.Window.SetFullscreen(Handle, (_willBeFullScreen) ? fullscreenFlag : 0);
                 _borderless = _willBeFullScreen;
                 Sdl.Window.SetBordered(Handle, _borderless ? 0 : 1);
@@ -288,9 +289,11 @@ namespace Microsoft.Xna.Framework
             // to not try and set the window position because it will be wrong.
             //if ((Sdl.Patch > 4 || !AllowUserResizing) && !_wasMoved)
             Sdl.Window.SetPosition(Handle, centerX, centerY);
+            fullscreenFlag = _game.graphicsDeviceManager.HardwareModeSwitch ? Sdl.Window.State.Fullscreen : Sdl.Window.State.FullscreenDesktop;
+            Sdl.Window.SetFullscreen(Handle, (_willBeFullScreen) ? fullscreenFlag : 0);
             Sdl.Window.SetBordered(Handle, _borderless ? 0 : 1);
 
-            Sdl.Window.Show(Handle);
+            //Sdl.Window.Show(Handle);
             Sdl.Window.Raise(Handle);
 
             Sdl.Window.SetGrab(Handle, _willBeFullScreen && _hardwareSwitch);
