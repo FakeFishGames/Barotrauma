@@ -21,11 +21,7 @@ namespace Barotrauma.Steam
             { "monster", 8 },
             { "art", 8 },
             { "mission", 8 },
-            { "event set", 8 },
-            { "total conversion", 5 },
-            { "environment", 5 },
-            { "item assembly", 5 },
-            { "language", 5 }
+            { "environment", 5 }
         };
 
         private List<string> popularTags = new List<string>();

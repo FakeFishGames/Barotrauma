@@ -24,7 +24,6 @@ namespace Facepunch.Steamworks
             public bool Publishing { get; internal set; }
             public ItemType? Type { get; set; }
             public string Error { get; internal set; } = null;
-            public SteamNative.Result? ErrorCode { get; internal set; } = null;
             public string ChangeNote { get; set; } = "";
             public uint WorkshopUploadAppId { get; set; }
             public string MetaData { get; set; } = null;
@@ -100,7 +99,6 @@ namespace Facepunch.Steamworks
 
                 Publishing = true;
                 Error = null;
-                ErrorCode = null;
 
                 if ( Id == 0 )
                 {
@@ -131,14 +129,12 @@ namespace Facepunch.Steamworks
                 if ( obj.Result == SteamNative.Result.OK && !Failed )
                 {
                     Error = null;
-                    ErrorCode = null;
                     Id = obj.PublishedFileId;
                     PublishChanges();
                     return;
                 }
 
                 Error = $"Error creating new file: {obj.Result} ({obj.PublishedFileId})";
-                ErrorCode = obj.Result;
                 Publishing = false;
                 
                 OnChangesSubmitted?.Invoke( (Result) obj.Result );
@@ -225,7 +221,6 @@ namespace Facepunch.Steamworks
                 NeedToAgreeToWorkshopLegal = obj.UserNeedsToAcceptWorkshopLegalAgreement;
                 Publishing = false;
 
-                ErrorCode = obj.Result;
                 Error = obj.Result != SteamNative.Result.OK
                     ? $"Error publishing changes: {obj.Result} ({NeedToAgreeToWorkshopLegal})"
                     : null;

@@ -25,45 +25,47 @@ namespace Barotrauma.Networking
     {
         partial void InitProjSpecific()
         {
-            if (!File.Exists(SavePath)) { return; }
-            
-            string[] lines;
-            try
+            if (File.Exists(SavePath))
             {
-                lines = File.ReadAllLines(SavePath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to open whitelist in " + SavePath, e);
-                return;
-            }
-
-            foreach (string line in lines)
-            {
-                if (line[0] == '#')
+                string[] lines;
+                try
                 {
-                    string lineval = line.Substring(1, line.Length - 1);
-                    Int32.TryParse(lineval, out int intVal);
-                    if (lineval.ToLower() == "true" || intVal != 0)
+                    lines = File.ReadAllLines(SavePath);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to open whitelist in " + SavePath, e);
+                    return;
+                }
+
+                foreach (string line in lines)
+                {
+                    if (line[0] == '#')
                     {
-                        Enabled = true;
+                        string lineval = line.Substring(1, line.Length - 1);
+                        int intVal = 0;
+                        Int32.TryParse(lineval, out intVal);
+                        if (lineval.ToLower() == "true" || intVal != 0)
+                        {
+                            Enabled = true;
+                        }
+                        else
+                        {
+                            Enabled = false;
+                        }
                     }
                     else
                     {
-                        Enabled = false;
+                        string[] separatedLine = line.Split(',');
+                        if (separatedLine.Length < 2) continue;
+
+                        string name = String.Join(",", separatedLine.Take(separatedLine.Length - 1));
+                        string ip = separatedLine.Last();
+
+                        whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
                     }
                 }
-                else
-                {
-                    string[] separatedLine = line.Split(',');
-                    if (separatedLine.Length < 2) continue;
-
-                    string name = string.Join(",", separatedLine.Take(separatedLine.Length - 1));
-                    string ip = separatedLine.Last();
-
-                    whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
-                }
-            }            
+            }
         }
 
         public void Save()
@@ -117,7 +119,9 @@ namespace Barotrauma.Networking
         private void RemoveFromWhiteList(WhiteListedPlayer wlp)
         {
             GameServer.Log("Removing " + wlp.Name + " from whitelist", ServerLog.MessageType.ServerMessage);
+
             whitelistedPlayers.Remove(wlp);
+            Save();
         }
 
         private void AddToWhiteList(string name, string ip)
@@ -125,6 +129,7 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(name)) return;
             if (whitelistedPlayers.Any(x => x.Name.ToLower() == name.ToLower() && x.IP == ip)) return;
             whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
+            Save();
         }
 
         public void ServerAdminWrite(NetBuffer outMsg, Client c)
@@ -196,10 +201,8 @@ namespace Barotrauma.Networking
                     GameServer.Log(c.Name + " added " + name + " to whitelist (" + ip + ")", ServerLog.MessageType.ConsoleUsage);
                     AddToWhiteList(name, ip);
                 }
-
-                bool changed = removeCount > 0 || addCount > 0 || prevEnabled != enabled;
-                if (changed) { Save(); }
-                return changed;
+                
+                return removeCount > 0 || addCount > 0 || prevEnabled!=enabled;
             }
         }
     }

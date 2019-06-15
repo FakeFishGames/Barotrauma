@@ -20,8 +20,8 @@ namespace Barotrauma
         /// </summary>
         const float CharacterWaitOnSwitch = 10.0f;
 
-        private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-        private readonly List<Character> characters = new List<Character>();
+        private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private List<Character> characters = new List<Character>();
 
         private Point screenResolution;
 

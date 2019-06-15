@@ -9,7 +9,6 @@ namespace Barotrauma
     class Entity : ISpatialEntity
     {
         public const ushort NullEntityID = 0;
-        public const ushort EntitySpawnerID = ushort.MaxValue;
 
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
         public static List<Entity> GetEntityList()
@@ -44,17 +43,10 @@ namespace Barotrauma
             }
             set
             {
-                if (this is EntitySpawner) { return; }
                 if (value == NullEntityID)
                 {
                     DebugConsole.ThrowError("Cannot set the ID of an entity to " + NullEntityID +
                         "! The value is reserved for entity events referring to a non-existent (e.g. removed) entity.\n" + Environment.StackTrace);
-                    return;
-                }
-                if (value == EntitySpawnerID)
-                {
-                    DebugConsole.ThrowError("Cannot set the ID of an entity to " + EntitySpawnerID +
-                        "! The value is reserved for EntitySpawner.\n" + Environment.StackTrace);
                     return;
                 }
 
@@ -115,17 +107,15 @@ namespace Barotrauma
             this.Submarine = submarine;
 
             //give a unique ID
-            id = this is EntitySpawner ?
-                EntitySpawnerID :
-                FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
-            
+            id = FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
+
             dictionary.Add(id, this);
         }
 
         public static ushort FindFreeID(ushort idOffset = 0)
         {
-            //ushort.MaxValue - 2 because 0 and ushort.MaxValue are reserved values
-            if (dictionary.Count >= ushort.MaxValue - 2)
+            //ushort.MaxValue - 1 because 0 is a reserved value
+            if (dictionary.Count >= ushort.MaxValue - 1)
             {
                 throw new Exception("Maximum amount of entities (" + (ushort.MaxValue - 1) + ") reached!");
             }

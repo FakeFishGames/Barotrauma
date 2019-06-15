@@ -285,7 +285,7 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
-        public bool IsFullCondition => MathUtils.NearlyEqual(Condition, MaxCondition);
+        public bool IsFullCondition => Condition >= MaxCondition;
         public float MaxCondition => Prefab.Health;
         public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
 
@@ -304,7 +304,6 @@ namespace Barotrauma
                 if (Indestructible) return;
 
                 float prev = condition;
-
                 condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
                 if (condition == 0.0f && prev > 0.0f)
                 {
@@ -1555,7 +1554,7 @@ namespace Barotrauma
 
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
-            if (RequireAimToUse && (character == null || !character.IsKeyDown(InputType.Aim)))
+            if (RequireAimToUse && !character.IsKeyDown(InputType.Aim))
             {
                 return;
             }

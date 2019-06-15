@@ -14,7 +14,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11 }
 
         private GUIComponent buttonsParent;
 
@@ -37,11 +37,7 @@ namespace Barotrauma
         private GUIComponent titleText;
 
         private CreditsPlayer creditsPlayer;
-
-        #if OSX
-        private bool firstLoadOnMac = true;
-        #endif
-
+        
         #region Creation
         public MainMenuScreen(GameMain game)
         {
@@ -364,9 +360,9 @@ namespace Barotrauma
                 OnClicked = SelectTab
             };
         }
-        #endregion
+#endregion
 
-        #region Selection
+#region Selection
         public override void Select()
         {
             base.Select();
@@ -382,25 +378,6 @@ namespace Barotrauma
             ResetButtonStates(null);
 
             GameAnalyticsManager.SetCustomDimension01("");
-
-            #if OSX
-            // Hack for adjusting the viewport properly after splash screens on older Macs
-            if (firstLoadOnMac)
-            {
-                firstLoadOnMac = false;
-
-                menuTabs[(int)Tab.Empty] = new GUIFrame(new RectTransform(new Vector2(1f, 1f), GUI.Canvas), "", Color.Transparent)
-                {
-                    CanBeFocused = false
-                };
-                var emptyList = new GUIListBox(new RectTransform(new Vector2(0.0f, 0.0f), menuTabs[(int)Tab.Empty].RectTransform))
-                {
-                    CanBeFocused = false
-                };
-
-                SelectTab(null, Tab.Empty);
-            }
-            #endif
         }
 
         public override void Deselect()
@@ -948,11 +925,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
-            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
-            { 
-                MaxTextLength = NetConfig.ServerNameMaxLength,
-                OverflowClip = true
-            };
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
 
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
             portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)

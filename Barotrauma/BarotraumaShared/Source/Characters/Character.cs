@@ -840,15 +840,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
-                            .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == "human.xml");
-
-                    if (humanConfigFile == null)
-                    {
-                        DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
-                        DebugConsole.ThrowError($"(The config file must end with \"human.xml\")");
-                        return string.Empty;
-                    }
+                    humanConfigFile = GetConfigFile("Human");
                 }
                 return humanConfigFile;
             }
@@ -877,6 +869,42 @@ namespace Barotrauma
             if (contentPackage == null)
             {
                 configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+            else
+            {
+                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
+                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
+            }
+
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+            get
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
+        {
+            string configFile = null;
+            if (contentPackage == null)
+            {
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
                     .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
             }
             else
@@ -2355,7 +2383,7 @@ namespace Barotrauma
             {
                 SelectCharacter(focusedCharacter);
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow && CanInteractWith(focusedCharacter, 160f, false))
+            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow)
             {
                 if (focusedCharacter == SelectedCharacter)
                 {

@@ -93,10 +93,6 @@ namespace Barotrauma.Networking
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
-            if (name.Length > NetConfig.ServerNameMaxLength)
-            {
-                name = name.Substring(0, NetConfig.ServerNameMaxLength);
-            }
             
             this.name = name;
             
@@ -728,7 +724,7 @@ namespace Barotrauma.Networking
                     bool isNew = inc.ReadBoolean(); inc.ReadPadBits();
                     if (isNew)
                     {
-                        string saveName = inc.ReadString();
+                        string savePath = inc.ReadString();
                         string seed = inc.ReadString();
                         string subName = inc.ReadString();
                         string subHash = inc.ReadString();
@@ -743,11 +739,7 @@ namespace Barotrauma.Networking
                         }
                         else
                         {
-                            string localSavePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
-                            if (connectedClient.HasPermission(ClientPermissions.SelectMode))
-                            {
-                                MultiPlayerCampaign.StartNewCampaign(localSavePath, matchingSub.FilePath, seed);
-                            }
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, matchingSub.FilePath, seed);
                         }
                      }
                     else
@@ -2190,6 +2182,7 @@ namespace Barotrauma.Networking
 
         public override void UnbanPlayer(string playerName, string playerIP)
         {
+            playerName = playerName.ToLowerInvariant();
             if (!string.IsNullOrEmpty(playerIP))
             {
                 serverSettings.BanList.UnbanIP(playerIP);
