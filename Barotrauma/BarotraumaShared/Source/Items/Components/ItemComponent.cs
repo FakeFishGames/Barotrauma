@@ -545,8 +545,6 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
             }
-            float average = skillSuccessSum / requiredSkills.Count;
-
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
             {
