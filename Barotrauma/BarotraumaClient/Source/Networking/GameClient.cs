@@ -1900,15 +1900,6 @@ namespace Barotrauma.Networking
             chatBox.AddMessage(message);
         }
 
-        public override void AddChatMessage(ChatMessage message)
-        {
-            base.AddChatMessage(message);
-
-            if (string.IsNullOrEmpty(message.Text)) { return; }
-            GameMain.NetLobbyScreen.NewChatMessage(message);
-            chatBox.AddMessage(message);
-        }
-
         public override void KickPlayer(string kickedName, string reason)
         {
             NetOutgoingMessage msg = client.CreateMessage();
