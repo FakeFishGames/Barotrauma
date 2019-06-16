@@ -55,7 +55,7 @@ namespace Facepunch.Steamworks
                     Name = Encoding.UTF8.GetString(item.ServerName),
                     Ping = item.Ping,
                     GameDir = item.GameDir,
-                    Map = item.Map,
+                    Map = Encoding.UTF8.GetString(item.Map),
                     Description = item.GameDescription,
                     AppId = item.AppID,
                     Players = item.Players,
