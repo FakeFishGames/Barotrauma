@@ -1884,17 +1884,20 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public bool VoteForKick(GUIButton button, object userdata)
+        public void VoteForKick(Client votedClient)
         {
-            var votedClient = userdata is Client ? (Client)userdata : otherClients.Find(c => c.Character == userdata);
-            if (votedClient == null) return false;
-
+            if (votedClient == null) { return; }
             votedClient.AddKickVote(ConnectedClients.First(c => c.ID == ID));
             Vote(VoteType.Kick, votedClient);
+        }
 
-            button.Enabled = false;
+        public override void AddChatMessage(ChatMessage message)
+        {
+            base.AddChatMessage(message);
 
-            return true;
+            if (string.IsNullOrEmpty(message.Text)) { return; }
+            GameMain.NetLobbyScreen.NewChatMessage(message);
+            chatBox.AddMessage(message);
         }
 
         public override void AddChatMessage(ChatMessage message)
@@ -2379,12 +2382,12 @@ namespace Barotrauma.Networking
 
         public virtual bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
         {
-            if (character == null) return false;
+            if (character == null) { return false; }
 
             if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
-                if (client == null) return false;
+                if (client == null) { return false; }
 
                 var mute = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.1f), characterFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
                     TextManager.Get("Mute"))
@@ -2405,8 +2408,8 @@ namespace Barotrauma.Networking
                     var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("Ban"))
                     {
-                        UserData = character.Name,
-                        OnClicked = GameMain.NetLobbyScreen.BanPlayer
+                        UserData = client,
+                        OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.BanPlayer(client); return false; }
                     };
                 }
                 if (HasPermission(ClientPermissions.Kick))
@@ -2414,8 +2417,8 @@ namespace Barotrauma.Networking
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("Kick"))
                     {
-                        UserData = character.Name,
-                        OnClicked = GameMain.NetLobbyScreen.KickPlayer
+                        UserData = client,
+                        OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.KickPlayer(client); return false; }
                     };
                 }
                 else if (serverSettings.Voting.AllowVoteKick)
@@ -2423,8 +2426,8 @@ namespace Barotrauma.Networking
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("VoteToKick"))
                     {
-                        UserData = character,
-                        OnClicked = VoteForKick
+                        UserData = client,
+                        OnClicked = (btn, userdata) => { VoteForKick(client); btn.Enabled = false; return true; }
                     };
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
