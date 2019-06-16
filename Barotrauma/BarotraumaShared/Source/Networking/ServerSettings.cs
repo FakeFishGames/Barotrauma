@@ -611,6 +611,7 @@ namespace Barotrauma.Networking
         public int MaxPlayers
         {
             get { return maxPlayers; }
+            set { maxPlayers = MathHelper.Clamp(value, 1, NetConfig.MaxPlayers); }
         }
 
         public List<MissionType> AllowedRandomMissionTypes
@@ -635,7 +636,14 @@ namespace Barotrauma.Networking
         
         public void SetPassword(string password)
         {
-            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            if (string.IsNullOrEmpty(password))
+            {
+                this.password = "";
+            }
+            else
+            {
+                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            }
         }
 
         public bool IsPasswordCorrect(string input, int nonce)
