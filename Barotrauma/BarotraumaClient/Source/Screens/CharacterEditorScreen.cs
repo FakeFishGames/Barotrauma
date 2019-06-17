@@ -4909,6 +4909,7 @@ namespace Barotrauma
                 protected override GUIMessageBox Create()
                 {
                     var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new string[] { TextManager.Get("Previous"), TextManager.Get("Create") }, new Vector2(0.5f, 1.0f));
+                    box.Header.Font = GUI.LargeFont;
                     box.Content.ChildAnchor = Anchor.TopCenter;
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;

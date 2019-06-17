@@ -286,8 +286,8 @@
   <inputtype.ragdoll>Ragdoll</inputtype.ragdoll>
   <inputtype.health>Health</inputtype.health>
   <inputtype.grab>Grab</inputtype.grab>
-  <inputtype.selectnextcharacter>Next character</inputtype.selectnextcharacter>
-  <inputtype.selectpreviouscharacter>Previous character</inputtype.selectpreviouscharacter>
+  <inputtype.selectnextcharacter>Next</inputtype.selectnextcharacter>
+  <inputtype.selectpreviouscharacter>Previous</inputtype.selectpreviouscharacter>
   <inputtype.voice>Push-to-talk</inputtype.voice>
   <setdefaultbindings>Set Default Bindings</setdefaultbindings>
   <setdefaultbindingstooltip>Set key bindings to the recommended default settings (left mouse button to select items, right mouse button or esc to deselect).</setdefaultbindingstooltip>
