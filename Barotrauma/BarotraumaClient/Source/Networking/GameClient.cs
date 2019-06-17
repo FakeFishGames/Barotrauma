@@ -1170,6 +1170,7 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
 
+            ServerSettings.ServerDetailsChanged = true;
             gameStarted = true;
 
             GameMain.GameScreen.Select();
@@ -1188,6 +1189,8 @@ namespace Barotrauma.Networking
             }
 
             if (GameMain.GameSession != null) { GameMain.GameSession.GameMode.End(endMessage); }
+
+            ServerSettings.ServerDetailsChanged = true;
 
             gameStarted = false;
             Character.Controlled = null;

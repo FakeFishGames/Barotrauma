@@ -34,7 +34,7 @@ namespace Barotrauma.Networking
         private NetServer server;
         
         private DateTime refreshMasterTimer;
-        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
+        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 60);
         private bool registeredToMaster;
 
         private DateTime roundStartTime;
@@ -657,23 +657,25 @@ namespace Barotrauma.Networking
                 updateTimer = DateTime.Now + updateInterval;
             }
 
-            if (!registeredToMaster || refreshMasterTimer >= DateTime.Now) return;
-
-            if (GameMain.Config.UseSteamMatchmaking)
+            if (registeredToMaster && (DateTime.Now > refreshMasterTimer || serverSettings.ServerDetailsChanged))
             {
-                bool refreshSuccessful = SteamManager.RefreshServerDetails(this);
-                if (GameSettings.VerboseLogging)
+                if (GameMain.Config.UseSteamMatchmaking)
                 {
-                    Log(refreshSuccessful ?
-                        "Refreshed server info on the server list." :
-                        "Refreshing server info on the server list failed.", ServerLog.MessageType.ServerMessage);
+                    bool refreshSuccessful = SteamManager.RefreshServerDetails(this);
+                    if (GameSettings.VerboseLogging)
+                    {
+                        Log(refreshSuccessful ?
+                            "Refreshed server info on the server list." :
+                            "Refreshing server info on the server list failed.", ServerLog.MessageType.ServerMessage);
+                    }
                 }
+                else
+                {
+                    CoroutineManager.StartCoroutine(RefreshMaster());
+                }
+                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+                serverSettings.ServerDetailsChanged = false;
             }
-            else
-            {
-                CoroutineManager.StartCoroutine(RefreshMaster());
-            }
-            refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
         
         private void ReadDataMessage(NetIncomingMessage inc)
@@ -2240,6 +2242,7 @@ namespace Barotrauma.Networking
 
             UpdateCrewFrame();
 
+            serverSettings.ServerDetailsChanged = true;
             refreshMasterTimer = DateTime.Now;
         }
 

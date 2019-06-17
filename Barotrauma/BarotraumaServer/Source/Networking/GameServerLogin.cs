@@ -482,6 +482,7 @@ namespace Barotrauma.Networking
             }
             
             GameMain.Server.SendChatMessage($"ServerMessage.JoinedServer~[client]={clName}", ChatMessageType.Server, null);
+            serverSettings.ServerDetailsChanged = true;
 
             var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 

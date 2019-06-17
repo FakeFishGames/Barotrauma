@@ -48,6 +48,11 @@ namespace Barotrauma.Networking
             get { return "ServerSettings"; }
         }
 
+        /// <summary>
+        /// Have some of the properties listed in the server list changed
+        /// </summary>
+        public bool ServerDetailsChanged;
+
         public class SavedClientPermission
         {
             public readonly string IP;
@@ -277,7 +282,17 @@ namespace Barotrauma.Networking
         
         public string ServerName;
 
-        public string ServerMessageText;
+        private string serverMessageText;
+        public string ServerMessageText
+        {
+            get { return serverMessageText; }
+            set
+            {
+                if (serverMessageText == value) { return; }
+                serverMessageText = value;
+                ServerDetailsChanged = true;
+            }
+        }
 
         public int Port;
 
@@ -370,19 +385,19 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        private bool allowSpectating;
         [Serialize(true, true)]
         public bool AllowSpectating
         {
-            get;
-            private set;
+            get { return allowSpectating; }
+            private set
+            {
+                if (allowSpectating == value) { return; }
+                allowSpectating = value;
+                ServerDetailsChanged = true;
+            }
         }
-
-        [Serialize(true, true)]
-        public bool VoipEnabled {
-            get;
-            private set;
-        }
-
+        
         [Serialize(true, true)]
         public bool EndRoundAtLevelEnd
         {
@@ -411,11 +426,17 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        private bool voiceChatEnabled;
         [Serialize(true, true)]
         public bool VoiceChatEnabled
         {
-            get;
-            set;
+            get { return voiceChatEnabled; }
+            set
+            {
+                if (voiceChatEnabled == value) { return; }
+                voiceChatEnabled = value;
+                ServerDetailsChanged = true;
+            }
         }
 
         [Serialize(800, true)]
@@ -473,11 +494,17 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool allowRespawn;
         [Serialize(true, true)]
         public bool AllowRespawn
         {
-            get;
-            set;
+            get { return allowRespawn; ; }
+            set
+            {
+                if (allowRespawn == value) { return; }
+                allowRespawn = value;
+                ServerDetailsChanged = true;
+            }
         }
         
         [Serialize(0, true)]
@@ -513,10 +540,16 @@ namespace Barotrauma.Networking
             set;
         }
 
+        private YesNoMaybe traitorsEnabled;
         public YesNoMaybe TraitorsEnabled
         {
-            get;
-            set;
+            get { return traitorsEnabled; }
+            set
+            {
+                if (traitorsEnabled == value) { return; }
+                traitorsEnabled = value;
+                ServerDetailsChanged = true;
+            }
         }
 
         private SelectionMode subSelectionMode;
@@ -528,6 +561,7 @@ namespace Barotrauma.Networking
             {
                 subSelectionMode = value;
                 Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
+                ServerDetailsChanged = true;
             }
         }
 
@@ -540,6 +574,7 @@ namespace Barotrauma.Networking
             {
                 modeSelectionMode = value;
                 Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+                ServerDetailsChanged = true;
             }
         }
 
