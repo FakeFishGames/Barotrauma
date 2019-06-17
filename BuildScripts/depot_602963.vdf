@@ -1,0 +1,17 @@
+"DepotBuildConfig"
+{
+  "DepotID" "602963"
+  "contentroot" "ReleaseMac"
+  "FileMapping"
+  {
+    "LocalPath" "*"
+    "DepotPath" "."
+    "recursive" "1"
+  }
+  "FileExclusion" "config_player.xml"
+  "FileExclusion" "Thumbs.db"
+  "FileExclusion" ".DS_Store"
+  "FileExclusion" "__MACOSX"
+
+  "InstallScript" "Barotrauma.app\installscript.vdf"
+}
