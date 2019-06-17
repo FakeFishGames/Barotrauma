@@ -196,7 +196,7 @@ namespace OpenAL
 
         public static IntPtr CaptureOpenDevice(string devicename, uint frequency, int format, int buffersize)
         {
-            byte[] devicenameBytes = Encoding.UTF8.GetBytes(devicename);
+            byte[] devicenameBytes = Encoding.UTF8.GetBytes(devicename + "\0");
             GCHandle devicenameHandle = GCHandle.Alloc(devicenameBytes, GCHandleType.Pinned);
             IntPtr retVal = CaptureOpenDevice(devicenameHandle.AddrOfPinnedObject(), frequency, format, buffersize);
             devicenameHandle.Free();
