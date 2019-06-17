@@ -14,7 +14,15 @@ namespace Barotrauma
         public Submarine SelectedSub
         {
             get { return selectedSub; }
-            set { selectedSub = value; lastUpdateID++; }
+            set
+            {
+                selectedSub = value;
+                lastUpdateID++;
+                if (GameMain.NetworkMember?.ServerSettings != null)
+                {
+                    GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
+                }
+            }
         }
         public Submarine SelectedShuttle
         {
@@ -32,6 +40,11 @@ namespace Barotrauma
             {
                 lastUpdateID++;
                 selectedModeIndex = MathHelper.Clamp(value, 0, GameModes.Length - 1);
+                if (GameMain.NetworkMember?.ServerSettings != null)
+                {
+                    GameMain.NetworkMember.ServerSettings.GameModeIdentifier = SelectedModeIdentifier;
+                    GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
+                }
             }
         }
 
@@ -47,6 +60,11 @@ namespace Barotrauma
                         SelectedModeIndex = i;
                         break;
                     }
+                }
+                if (GameMain.NetworkMember?.ServerSettings != null)
+                {
+                    GameMain.NetworkMember.ServerSettings.GameModeIdentifier = SelectedModeIdentifier;
+                    GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
                 }
             }
         }
