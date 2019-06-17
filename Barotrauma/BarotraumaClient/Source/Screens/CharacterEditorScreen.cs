@@ -2126,7 +2126,7 @@ namespace Barotrauma
             var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.2f), padding.RectTransform)
             {
                 RelativeOffset = new Vector2(0, 0.2f)
-            }, elementCount: 10, style: null);
+            }, elementCount: 8, style: null);
             characterDropDown.ListBox.Color = new Color(characterDropDown.ListBox.Color.R, characterDropDown.ListBox.Color.G, characterDropDown.ListBox.Color.B, byte.MaxValue);
             foreach (var file in AllFiles)
             {
@@ -2143,7 +2143,7 @@ namespace Barotrauma
                 var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.15f), padding.RectTransform)
                 {
                     RelativeOffset = new Vector2(0, 0.45f)
-                }, elementCount: 7, style: null);
+                }, elementCount: 8, style: null);
                 jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
                 jobDropDown.AddItem("None");
                 JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
