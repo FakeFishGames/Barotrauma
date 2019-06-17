@@ -701,11 +701,11 @@ namespace Barotrauma
             GUI.Draw(Cam, spriteBatch);
             if (isFreezed)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 100), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 200), GetCharacterEditorTranslation("Frozen"), Color.Blue, Color.White * 0.5f, 10, GUI.Font);
             }
             if (animTestPoseToggle.Selected)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), GetCharacterEditorTranslation("AnimationTestPoseEnabled"), Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 300), GetCharacterEditorTranslation("AnimationTestPoseEnabled"), Color.Blue, Color.White * 0.5f, 10, GUI.Font);
             }
             if (showSpritesheet)
             {
@@ -3708,7 +3708,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && editJoints && selectedJoints.Any())
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 100), GetCharacterEditorTranslation("HoldLeftAltToManipulateJoint"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 250), GetCharacterEditorTranslation("HoldLeftAltToManipulateJoint"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
