@@ -181,6 +181,9 @@
     <None Include="Content\Effects\solidcolor_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="libfreetype.6.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Shaders\Content_opengl.mgcb" />
     <None Include="Content\Effects\blurshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -262,6 +265,22 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="barotrauma.icns" />
+    <None Include="osx\libMonoPosixHelper.dylib" />
+    <None Include="osx\libSDL2-2.0.0.dylib" />
+    <None Include="osx\libcairo.2.dylib" />
+    <None Include="osx\libexpat.1.5.2.dylib" />
+    <None Include="osx\libfontconfig.1.dylib" />
+    <None Include="osx\libfreetype.6.dylib" />
+    <None Include="osx\libgdiplus.0.dylib" />
+    <None Include="osx\libgdiplus.dylib" />
+    <None Include="osx\libgif.4.1.6.dylib" />
+    <None Include="osx\libglib-2.0.0.dylib" />
+    <None Include="osx\libintl.8.dylib" />
+    <None Include="osx\libjpeg.8.dylib" />
+    <None Include="osx\libopenal.1.dylib" />
+    <None Include="osx\libpixman-1.0.dylib" />
+    <None Include="osx\libpng14.14.dylib" />
+    <None Include="osx\libtiff.5.dylib" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="ClientCode.projitems" Label="Shared" />
