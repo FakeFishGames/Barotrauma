@@ -137,8 +137,11 @@ namespace Barotrauma
         {
             if (noiseTexture == null)
             {
-                noiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
-                rawNoiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    noiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
+                    rawNoiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
+                });
                 rawNoiseSprite = new Sprite(rawNoiseTexture, null, null);
             }
 
@@ -221,8 +224,11 @@ namespace Barotrauma
                     Color.Lerp(noiseTextureData[i], pathColor, crackTextureData[i].A / 255.0f * 0.5f);
             }
 
-            noiseTexture.SetData(noiseTextureData);
-            rawNoiseTexture.SetData(rawNoiseTextureData);
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                noiseTexture.SetData(noiseTextureData);
+                rawNoiseTexture.SetData(rawNoiseTextureData);
+            });
         }
 
         private void LocationChanged(Location prevLocation, Location newLocation)

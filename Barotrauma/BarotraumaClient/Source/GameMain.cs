@@ -48,6 +48,8 @@ namespace Barotrauma
 
         public static Sounds.SoundManager SoundManager;
 
+        public static Thread MainThread { get; private set; }
+
         public static HashSet<ContentPackage> SelectedPackages
         {
             get { return Config?.SelectedContentPackages; }
@@ -183,6 +185,8 @@ namespace Barotrauma
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
+
+            MainThread = Thread.CurrentThread;
         }
 
         public void ApplyGraphicsSettings()
@@ -220,8 +224,20 @@ namespace Barotrauma
 
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
-
+            
             GraphicsDeviceManager.ApplyChanges();
+
+            if (windowMode == WindowMode.BorderlessWindowed)
+            {
+                GraphicsWidth = GraphicsDevice.PresentationParameters.Bounds.Width;
+                GraphicsHeight = GraphicsDevice.PresentationParameters.Bounds.Height;
+                GraphicsDevice.Viewport = new Viewport(0,0,GraphicsWidth,GraphicsHeight);
+                GraphicsDevice.ScissorRectangle = new Rectangle(0,0,GraphicsWidth,GraphicsHeight);
+                GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
+                GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
+
+                GraphicsDeviceManager.ApplyChanges();
+            }
         }
 
         public void ResetViewPort()
@@ -272,10 +288,9 @@ namespace Barotrauma
                 WaitForLanguageSelection = Config.ShowLanguageSelectionPrompt
             };
 
-            bool canLoadInSeparateThread = false;
-#if WINDOWS
-            canLoadInSeparateThread = false;
-#endif
+            bool canLoadInSeparateThread = true;
+
+            ApplyGraphicsSettings();
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
         }
@@ -578,6 +593,9 @@ namespace Barotrauma
                 //otherwise it snowballs and becomes unplayable
                 Timing.Accumulator = Timing.Step;
             }
+
+            CrossThread.ProcessTasks();
+
             PlayerInput.UpdateVariable();
 
             bool paused = true;

@@ -131,7 +131,10 @@ namespace Barotrauma.Media
             //LibVlcWrapper.LibVlcMethods.libvlc_media_release(media);
 
             //LibVlcWrapper.LibVlcMethods.libvlc_video_get_size(mediaPlayer, 0, out width, out height);
-            texture = new Texture2D(graphicsDevice, (int)width, (int)height);
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(graphicsDevice, (int)width, (int)height);
+            });
             Width = width; Height = height;
 
             unmanagedData = Marshal.AllocHGlobal(sizeof(int)*2+(int)(width*height*3));
@@ -216,7 +219,10 @@ namespace Barotrauma.Media
                                                           (byte)255);
                     }
                 }
-                texture.SetData(colors);
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    texture.SetData(colors);
+                });
                 arr[0] = 0;
                 Marshal.Copy(arr, 0, changedPtr, 1);
             }

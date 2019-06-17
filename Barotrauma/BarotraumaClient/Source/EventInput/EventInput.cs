@@ -6,34 +6,6 @@ using System.Text;
 
 namespace EventInput
 {
-#if WINDOWS
-    public class KeyboardLayout
-    {
-        const uint KLF_ACTIVATE = 1; //activate the layout
-        const int KL_NAMELENGTH = 9; // length of the keyboard buffer
-        const string LANG_EN_US = "00000409";
-        const string LANG_HE_IL = "0001101A";
-
-        [DllImport("user32.dll")]
-        private static extern long LoadKeyboardLayout(
-        string pwszKLID,  // input locale identifier
-        uint Flags       // input locale identifier options
-        );
-
-        [DllImport("user32.dll")]
-        private static extern long GetKeyboardLayoutName(
-        StringBuilder pwszKLID  //[out] string that receives the name of the locale identifier
-        );
-
-        public static string getName()
-        {
-            StringBuilder name = new StringBuilder(KL_NAMELENGTH);
-            GetKeyboardLayoutName(name);
-            return name.ToString();
-        }
-    }
-#endif
-
     public class CharacterEventArgs : EventArgs
     {
         private readonly char character;
@@ -118,50 +90,6 @@ namespace EventInput
 
         static bool initialized;
 
-#if WINDOWS
-        delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-        static IntPtr prevWndProc;
-        static WndProc hookProcDelegate;
-        static IntPtr hIMC;
-
-        //various Win32 constants that we need
-        const int GWL_WNDPROC = -4;
-        const int WM_KEYDOWN = 0x100;
-        const int WM_KEYUP = 0x101;
-        const int WM_CHAR = 0x102;
-        const int WM_IME_SETCONTEXT = 0x0281;
-        const int WM_INPUTLANGCHANGE = 0x51;
-        const int WM_GETDLGCODE = 0x87;
-        const int WM_IME_COMPOSITION = 0x10f;
-        const int DLGC_WANTALLKEYS = 4;
-
-        //Win32 functions that we're using
-        [DllImport("Imm32.dll", CharSet = CharSet.Unicode)]
-        static extern IntPtr ImmGetContext(IntPtr hWnd);
-
-        [DllImport("Imm32.dll", CharSet = CharSet.Unicode)]
-        static extern IntPtr ImmAssociateContext(IntPtr hWnd, IntPtr hIMC);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-        public static IntPtr TrySetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
-        {
-            if (IntPtr.Size == 4)
-            {
-                return SetWindowLong(hWnd, nIndex, dwNewLong);
-            }
-            return SetWindowLongPtr(hWnd, nIndex, dwNewLong);
-        }
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        static extern IntPtr SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-#endif
-
         /// <summary>
         /// Initialize the TextInput with the given GameWindow.
         /// </summary>
@@ -172,17 +100,8 @@ namespace EventInput
             {
                 return;
             }
-
-#if WINDOWS
-            hookProcDelegate = HookProc;
-
-            prevWndProc = TrySetWindowLong(window.Handle, GWL_WNDPROC,
-                Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
-
-            hIMC = ImmGetContext(window.Handle);
-#else
+            
             window.TextInput += ReceiveInput;
-#endif
 
             initialized = true;
         }
@@ -197,63 +116,5 @@ namespace EventInput
         {
             CharEntered?.Invoke(null, new CharacterEventArgs(character, 0));
         }
-#if WINDOWS
-        static IntPtr HookProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
-        {
-            IntPtr returnCode = CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
-
-            switch (msg)
-            {
-                case WM_GETDLGCODE:
-                    returnCode = (IntPtr)(returnCode.ToInt32() | DLGC_WANTALLKEYS);
-                    break;
-
-                case WM_KEYDOWN:
-                    if (KeyDown != null)
-                        KeyDown(null, new KeyEventArgs(HandleKeyInput(wParam)));
-                    break;
-
-                case WM_KEYUP:
-                    if (KeyUp != null)
-                        KeyUp(null, new KeyEventArgs(HandleKeyInput(wParam)));
-                    break;
-
-                case WM_CHAR:
-                    if (CharEntered != null)
-                        CharEntered(null, new CharacterEventArgs((char)wParam, lParam.ToInt64()));
-                    break;
-
-                case WM_IME_SETCONTEXT:
-                    if (wParam.ToInt32() == 1)
-                        ImmAssociateContext(hWnd, hIMC);
-                    break;
-
-                case WM_INPUTLANGCHANGE:
-                    ImmAssociateContext(hWnd, hIMC);
-                    returnCode = (IntPtr)1;
-                    break;
-            }
-
-            return returnCode;
-        }
-
-        static Keys HandleKeyInput(IntPtr wParam)
-        {
-            // The conversion does not work for Shift or CTRL. Hence the hack.
-            Keys key = (Keys)wParam;
-            int k = (int)key;
-            if (k == 16)
-            {
-                // Could also be RightShift
-                key = Keys.LeftShift;
-            }
-            else if (k == 17)
-            {
-                // Could also be RightControl
-                key = Keys.LeftControl;
-            }
-            return key;
-        }
-#endif
     }
 }
