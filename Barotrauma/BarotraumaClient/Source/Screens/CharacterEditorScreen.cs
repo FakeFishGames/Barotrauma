@@ -2121,7 +2121,7 @@ namespace Barotrauma
             disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
 
             // Character selection
-            new GUITextBlock(new RectTransform(new Vector2(1, 0.2f), padding.RectTransform), GetCharacterEditorTranslation("CharacterPanel"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.2f), padding.RectTransform), GetCharacterEditorTranslation("CharacterPanel"), font: GUI.LargeFont);
 
             var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.2f), padding.RectTransform)
             {
