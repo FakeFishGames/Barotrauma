@@ -234,10 +234,10 @@ namespace Barotrauma
         {
             //base.AddToGUIUpdateList();
 
-            characterSelectionPanel.AddToGUIUpdateList();
             fileEditPanel.AddToGUIUpdateList();
             modesPanel.AddToGUIUpdateList();
             miscToolsPanel.AddToGUIUpdateList();
+            characterSelectionPanel.AddToGUIUpdateList();
 
             Wizard.instance?.AddToGUIUpdateList();
             if (displayBackgroundColor)
