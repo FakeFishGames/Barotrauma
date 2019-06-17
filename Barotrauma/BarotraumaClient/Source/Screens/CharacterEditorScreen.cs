@@ -1450,6 +1450,10 @@ namespace Barotrauma
                 AllFiles.Add(configFilePath);
             }
             SpawnCharacter(configFilePath, ragdollParams);
+
+            editLimbsToggle.Selected = true;
+            recalculateColliderToggle.Selected = true;
+            selectedLimbs.Add(character.AnimController.Limbs.First());
             return true;
         }
 
@@ -1499,6 +1503,7 @@ namespace Barotrauma
         private GUIScrollBar limbScaleBar;
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
+        private GUITickBox recalculateColliderToggle;
         private GUITickBox jointsToggle;
         private GUITickBox editAnimsToggle;
         private GUITickBox editLimbsToggle;
@@ -1888,7 +1893,7 @@ namespace Barotrauma
                 }
             };
             lockSpriteSizeToggle.TextColor = Color.White;
-            var recalculateColliderToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("AdjustCollider"))
+            recalculateColliderToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupLimbControls.RectTransform), GetCharacterEditorTranslation("AdjustCollider"))
             {
                 Selected = recalculateCollider,
                 OnSelected = (GUITickBox box) =>
@@ -5203,7 +5208,6 @@ namespace Barotrauma
                         if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackageName, ragdollParams))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
-                            CharacterEditorScreen.instance.editLimbsToggle.Selected = true;
                         }
                         Wizard.Instance.SelectTab(Tab.None);
                         return true;
