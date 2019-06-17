@@ -208,7 +208,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-2.0" />
       <sound file="Content/Items/Tools/Extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
     </RepairTool>
-    <Propulsion force="-20" usablein="water" particles="bubbles" />
+    <Propulsion force="-80" usablein="water" particles="bubbles" />
   </Item>
   
   <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
