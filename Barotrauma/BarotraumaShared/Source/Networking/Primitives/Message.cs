@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
             bitPos = Write7BitEncoded(buf, bitPos, (UInt64)bytes.Length); 
             for (int i=0;i<val.Length;i++)
             {
-                bitPos = Write7BitEncoded(buf, bitPos, bytes[i]);
+                bitPos = Write(buf, bitPos, bytes[i]);
             }
             return bitPos;
         }
