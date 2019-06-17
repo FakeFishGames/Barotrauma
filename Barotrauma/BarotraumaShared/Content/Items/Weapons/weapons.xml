@@ -152,22 +152,6 @@
       </Attack>
     </Projectile>
   </Item>
-<!--
-  <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
-    <Price locationtype="Military" buyprice="35" />
-    <Price locationtype="City" buyprice="70" />
-    <Price locationtype="Outpost" buyprice="70" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" />
-    <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
-    <Body width="8" height="3" density="40" />
-    <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
-    <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="2.5" stun="0.125" targetforce="5">
-        <Affliction identifier="gunshotwound" strength="15" />
-        <Affliction identifier="internaldamage" strength="10" />
-      </Attack>
-    </Projectile>
-  </Item>
   
   <Item name="Revolver" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="75" />
@@ -195,7 +179,23 @@
       <Containable identifiers="revolverround" />
     </ItemContainer>
   </Item>
-
+  <!--
+  <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="35" />
+    <Price locationtype="City" buyprice="70" />
+    <Price locationtype="Outpost" buyprice="70" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" />
+    <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
+    <Body width="8" height="3" density="40" />
+    <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
+    <Projectile characterusable="false" hitscan="true" removeonhit="true">
+      <Attack structuredamage="2.5" stun="0.125" targetforce="5">
+        <Affliction identifier="gunshotwound" strength="15" />
+        <Affliction identifier="internaldamage" strength="10" />
+      </Attack>
+    </Projectile>
+  </Item>
+  
   <Item name="SMG" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="300" />
