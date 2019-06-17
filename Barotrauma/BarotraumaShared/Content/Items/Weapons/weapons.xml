@@ -152,7 +152,7 @@
       </Attack>
     </Projectile>
   </Item>
-
+<!--
   <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="35" />
     <Price locationtype="City" buyprice="70" />
@@ -222,7 +222,7 @@
       <Containable identifiers="smground" />
     </ItemContainer>
   </Item>
-  
+-->
   <Item name="Stun Grenade" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
