@@ -80,7 +80,7 @@ namespace Barotrauma.Networking
         {
             Write(buf, ref bitPos, (UInt64)val);
         }
-        
+
         internal static void Write(byte[] buf, ref int bitPos, Single val)
         {
             byte[] bytes = BitConverter.GetBytes(val);
@@ -118,8 +118,8 @@ namespace Barotrauma.Networking
         internal static void Write(byte[] buf, ref int bitPos, String val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
-            Write7BitEncoded(buf, ref bitPos, (UInt64)bytes.Length); 
-            for (int i=0;i<val.Length;i++)
+            Write7BitEncoded(buf, ref bitPos, (UInt64)bytes.Length);
+            for (int i = 0; i < val.Length; i++)
             {
                 Write(buf, ref bitPos, bytes[i]);
             }
@@ -133,7 +133,7 @@ namespace Barotrauma.Networking
             if (normalized > diff) normalized = diff;
             int requiredBits = 1;
             while ((1 << requiredBits) < diff) { requiredBits++; }
-            for (int i=0;i<requiredBits;i++)
+            for (int i = 0; i < requiredBits; i++)
             {
                 Write(buf, ref bitPos, ((normalized >> i) & 0x1) != 0);
             }
@@ -235,10 +235,10 @@ namespace Barotrauma.Networking
             ReadPadBits(buf, ref bitPos);
             int bytePos = bitPos / 8;
             bitPos += 8;
-            UInt64 retVal = (UInt64)(buf[bytePos]&0x7f);
-            if ((buf[bytePos]&0x80) != 0)
+            UInt64 retVal = (UInt64)(buf[bytePos] & 0x7f);
+            if ((buf[bytePos] & 0x80) != 0)
             {
-                retVal |= Read7BitEncoded(buf, ref bitPos)<<7;
+                retVal |= Read7BitEncoded(buf, ref bitPos) << 7;
             }
             return retVal;
         }
@@ -247,11 +247,24 @@ namespace Barotrauma.Networking
         {
             UInt64 length = Read7BitEncoded(buf, ref bitPos);
             byte[] bytes = new byte[length];
-            for (UInt64 i=0;i<length;i++)
+            for (UInt64 i = 0; i < length; i++)
             {
                 bytes[i] = ReadByte(buf, ref bitPos);
             }
             return Encoding.UTF8.GetString(bytes);
+        }
+
+        internal static int ReadRangedInteger(byte[] buf, ref int bitPos, int min, int max)
+        {
+            int diff = max - min;
+            int retVal = 0;
+            int requiredBits = 1;
+            while ((1 << requiredBits) < diff) { requiredBits++; }
+            for (int i = 0; i < requiredBits; i++)
+            {
+                if (ReadBoolean(buf, ref bitPos)) retVal |= 1 << i;
+            }
+            return retVal;
         }
     }
 
@@ -318,6 +331,11 @@ namespace Barotrauma.Networking
             MsgWriter.Write(buf, ref seekPos, val);
         }
 
+        public void Write7BitEncoded(UInt64 val)
+        {
+            MsgWriter.Write7BitEncoded(buf, ref seekPos, val);
+        }
+
         public void Write(String val)
         {
             MsgWriter.Write(buf, ref seekPos, val);
@@ -326,6 +344,234 @@ namespace Barotrauma.Networking
         public void WriteRangedInteger(int val, int min, int max)
         {
             MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+        }
+    }
+
+    public class ReadOnlyMessage : IReadMessage, IMessage
+    {
+        private byte[] buf = new byte[1200];
+        private int seekPos = 0;
+
+        public bool CanWrite { get { return false; } }
+        public bool CanRead { get { return true; } }
+
+        public bool ReadBoolean()
+        {
+            return MsgReader.ReadBoolean(buf, ref seekPos);
+        }
+
+        public void ReadPadBits()
+        {
+            MsgReader.ReadPadBits(buf, ref seekPos);
+        }
+
+        public byte ReadByte()
+        {
+            return MsgReader.ReadByte(buf, ref seekPos);
+        }
+
+        public UInt16 ReadUInt16()
+        {
+            return MsgReader.ReadUInt16(buf, ref seekPos);
+        }
+
+        public Int16 ReadInt16()
+        {
+            return MsgReader.ReadInt16(buf, ref seekPos);
+        }
+
+        public UInt32 ReadUInt32()
+        {
+            return MsgReader.ReadUInt32(buf, ref seekPos);
+        }
+
+        public Int32 ReadInt32()
+        {
+            return MsgReader.ReadInt32(buf, ref seekPos);
+        }
+
+        public UInt64 ReadUInt64()
+        {
+            return MsgReader.ReadUInt64(buf, ref seekPos);
+        }
+
+        public Int64 ReadInt64()
+        {
+            return MsgReader.ReadInt64(buf, ref seekPos);
+        }
+
+        public Single ReadSingle()
+        {
+            return MsgReader.ReadSingle(buf, ref seekPos);
+        }
+
+        public Double ReadDouble()
+        {
+            return MsgReader.ReadDouble(buf, ref seekPos);
+        }
+
+        public UInt64 Read7BitEncoded()
+        {
+            return MsgReader.Read7BitEncoded(buf, ref seekPos);
+        }
+
+        public String ReadString()
+        {
+            return MsgReader.ReadString(buf, ref seekPos);
+        }
+
+        public int ReadRangedInteger(int min, int max)
+        {
+            return MsgReader.ReadRangedInteger(buf, ref seekPos, min, max);
+        }
+    }
+
+    public class ReadWriteMessage : IWriteMessage, IReadMessage, IMessage
+    {
+        private byte[] buf = new byte[1200];
+        private int seekPos = 0;
+
+        public bool CanWrite { get { return true; } }
+        public bool CanRead { get { return true; } }
+
+        public void Write(bool val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void WritePadBits()
+        {
+            MsgWriter.WritePadBits(buf, ref seekPos);
+        }
+
+        public void Write(byte val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(UInt16 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Int16 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(UInt32 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Int32 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(UInt64 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Int64 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Single val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Double val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write7BitEncoded(UInt64 val)
+        {
+            MsgWriter.Write7BitEncoded(buf, ref seekPos, val);
+        }
+
+        public void Write(String val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void WriteRangedInteger(int val, int min, int max)
+        {
+            MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+        }
+
+        public bool ReadBoolean()
+        {
+            return MsgReader.ReadBoolean(buf, ref seekPos);
+        }
+
+        public void ReadPadBits()
+        {
+            MsgReader.ReadPadBits(buf, ref seekPos);
+        }
+
+        public byte ReadByte()
+        {
+            return MsgReader.ReadByte(buf, ref seekPos);
+        }
+
+        public UInt16 ReadUInt16()
+        {
+            return MsgReader.ReadUInt16(buf, ref seekPos);
+        }
+
+        public Int16 ReadInt16()
+        {
+            return MsgReader.ReadInt16(buf, ref seekPos);
+        }
+
+        public UInt32 ReadUInt32()
+        {
+            return MsgReader.ReadUInt32(buf, ref seekPos);
+        }
+
+        public Int32 ReadInt32()
+        {
+            return MsgReader.ReadInt32(buf, ref seekPos);
+        }
+
+        public UInt64 ReadUInt64()
+        {
+            return MsgReader.ReadUInt64(buf, ref seekPos);
+        }
+
+        public Int64 ReadInt64()
+        {
+            return MsgReader.ReadInt64(buf, ref seekPos);
+        }
+
+        public Single ReadSingle()
+        {
+            return MsgReader.ReadSingle(buf, ref seekPos);
+        }
+
+        public Double ReadDouble()
+        {
+            return MsgReader.ReadDouble(buf, ref seekPos);
+        }
+
+        public UInt64 Read7BitEncoded()
+        {
+            return MsgReader.Read7BitEncoded(buf, ref seekPos);
+        }
+
+        public String ReadString()
+        {
+            return MsgReader.ReadString(buf, ref seekPos);
+        }
+
+        public int ReadRangedInteger(int min, int max)
+        {
+            return MsgReader.ReadRangedInteger(buf, ref seekPos, min, max);
         }
     }
 }

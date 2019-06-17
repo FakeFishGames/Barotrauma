@@ -15,6 +15,7 @@ namespace Barotrauma.Networking
         void Write(UInt64 val);
         void Write(Single val);
         void Write(Double val);
+        void Write7BitEncoded(UInt64 val);
         void Write(string val);
         void WriteRangedInteger(int val, int min, int max);
     }
