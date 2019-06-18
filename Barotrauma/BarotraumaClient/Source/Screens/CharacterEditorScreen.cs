@@ -1329,15 +1329,11 @@ namespace Barotrauma
             Cam.Position = character.WorldPosition;
         }
 
-        private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, string contentPackageName = null, params object[] ragdollConfig)
+        private bool CreateCharacter(string name, string mainFolder, bool isHumanoid, ContentPackage contentPackage = null, params object[] ragdollConfig)
         {
             var vanilla = GameMain.VanillaContent;
-            ContentPackage contentPackage = null;
-            if (string.IsNullOrWhiteSpace(contentPackageName))
-            {
-                contentPackageName = null;
-            }
-            if (contentPackageName == null)
+            
+            if (contentPackage == null)
             {
 #if DEBUG
                 contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
@@ -1345,17 +1341,9 @@ namespace Barotrauma
                 contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault(cp => cp != vanilla);
 #endif
             }
-            else
-            {
-#if DEBUG
-                contentPackage = ContentPackage.List.LastOrDefault(cp => cp.Name == contentPackageName);
-#else
-                contentPackage = ContentPackage.List.LastOrDefault(cp => cp != vanilla && cp.Name == contentPackageName);
-#endif
-            }
             if (contentPackage == null)
             {
-                string modName = contentPackageName ?? "NewCharacterMod";
+                string modName = "NewCharacterMod";
                 if (ContentPackage.List.Any(cp => cp.Name == modName))
                 {
                     string tempName = modName;
@@ -4719,7 +4707,8 @@ namespace Barotrauma
             private bool canEnterSubmarine = true;
             private string texturePath;
             private string xmlPath;
-            private string contentPackageName;
+            private ContentPackage contentPackage;
+            private GUIDropDown contentPackageDropDown;
             private Dictionary<string, XElement> limbXElements = new Dictionary<string, XElement>();
             private List<GUIComponent> limbGUIElements = new List<GUIComponent>();
             private List<XElement> jointXElements = new List<XElement>();
@@ -4779,11 +4768,11 @@ namespace Barotrauma
                     box.Content.AbsoluteSpacing = 20;
                     int elementSize = 30;
                     var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
-                    var topGroup = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize * 6 + 20), listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
+                    var topGroup = new GUILayoutGroup(new RectTransform(Vector2.One, listBox.Content.RectTransform)) { AbsoluteSpacing = 2 };
                     var fields = new List<GUIComponent>();
                     GUITextBox texturePathElement = null;
                     GUITextBox xmlPathElement = null;
-                    GUITextBox contentPackageNameElement = null;
+                    //GUITextBox contentPackageNameElement = null;
                     void UpdatePaths()
                     {
                         string pathBase = $"Mods/Characters/{Name}/{Name}";
@@ -4860,14 +4849,72 @@ namespace Barotrauma
                                 };
                                 break;
                             case 5:
-                                new GUITextBlock(leftElement, GetCharacterEditorTranslation("ContentPackageName"));
-                                contentPackageNameElement = new GUITextBox(rightElement, string.Empty)
+                                mainElement.RectTransform.NonScaledSize = new Point(
+                                    mainElement.RectTransform.NonScaledSize.X, 
+                                    mainElement.RectTransform.NonScaledSize.Y * 2);
+                                new GUITextBlock(leftElement, TextManager.Get("ContentPackage"));
+
+                                var rightContainer = new GUIFrame(rightElement, style: null);
+
+                                Instance.contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
+                                foreach (ContentPackage cp in ContentPackage.List)
+                                {
+#if !DEBUG
+                                    if (cp == GameMain.VanillaContent) { continue; }
+#endif
+                                    Instance.contentPackageDropDown.AddItem(cp.Name, userData: cp, toolTip: cp.Path);
+                                }
+                                Instance.contentPackageDropDown.OnSelected = (obj, userdata) =>
+                                {
+                                    ContentPackage = userdata as ContentPackage;
+                                    return true;
+                                };
+
+                                var contentPackageNameElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 0.5f), rightContainer.RectTransform, Anchor.BottomLeft), 
+                                    TextManager.Get("name"))
                                 {
                                     CaretColor = Color.White,
                                 };
-                                contentPackageNameElement.OnTextChanged += (tb, text) =>
+                                var createNewPackageButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), rightContainer.RectTransform, Anchor.BottomRight), TextManager.Get("CreateNew"))
                                 {
-                                    ContentPackageName = text;
+                                    OnClicked = (btn, userdata) =>
+                                    {
+                                        if (string.IsNullOrEmpty(contentPackageNameElement.Text))
+                                        {
+                                            contentPackageNameElement.Flash();
+                                            return false;
+                                        }
+
+                                        if (ContentPackage.List.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
+                                        {
+                                            new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", fallBackTag: "leveleditorlevelobjnametaken"));
+                                            return false;
+                                        }
+
+                                        string fileName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
+                                        ContentPackage = ContentPackage.CreatePackage(
+                                            contentPackageNameElement.Text,
+                                            Path.Combine(ContentPackage.Folder, $"{fileName}.xml"), false);
+                                        ContentPackage.List.Add(ContentPackage);
+
+                                        Instance.contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
+                                        Instance.contentPackageDropDown.SelectItem(ContentPackage);
+                                        contentPackageNameElement.Text = "";
+                                        return true;
+                                    },
+                                    Enabled = false
+                                };
+
+                                Color textColor = contentPackageNameElement.TextColor;
+                                contentPackageNameElement.TextColor *= 0.6f;
+                                contentPackageNameElement.OnSelected += (sender, key) =>
+                                {
+                                    contentPackageNameElement.Text = "";
+                                };
+                                contentPackageNameElement.OnTextChanged += (textBox, text) =>
+                                {
+                                    textBox.TextColor = textColor;
+                                    createNewPackageButton.Enabled = !string.IsNullOrWhiteSpace(text);
                                     return true;
                                 };
                                 break;
@@ -4886,6 +4933,12 @@ namespace Barotrauma
                     // Next
                     box.Buttons[1].OnClicked += (b, d) =>
                     {
+                        if (ContentPackage == null)
+                        {
+                            Instance.contentPackageDropDown.Flash();
+                            return false;
+                        }
+
                         if (!File.Exists(TexturePath))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), Color.Red);
@@ -5206,7 +5259,7 @@ namespace Barotrauma
                                 LimbXElements.Values,
                                 JointXElements
                         };
-                        if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackageName, ragdollParams))
+                        if (CharacterEditorScreen.instance.CreateCharacter(Name, Path.GetDirectoryName(XMLPath), IsHumanoid, ContentPackage, ragdollParams))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", Name), Color.Green, font: GUI.Font);
                         }
@@ -5320,10 +5373,10 @@ namespace Barotrauma
                     get => Instance.canEnterSubmarine;
                     set => Instance.canEnterSubmarine = value;
                 }
-                public string ContentPackageName
+                public ContentPackage ContentPackage
                 {
-                    get => Instance.contentPackageName;
-                    set => Instance.contentPackageName = value;
+                    get => Instance.contentPackage;
+                    set => Instance.contentPackage = value;
                 }
                 public string TexturePath
                 {
