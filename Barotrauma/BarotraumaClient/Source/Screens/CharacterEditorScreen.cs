@@ -4774,7 +4774,7 @@ namespace Barotrauma
                     GUIDropDown contentPackageDropDown = null;
                     void UpdatePaths()
                     {
-                        string pathBase = $"Mods/Characters/{Name}/{Name}";
+                        string pathBase = $"Mods/{(ContentPackage != null ? ContentPackage.Name + "/" : string.Empty)}Characters/{Name}/{Name}";
                         XMLPath = $"{pathBase}.xml";
                         xmlPathElement.Text = XMLPath;
                         if (string.IsNullOrWhiteSpace(TexturePath))
