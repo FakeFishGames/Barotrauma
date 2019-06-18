@@ -4708,7 +4708,6 @@ namespace Barotrauma
             private string texturePath;
             private string xmlPath;
             private ContentPackage contentPackage;
-            private GUIDropDown contentPackageDropDown;
             private Dictionary<string, XElement> limbXElements = new Dictionary<string, XElement>();
             private List<GUIComponent> limbGUIElements = new List<GUIComponent>();
             private List<XElement> jointXElements = new List<XElement>();
@@ -4772,7 +4771,7 @@ namespace Barotrauma
                     var fields = new List<GUIComponent>();
                     GUITextBox texturePathElement = null;
                     GUITextBox xmlPathElement = null;
-                    //GUITextBox contentPackageNameElement = null;
+                    GUIDropDown contentPackageDropDown = null;
                     void UpdatePaths()
                     {
                         string pathBase = $"Mods/Characters/{Name}/{Name}";
@@ -4853,23 +4852,20 @@ namespace Barotrauma
                                     mainElement.RectTransform.NonScaledSize.X, 
                                     mainElement.RectTransform.NonScaledSize.Y * 2);
                                 new GUITextBlock(leftElement, TextManager.Get("ContentPackage"));
-
                                 var rightContainer = new GUIFrame(rightElement, style: null);
-
-                                Instance.contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
+                                contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
                                 foreach (ContentPackage cp in ContentPackage.List)
                                 {
 #if !DEBUG
                                     if (cp == GameMain.VanillaContent) { continue; }
 #endif
-                                    Instance.contentPackageDropDown.AddItem(cp.Name, userData: cp, toolTip: cp.Path);
+                                    contentPackageDropDown.AddItem(cp.Name, userData: cp, toolTip: cp.Path);
                                 }
-                                Instance.contentPackageDropDown.OnSelected = (obj, userdata) =>
+                                contentPackageDropDown.OnSelected = (obj, userdata) =>
                                 {
                                     ContentPackage = userdata as ContentPackage;
                                     return true;
                                 };
-
                                 var contentPackageNameElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 0.5f), rightContainer.RectTransform, Anchor.BottomLeft), 
                                     TextManager.Get("name"))
                                 {
@@ -4884,27 +4880,23 @@ namespace Barotrauma
                                             contentPackageNameElement.Flash();
                                             return false;
                                         }
-
                                         if (ContentPackage.List.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
                                         {
                                             new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", fallBackTag: "leveleditorlevelobjnametaken"));
                                             return false;
                                         }
-
                                         string fileName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
                                         ContentPackage = ContentPackage.CreatePackage(
                                             contentPackageNameElement.Text,
                                             Path.Combine(ContentPackage.Folder, $"{fileName}.xml"), false);
                                         ContentPackage.List.Add(ContentPackage);
-
-                                        Instance.contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
-                                        Instance.contentPackageDropDown.SelectItem(ContentPackage);
+                                        contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
+                                        contentPackageDropDown.SelectItem(ContentPackage);
                                         contentPackageNameElement.Text = "";
                                         return true;
                                     },
                                     Enabled = false
                                 };
-
                                 Color textColor = contentPackageNameElement.TextColor;
                                 contentPackageNameElement.TextColor *= 0.6f;
                                 contentPackageNameElement.OnSelected += (sender, key) =>
@@ -4935,10 +4927,9 @@ namespace Barotrauma
                     {
                         if (ContentPackage == null)
                         {
-                            Instance.contentPackageDropDown.Flash();
+                            contentPackageDropDown.Flash();
                             return false;
                         }
-
                         if (!File.Exists(TexturePath))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), Color.Red);
