@@ -5530,10 +5530,8 @@ namespace Barotrauma
                         {
                             if (hierarchy != "0")
                             {
-                                // OLD LOGIC: If the bone is at the root hierarchy, parent the bone to the last sibling (1 is parented to 0, 2 to 1 etc)
                                 // NEW LOGIC: if hierarchy length == 1, parent to 0
                                 // Else parent to the last bone in the current hierarchy (11 is parented to 1, 212 is parented to 21 etc)
-                                //string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : (int.Parse(hierarchy) - 1).ToString();
                                 string parent = hierarchy.Length > 1 ? hierarchy.Remove(hierarchy.Length - 1, 1) : "0";
                                 if (hierarchyToID.TryGetValue(parent, out int parentID))
                                 {
