@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Sounds;
-using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +58,7 @@ namespace Barotrauma.Networking
 
             if (DateTime.Now >= lastSendTime + VoipConfig.SEND_INTERVAL)
             {
-                NetOutgoingMessage msg = netClient.CreateMessage();
+                IWriteMessage msg = netClient.CreateMessage();
 
                 msg.Write((byte)ClientPacketHeader.VOICE);
                 msg.Write((byte)VoipCapture.Instance.QueueID);
@@ -71,7 +70,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void Read(NetBuffer msg)
+        public void Read(IReadMessage msg)
         {
             byte queueId = msg.ReadByte();
             VoipQueue queue = queues.Find(q => q.QueueID == queueId);

@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricationRecipes.Count - 1);
 
@@ -32,7 +31,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
             msg.WriteRangedInteger(-1, fabricationRecipes.Count - 1, itemIndex);

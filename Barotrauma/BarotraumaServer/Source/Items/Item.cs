@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             string errorMsg = "";
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
@@ -131,7 +130,7 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(errorMsg))
             {
                 //something went wrong - rewind the write position and write invalid event type to prevent creating an unreadable event
-                msg.ReadBits(msg.Data, 0, initialWritePos);
+                msg.BitPosition = initialWritePos;
                 msg.LengthBits = initialWritePos;
                 msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
                 DebugConsole.Log(errorMsg);
@@ -140,7 +139,7 @@ namespace Barotrauma
 
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             NetEntityEvent.Type eventType =
                 (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
@@ -189,7 +188,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(NetBuffer msg)
+        public void WriteSpawnData(IWriteMessage msg)
         {
             if (GameMain.Server == null) return;
 
@@ -320,14 +319,14 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWritePosition(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWritePosition(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(ID);
 
-            NetBuffer tempBuffer = new NetBuffer();
+            IWriteMessage tempBuffer = new WriteOnlyMessage();
             body.ServerWrite(tempBuffer, c, extraData);
             msg.Write((byte)tempBuffer.LengthBytes);
-            msg.Write(tempBuffer);
+            msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             msg.WritePadBits();
         }
 

@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -72,7 +71,7 @@ namespace Barotrauma.Networking
                 private set;
             }
 
-            public NetConnection Connection
+            public NetworkConnection Connection
             {
                 get;
                 private set;
@@ -80,7 +79,7 @@ namespace Barotrauma.Networking
 
             public int SequenceChannel;
 
-            public FileTransferIn(NetConnection connection, string filePath, FileTransferType fileType)
+            public FileTransferIn(NetworkConnection connection, string filePath, FileTransferType fileType)
             {
                 FilePath = filePath;
                 FileName = Path.GetFileName(FilePath);
@@ -105,16 +104,17 @@ namespace Barotrauma.Networking
                 TimeStarted = Environment.TickCount;
             }
 
-            public void ReadBytes(NetIncomingMessage inc)
+            public void ReadBytes(IReadMessage inc)
             {
-                int bytesToRead = inc.LengthBytes - inc.PositionInBytes;
+                int bytesToRead = inc.LengthBytes - inc.BytePosition;
                 if (Received + (ulong)(bytesToRead) > FileSize)
                 {
                     //strip out excess bytes
                     bytesToRead -= (int)((Received + (ulong)bytesToRead) - FileSize);
                 }
 
-                byte[] all = inc.ReadBytes(bytesToRead);
+                byte[] all = new byte[bytesToRead];
+                inc.ReadBytes(all, 0, bytesToRead);
                 Received += (ulong)all.Length;
                 WriteStream.Write(all, 0, all.Length);
 
@@ -179,7 +179,7 @@ namespace Barotrauma.Networking
             activeTransfers = new List<FileTransferIn>();
         }
         
-        public void ReadMessage(NetIncomingMessage inc)
+        public void ReadMessage(IReadMessage inc)
         {
             System.Diagnostics.Debug.Assert(!activeTransfers.Any(t => 
                 t.Status == FileTransferStatus.Error ||

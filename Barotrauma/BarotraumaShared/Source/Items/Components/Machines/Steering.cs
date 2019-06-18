@@ -522,7 +522,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
             bool dockingButtonClicked   = msg.ReadBoolean();
@@ -587,7 +587,7 @@ namespace Barotrauma.Items.Components
             unsentChanges = true;
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             msg.Write(autoPilot);
 

@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -7,12 +6,12 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    enum ChatMessageType
+    public enum ChatMessageType
     {
         Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog
     }
 
-    partial class ChatMessage
+    public partial class ChatMessage
     {
         public const int MaxLength = 150;
 

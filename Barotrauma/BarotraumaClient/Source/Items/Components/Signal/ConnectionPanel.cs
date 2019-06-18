@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -64,7 +63,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (GameMain.Client.MidRoundSyncing)
             {
@@ -79,7 +78,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void ApplyRemoteState(NetBuffer msg)
+        private void ApplyRemoteState(IReadMessage msg)
         {
             List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
             List<Wire> newWires = new List<Wire>();

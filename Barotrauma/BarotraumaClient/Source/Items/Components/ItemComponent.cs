@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Sounds;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -465,14 +464,14 @@ namespace Barotrauma.Items.Components
         }
 
         //Starts a coroutine that will read the correct state of the component from the NetBuffer when correctionTimer reaches zero.
-        protected void StartDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync = false)
+        protected void StartDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync = false)
         {
             if (delayedCorrectionCoroutine != null) CoroutineManager.StopCoroutines(delayedCorrectionCoroutine);
 
             delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime, waitForMidRoundSync));
         }
 
-        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync)
+        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync)
         {
             while (GameMain.Client != null && 
                 (correctionTimer > 0.0f || (waitForMidRoundSync && GameMain.Client.MidRoundSyncing)))

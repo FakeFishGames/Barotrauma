@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -61,7 +60,7 @@ namespace Barotrauma.Networking
         public float DeleteDisconnectedTimer;
 
         public CharacterInfo CharacterInfo;
-        public NetConnection Connection { get; set; }
+        public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
         

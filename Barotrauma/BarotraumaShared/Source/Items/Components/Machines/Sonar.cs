@@ -286,7 +286,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
@@ -329,7 +329,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(IsActive);
             if (IsActive)

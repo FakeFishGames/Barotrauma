@@ -1,12 +1,11 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Linq;
 
 namespace Barotrauma.Networking
 {
     partial class ChatMessage
     {
-        public virtual void ClientWrite(NetOutgoingMessage msg)
+        public virtual void ClientWrite(IWriteMessage msg)
         {
             msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
@@ -14,7 +13,7 @@ namespace Barotrauma.Networking
             msg.Write(Text);
         }
 
-        public static void ClientRead(NetIncomingMessage msg)
+        public static void ClientRead(IReadMessage msg)
         {
             UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();

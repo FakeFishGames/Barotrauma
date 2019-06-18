@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -854,7 +853,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (type == ServerNetObject.ENTITY_POSITION)
             {
@@ -936,7 +935,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
             {
@@ -1003,7 +1002,7 @@ namespace Barotrauma
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
         }
 
-        public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientReadPosition(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (body == null)
             {
@@ -1071,7 +1070,7 @@ namespace Barotrauma
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
         
-        public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
+        public static Item ReadSpawnData(IReadMessage msg, bool spawn = true)
         {
             string itemName = msg.ReadString();
             string itemIdentifier = msg.ReadString();

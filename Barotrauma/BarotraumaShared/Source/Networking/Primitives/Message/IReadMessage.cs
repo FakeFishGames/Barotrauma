@@ -20,5 +20,13 @@ namespace Barotrauma.Networking
         UInt64 Read7BitEncoded();
         String ReadString();
         int ReadRangedInteger(int min, int max);
+        Single ReadRangedSingle(Single min, Single max, int bitCount);
+        void ReadBytes(byte[] ret, int startPos, int length);
+
+        int BitPosition { get; set; }
+        int BytePosition { get; }
+        byte[] Buffer { get; }
+        int LengthBits { get; set; }
+        int LengthBytes { get; }
     }
 }

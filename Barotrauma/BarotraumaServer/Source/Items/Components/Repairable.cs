@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
@@ -11,13 +10,13 @@ namespace Barotrauma.Items.Components
             item.CreateServerEvent(this);
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             if (c.Character == null) return;
             StartRepairing(c.Character);
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(deteriorationTimer);
         }

@@ -4,10 +4,11 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    public abstract class ServerPeer
+    abstract class ServerPeer
     {
-        public delegate bool OnConnectionDelegate(NetworkConnection connection, IReadMessage message);
-        
+        public delegate void OnConnectionDelegate(NetworkConnection connection, IReadMessage message);
+
+        public abstract void ExecuteOnConnection(OnConnectionDelegate deleg);
         public abstract NetworkConnection GetPlayerByName(string name);
         public abstract NetworkConnection GetPlayerByEndPoint(object endPoint);
         public abstract void KickPlayer(NetworkConnection connection, string reason);

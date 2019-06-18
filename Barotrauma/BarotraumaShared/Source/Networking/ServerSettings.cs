@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,22 +13,22 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
-    enum SelectionMode
+    public enum SelectionMode
     {
         Manual = 0, Random = 1, Vote = 2
     }
 
-    enum YesNoMaybe
+    public enum YesNoMaybe
     {
         No = 0, Maybe = 1, Yes = 2
     }
 
-    enum BotSpawnMode
+    public enum BotSpawnMode
     {
         Normal, Fill
     }
-    
-    partial class ServerSettings : ISerializableEntity
+
+    public partial class ServerSettings : ISerializableEntity
     {
         [Flags]
         public enum NetFlags : byte
@@ -106,10 +105,10 @@ namespace Barotrauma.Networking
                 this.serverSettings = serverSettings;
             }
             
-            public void Read(NetBuffer msg)
+            public void Read(IReadMessage msg)
             {
-                long oldPos = msg.Position;
-                UInt32 size = msg.ReadVariableUInt32();
+                int oldPos = msg.BitPosition;
+                UInt64 size = msg.Read7BitEncoded();
 
                 float x; float y; float z; float w;
                 byte r; byte g; byte b; byte a;
@@ -119,27 +118,27 @@ namespace Barotrauma.Networking
                 {
                     case "float":
                         if (size != 4) break;
-                        property.SetValue(serverSettings, msg.ReadFloat());
+                        property.SetValue(serverSettings, msg.ReadSingle());
                         return;
                     case "vector2":
                         if (size != 8) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
                         property.SetValue(serverSettings, new Vector2(x, y));
                         return;
                     case "vector3":
                         if (size != 12) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
+                        z = msg.ReadSingle();
                         property.SetValue(serverSettings, new Vector3(x, y, z));
                         return;
                     case "vector4":
                         if (size != 16) break;
-                        x = msg.ReadFloat();
-                        y = msg.ReadFloat();
-                        z = msg.ReadFloat();
-                        w = msg.ReadFloat();
+                        x = msg.ReadSingle();
+                        y = msg.ReadSingle();
+                        z = msg.ReadSingle();
+                        w = msg.ReadSingle();
                         property.SetValue(serverSettings, new Vector4(x, y, z, w));
                         return;
                     case "color":
@@ -159,52 +158,52 @@ namespace Barotrauma.Networking
                         property.SetValue(serverSettings, new Rectangle(ix, iy, width, height));
                         return;
                     default:
-                        msg.Position = oldPos; //reset position to properly read the string
+                        msg.BitPosition = oldPos; //reset position to properly read the string
                         string incVal = msg.ReadString();
                         property.TrySetValue(serverSettings, incVal);
                         return;
                 }
 
                 //size didn't match: skip this
-                msg.Position += 8 * size;
+                msg.BitPosition += (int)(8 * size);
             }
 
-            public void Write(NetBuffer msg, object overrideValue = null)
+            public void Write(IWriteMessage msg, object overrideValue = null)
             {
                 if (overrideValue == null) overrideValue = property.GetValue(serverSettings);
                 switch (typeString)
                 {
                     case "float":
-                        msg.WriteVariableUInt32(4);
+                        msg.Write7BitEncoded(4);
                         msg.Write((float)overrideValue);
                         break;
                     case "vector2":
-                        msg.WriteVariableUInt32(8);
+                        msg.Write7BitEncoded(8);
                         msg.Write(((Vector2)overrideValue).X);
                         msg.Write(((Vector2)overrideValue).Y);
                         break;
                     case "vector3":
-                        msg.WriteVariableUInt32(12);
+                        msg.Write7BitEncoded(12);
                         msg.Write(((Vector3)overrideValue).X);
                         msg.Write(((Vector3)overrideValue).Y);
                         msg.Write(((Vector3)overrideValue).Z);
                         break;
                     case "vector4":
-                        msg.WriteVariableUInt32(16);
+                        msg.Write7BitEncoded(16);
                         msg.Write(((Vector4)overrideValue).X);
                         msg.Write(((Vector4)overrideValue).Y);
                         msg.Write(((Vector4)overrideValue).Z);
                         msg.Write(((Vector4)overrideValue).W);
                         break;
                     case "color":
-                        msg.WriteVariableUInt32(4);
+                        msg.Write7BitEncoded(4);
                         msg.Write(((Color)overrideValue).R);
                         msg.Write(((Color)overrideValue).G);
                         msg.Write(((Color)overrideValue).B);
                         msg.Write(((Color)overrideValue).A);
                         break;
                     case "rectangle":
-                        msg.WriteVariableUInt32(16);
+                        msg.Write7BitEncoded(16);
                         msg.Write(((Rectangle)overrideValue).X);
                         msg.Write(((Rectangle)overrideValue).Y);
                         msg.Write(((Rectangle)overrideValue).Width);
@@ -246,7 +245,7 @@ namespace Barotrauma.Networking
             ServerName = serverName;
             Port = port;
             QueryPort = queryPort;
-            //EnableUPnP = enableUPnP;
+            EnableUPnP = enableUPnP;
             this.maxPlayers = maxPlayers;
             this.isPublic = isPublic;
 
@@ -282,6 +281,8 @@ namespace Barotrauma.Networking
         public int Port;
 
         public int QueryPort;
+
+        public bool EnableUPnP;
         
         public ServerLog ServerLog;
 
@@ -642,7 +643,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+                this.password = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
             }
         }
 
@@ -651,7 +652,7 @@ namespace Barotrauma.Networking
             if (!HasPassword) return true;
             string saltedPw = password;
             saltedPw = saltedPw + Convert.ToString(nonce);
-            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
+            saltedPw = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
             return input == saltedPw;
         }
 
@@ -683,7 +684,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ReadMonsterEnabled(NetBuffer inc)
+        public void ReadMonsterEnabled(IReadMessage inc)
         {
             InitMonstersEnabled();
             List<string> monsterNames = MonsterEnabled.Keys.ToList();
@@ -694,7 +695,7 @@ namespace Barotrauma.Networking
             inc.ReadPadBits();
         }
 
-        public void WriteMonsterEnabled(NetBuffer msg, Dictionary<string, bool> monsterEnabled = null)
+        public void WriteMonsterEnabled(IWriteMessage msg, Dictionary<string, bool> monsterEnabled = null)
         {
             //monster spawn settings
             if (monsterEnabled == null) monsterEnabled = MonsterEnabled;
@@ -707,7 +708,7 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
         }
 
-        public bool ReadExtraCargo(NetBuffer msg)
+        public bool ReadExtraCargo(IReadMessage msg)
         {
             bool changed = false;
             UInt32 count = msg.ReadUInt32();
@@ -732,7 +733,7 @@ namespace Barotrauma.Networking
             return changed;
         }
 
-        public void WriteExtraCargo(NetBuffer msg)
+        public void WriteExtraCargo(IWriteMessage msg)
         {
             if (ExtraCargo == null)
             {

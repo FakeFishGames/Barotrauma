@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -558,7 +557,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             base.ServerWrite(msg, c, extraData);
             if (!attachable || body == null) { return; }
@@ -568,7 +567,7 @@ namespace Barotrauma.Items.Components
             msg.Write(body.SimPosition.Y);
         }
 
-        public override void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             base.ClientRead(type, msg, sendingTime);
             bool shouldBeAttached = msg.ReadBoolean();

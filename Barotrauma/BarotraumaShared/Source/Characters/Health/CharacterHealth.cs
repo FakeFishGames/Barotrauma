@@ -1,9 +1,9 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -732,7 +732,7 @@ namespace Barotrauma
             return allAfflictions;
         }
 
-        public void ServerWrite(NetBuffer msg)
+        public void ServerWrite(IWriteMessage msg)
         {
             List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);
 

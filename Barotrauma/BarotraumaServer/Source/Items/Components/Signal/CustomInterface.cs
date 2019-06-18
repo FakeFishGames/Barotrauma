@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -8,7 +7,7 @@ namespace Barotrauma.Items.Components
 {
     partial class CustomInterface : ItemComponent, IClientSerializable, IServerSerializable
     {
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             bool[] elementStates = new bool[customInterfaceElementList.Count];
             for (int i = 0; i < customInterfaceElementList.Count; i++)
@@ -44,7 +43,7 @@ namespace Barotrauma.Items.Components
             item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             //extradata contains an array of buttons clicked by a client (or nothing if nothing was clicked)
             for (int i = 0; i < customInterfaceElementList.Count; i++)

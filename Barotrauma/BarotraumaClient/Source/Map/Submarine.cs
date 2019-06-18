@@ -2,7 +2,6 @@
 using Barotrauma.RuinGeneration;
 using Barotrauma.Sounds;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -514,7 +513,7 @@ namespace Barotrauma
             }
         }
         
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Name);
             msg.ReadPadBits();

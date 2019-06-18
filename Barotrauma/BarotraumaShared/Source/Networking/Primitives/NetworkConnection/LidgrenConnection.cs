@@ -15,6 +15,12 @@ namespace Barotrauma.Networking
             }
         }
 
+        public UInt64 SteamID
+        {
+            get;
+            private set;
+        }
+
         public UInt16 Port
         {
             get
@@ -23,9 +29,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        public LidgrenConnection(string ip, UInt16 port)
+        public LidgrenConnection(string ip, UInt64 steamId, UInt16 port)
         {
             IPEndPoint = new IPEndPoint(IPAddress.Parse(ip), (int)port);
+            SteamID = steamId;
         }
 
         public override void Disconnect(string reason)

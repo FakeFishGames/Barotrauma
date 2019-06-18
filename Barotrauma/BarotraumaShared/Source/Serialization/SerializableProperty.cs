@@ -72,7 +72,7 @@ namespace Barotrauma
         }
     }
 
-    class SerializableProperty
+    public class SerializableProperty
     {
         private static Dictionary<Type, string> supportedTypes = new Dictionary<Type, string>
         {

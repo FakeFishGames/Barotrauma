@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace Barotrauma.Networking
 {
     partial class ChatMessage
     {
-        public static void ServerRead(NetIncomingMessage msg, Client c)
+        public static void ServerRead(IReadMessage msg, Client c)
         {
             c.KickAFKTimer = 0.0f;
 
@@ -152,7 +151,7 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public virtual void ServerWrite(NetOutgoingMessage msg, Client c)
+        public virtual void ServerWrite(IWriteMessage msg, Client c)
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);

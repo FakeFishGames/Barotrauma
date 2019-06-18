@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -142,7 +141,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public virtual void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             if (GameMain.Server == null) return;
 
@@ -259,7 +258,7 @@ namespace Barotrauma
             msg.ReadPadBits();
         }
 
-        public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public virtual void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             if (GameMain.Server == null) return;
 
@@ -306,7 +305,7 @@ namespace Barotrauma
             {
                 msg.Write(ID);
 
-                NetBuffer tempBuffer = new NetBuffer();
+                IWriteMessage tempBuffer = new WriteOnlyMessage();
 
                 if (this == c.Character)
                 {
@@ -407,11 +406,11 @@ namespace Barotrauma
                 tempBuffer.WritePadBits();
 
                 msg.Write((byte)tempBuffer.LengthBytes);
-                msg.Write(tempBuffer);
+                msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             }
         }
 
-        private void WriteStatus(NetBuffer msg)
+        private void WriteStatus(IWriteMessage msg)
         {
             msg.Write(IsDead);
             if (IsDead)
@@ -450,7 +449,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(NetBuffer msg)
+        public void WriteSpawnData(IWriteMessage msg)
         {
             if (GameMain.Server == null) return;
             

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 
@@ -17,7 +16,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    partial class BanList
+    public partial class BanList
     {
         private GUIComponent banFrame;
 
@@ -129,7 +128,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public void ClientAdminRead(NetBuffer incMsg)
+        public void ClientAdminRead(IReadMessage incMsg)
         {
             bool hasPermission = incMsg.ReadBoolean();
             if (!hasPermission)
@@ -142,8 +141,8 @@ namespace Barotrauma.Networking
             incMsg.ReadPadBits();
 
             bannedPlayers.Clear();
-            Int32 bannedPlayerCount = incMsg.ReadVariableInt32();
-            for (int i = 0; i < bannedPlayerCount; i++)
+            UInt64 bannedPlayerCount = incMsg.Read7BitEncoded();
+            for (int i = 0; i < (int)bannedPlayerCount; i++)
             {
                 string name = incMsg.ReadString();
                 UInt16 uniqueIdentifier = incMsg.ReadUInt16();
@@ -172,7 +171,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetBuffer outMsg)
+        public void ClientAdminWrite(IWriteMessage outMsg)
         {
             outMsg.Write((UInt16)localRemovedBans.Count);
             foreach (UInt16 uniqueId in localRemovedBans)

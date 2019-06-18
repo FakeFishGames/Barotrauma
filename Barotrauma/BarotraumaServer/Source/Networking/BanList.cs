@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -262,7 +261,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ServerAdminWrite(NetBuffer outMsg, Client c)
+        public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
             if (!c.HasPermission(ClientPermissions.Ban))
             {
@@ -273,7 +272,7 @@ namespace Barotrauma.Networking
             outMsg.Write(c.Connection == GameMain.Server.OwnerConnection);
 
             outMsg.WritePadBits();
-            outMsg.WriteVariableInt32(bannedPlayers.Count);
+            outMsg.Write7BitEncoded((UInt64)bannedPlayers.Count);
             for (int i = 0; i < bannedPlayers.Count; i++)
             {
                 BannedPlayer bannedPlayer = bannedPlayers[i];
@@ -289,14 +288,14 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool ServerAdminRead(NetBuffer incMsg, Client c)
+        public bool ServerAdminRead(IReadMessage incMsg, Client c)
         {
             if (!c.HasPermission(ClientPermissions.Ban))
             {
                 UInt16 removeCount = incMsg.ReadUInt16();
-                incMsg.Position += removeCount * 4 * 8;
+                incMsg.BitPosition += removeCount * 4 * 8;
                 UInt16 rangeBanCount = incMsg.ReadUInt16();
-                incMsg.Position += rangeBanCount * 4 * 8;
+                incMsg.BitPosition += rangeBanCount * 4 * 8;
                 return false;
             }
             else

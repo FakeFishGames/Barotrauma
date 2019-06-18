@@ -3,7 +3,6 @@ using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -1781,7 +1780,7 @@ namespace Barotrauma
             return allProperties;
         }
 
-        private void WritePropertyChange(NetBuffer msg, object[] extraData, bool inGameEditableOnly)
+        private void WritePropertyChange(IWriteMessage msg, object[] extraData, bool inGameEditableOnly)
         {
             var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             SerializableProperty property = extraData[1] as SerializableProperty;
@@ -1862,7 +1861,7 @@ namespace Barotrauma
             }
         }
 
-        private void ReadPropertyChange(NetBuffer msg, bool inGameEditableOnly, Client sender = null)
+        private void ReadPropertyChange(IReadMessage msg, bool inGameEditableOnly, Client sender = null)
         {
             var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             if (allProperties.Count == 0) { return; }
@@ -1894,7 +1893,7 @@ namespace Barotrauma
             }
             else if (type == typeof(float))
             {
-                float val = msg.ReadFloat();
+                float val = msg.ReadSingle();
                 if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(int))
@@ -1914,17 +1913,17 @@ namespace Barotrauma
             }
             else if (type == typeof(Vector2))
             {
-                Vector2 val = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                Vector2 val = new Vector2(msg.ReadSingle(), msg.ReadSingle());
                 if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector3))
             {
-                Vector3 val = new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
+                Vector3 val = new Vector3(msg.ReadSingle(), msg.ReadSingle(), msg.ReadSingle());
                 if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Vector4))
             {
-                Vector4 val = new Vector4(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
+                Vector4 val = new Vector4(msg.ReadSingle(), msg.ReadSingle(), msg.ReadSingle(), msg.ReadSingle());
                 if (allowEditing) property.TrySetValue(parentObject, val);
             }
             else if (type == typeof(Point))

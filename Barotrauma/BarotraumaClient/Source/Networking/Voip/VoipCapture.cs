@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
 using System.Linq;
@@ -234,7 +233,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Write(NetBuffer msg)
+        public override void Write(IWriteMessage msg)
         {
             lock (buffers)
             {

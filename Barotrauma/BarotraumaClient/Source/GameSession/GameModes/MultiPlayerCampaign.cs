@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -129,7 +128,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(NetBuffer msg)
+        public void ClientWrite(IWriteMessage msg)
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
@@ -147,7 +146,7 @@ namespace Barotrauma
         }
 
         //static because we may need to instantiate the campaign if it hasn't been done yet
-        public static void ClientRead(NetBuffer msg)
+        public static void ClientRead(IReadMessage msg)
         {
             byte campaignID = msg.ReadByte();
             UInt16 updateID = msg.ReadUInt16();

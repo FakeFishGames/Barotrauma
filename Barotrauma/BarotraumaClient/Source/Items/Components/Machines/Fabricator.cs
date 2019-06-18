@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -455,13 +454,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
             msg.WriteRangedInteger(-1, fabricationRecipes.Count - 1, itemIndex);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricationRecipes.Count - 1);
             UInt16 userID = msg.ReadUInt16();

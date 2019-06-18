@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Barotrauma.Networking
@@ -75,7 +74,7 @@ namespace Barotrauma.Networking
             events.Add(newEvent);
         }
 
-        public void Write(NetOutgoingMessage msg, NetConnection serverConnection)
+        public void Write(IWriteMessage msg, NetworkConnection serverConnection)
         {
             if (events.Count == 0 || serverConnection == null) return;
 
@@ -97,7 +96,7 @@ namespace Barotrauma.Networking
                 //find the first event that hasn't been sent in roundtriptime or at all
                 eventLastSent.TryGetValue(events[i].ID, out float lastSent);
 
-                if (lastSent > NetTime.Now - serverConnection.AverageRoundtripTime)
+                if (lastSent > Lidgren.Network.NetTime.Now - serverConnection.AverageRoundtripTime)
                 {
                     continue;
                 }
@@ -109,7 +108,7 @@ namespace Barotrauma.Networking
 
             foreach (NetEntityEvent entityEvent in eventsToSync)
             {
-                eventLastSent[entityEvent.ID] = (float)NetTime.Now;
+                eventLastSent[entityEvent.ID] = (float)Lidgren.Network.NetTime.Now;
             }
 
             msg.Write((byte)ClientNetObject.ENTITY_STATE);
@@ -121,7 +120,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received. Returns false if reading the events fails.
         /// </summary>
-        public bool Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime, List<IServerSerializable> entities)
+        public bool Read(ServerNetObject type, IReadMessage msg, float sendingTime, List<IServerSerializable> entities)
         {
             UInt16 unreceivedEntityEventCount = 0;
 
@@ -200,11 +199,11 @@ namespace Barotrauma.Networking
                         return false;
                     }
                     
-                    msg.Position += msgLength * 8;
+                    msg.BitPosition += msgLength * 8;
                 }
                 else
                 {
-                    long msgPosition = msg.Position;
+                    long msgPosition = msg.BitPosition;
                     if (GameSettings.VerboseLogging)
                     {
                         DebugConsole.NewMessage("received msg " + thisEventID + " (" + entity.ToString() + ")",
@@ -231,7 +230,7 @@ namespace Barotrauma.Networking
                         }
                         GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                        msg.Position = msgPosition + msgLength * 8;
+                        msg.BitPosition = (int)(msgPosition + msgLength * 8);
                     }
                 }
                 msg.ReadPadBits();
@@ -239,7 +238,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
+        protected override void WriteEvent(IWriteMessage buffer, NetEntityEvent entityEvent, Client recipient = null)
         {
             var clientEvent = entityEvent as ClientEntityEvent;
             if (clientEvent == null) return;
@@ -248,7 +247,7 @@ namespace Barotrauma.Networking
             clientEvent.Sent = true;
         }
 
-        protected void ReadEvent(NetIncomingMessage buffer, IServerSerializable entity, float sendingTime)
+        protected void ReadEvent(IReadMessage buffer, IServerSerializable entity, float sendingTime)
         {
             entity.ClientRead(ServerNetObject.ENTITY_EVENT, buffer, sendingTime);
         }

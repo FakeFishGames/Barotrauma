@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -562,7 +561,7 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator.Remove();
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             msg.Write(autoTemp);
             msg.Write(shutDown);
@@ -572,7 +571,7 @@ namespace Barotrauma.Items.Components
             correctionTimer = CorrectionDelay;
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {

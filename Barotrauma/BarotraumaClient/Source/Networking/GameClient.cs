@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Steam;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;

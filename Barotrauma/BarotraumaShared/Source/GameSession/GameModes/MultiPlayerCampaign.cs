@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using System.Xml.Linq;
-using Lidgren.Network;
 using System.Collections.Generic;
 using System.IO;
 

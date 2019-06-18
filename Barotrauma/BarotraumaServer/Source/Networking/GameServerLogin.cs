@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace Barotrauma.Networking
 {
     class UnauthenticatedClient
     {
-        public readonly NetConnection Connection;
+        public readonly NetworkConnection Connection;
         public readonly ulong SteamID;
         public Facepunch.Steamworks.ServerAuth.Status? SteamAuthStatus = null;
         public readonly int Nonce;
@@ -18,7 +17,7 @@ namespace Barotrauma.Networking
 
         public float AuthTimer;
         
-        public UnauthenticatedClient(NetConnection connection, int nonce, ulong steamID = 0)
+        public UnauthenticatedClient(NetworkConnection connection, int nonce, ulong steamID = 0)
         {
             Connection = connection;
             SteamID = steamID;
@@ -34,7 +33,7 @@ namespace Barotrauma.Networking
 
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 
-        private void ReadClientSteamAuthRequest(NetIncomingMessage inc, NetConnection senderConnection, out ulong clientSteamID)
+        private void ReadClientSteamAuthRequest(IReadMessage inc, NetworkConnection senderConnection, out ulong clientSteamID)
         {
             clientSteamID = 0;
             if (!Steam.SteamManager.USE_STEAM)
@@ -55,7 +54,8 @@ namespace Barotrauma.Networking
 
             clientSteamID = inc.ReadUInt64();
             int authTicketLength = inc.ReadInt32();
-            inc.ReadBytes(authTicketLength, out byte[] authTicketData);
+            byte[] authTicketData = new byte[authTicketLength];
+            inc.ReadBytes(authTicketData, 0, authTicketLength);
 
             DebugConsole.Log("Received a Steam auth request");
             DebugConsole.Log("  Steam ID: "+ clientSteamID);

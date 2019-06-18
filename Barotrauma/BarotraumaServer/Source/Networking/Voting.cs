@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +18,7 @@ namespace Barotrauma
             set { allowModeVoting = value; }
         }
 
-        public void ServerRead(NetIncomingMessage inc, Client sender)
+        public void ServerRead(IReadMessage inc, Client sender)
         {
             if (GameMain.Server == null || sender == null) return;
 
@@ -86,7 +85,7 @@ namespace Barotrauma
             GameMain.Server.UpdateVoteStatus();
         }
 
-        public void ServerWrite(NetBuffer msg)
+        public void ServerWrite(IWriteMessage msg)
         {
             if (GameMain.Server == null) return;
 

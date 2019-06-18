@@ -13,7 +13,7 @@ using System.Globalization;
 
 namespace Barotrauma
 {
-    static partial class DebugConsole
+    public static partial class DebugConsole
     {
         public partial class Command
         {

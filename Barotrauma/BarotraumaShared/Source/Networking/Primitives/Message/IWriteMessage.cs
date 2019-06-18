@@ -6,7 +6,7 @@ namespace Barotrauma.Networking
     {
         void Write(bool val);
         void WritePadBits();
-        void Write(Byte val);
+        void Write(byte val);
         void Write(Int16 val);
         void Write(UInt16 val);
         void Write(Int32 val);
@@ -18,5 +18,13 @@ namespace Barotrauma.Networking
         void Write7BitEncoded(UInt64 val);
         void Write(string val);
         void WriteRangedInteger(int val, int min, int max);
+        void WriteRangedSingle(Single val, Single min, Single max, int bitCount);
+        void Write(byte[] val, int startIndex, int length);
+
+        int BitPosition { get; set; }
+        int BytePosition { get; }
+        byte[] Buffer { get; }
+        int LengthBits { get; set; }
+        int LengthBytes { get; }
     }
 }

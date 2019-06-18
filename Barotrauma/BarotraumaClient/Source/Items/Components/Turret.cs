@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -345,7 +344,7 @@ namespace Barotrauma.Items.Components
             crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
             //projectile removed, do nothing

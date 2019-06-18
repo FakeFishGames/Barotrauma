@@ -138,6 +138,22 @@ namespace Barotrauma.Networking
                 Write(buf, ref bitPos, ((normalized >> i) & 0x1) != 0);
             }
         }
+
+        internal static void WriteRangedSingle(byte[] buf, ref int bitPos, Single val, Single min, Single max, int bitCount)
+        {
+            int maxInt = (1 << bitCount) - 1;
+            Single range = max - min;
+            int normalized = (int)(maxInt * ((val - min) / range));
+            WriteRangedInteger(buf, ref bitPos, normalized, 0, maxInt);
+        }
+
+        internal static void WriteBytes(byte[] buf, ref int bitPos, byte[] val, int pos, int length)
+        {
+            WritePadBits(buf, ref bitPos);
+            int bytePos = bitPos / 8;
+            Array.Copy(val, pos, buf, bytePos, length);
+            bitPos += length * 8;
+        }
     }
 
     internal static class MsgReader
@@ -266,173 +282,79 @@ namespace Barotrauma.Networking
             }
             return retVal;
         }
-    }
 
-    public class WriteOnlyMessage : IWriteMessage, IMessage
-    {
-        private byte[] buf = new byte[1200];
-        private int seekPos = 0;
-
-        public bool CanWrite { get { return true; } }
-        public bool CanRead { get { return false; } }
-
-        public void Write(bool val)
+        internal static Single ReadRangedSingle(byte[] buf, ref int bitPos, Single min, Single max, int bitCount)
         {
-            MsgWriter.Write(buf, ref seekPos, val);
+            int maxInt = (1 << bitCount) - 1;
+            int intVal = ReadRangedInteger(buf, ref bitPos, 0, maxInt);
+            Single range = max - min;
+            return min + (range * ((Single)intVal) / ((Single)maxInt));
         }
 
-        public void WritePadBits()
+        internal static void ReadBytes(byte[] buf, ref int bitPos, byte[] ret, int pos, int length)
         {
-            MsgWriter.WritePadBits(buf, ref seekPos);
-        }
-
-        public void Write(byte val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(UInt16 val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(Int16 val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(UInt32 val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(Int32 val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(UInt64 val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(Int64 val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(Single val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write(Double val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void Write7BitEncoded(UInt64 val)
-        {
-            MsgWriter.Write7BitEncoded(buf, ref seekPos, val);
-        }
-
-        public void Write(String val)
-        {
-            MsgWriter.Write(buf, ref seekPos, val);
-        }
-
-        public void WriteRangedInteger(int val, int min, int max)
-        {
-            MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+            ReadPadBits(buf, ref bitPos);
+            int bytePos = bitPos / 8;
+            Array.Copy(buf, bytePos, ret, pos, length);
+            bitPos += length * 8;
         }
     }
 
-    public class ReadOnlyMessage : IReadMessage, IMessage
+    public class WriteOnlyMessage : IWriteMessage
     {
-        private byte[] buf = new byte[1200];
+        private byte[] buf = new byte[5000];
         private int seekPos = 0;
+        private int lengthBits = 0;
 
-        public bool CanWrite { get { return false; } }
-        public bool CanRead { get { return true; } }
-
-        public bool ReadBoolean()
+        public int BitPosition
         {
-            return MsgReader.ReadBoolean(buf, ref seekPos);
+            get
+            {
+                return seekPos;
+            }
+            set
+            {
+                seekPos = value;
+            }
         }
 
-        public void ReadPadBits()
+        public int BytePosition
         {
-            MsgReader.ReadPadBits(buf, ref seekPos);
+            get
+            {
+                return seekPos / 8;
+            }
         }
 
-        public byte ReadByte()
+        public byte[] Buffer
         {
-            return MsgReader.ReadByte(buf, ref seekPos);
+            get
+            {
+                return buf;
+            }
         }
 
-        public UInt16 ReadUInt16()
+        public int LengthBits
         {
-            return MsgReader.ReadUInt16(buf, ref seekPos);
+            get
+            {
+                lengthBits = seekPos > lengthBits ? seekPos : lengthBits;
+                return lengthBits;
+            }
+            set
+            {
+                lengthBits = value;
+                seekPos = seekPos > lengthBits ? lengthBits : seekPos;
+            }
         }
 
-        public Int16 ReadInt16()
+        public int LengthBytes
         {
-            return MsgReader.ReadInt16(buf, ref seekPos);
+            get
+            {
+                return lengthBits / 8;
+            }
         }
-
-        public UInt32 ReadUInt32()
-        {
-            return MsgReader.ReadUInt32(buf, ref seekPos);
-        }
-
-        public Int32 ReadInt32()
-        {
-            return MsgReader.ReadInt32(buf, ref seekPos);
-        }
-
-        public UInt64 ReadUInt64()
-        {
-            return MsgReader.ReadUInt64(buf, ref seekPos);
-        }
-
-        public Int64 ReadInt64()
-        {
-            return MsgReader.ReadInt64(buf, ref seekPos);
-        }
-
-        public Single ReadSingle()
-        {
-            return MsgReader.ReadSingle(buf, ref seekPos);
-        }
-
-        public Double ReadDouble()
-        {
-            return MsgReader.ReadDouble(buf, ref seekPos);
-        }
-
-        public UInt64 Read7BitEncoded()
-        {
-            return MsgReader.Read7BitEncoded(buf, ref seekPos);
-        }
-
-        public String ReadString()
-        {
-            return MsgReader.ReadString(buf, ref seekPos);
-        }
-
-        public int ReadRangedInteger(int min, int max)
-        {
-            return MsgReader.ReadRangedInteger(buf, ref seekPos, min, max);
-        }
-    }
-
-    public class ReadWriteMessage : IWriteMessage, IReadMessage, IMessage
-    {
-        private byte[] buf = new byte[1200];
-        private int seekPos = 0;
-
-        public bool CanWrite { get { return true; } }
-        public bool CanRead { get { return true; } }
 
         public void Write(bool val)
         {
@@ -504,6 +426,73 @@ namespace Barotrauma.Networking
             MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
         }
 
+        public void WriteRangedSingle(Single val, Single min, Single max, int bitCount)
+        {
+            MsgWriter.WriteRangedSingle(buf, ref seekPos, val, min, max, bitCount);
+        }
+
+        public void Write(byte[] val, int startPos, int length)
+        {
+            MsgWriter.WriteBytes(buf, ref seekPos, val, startPos, length);
+        }
+    }
+
+    public class ReadOnlyMessage : IReadMessage
+    {
+        private byte[] buf = new byte[5000];
+        private int seekPos = 0;
+        private int lengthBits = 0;
+
+        public int BitPosition
+        {
+            get
+            {
+                return seekPos;
+            }
+            set
+            {
+                seekPos = value;
+            }
+        }
+
+        public int BytePosition
+        {
+            get
+            {
+                return seekPos / 8;
+            }
+        }
+
+        public byte[] Buffer
+        {
+            get
+            {
+                return buf;
+            }
+        }
+
+        public int LengthBits
+        {
+            get
+            {
+                lengthBits = seekPos > lengthBits ? seekPos : lengthBits;
+                return lengthBits;
+            }
+            set
+            {
+                lengthBits = value;
+                seekPos = seekPos > lengthBits ? lengthBits : seekPos;
+            }
+        }
+
+        public int LengthBytes
+        {
+            get
+            {
+                return lengthBits / 8;
+            }
+        }
+
         public bool ReadBoolean()
         {
             return MsgReader.ReadBoolean(buf, ref seekPos);
@@ -572,6 +561,233 @@ namespace Barotrauma.Networking
         public int ReadRangedInteger(int min, int max)
         {
             return MsgReader.ReadRangedInteger(buf, ref seekPos, min, max);
+        }
+
+        public Single ReadRangedSingle(Single min, Single max, int bitCount)
+        {
+            return MsgReader.ReadRangedSingle(buf, ref seekPos, min, max, bitCount);
+        }
+
+        public void ReadBytes(byte[] ret, int startPos, int length)
+        {
+            MsgReader.ReadBytes(buf, ref seekPos, ret, startPos, length);
+        }
+    }
+
+    public class ReadWriteMessage : IWriteMessage, IReadMessage
+    {
+        private byte[] buf = new byte[5000];
+        private int seekPos = 0;
+        private int lengthBits = 0;
+
+        public int BitPosition
+        {
+            get
+            {
+                return seekPos;
+            }
+            set
+            {
+                seekPos = value;
+            }
+        }
+
+        public int BytePosition
+        {
+            get
+            {
+                return seekPos / 8;
+            }
+        }
+
+        public byte[] Buffer
+        {
+            get
+            {
+                return buf;
+            }
+        }
+
+        public int LengthBits
+        {
+            get
+            {
+                lengthBits = seekPos > lengthBits ? seekPos : lengthBits;
+                return lengthBits;
+            }
+            set
+            {
+                lengthBits = value;
+                seekPos = seekPos > lengthBits ? lengthBits : seekPos;
+            }
+        }
+
+        public int LengthBytes
+        {
+            get
+            {
+                return lengthBits / 8;
+            }
+        }
+
+        public void Write(bool val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void WritePadBits()
+        {
+            MsgWriter.WritePadBits(buf, ref seekPos);
+        }
+
+        public void Write(byte val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(UInt16 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Int16 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(UInt32 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Int32 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(UInt64 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Int64 val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Single val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write(Double val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void Write7BitEncoded(UInt64 val)
+        {
+            MsgWriter.Write7BitEncoded(buf, ref seekPos, val);
+        }
+
+        public void Write(String val)
+        {
+            MsgWriter.Write(buf, ref seekPos, val);
+        }
+
+        public void WriteRangedInteger(int val, int min, int max)
+        {
+            MsgWriter.WriteRangedInteger(buf, ref seekPos, val, min, max);
+        }
+
+        public void WriteRangedSingle(Single val, Single min, Single max, int bitCount)
+        {
+            MsgWriter.WriteRangedSingle(buf, ref seekPos, val, min, max, bitCount);
+        }
+
+        public void Write(byte[] val, int startPos, int length)
+        {
+            MsgWriter.WriteBytes(buf, ref seekPos, val, startPos, length);
+        }
+
+        public bool ReadBoolean()
+        {
+            return MsgReader.ReadBoolean(buf, ref seekPos);
+        }
+
+        public void ReadPadBits()
+        {
+            MsgReader.ReadPadBits(buf, ref seekPos);
+        }
+
+        public byte ReadByte()
+        {
+            return MsgReader.ReadByte(buf, ref seekPos);
+        }
+
+        public UInt16 ReadUInt16()
+        {
+            return MsgReader.ReadUInt16(buf, ref seekPos);
+        }
+
+        public Int16 ReadInt16()
+        {
+            return MsgReader.ReadInt16(buf, ref seekPos);
+        }
+
+        public UInt32 ReadUInt32()
+        {
+            return MsgReader.ReadUInt32(buf, ref seekPos);
+        }
+
+        public Int32 ReadInt32()
+        {
+            return MsgReader.ReadInt32(buf, ref seekPos);
+        }
+
+        public UInt64 ReadUInt64()
+        {
+            return MsgReader.ReadUInt64(buf, ref seekPos);
+        }
+
+        public Int64 ReadInt64()
+        {
+            return MsgReader.ReadInt64(buf, ref seekPos);
+        }
+
+        public Single ReadSingle()
+        {
+            return MsgReader.ReadSingle(buf, ref seekPos);
+        }
+
+        public Double ReadDouble()
+        {
+            return MsgReader.ReadDouble(buf, ref seekPos);
+        }
+
+        public UInt64 Read7BitEncoded()
+        {
+            return MsgReader.Read7BitEncoded(buf, ref seekPos);
+        }
+
+        public String ReadString()
+        {
+            return MsgReader.ReadString(buf, ref seekPos);
+        }
+
+        public int ReadRangedInteger(int min, int max)
+        {
+            return MsgReader.ReadRangedInteger(buf, ref seekPos, min, max);
+        }
+
+        public Single ReadRangedSingle(Single min, Single max, int bitCount)
+        {
+            return MsgReader.ReadRangedSingle(buf, ref seekPos, min, max, bitCount);
+        }
+
+        public void ReadBytes(byte[] ret, int startPos, int length)
+        {
+            MsgReader.ReadBytes(buf, ref seekPos, ret, startPos, length);
         }
     }
 }

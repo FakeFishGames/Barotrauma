@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -305,7 +304,7 @@ namespace Barotrauma.Networking
             RespawnCharactersProjSpecific();
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.WriteRangedInteger(0, Enum.GetNames(typeof(State)).Length, (int)state);
 
@@ -325,7 +324,7 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
 

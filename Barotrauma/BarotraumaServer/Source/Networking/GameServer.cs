@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
 using System;
@@ -31,7 +30,7 @@ namespace Barotrauma.Networking
         //is the server running
         private bool started;
 
-        private NetServer server;
+        private ServerPeer serverPeer;
         
         private DateTime refreshMasterTimer;
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
@@ -87,7 +86,7 @@ namespace Barotrauma.Networking
             set;
         }
 
-        public NetConnection OwnerConnection { get; private set; }
+        public NetworkConnection OwnerConnection { get; private set; }
 
         public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int ownerKey = 0)
         {
@@ -104,31 +103,13 @@ namespace Barotrauma.Networking
 
             LastClientListUpdateID = 0;
 
-            NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
-
-            NetPeerConfiguration.Port = port;
-            Port = port;
-            QueryPort = queryPort;
-
-            if (attemptUPnP)
-            {
-                NetPeerConfiguration.EnableUPnP = true;
-            }
-
             serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
             }
 
-            NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
-
-            NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
-                NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
-                NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error |
-                NetIncomingMessageType.UnconnectedData);
-
-            NetPeerConfiguration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+            serverPeer = new LidgrenServerPeer(serverSettings);
             
             entityEventManager = new ServerEntityEventManager(this);
             
@@ -141,8 +122,7 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                server = new NetServer(NetPeerConfiguration);
-                NetPeer = server;
+                serverPeer = new LidgrenServerPeer(serverSettings);
 
                 fileSender = new FileSender(this);
                 fileSender.OnEnded += FileTransferChanged;

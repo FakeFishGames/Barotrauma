@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -25,7 +24,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             for (int i = 0; i < Sections.Length; i++)
             {

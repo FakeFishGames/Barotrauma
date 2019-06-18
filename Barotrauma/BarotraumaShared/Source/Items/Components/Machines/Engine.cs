@@ -3,7 +3,6 @@ using System;
 using System.Globalization;
 using System.Xml.Linq;
 using Barotrauma.Networking;
-using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {

@@ -235,7 +235,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\NetworkConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\LidgrenConnection.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IReadMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IWriteMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\Message.cs" />

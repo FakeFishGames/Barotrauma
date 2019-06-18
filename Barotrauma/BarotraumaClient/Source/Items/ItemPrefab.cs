@@ -45,7 +45,7 @@ namespace Barotrauma
         }
     }
 
-    partial class ItemPrefab : MapEntityPrefab
+    public partial class ItemPrefab : MapEntityPrefab
     {
         public class DecorativeSprite
         {

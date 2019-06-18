@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -54,7 +53,7 @@ namespace Barotrauma.Networking
 
                     if (!CanReceive(sender, recipient)) { continue; }
 
-                    NetOutgoingMessage msg = netServer.CreateMessage();
+                    IWriteMessage msg = netServer.CreateMessage();
 
                     msg.Write((byte)ServerPacketHeader.VOICE);
                     msg.Write((byte)queue.QueueID);

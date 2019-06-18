@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,7 +20,7 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
         }
 
-        private void WriteNetProperties(NetBuffer outMsg)
+        private void WriteNetProperties(IWriteMessage outMsg)
         {
             outMsg.Write((UInt16)netProperties.Keys.Count);
             foreach (UInt32 key in netProperties.Keys)
@@ -31,7 +30,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ServerAdminWrite(NetBuffer outMsg, Client c)
+        public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
             //outMsg.Write(isPublic);
             //outMsg.Write(EnableUPnP);
@@ -44,7 +43,7 @@ namespace Barotrauma.Networking
             Whitelist.ServerAdminWrite(outMsg, c);
         }
 
-        public void ServerWrite(NetBuffer outMsg,Client c)
+        public void ServerWrite(IWriteMessage outMsg,Client c)
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
@@ -68,7 +67,7 @@ namespace Barotrauma.Networking
             }
         }
         
-        public void ServerRead(NetIncomingMessage incMsg,Client c)
+        public void ServerRead(IReadMessage incMsg,Client c)
         {
             if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -108,8 +107,8 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        UInt32 size = incMsg.ReadVariableUInt32();
-                        incMsg.Position += 8 * size;
+                        UInt64 size = incMsg.Read7BitEncoded();
+                        incMsg.BitPosition += (int)(8 * size);
                     }
                 }
 
@@ -142,7 +141,7 @@ namespace Barotrauma.Networking
                 if (botSpawnMode > 1) botSpawnMode = 0;
                 BotSpawnMode = (BotSpawnMode)botSpawnMode;
 
-                float levelDifficulty = incMsg.ReadFloat();
+                float levelDifficulty = incMsg.ReadSingle();
                 if (levelDifficulty >= 0.0f) SelectedLevelDifficulty = levelDifficulty;
 
                 UseRespawnShuttle = incMsg.ReadBoolean();

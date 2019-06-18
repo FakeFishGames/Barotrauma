@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         public UInt16 UniqueIdentifier;
     }
 
-    partial class BanList
+    public partial class BanList
     {
         const string SavePath = "Data/bannedplayers.txt";
 

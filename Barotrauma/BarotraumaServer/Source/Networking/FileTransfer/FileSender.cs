@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +15,7 @@ namespace Barotrauma.Networking
 
             private DateTime startingTime;
 
-            private NetConnection connection;
+            private NetworkConnection connection;
 
             public FileTransferStatus Status;
             
@@ -60,14 +59,14 @@ namespace Barotrauma.Networking
                 set;
             }
 
-            public NetConnection Connection
+            public NetworkConnection Connection
             {
                 get { return connection; }
             }
 
             public int SequenceChannel;
 
-            public FileTransferOut(NetConnection recipient, FileTransferType fileType, string filePath)
+            public FileTransferOut(NetworkConnection recipient, FileTransferType fileType, string filePath)
             {
                 connection = recipient;
 

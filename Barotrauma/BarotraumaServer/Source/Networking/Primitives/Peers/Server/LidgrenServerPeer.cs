@@ -5,8 +5,10 @@ using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
-    public class LidgrenServerPeer : ServerPeer
+    class LidgrenServerPeer : ServerPeer
     {
+        private ServerSettings serverSettings;
+
         private NetPeerConfiguration netPeerConfiguration;
         private NetServer netServer;
 
@@ -23,14 +25,23 @@ namespace Barotrauma.Networking
         private List<LidgrenConnection> connectedClients;
         private List<LidgrenConnection> pendingClients;
 
-        public LidgrenServerPeer(UInt16 port, UInt16 queryPort, int maxConnections, bool enableUPnP)
+        public LidgrenServerPeer(ServerSettings settings)
         {
+            serverSettings = settings;
             netPeerConfiguration = new NetPeerConfiguration("barotrauma");
             netPeerConfiguration.AcceptIncomingConnections = true;
             netPeerConfiguration.AutoExpandMTU = false;
-            netPeerConfiguration.MaximumConnections = maxConnections * 2;
-            netPeerConfiguration.EnableUPnP = enableUPnP;
-            netPeerConfiguration.Port = port;
+            netPeerConfiguration.MaximumConnections = serverSettings.MaxPlayers * 2;
+            netPeerConfiguration.EnableUPnP = serverSettings.EnableUPnP;
+            netPeerConfiguration.Port = serverSettings.Port;
+            
+            netPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
+                NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
+                NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error |
+                NetIncomingMessageType.UnconnectedData);
+
+            netPeerConfiguration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+
             netServer = new NetServer(netPeerConfiguration);
 
             connectedClients = new List<LidgrenConnection>();

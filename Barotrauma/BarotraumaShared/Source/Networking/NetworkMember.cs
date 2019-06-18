@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -131,13 +130,7 @@ namespace Barotrauma.Networking
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
-
-        public NetPeer NetPeer
-        {
-            get;
-            protected set;
-        }
-
+        
         protected string name;
 
         protected ServerSettings serverSettings;
@@ -198,13 +191,7 @@ namespace Barotrauma.Networking
         {
             get { return serverSettings; }
         }
-        
-        public NetPeerConfiguration NetPeerConfiguration
-        {
-            get;
-            protected set;
-        }
-        
+
         public bool CanUseRadio(Character sender)
         {
             if (sender == null) return false;
