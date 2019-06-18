@@ -1812,7 +1812,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.2f, 1), spriteSheetControlElement.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("Reset"))
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1), spriteSheetControlElement.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("Reset"))
             {
                 OnClicked = (box, data) =>
                 {
