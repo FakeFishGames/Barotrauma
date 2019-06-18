@@ -4772,12 +4772,14 @@ namespace Barotrauma
                     GUITextBox texturePathElement = null;
                     GUITextBox xmlPathElement = null;
                     GUIDropDown contentPackageDropDown = null;
+                    bool updateTexturePath = true;
                     void UpdatePaths()
                     {
-                        string pathBase = $"Mods/{(ContentPackage != null ? ContentPackage.Name + "/" : string.Empty)}Characters/{Name}/{Name}";
+                        string pathBase = ContentPackage == GameMain.VanillaContent ? $"Content/Characters/{Name}/{Name}"
+                            : $"Mods/{(ContentPackage != null ? ContentPackage.Name + "/" : string.Empty)}Characters/{Name}/{Name}";
                         XMLPath = $"{pathBase}.xml";
                         xmlPathElement.Text = XMLPath;
-                        if (string.IsNullOrWhiteSpace(TexturePath))
+                        if (updateTexturePath)
                         {
                             TexturePath = $"{pathBase}.png";
                             texturePathElement.Text = TexturePath;
@@ -4843,6 +4845,7 @@ namespace Barotrauma
                                 };
                                 texturePathElement.OnTextChanged += (tb, text) =>
                                 {
+                                    updateTexturePath = false;
                                     TexturePath = text;
                                     return true;
                                 };
@@ -4864,6 +4867,8 @@ namespace Barotrauma
                                 contentPackageDropDown.OnSelected = (obj, userdata) =>
                                 {
                                     ContentPackage = userdata as ContentPackage;
+                                    updateTexturePath = true;
+                                    UpdatePaths();
                                     return true;
                                 };
                                 var contentPackageNameElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 0.5f), rightContainer.RectTransform, Anchor.BottomLeft), 
