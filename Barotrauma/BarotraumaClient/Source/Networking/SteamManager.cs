@@ -254,7 +254,8 @@ namespace Barotrauma.Steam
 
         private static bool ValidateServerInfo(ServerList.Server server)
         {
-            if (string.IsNullOrEmpty(server.Name)) { return false; }
+            if (string.IsNullOrWhiteSpace(server.Name)) { return false; }
+            if (string.IsNullOrWhiteSpace(server.Name.Replace("\0", ""))) { return false; }
             if (server.Address == null) { return false; }
 
             return true;
