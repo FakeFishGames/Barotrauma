@@ -14,13 +14,14 @@ Additions and changes:
 - Diving suits play the warning beep when there's no tank in the suit (not just when the tank is running out).
 - Items now collide with platforms.
 - The game automatically opens the generated crash report when it crashes.
-- Switched send out a continuous 0/1 signal that can be flipped by interacting with the switch (as opposed 
+- Switches send out a continuous 0/1 signal that can be flipped by interacting with the switch (as opposed 
 to working like buttons which send out a pulse when interacted with).
 - More descriptive error messages when publishing a Workshop item fails.
 - Docking ports of the enemy submarine are not shown on the sonar during combat missions.
 - Added "setmaxplayers" command to the dedicated server.
 - Clients can change the server password using the command "setpassword" if they have a permission from the host.
 - Reduced the range of the sonar ping sound and added a more subtle ping sound that can be heard further away.
+- Watchmen now hold position when attacked.
 
 Networking fixes:
 - Fixed an ID mismatch problem that occasionally caused clients to get kicked out in the multiplayer 
@@ -50,6 +51,8 @@ changes the number or type of inventory slots a character has.
 possible to change the resolution when in fullscreen without having to restart the game.
 - Fixes to the DXGI crashes during startup.
 - Fixed bots not being able to retaliate when attacked with a repair tool.
+- Fixed watchmen not retaliating when a character does very small amounts of damage to them.
+- Fixed bots being able to take handcuffs off from themselves.
 - Fixed crashing when firing a revolver in the sub editor.
 - Fixed combat mission achievements being impossible to unlock.
 - Fixed deconstructing coilgun ammo boxes giving out more materials than the materials required to fabricate them.
@@ -84,6 +87,8 @@ status effect).
 Prevents accidentally deleting items/structures when attempting to delete text from a textbox.
 - Toolboxes can't be put inside other toolboxes or in the doctor's clothes.
 - Fixed incorrect physicorium shell description.
+- Fixed OverrideSaveFolder and OverrideMultiplayerSaveFolder settings not being saved.
+- Fixed order/report icons "twitching" when the sub moves.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.0.6
