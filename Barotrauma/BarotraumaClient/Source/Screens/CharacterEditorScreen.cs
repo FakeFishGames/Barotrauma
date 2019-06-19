@@ -938,6 +938,7 @@ namespace Barotrauma
             for (int i = 0; i < selectedJoints.Count; i++)
             {
                 var joint = selectedJoints[i];
+                joint.jointParams.Element.Remove();
                 RagdollParams.Joints.Remove(joint.jointParams);
             }
             var removedIDs = new List<int>();
