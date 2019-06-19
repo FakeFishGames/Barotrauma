@@ -279,6 +279,18 @@ namespace Barotrauma
             // Handle shortcut keys
             if (GUI.KeyboardDispatcher.Subscriber == null && Wizard.instance == null)
             {
+                if (PlayerInput.KeyHit(Keys.D1))
+                {
+                    SetMode(editLimbsToggle, true);
+                }
+                else if (PlayerInput.KeyHit(Keys.D2))
+                {
+                    SetMode(jointsToggle, true);
+                }
+                else if (PlayerInput.KeyHit(Keys.D3))
+                {
+                    SetMode(editAnimsToggle, true);
+                }
                 if (PlayerInput.KeyDown(Keys.LeftControl))
                 {
                     Character.DisableControls = true;
@@ -1574,9 +1586,9 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ModesPanel"), font: GUI.LargeFont);
             // Main modes
-            editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditAnimations")) { Selected = editAnimations };
             editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
             jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditJoints")) { Selected = editJoints };
+            editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditAnimations")) { Selected = editAnimations };
             // Spacing
             new GUIFrame(new RectTransform(toggleSize, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             // Minor modes
