@@ -169,6 +169,7 @@ namespace Barotrauma
             anchor1Pos = null;
             useMouseOffset = false;
             closestSelectedLimb = null;
+            allFiles = null;
             Wizard.instance?.Reset();
         }
 
