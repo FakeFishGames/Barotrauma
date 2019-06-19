@@ -237,6 +237,7 @@ namespace Barotrauma
 
             fileEditPanel.AddToGUIUpdateList();
             modesPanel.AddToGUIUpdateList();
+            toolsPanel.AddToGUIUpdateList();
             optionsPanel.AddToGUIUpdateList();
             characterSelectionPanel.AddToGUIUpdateList();
 
@@ -572,6 +573,7 @@ namespace Barotrauma
             fileEditToggle?.UpdateOpenState((float)deltaTime, new Vector2(-fileEditPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), fileEditPanel.RectTransform);
             characterPanelToggle?.UpdateOpenState((float)deltaTime, new Vector2(-characterSelectionPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), characterSelectionPanel.RectTransform);
             modesToggle?.UpdateOpenState((float)deltaTime, new Vector2(-modesPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), modesPanel.RectTransform);
+            toolsToggle?.UpdateOpenState((float)deltaTime, new Vector2(-toolsPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), toolsPanel.RectTransform);
         }
 
         /// <summary>
@@ -1476,6 +1478,7 @@ namespace Barotrauma
         private GUIFrame characterSelectionPanel;
         private GUIFrame fileEditPanel;
         private GUIFrame modesPanel;
+        private GUIFrame toolsPanel;
         private GUIFrame optionsPanel;
 
         private GUIFrame ragdollControls;
@@ -1506,6 +1509,7 @@ namespace Barotrauma
         private GUIButton createJointButton;
 
         private ToggleButton modesToggle;
+        private ToggleButton toolsToggle;
         private ToggleButton optionsToggle;
         private ToggleButton characterPanelToggle;
         private ToggleButton fileEditToggle;
@@ -1550,6 +1554,7 @@ namespace Barotrauma
 
             CreateCharacterSelectionPanel();
             CreateModesPanel(toggleSize);
+            CreateToolsPanel();
             CreateFileEditPanel();
             CreateOptionsPanel(toggleSize);
             CreateContextualControls();
@@ -1643,6 +1648,46 @@ namespace Barotrauma
                 return true;
             };
             modesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+        }
+
+        private void CreateToolsPanel()
+        {
+            Vector2 buttonSize = new Vector2(1, 0.06f);
+            toolsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.15f), leftArea.RectTransform, Anchor.CenterLeft)
+            {
+                RelativeOffset = new Vector2(0, 0.15f)
+            }, style: null, color: panelColor);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(toolsPanel.Rect.Width - innerMargin.X, toolsPanel.Rect.Height - innerMargin.Y),
+                toolsPanel.RectTransform, Anchor.Center))
+            {
+                AbsoluteSpacing = 2,
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ToolsPanel"), font: GUI.LargeFont);
+            var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ReloadTextures"));
+            reloadTexturesButton.OnClicked += (button, userData) =>
+            {
+                foreach (var limb in character.AnimController.Limbs)
+                {
+                    limb.ActiveSprite.ReloadTexture();
+                    limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
+                    limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
+                }
+                CreateTextures();
+                return true;
+            };
+            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("RecreateRagdoll"))
+            {
+                ToolTip = GetCharacterEditorTranslation("RecreateRagdollTooltip"),
+                OnClicked = (button, data) =>
+                {
+                    RecreateRagdoll();
+                    character.AnimController.ResetLimbs();
+                    return true;
+                }
+            };
+
+            toolsToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), toolsPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
         }
 
         private void CreateOptionsPanel(Vector2 toggleSize)
@@ -2187,29 +2232,6 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("FileEditPanel"), font: GUI.LargeFont);
-
-            var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ReloadTextures"));
-            reloadTexturesButton.OnClicked += (button, userData) =>
-            {
-                foreach (var limb in character.AnimController.Limbs)
-                {
-                    limb.ActiveSprite.ReloadTexture();
-                    limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
-                    limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
-                }
-                CreateTextures();
-                return true;
-            };
-            new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("RecreateRagdoll"))
-            {
-                ToolTip = GetCharacterEditorTranslation("RecreateRagdollTooltip"),
-                OnClicked = (button, data) =>
-                {
-                    RecreateRagdoll();
-                    character.AnimController.ResetLimbs();
-                    return true;
-                }
-            };
 
             // Spacing
             new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };

@@ -3060,6 +3060,7 @@
   <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
   <charactereditor.optionspanel>Options</charactereditor.optionspanel>
   <charactereditor.characterpanel>Character</charactereditor.characterpanel>
+  <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
   <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
 
   <!-- Submarine editor -->
