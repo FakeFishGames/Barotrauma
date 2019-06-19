@@ -2965,9 +2965,9 @@
   <charactereditor.showparameters>Parameters</charactereditor.showparameters>
   <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
   <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
-  <charactereditor.editanimations>Animations</charactereditor.editanimations>
-  <charactereditor.editlimbs>Limbs</charactereditor.editlimbs>
-  <charactereditor.editjoints>Joints</charactereditor.editjoints>
+  <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
+  <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
+  <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
   <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
@@ -2975,7 +2975,7 @@
   <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
-  <charactereditor.showcolliders>Show Colliders</charactereditor.showcolliders>
+  <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
   <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
   <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>

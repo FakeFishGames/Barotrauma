@@ -1497,6 +1497,7 @@ namespace Barotrauma
         private GUIScrollBar spriteSheetZoomBar;
         private GUITickBox copyJointsToggle;
         private GUITickBox recalculateColliderToggle;
+
         private GUITickBox jointsToggle;
         private GUITickBox editAnimsToggle;
         private GUITickBox editLimbsToggle;
@@ -1563,7 +1564,7 @@ namespace Barotrauma
 
         private void CreateModesPanel(Vector2 toggleSize)
         {
-            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.25f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
+            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.3f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - innerMargin.X, modesPanel.Rect.Height - innerMargin.Y),
                 modesPanel.RectTransform, Anchor.Center))
             {
@@ -1572,6 +1573,13 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ModesPanel"), font: GUI.LargeFont);
+            // Main modes
+            editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditAnimations")) { Selected = editAnimations };
+            editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
+            jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditJoints")) { Selected = editJoints };
+            // Spacing
+            new GUIFrame(new RectTransform(toggleSize, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
+            // Minor modes
             paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
             spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowSpriteSheet")) { Selected = showSpritesheet };
             ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowRagdoll")) { Selected = showRagdoll };
@@ -1584,18 +1592,15 @@ namespace Barotrauma
                     return true;
                 }
             };
-            editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditAnimations")) { Selected = editAnimations };
-            editLimbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
-            jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditJoints")) { Selected = editJoints };
             ikToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditIKTargets")) { Selected = editIK };
             editAnimsToggle.OnSelected = box =>
             {
                 editAnimations = box.Selected;
                 if (editAnimations)
                 {
+                    SetMode(editLimbsToggle, false);
+                    SetMode(jointsToggle, false);
                     spritesheetToggle.Selected = false;
-                    editLimbsToggle.Selected = false;
-                    jointsToggle.Selected = false;
                     ResetParamsEditor();
                 }
                 return true;
@@ -1610,8 +1615,8 @@ namespace Barotrauma
                 editLimbs = box.Selected;
                 if (editLimbs)
                 {
-                    editAnimsToggle.Selected = false;
-                    jointsToggle.Selected = false;
+                    SetMode(editAnimsToggle, false);
+                    SetMode(jointsToggle, false);
                     spritesheetToggle.Selected = true;
                     ResetParamsEditor();
                     ClearSelection();
@@ -1624,11 +1629,11 @@ namespace Barotrauma
                 editJoints = box.Selected;
                 if (editJoints)
                 {
-                    editLimbsToggle.Selected = false;
-                    editAnimsToggle.Selected = false;
+                    SetMode(editLimbsToggle, false);
+                    SetMode(editAnimsToggle, false);
+                    ragdollToggle.Selected = true;
                     ikToggle.Selected = false;
                     spritesheetToggle.Selected = true;
-                    ragdollToggle.Selected = true;
                     ResetParamsEditor();
                     ClearSelection();
                 }
@@ -1651,12 +1656,28 @@ namespace Barotrauma
             modesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
         }
 
+        private void SetMode(GUITickBox toggle, bool value)
+        {
+            if (toggle.Selected != value)
+            {
+                if (value)
+                {
+                    toggle.Box.Flash(Color.LightGreen, useRectangleFlash: true);
+                }
+                else
+                {
+                    toggle.Box.Flash(Color.Red, useRectangleFlash: true);
+                }
+            }
+            toggle.Selected = value;
+        }
+
         private void CreateToolsPanel()
         {
             Vector2 buttonSize = new Vector2(1, 0.06f);
             toolsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.15f), leftArea.RectTransform, Anchor.CenterLeft)
             {
-                RelativeOffset = new Vector2(0, 0.15f)
+                RelativeOffset = new Vector2(0, 0.1f)
             }, style: null, color: panelColor);
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(toolsPanel.Rect.Width - innerMargin.X, toolsPanel.Rect.Height - innerMargin.Y),
                 toolsPanel.RectTransform, Anchor.Center))
@@ -1693,7 +1714,7 @@ namespace Barotrauma
 
         private void CreateOptionsPanel(Vector2 toggleSize)
         {
-            optionsPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), rightArea.RectTransform, Anchor.Center)
+            optionsPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), rightArea.RectTransform, Anchor.Center)
             {
                 RelativeOffset = new Vector2(0, -0.075f)
             }, style: null, color: panelColor);
