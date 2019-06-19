@@ -169,7 +169,7 @@ namespace Barotrauma
             anchor1Pos = null;
             useMouseOffset = false;
             closestSelectedLimb = null;
-            Wizard.instance = null;
+            Wizard.instance?.Reset();
         }
 
         private void Reset()
@@ -4729,6 +4729,13 @@ namespace Barotrauma
                 }
             }
 
+            public void Reset()
+            {
+                CharacterView.Get().Release();
+                RagdollView.Get().Release();
+                instance = null;
+            }
+
             public enum Tab { None, Character, Ragdoll }
             private View activeView;
             private Tab currentTab;
@@ -4747,7 +4754,7 @@ namespace Barotrauma
                         break;
                     case Tab.None:
                     default:
-                        instance = null;
+                        Reset();
                         break;
                 }
             }
@@ -4761,6 +4768,8 @@ namespace Barotrauma
             {
                 private static CharacterView instance;
                 public static CharacterView Get() => Get(ref instance);
+
+                public override void Release() => instance = null;
 
                 protected override GUIMessageBox Create()
                 {
@@ -4962,6 +4971,8 @@ namespace Barotrauma
             {
                 private static RagdollView instance;
                 public static RagdollView Get() => Get(ref instance);
+
+                public override void Release() => instance = null;
 
                 protected override GUIMessageBox Create()
                 {
@@ -5430,6 +5441,8 @@ namespace Barotrauma
                     }
                     return instance;
                 }
+
+                public abstract void Release();
 
                 protected void ParseLimbsFromGUIElements()
                 {
