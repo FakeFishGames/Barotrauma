@@ -2962,13 +2962,13 @@
   <charactereditor.selectedanimation>Selected Animation</charactereditor.selectedanimation>
   <charactereditor.previouscharacter>Previous</charactereditor.previouscharacter>
   <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
-  <charactereditor.showparameters>Show Parameters</charactereditor.showparameters>
-  <charactereditor.showspritesheet>Show Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.showragdoll>Show Ragdoll</charactereditor.showragdoll>
-  <charactereditor.editanimations>Edit Animations</charactereditor.editanimations>
-  <charactereditor.editlimbs>Edit Limbs</charactereditor.editlimbs>
-  <charactereditor.editjoints>Edit Joints</charactereditor.editjoints>
-  <charactereditor.editiktargets>Edit IK Targets</charactereditor.editiktargets>
+  <charactereditor.showparameters>Parameters</charactereditor.showparameters>
+  <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
+  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
+  <charactereditor.editanimations>Animations</charactereditor.editanimations>
+  <charactereditor.editlimbs>Limbs</charactereditor.editlimbs>
+  <charactereditor.editjoints>Joints</charactereditor.editjoints>
+  <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
