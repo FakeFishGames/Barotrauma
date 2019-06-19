@@ -1959,6 +1959,7 @@ namespace Barotrauma.Networking
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
             msg.Write(serverSettings.AllowDisguises);
+            msg.Write(serverSettings.AllowRewiring);
 
             Traitor traitor = null;
             if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)

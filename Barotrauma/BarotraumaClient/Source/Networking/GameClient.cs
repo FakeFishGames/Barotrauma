@@ -1093,6 +1093,7 @@ namespace Barotrauma.Networking
             bool loadSecondSub      = inc.ReadBoolean();
 
             bool disguisesAllowed   = inc.ReadBoolean();
+            bool rewiringAllowed    = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
@@ -1114,6 +1115,7 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
             serverSettings.AllowDisguises = disguisesAllowed;
+            serverSettings.AllowRewiring = rewiringAllowed;
             serverSettings.AllowRagdollButton = allowRagdollButton;
 
             if (campaign == null)
