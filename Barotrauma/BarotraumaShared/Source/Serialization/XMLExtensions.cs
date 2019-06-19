@@ -15,7 +15,8 @@ namespace Barotrauma
         public static string ParseContentPathFromUri(this XObject element)
         {
             string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+            // TODO: This doesn't work if there is "Content" or "Mods" folder in the underlying path. Need to make more robust by using the project folder only
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content" && part != "Mods");
             return string.Join("/", filtered);
         }
 

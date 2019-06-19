@@ -264,7 +264,31 @@ namespace Barotrauma
         {
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
-            //foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
+            var contentPackages = GameMain.Config.SelectedContentPackages.ToList();
+
+#if !DEBUG
+            var vanilla = GameMain.VanillaContent;
+            if (vanilla != null)
+            {
+                contentPackages.Remove(vanilla);
+            }
+#endif
+            foreach (var contentPackage in contentPackages)
+            {
+                foreach (var file in contentPackage.Files)
+                {
+                    if (file.Path.EndsWith(".xml"))
+                    {
+                        XDocument doc = XMLExtensions.TryLoadXml(file.Path);
+                        if (doc != null && doc.Root != null)
+                        {
+                            LoadSprites(doc.Root);
+                        }
+                    }
+                }
+            }
+
+            //foreach (string filePath in Directory.GetFiles("Content/", "*.xml", SearchOption.AllDirectories))
             //{
             //    XDocument doc = XMLExtensions.TryLoadXml(filePath);
             //    if (doc != null && doc.Root != null)
@@ -272,15 +296,6 @@ namespace Barotrauma
             //        LoadSprites(doc.Root);
             //    }
             //}
-
-            foreach (string filePath in Directory.GetFiles("Content/", "*.xml", SearchOption.AllDirectories))
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc != null && doc.Root != null)
-                {
-                    LoadSprites(doc.Root);
-                }
-            }
 
             void LoadSprites(XElement element)
             {
@@ -308,15 +323,15 @@ namespace Barotrauma
                 if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]")) { return; }
                 if (!textureElement.Contains("/"))
                 {
-                    spriteFolder = Path.GetDirectoryName(element.ParseContentPathFromUri());
+                    var parsedPath = element.ParseContentPathFromUri();
+                    spriteFolder = Path.GetDirectoryName(parsedPath);
                 }
                 // Uncomment if we do multiple passes -> there can be duplicates
-                //string identifier = Sprite.GetID(element);
-                //if (loadedSprites.None(s => s.ID == identifier))
-                //{
-                //    loadedSprites.Add(new Sprite(element, spriteFolder));
-                //}
-                loadedSprites.Add(new Sprite(element, spriteFolder));
+                string identifier = Sprite.GetID(element);
+                if (loadedSprites.None(s => s.ID == identifier))
+                {
+                    loadedSprites.Add(new Sprite(element, spriteFolder));
+                }
             }
         }
 
@@ -344,9 +359,9 @@ namespace Barotrauma
             xmlPathText.TextColor = Color.LightGreen;
             return true;
         }
-        #endregion
+#endregion
 
-        #region Public methods
+#region Public methods
         public override void AddToGUIUpdateList()
         {
             leftPanel.AddToGUIUpdateList();
@@ -706,9 +721,9 @@ namespace Barotrauma
             zoomBar.BarScroll = GetBarScrollValue();
             viewAreaOffset = Point.Zero;
         }
-        #endregion
+#endregion
 
-        #region Helpers
+#region Helpers
         private Point viewAreaOffset;
         private Rectangle GetViewArea
         {
@@ -750,9 +765,9 @@ namespace Barotrauma
             // Keeps the relative origin unchanged. The absolute origin will be recalculated.
             sprite.RelativeOrigin = sprite.RelativeOrigin;
         }
-        #endregion
+#endregion
 
-        #region Widgets
+#region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
 
         private Widget GetWidget(string id, Sprite sprite, int size = 5, Widget.Shape shape = Widget.Shape.Rectangle, Action<Widget> initMethod = null)
@@ -792,6 +807,6 @@ namespace Barotrauma
             widgets.Clear();
             Widget.selectedWidgets.Clear();
         }
-        #endregion
+#endregion
     }
 }
