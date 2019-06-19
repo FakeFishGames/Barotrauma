@@ -12,7 +12,7 @@
       <RequiredItem identifier="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64" />
-    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="356,223,39,110" depth="0.55" origin="0.5,0.5" />
     <Body width="38" height="109" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
