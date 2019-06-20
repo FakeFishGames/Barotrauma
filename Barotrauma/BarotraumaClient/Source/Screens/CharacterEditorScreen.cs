@@ -40,7 +40,7 @@ namespace Barotrauma
         private bool editLimbs;
         private bool editJoints;
         private bool editIK;
-        private bool showRagdoll;
+        private bool editRagdoll;
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool isFreezed;
@@ -144,9 +144,9 @@ namespace Barotrauma
             editLimbs = false;
             editJoints = false;
             editIK = false;
-            showRagdoll = false;
+            editRagdoll = false;
             showParamsEditor = false;
-            showSpritesheet = true;
+            showSpritesheet = false;
             isFreezed = false;
             autoFreeze = true;
             limbPairEditing = true;
@@ -254,9 +254,13 @@ namespace Barotrauma
             {
                 spriteSheetControls.AddToGUIUpdateList();
             }
-            if (editJoints)
+            if (editRagdoll)
             {
                 ragdollControls.AddToGUIUpdateList();
+            }
+            if (editJoints)
+            {
+                jointControls.AddToGUIUpdateList();
             }
             if (editLimbs)
             {
@@ -651,7 +655,7 @@ namespace Barotrauma
             {
                 DrawLimbEditor(spriteBatch);
             }
-            if (showRagdoll)
+            if (editRagdoll)
             {
                 DrawRagdoll(spriteBatch, (float)deltaTime);
             }
@@ -1495,6 +1499,7 @@ namespace Barotrauma
         private GUIFrame optionsPanel;
 
         private GUIFrame ragdollControls;
+        private GUIFrame jointControls;
         private GUIFrame animationControls;
         private GUIFrame limbControls;
         private GUIFrame spriteSheetControls;
@@ -1592,9 +1597,9 @@ namespace Barotrauma
             // Spacing
             new GUIFrame(new RectTransform(toggleSize, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             // Minor modes
+            ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowRagdoll")) { Selected = editRagdoll };
             paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
             spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowSpriteSheet")) { Selected = showSpritesheet };
-            ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowRagdoll")) { Selected = showRagdoll };
             showCollidersToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowColliders"))
             {
                 Selected = showColliders,
@@ -1613,8 +1618,9 @@ namespace Barotrauma
                     SetMode(editLimbsToggle, false);
                     SetMode(jointsToggle, false);
                     spritesheetToggle.Selected = false;
-                    ResetParamsEditor();
+                    ClearSelection();
                 }
+                ResetParamsEditor();
                 return true;
             };
             paramsToggle.OnSelected = box =>
@@ -1630,12 +1636,25 @@ namespace Barotrauma
                     SetMode(editAnimsToggle, false);
                     SetMode(jointsToggle, false);
                     spritesheetToggle.Selected = true;
-                    ResetParamsEditor();
                     ClearSelection();
                 }
+                ResetParamsEditor();
                 return true;
             };
-            ragdollToggle.OnSelected = box => showRagdoll = box.Selected;
+            ragdollToggle.OnSelected = box =>
+            {
+                editRagdoll = box.Selected;
+                if (editRagdoll)
+                {
+                    if (!editIK)
+                    {
+                        paramsToggle.Selected = true;
+                    }
+                    ClearSelection();
+                }
+                ResetParamsEditor();
+                return true;
+            };
             jointsToggle.OnSelected = box =>
             {
                 editJoints = box.Selected;
@@ -1643,12 +1662,11 @@ namespace Barotrauma
                 {
                     SetMode(editLimbsToggle, false);
                     SetMode(editAnimsToggle, false);
-                    ragdollToggle.Selected = true;
                     ikToggle.Selected = false;
                     spritesheetToggle.Selected = true;
-                    ResetParamsEditor();
                     ClearSelection();
                 }
+                ResetParamsEditor();
                 return true;
             };
             ikToggle.OnSelected = box =>
@@ -1975,21 +1993,11 @@ namespace Barotrauma
                 }
             };
             recalculateColliderToggle.TextColor = Color.White;
-            // Ragdoll
+            // Joint controls
             Point sliderSize = new Point(300, 20);
-            ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
-            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
-            var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), GetCharacterEditorTranslation("UniformScale"))
-            {
-                Selected = uniformScaling,
-                OnSelected = (GUITickBox box) =>
-                {
-                    uniformScaling = box.Selected;
-                    return true;
-                }
-            };
-            uniformScalingToggle.TextColor = Color.White;
-            copyJointsToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), GetCharacterEditorTranslation("CopyJointSettings"))
+            jointControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.075f), centerArea.RectTransform), style: null) { CanBeFocused = false };
+            var layoutGroupJoints = new GUILayoutGroup(new RectTransform(Vector2.One, jointControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
+            copyJointsToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupJoints.RectTransform), GetCharacterEditorTranslation("CopyJointSettings"))
             {
                 ToolTip = GetCharacterEditorTranslation("CopyJointSettingsTooltip"),
                 Selected = copyJointSettings,
@@ -2001,8 +2009,19 @@ namespace Barotrauma
                     return true;
                 }
             };
-            // Spacing
-            new GUIFrame(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null) { CanBeFocused = false };
+            // Ragdoll controls
+            ragdollControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.25f), centerArea.RectTransform) { AbsoluteOffset = new Point(0, jointControls.Rect.Bottom) }, style: null) { CanBeFocused = false };
+            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
+            var uniformScalingToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupRagdoll.RectTransform), GetCharacterEditorTranslation("UniformScale"))
+            {
+                Selected = uniformScaling,
+                OnSelected = (GUITickBox box) =>
+                {
+                    uniformScaling = box.Selected;
+                    return true;
+                }
+            };
+            uniformScalingToggle.TextColor = Color.White;
             var jointScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"{GetCharacterEditorTranslation("JointScale")}: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
@@ -2765,47 +2784,48 @@ namespace Barotrauma
             }
             else
             {
-                //if (selectedJoints.Any())
-                //{
-                //    foreach (var jointParams in RagdollParams.Joints)
-                //    {
-                //        if (selectedJoints.Any(j => j.jointParams == jointParams))
-                //        {
-                //            jointParams?.AddToEditor(ParamsEditor.Instance);
-                //        }
-                //    }
-                //}
-                //if (selectedLimbs.Any())
-                //{
-                //    foreach (var limbParams in RagdollParams.Limbs)
-                //    {
-                //        if (limbParams == null) { continue; }
-                //        var selectedLimb = selectedLimbs.Find(l => l.limbParams == limbParams);
-                //        if (selectedLimb != null)
-                //        {
-                //            limbParams.AddToEditor(ParamsEditor.Instance);
-                //            if (selectedLimb.attack != null)
-                //            {
-                //                var attackEditor = new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, selectedLimb.attack, false, true);
-                //            }
-                //        }
-                //    }
-                //}
-                foreach (var joint in selectedJoints)
+                if (editRagdoll || !editLimbs && !editJoints)
                 {
-                    joint.jointParams.AddToEditor(ParamsEditor.Instance);
+                    RagdollParams.AddToEditor(ParamsEditor.Instance, alsoChildren: false);
                 }
-                foreach (var limb in selectedLimbs)
+                if (editJoints)
                 {
-                    limb.limbParams.AddToEditor(ParamsEditor.Instance);
-                    if (limb.attack != null)
+                    if (selectedJoints.None())
                     {
-                        new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
+                        RagdollParams.Joints.ForEach(jp => jp.AddToEditor(ParamsEditor.Instance));
+                    }
+                    else
+                    {
+                        foreach (var joint in selectedJoints)
+                        {
+                            joint.jointParams.AddToEditor(ParamsEditor.Instance);
+                        }
                     }
                 }
-                if (selectedJoints.None() && selectedLimbs.None())
+                if (editLimbs)
                 {
-                    RagdollParams.AddToEditor(ParamsEditor.Instance);
+                    if (selectedLimbs.None())
+                    {
+                        foreach (var limb in character.AnimController.Limbs)
+                        {
+                            limb.limbParams.AddToEditor(ParamsEditor.Instance);
+                            if (limb.attack != null)
+                            {
+                                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var limb in selectedLimbs)
+                        {
+                            limb.limbParams.AddToEditor(ParamsEditor.Instance);
+                            if (limb.attack != null)
+                            {
+                                new SerializableEntityEditor(ParamsEditor.Instance.EditorBox.Content.RectTransform, limb.attack, inGame: false, showName: true);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -3804,7 +3824,7 @@ namespace Barotrauma
                     var f = Vector2.Transform(jointPos, Matrix.CreateRotationZ(limb.Rotation));
                     f.Y = -f.Y;
                     Vector2 tformedJointPos = limbScreenPos + f * Cam.Zoom;
-                    if (showRagdoll)
+                    if (editRagdoll)
                     {
                         ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.Black, size: 5);
                         ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.White, size: 1);
@@ -4081,7 +4101,6 @@ namespace Barotrauma
                             color: Color.White,
                             layerDepth: 0);
                     }
-                    GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                     // The origin is manipulated when the character is flipped. We have to undo it here.
                     if (character.AnimController.Dir < 0)
                     {
@@ -4093,6 +4112,7 @@ namespace Barotrauma
                     }
                     if (editLimbs)
                     {
+                        GUI.DrawRectangle(spriteBatch, rect, selectedLimbs.Contains(limb) ? Color.Yellow : Color.Red);
                         int widgetSize = 8;
                         int halfSize = widgetSize / 2;
                         Vector2 stringOffset = new Vector2(5, 14);

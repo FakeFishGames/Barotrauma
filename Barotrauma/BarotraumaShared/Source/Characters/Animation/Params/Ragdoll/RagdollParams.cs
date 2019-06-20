@@ -368,16 +368,18 @@ namespace Barotrauma
         #endregion
 
 #if CLIENT
-        public override void AddToEditor(ParamsEditor editor)
+        public void AddToEditor(ParamsEditor editor, bool alsoChildren = true)
         {
             base.AddToEditor(editor);
-            var subParams = GetAllSubParams();
-            foreach (var subParam in subParams)
+            if (alsoChildren)
             {
-                subParam.AddToEditor(editor);   
-                //TODO: divider sprite
-                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform), 
-                    style: null, color: Color.Black);
+                var subParams = GetAllSubParams();
+                foreach (var subParam in subParams)
+                {
+                    subParam.AddToEditor(editor);
+                    new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform),
+                        style: null, color: Color.Black);
+                }
             }
         }
 #endif
