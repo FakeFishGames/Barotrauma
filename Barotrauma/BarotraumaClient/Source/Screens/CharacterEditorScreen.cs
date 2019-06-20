@@ -285,15 +285,15 @@ namespace Barotrauma
             {
                 if (PlayerInput.KeyHit(Keys.D1))
                 {
-                    SetMode(editLimbsToggle, true);
+                    SetToggle(editLimbsToggle, true);
                 }
                 else if (PlayerInput.KeyHit(Keys.D2))
                 {
-                    SetMode(jointsToggle, true);
+                    SetToggle(jointsToggle, true);
                 }
                 else if (PlayerInput.KeyHit(Keys.D3))
                 {
-                    SetMode(editAnimsToggle, true);
+                    SetToggle(editAnimsToggle, true);
                 }
                 if (PlayerInput.KeyDown(Keys.LeftControl))
                 {
@@ -407,7 +407,7 @@ namespace Barotrauma
                 }
                 if (PlayerInput.KeyHit(Keys.F))
                 {
-                    freezeToggle.Selected = !freezeToggle.Selected;
+                    SetToggle(freezeToggle, !freezeToggle.Selected);
                 }
                 if (PlayerInput.RightButtonClicked() || PlayerInput.KeyHit(Keys.Escape))
                 {
@@ -1615,8 +1615,8 @@ namespace Barotrauma
                 editAnimations = box.Selected;
                 if (editAnimations)
                 {
-                    SetMode(editLimbsToggle, false);
-                    SetMode(jointsToggle, false);
+                    SetToggle(editLimbsToggle, false);
+                    SetToggle(jointsToggle, false);
                     spritesheetToggle.Selected = false;
                     ClearSelection();
                 }
@@ -1633,8 +1633,8 @@ namespace Barotrauma
                 editLimbs = box.Selected;
                 if (editLimbs)
                 {
-                    SetMode(editAnimsToggle, false);
-                    SetMode(jointsToggle, false);
+                    SetToggle(editAnimsToggle, false);
+                    SetToggle(jointsToggle, false);
                     spritesheetToggle.Selected = true;
                     ClearSelection();
                 }
@@ -1660,8 +1660,8 @@ namespace Barotrauma
                 editJoints = box.Selected;
                 if (editJoints)
                 {
-                    SetMode(editLimbsToggle, false);
-                    SetMode(editAnimsToggle, false);
+                    SetToggle(editLimbsToggle, false);
+                    SetToggle(editAnimsToggle, false);
                     ikToggle.Selected = false;
                     spritesheetToggle.Selected = true;
                     ClearSelection();
@@ -1686,7 +1686,7 @@ namespace Barotrauma
             modesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
         }
 
-        private void SetMode(GUITickBox toggle, bool value)
+        private void SetToggle(GUITickBox toggle, bool value)
         {
             if (toggle.Selected != value)
             {
