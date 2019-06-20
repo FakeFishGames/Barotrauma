@@ -7,6 +7,13 @@
     tags="smallitem"
     fireproof="true"
     description="" impactsoundtag="impact_metal_heavy">
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <Item identifier="steel" />
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,256,64,64" origin="0.5,0.6"/>
     <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="648,270,47,37"/>
     <!--<Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="1,0,68,39"/>-->
