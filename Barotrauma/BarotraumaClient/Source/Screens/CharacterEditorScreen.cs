@@ -2695,6 +2695,7 @@ namespace Barotrauma
                     spritesheetToggle.Selected = false;
                     jointsToggle.Selected = false;
                     paramsToggle.Selected = false;
+                    ragdollToggle.Selected = false;
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
