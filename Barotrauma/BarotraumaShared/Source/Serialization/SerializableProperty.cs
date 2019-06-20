@@ -414,9 +414,6 @@ namespace Barotrauma
         {
             switch (Name)
             {
-                case "Condition":
-                    if (parentObject is Item item) { return item.Condition; }                    
-                    break;
                 case "Voltage":
                     if (parentObject is Powered powered) { return powered.Voltage; }
                     break;
@@ -459,6 +456,21 @@ namespace Barotrauma
                     break;
                 case "IsOn":
                     { if (parentObject is LightComponent lightComponent) { return lightComponent.IsOn; } }
+                    break;
+                case "Condition":
+                    {
+                        if (parentObject is Item item) { return item.Condition; }
+                    }
+                    break;
+                case "ContainerIdentifier":
+                    {
+                        if (parentObject is Item item) { return item.ContainerIdentifier; }
+                    }
+                    break;
+                case "PhysicsBodyActive":
+                    {
+                        if (parentObject is Item item) { return item.PhysicsBodyActive; }
+                    }
                     break;
             }
 
