@@ -176,7 +176,7 @@ namespace Barotrauma.Items.Components
 
             float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
             
-            //item must have been below 50% condition for the player to get an achievement or XP for repairing it
+            //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
             if (item.Condition < ShowRepairUIThreshold)
             {
                 wasBroken = true;
