@@ -1553,7 +1553,7 @@ namespace Barotrauma
             if (MainSub == this) MainSub = null;
             if (MainSubs[1] == this) MainSubs[1] = null;
 
-            DockedTo.Clear();
+            DockedTo?.Clear();
         }
 
         public void Dispose()
