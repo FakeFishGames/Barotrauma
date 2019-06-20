@@ -150,13 +150,12 @@ namespace Barotrauma
             get { return description ?? prefab.Description; }
             set { description = value; }
         }
-
-        private bool hiddenInGame;
+        
         [Editable, Serialize(false, true)]
         public bool HiddenInGame
         {
-            get { return hiddenInGame; }
-            set { hiddenInGame = value; }
+            get;
+            set;
         }
 
         public float ImpactTolerance
