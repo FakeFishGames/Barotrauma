@@ -8,11 +8,11 @@ namespace Barotrauma.Networking
 {
     class VoipServer
     {
-        private NetServer netServer;
+        private ServerPeer netServer;
         private List<VoipQueue> queues;
         private Dictionary<VoipQueue,DateTime> lastSendTime;
 
-        public VoipServer(NetServer server)
+        public VoipServer(ServerPeer server)
         {
             this.netServer = server;
             queues = new List<VoipQueue>();
@@ -53,15 +53,13 @@ namespace Barotrauma.Networking
 
                     if (!CanReceive(sender, recipient)) { continue; }
 
-                    IWriteMessage msg = netServer.CreateMessage();
+                    IWriteMessage msg = new WriteOnlyMessage();
 
                     msg.Write((byte)ServerPacketHeader.VOICE);
                     msg.Write((byte)queue.QueueID);
                     queue.Write(msg);
-
-                    GameMain.Server.CompressOutgoingMessage(msg);
-
-                    netServer.SendMessage(msg, recipient.Connection, NetDeliveryMethod.Unreliable);
+                    
+                    netServer.Send(msg, recipient.Connection, DeliveryMethod.Unreliable);
                 }
             }
         }

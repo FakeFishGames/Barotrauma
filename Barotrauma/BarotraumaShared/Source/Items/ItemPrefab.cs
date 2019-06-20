@@ -124,7 +124,7 @@ namespace Barotrauma
         }
     }
 
-    public partial class ItemPrefab : MapEntityPrefab
+    partial class ItemPrefab : MapEntityPrefab
     {
         private readonly string configFile;
         

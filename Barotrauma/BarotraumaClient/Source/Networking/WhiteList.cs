@@ -17,7 +17,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    public partial class WhiteList
+    partial class WhiteList
     {
         private GUIComponent whitelistFrame;
 

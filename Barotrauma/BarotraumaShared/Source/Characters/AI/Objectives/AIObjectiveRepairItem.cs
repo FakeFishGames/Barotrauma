@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {

@@ -13,7 +13,7 @@ namespace Barotrauma.Networking
         public UInt16 UniqueIdentifier;
     }
 
-    public partial class WhiteList
+    partial class WhiteList
     {
         const string SavePath = "Data/whitelist.txt";
 

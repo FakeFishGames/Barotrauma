@@ -7,11 +7,10 @@ namespace Barotrauma.Networking
     abstract class ServerPeer
     {
         public delegate void OnConnectionDelegate(NetworkConnection connection, IReadMessage message);
-
         public abstract void ExecuteOnConnection(OnConnectionDelegate deleg);
+
+        public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod);
         public abstract NetworkConnection GetPlayerByName(string name);
         public abstract NetworkConnection GetPlayerByEndPoint(object endPoint);
-        public abstract void KickPlayer(NetworkConnection connection, string reason);
-        public abstract void BanPlayer(NetworkConnection connection, string reason, TimeSpan? duration);
     }
 }

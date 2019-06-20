@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    public partial class Voting
+    partial class Voting
     {
         public bool AllowSubVoting
         {

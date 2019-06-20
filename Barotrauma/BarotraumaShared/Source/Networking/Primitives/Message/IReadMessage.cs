@@ -28,5 +28,7 @@ namespace Barotrauma.Networking
         byte[] Buffer { get; }
         int LengthBits { get; set; }
         int LengthBytes { get; }
+
+        NetworkConnection Sender { get; }
     }
 }

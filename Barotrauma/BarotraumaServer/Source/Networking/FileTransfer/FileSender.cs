@@ -123,7 +123,7 @@ namespace Barotrauma.Networking
             activeTransfers = new List<FileTransferOut>();
         }
 
-        public FileTransferOut StartTransfer(NetConnection recipient, FileTransferType fileType, string filePath)
+        public FileTransferOut StartTransfer(NetworkConnection recipient, FileTransferType fileType, string filePath)
         {
             if (activeTransfers.Count >= MaxTransferCount)
             {
@@ -271,14 +271,14 @@ namespace Barotrauma.Networking
             GameMain.Server.SendCancelTransferMsg(transfer);
         }
 
-        public void ReadFileRequest(NetIncomingMessage inc, Client client)
+        public void ReadFileRequest(IReadMessage inc, Client client)
         {
             byte messageType = inc.ReadByte();
 
             if (messageType == (byte)FileTransferMessageType.Cancel)
             {
                 byte sequenceChannel = inc.ReadByte();
-                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == sequenceChannel);
+                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.SequenceChannel == sequenceChannel);
                 if (matchingTransfer != null) CancelTransfer(matchingTransfer);
 
                 return;
@@ -294,17 +294,17 @@ namespace Barotrauma.Networking
 
                     if (requestedSubmarine != null)
                     {
-                        StartTransfer(inc.SenderConnection, FileTransferType.Submarine, requestedSubmarine.FilePath);
+                        StartTransfer(inc.Sender, FileTransferType.Submarine, requestedSubmarine.FilePath);
                     }
                     break;
                 case (byte)FileTransferType.CampaignSave:
                     if (GameMain.GameSession != null &&
-                        !ActiveTransfers.Any(t => t.Connection == inc.SenderConnection && t.FileType == FileTransferType.CampaignSave))
+                        !ActiveTransfers.Any(t => t.Connection == inc.Sender && t.FileType == FileTransferType.CampaignSave))
                     {                       
-                        StartTransfer(inc.SenderConnection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
+                        StartTransfer(inc.Sender, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
                         if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                         {
-                            client.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)NetTime.Now);
+                            client.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)Lidgren.Network.NetTime.Now);
                         }
                     }
                     break;

@@ -233,6 +233,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetIdUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetworkMember.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\DeliveryMethod.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\NetworkConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\LidgrenConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IReadMessage.cs" />

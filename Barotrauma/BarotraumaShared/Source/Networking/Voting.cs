@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    public partial class Voting
+    partial class Voting
     {
         private bool allowSubVoting, allowModeVoting;
 

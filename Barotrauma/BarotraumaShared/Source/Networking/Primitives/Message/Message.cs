@@ -493,6 +493,13 @@ namespace Barotrauma.Networking
             }
         }
 
+        public NetworkConnection Sender { get; private set; }
+
+        public ReadOnlyMessage(NetworkConnection sender)
+        {
+            Sender = sender;
+        }
+
         public bool ReadBoolean()
         {
             return MsgReader.ReadBoolean(buf, ref seekPos);
@@ -629,6 +636,8 @@ namespace Barotrauma.Networking
                 return lengthBits / 8;
             }
         }
+
+        public NetworkConnection Sender { get { return null; } }
 
         public void Write(bool val)
         {

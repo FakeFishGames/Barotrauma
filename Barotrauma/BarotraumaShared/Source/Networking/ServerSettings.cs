@@ -28,7 +28,7 @@ namespace Barotrauma.Networking
         Normal, Fill
     }
 
-    public partial class ServerSettings : ISerializableEntity
+    partial class ServerSettings : ISerializableEntity
     {
         [Flags]
         public enum NetFlags : byte

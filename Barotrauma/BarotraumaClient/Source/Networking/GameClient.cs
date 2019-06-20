@@ -575,7 +575,7 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private void WriteAuthRequest(NetOutgoingMessage outmsg)
+        private void WriteAuthRequest(IWriteMessage outmsg)
         {
             if (SteamManager.IsInitialized && SteamManager.USE_STEAM)
             {
@@ -605,7 +605,7 @@ namespace Barotrauma.Networking
 
                 outmsg.Write(SteamManager.GetSteamID());
                 outmsg.Write(steamAuthTicket.Data.Length);
-                outmsg.Write(steamAuthTicket.Data);
+                outmsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
 
                 DebugConsole.Log("Sending Steam auth request");
                 DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());

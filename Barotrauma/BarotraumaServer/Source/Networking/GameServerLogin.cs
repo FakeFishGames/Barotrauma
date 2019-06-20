@@ -169,7 +169,7 @@ namespace Barotrauma.Networking
             }*/
         }
 
-        private bool IsServerOwner(NetIncomingMessage inc, NetConnection senderConnection)
+        private bool IsServerOwner(IReadMessage inc, NetworkConnection senderConnection)
         {
             string address = senderConnection.RemoteEndPoint.Address.MapToIPv4().ToString();
             int incKey = inc.ReadInt32();
@@ -190,7 +190,7 @@ namespace Barotrauma.Networking
             return true;
         }
         
-        private void HandleOwnership(NetIncomingMessage inc, NetConnection senderConnection)
+        private void HandleOwnership(IReadMessage inc, NetworkConnection senderConnection)
         {
             DebugConsole.Log("HandleOwnership (" + senderConnection.RemoteEndPoint.Address + ")");
             if (IsServerOwner(inc, senderConnection))
@@ -201,7 +201,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void HandleClientAuthRequest(NetConnection connection, ulong steamID = 0)
+        private void HandleClientAuthRequest(NetworkConnection connection, ulong steamID = 0)
         {
             DebugConsole.Log("HandleClientAuthRequest (steamID " + steamID + ")");
 
@@ -238,7 +238,7 @@ namespace Barotrauma.Networking
             }
             unauthClient.AuthTimer = 10.0f;
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
-            NetOutgoingMessage nonceMsg = server.CreateMessage();
+            IWriteMessage nonceMsg = new WriteOnlyMessage();
             nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
             if (serverSettings.HasPassword && connection != OwnerConnection)
             {
@@ -251,13 +251,13 @@ namespace Barotrauma.Networking
             }
             CompressOutgoingMessage(nonceMsg);
             DebugConsole.Log("Sending auth response...");
-            server.SendMessage(nonceMsg, connection, NetDeliveryMethod.Unreliable);
+            serverPeer.Send(nonceMsg, connection, DeliveryMethod.Unreliable);
         }
 
-        private void ClientInitRequest(NetIncomingMessage inc)
+        private void ClientInitRequest(IReadMessage inc)
         {
             DebugConsole.Log("Received client init request");
-            if (ConnectedClients.Find(c => c.Connection == inc.SenderConnection) != null)
+            if (ConnectedClients.Find(c => c.Connection == inc.Sender) != null)
             {
                 //this client was already authenticated
                 //another init request means they didn't get any update packets yet
@@ -265,16 +265,16 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == inc.SenderConnection);
+            UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == inc.Sender);
             if (unauthClient == null)
             {
                 //client did not ask for nonce first, can't authorize
-                inc.SenderConnection.Disconnect(DisconnectReason.AuthenticationRequired.ToString());
+                inc.Sender.Disconnect(DisconnectReason.AuthenticationRequired.ToString());
                 if (unauthClient.SteamID > 0) { Steam.SteamManager.StopAuthSession(unauthClient.SteamID); }
                 return;
             }
 
-            if (serverSettings.HasPassword && inc.SenderConnection != OwnerConnection)
+            if (serverSettings.HasPassword && inc.Sender != OwnerConnection)
             {
                 //decrypt message and compare password
                 string clPw = inc.ReadString();
@@ -287,20 +287,20 @@ namespace Barotrauma.Networking
                         serverSettings.BanList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address, "DisconnectMessage.TooManyFailedLogins", duration: null);
                         DisconnectUnauthClient(inc, unauthClient, DisconnectReason.TooManyFailedLogins, "");
 
-                        Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
-                        DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", Color.Red);
+                        Log(inc.Sender.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
+                        DebugConsole.NewMessage(inc.Sender.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", Color.Red);
                         return;
                     }
                     else
                     {
                         //not disconnecting the player here, because they'll still use the same connection and nonce if they try logging in again
-                        NetOutgoingMessage reject = server.CreateMessage();
+                        IWriteMessage reject = new WriteOnlyMessage();
                         reject.Write((byte)ServerPacketHeader.AUTH_FAILURE);
                         reject.Write("Wrong password! You have " + Convert.ToString(4 - unauthClient.FailedAttempts) + " more attempts before you're banned from the server.");
-                        Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", ServerLog.MessageType.Error);
-                        DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", Color.Red);
+                        Log(inc.Sender.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", ServerLog.MessageType.Error);
+                        DebugConsole.NewMessage(inc.Sender.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", Color.Red);
                         CompressOutgoingMessage(reject);
-                        server.SendMessage(reject, unauthClient.Connection, NetDeliveryMethod.Unreliable);
+                        serverPeer.Send(reject, unauthClient.Connection, DeliveryMethod.Unreliable);
                         unauthClient.AuthTimer = 10.0f;
                         return;
                     }
@@ -507,7 +507,7 @@ namespace Barotrauma.Networking
             }
         }
                 
-        private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, DisconnectReason reason, string message)
+        private void DisconnectUnauthClient(IReadMessage inc, UnauthenticatedClient unauthClient, DisconnectReason reason, string message)
         {
             inc.SenderConnection.Disconnect(reason.ToString() + "/ " + TextManager.GetServerMessage(message));
             if (unauthClient.SteamID > 0) { Steam.SteamManager.StopAuthSession(unauthClient.SteamID); }

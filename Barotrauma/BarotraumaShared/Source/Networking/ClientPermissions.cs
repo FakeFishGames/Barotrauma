@@ -24,7 +24,7 @@ namespace Barotrauma.Networking
         All = 0x7ff
     }
 
-    public class PermissionPreset
+    class PermissionPreset
     {
         public static List<PermissionPreset> List = new List<PermissionPreset>();
            

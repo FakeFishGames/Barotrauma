@@ -24,7 +24,7 @@ namespace Barotrauma.Networking
 
         //for keeping track of disconnected clients in case the reconnect shortly after
         private List<Client> disconnectedClients = new List<Client>();
-
+         
         private int roundStartSeed;
 
         //is the server running
@@ -660,7 +660,7 @@ namespace Barotrauma.Networking
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
         
-        private void ReadDataMessage(NetIncomingMessage inc)
+        private void ReadDataMessage(IReadMessage inc)
         {
             var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
             if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address, connectedClient == null ? 0 : connectedClient.SteamID))
@@ -769,7 +769,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void HandleClientError(NetIncomingMessage inc, Client c)
+        private void HandleClientError(IReadMessage inc, Client c)
         {
             string errorStr = "Unhandled error report";
 
@@ -840,7 +840,7 @@ namespace Barotrauma.Networking
             return userID;
         }
 
-        private void ClientReadLobby(NetIncomingMessage inc)
+        private void ClientReadLobby(IReadMessage inc)
         {
             Client c = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
             if (c == null)
@@ -901,7 +901,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void ClientReadIngame(NetIncomingMessage inc)
+        private void ClientReadIngame(IReadMessage inc)
         {
             Client c = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
             if (c == null)
@@ -1016,7 +1016,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void ClientReadServerCommand(NetIncomingMessage inc)
+        private void ClientReadServerCommand(IReadMessage inc)
         {
             Client sender = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
             if (sender == null)
@@ -1252,7 +1252,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Write info that the client needs when joining the server
         /// </summary>
-        private void ClientWriteInitial(Client c, NetBuffer outmsg)
+        private void ClientWriteInitial(Client c, IWriteMessage outmsg)
         {
             if (GameSettings.VerboseLogging)
             {
@@ -1276,7 +1276,7 @@ namespace Barotrauma.Networking
         }
 
         private const int COMPRESSION_THRESHOLD = 500;
-        public void CompressOutgoingMessage(NetOutgoingMessage outmsg)
+        public void CompressOutgoingMessage(IWriteMessage outmsg)
         {
             if (outmsg.LengthBytes > COMPRESSION_THRESHOLD)
             {
@@ -1457,11 +1457,11 @@ namespace Barotrauma.Networking
                 }
 
                 CompressOutgoingMessage(outmsg);
-                server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);     
+                serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);     
             }                  
         }
 
-        private void WriteClientList(Client c, NetOutgoingMessage outmsg)
+        private void WriteClientList(Client c, IWriteMessage outmsg)
         {
             bool hasChanged = NetIdUtils.IdMoreRecent(LastClientListUpdateID, c.LastRecvClientListUpdate);
             if (!hasChanged) return;
@@ -1594,7 +1594,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void WriteChatMessages(NetOutgoingMessage outmsg, Client c)
+        private void WriteChatMessages(IWriteMessage outmsg, Client c)
         {
             c.ChatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.LastRecvChatMsgID));
             for (int i = 0; i < c.ChatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
@@ -2112,7 +2112,7 @@ namespace Barotrauma.Networking
             KickClient(client, reason);
         }
 
-        public void KickClient(NetConnection conn, string reason)
+        public void KickClient(NetworkConnection conn, string reason)
         {
             if (conn == OwnerConnection) return;
 
@@ -2180,7 +2180,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
+        public void DisconnectClient(NetworkConnection senderConnection, string msg = "", string targetmsg = "")
         {
             if (senderConnection == OwnerConnection)
             {
@@ -2706,7 +2706,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void UpdateCharacterInfo(NetIncomingMessage message, Client sender)
+        private void UpdateCharacterInfo(IReadMessage message, Client sender)
         {
             sender.SpectateOnly = message.ReadBoolean() && (serverSettings.AllowSpectating || sender.Connection == OwnerConnection);
             if (sender.SpectateOnly)

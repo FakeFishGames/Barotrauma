@@ -32,7 +32,7 @@ namespace Barotrauma
         }
     }
 
-    public static partial class DebugConsole
+    static partial class DebugConsole
     {
         public partial class Command
         {

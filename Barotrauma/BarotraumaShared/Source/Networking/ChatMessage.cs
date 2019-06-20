@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
         Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog
     }
 
-    public partial class ChatMessage
+    partial class ChatMessage
     {
         public const int MaxLength = 150;
 

@@ -12,7 +12,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class Editable : Attribute
+    class Editable : Attribute
     {
         public int MaxLength;
         public int DecimalCount = 1;
@@ -45,7 +45,7 @@ namespace Barotrauma
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class InGameEditable : Editable
+    class InGameEditable : Editable
     {
     }
 
@@ -72,7 +72,7 @@ namespace Barotrauma
         }
     }
 
-    public class SerializableProperty
+    class SerializableProperty
     {
         private static Dictionary<Type, string> supportedTypes = new Dictionary<Type, string>
         {

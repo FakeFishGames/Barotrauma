@@ -73,15 +73,5 @@ namespace Barotrauma.Networking
             }
             return null;
         }
-
-        public override void KickPlayer(NetworkConnection connection, string reason)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void BanPlayer(NetworkConnection connection, string reason, TimeSpan? duration)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

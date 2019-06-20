@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    public partial class Client : IDisposable
+    partial class Client : IDisposable
     {
         public const int MaxNameLength = 20;
 

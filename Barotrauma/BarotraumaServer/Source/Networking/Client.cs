@@ -121,7 +121,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public bool IPMatches(string ip)
+        /*public bool IPMatches(string ip)
         {
             if (Connection?.RemoteEndPoint == null) { return false; }
             if (Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6 && 
@@ -130,7 +130,7 @@ namespace Barotrauma.Networking
                 return true;
             }
             return Connection.RemoteEndPoint.Address.ToString() == ip;
-        }
+        }*/
 
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
         {
