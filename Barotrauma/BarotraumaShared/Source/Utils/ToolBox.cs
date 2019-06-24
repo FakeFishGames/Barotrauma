@@ -322,6 +322,7 @@ namespace Barotrauma
                 bool bit = originalBuffer.ReadBoolean();
                 buffer.Write(bit);
             }
+            buffer.BitPosition = 0;
 
             return buffer;
         }

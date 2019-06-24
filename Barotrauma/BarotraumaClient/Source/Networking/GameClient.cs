@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
             get { return true; }
         }
 
-        private NetClient client;
+        private ClientPeer clientPeer;
 
         private GUIMessageBox reconnectBox, waitInServerQueueBox;
 
@@ -251,20 +251,12 @@ namespace Barotrauma.Networking
             myCharacter = Character.Controlled;
             ChatMessage.LastID = 0;
 
-            // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
-            NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
-
-            NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
-                | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
-
-            client = new NetClient(NetPeerConfiguration);
-            NetPeer = client;
-            client.Start();
-
+            clientPeer = new LidgrenClientPeer();
+            
             System.Net.IPEndPoint IPEndPoint = null;
             try
             {
-                IPEndPoint = new System.Net.IPEndPoint(NetUtility.Resolve(serverIP), Port);
+                IPEndPoint = new System.Net.IPEndPoint(Lidgren.Network.NetUtility.Resolve(serverIP), Port);
             }
             catch
             {
@@ -272,14 +264,11 @@ namespace Barotrauma.Networking
                     TextManager.GetWithVariables("InvalidIPAddress", new string[2] { "[serverip]", "[port]" }, new string[2] { serverIP, Port.ToString() }));
                 return;
             }
-
-            NetOutgoingMessage outmsg = client.CreateMessage();
-            WriteAuthRequest(outmsg);
-
+            
             // Connect client, to ip previously requested from user
             try
             {
-                client.Connect(IPEndPoint, outmsg);
+                clientPeer.Start(IPEndPoint);
             }
             catch (Exception e)
             {
@@ -301,7 +290,7 @@ namespace Barotrauma.Networking
 
         private bool RetryConnection(GUIButton button, object obj)
         {
-            if (client != null) client.Shutdown(TextManager.Get("Disconnecting"));
+            if (clientPeer != null) clientPeer.Close();
             ConnectToServer(serverIP, serverName);
             return true;
         }

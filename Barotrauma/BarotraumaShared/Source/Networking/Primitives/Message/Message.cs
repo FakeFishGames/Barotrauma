@@ -1,9 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Text;
 
 namespace Barotrauma.Networking
 {
+    public enum ConnectionInitialization
+    {
+        SteamTicket = 0x1,
+        Password = 0x2,
+        Success = 0x0
+    }
+
     internal static class MsgWriter
     {
         internal static void Write(byte[] buf, ref int bitPos, bool val)
@@ -435,6 +444,30 @@ namespace Barotrauma.Networking
         {
             MsgWriter.WriteBytes(buf, ref seekPos, val, startPos, length);
         }
+
+        public void PrepareForSending(byte[] outBuf, out bool isCompressed, out int length)
+        {
+            if (LengthBytes <= 1100)
+            {
+                isCompressed = false;
+                Array.Copy(buf, outBuf, LengthBytes);
+                length = LengthBytes;
+            }
+            else
+            {
+                isCompressed = true;
+                using (MemoryStream output = new MemoryStream())
+                {
+                    using (DeflateStream dstream = new DeflateStream(output, CompressionLevel.Fastest))
+                    {
+                        dstream.Write(buf, 0, buf.Length);
+                    }
+                    byte[] compressedBuf = output.ToArray();
+                    Array.Copy(compressedBuf, outBuf, compressedBuf.Length);
+                    length = compressedBuf.Length;
+                }
+            }
+        }
     }
 
     public class ReadOnlyMessage : IReadMessage
@@ -494,10 +527,31 @@ namespace Barotrauma.Networking
         }
 
         public NetworkConnection Sender { get; private set; }
-
-        public ReadOnlyMessage(NetworkConnection sender)
+        
+        public ReadOnlyMessage(byte[] inBuf, bool isCompressed, int inLength, NetworkConnection sender)
         {
             Sender = sender;
+            byte[] decompressedData;
+            if (isCompressed)
+            {
+                using (MemoryStream input = new MemoryStream(inBuf, 0, inLength))
+                {
+                    using (MemoryStream output = new MemoryStream())
+                    {
+                        using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
+                        {
+                            dstream.CopyTo(output);
+                        }
+                        decompressedData = output.ToArray();
+                        inLength = decompressedData.Length;
+                    }
+                }
+            }
+            else
+            {
+                decompressedData = inBuf;
+            }
+            Array.Copy(inBuf, buf, inLength);
         }
 
         public bool ReadBoolean()
@@ -797,6 +851,11 @@ namespace Barotrauma.Networking
         public void ReadBytes(byte[] ret, int startPos, int length)
         {
             MsgReader.ReadBytes(buf, ref seekPos, ret, startPos, length);
+        }
+
+        public void PrepareForSending(byte[] outBuf, out bool isCompressed, out int outLength)
+        {
+            throw new InvalidOperationException("ReadWriteMessages are not to be sent");
         }
     }
 }

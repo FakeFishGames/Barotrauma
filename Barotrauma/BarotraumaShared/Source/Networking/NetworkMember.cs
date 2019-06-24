@@ -8,8 +8,6 @@ namespace Barotrauma.Networking
 {
     enum ClientPacketHeader
     {
-        REQUEST_AUTH,   //ask the server if a password is needed, if so we'll get nonce for encryption
-        REQUEST_STEAMAUTH, //the same as REQUEST_AUTH, but in addition we want to authenticate the player's Steam ID
         REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame

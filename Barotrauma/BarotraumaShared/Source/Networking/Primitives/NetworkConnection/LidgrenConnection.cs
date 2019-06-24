@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Net;
+using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
     public class LidgrenConnection : NetworkConnection
     {
-        public IPEndPoint IPEndPoint { get; private set; }
-        
-        public string IP
+        public NetConnection NetConnection { get; private set; }
+
+        public IPEndPoint IPEndPoint => NetConnection.RemoteEndPoint;
+
+        public string IPString
         {
             get
             {
                 return IPEndPoint.Address.IsIPv4MappedToIPv6 ? IPEndPoint.Address.MapToIPv4().ToString() : IPEndPoint.Address.ToString();
             }
-        }
-
-        public UInt64 SteamID
-        {
-            get;
-            private set;
         }
 
         public UInt16 Port
@@ -29,20 +26,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        public LidgrenConnection(string ip, UInt64 steamId, UInt16 port)
+        public LidgrenConnection(NetConnection netConnection, UInt64 steamId)
         {
-            IPEndPoint = new IPEndPoint(IPAddress.Parse(ip), (int)port);
+            NetConnection = netConnection;
             SteamID = steamId;
-        }
-
-        public override void Disconnect(string reason)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Ban(string reason, TimeSpan? duration)
-        {
-            throw new NotImplementedException();
         }
     }
 }
