@@ -536,7 +536,6 @@
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
   <serverlistversion>Game version</serverlistversion>
-  <serverlisthaspassword>Password-protected</serverlisthaspassword>
   <serverlistusingwhitelist>Using whitelist</serverlistusingwhitelist>
   <serverlistcontentpackages>Content packages</serverlistcontentpackages>
   <serverlistsubselection>Submarine selection</serverlistsubselection>
@@ -3224,4 +3223,6 @@
   <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
   <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
   <workshop.contenttag.language>Language</workshop.contenttag.language>
+
+  <serverlisthaspassword>Password</serverlisthaspassword>
 </infotexts>

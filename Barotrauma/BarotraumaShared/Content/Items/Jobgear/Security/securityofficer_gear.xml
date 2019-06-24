@@ -85,6 +85,7 @@
       <StatusEffect type="OnWearing" target="Character" lockhands="true" setvalue="true" />
     </Wearable>
   </Item>
+  <!-- 
   <Item name="Riot Shield" identifier="riotshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="200" />
     <Price locationtype="City" buyprice="225" />
@@ -102,5 +103,5 @@
     <Holdable slots="RightHand+LeftHand" aimpos="60,-30" holdpos="45,-30" handle1="-10,0" handle2="10,0" controlpose="true" blocksplayers="true" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />
     </Holdable>
-  </Item>
+  </Item> -->
 </Items>

@@ -57,8 +57,8 @@ namespace Barotrauma
             }
         }
 
-        public GUIImage(RectTransform rectT, string style)
-            : this(rectT, null, null, false, style)
+        public GUIImage(RectTransform rectT, string style, bool scaleToFit = false)
+            : this(rectT, null, null, scaleToFit, style)
         {
         }
 

@@ -14,14 +14,15 @@
     <ArtifactEvent itemidentifier="skyholderartifact" />
     <ArtifactEvent itemidentifier="thermalartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
+    <!-- populate the ruins -->
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
 
-    <!-- 1 crawler or 1 mudraptor after 150 seconds or passing 20% -->
+    <!-- 1 crawler or 1 mudraptor or 1 husk after 150 seconds or passing 20% -->
     <EventSet chooserandom="true" mindistancetraveled="0.20" minmissiontime="150" minintensity="0.0" maxintensity="0.25">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
     <!-- 1 thresher or 1 hammerhead or 3 crawlers after 5 minutes or passing 40% -->
@@ -57,13 +58,15 @@
     <ArtifactEvent itemidentifier="skyholderartifact" />
     <ArtifactEvent itemidentifier="thermalartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
+    <!-- chance of a couple of fractal guardians and husks inside ruins -->
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
 
-    <!-- 1-3 crawlers after 150 seconds or passing 20% -->
+    <!-- 1-3 crawlers or 1 -3 husks after 150 seconds or passing 20% -->
     <EventSet chooserandom="true" mindistancetraveled="0.20" minmissiontime="150" minintensity="0.0" maxintensity="0.25">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Humanhusk/Humanhusk.xml" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
     <!-- 2 - 3 crawlers and 0-1 mud raptors after 5 minutes or passing 40% -->
@@ -99,14 +102,15 @@
     <ArtifactEvent itemidentifier="thermalartifact" />
     <ArtifactEvent itemidentifier="faradayartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
+    <!-- populate the ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
 
     <!-- 1 crawler after 3 minutes or passing 15% -->
-    <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="180" minintensity="0.0" maxintensity="1.0">
+    <EventSet chooserandom="false" mindistancetraveled="0.15" minmissiontime="180" minintensity="0.0" maxintensity="1.0">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
@@ -134,8 +138,6 @@
     <EventSet chooserandom="false" mindistancetraveled="0.25" minmissiontime="280" minintensity="0.0" maxintensity="0.6">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
-
-    
     
     <!-- 1 crawler after 7 minutes or passing 50% -->
     <EventSet chooserandom="true" mindistancetraveled="0.5" minmissiontime="420" minintensity="0.0" maxintensity="1.0">
@@ -170,9 +172,7 @@
     <!-- 1 - 2 mud raptors after 11 minutes or passing 75% -->
     <EventSet chooserandom="false" mindistancetraveled="0.60" minmissiontime="540" minintensity="0.0" maxintensity="0.6">
       <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
-    </EventSet>
-
-    
+    </EventSet> 
   </EventSet>
 
   <!--                               Set 3                                       -->
@@ -188,15 +188,17 @@
     <ArtifactEvent itemidentifier="skyholderartifact" />
     <ArtifactEvent itemidentifier="thermalartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="1" spawntype="ruin" musictype="monster" />
+    <!-- populate the ruins -->
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
     
-    <!-- 1-2 crawlers or 1 mudraptor after 120 seconds or passing 10% -->
+    <!-- 1-2 crawlers or 1 mudraptor or 1-2 husks after 120 seconds or passing 10% -->
     <EventSet chooserandom="true" mindistancetraveled="0.10" minmissiontime="120" minintensity="0.0" maxintensity="1.0">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
     </EventSet>
 
     <!-- 0-1 baby moloch after 10 minutes or passing 40% -->
@@ -234,11 +236,12 @@
     <ArtifactEvent itemidentifier="thermalartifact" />
     <ArtifactEvent itemidentifier="faradayartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
+    <!-- populate the ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
 
     <!-- 1 crawler after 3 minutes or passing 15% -->
     <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="180" minintensity="0.0" maxintensity="1.0">
@@ -304,11 +307,12 @@
     <ArtifactEvent itemidentifier="thermalartifact" />
     <ArtifactEvent itemidentifier="faradayartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
+    <!-- populate the ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
 
     <!-- 1 crawler or 1 mudraptor after 3 minutes or passing 15% -->
     <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="180" minintensity="0.0" maxintensity="1.0">
@@ -374,17 +378,19 @@
     <ArtifactEvent itemidentifier="thermalartifact" />
     <ArtifactEvent itemidentifier="faradayartifact" />
     
-    <!-- chance of a couple of fractal guardians inside ruins -->
+    <!-- populate the ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
 
-    <!-- 4-6 crawlers or 2-4 mudraptors or a hammerhead after 3 minutes or passing 15% -->
+    <!-- 4-6 crawlers or 2-4 mudraptors or a hammerhead or 3 - 5 husks after 3 minutes or passing 15% -->
     <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="180" minintensity="0.0" maxintensity="1.0">
       <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="4" maxamount="6" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="2" maxamount="4" spawntype="mainpath" musictype="monster" />
       <MonsterEvent characterfile="Content/Characters/Hammerhead/Hammerhead.xml" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
+      <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="3" maxamount="5" spawntype="mainpath" musictype="monster" />
     </EventSet>
     
     <!-- two baby molochs or 1-3 threshers or 1-3 hammerheads or 2-4 mudraptors or 3 - 5 crawlers after 10 minutes or passing 30% -->
@@ -425,11 +431,12 @@
     <ArtifactEvent itemidentifier="thermalartifact" />
     <ArtifactEvent itemidentifier="faradayartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="1" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="2" spawntype="ruin" musictype="monster" />
+    <!-- populate the ruins -->
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
 
     <!-- 1 crawler or 1 mudraptor after 3 minutes or passing 15% -->
     <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="180" minintensity="0.0" maxintensity="1.0">
@@ -497,11 +504,12 @@
     <ArtifactEvent itemidentifier="thermalartifact" />
     <ArtifactEvent itemidentifier="faradayartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
+    <!-- populate the ruins -->
     <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
     <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="3" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="0" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="0" maxamount="4" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="0" maxamount="4" spawntype="ruin" musictype="monster" />
 
     <!-- 2-4 crawlers or 1-2 mudraptors after 4 minutes or passing 15% -->
     <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="180" minintensity="0.0" maxintensity="1.0">
@@ -551,11 +559,12 @@
     <ArtifactEvent itemidentifier="thermalartifact" />
     <ArtifactEvent itemidentifier="faradayartifact" />
 
-    <!-- chance of a couple of fractal guardians inside ruins -->
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="2" maxamount="4" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
-    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="1" maxamount="4" spawntype="ruin" musictype="monster" />
+    <!-- populate the ruins -->
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian/Fractalguardian.xml" minamount="2" maxamount="5" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Fractalguardian2/Fractalguardian2.xml" minamount="2" maxamount="5" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Crawler/Crawler.xml" minamount="1" maxamount="5" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Mudraptor/Mudraptor.xml" minamount="1" maxamount="5" spawntype="ruin" musictype="monster" />
+    <MonsterEvent characterfile="Content/Characters/Husk/Husk.xml" minamount="1" maxamount="5" spawntype="ruin" musictype="monster" />
 
     <!-- 2-4 crawlers or 1-2 mudraptors after 2 minutes or passing 15% -->
     <EventSet chooserandom="true" mindistancetraveled="0.15" minmissiontime="120" minintensity="0.0" maxintensity="1.0">
