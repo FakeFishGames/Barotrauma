@@ -22,12 +22,18 @@ to working like buttons which send out a pulse when interacted with).
 - Clients can change the server password using the command "setpassword" if they have a permission from the host.
 - Reduced the range of the sonar ping sound and added a more subtle ping sound that can be heard further away.
 - Watchmen now hold position when attacked.
+- Toolboxes can be fabricated and decontructed.
+- Added a subtle glow to alien buttons to make them a bit more noticeable.
+- Items that are set to be hidden in-game can still be interacted with in the sub editor.
 
 Networking fixes:
 - Fixed an ID mismatch problem that occasionally caused clients to get kicked out in the multiplayer 
 campaign, usually with an error message warning about a missing item.
 - Fixed servers using a local campaign save path sent by the client setupping the campaign, preventing
 the campaign from starting up if the path does not exist at the server's end.
+ - Fixed radio communication occasionally not working between characters in the multiplayer campaign. Characters 
+ that had made it through at least one round were not able to communicate through radio with characters that 
+ have just been spawned for the first time.
 - Fixed client that's hosting a server not being taken into account in the player count visible on the server list.
 - Fixed server list not displaying non-English symbols correctly (e.g. Cyrillic or Chinese characters).
 - Fixed GameServer.UnbanPlayer passing the name to BanList in lower case even though BanList was case 
@@ -49,6 +55,9 @@ the mod was not enabled, leading to various issues such as characters failing to
 changes the number or type of inventory slots a character has.
 - Replaced WinForms with SDL which should resolve most of the fullscreen/resolution issues. It's also now
 possible to change the resolution when in fullscreen without having to restart the game.
+- Fixed a bug in monster/item spawnpoint logic that occasionally caused perfectly valid spawnpoints to be 
+discarded when there were floating ice chunks in the level, sometimes causing monsters to spawn very
+far from the submarine (which often lead to the player not running into them at all).
 - Fixes to the DXGI crashes during startup.
 - Fixed bots not being able to retaliate when attacked with a repair tool.
 - Fixed watchmen not retaliating when a character does very small amounts of damage to them.
@@ -89,6 +98,10 @@ Prevents accidentally deleting items/structures when attempting to delete text f
 - Fixed incorrect physicorium shell description.
 - Fixed OverrideSaveFolder and OverrideMultiplayerSaveFolder settings not being saved.
 - Fixed order/report icons "twitching" when the sub moves.
+- Flares stop emitting particles when inside an inventory.
+- Fixed a "attempted to access a removed ragdoll" console error when a character wearing the health scanner 
+HUD is removed.
+- Fixed console errors when a battery's or supercapacitor's capacity is set to 0 and the interface is open.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.0.6
