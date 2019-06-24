@@ -546,7 +546,14 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
+        [Serialize(true, true)]
+        public bool AllowFriendlyFire
+        {
+            get;
+            set;
+        }
+
         private YesNoMaybe traitorsEnabled;
         public YesNoMaybe TraitorsEnabled
         {

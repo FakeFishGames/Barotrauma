@@ -2354,7 +2354,12 @@ namespace Barotrauma
         {
             hitLimb = null;
 
-            if (Removed) return new AttackResult();
+            if (Removed) { return new AttackResult(); }
+
+            if (attacker != null && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
+            {
+                if (attacker.TeamID == TeamID) { return new AttackResult(); }
+            }
 
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
@@ -2372,7 +2377,12 @@ namespace Barotrauma
 
         public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, List<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null)
         {
-            if (Removed) return new AttackResult();
+            if (Removed) { return new AttackResult(); }
+
+            if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
+            {
+                if (attacker.TeamID == TeamID) { return new AttackResult(); }
+            }
 
             SetStun(stun);
             Vector2 dir = hitLimb.WorldPosition - worldPosition;
