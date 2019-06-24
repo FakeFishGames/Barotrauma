@@ -22,7 +22,7 @@ namespace Barotrauma
         private GUIFrame menu;
 
         private GUIListBox serverList;
-        private GUIListBox serverPreview;
+        private GUIFrame serverPreview;
 
         private GUIButton joinButton;
 
@@ -48,7 +48,7 @@ namespace Barotrauma
         //a timer for 
         private DateTime refreshDisableTimer;
         private bool waitingForRefresh;
-                
+
         public ServerListScreen()
         {
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
@@ -93,7 +93,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), ipBoxHolder.RectTransform), TextManager.Get("ServerIP"));
             ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), ipBoxHolder.RectTransform), "");
             ipBox.OnTextChanged += RefreshJoinButtonState;
-            ipBox.OnSelected += (sender, key) => 
+            ipBox.OnSelected += (sender, key) =>
             {
                 if (sender.UserData is ServerInfo)
                 {
@@ -138,7 +138,7 @@ namespace Barotrauma
 
             var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
 
-            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverListContainer.RectTransform) { MinSize = new Point(0, 15) },
+            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.985f, 0.05f), serverListContainer.RectTransform) { MinSize = new Point(0, 15) },
                 isHorizontal: true)
             {
                 Stretch = true
@@ -148,21 +148,26 @@ namespace Barotrauma
             for (int i = 0; i < columnRelativeWidth.Length; i++)
             {
                 var btn = new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), labelHolder.RectTransform),
-                    text: TextManager.Get(columnLabel[i]), textAlignment: Alignment.CenterLeft, style: "GUIButtonSlicedTopAndBottom")
+                    text: TextManager.Get(columnLabel[i]), textAlignment: Alignment.CenterLeft, style: null)
                 {
+                    Color = new Color(12, 14, 15, 255) * 1.5f,
+                    HoverColor = new Color(12, 14, 15, 255) * 2.5f,
+                    SelectedColor = Color.Gray * 0.7f,
+                    PressedColor = Color.Gray * 0.7f,
+                    OutlineColor = Color.Gray * 0.7f,
                     Font = GUI.SmallFont,
                     UserData = columnLabel[i],
                     OnClicked = SortList
                 };
                 labelTexts.Add(btn.TextBlock);
-                btn.TextBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 0.0f) * GUI.Scale;
-                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                btn.TextBlock.Padding = new Vector4(3.0f, 0.25f, 5.0f, 0.0f) * GUI.Scale;
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
                 {
                     CanBeFocused = false,
                     UserData = "arrowup",
                     Visible = false
                 };
-                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
                 {
                     CanBeFocused = false,
                     UserData = "arrowdown",
@@ -190,7 +195,10 @@ namespace Barotrauma
 
             serverList.OnSelected += SelectServer;
 
-            serverPreview = new GUIListBox(new RectTransform(new Vector2(0.45f, 1.0f), serverListHolder.RectTransform, Anchor.Center));
+            serverPreview = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            {
+                Color = new Color(12, 14, 15, 190),
+            };
 
             var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), bottomRow.RectTransform), style: null);
 

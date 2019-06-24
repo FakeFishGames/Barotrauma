@@ -60,13 +60,13 @@ namespace Barotrauma.Networking
             return contentPackageHashes.SetEquals(myContentPackageHashes);
         }
 
-        public void CreatePreviewWindow(GUIListBox listBox)
+        public void CreatePreviewWindow(GUIFrame frame)
         {
-            listBox.ClearChildren();
+            frame.ClearChildren();
 
-            if (listBox == null) return;
+            if (frame == null) return;
 
-            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), listBox.Content.RectTransform, Anchor.Center))
+            var previewContainer =  new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), frame.RectTransform, Anchor.Center))
             {
                 Stretch = true
             };
@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
 
             float elementHeight = 0.075f;
 
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnContainer.RectTransform), ServerName, font: GUI.LargeFont, wrap: true);
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnContainer.RectTransform), ServerName, font: GUI.LargeFont);
             title.Text = ToolBox.LimitString(title.Text, title.Font, title.Rect.Width);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnContainer.RectTransform),
