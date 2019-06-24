@@ -62,15 +62,15 @@ namespace Barotrauma
             //Top row
             //-------------------------------------------------------------------------------------
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), paddedFrame.RectTransform)) { Stretch = true };
+            var topRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), paddedFrame.RectTransform)) { Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), leftColumn.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
             {
                 ForceUpperCase = true,
                 AutoScale = true
             };
 
-            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), leftColumn.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f, Stretch = true };
+            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f, Stretch = true };
 
             var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
 
@@ -102,41 +102,48 @@ namespace Barotrauma
                 }
             };
 
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), isHorizontal: true) { Stretch = true };
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), topRow.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
 
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterHolder.RectTransform), "");
+            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
+
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("FilterServers"));
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
 
-            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), leftColumn.RectTransform), isHorizontal: true) { RelativeSpacing = 0.15f };
+            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.7f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
 
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
             filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
             filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
 
-            filterFull = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
+            filterFull = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
 
             //-------------------------------------------------------------------------------------
             // Bottom row
             //-------------------------------------------------------------------------------------
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f - leftColumn.RectTransform.RelativeSize.Y - 0.017f),
+            var bottomRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f - topRow.RectTransform.RelativeSize.Y),
                 paddedFrame.RectTransform, Anchor.CenterRight))
             {
                 Stretch = true
             };
 
-            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform) { MinSize = new Point(0, 15) },
+            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), bottomRow.RectTransform), isHorizontal: true) { Stretch = true };
+
+            var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
+
+            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverListContainer.RectTransform) { MinSize = new Point(0, 15) },
                 isHorizontal: true)
             {
                 Stretch = true
             };
+
             List<GUITextBlock> labelTexts = new List<GUITextBlock>();
             for (int i = 0; i < columnRelativeWidth.Length; i++)
             {
@@ -164,10 +171,10 @@ namespace Barotrauma
                 };
             }
 
-            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform)) { Stretch = true, RelativeSpacing = 0.02f };
-            serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center))
+            serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListContainer.RectTransform, Anchor.Center))
             {
-                OnSelected = (btn, obj) => 
+                ScrollBarVisible = true,
+                OnSelected = (btn, obj) =>
                 {
                     if (obj is ServerInfo serverInfo)
                     {
@@ -176,15 +183,16 @@ namespace Barotrauma
                     return true;
                 }
             };
+
             labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
             labelHolder.Recalculate();
             GUITextBlock.AutoScaleAndNormalize(labelTexts);
 
             serverList.OnSelected += SelectServer;
 
-            serverPreview = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center));
-            
-            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), rightColumn.RectTransform), style: null);
+            serverPreview = new GUIListBox(new RectTransform(new Vector2(0.45f, 1.0f), serverListHolder.RectTransform, Anchor.Center));
+
+            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), bottomRow.RectTransform), style: null);
 
             GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
                 TextManager.Get("Back"), style: "GUIButtonLarge")
