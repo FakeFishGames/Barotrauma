@@ -62,7 +62,7 @@ namespace Barotrauma
             //Top row
             //-------------------------------------------------------------------------------------
 
-            var topRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), paddedFrame.RectTransform)) { Stretch = true };
+            var topRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform)) { Stretch = true };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
             {
@@ -102,28 +102,6 @@ namespace Barotrauma
                 }
             };
 
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), topRow.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
-
-            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
-
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("FilterServers"));
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
-            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
-            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
-
-            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.7f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
-
-            searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
-            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
-            filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
-
-            filterFull = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
-            filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
-            filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
-
             //-------------------------------------------------------------------------------------
             // Bottom row
             //-------------------------------------------------------------------------------------
@@ -138,6 +116,28 @@ namespace Barotrauma
 
             var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
 
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), serverListContainer.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
+
+            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
+
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
+            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
+            filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
+
+            filterFull = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
+            filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
+            filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
+
+            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
+
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("FilterServers"));
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+            searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
+
             labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.985f, 0.05f), serverListContainer.RectTransform) { MinSize = new Point(0, 15) },
                 isHorizontal: true)
             {
@@ -148,26 +148,27 @@ namespace Barotrauma
             for (int i = 0; i < columnRelativeWidth.Length; i++)
             {
                 var btn = new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), labelHolder.RectTransform),
-                    text: TextManager.Get(columnLabel[i]), textAlignment: Alignment.CenterLeft, style: null)
+                    text: TextManager.Get(columnLabel[i]), textAlignment: Alignment.Center, style: null)
                 {
-                    Color = new Color(12, 14, 15, 255) * 1.5f,
+                    Color = new Color(12, 14, 15, 255) * 0.5f,
                     HoverColor = new Color(12, 14, 15, 255) * 2.5f,
                     SelectedColor = Color.Gray * 0.7f,
                     PressedColor = Color.Gray * 0.7f,
-                    OutlineColor = Color.Gray * 0.7f,
+                    OutlineColor = Color.Black,
                     Font = GUI.SmallFont,
+                    ForceUpperCase = true,
                     UserData = columnLabel[i],
                     OnClicked = SortList
                 };
                 labelTexts.Add(btn.TextBlock);
-                btn.TextBlock.Padding = new Vector4(3.0f, 0.25f, 5.0f, 0.0f) * GUI.Scale;
-                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.3f), btn.RectTransform, Anchor.BottomCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
                 {
                     CanBeFocused = false,
                     UserData = "arrowup",
                     Visible = false
                 };
-                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.3f), btn.RectTransform, Anchor.BottomCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
                 {
                     CanBeFocused = false,
                     UserData = "arrowdown",
@@ -195,7 +196,7 @@ namespace Barotrauma
 
             serverList.OnSelected += SelectServer;
 
-            serverPreview = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            serverPreview = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
                 Color = new Color(12, 14, 15, 190),
             };
