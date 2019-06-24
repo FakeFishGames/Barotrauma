@@ -55,38 +55,43 @@ namespace Barotrauma
 
             menu = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center), isHorizontal: true)
-            { Stretch = true, RelativeSpacing = 0.02f };
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center))
+            { Stretch = true };
 
             //-------------------------------------------------------------------------------------
-            //left column
+            //Top row
             //-------------------------------------------------------------------------------------
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), paddedFrame.RectTransform, Anchor.CenterLeft)) { Stretch = true, RelativeSpacing = 0.5f };
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), paddedFrame.RectTransform)) { Stretch = true };
 
-            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoHolder.RectTransform, Anchor.Center), TextManager.Get("JoinServer"), font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), leftColumn.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
             {
                 ForceUpperCase = true,
                 AutoScale = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
-            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")
+            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), leftColumn.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f, Stretch = true };
+
+            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"));
+            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
             {
                 Text = GameMain.Config.DefaultPlayerName,
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
             };
+
             if (string.IsNullOrEmpty(clientNameBox.Text))
             {
                 clientNameBox.Text = SteamManager.GetUsername();
             }
             clientNameBox.OnTextChanged += RefreshJoinButtonState;
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("ServerIP"));
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "");
+            var ipBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), ipBoxHolder.RectTransform), TextManager.Get("ServerIP"));
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), ipBoxHolder.RectTransform), "");
             ipBox.OnTextChanged += RefreshJoinButtonState;
             ipBox.OnSelected += (sender, key) => 
             {
@@ -97,29 +102,31 @@ namespace Barotrauma
                 }
             };
 
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), isHorizontal: true) { Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), filterHolder.RectTransform), "");
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterHolder.RectTransform), "");
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
 
-            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), filterHolder.RectTransform));
+            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), leftColumn.RectTransform), isHorizontal: true) { RelativeSpacing = 0.15f };
 
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
             filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
             filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
 
-            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
+            filterFull = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(0.001f, 0.333f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
 
             //-------------------------------------------------------------------------------------
-            //right column
+            // Bottom row
             //-------------------------------------------------------------------------------------
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.017f, 1.0f),
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f - leftColumn.RectTransform.RelativeSize.Y - 0.017f),
                 paddedFrame.RectTransform, Anchor.CenterRight))
             {
                 Stretch = true
