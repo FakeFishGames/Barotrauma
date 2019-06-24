@@ -36,7 +36,7 @@ namespace Barotrauma
         private float[] columnRelativeWidth = new float[] { 0.1f, 0.1f, 0.7f, 0.12f, 0.08f, 0.08f };
         private string[] columnLabel = new string[] { "ServerListCompatible", "ServerListHasPassword", "ServerListName", "ServerListRoundStarted", "ServerListPlayers", "ServerListPing" };
 
-        private GUIComponent labelHolder;
+        private GUILayoutGroup labelHolder;
 
         //filters
         private GUITextBox searchBox;
@@ -125,7 +125,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform) { MinSize = new Point(0, 15) },
+            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform) { MinSize = new Point(0, 15) },
                 isHorizontal: true)
             {
                 Stretch = true,
