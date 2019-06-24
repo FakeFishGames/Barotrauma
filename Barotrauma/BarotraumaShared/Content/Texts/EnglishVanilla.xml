@@ -2958,22 +2958,22 @@
   <charactereditor.jointscale>Joint Scale</charactereditor.jointscale>
   <charactereditor.limbscale>Limb Scale</charactereditor.limbscale>
   <charactereditor.selectedanimation>Selected Animation</charactereditor.selectedanimation>
-  <charactereditor.previouscharacter>Previous \nCharacter</charactereditor.previouscharacter>
-  <charactereditor.nextcharacter>Next \nCharacter</charactereditor.nextcharacter>
-  <charactereditor.showparameters>Show Parameters</charactereditor.showparameters>
-  <charactereditor.showspritesheet>Show Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.showragdoll>Show Ragdoll</charactereditor.showragdoll>
-  <charactereditor.editanimations>Edit Animations</charactereditor.editanimations>
-  <charactereditor.editlimbs>Edit Limbs</charactereditor.editlimbs>
-  <charactereditor.editjoints>Edit Joints</charactereditor.editjoints>
-  <charactereditor.editiktargets>Edit IK Targets</charactereditor.editiktargets>
+  <charactereditor.previouscharacter>Previous</charactereditor.previouscharacter>
+  <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
+  <charactereditor.showparameters>Parameters</charactereditor.showparameters>
+  <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
+  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
+  <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
+  <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
+  <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
+  <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
   <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
-  <charactereditor.displaycolliders>Display Colliders</charactereditor.displaycolliders>
+  <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
   <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
   <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
@@ -3029,9 +3029,10 @@
   <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
   <charactereditor.ishumanoid>Is a Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines?</charactereditor.canentersubmarines>
+  <charactereditor.canentersubmarines>Can Enter Submarines (and can walk)?</charactereditor.canentersubmarines>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
+  <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
   <charactereditor.texturedoesnotexist>The texture file does not exist!</charactereditor.texturedoesnotexist>
   <charactereditor.defineragdoll>Define Ragdoll</charactereditor.defineragdoll>
   <charactereditor.loadfromhtml>Load From HTML</charactereditor.loadfromhtml>
@@ -3053,6 +3054,12 @@
   <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
   <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
+  <charactereditor.modespanel>Modes</charactereditor.modespanel>
+  <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
+  <charactereditor.optionspanel>Options</charactereditor.optionspanel>
+  <charactereditor.characterpanel>Character</charactereditor.characterpanel>
+  <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
+  <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
 
   <!-- Submarine editor -->
   <items>Items</items>
@@ -3204,6 +3211,10 @@
   
   <voipnodevices>No audio capture devices found</voipnodevices>
 
+  <wrongfiletype>Wrong file type!</wrongfiletype>
+
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
+  
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>

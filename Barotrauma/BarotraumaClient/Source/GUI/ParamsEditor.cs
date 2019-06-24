@@ -19,6 +19,7 @@ namespace Barotrauma
             }
         }
 
+        public GUIComponent Parent { get; private set; }
         public GUIListBox EditorBox { get; private set; }
         /// <summary>
         /// Uses Linq queries. Don't use too frequently or reimplement.
@@ -29,13 +30,12 @@ namespace Barotrauma
 
         public GUIListBox CreateEditorBox(RectTransform rectT = null)
         {
-            rectT = rectT ?? new RectTransform(new Vector2(0.25f, 0.95f), GUI.Canvas) { MinSize = new Point(340, GameMain.GraphicsHeight) };
+            rectT = rectT ?? new RectTransform(new Vector2(0.25f, 1f), GUI.Canvas) { MinSize = new Point(340, GameMain.GraphicsHeight) };
             rectT.SetPosition(Anchor.TopRight);
-            rectT.RelativeOffset = new Vector2(0.16f, 0);
-            EditorBox = new GUIListBox(rectT)
+            Parent = new GUIFrame(rectT, null, new Color(20, 20, 20, 255));
+            EditorBox = new GUIListBox(new RectTransform(Vector2.One * 0.98f, rectT, Anchor.Center), color: Color.Black, style: null)
             {
-                Spacing = 10,
-                Color = Color.Black
+                Spacing = 10
             };
             return EditorBox;
         }
