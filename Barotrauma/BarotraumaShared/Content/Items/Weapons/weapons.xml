@@ -178,7 +178,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable identifiers="revolverround" />
     </ItemContainer>
-  </Item>
+  </Item>  
   <!--
   <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="35" />
@@ -223,6 +223,7 @@
     </ItemContainer>
   </Item>
 -->
+  
   <Item name="Stun Grenade" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />

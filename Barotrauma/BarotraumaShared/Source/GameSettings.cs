@@ -143,6 +143,8 @@ namespace Barotrauma
         public bool CrewMenuOpen { get; set; } = true;
         public bool ChatOpen { get; set; } = true;
 
+        private string overrideSaveFolder, overrideMultiplayerSaveFolder;
+
         private bool unsavedSettings;
         public bool UnsavedSettings
         {
@@ -608,13 +610,12 @@ namespace Barotrauma
             //allow overriding the save paths in the config file
             if (doc.Root.Attribute("overridesavefolder") != null)
             {
-                string saveFolder = doc.Root.GetAttributeString("overridesavefolder", "");
-                SaveUtil.SaveFolder = saveFolder;
-                SaveUtil.MultiplayerSaveFolder = Path.Combine(saveFolder, "Multiplayer");
+                overrideSaveFolder = SaveUtil.SaveFolder = doc.Root.GetAttributeString("overridesavefolder", "");
+                overrideMultiplayerSaveFolder = SaveUtil.MultiplayerSaveFolder = Path.Combine(overrideSaveFolder, "Multiplayer");
             }
             if (doc.Root.Attribute("overridemultiplayersavefolder") != null)
             {
-                SaveUtil.MultiplayerSaveFolder = doc.Root.GetAttributeString("overridemultiplayersavefolder", "");
+                overrideMultiplayerSaveFolder = SaveUtil.MultiplayerSaveFolder = doc.Root.GetAttributeString("overridemultiplayersavefolder", "");
             }
 
             XElement tutorialsElement = doc.Root.Element("tutorials");
@@ -743,6 +744,15 @@ namespace Barotrauma
                 new XAttribute("crewmenuopen", CrewMenuOpen),
                 new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
                 new XAttribute("editordisclaimershown", EditorDisclaimerShown));
+
+            if (!string.IsNullOrEmpty(overrideSaveFolder))
+            {
+                doc.Root.Add(new XAttribute("overridesavefolder", overrideSaveFolder));
+            }
+            if (!string.IsNullOrEmpty(overrideMultiplayerSaveFolder))
+            {
+                doc.Root.Add(new XAttribute("overridemultiplayersavefolder", overrideMultiplayerSaveFolder));
+            }
 
             if (!ShowUserStatisticsPrompt)
             {

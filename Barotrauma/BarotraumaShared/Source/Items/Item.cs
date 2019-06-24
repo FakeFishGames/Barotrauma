@@ -152,13 +152,12 @@ namespace Barotrauma
             get { return description ?? prefab.Description; }
             set { description = value; }
         }
-
-        private bool hiddenInGame;
+        
         [Editable, Serialize(false, true)]
         public bool HiddenInGame
         {
-            get { return hiddenInGame; }
-            set { hiddenInGame = value; }
+            get;
+            set;
         }
 
         public float ImpactTolerance
@@ -262,7 +261,26 @@ namespace Barotrauma
         /// </summary>
         public string ContainerIdentifier
         {
-            get { return Container?.prefab.Identifier ?? ""; }
+            get
+            {
+                return 
+                    Container?.prefab.Identifier ?? 
+                    ParentInventory?.Owner?.ToString() ?? 
+                    "";
+            }
+            set { /*do nothing*/ }
+        }
+
+        [Serialize(false, false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to check if the physics body of the item is active
+        /// </summary>
+        public bool PhysicsBodyActive
+        {
+            get
+            {
+                return body != null && body.Enabled;
+            }
             set { /*do nothing*/ }
         }
 

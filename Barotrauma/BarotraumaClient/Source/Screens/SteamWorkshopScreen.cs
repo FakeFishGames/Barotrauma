@@ -47,6 +47,8 @@ namespace Barotrauma
 
         public SteamWorkshopScreen()
         {
+            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
             menu = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
@@ -209,6 +211,11 @@ namespace Barotrauma
             backButton.SelectedColor = backButton.Color;
 
             SelectTab(Tab.Mods);
+        }
+
+        private void OnResolutionChanged()
+        {
+            menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
         }
 
         public override void Select()

@@ -228,7 +228,11 @@ namespace Barotrauma
                         attacker = item.GetComponent<Projectile>()?.User;
                         if (attacker == null) attacker = item.GetComponent<MeleeWeapon>()?.User;
                     }
-                    c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
+
+                    //use a position slightly from the limb's position towards the explosion
+                    //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
+                    Vector2 hitPos = limb.WorldPosition + (worldPosition - limb.WorldPosition) / dist * 0.01f;
+                    c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
                     
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {

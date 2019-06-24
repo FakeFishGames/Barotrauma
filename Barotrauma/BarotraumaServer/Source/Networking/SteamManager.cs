@@ -53,6 +53,7 @@ namespace Barotrauma.Steam
             instance.server.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName ?? "";
             Instance.server.SetKey("message", GameMain.Server.ServerSettings.ServerMessageText);
             Instance.server.SetKey("version", GameMain.Version.ToString());
+            Instance.server.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
             Instance.server.SetKey("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
@@ -74,7 +75,7 @@ namespace Barotrauma.Steam
         public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
             if (instance == null || !instance.isInitialized || instance.server == null) return false;
-
+            
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
             if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
             {

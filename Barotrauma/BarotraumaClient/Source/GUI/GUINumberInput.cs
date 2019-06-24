@@ -131,13 +131,13 @@ namespace Barotrauma
         private float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
 
-        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center) : base(style, rectT)
+        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center, float? relativeButtonAreaWidth = null) : base(style, rectT)
         {
             LayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), isHorizontal: true) { Stretch = true };
 
-            float relativeButtonAreaWidth = MathHelper.Clamp(Rect.Height / (float)Rect.Width, 0.1f, 0.5f);
+            float _relativeButtonAreaWidth = relativeButtonAreaWidth ?? MathHelper.Clamp(Rect.Height / (float)Rect.Width, 0.1f, 0.5f);
 
-            TextBox = new GUITextBox(new RectTransform(new Vector2(1.0f - relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform), textAlignment: textAlignment, style: style)
+            TextBox = new GUITextBox(new RectTransform(new Vector2(1.0f - _relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform), textAlignment: textAlignment, style: style)
             {
                 ClampText = false,
                 // For some reason the caret in the number inputs is dimmer than it should.
@@ -146,7 +146,12 @@ namespace Barotrauma
                 CaretColor = Color.White
             };
             TextBox.OnTextChanged += TextChanged;
-            var buttonArea = new GUIFrame(new RectTransform(new Vector2(relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight) { MinSize = new Point(Rect.Height, 0) }, style: null);
+            var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
+            if (!relativeButtonAreaWidth.HasValue)
+            {
+                // Not sure what's the point of this
+                buttonArea.RectTransform.MinSize = new Point(Rect.Height, 0);
+            }
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+");
             PlusButton.OnButtonDown += () =>
             {

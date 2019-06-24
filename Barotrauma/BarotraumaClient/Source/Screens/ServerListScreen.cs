@@ -206,6 +206,7 @@ namespace Barotrauma
 
             refreshDisableTimer = DateTime.Now;
         }
+
         private void OnResolutionChanged()
         {
             menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
@@ -219,7 +220,7 @@ namespace Barotrauma
 
             var arrowUp = button.GetChildByUserData("arrowup");
             var arrowDown = button.GetChildByUserData("arrowdown");
-
+            
             //disable arrow buttons in other labels
             foreach (var child in button.Parent.Children)
             {

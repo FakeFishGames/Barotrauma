@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            if (equipper == null)
+            if (equipper == null || equipper.Removed)
             {
                 IsActive = false;
                 return;
