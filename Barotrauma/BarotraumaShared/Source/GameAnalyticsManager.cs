@@ -72,8 +72,7 @@ namespace Barotrauma
                 {
                     string trimmedName = cp.Name.Replace(":", "").Replace(" ", "");
                     sb.Append(trimmedName.Substring(0, Math.Min(32, trimmedName.Length)));
-                    if (i < GameMain.Config.SelectedContentPackages.Count - 1) sb.Append(" ");
-                    GameAnalytics.AddDesignEvent(sb.ToString());
+                    if (i < GameMain.Config.SelectedContentPackages.Count - 1) { sb.Append(" "); }
                 }
                 GameAnalytics.AddDesignEvent(sb.ToString());
             }
