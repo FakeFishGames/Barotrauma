@@ -26,6 +26,10 @@ namespace Barotrauma.Networking
         //for keeping track of disconnected clients in case the reconnect shortly after
         private List<Client> disconnectedClients = new List<Client>();
 
+        //keeps track of players who've previously been playing on the server
+        //so kick votes persist during the session and the server can let the clients know what name this client used previously
+        private readonly List<PreviousPlayer> previousPlayers = new List<PreviousPlayer>();
+
         private int roundStartSeed;
 
         //is the server running
@@ -1969,6 +1973,7 @@ namespace Barotrauma.Networking
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
             msg.Write(serverSettings.AllowDisguises);
+            msg.Write(serverSettings.AllowRewiring);
 
             Traitor traitor = null;
             if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)
@@ -2238,6 +2243,19 @@ namespace Barotrauma.Networking
             }
 
             if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
+
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+            if (previousPlayer == null)
+            {
+                previousPlayer = new PreviousPlayer(client);
+                previousPlayers.Add(previousPlayer);
+            }
+            previousPlayer.Name = client.Name;
+            previousPlayer.KickVoters.Clear();
+            foreach (Client c in connectedClients)
+            {
+                if (client.HasKickVoteFrom(c)) { previousPlayer.KickVoters.Add(c); }
+            }
 
             client.Connection.Disconnect(targetmsg);
             client.Dispose();
@@ -2568,6 +2586,13 @@ namespace Barotrauma.Networking
                 c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
+                var previousPlayer = previousPlayers.Find(p => p.MatchesClient(c));
+                if (previousPlayer != null)
+                {
+                    //reset the client's kick votes (they can rejoin after their ban expires)
+                    previousPlayer.KickVoters.Clear();
+                }
+
                 SendChatMessage($"ServerMessage.KickedFromServer~[client]={c.Name}", ChatMessageType.Server, null);
                 KickClient(c, "ServerMessage.KickedByVote");
                 BanClient(c, "ServerMessage.KickedByVoteAutoBan", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
@@ -3038,6 +3063,27 @@ namespace Barotrauma.Networking
         void FinishUPnP()
         {
             //do nothing
+        }
+    }
+    
+    partial class PreviousPlayer
+    {
+        public string Name;
+        public string IP;
+        public UInt64 SteamID;
+        public readonly List<Client> KickVoters = new List<Client>();
+
+        public PreviousPlayer(Client c)
+        {
+            Name = c.Name;
+            IP = c.Connection?.RemoteEndPoint?.Address?.ToString() ?? "";
+            SteamID = c.SteamID;
+        }
+
+        public bool MatchesClient(Client c)
+        {
+            if (c.SteamID > 0 && SteamID > 0) { return c.SteamID == SteamID; }
+            return c.IPMatches(IP);
         }
     }
 }

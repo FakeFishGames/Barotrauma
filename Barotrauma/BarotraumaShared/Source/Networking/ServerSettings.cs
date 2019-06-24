@@ -539,7 +539,14 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-
+        
+        [Serialize(true, true)]
+        public bool AllowRewiring
+        {
+            get;
+            set;
+        }
+        
         private YesNoMaybe traitorsEnabled;
         public YesNoMaybe TraitorsEnabled
         {
