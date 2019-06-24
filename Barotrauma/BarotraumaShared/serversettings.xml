@@ -10,7 +10,6 @@
   startwhenclientsready="False"
   startwhenclientsreadyratio="0.8"
   allowspectating="True"
-  voipenabled="True"
   endroundatlevelend="True"
   saveserverlogs="True"
   allowragdollbutton="True"
@@ -22,6 +21,7 @@
   botcount="0"
   maxbotcount="16"
   allowdisguises="True"
+  allowrewiring="True"
   subselectionmode="Manual"
   modeselectionmode="Manual"
   endvoterequiredratio="0.6"
@@ -48,5 +48,5 @@
   TraitorsEnabled="No"
   BotSpawnMode="Normal"
   AllowedRandomMissionTypes="Random,Salvage,Monster,Cargo,Combat"
-  AllowedClientNameChars="32-33,38-46,48-57,65-90,91,93,95-122,192-255,384-591,1024-1279"
+  AllowedClientNameChars="32-33,38-46,48-57,65-90,91-91,93-93,95-122,192-255,384-591,1024-1279"
   ServerMessage="" />

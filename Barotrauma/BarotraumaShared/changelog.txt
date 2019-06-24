@@ -31,6 +31,8 @@ to working like buttons which send out a pulse when interacted with).
 - Watchmen now hold position when attacked.
 - Added a subtle glow to alien buttons to make them a bit more noticeable.
 - Items that are set to be hidden in-game can still be interacted with in the sub editor.
+- EXPERIMENTAL: option to disable rewiring items in multiplayer. At the moment the setting can only be
+changed by editing a parameter called "allowrewiring" in serversettings.xml.
 
 Networking fixes:
 - Fixed an ID mismatch problem that occasionally caused clients to get kicked out in the multiplayer 
