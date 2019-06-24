@@ -3,9 +3,15 @@ v0.9.1.0
 ---------------------------------------------------------------------------------------------------------
 
 Additions and changes:
+- Made husks more common.
+- Disabled riot shields for now (too much griefing potential).
 - Toolboxes can be fabricated and decontructed.
 - Nerfed nitroglycerin's structure damage and increased the impact tolerance from 4 to 6.
+- Made alien pistols a little less underwhelming (sounds, recoil, particle effects).
+- Modified welding fuel tank and oxygen tank sprites a bit to differentiate them from each other a bit more.
+- Modified plasma cutter and welding tool sprites a bit to differentiate them from each other a bit more.
 - Diving suits play the warning beep when there's no tank in the suit (not just when the tank is running out).
+- Server list can be sorted according to ping, name, compatibility or any of the other property in the list.
 - Switches send out a continuous 0/1 signal that can be flipped by interacting with the switch (as opposed 
 to working like buttons which send out a pulse when interacted with).
 - Docking ports of the enemy submarine are not shown on the sonar during combat missions.
@@ -31,9 +37,12 @@ Networking fixes:
 campaign, usually with an error message warning about a missing item.
 - Fixed servers using a local campaign save path sent by the client setupping the campaign, preventing
 the campaign from starting up if the path does not exist at the server's end.
- - Fixed radio communication occasionally not working between characters in the multiplayer campaign. Characters 
+- Fixed radio communication occasionally not working between characters in the multiplayer campaign. Characters 
  that had made it through at least one round were not able to communicate through radio with characters that 
  have just been spawned for the first time.
+- Kick votes persist during a multiplayer session even if the client disconnects (= disconnecting and rejoining 
+just before you get kicked doesn't work anymore).
+- The server sends a "this client previously used the name xxx" message when a client rejoins with a different name.
 - Fixed client that's hosting a server not being taken into account in the player count visible on the server list.
 - Fixed server list not displaying non-English symbols correctly (e.g. Cyrillic or Chinese characters).
 - Fixed GameServer.UnbanPlayer passing the name to BanList in lower case even though BanList was case 
