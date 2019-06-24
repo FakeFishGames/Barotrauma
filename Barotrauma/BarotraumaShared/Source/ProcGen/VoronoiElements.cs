@@ -198,7 +198,7 @@ namespace Voronoi2
         {
             foreach (GraphEdge edge in Edges)
             {
-                if (MathUtils.LinesIntersect(point, Center, edge.Point1, edge.Point2)) return false;
+                if (MathUtils.LinesIntersect(point, Center, edge.Point1 + Translation, edge.Point2 + Translation)) return false;
             }
 
             return true;
