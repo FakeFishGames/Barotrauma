@@ -157,7 +157,8 @@ namespace Barotrauma.Items.Components
 
         partial void UseProjSpecific(float deltaTime);
 
-        private List<FireSource> fireSourcesInRange = new List<FireSource>();
+        private readonly HashSet<Character> hitCharacters = new HashSet<Character>();
+        private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
@@ -165,6 +166,7 @@ namespace Barotrauma.Items.Components
             {
                 var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true);
                 Type lastHitType = null;
+                hitCharacters.Clear();
                 foreach (Body body in bodies)
                 {
                     Type bodyType = body.UserData?.GetType();
@@ -173,6 +175,23 @@ namespace Barotrauma.Items.Components
                         //stop the ray if it already hit a door/wall and is now about to hit some other type of entity
                         if (lastHitType == typeof(Item) || lastHitType == typeof(Structure)) { break; }
                     }
+
+                    Character hitCharacter = null;
+                    if (body.UserData is Limb limb)
+                    {
+                        hitCharacter = limb.character;
+                    }
+                    else if (body.UserData is Character character)
+                    {
+                        hitCharacter = character;
+                    }
+                    //only do damage once to each character even if they ray hit multiple limbs
+                    if (hitCharacter != null)
+                    {
+                        if (hitCharacters.Contains(hitCharacter)) { continue; }
+                        hitCharacters.Add(hitCharacter);
+                    }
+
                     if (FixBody(user, deltaTime, degreeOfSuccess, body))
                     {
                         if (bodyType != null) { lastHitType = bodyType; }

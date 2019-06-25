@@ -498,7 +498,7 @@ namespace Barotrauma
         {
             Path = path;
 
-#if OSX
+#if OSX || LINUX
             Path = Path.Replace("\\", "/");
 #endif
 

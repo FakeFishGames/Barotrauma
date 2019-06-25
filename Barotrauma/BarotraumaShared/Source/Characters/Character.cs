@@ -836,13 +836,21 @@ namespace Barotrauma
         private static string humanConfigFile;
         public static string HumanConfigFile
         {
-            get 
+            get
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    humanConfigFile = GetConfigFile("Human");
+                    humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
+                            .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == "human.xml");
+
+                    if (humanConfigFile == null)
+                    {
+                        DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
+                        DebugConsole.ThrowError($"(The config file must end with \"human.xml\")");
+                        return string.Empty;
+                    }
                 }
-                return humanConfigFile; 
+                return humanConfigFile;
             }
         }
 
@@ -859,12 +867,16 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Searches for a character config file from all currently selected content packages, 
+        /// or from a specific package if the contentPackage parameter is given.
+        /// </summary>
         public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
         {
             string configFile = null;
             if (contentPackage == null)
             {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character, searchAllContentPackages: true)
+                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
                     .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
             }
             else
@@ -1519,10 +1531,9 @@ namespace Barotrauma
             if (inventory.Owner is Item)
             {
                 var owner = (Item)inventory.Owner;
-                if (!CanInteractWith(owner))
-                {
-                    return false;
-                }
+                if (!CanInteractWith(owner)) { return false; }
+                ItemContainer container = owner.GetComponents<ItemContainer>().FirstOrDefault(ic => ic.Inventory == inventory);
+                if (container != null && !container.HasRequiredItems(this, addMessage: false)) { return false; }
             }
             return true;
         }

@@ -14,7 +14,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
 
         private GUIComponent buttonsParent;
 
@@ -37,7 +37,11 @@ namespace Barotrauma
         private GUIComponent titleText;
 
         private CreditsPlayer creditsPlayer;
-        
+
+        #if OSX
+        private bool firstLoadOnMac = true;
+        #endif
+
         #region Creation
         public MainMenuScreen(GameMain game)
         {
@@ -360,9 +364,9 @@ namespace Barotrauma
                 OnClicked = SelectTab
             };
         }
-#endregion
+        #endregion
 
-#region Selection
+        #region Selection
         public override void Select()
         {
             base.Select();
@@ -378,6 +382,25 @@ namespace Barotrauma
             ResetButtonStates(null);
 
             GameAnalyticsManager.SetCustomDimension01("");
+
+            #if OSX
+            // Hack for adjusting the viewport properly after splash screens on older Macs
+            if (firstLoadOnMac)
+            {
+                firstLoadOnMac = false;
+
+                menuTabs[(int)Tab.Empty] = new GUIFrame(new RectTransform(new Vector2(1f, 1f), GUI.Canvas), "", Color.Transparent)
+                {
+                    CanBeFocused = false
+                };
+                var emptyList = new GUIListBox(new RectTransform(new Vector2(0.0f, 0.0f), menuTabs[(int)Tab.Empty].RectTransform))
+                {
+                    CanBeFocused = false
+                };
+
+                SelectTab(null, Tab.Empty);
+            }
+            #endif
         }
 
         public override void Deselect()
@@ -701,7 +724,14 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                int ownerKey = Math.Max(CryptoRandom.Instance.Next(),1);
+                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault();
+                if (string.IsNullOrEmpty(exeName))
+                {
+                    DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");
+                    exeName = "DedicatedServer.exe";
+                }
+
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
 
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -port " + port.ToString() +
@@ -711,16 +741,15 @@ namespace Barotrauma
                                    " -maxplayers " + maxPlayersBox.Text +
                                     " -ownerkey " + ownerKey.ToString();
 
-                string filename = "DedicatedServer.exe";
+                string filename = exeName;
 #if LINUX || OSX
-                filename = "./DedicatedServer";
+                filename = "./" + Path.GetFileNameWithoutExtension(exeName);
 #endif
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = filename,
-                    Arguments = arguments
+                    Arguments = arguments,
 #if !DEBUG
-                    ,
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif
                 };

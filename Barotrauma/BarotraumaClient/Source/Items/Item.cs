@@ -451,7 +451,7 @@ namespace Barotrauma
 
         public override void UpdateEditing(Camera cam)
         {
-            if (editingHUD == null || editingHUD.UserData as Item != this)
+            if (editingHUD == null || editingHUD.UserData == null)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }

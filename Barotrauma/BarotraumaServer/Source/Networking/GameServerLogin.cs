@@ -418,7 +418,7 @@ namespace Barotrauma.Networking
                 return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
             }
 
-            if (!serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
+            if (inc.SenderConnection != OwnerConnection && !serverSettings.Whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address))
             {
                 DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
@@ -470,6 +470,17 @@ namespace Barotrauma.Networking
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
             ConnectedClients.Add(newClient);
+
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(newClient));
+            if (previousPlayer != null)
+            {
+                foreach (Client c in previousPlayer.KickVoters)
+                {
+                    if (!connectedClients.Contains(c)) { continue; }
+                    newClient.AddKickVote(c);
+                }
+            }
+
             LastClientListUpdateID++;
 
             if (newClient.Connection == OwnerConnection)
@@ -482,6 +493,13 @@ namespace Barotrauma.Networking
             }
             
             GameMain.Server.SendChatMessage($"ServerMessage.JoinedServer~[client]={clName}", ChatMessageType.Server, null);
+            serverSettings.ServerDetailsChanged = true;
+
+            if (previousPlayer != null && previousPlayer.Name != newClient.Name)
+            {
+                GameMain.Server.SendChatMessage($"ServerMessage.PreviousClientName~[client]={clName}~[previousname]={previousPlayer.Name}", ChatMessageType.Server, null);
+                previousPlayer.Name = newClient.Name;
+            }
 
             var savedPermissions = serverSettings.ClientPermissions.Find(cp => 
                 cp.SteamID > 0 ? 

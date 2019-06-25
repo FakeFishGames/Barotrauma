@@ -26,6 +26,10 @@ namespace Barotrauma.Networking
         //for keeping track of disconnected clients in case the reconnect shortly after
         private List<Client> disconnectedClients = new List<Client>();
 
+        //keeps track of players who've previously been playing on the server
+        //so kick votes persist during the session and the server can let the clients know what name this client used previously
+        private readonly List<PreviousPlayer> previousPlayers = new List<PreviousPlayer>();
+
         private int roundStartSeed;
 
         //is the server running
@@ -34,7 +38,7 @@ namespace Barotrauma.Networking
         private NetServer server;
         
         private DateTime refreshMasterTimer;
-        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
+        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 60);
         private bool registeredToMaster;
 
         private DateTime roundStartTime;
@@ -657,23 +661,25 @@ namespace Barotrauma.Networking
                 updateTimer = DateTime.Now + updateInterval;
             }
 
-            if (!registeredToMaster || refreshMasterTimer >= DateTime.Now) return;
-
-            if (GameMain.Config.UseSteamMatchmaking)
+            if (registeredToMaster && (DateTime.Now > refreshMasterTimer || serverSettings.ServerDetailsChanged))
             {
-                bool refreshSuccessful = SteamManager.RefreshServerDetails(this);
-                if (GameSettings.VerboseLogging)
+                if (GameMain.Config.UseSteamMatchmaking)
                 {
-                    Log(refreshSuccessful ?
-                        "Refreshed server info on the server list." :
-                        "Refreshing server info on the server list failed.", ServerLog.MessageType.ServerMessage);
+                    bool refreshSuccessful = SteamManager.RefreshServerDetails(this);
+                    if (GameSettings.VerboseLogging)
+                    {
+                        Log(refreshSuccessful ?
+                            "Refreshed server info on the server list." :
+                            "Refreshing server info on the server list failed.", ServerLog.MessageType.ServerMessage);
+                    }
                 }
+                else
+                {
+                    CoroutineManager.StartCoroutine(RefreshMaster());
+                }
+                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+                serverSettings.ServerDetailsChanged = false;
             }
-            else
-            {
-                CoroutineManager.StartCoroutine(RefreshMaster());
-            }
-            refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
         
         private void ReadDataMessage(NetIncomingMessage inc)
@@ -724,7 +730,7 @@ namespace Barotrauma.Networking
                     bool isNew = inc.ReadBoolean(); inc.ReadPadBits();
                     if (isNew)
                     {
-                        string savePath = inc.ReadString();
+                        string saveName = inc.ReadString();
                         string seed = inc.ReadString();
                         string subName = inc.ReadString();
                         string subHash = inc.ReadString();
@@ -739,7 +745,11 @@ namespace Barotrauma.Networking
                         }
                         else
                         {
-                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, matchingSub.FilePath, seed);
+                            string localSavePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode))
+                            {
+                                MultiPlayerCampaign.StartNewCampaign(localSavePath, matchingSub.FilePath, seed);
+                            }
                         }
                      }
                     else
@@ -2182,7 +2192,6 @@ namespace Barotrauma.Networking
 
         public override void UnbanPlayer(string playerName, string playerIP)
         {
-            playerName = playerName.ToLowerInvariant();
             if (!string.IsNullOrEmpty(playerIP))
             {
                 serverSettings.BanList.UnbanIP(playerIP);
@@ -2230,6 +2239,19 @@ namespace Barotrauma.Networking
 
             if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
 
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+            if (previousPlayer == null)
+            {
+                previousPlayer = new PreviousPlayer(client);
+                previousPlayers.Add(previousPlayer);
+            }
+            previousPlayer.Name = client.Name;
+            previousPlayer.KickVoters.Clear();
+            foreach (Client c in connectedClients)
+            {
+                if (client.HasKickVoteFrom(c)) { previousPlayer.KickVoters.Add(c); }
+            }
+
             client.Connection.Disconnect(targetmsg);
             client.Dispose();
             connectedClients.Remove(client);
@@ -2240,6 +2262,7 @@ namespace Barotrauma.Networking
 
             UpdateCrewFrame();
 
+            serverSettings.ServerDetailsChanged = true;
             refreshMasterTimer = DateTime.Now;
         }
 
@@ -2558,6 +2581,13 @@ namespace Barotrauma.Networking
                 c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
+                var previousPlayer = previousPlayers.Find(p => p.MatchesClient(c));
+                if (previousPlayer != null)
+                {
+                    //reset the client's kick votes (they can rejoin after their ban expires)
+                    previousPlayer.KickVoters.Clear();
+                }
+
                 SendChatMessage($"ServerMessage.KickedFromServer~[client]={c.Name}", ChatMessageType.Server, null);
                 KickClient(c, "ServerMessage.KickedByVote");
                 BanClient(c, "ServerMessage.KickedByVoteAutoBan", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
@@ -3028,6 +3058,27 @@ namespace Barotrauma.Networking
         void FinishUPnP()
         {
             //do nothing
+        }
+    }
+    
+    partial class PreviousPlayer
+    {
+        public string Name;
+        public string IP;
+        public UInt64 SteamID;
+        public readonly List<Client> KickVoters = new List<Client>();
+
+        public PreviousPlayer(Client c)
+        {
+            Name = c.Name;
+            IP = c.Connection?.RemoteEndPoint?.Address?.ToString() ?? "";
+            SteamID = c.SteamID;
+        }
+
+        public bool MatchesClient(Client c)
+        {
+            if (c.SteamID > 0 && SteamID > 0) { return c.SteamID == SteamID; }
+            return c.IPMatches(IP);
         }
     }
 }

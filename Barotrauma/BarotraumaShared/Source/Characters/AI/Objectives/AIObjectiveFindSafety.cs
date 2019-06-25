@@ -196,7 +196,7 @@ namespace Barotrauma
                 if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
                 if (unreachable.Contains(hull)) { continue; }
                 float hullSafety = 0;
-                if (character.CurrentHull != null)
+                if (character.CurrentHull != null && character.Submarine != null)
                 {
                     // Inside
                     if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }

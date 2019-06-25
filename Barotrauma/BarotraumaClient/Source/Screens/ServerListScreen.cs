@@ -48,6 +48,8 @@ namespace Barotrauma
                 
         public ServerListScreen()
         {
+            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+
             menu = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center), isHorizontal: true)
@@ -170,6 +172,11 @@ namespace Barotrauma
             refreshDisableTimer = DateTime.Now;
         }
 
+        private void OnResolutionChanged()
+        {
+            menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
+        }
+
         public override void Select()
         {
             base.Select();
@@ -205,6 +212,8 @@ namespace Barotrauma
                     UserData = "noresults"
                 };
             }
+
+            serverList.UpdateScrollBarSize();
         }
 
         private bool RefreshJoinButtonState(GUIComponent component, object obj)

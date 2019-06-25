@@ -137,10 +137,10 @@ namespace Barotrauma.Items.Components
 
             public Vector2 AvoidStrength;
 
-            public ObstacleDebugInfo(GraphEdge edge, Vector2? intersection, float dot, Vector2 avoidStrength)
+            public ObstacleDebugInfo(GraphEdge edge, Vector2? intersection, float dot, Vector2 avoidStrength, Vector2 translation)
             {
-                Point1 = edge.Point1;
-                Point2 = edge.Point2;
+                Point1 = edge.Point1 + translation;
+                Point2 = edge.Point2 + translation;
                 Intersection = intersection;
                 Dot = dot;
                 AvoidStrength = avoidStrength;
@@ -209,6 +209,11 @@ namespace Barotrauma.Items.Components
             currPowerConsumption = powerConsumption;
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) { return; }
+
+            if (user != null && user.Removed)
+            {
+                user = null;
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
@@ -333,14 +338,14 @@ namespace Barotrauma.Items.Components
             {
                 foreach (GraphEdge edge in cell.Edges)
                 {
-                    if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
+                    if (MathUtils.GetLineIntersection(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
                     {
                         Vector2 diff = controlledSub.WorldPosition - intersection;
 
                         //far enough -> ignore
                         if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y)
                         {
-                            debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, 0.0f, Vector2.Zero));
+                            debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, 0.0f, Vector2.Zero, Vector2.Zero));
                             continue;
                         }
                         if (diff.LengthSquared() < 1.0f) diff = Vector2.UnitY;
@@ -352,13 +357,13 @@ namespace Barotrauma.Items.Components
                         //not heading towards the wall -> ignore
                         if (dot < 0.5)
                         {
-                            debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, Vector2.Zero));
+                            debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, Vector2.Zero, cell.Translation));
                             continue;
                         }
                         
                         Vector2 change = (normalizedDiff * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;                        
                         newAvoidStrength += change * dot;
-                        debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, change * dot));
+                        debugDrawObstacles.Add(new ObstacleDebugInfo(edge, intersection, dot, change * dot, cell.Translation));
                     }
                 }
             }

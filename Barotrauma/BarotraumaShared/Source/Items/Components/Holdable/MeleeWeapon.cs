@@ -53,12 +53,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        /// <summary>
-        /// How useful the weapon is in combat? Used by AI to sort the used weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
-        /// </summary>
-        [Serialize(0f, false)]
-        public float CombatPriority { get; private set; }
-
         public MeleeWeapon(Item item, XElement element)
             : base(item, element)
         {

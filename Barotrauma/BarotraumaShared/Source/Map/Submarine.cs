@@ -365,7 +365,9 @@ namespace Barotrauma
                         {
                             using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
                             {
-                                PreviewImage = new Sprite(TextureLoader.FromStream(mem, preMultiplyAlpha: false), null, null);
+                                var texture = TextureLoader.FromStream(mem, preMultiplyAlpha: false, path: filePath);
+                                if (texture == null) { throw new Exception("PreviewImage texture returned null"); }
+                                PreviewImage = new Sprite(texture, null, null);
                             }
                         }
                         catch (Exception e)
@@ -382,7 +384,6 @@ namespace Barotrauma
 
             DockedTo = new List<Submarine>();
 
-            ID = ushort.MaxValue;
             FreeID();
         }
 
@@ -1405,7 +1406,7 @@ namespace Barotrauma
             }
 
 
-            ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
+            ID = (ushort)(ushort.MaxValue - 1 - Submarine.loaded.IndexOf(this));
         }
 
         public static Submarine Load(XElement element, bool unloadPrevious)
@@ -1553,7 +1554,7 @@ namespace Barotrauma
             if (MainSub == this) MainSub = null;
             if (MainSubs[1] == this) MainSubs[1] = null;
 
-            DockedTo.Clear();
+            DockedTo?.Clear();
         }
 
         public void Dispose()

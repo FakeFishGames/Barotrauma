@@ -1537,7 +1537,7 @@ namespace Barotrauma
                     {
                         UserData = selectedClient
                     };
-                    banButton.OnClicked += BanPlayer;
+                    banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
                     banButton.OnClicked += ClosePlayerFrame;
 
                     var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
@@ -1545,7 +1545,7 @@ namespace Barotrauma
                     {
                         UserData = selectedClient
                     };
-                    rangebanButton.OnClicked += BanPlayerRange;
+                    rangebanButton.OnClicked = (bt, userdata) => { BanPlayerRange(selectedClient); return true; };
                     rangebanButton.OnClicked += ClosePlayerFrame;
                 }
 
@@ -1557,7 +1557,7 @@ namespace Barotrauma
                         TextManager.Get("VoteToKick"))
                     {
                         Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
-                        OnClicked = GameMain.Client.VoteForKick,
+                        OnClicked = (btn, userdata) => { GameMain.Client.VoteForKick(selectedClient); btn.Enabled = false; return true; },
                         UserData = selectedClient
                     };
                 }
@@ -1570,7 +1570,7 @@ namespace Barotrauma
                     {
                         UserData = selectedClient
                     };
-                    kickButton.OnClicked = KickPlayer;
+                    kickButton.OnClicked = (bt, userdata) => { KickPlayer(selectedClient); return true; };
                     kickButton.OnClicked += ClosePlayerFrame;
                 }
 
@@ -1599,28 +1599,22 @@ namespace Barotrauma
             return true;
         }
 
-        public bool KickPlayer(GUIButton button, object userData)
+        public void KickPlayer(Client client)
         {
-            Client client = userData as Client;
-            if (client == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(client.Name, false);            
-            return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, false);    
         }
 
-        public bool BanPlayer(GUIButton button, object userData)
+        public void BanPlayer(Client client)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
             GameMain.Client.CreateKickReasonPrompt(client.Name, true);
-            return false;
         }
 
-        public bool BanPlayerRange(GUIButton button, object userData)
+        public void BanPlayerRange(Client client)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
             GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
-            return false;
         }
         
         public override void AddToGUIUpdateList()

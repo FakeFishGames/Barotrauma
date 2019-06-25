@@ -20,8 +20,8 @@ namespace Barotrauma
         /// </summary>
         const float CharacterWaitOnSwitch = 10.0f;
 
-        private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-        private List<Character> characters = new List<Character>();
+        private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private readonly List<Character> characters = new List<Character>();
 
         private Point screenResolution;
 
@@ -1318,7 +1318,7 @@ namespace Barotrauma
             GUIComponent existingPreview = crewFrame.FindChild("SelectedCharacter");
             if (existingPreview != null) crewFrame.RemoveChild(existingPreview);
 
-            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
+            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.9f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
             {
                 UserData = "SelectedCharacter"
             };

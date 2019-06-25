@@ -122,6 +122,8 @@ namespace Barotrauma
 
             GapList.Add(this);
             InsertToList();
+
+            DebugConsole.Log("Created gap (" + ID + ")");
         }
 
         public override MapEntity Clone()

@@ -1,4 +1,81 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.0.7
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Made husks more common.
+
+Multiplayer fixes:
+- Fixed an ID mismatch problem that occasionally caused clients to get kicked out in the multiplayer 
+campaign, usually with an error message warning about a missing item.
+- Fixed servers using a local campaign save path sent by the client setupping the campaign, preventing
+the campaign from starting up if the path does not exist at the server's end.
+- Fixed radio communication occasionally not working between characters in the multiplayer campaign. Characters 
+that had made it through at least one round were not able to communicate through radio with characters that 
+have just been spawned for the first time.
+- Kick votes persist during a multiplayer session even if the client disconnects (= disconnecting and rejoining 
+just before you get kicked doesn't work anymore).
+- The server sends a "this client previously used the name xxx" message when a client rejoins with a different name.
+- Fixed GameServer.UnbanPlayer passing the name to BanList in lower case even though BanList was case 
+sensitive (preventing unbanning clients with the "unban" command if their name is not in lower case).
+- Fixed server not saving the whitelist when it's enabled/disabled, causing the setting to revert when 
+relaunching the server.
+- Fixed structure texture scale and texture offset now being reverting to default values when the 
+submarine is saved by the server, causing them to reset between campaign rounds.
+- Fixed client always launching the default "DedicatedServer.exe" even if using a content package that 
+should replace the server exe.
+- Servers only report content packages with files that cause multiplayer incompatibility to the master server. 
+Fixes servers showing up as incompatible in the server list if they have custom sub files (or other types 
+of files that don't cause compatibility issues) installed.
+- Fixed crashing when clients attempted to kick/ban players through the in-game info menu when a round
+was running.
+- Fixed client that's hosting a server not being taken into account in the player count visible on the server list.
+- Fixed server list not displaying non-English symbols correctly (e.g. Cyrillic or Chinese characters).
+
+Misc fixes:
+- Replaced WinForms with SDL which should resolve most of the fullscreen/resolution issues. It's also now
+possible to change the resolution when in fullscreen without having to restart the game.
+- Fixes to the DXGI crashes during startup.
+- Fixed Character.GetConfigFile searching for the character file from all available content packages, not 
+just the ones that are currently selected. Caused modded character files to affect the game even when 
+the mod was not enabled, leading to various issues such as characters failing to equip items if the mod
+changes the number or type of inventory slots a character has.
+- Fixed a bug in monster/item spawnpoint logic that occasionally caused perfectly valid spawnpoints to be 
+discarded when there were floating ice chunks in the level, sometimes causing monsters to spawn very
+far from the submarine (which often lead to the player not running into them at all).
+- Fixed bots not being able to retaliate when attacked with a repair tool.
+- Fixed crashing when firing a revolver in the sub editor.
+- Fixed items applying their status effects twice if they're put into a container by swapping them with
+another item. For example, replacing a fuel rod in the reactor by dropping a new fuel rod on it caused
+the reactor behave as if it had two rods in it.
+- Switches send out a continuous 0/1 signal that can be flipped by interacting with the switch (as opposed 
+to working like buttons which send out a pulse when interacted with).
+- Fixed an issue that occasionally caused the main menu to look distorted when launching the game on Mac.
+- Fixed crash after opening the file browser from the Workshop menu more than once on Linux.
+- Fixed deconstructing coilgun ammo boxes giving out more materials than the materials required to fabricate them.
+- Fixed combat mission achievements being impossible to unlock.
+- Fixed item scales not being saved when the scale is modified in the sub editor.
+- Fixed incorrect physicorium shell description.
+- Fixed server list & workshop menu not resizing properly when changing resolution.
+- Fixed player input being used to determine whether a character should be holding on to ladders, causing 
+AI characters to let go of ladders when holding RMB.
+- Fixed explosion damage bypassing armor (both creature shells and wearable items).
+- Fixed OverrideSaveFolder and OverrideMultiplayerSaveFolder settings not being saved.
+- Fixed order/report icons "twitching" when the sub moves. 
+- Fixed players being able to repair submerged electrical items indefinitely. 
+- Fixed a "attempted to access a removed ragdoll" console error when a character wearing the health 
+scanner HUD is removed.
+- Fixed console errors when a battery's or supercapacitor's capacity is set to 0 and the interface is open.
+- Fixed ability to drop items into secure lockers (or other containers that require specific items)
+without having access to it.
+- Automatically move the gaps linked to doors when the door is moved (and vice versa).
+- Fixed items disappearing when they're dropped into a full container.
+- Fixed crashing when an item that requires aim to use is used by something else than a character 
+(e.g. a status effect).
+- Fixed having a broken device on a sub in the sub editor and switching to Character Mode causing a crash.
+- Fixed the bottom of the background ice texture not rendering correctly on high resolutions.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.0.6
 ---------------------------------------------------------------------------------------------------------
 
@@ -17,13 +94,19 @@ Additions and changes:
 - Added a close button to the debug console and a text that explains it can be opened/closed by pressing F3.
 - Electrical components are attached to walls with the left mouse button instead of E.
 - Flares are activated with the left mouse button instead of E.
-- Nerfed plasma cutters.
+- Nerfed plasma cutters and welding tools.
 - Made coilgun ammunition boxes deconstructable.
+- Removed minimum job count requirement from Captain, Engineer & Mechanic (i.e. it's not possible to play
+other jobs even when there's 3 or less players on the server).
+- Increased default respawn transport time to 5 minutes, decreased respawn interval to 3 minutes.
+- Allow muting players mid-round through the info menu.
 - Allow to edit the door opening/closing speeds and increase the defaults.
 - Reduce the follow-up distance and require the bot to be in the same room than the player before stopping, 
 so that bots with a follow order don't stay on the doorways when the player is trying to enter the airlocks.
 - Stop "breathing" deformations when the character is dead.
 - Disable obstructed paths when the submarine docks to another submarine/outpost.
+- The location of save files can be changed in config_player.xml using the attributes "overridesavefolder" 
+and "overridemultiplayersavefolder".
 
 Bugfixes:
 - Fixed crashing during startup due to faulty OpenAL installations.
@@ -35,8 +118,13 @@ excessive desync" error message.
 - Fixed items not being repaired after purchasing repairs in the campaign.
 - Removed outdated Launch_BarotraumaServer script from the Linux version (does not work anymore, the 
 dedicated server should be launched by running the file called "DedicatedServer").
+- Fixed server owners not being able to join their own server if whitelist is enabled and the owner is not
+on the whitelist.
+- Fixed inability to ban clients by their Steam ID using the console.
+- Fixed all servers showing up as "Round has not started" in the server list.
 - Fixed server ignoring the max players value set in the "host server" menu and using the setting 
 configured in "serversettings.xml" instead.
+- Fixed spectators not hearing the living players' voice chat.
 - VOIP improvements (less crackling and pops).
 - Increased oxygen output in vanilla submarines to prevent characters from suffocating when playing with
 an oversized crew.
@@ -44,6 +132,8 @@ an oversized crew.
 - Waypoint fixes in vanilla subs.
 - Disallow shooting and attacking when the cursor is over a UI element (to prevent, for example, 
 accidentally firing a gun when dismissing a message box).
+- Fixed "file not found" errors on Linux when attempting to enable a mod that defines file paths
+using a backslash instead of a slash.
 - Fixed monsters ignoring decoys.
 - Fixed store menu switching back to the equipment category every time something is bought/sold in 
 the multiplayer campaign.
@@ -60,8 +150,10 @@ in the leftmost inventory slot.
 - Prevent welding doors shut during the tutorials (as the player doesn't have access to any tools to 
 reopen the door).
 - Fixed AI pathfinding when the path is from a submarine to another submarine.
+- Fixed crashing when AI crew tries to find a path out of the ruins.
 - Fixed Watchmen looking at the wrong direction.
 - Fixed crashing due to an invalid display resolution.
+- Fixed alien item assemblies not being hidden from the sub editor.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.0.4

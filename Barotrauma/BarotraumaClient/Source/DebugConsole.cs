@@ -318,7 +318,7 @@ namespace Barotrauma
                     if (!(mp is ItemPrefab)) continue;
                     sb.AppendLine(mp.Name);
                 }
-                System.Windows.Clipboard.SetText(sb.ToString());
+                Clipboard.SetText(sb.ToString());
             }));
 #endif
 
@@ -452,6 +452,10 @@ namespace Barotrauma
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
+            commands.Add(new Command("setmaxplayers|maxplayers", "", (string[] args) => { }));
+            AssignRelayToServer("setmaxplayers", true);
+            commands.Add(new Command("setpassword|password", "", (string[] args) => { }));
+            AssignRelayToServer("setpassword", true);
 
             AssignOnExecute("control", (string[] args) =>
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Linq;
+using System.Text;
 
 namespace SteamNative
 {
@@ -256,13 +257,21 @@ namespace SteamNative
 		// void
 		public void SetKeyValue( string pKey /*const char **/, string pValue /*const char **/ )
 		{
-			platform.ISteamGameServer_SetKeyValue( pKey, pValue );
+            byte[] bytesKey = Encoding.UTF8.GetBytes(pKey + "\0");
+            GCHandle handleKey = GCHandle.Alloc(bytesKey, GCHandleType.Pinned);
+            byte[] bytesValue = Encoding.UTF8.GetBytes(pValue + "\0");
+            GCHandle handleValue = GCHandle.Alloc(bytesValue, GCHandleType.Pinned);
+            platform.ISteamGameServer_SetKeyValue( handleKey.AddrOfPinnedObject(), handleValue.AddrOfPinnedObject() );
+            handleKey.Free(); handleValue.Free();
 		}
 		
 		// void
 		public void SetMapName( string pszMapName /*const char **/ )
 		{
-			platform.ISteamGameServer_SetMapName( pszMapName );
+            byte[] bytes = Encoding.UTF8.GetBytes(pszMapName + "\0");
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            platform.ISteamGameServer_SetMapName( handle.AddrOfPinnedObject() );
+            handle.Free();
 		}
 		
 		// void
@@ -298,7 +307,10 @@ namespace SteamNative
 		// void
 		public void SetServerName( string pszServerName /*const char **/ )
 		{
-			platform.ISteamGameServer_SetServerName( pszServerName );
+            byte[] bytes = Encoding.UTF8.GetBytes(pszServerName + "\0");
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+			platform.ISteamGameServer_SetServerName( handle.AddrOfPinnedObject() );
+            handle.Free();
 		}
 		
 		// void
