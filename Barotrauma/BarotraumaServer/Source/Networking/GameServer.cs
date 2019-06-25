@@ -132,9 +132,9 @@ namespace Barotrauma.Networking
                 fileSender.OnEnded += FileTransferChanged;
                 fileSender.OnStarted += FileTransferChanged;
 
-                server.Start();
+                serverPeer.Start();
 
-                VoipServer = new VoipServer(server);
+                VoipServer = new VoipServer(serverPeer);
             }
             catch (Exception e)
             {
@@ -147,26 +147,13 @@ namespace Barotrauma.Networking
 
             if (error)
             {
-                if (server != null) server.Shutdown("Error while starting the server");
+                if (serverPeer != null) serverPeer.Close("Error while starting the server");
                 
                 Environment.Exit(-1);
 
                 yield return CoroutineStatus.Success;
             }
-
-            if (NetPeerConfiguration.EnableUPnP)
-            {
-                InitUPnP();
-
-                //DateTime upnpTimeout = DateTime.Now + new TimeSpan(0,0,5);
-                while (DiscoveringUPnP())// && upnpTimeout>DateTime.Now)
-                {
-                    yield return null;
-                }
-
-                FinishUPnP();
-            }
-
+            
             if (SteamManager.USE_STEAM)
             {
                 SteamManager.CreateServer(this, isPublic);
@@ -3023,26 +3010,7 @@ namespace Barotrauma.Networking
             }
 
             GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");
-            server.Shutdown(DisconnectReason.ServerShutdown.ToString());
-        }
-
-        void InitUPnP()
-        {
-            server.UPnP.ForwardPort(NetPeerConfiguration.Port, "barotrauma");
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                server.UPnP.ForwardPort(QueryPort, "barotrauma");
-            }
-        }
-
-        bool DiscoveringUPnP()
-        {
-            return server.UPnP.Status == UPnPStatus.Discovering;
-        }
-
-        void FinishUPnP()
-        {
-            //do nothing
+            serverPeer.Close(DisconnectReason.ServerShutdown.ToString());
         }
     }
     

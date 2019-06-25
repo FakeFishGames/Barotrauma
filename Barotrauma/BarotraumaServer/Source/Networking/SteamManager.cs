@@ -79,7 +79,7 @@ namespace Barotrauma.Steam
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
             if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
             {
-                DebugConsole.Log("Authentication failed");
+                DebugConsole.Log("Authentication failed: failed to start auth session");
                 return false;
             }
             return true;

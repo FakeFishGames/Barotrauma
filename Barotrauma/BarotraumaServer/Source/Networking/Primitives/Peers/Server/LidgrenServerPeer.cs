@@ -29,12 +29,16 @@ namespace Barotrauma.Networking
             public NetConnection Connection;
             public ConnectionInitialization InitializationStep;
             public int Retries;
+            public UInt64 SteamID;
+            public Int32 PasswordNonce;
 
             public PendingClient(NetConnection conn)
             {
                 Connection = conn;
                 InitializationStep = ConnectionInitialization.SteamTicket;
                 Retries = 0;
+                SteamID = 0;
+                PasswordNonce = 0;
             }
         }
 
@@ -71,11 +75,20 @@ namespace Barotrauma.Networking
         public override void Start()
         {
             netServer.Start();
+
+            if (serverSettings.EnableUPnP)
+            {
+                InitUPnP();
+
+                while (DiscoveringUPnP()) { }
+
+                FinishUPnP();
+            }
         }
 
-        public override void Close()
+        public override void Close(string msg=null)
         {
-            netServer.Shutdown(DisconnectReason.ServerShutdown.ToString());
+            netServer.Shutdown(msg ?? DisconnectReason.ServerShutdown.ToString());
         }
 
         public override void Update()
@@ -93,21 +106,114 @@ namespace Barotrauma.Networking
             }
         }
 
+        private void InitUPnP()
+        {
+            netServer.UPnP.ForwardPort(netPeerConfiguration.Port, "barotrauma");
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                netServer.UPnP.ForwardPort(serverSettings.QueryPort, "barotrauma");
+            }
+        }
+
+        private bool DiscoveringUPnP()
+        {
+            return netServer.UPnP.Status == UPnPStatus.Discovering;
+        }
+
+        private void FinishUPnP()
+        {
+            //do nothing
+        }
+
         private void HandleConnection(NetIncomingMessage inc)
         {
-            PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
-
             if (inc.MessageType == NetIncomingMessageType.ConnectionApproval)
             {
+                if (serverSettings.BanList.IsBanned(inc.SenderConnection.RemoteEndPoint.Address, 0))
+                {
+                    //IP banned: deny immediately
+                    //TODO: use TextManager
+                    inc.SenderConnection.Deny("IP banned");
+                    return;
+                }
+
+                PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
+
                 if (pendingClient == null)
                 {
                     pendingClient = new PendingClient(inc.SenderConnection);
                     pendingClients.Add(pendingClient);
                 }
+
+                inc.SenderConnection.Approve();
             }
-            else if (inc.MessageType == NetIncomingMessageType.Data)
+        }
+
+        private void HandleDataMessage(NetIncomingMessage inc)
+        {
+            PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
+
+            if (pendingClient != null)
             {
-                //TODO: check step, do steam validation, etc
+                UpdateConnectionValidation(pendingClient, inc);
+            }
+            else
+            {
+                LidgrenConnection conn = connectedClients.Find(c => c.NetConnection == inc.SenderConnection);
+                if (conn == null)
+                {
+                    inc.SenderConnection.Disconnect("Received data message from unauthenticated client");
+                    return;
+                }
+                byte isCompressedByte = inc.ReadByte();
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressedByte != 0, inc.LengthBytes - 1, conn);
+                OnMessageReceived?.Invoke(conn, msg);
+            }
+        }
+
+        private void UpdateConnectionValidation(PendingClient pendingClient, NetIncomingMessage inc)
+        {
+            ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
+            if (pendingClient.InitializationStep != initializationStep) return;
+
+            switch (initializationStep)
+            {
+                case ConnectionInitialization.SteamTicket:
+                    UInt64 steamId = inc.ReadUInt64();
+                    UInt16 ticketLength = inc.ReadUInt16();
+                    byte[] ticket = inc.ReadBytes(ticketLength);
+
+                    if (pendingClient.SteamID != 0)
+                    {
+                        bool startedAuthSession = Steam.SteamManager.StartAuthSession(ticket, steamId);
+                        if (!startedAuthSession)
+                        {
+                            pendingClient.Connection.Disconnect("Steam authentication failed");
+                            pendingClients.Remove(pendingClient);
+                            return;
+                        }
+                        pendingClient.SteamID = steamId;
+                    }
+                    else //TODO: could remove since this seems impossible
+                    {
+                        if (pendingClient.SteamID != steamId)
+                        {
+                            pendingClient.Connection.Disconnect("SteamID mismatch");
+                            pendingClients.Remove(pendingClient);
+                            return;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        public void OnAuthChange(ulong steamID, ulong ownerID, Facepunch.Steamworks.ServerAuth.Status status)
+        {
+            PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
+
+            if (status == ServerAuth.Status.OK)
+            {
+                pendingClient.InitializationStep = ConnectionInitialization.Success;
             }
         }
 
