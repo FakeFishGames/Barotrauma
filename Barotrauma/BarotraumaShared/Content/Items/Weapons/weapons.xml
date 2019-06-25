@@ -179,7 +179,7 @@
       <Containable identifiers="revolverround" />
     </ItemContainer>
   </Item>  
-  <!--
+  
   <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="35" />
     <Price locationtype="City" buyprice="70" />
@@ -222,7 +222,56 @@
       <Containable identifiers="smground" />
     </ItemContainer>
   </Item>
--->
+
+  <Item name="Flamer" identifier="flamer" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="Flamethrower text. REPLACE ME!" Scale="0.32" impactsoundtag="impact_metal_light">
+    <Price locationtype="City" buyprice="75" />
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="Military" buyprice="75" />
+    <Price locationtype="Outpost" buyprice="75" />
+    <Price locationtype="Mine" buyprice="75" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64" />
+    <Sprite texture="Content/Items/tools/tools_new.png" sourcerect="0,116,221,123" depth="0.55" origin="0.5,0.5" />
+    <!-- the item takes 10 seconds to break down in a deconstructor and turns into steel and plastic -->
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+      <Item identifier="plastic" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="30"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
+    <!-- physics body -->
+    <Body width="215" height="119" density="40" />
+    <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
+    <RepairTool structurefixamount="0.0" range="300" barrelpos="35,13" particles="flamethrower" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
+      <!-- the item must contain a welding fuel tank for it to work -->
+      <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <ParticleEmitter particle="flamethrower" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="500" velocitymax="1000" />
+      <sound file="Content/Items/Tools/WeldingLoop.ogg" type="OnUse" range="500.0" loop="true" />
+      <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
+      <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-6.0" />
+      <StatusEffect type="OnUse" target="Contained" targetidentifiers="incendiumfueltank" Condition="-2.5" />
+      <!-- do burn damage to characters -->
+      <StatusEffect type="OnUse" target="UseTarget">
+        <Affliction identifier="burn" amount="1.25" />
+      </StatusEffect>
+      <!-- security skill 20 required to use the item -->
+      <RequiredSkill identifier="security" level="20" />
+      <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
+      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-12.0" />
+      <LightComponent LightColor="1.0,0.9,0.7,1.0" Flicker="0.5">
+        <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
+      </LightComponent>
+    </RepairTool>
+    <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->
+    <ItemContainer capacity="1" hideitems="false" itempos="18,-32" containedspritedepth="0.56">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
+      <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank,incendiumfueltank" />
+    </ItemContainer>
+  </Item>  
   
   <Item name="Stun Grenade" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="175" />
