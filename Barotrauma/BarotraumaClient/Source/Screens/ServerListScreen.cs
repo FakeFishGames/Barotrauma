@@ -53,7 +53,7 @@ namespace Barotrauma
         {
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
+            menu = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center))
             { Stretch = true };
@@ -114,23 +114,19 @@ namespace Barotrauma
 
             var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), bottomRow.RectTransform), isHorizontal: true) { Stretch = true };
 
-            var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
+            var filters = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            {
+                Color = new Color(12, 14, 15, 255) * 0.5f,
+                OutlineColor = Color.Black
+            };
 
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), serverListContainer.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.RectTransform, Anchor.Center)) { RelativeSpacing = 0.015f };
 
-            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterContainer.RectTransform), "Filters", font: GUI.LargeFont);
 
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
-            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
-            filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
+            float elementHeight = 0.05f;
 
-            filterFull = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
-            filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(0.27f, 1.0f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
-            filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
-
-            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), filterHolder.RectTransform), isHorizontal: true) { Stretch = true };
+            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), isHorizontal: true) { Stretch = true };
 
             var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("FilterServers"));
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
@@ -138,7 +134,19 @@ namespace Barotrauma
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
 
-            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.985f, 0.05f), serverListContainer.RectTransform) { MinSize = new Point(0, 15) },
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterPassword"));
+            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterIncompatibleServers"));
+            filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
+
+            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterFullServers"));
+            filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterEmptyServers"));
+            filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
+
+            var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
+
+            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.99f, 0.05f), serverListContainer.RectTransform) { MinSize = new Point(0, 15) },
                 isHorizontal: true)
             {
                 Stretch = true
@@ -155,7 +163,7 @@ namespace Barotrauma
                     SelectedColor = Color.Gray * 0.7f,
                     PressedColor = Color.Gray * 0.7f,
                     OutlineColor = Color.Black,
-                    Font = GUI.SmallFont,
+                    Font = GUI.Font,
                     ForceUpperCase = true,
                     UserData = columnLabel[i],
                     OnClicked = SortList
@@ -196,9 +204,10 @@ namespace Barotrauma
 
             serverList.OnSelected += SelectServer;
 
-            serverPreview = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            serverPreview = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
-                Color = new Color(12, 14, 15, 190),
+                Color = new Color(12, 14, 15, 255) * 0.5f,
+                OutlineColor = Color.Black
             };
 
             var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), bottomRow.RectTransform), style: null);
