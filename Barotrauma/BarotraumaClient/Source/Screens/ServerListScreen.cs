@@ -64,8 +64,9 @@ namespace Barotrauma
 
             var topRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform)) { Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
             {
+                Padding = Vector4.Zero,
                 ForceUpperCase = true,
                 AutoScale = true
             };
@@ -122,26 +123,31 @@ namespace Barotrauma
 
             var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.RectTransform, Anchor.Center)) { RelativeSpacing = 0.015f };
 
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterContainer.RectTransform), "Filters", font: GUI.LargeFont);
+            var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterContainer.RectTransform), TextManager.Get("FilterServers"), font: GUI.LargeFont)
+            {
+                Padding = Vector4.Zero
+            };
 
             float elementHeight = 0.05f;
 
             var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), isHorizontal: true) { Stretch = true };
 
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("FilterServers"));
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("Search") + "...");
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
 
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterPassword"));
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform)) { RelativeSpacing = 0.005f };
+
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterPassword"));
             filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterIncompatibleServers"));
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
             filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
 
-            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterFullServers"));
+            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterFullServers"));
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), TextManager.Get("FilterEmptyServers"));
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
 
             var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
@@ -210,22 +216,30 @@ namespace Barotrauma
                 OutlineColor = Color.Black
             };
 
-            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), bottomRow.RectTransform), style: null);
+            // Spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), bottomRow.RectTransform), style: null);
 
-            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.075f), bottomRow.RectTransform, Anchor.Center), isHorizontal: true) { Stretch = true };
+
+            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("Back"), style: "GUIButtonLarge")
             {
                 OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
 
-			refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
-				"", style: "GUIButtonRefresh") {
-
-				ToolTip = TextManager.Get("ServerListRefresh"),
+			refreshButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
+                TextManager.Get("ServerListRefresh"), style: "GUIButtonLarge")
+            {
 				OnClicked = RefreshServers
 			};
 
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopRight),
+            var directJoinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
+                TextManager.Get("serverlistdirectjoin"), style: "GUIButtonLarge")
+            {
+                OnClicked = RefreshServers
+            };
+
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("ServerListJoin"), style: "GUIButtonLarge")
             {
                 OnClicked = JoinServer,
@@ -238,6 +252,7 @@ namespace Barotrauma
 
             refreshDisableTimer = DateTime.Now;
         }
+
         private void OnResolutionChanged()
         {
             menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
