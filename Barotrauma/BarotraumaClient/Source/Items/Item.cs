@@ -180,7 +180,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible || (!editing && hiddenInGame)) return;
+            if (!Visible || (!editing && HiddenInGame)) return;
             if (editing && !ShowItems) return;
             
             Color color = IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? Color.Orange : GetSpriteColor();

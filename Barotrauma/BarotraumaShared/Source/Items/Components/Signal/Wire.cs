@@ -60,6 +60,7 @@ namespace Barotrauma.Items.Components
         {
             get
             {
+                if (GameMain.NetworkMember?.ServerSettings != null && !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return false; }
                 return locked || connections.Any(c => c != null && c.ConnectionPanel.Locked);
             }
             set { locked = value; }

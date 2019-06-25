@@ -33,7 +33,10 @@ namespace Barotrauma
 
         private GUIButton refreshButton;
 
-        private float[] columnRelativeWidth;
+        private float[] columnRelativeWidth = new float[] { 0.1f, 0.1f, 0.7f, 0.12f, 0.08f, 0.08f };
+        private string[] columnLabel = new string[] { "ServerListCompatible", "ServerListHasPassword", "ServerListName", "ServerListRoundStarted", "ServerListPlayers", "ServerListPing" };
+
+        private GUILayoutGroup labelHolder;
 
         //filters
         private GUITextBox searchBox;
@@ -48,6 +51,8 @@ namespace Barotrauma
                 
         public ServerListScreen()
         {
+            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+
             menu = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center), isHorizontal: true)
@@ -117,30 +122,62 @@ namespace Barotrauma
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.017f, 1.0f),
                 paddedFrame.RectTransform, Anchor.CenterRight))
             {
-                RelativeSpacing = 0.02f,
                 Stretch = true
             };
 
-            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform)) { Stretch = true, RelativeSpacing = 0.02f };
+            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform) { MinSize = new Point(0, 15) },
+                isHorizontal: true)
+            {
+                Stretch = true,
+                //RelativeSpacing = 0.02f
+            };
+            List<GUITextBlock> labelTexts = new List<GUITextBlock>();
+            for (int i = 0; i < columnRelativeWidth.Length; i++)
+            {
+                var btn = new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), labelHolder.RectTransform),
+                    text: TextManager.Get(columnLabel[i]), textAlignment: Alignment.CenterLeft, style: "GUIButtonSlicedTopAndBottom")
+                {
+                    Font = GUI.SmallFont,
+                    UserData = columnLabel[i],
+                    OnClicked = SortList
+                };
+                labelTexts.Add(btn.TextBlock);
+                btn.TextBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 0.0f) * GUI.Scale;
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                {
+                    CanBeFocused = false,
+                    UserData = "arrowup",
+                    Visible = false
+                };
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.2f), btn.RectTransform, Anchor.TopCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                {
+                    CanBeFocused = false,
+                    UserData = "arrowdown",
+                    SpriteEffects = SpriteEffects.FlipVertically,
+                    Visible = false
+                };
+            }
 
+            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform)) { Stretch = true, RelativeSpacing = 0.02f };
             serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center))
             {
-                OnSelected = (btn, obj) => {
-                    if (obj is ServerInfo)
+                OnSelected = (btn, obj) => 
+                {
+                    if (obj is ServerInfo serverInfo)
                     {
-                        ServerInfo serverInfo = (ServerInfo)obj;
                         serverInfo.CreatePreviewWindow(serverPreview);
                     }
                     return true;
                 }
             };
+            labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+            labelHolder.Recalculate();
+            GUITextBlock.AutoScaleAndNormalize(labelTexts);
 
             serverList.OnSelected += SelectServer;
 
             serverPreview = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center));
-
-            columnRelativeWidth = new float[] { 0.04f, 0.02f, 0.044f, 0.77f, 0.02f, 0.075f, 0.06f };
-
+            
             var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), rightColumn.RectTransform), style: null);
 
             GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
@@ -170,6 +207,81 @@ namespace Barotrauma
             refreshDisableTimer = DateTime.Now;
         }
 
+        private void OnResolutionChanged()
+        {
+            menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
+            labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+        }
+
+        private bool SortList(GUIButton button, object obj)
+        {
+            string sortBy = obj as string;
+            if (sortBy == null) { return false; }
+
+            var arrowUp = button.GetChildByUserData("arrowup");
+            var arrowDown = button.GetChildByUserData("arrowdown");
+            
+            //disable arrow buttons in other labels
+            foreach (var child in button.Parent.Children)
+            {
+                if (child != button)
+                {
+                    child.GetChildByUserData("arrowup").Visible = false;
+                    child.GetChildByUserData("arrowdown").Visible = false;
+                }
+            }
+
+            bool ascending = arrowUp.Visible;
+            ascending = !ascending;
+
+            arrowUp.Visible = ascending;
+            arrowDown.Visible = !ascending;
+            serverList.Content.RectTransform.SortChildren((c1, c2) => 
+            {
+                ServerInfo s1 = c1.GUIComponent.UserData as ServerInfo;
+                ServerInfo s2 = c2.GUIComponent.UserData as ServerInfo;
+
+                switch (sortBy)
+                {
+                    case "ServerListCompatible":
+                        bool? s1Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s1.GameVersion);
+                        if (!s1.ContentPackageHashes.Any()) { s1Compatible = null; }
+                        if (s1Compatible.HasValue) { s1Compatible = s1Compatible.Value && s1.ContentPackagesMatch(GameMain.SelectedPackages); };
+
+                        bool? s2Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s2.GameVersion);
+                        if (!s2.ContentPackageHashes.Any()) { s2Compatible = null; }
+                        if (s2Compatible.HasValue) { s2Compatible = s2Compatible.Value && s2.ContentPackagesMatch(GameMain.SelectedPackages); };
+
+                        //convert to int to make sorting easier
+                        //1 Compatible
+                        //0 Unknown 
+                        //-1 Incompatible
+                        int s1CompatibleInt = s1Compatible.HasValue ?
+                            (s1Compatible.Value ? 1 : -1) :
+                            0;
+                        int s2CompatibleInt = s2Compatible.HasValue ?
+                            (s2Compatible.Value ? 1 : -1) :
+                            0;
+                        return s2CompatibleInt.CompareTo(s1CompatibleInt) * (ascending ? 1 : -1);
+                    case "ServerListHasPassword":
+                        if (s1.HasPassword == s2.HasPassword) { return 0; }
+                        return (s1.HasPassword ? 1 : -1) * (ascending ? 1 : -1);
+                    case "ServerListName":
+                        return s1.ServerName.CompareTo(s2.ServerName) * (ascending ? 1 : -1);
+                    case "ServerListRoundStarted":
+                        if (s1.GameStarted == s2.GameStarted) { return 0; }
+                        return (s1.GameStarted ? 1 : -1) * (ascending ? 1 : -1);
+                    case "ServerListPlayers":
+                        return s2.PlayerCount.CompareTo(s1.PlayerCount) * (ascending ? 1 : -1);
+                    case "ServerListPing":
+                        return s2.Ping.CompareTo(s1.Ping) * (ascending ? 1 : -1);
+                    default:
+                        return 0;
+                }
+            });
+            return true;
+        }
+        
         public override void Select()
         {
             base.Select();
@@ -391,10 +503,10 @@ namespace Barotrauma
             {
                 UserData = serverInfo
             };
-            var serverContent = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 1.0f), serverFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                //RelativeSpacing = 0.02f
             };
             UpdateServerInfo(serverInfo);
         }
@@ -404,7 +516,7 @@ namespace Barotrauma
             var serverFrame = serverList.Content.FindChild(serverInfo);
             if (serverFrame == null) return;
 
-            var serverContent = serverFrame.Children.First();
+            var serverContent = serverFrame.Children.First() as GUILayoutGroup;
             serverContent.ClearChildren();
 
             var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
@@ -424,21 +536,22 @@ namespace Barotrauma
                 UserData = "password"
             };
 
-			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
-			var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[4], 0.4f), serverContent.RectTransform, Anchor.Center),
-				label: "", style: "GUIServerListRoundStartedTickBox") {
+			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
+
+            new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
+            {
 				ToolTip = TextManager.Get((serverInfo.GameStarted) ? "ServerListRoundStarted" : "ServerListRoundNotStarted"),
 				Selected = serverInfo.GameStarted,
 				Enabled = false
 			};
 
-            var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[5], 1.0f), serverContent.RectTransform),
+            var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[4], 1.0f), serverContent.RectTransform),
                 serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, style: "GUIServerListTextBox", textAlignment: Alignment.Right)
             {
                 ToolTip = TextManager.Get("ServerListPlayers")
             };
 
-            var serverPingText = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[6], 1.0f), serverContent.RectTransform), "?", 
+            var serverPingText = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[5], 1.0f), serverContent.RectTransform), "?", 
                 style: "GUIServerListTextBox", textColor: Color.White * 0.5f, textAlignment: Alignment.Right)
             {
                 ToolTip = TextManager.Get("ServerListPing")
@@ -447,6 +560,7 @@ namespace Barotrauma
             if (serverInfo.PingChecked)
             {
                 serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+                serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
             }
             else if (!string.IsNullOrEmpty(serverInfo.IP))
             {
@@ -500,6 +614,7 @@ namespace Barotrauma
                 serverPlayers.TextColor *= 0.5f;
             }
 
+            serverContent.Recalculate();
             FilterServers();
         }
 
@@ -670,18 +785,7 @@ namespace Barotrauma
                 {
                     if (serverInfo.Ping != -1)
                     {
-                        if (serverInfo.Ping < 50)
-                        {
-                            serverPingText.TextColor = Color.Green * 1.75f;
-                        }
-                        else if (serverInfo.Ping < 150)
-                        {
-                            serverPingText.TextColor = Color.Yellow * 0.85f;
-                        }
-                        else
-                        {
-                            serverPingText.TextColor = Color.Red * 0.75f;
-                        }
+                        serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
 					}
                     serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
                     yield return CoroutineStatus.Success;
@@ -690,6 +794,12 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
             yield return CoroutineStatus.Success;
+        }
+
+        private Color GetPingTextColor(int ping)
+        {
+            if (ping < 0) { return Color.DarkRed; }
+            return ToolBox.GradientLerp(ping / 200.0f, Color.LightGreen, Color.Yellow * 0.8f, Color.Red * 0.75f);
         }
 
         public void PingServer(ServerInfo serverInfo, int timeOut)

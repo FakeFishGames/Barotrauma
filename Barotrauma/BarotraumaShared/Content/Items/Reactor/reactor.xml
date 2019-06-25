@@ -93,7 +93,7 @@
     </Fabricate>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,64,64,64"/>
-    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="357,152,20,70"/>
+    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="371,3,19,68"/>
 
     <Body radius="6" width="20" height="70" density="5"/>
 
@@ -118,7 +118,7 @@
     </Fabricate>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,64,64,64"/>
-    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="377,152,20,70"/>
+    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="391,3,19,68"/>
 
     <Body radius="6" width="20" height="70" density="5"/>
 
@@ -143,7 +143,7 @@
     </Fabricate>
 
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,64,64,64"/>
-    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="397,152,21,71"/>
+    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="411,3,19,68"/>
 
     <Body radius="6" width ="21" height="71" density="5"/>
 

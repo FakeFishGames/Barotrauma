@@ -96,6 +96,12 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (character.LockHands)
+            {
+                abandon = true;
+                return;
+            }
+
             FindTargetItem();
             if (targetItem == null || moveToTarget == null)
             {

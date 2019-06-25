@@ -1558,7 +1558,11 @@ namespace Barotrauma
         {
             distanceToItem = -1.0f;
 
-            if (!CanInteract || item.HiddenInGame) return false;
+            bool hidden = item.HiddenInGame;
+#if CLIENT
+            if (Screen.Selected == GameMain.SubEditorScreen) { hidden = false; }
+#endif  
+            if (!CanInteract || hidden) return false;
 
             if (item.ParentInventory != null)
             {

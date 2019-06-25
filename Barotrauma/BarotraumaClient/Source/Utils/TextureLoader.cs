@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
@@ -43,15 +43,18 @@ namespace Barotrauma
             _graphicsDevice = graphicsDevice;
             _needsBmp = needsBmp;
             _spriteBatch = new SpriteBatch(_graphicsDevice);
-
-            PlaceHolderTexture = new Texture2D(graphicsDevice, 32, 32);
-
+            
             Color[] data = new Color[32 * 32];
             for (int i = 0; i < 32 * 32; i++)
             {
                 data[i] = Color.Magenta;
             }
-            PlaceHolderTexture.SetData(data);
+
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                PlaceHolderTexture = new Texture2D(graphicsDevice, 32, 32);
+                PlaceHolderTexture.SetData(data);
+            });
         }
 
         public static Texture2D FromFile(string path, bool preMultiplyAlpha = true)
@@ -60,12 +63,7 @@ namespace Barotrauma
             {
                 using (Stream fileStream = File.OpenRead(path))
                 {
-                    var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
-                    if (preMultiplyAlpha)
-                    {
-                        PreMultiplyAlpha(ref texture);
-                    }
-                    return texture;
+                    return FromStream(fileStream, preMultiplyAlpha, path);
                 }
 
             }
@@ -76,16 +74,33 @@ namespace Barotrauma
             }
         }
 
-        public static Texture2D FromStream(Stream fileStream, bool preMultiplyAlpha = true)
+        public static Texture2D FromStream(Stream fileStream, bool preMultiplyAlpha = true, string path=null)
         {
             try
             {
-                var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
+                int width = 0; int height = 0; int channels = 0;
+                byte[] textureData = null;
+                Task loadTask = Task.Run(() =>
+                {
+                    textureData = Texture2D.TextureDataFromStream(fileStream, out width, out height, out channels);
+                });
+                bool success = loadTask.Wait(10000);
+                if (!success)
+                {
+                    DebugConsole.ThrowError("Failed to load texture data from " + (path ?? "stream") + ": timed out");
+                    return null;
+                }
                 if (preMultiplyAlpha)
                 {
-                    PreMultiplyAlpha(ref texture);
+                    PreMultiplyAlpha(ref textureData);
                 }
-                return texture;
+                Texture2D tex = null;
+                CrossThread.RequestExecutionOnMainThread(() =>
+                {
+                    tex = new Texture2D(_graphicsDevice, width, height);
+                    tex.SetData(textureData);
+                });
+                return tex;
             }
             catch (Exception e)
             {
@@ -94,40 +109,35 @@ namespace Barotrauma
             }
         }
 
-        private static void PreMultiplyAlpha(ref Texture2D texture)
+        private static void PreMultiplyAlpha(ref byte[] data)
         {
-            UInt32[] data = new UInt32[texture.Width * texture.Height];
-            texture.GetData(data);
-
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 0; i < data.Length; i+=4)
             {
-                uint a = (data[i] & 0xff000000) >> 24;
+                uint a = data[i+3];
                 if (a == 0)
                 {
-                    data[i] = 0;
+                    data[i + 0] = 0;
+                    data[i + 1] = 0;
+                    data[i + 2] = 0;
                     continue;
                 }
                 else if (a == uint.MaxValue)
                 {
                     continue;
                 }
-                uint r = (data[i] & 0x00ff0000) >> 16;
-                uint g = (data[i] & 0x0000ff00) >> 8;
-                uint b = (data[i] & 0x000000ff);
+                uint r = data[i+0];
+                uint g = data[i+1];
+                uint b = data[i+2];
                 // Monogame 3.7 needs the line below.
                 a *= a; a /= 255;
                 b *= a; b /= 255;
                 g *= a; g /= 255;
                 r *= a; r /= 255;
-                data[i] = (a << 24) | (r << 16) | (g << 8) | b;
+                data[i + 0] = (byte)r;
+                data[i + 1] = (byte)g;
+                data[i + 2] = (byte)b;
+                data[i + 3] = (byte)a;
             }
-            
-            //not sure why this is needed, but it seems to cut the memory usage of the game almost in half
-            //GetData/SetData might be leaking memory?
-            int width = texture.Width; int height = texture.Height;
-            texture.Dispose();
-            texture = new Texture2D(_graphicsDevice, width, height);
-            texture.SetData(data);
         }
        
         

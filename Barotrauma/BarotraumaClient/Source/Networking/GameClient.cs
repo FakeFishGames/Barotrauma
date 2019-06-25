@@ -1081,6 +1081,7 @@ namespace Barotrauma.Networking
             bool loadSecondSub      = inc.ReadBoolean();
 
             bool disguisesAllowed   = inc.ReadBoolean();
+            bool rewiringAllowed    = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
@@ -1102,6 +1103,7 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
             serverSettings.AllowDisguises = disguisesAllowed;
+            serverSettings.AllowRewiring = rewiringAllowed;
             serverSettings.AllowRagdollButton = allowRagdollButton;
 
             if (campaign == null)
@@ -1158,6 +1160,7 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
 
+            ServerSettings.ServerDetailsChanged = true;
             gameStarted = true;
 
             GameMain.GameScreen.Select();
@@ -1176,6 +1179,8 @@ namespace Barotrauma.Networking
             }
 
             if (GameMain.GameSession != null) { GameMain.GameSession.GameMode.End(endMessage); }
+
+            ServerSettings.ServerDetailsChanged = true;
 
             gameStarted = false;
             Character.Controlled = null;

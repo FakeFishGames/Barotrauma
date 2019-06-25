@@ -1,0 +1,227 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{734EAA48-F1CA-481A-B391-0285BC0E8B40}</ProjectGuid>
+    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Lidgren.Network</RootNamespace>
+    <AssemblyName>Lidgren.Network</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn></NoWarn>
+    <TargetFrameworkProfile />
+    <LangVersion>Default</LangVersion>
+    <SynchReleaseVersion>False</SynchReleaseVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <DebugType>full</DebugType>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+    <OutputPath>bin\iOS\iPhone\Debug</OutputPath>
+    <IntermediateOutputPath>obj\iOS\iPhone\Debug</IntermediateOutputPath>
+    <DocumentationFile>bin\iOS\iPhone\Debug\Lidgren.Network.xml</DocumentationFile>
+    <DefineConstants>DEBUG;IOS;UNITY_4_5</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <MtouchDebug>True</MtouchDebug>
+    <MtouchUseArmv7>false</MtouchUseArmv7>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <OutputPath>bin\iOS\iPhone\Release</OutputPath>
+    <IntermediateOutputPath>obj\iOS\iPhone\Release</IntermediateOutputPath>
+    <DocumentationFile>bin\iOS\iPhone\Release\Lidgren.Network.xml</DocumentationFile>
+    <DefineConstants>IOS;UNITY_4_5</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <MtouchUseArmv7>false</MtouchUseArmv7>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <DebugType>full</DebugType>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+    <OutputPath>bin\iOS\iPhoneSimulator\Debug</OutputPath>
+    <IntermediateOutputPath>obj\iOS\iPhoneSimulator\Debug</IntermediateOutputPath>
+    <DocumentationFile>bin\iOS\iPhoneSimulator\Debug\Lidgren.Network.xml</DocumentationFile>
+    <DefineConstants>DEBUG;IOS;UNITY_4_5</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <MtouchDebug>True</MtouchDebug>
+    <MtouchUseArmv7>false</MtouchUseArmv7>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <OutputPath>bin\iOS\iPhoneSimulator\Release</OutputPath>
+    <IntermediateOutputPath>obj\iOS\iPhoneSimulator\Release</IntermediateOutputPath>
+    <DocumentationFile>bin\iOS\iPhoneSimulator\Release\Lidgren.Network.xml</DocumentationFile>
+    <DefineConstants>IOS;UNITY_4_5</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <MtouchUseArmv7>false</MtouchUseArmv7>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ad-Hoc|iPhone' ">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <OutputPath>bin\iOS\iPhone\Ad-Hoc</OutputPath>
+    <IntermediateOutputPath>obj\iOS\iPhone\Ad-Hoc</IntermediateOutputPath>
+    <DocumentationFile>bin\iOS\iPhone\Ad-Hoc\Lidgren.Network.xml</DocumentationFile>
+    <DefineConstants>IOS;UNITY_4_5</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <MtouchUseArmv7>false</MtouchUseArmv7>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'AppStore|iPhone' ">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <OutputPath>bin\iOS\iPhone\AppStore</OutputPath>
+    <IntermediateOutputPath>obj\iOS\iPhone\AppStore</IntermediateOutputPath>
+    <DocumentationFile>bin\iOS\iPhone\AppStore\Lidgren.Network.xml</DocumentationFile>
+    <DefineConstants>IOS;UNITY_4_5</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <MtouchUseArmv7>false</MtouchUseArmv7>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Xamarin.iOS" />
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Encryption\NetAESEncryption.cs" />
+    <Compile Include="Encryption\NetCryptoProviderBase.cs" />
+    <Compile Include="Encryption\NetDESEncryption.cs" />
+    <Compile Include="Encryption\NetEncryption.cs" />
+    <Compile Include="Encryption\NetBlockEncryptionBase.cs" />
+    <Compile Include="Encryption\NetRC2Encryption.cs" />
+    <Compile Include="Encryption\NetTripleDESEncryption.cs" />
+    <Compile Include="Encryption\NetXorEncryption.cs" />
+    <Compile Include="Encryption\NetXteaEncryption.cs" />
+    <Compile Include="NamespaceDoc.cs" />
+    <Compile Include="NetBigInteger.cs" />
+    <Compile Include="NetBitVector.cs" />
+    <Compile Include="NetBitWriter.cs" />
+    <Compile Include="NetBuffer.cs" />
+    <Compile Include="NetBuffer.Peek.cs" />
+    <Compile Include="NetBuffer.Read.cs" />
+    <Compile Include="NetBuffer.Read.Reflection.cs" />
+    <Compile Include="NetBuffer.Write.cs" />
+    <Compile Include="NetBuffer.Write.Reflection.cs" />
+    <Compile Include="NetClient.cs" />
+    <Compile Include="NetConnection.cs" />
+    <Compile Include="NetConnection.Handshake.cs" />
+    <Compile Include="NetConnection.Latency.cs" />
+    <Compile Include="NetConnection.MTU.cs" />
+    <Compile Include="NetConnectionStatistics.cs" />
+    <Compile Include="NetConnectionStatus.cs" />
+    <Compile Include="NetConstants.cs" />
+    <Compile Include="NetDeliveryMethod.cs" />
+    <Compile Include="NetException.cs" />
+    <Compile Include="NetFragmentationHelper.cs" />
+    <Compile Include="NetIncomingMessage.cs" />
+    <Compile Include="NetIncomingMessageType.cs" />
+    <Compile Include="NetMessageType.cs" />
+    <Compile Include="NetNatIntroduction.cs" />
+    <Compile Include="NetOutgoingMessage.cs" />
+    <Compile Include="NetPeer.cs" />
+    <Compile Include="NetPeer.Discovery.cs" />
+    <Compile Include="NetPeer.Fragmentation.cs" />
+    <Compile Include="NetPeer.Internal.cs" />
+    <Compile Include="NetPeer.LatencySimulation.cs" />
+    <Compile Include="NetPeer.Logging.cs" />
+    <Compile Include="NetPeer.MessagePools.cs" />
+    <Compile Include="NetPeer.Send.cs" />
+    <Compile Include="NetPeerConfiguration.cs" />
+    <Compile Include="NetPeerStatistics.cs" />
+    <Compile Include="NetPeerStatus.cs" />
+    <Compile Include="NetQueue.cs" />
+    <Compile Include="NetRandom.cs" />
+    <Compile Include="NetRandom.Implementations.cs" />
+    <Compile Include="NetRandomSeed.cs" />
+    <Compile Include="NetReceiverChannelBase.cs" />
+    <Compile Include="NetReliableOrderedReceiver.cs" />
+    <Compile Include="NetReliableSenderChannel.cs" />
+    <Compile Include="NetReliableSequencedReceiver.cs" />
+    <Compile Include="NetReliableUnorderedReceiver.cs" />
+    <Compile Include="NetSenderChannelBase.cs" />
+    <Compile Include="NetSendResult.cs" />
+    <Compile Include="NetServer.cs" />
+    <Compile Include="NetSRP.cs" />
+    <Compile Include="NetStoredReliableMessage.cs" />
+    <Compile Include="NetTime.cs" />
+    <Compile Include="NetTuple.cs" />
+    <Compile Include="NetUnreliableSenderChannel.cs" />
+    <Compile Include="NetUnreliableSequencedReceiver.cs" />
+    <Compile Include="NetUnreliableUnorderedReceiver.cs" />
+    <Compile Include="NetUPnP.cs" />
+    <Compile Include="NetUtility.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
+  <PropertyGroup>
+    <_PostBuildHookTimestamp>@(IntermediateAssembly-&gt;'%(FullPath).timestamp')</_PostBuildHookTimestamp>
+    <_PostBuildHookHostPlatform>AnyCPU</_PostBuildHookHostPlatform>
+  </PropertyGroup>
+  <UsingTask TaskName="LocalTouch" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
+    <ParameterGroup>
+      <Path ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs">
+              
+                  if (!File.Exists(Path))
+                  {
+                    var stream = File.Create(Path);
+                    stream.Dispose();
+                  }
+                  File.SetLastAccessTime(Path, DateTime.Now);
+                  
+            </Code>
+    </Task>
+  </UsingTask>
+  <Target Name="PostBuildHooks" Inputs="@(IntermediateAssembly);@(ReferencePath)" Outputs="@(IntermediateAssembly);$(_PostBuildHookTimestamp)" AfterTargets="CoreCompile" BeforeTargets="AfterCompile">
+    <LocalTouch Path="$(_PostBuildHookTimestamp)" />
+  </Target>
+  <ItemGroup />
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties><Policies>
+  <TextStylePolicy inheritsSet="VisualStudio" inheritsScope="text/plain" scope="text/x-csharp" />
+  <CSharpFormattingPolicy IndentSwitchSection="True" NewLinesForBracesInProperties="True" NewLinesForBracesInAccessors="True" NewLinesForBracesInAnonymousMethods="True" NewLinesForBracesInControlBlocks="True" NewLinesForBracesInAnonymousTypes="True" NewLinesForBracesInObjectCollectionArrayInitializers="True" NewLinesForBracesInLambdaExpressionBody="True" NewLineForElse="True" NewLineForCatch="True" NewLineForFinally="True" NewLineForMembersInObjectInit="True" NewLineForMembersInAnonymousTypes="True" NewLineForClausesInQuery="True" SpacingAfterMethodDeclarationName="False" SpaceAfterMethodCallName="False" SpaceBeforeOpenSquareBracket="False" inheritsSet="Mono" inheritsScope="text/x-csharp" scope="text/x-csharp" />
+</Policies>
+</Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>

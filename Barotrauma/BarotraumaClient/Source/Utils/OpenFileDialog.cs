@@ -29,22 +29,15 @@ namespace Barotrauma
             ofd.Title = Title;
 
             System.Windows.Forms.DialogResult result;
-#if LINUX || OSX
             var wrapperForm = new WrapperForm(ofd);
             System.Windows.Forms.Application.Run(wrapperForm);
             FileName = wrapperForm.FileName;
             FileNames = wrapperForm.FileNames;
             result = wrapperForm.Result;
-#else
-            result = ofd.ShowDialog();
-            FileName = ofd.FileName;
-            FileNames = ofd.FileNames;
-#endif
             ofd = null;
             return result;
         }
 
-#if LINUX || OSX
         private class WrapperForm : System.Windows.Forms.Form
         {
             private System.Windows.Forms.OpenFileDialog ofd;
@@ -68,6 +61,5 @@ namespace Barotrauma
                 System.Windows.Forms.Application.Exit();
             }
         }
-#endif
     }
 }

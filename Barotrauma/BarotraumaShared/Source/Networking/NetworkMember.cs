@@ -233,6 +233,8 @@ namespace Barotrauma.Networking
         /// </summary>
         public static bool? IsCompatible(string myVersion, string remoteVersion)
         {
+            if (string.IsNullOrEmpty(myVersion) || string.IsNullOrEmpty(remoteVersion)) { return null; }
+
             if (!Version.TryParse(myVersion, out Version myVersionNumber)) { return null; }
             if (!Version.TryParse(remoteVersion, out Version remoteVersionNumber)) { return null; }
 

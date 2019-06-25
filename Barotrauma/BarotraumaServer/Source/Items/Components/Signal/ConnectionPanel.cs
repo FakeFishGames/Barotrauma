@@ -22,8 +22,7 @@ namespace Barotrauma.Items.Components
                 {
                     ushort wireId = msg.ReadUInt16();
 
-                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
-                    if (wireItem == null) continue;
+                    if (!(Entity.FindEntityByID(wireId) is Item wireItem)) { continue; }
 
                     Wire wireComponent = wireItem.GetComponent<Wire>();
                     if (wireComponent != null)
@@ -34,13 +33,13 @@ namespace Barotrauma.Items.Components
             }
 
             //don't allow rewiring locked panels
-            if (Locked) return;
+            if (Locked || !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return; }
 
             item.CreateServerEvent(this);
 
             //check if the character can access this connectionpanel 
             //and all the wires they're trying to connect
-            if (!item.CanClientAccess(c)) return;
+            if (!item.CanClientAccess(c)) { return; }
             for (int i = 0; i < Connections.Count; i++)
             {
                 foreach (Wire wire in wires[i])
@@ -49,7 +48,7 @@ namespace Barotrauma.Items.Components
                     //  -> we need to check if the client has access to it
                     if (!Connections.Any(connection => connection.Wires.Contains(wire)))
                     {
-                        if (!wire.Item.CanClientAccess(c)) return;
+                        if (!wire.Item.CanClientAccess(c)) { return; }
                     }
                 }
             }
@@ -61,7 +60,7 @@ namespace Barotrauma.Items.Components
                 foreach (Wire existingWire in Connections[i].Wires)
                 {
                     j++;
-                    if (existingWire == null) continue;
+                    if (existingWire == null) { continue; }
 
                     //existing wire not in the list of new wires -> disconnect it
                     if (!wires[i].Contains(existingWire))
@@ -120,7 +119,7 @@ namespace Barotrauma.Items.Components
                 foreach (Wire newWire in wires[i])
                 {
                     //already connected, no need to do anything
-                    if (Connections[i].Wires.Contains(newWire)) continue;
+                    if (Connections[i].Wires.Contains(newWire)) { continue; }
 
                     Connections[i].TryAddLink(newWire);
                     newWire.Connect(Connections[i], true, true);

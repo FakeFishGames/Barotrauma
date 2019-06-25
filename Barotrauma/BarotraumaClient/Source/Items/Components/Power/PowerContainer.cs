@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             {
                 ProgressGetter = () => 
                 {
-                    return charge / capacity;
+                    return capacity <= 0.0f ? 1.0f : charge / capacity;
                 }
             };
         }
