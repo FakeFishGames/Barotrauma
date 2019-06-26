@@ -2496,7 +2496,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        BanPlayer(clientName, banReasonBox.Text, ban);
+                        BanPlayer(clientName, banReasonBox.Text, range: rangeBan);
                     }
                 }
                 else
