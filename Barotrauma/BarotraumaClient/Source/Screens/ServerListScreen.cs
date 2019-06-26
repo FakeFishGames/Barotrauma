@@ -45,6 +45,8 @@ namespace Barotrauma
         private GUITickBox filterFull;
         private GUITickBox filterEmpty;
 
+        private GUIButton serverPreviewToggleButton;
+
         //a timer for 
         private DateTime refreshDisableTimer;
         private bool waitingForRefresh;
@@ -56,7 +58,10 @@ namespace Barotrauma
             menu = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center))
-            { Stretch = true };
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
 
             //-------------------------------------------------------------------------------------
             //Top row
@@ -113,15 +118,37 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), bottomRow.RectTransform), isHorizontal: true) { Stretch = true };
+            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), bottomRow.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.01f,
+                Stretch = true
+            };
 
-            var filters = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            // filters -------------------------------------------
+
+            var filters = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
                 Color = new Color(12, 14, 15, 255) * 0.5f,
                 OutlineColor = Color.Black
             };
+            new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    filters.RectTransform.RelativeSize = new Vector2(0.25f, 1.0f);
+                    filters.Visible = !filters.Visible;
+                    filters.IgnoreLayoutGroups = !filters.Visible;
+                    serverListHolder.Recalculate();
+                    btn.Children.ForEach(c => c.SpriteEffects = filters.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                    return true;
+                }
+            };
 
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.RectTransform, Anchor.Center)) { RelativeSpacing = 0.015f };
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.015f
+            };
 
             var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterContainer.RectTransform), TextManager.Get("FilterServers"), font: GUI.LargeFont)
             {
@@ -149,6 +176,8 @@ namespace Barotrauma
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
             filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
+
+            // server list ---------------------------------------------------------------------
 
             var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
 
@@ -198,22 +227,47 @@ namespace Barotrauma
                 {
                     if (obj is ServerInfo serverInfo)
                     {
+                        if (!serverPreview.Visible)
+                        {
+                            serverPreview.RectTransform.RelativeSize = new Vector2(0.3f, 1.0f);
+                            serverPreviewToggleButton.Visible = true;
+                            serverPreviewToggleButton.IgnoreLayoutGroups = false;
+                            serverPreview.Visible = true;
+                            serverPreview.IgnoreLayoutGroups = false;
+                            serverListHolder.Recalculate();
+                        }
                         serverInfo.CreatePreviewWindow(serverPreview);
+                        btn.Children.ForEach(c => c.SpriteEffects = serverPreview.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
                     }
                     return true;
                 }
             };
 
-            labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
-            labelHolder.Recalculate();
-            GUITextBlock.AutoScaleAndNormalize(labelTexts);
-
             serverList.OnSelected += SelectServer;
+
+            //server preview panel --------------------------------------------------
+
+            serverPreviewToggleButton = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
+            {
+                Visible = false,
+                IgnoreLayoutGroups = true,
+                OnClicked = (btn, userdata) =>
+                {
+                    serverPreview.RectTransform.RelativeSize = new Vector2(0.3f, 1.0f);
+                    serverPreview.Visible = !serverPreview.Visible;
+                    serverPreview.IgnoreLayoutGroups = !serverPreview.Visible;
+                    serverListHolder.Recalculate();
+                    btn.Children.ForEach(c => c.SpriteEffects = serverPreview.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                    return true;
+                }
+            };
 
             serverPreview = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
             {
                 Color = new Color(12, 14, 15, 255) * 0.5f,
-                OutlineColor = Color.Black
+                OutlineColor = Color.Black,
+                IgnoreLayoutGroups = true,
+                Visible = false
             };
 
             // Spacing
@@ -248,8 +302,20 @@ namespace Barotrauma
 
             //--------------------------------------------------------
 
-            button.SelectedColor = button.Color;
+            bottomRow.Recalculate();
+            serverListHolder.Recalculate();
+            serverListContainer.Recalculate();
+            labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+            labelHolder.Recalculate();
+            GUITextBlock.AutoScaleAndNormalize(labelTexts);
 
+            serverList.Content.RectTransform.SizeChanged += () =>
+            {
+                labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+                labelHolder.Recalculate();
+            };
+
+            button.SelectedColor = button.Color;
             refreshDisableTimer = DateTime.Now;
         }
 
