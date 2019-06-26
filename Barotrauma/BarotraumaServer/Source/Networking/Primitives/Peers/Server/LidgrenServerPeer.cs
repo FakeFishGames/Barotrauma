@@ -152,12 +152,15 @@ namespace Barotrauma.Networking
         private void HandleDataMessage(NetIncomingMessage inc)
         {
             PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
-
-            if (pendingClient != null)
+            
+            bool isCompressed = inc.ReadBoolean();
+            bool isConnectionValidationRequest = inc.ReadBoolean();
+            inc.ReadPadBits();
+            if (pendingClient != null && isConnectionValidationRequest)
             {
                 UpdateConnectionValidation(pendingClient, inc);
             }
-            else
+            else if (!isConnectionValidationRequest)
             {
                 LidgrenConnection conn = connectedClients.Find(c => c.NetConnection == inc.SenderConnection);
                 if (conn == null)
@@ -165,8 +168,7 @@ namespace Barotrauma.Networking
                     inc.SenderConnection.Disconnect("Received data message from unauthenticated client");
                     return;
                 }
-                byte isCompressedByte = inc.ReadByte();
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressedByte != 0, inc.LengthBytes - 1, conn);
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.LengthBytes - 1, conn);
                 OnMessageReceived?.Invoke(conn, msg);
             }
         }
@@ -185,10 +187,10 @@ namespace Barotrauma.Networking
 
                     if (pendingClient.SteamID != 0)
                     {
-                        bool startedAuthSession = Steam.SteamManager.StartAuthSession(ticket, steamId);
-                        if (!startedAuthSession)
+                        ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
+                        if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
                         {
-                            pendingClient.Connection.Disconnect("Steam authentication failed");
+                            pendingClient.Connection.Disconnect("Steam auth session failed to start: "+authSessionStartState.ToString());
                             pendingClients.Remove(pendingClient);
                             return;
                         }
@@ -210,10 +212,24 @@ namespace Barotrauma.Networking
         public void OnAuthChange(ulong steamID, ulong ownerID, Facepunch.Steamworks.ServerAuth.Status status)
         {
             PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
+            if (pendingClient == null) { return; }
+
+            if (serverSettings.BanList.IsBanned(null, steamID))
+            {
+                pendingClient.Connection.Disconnect("SteamID banned");
+                pendingClients.Remove(pendingClient);
+                return;
+            }
 
             if (status == ServerAuth.Status.OK)
             {
-                pendingClient.InitializationStep = ConnectionInitialization.Success;
+                pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.Success;
+            }
+            else
+            {
+                pendingClient.Connection.Disconnect("Steam authentication failed: "+status.ToString());
+                pendingClients.Remove(pendingClient);
+                return;
             }
         }
 

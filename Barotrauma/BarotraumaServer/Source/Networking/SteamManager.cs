@@ -72,17 +72,18 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
+        public static ServerAuth.StartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
+            if (instance == null || !instance.isInitialized || instance.server == null) return ServerAuth.StartAuthSessionResult.GameMismatch;
             
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
-            if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
+            ServerAuth.StartAuthSessionResult startResult = instance.server.Auth.StartSession(authTicketData, clientSteamID);
+            if (startResult != ServerAuth.StartAuthSessionResult.OK)
             {
-                DebugConsole.Log("Authentication failed: failed to start auth session");
-                return false;
+                DebugConsole.Log("Authentication failed: failed to start auth session (" + startResult.ToString() + ")");
             }
-            return true;
+
+            return startResult;
         }
 
         public static void StopAuthSession(ulong clientSteamID)
