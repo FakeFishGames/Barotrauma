@@ -43,6 +43,9 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false)]
         public bool RepairMultiple { get; set; }
 
+        [Serialize(0.0f, false)]
+        public float FireProbability { get; set; }
+
         public Vector2 TransformedBarrelPos
         {
             get
@@ -148,6 +151,15 @@ namespace Barotrauma.Items.Components
             else
             {
                 Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
+            }
+
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
+                {
+                    new FireSource(targetPosition);
+                }
             }
 
             UseProjSpecific(deltaTime);

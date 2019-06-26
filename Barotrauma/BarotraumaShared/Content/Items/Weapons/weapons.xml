@@ -230,7 +230,7 @@
     <Price locationtype="Outpost" buyprice="75" />
     <Price locationtype="Mine" buyprice="75" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,64,64,64" />
-    <Sprite texture="Content/Items/tools/tools_new.png" sourcerect="0,116,221,123" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="0,116,221,123" depth="0.55" origin="0.5,0.5" />
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into steel and plastic -->
     <Deconstruct time="10">
       <Item identifier="steel" />
@@ -245,7 +245,7 @@
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
-    <RepairTool structurefixamount="0.0" range="300" barrelpos="35,13" particles="flamethrower" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
+    <RepairTool structurefixamount="0.0" range="300" barrelpos="35,13" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
@@ -258,11 +258,15 @@
       <StatusEffect type="OnUse" target="UseTarget">
         <Affliction identifier="burn" amount="1.25" />
       </StatusEffect>
-      <!-- security skill 20 required to use the item -->
-      <RequiredSkill identifier="security" level="20" />
+      <!-- do minor burn damage to the user -->
+      <StatusEffect type="OnUse" target="Character">
+        <Affliction identifier="burn" amount="0.1" />
+      </StatusEffect>
+      <!-- weapons skill 20 required to use the item -->
+      <RequiredSkill identifier="weapons" level="20" />
       <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
       <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-12.0" />
-      <LightComponent LightColor="1.0,0.9,0.7,1.0" Flicker="0.5">
+      <LightComponent LightColor="255,174,121,255" Flicker="0.5" Range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
     </RepairTool>
