@@ -286,7 +286,7 @@
       <sound file="Content/Items/Alien/AlienTurret1.ogg" type="OnUse" range="500.0" loop="false" />
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
-      <ParticleEmitter particle="plasma" particlespersecond="50" />
+      <ParticleEmitter particle="plasma" particlespersecond="50" copyentityangle="true" />
       <ParticleEmitterHitStructure particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitItem particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="plasmasmoke" particleamount="5" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
@@ -318,7 +318,7 @@
     <Sprite texture="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4" />
     <Body width="85" height="40" density="15" />
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11" msg="ItemMsgPickUpSelect"/>
-    <RepairTool structurefixamount="-3.0" range="600" barrelpos="30,15">
+    <RepairTool structurefixamount="-3.0" range="600" barrelpos="30,15" copyentityangle="true">
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
       <ParticleEmitter particle="largeplasma" particlespersecond="50" />
