@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption == 0.0f) voltage = 1.0f;
+            if (powerConsumption == 0.0f) { voltage = 1.0f; }
 
             progressTimer += deltaTime * voltage;
             Voltage -= deltaTime * 10.0f;
@@ -107,28 +107,31 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 
-                if (targetItem.Prefab.DeconstructItems.Any())
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
-                    inputContainer.Inventory.RemoveItem(targetItem);
-                    Entity.Spawner.AddToRemoveQueue(targetItem);
-                    MoveInputQueue();
-                    PutItemsToLinkedContainer();
-                }
-                else
-                {
-                    if (outputContainer.Inventory.Items.All(i => i != null))
+                    if (targetItem.Prefab.DeconstructItems.Any())
                     {
-                        targetItem.Drop(dropper: null);
+                        inputContainer.Inventory.RemoveItem(targetItem);
+                        Entity.Spawner.AddToRemoveQueue(targetItem);
+                        MoveInputQueue();
+                        PutItemsToLinkedContainer();
                     }
                     else
                     {
-                        outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
+                        if (outputContainer.Inventory.Items.All(i => i != null))
+                        {
+                            targetItem.Drop(dropper: null);
+                        }
+                        else
+                        {
+                            outputContainer.Inventory.TryPutItem(targetItem, user: null, createNetworkEvent: true);
+                        }
                     }
-                }
-
-                if (inputContainer.Inventory.Items.Any(i => i != null))
-                {
+#if SERVER
+                    item.CreateServerEvent(this);
+#endif
                     progressTimer = 0.0f;
+                    progressState = 0.0f;
                 }
             }
 
@@ -188,21 +191,17 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
-            if (!IsActive) { progressState = 0.0f; }
-
-#if CLIENT
             if (!IsActive)
             {
                 progressTimer = 0.0f;
-                activateButton.Text = TextManager.Get("DeconstructorDeconstruct");
+                progressState = 0.0f;
             }
-            else
-            {
-                activateButton.Text = TextManager.Get("DeconstructorCancel");
-            }
+
+#if CLIENT
+            activateButton.Text = TextManager.Get(IsActive ? "DeconstructorCancel" : "DeconstructorDeconstruct");
 #endif
 
-            inputContainer.Inventory.Locked = IsActive;            
+            inputContainer.Inventory.Locked = IsActive;
         }
     }
 }
