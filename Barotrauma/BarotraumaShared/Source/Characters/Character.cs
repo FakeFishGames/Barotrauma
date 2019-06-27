@@ -1521,7 +1521,7 @@ namespace Barotrauma
 
         public bool CanAccessInventory(Inventory inventory)
         {
-            if (!CanInteract) return false;
+            if (!CanInteract || inventory.Locked) { return false; }
 
             //the inventory belongs to some other character
             if (inventory.Owner is Character && inventory.Owner != this)
