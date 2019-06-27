@@ -189,11 +189,7 @@ namespace Barotrauma.Networking
 
             if (SteamManager.USE_STEAM)
             {
-                SteamManager.CreateServer(this, isPublic);
-                if (isPublic)
-                {
-                    registeredToMaster = true;
-                }
+                registeredToMaster = SteamManager.CreateServer(this, isPublic);
             }
             if (isPublic && !GameMain.Config.UseSteamMatchmaking)
             {
