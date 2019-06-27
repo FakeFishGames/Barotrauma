@@ -26,19 +26,22 @@ namespace Barotrauma.Networking
 
         private class PendingClient
         {
+            public string Name;
             public NetConnection Connection;
             public ConnectionInitialization InitializationStep;
+            public double UpdateTime;
             public int Retries;
-            public UInt64 SteamID;
-            public Int32 PasswordNonce;
+            public UInt64? SteamID;
+            public Int32? PasswordNonce;
 
             public PendingClient(NetConnection conn)
             {
                 Connection = conn;
                 InitializationStep = ConnectionInitialization.SteamTicket;
                 Retries = 0;
-                SteamID = 0;
-                PasswordNonce = 0;
+                SteamID = null;
+                PasswordNonce = null;
+                UpdateTime = Timing.TotalTime;
             }
         }
 
@@ -100,9 +103,24 @@ namespace Barotrauma.Networking
                 HandleConnection(inc);
             }
 
-            foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType == NetIncomingMessageType.Data))
+            foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
             {
-                HandleDataMessage(inc);
+                switch (inc.MessageType)
+                {
+                    case NetIncomingMessageType.Data:
+                        HandleDataMessage(inc);
+                        break;
+                    case NetIncomingMessageType.StatusChanged:
+                        HandleStatusChanged(inc);
+                        break;
+                }
+            }
+
+            for (int i=0;i<pendingClients.Count;i++)
+            {
+                PendingClient pendingClient = pendingClients[i];
+                UpdatePendingClient(pendingClient);
+                if (i>=pendingClients.Count || pendingClients[i] != pendingClient) { i--; }
             }
         }
 
@@ -152,13 +170,13 @@ namespace Barotrauma.Networking
         private void HandleDataMessage(NetIncomingMessage inc)
         {
             PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
-            
-            bool isCompressed = inc.ReadBoolean();
-            bool isConnectionValidationRequest = inc.ReadBoolean();
-            inc.ReadPadBits();
-            if (pendingClient != null && isConnectionValidationRequest)
+
+            byte incByte = inc.ReadByte();
+            bool isCompressed = (incByte & 0x1) != 0;
+            bool isConnectionValidationRequest = (incByte & 0x2) != 0;
+            if (pendingClient != null)
             {
-                UpdateConnectionValidation(pendingClient, inc);
+                ReadConnectionValidationStep(pendingClient, inc);
             }
             else if (!isConnectionValidationRequest)
             {
@@ -168,12 +186,27 @@ namespace Barotrauma.Networking
                     inc.SenderConnection.Disconnect("Received data message from unauthenticated client");
                     return;
                 }
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.LengthBytes - 1, conn);
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, 1, inc.LengthBytes - 1, conn);
                 OnMessageReceived?.Invoke(conn, msg);
             }
         }
 
-        private void UpdateConnectionValidation(PendingClient pendingClient, NetIncomingMessage inc)
+        private void HandleStatusChanged(NetIncomingMessage inc)
+        {
+            switch (inc.SenderConnection.Status)
+            {
+                case NetConnectionStatus.Disconnected:
+                    LidgrenConnection conn = connectedClients.Find(c => c.NetConnection == inc.SenderConnection);
+                    if (conn != null)
+                    {
+                        OnStatusChanged?.Invoke(conn, ConnectionStatus.Disconnected);
+                        connectedClients.Remove(conn);
+                    }
+                    break;
+            }
+        }
+
+        private void ReadConnectionValidationStep(PendingClient pendingClient, NetIncomingMessage inc)
         {
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
             if (pendingClient.InitializationStep != initializationStep) return;
@@ -181,11 +214,19 @@ namespace Barotrauma.Networking
             switch (initializationStep)
             {
                 case ConnectionInitialization.SteamTicket:
+                    string name = inc.ReadString();
                     UInt64 steamId = inc.ReadUInt64();
                     UInt16 ticketLength = inc.ReadUInt16();
                     byte[] ticket = inc.ReadBytes(ticketLength);
 
-                    if (pendingClient.SteamID != 0)
+                    if (!Client.IsValidName(name, serverSettings))
+                    {
+                        pendingClient.Connection.Disconnect("The name \""+name+"\" is invalid");
+                        pendingClients.Remove(pendingClient);
+                        return;
+                    }
+
+                    if (pendingClient.SteamID == 0)
                     {
                         ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
                         if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
@@ -195,6 +236,7 @@ namespace Barotrauma.Networking
                             return;
                         }
                         pendingClient.SteamID = steamId;
+                        pendingClient.Name = name;
                     }
                     else //TODO: could remove since this seems impossible
                     {
@@ -206,10 +248,72 @@ namespace Barotrauma.Networking
                         }
                     }
                     break;
+                case ConnectionInitialization.Password:
+                    string incPassword = inc.ReadString();
+                    if (pendingClient.PasswordNonce == null)
+                    {
+                        DebugConsole.ThrowError("Received password message from client without nonce");
+                        return;
+                    }
+                    if (serverSettings.IsPasswordCorrect(incPassword, pendingClient.PasswordNonce.Value))
+                    {
+                        pendingClient.InitializationStep = ConnectionInitialization.Success;
+                    }
+                    else
+                    {
+                        pendingClient.Retries++;
+
+                        if (pendingClient.Retries >= 3)
+                        {
+                            string banMsg = "Failed to enter correct password too many times";
+                            pendingClient.Connection.Disconnect(banMsg);
+                            if (pendingClient.SteamID != null)
+                            {
+                                serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.SteamID.Value, banMsg, null);
+                            }
+                            serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.Connection.RemoteEndPoint.Address, banMsg, null);
+                        }
+                    }
+                    pendingClient.UpdateTime = Timing.TotalTime;
+                    break;
             }
         }
 
-        public void OnAuthChange(ulong steamID, ulong ownerID, Facepunch.Steamworks.ServerAuth.Status status)
+        private void UpdatePendingClient(PendingClient pendingClient)
+        {
+            if (pendingClient.InitializationStep == ConnectionInitialization.Success)
+            {
+                LidgrenConnection newConnection = new LidgrenConnection(pendingClient.Name, pendingClient.Connection, pendingClient.SteamID ?? 0);
+                connectedClients.Add(newConnection);
+                pendingClients.Remove(pendingClient);
+            }
+
+            if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
+            pendingClient.UpdateTime = Timing.TotalTime + 1.0;
+
+            NetOutgoingMessage outMsg = netServer.CreateMessage();
+            outMsg.Write((byte)0x2);
+            outMsg.Write((byte)pendingClient.InitializationStep);
+            switch (pendingClient.InitializationStep)
+            {
+                case ConnectionInitialization.Password:
+                    outMsg.Write(pendingClient.PasswordNonce == null); outMsg.WritePadBits();
+                    if (pendingClient.PasswordNonce == null)
+                    {
+                        pendingClient.PasswordNonce = CryptoRandom.Instance.Next();
+                        outMsg.Write(pendingClient.PasswordNonce.Value);
+                    }
+                    else
+                    {
+                        outMsg.Write(pendingClient.Retries);
+                    }
+                    break;
+            }
+
+            netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
         {
             PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
             if (pendingClient == null) { return; }
@@ -224,6 +328,7 @@ namespace Barotrauma.Networking
             if (status == ServerAuth.Status.OK)
             {
                 pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.Success;
+                pendingClient.UpdateTime = Timing.TotalTime;
             }
             else
             {
@@ -241,8 +346,29 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Tried to send message to unauthenticated connection: " + lidgrenConn.IPString);
                 return;
             }
-            
 
+            NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
+            switch (deliveryMethod)
+            {
+                case DeliveryMethod.Unreliable:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
+                    break;
+                case DeliveryMethod.Reliable:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableUnordered;
+                    break;
+                case DeliveryMethod.ReliableOrdered:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
+                    break;
+            }
+
+            NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
+            byte[] msgData = new byte[1500];
+            bool isCompressed; int length;
+            msg.PrepareForSending(msgData, out isCompressed, out length);
+            lidgrenMsg.Write((byte)(isCompressed ? 0x1 : 0x0));
+            lidgrenMsg.Write(msgData, 0, length);
+
+            netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
         }
 
         public override NetworkConnection GetConnectionByName(string name)

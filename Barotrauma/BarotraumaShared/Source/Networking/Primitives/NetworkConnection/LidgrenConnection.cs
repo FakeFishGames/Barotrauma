@@ -26,8 +26,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public LidgrenConnection(NetConnection netConnection, UInt64 steamId)
+        public LidgrenConnection(string name, NetConnection netConnection, UInt64 steamId)
         {
+            Name = name;
             NetConnection = netConnection;
             SteamID = steamId;
         }

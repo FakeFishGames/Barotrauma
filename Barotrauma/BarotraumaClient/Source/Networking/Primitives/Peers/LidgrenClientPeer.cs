@@ -35,7 +35,7 @@ namespace Barotrauma.Networking
             }
 
             netClient.Start();
-            ServerConnection = new LidgrenConnection(netClient.Connect(ipEndPoint), 0);
+            ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
         }
 
         public override void Close(string msg=null)

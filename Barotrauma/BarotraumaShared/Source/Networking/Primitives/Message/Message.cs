@@ -528,13 +528,13 @@ namespace Barotrauma.Networking
 
         public NetworkConnection Sender { get; private set; }
         
-        public ReadOnlyMessage(byte[] inBuf, bool isCompressed, int inLength, NetworkConnection sender)
+        public ReadOnlyMessage(byte[] inBuf, bool isCompressed, int startPos, int inLength, NetworkConnection sender)
         {
             Sender = sender;
             byte[] decompressedData;
             if (isCompressed)
             {
-                using (MemoryStream input = new MemoryStream(inBuf, 0, inLength))
+                using (MemoryStream input = new MemoryStream(inBuf, startPos, inLength))
                 {
                     using (MemoryStream output = new MemoryStream())
                     {

@@ -10,6 +10,7 @@ namespace Barotrauma.Networking
 
         public abstract void Start(object endPoint);
         public abstract void Close(string msg=null);
+        public abstract void Update();
         public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod);
     }
 }

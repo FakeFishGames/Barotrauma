@@ -6,5 +6,11 @@
         Reliable,
         ReliableOrdered
     }
+
+    public enum ConnectionStatus
+    {
+        Connected,
+        Disconnected
+    }
 }
 

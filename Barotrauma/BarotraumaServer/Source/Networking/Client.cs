@@ -108,14 +108,14 @@ namespace Barotrauma.Networking
             NeedsMidRoundSync = false;
         }
 
-        public static bool IsValidName(string name, GameServer server)
+        public static bool IsValidName(string name, ServerSettings serverSettings)
         {
             char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
             if (name.Any(c => disallowedChars.Contains(c))) return false;
 
             foreach (char character in name)
             {
-                if (!server.ServerSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
+                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
             }
 
             return true;
