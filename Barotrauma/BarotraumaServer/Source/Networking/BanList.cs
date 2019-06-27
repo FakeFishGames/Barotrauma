@@ -117,8 +117,19 @@ namespace Barotrauma.Networking
 
         public bool IsBanned(IPAddress IP, ulong steamID)
         {
-            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
             return bannedPlayers.Any(bp => bp.CompareTo(IP) || (steamID > 0 && bp.SteamID == steamID));
+        }
+
+        public bool IsBanned(IPAddress IP)
+        {
+            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
+            return bannedPlayers.Any(bp => bp.CompareTo(IP));
+        }
+
+        public bool IsBanned(ulong steamID)
+        {
+            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
+            return bannedPlayers.Any(bp => (steamID > 0 && bp.SteamID == steamID));
         }
 
         public void BanPlayer(string name, IPAddress ip, string reason, TimeSpan? duration)

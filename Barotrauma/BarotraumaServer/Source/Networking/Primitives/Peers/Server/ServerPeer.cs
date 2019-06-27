@@ -6,11 +6,11 @@ namespace Barotrauma.Networking
 {
     abstract class ServerPeer
     {
-        public delegate void MessageDelegate(NetworkConnection connection, IReadMessage message);
-        public delegate void StatusChangeDelegate(NetworkConnection connection, ConnectionStatus status);
-        public MessageDelegate OnConnectionValidated;
-        public MessageDelegate OnMessageReceived;
-        public StatusChangeDelegate OnStatusChanged;
+        public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
+        public delegate void StatusChangeCallback(NetworkConnection connection, ConnectionStatus status);
+        public MessageCallback OnConnectionValidated;
+        public MessageCallback OnMessageReceived;
+        public StatusChangeCallback OnStatusChanged;
 
         public abstract void Start();
         public abstract void Close(string msg=null);

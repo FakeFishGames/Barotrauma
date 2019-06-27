@@ -122,6 +122,8 @@ namespace Barotrauma.Networking
                 UpdatePendingClient(pendingClient);
                 if (i>=pendingClients.Count || pendingClients[i] != pendingClient) { i--; }
             }
+
+            incomingLidgrenMessages.Clear();
         }
 
         private void InitUPnP()
@@ -173,24 +175,32 @@ namespace Barotrauma.Networking
 
             byte incByte = inc.ReadByte();
             bool isCompressed = (incByte & 0x1) != 0;
-            bool isConnectionValidationRequest = (incByte & 0x2) != 0;
-            if (pendingClient != null)
+            bool isConnectionInitializationStep = (incByte & 0x2) != 0;
+            if (isConnectionInitializationStep && pendingClient != null)
             {
-                ReadConnectionValidationStep(pendingClient, inc);
+                ReadConnectionInitializationStep(pendingClient, inc);
             }
-            else if (!isConnectionValidationRequest)
+            else if (!isConnectionInitializationStep)
             {
                 LidgrenConnection conn = connectedClients.Find(c => c.NetConnection == inc.SenderConnection);
                 if (conn == null)
                 {
                     inc.SenderConnection.Disconnect("Received data message from unauthenticated client");
+                    if (pendingClient != null) { pendingClients.Remove(pendingClient); }
+                    return;
+                }
+                if (pendingClient != null) { pendingClients.Remove(pendingClient); }
+                if (serverSettings.BanList.IsBanned(conn.IPEndPoint.Address, conn.SteamID))
+                {
+                    inc.SenderConnection.Disconnect("Received data message from banned client");
+                    connectedClients.Remove(conn);
                     return;
                 }
                 IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, 1, inc.LengthBytes - 1, conn);
                 OnMessageReceived?.Invoke(conn, msg);
             }
         }
-
+        
         private void HandleStatusChanged(NetIncomingMessage inc)
         {
             switch (inc.SenderConnection.Status)
@@ -206,7 +216,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void ReadConnectionValidationStep(PendingClient pendingClient, NetIncomingMessage inc)
+        private void ReadConnectionInitializationStep(PendingClient pendingClient, NetIncomingMessage inc)
         {
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
             if (pendingClient.InitializationStep != initializationStep) return;
@@ -272,6 +282,8 @@ namespace Barotrauma.Networking
                                 serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.SteamID.Value, banMsg, null);
                             }
                             serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.Connection.RemoteEndPoint.Address, banMsg, null);
+                            pendingClients.Remove(pendingClient);
+                            return;
                         }
                     }
                     pendingClient.UpdateTime = Timing.TotalTime;
@@ -281,6 +293,12 @@ namespace Barotrauma.Networking
 
         private void UpdatePendingClient(PendingClient pendingClient)
         {
+            if (serverSettings.BanList.IsBanned(pendingClient.SteamID ?? 0))
+            {
+                pendingClient.Connection.Disconnect("Initialization interrupted by ban");
+                pendingClients.Remove(pendingClient);
+            }
+
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
                 LidgrenConnection newConnection = new LidgrenConnection(pendingClient.Name, pendingClient.Connection, pendingClient.SteamID ?? 0);
@@ -386,7 +404,8 @@ namespace Barotrauma.Networking
             else if (endPoint is string)
             {
                 string strEndPoint = (string)endPoint;
-                if (strEndPoint.Contains(":"))
+                int colonCount = strEndPoint.Count(c => c == ':');
+                if (colonCount == 1 || colonCount == 7)
                 {
                     string[] split = strEndPoint.Split(':');
                     string ip = string.Join(":", split, 0, split.Length-1); UInt16 port = UInt16.Parse(split[split.Length-1]);
