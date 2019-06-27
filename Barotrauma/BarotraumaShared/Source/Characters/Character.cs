@@ -130,16 +130,20 @@ namespace Barotrauma
         {
             get
             {
-                if (ViewTarget == null) return AnimController.AimSourcePos;
+                if (ViewTarget == null) { return AnimController.AimSourcePos; }
+
+                Vector2 viewTargetWorldPos = ViewTarget.WorldPosition;
                 if (ViewTarget is Item targetItem)
                 {
                     Turret turret = targetItem.GetComponent<Turret>();
                     if (turret != null)
                     {
-                        return new Vector2(targetItem.Rect.X + turret.TransformedBarrelPos.X, targetItem.Rect.Y - turret.TransformedBarrelPos.Y);
+                        viewTargetWorldPos = new Vector2(
+                            targetItem.WorldRect.X + turret.TransformedBarrelPos.X, 
+                            targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
-                return ViewTarget.Position;
+                return Position + (viewTargetWorldPos - WorldPosition);
             }
         }
 
