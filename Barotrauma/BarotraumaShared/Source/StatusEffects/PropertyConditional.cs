@@ -277,7 +277,7 @@ namespace Barotrauma
                 case OperatorType.Equals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) == (AttributeValue == "true");
+                        return ((bool)propertyValue) == (AttributeValue == "true" || AttributeValue == "True");
                     }
                     else if (FloatValue == null)
                     {
@@ -290,7 +290,7 @@ namespace Barotrauma
                 case OperatorType.NotEquals:
                     if (type == typeof(bool))
                     {
-                        return ((bool)propertyValue) != (AttributeValue == "true");
+                        return ((bool)propertyValue) != (AttributeValue == "true" || AttributeValue == "True");
                     }
                     else if (FloatValue == null)
                     {

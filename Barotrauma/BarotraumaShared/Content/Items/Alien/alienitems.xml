@@ -283,24 +283,27 @@
     </RangedWeapon>-->
 
     <RepairTool structurefixamount="-3.0" range="1000" barrelpos="25,5">
+      <sound file="Content/Items/Alien/AlienTurret1.ogg" type="OnUse" range="500.0" loop="false" />
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
       <ParticleEmitter particle="plasma" particlespersecond="50" />
-      <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
-      <ParticleEmitterHitItem particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
-      <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
-      <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
-      <StatusEffect type="OnUse" target="This" Condition="-40" disabledeltatime="true" />
-      <StatusEffect type="OnUse" target="Contained" Condition="-20.0" />
-      <StatusEffect type="OnUse" target="UseTarget">
-        <Affliction identifier="burn" amount="5" />
+      <ParticleEmitterHitStructure particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitItem particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitStructure particle="plasmasmoke" particleamount="5" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
+      <ParticleEmitterHitItem particle="plasmasmoke" particleamount="5" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particleamount="5" anglemin="0" anglemax="360" velocitymin="0" velocitymax="20" />
+      <ParticleEmitterHitCharacter particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <StatusEffect type="OnUse" target="This" Condition="-100" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="Contained" Condition="-5.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="UseTarget" disabledeltatime="true">
+        <Explosion range="150.0" force="3" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0">
+          <Affliction identifier="psychosis" strength="2" />
+        </Explosion>
+        <Affliction identifier="burn" amount="1" />
+        <Affliction identifier="stun" amount="1" />
+        <Affliction identifier="psychosis" strength="2" />
       </StatusEffect>
       <StatusEffect type="OnFailure" target="Contained" Condition="-0.1" disabledeltatime="true"/>
-      <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="800.0" loop="true" />
-      <LightComponent AllowInGameEditing="false" LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
-        <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
-      </LightComponent>
     </RepairTool>
 
   </Item>
@@ -485,6 +488,9 @@
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
+    <LightComponent AllowInGameEditing="false" color="150,150,255,150" range="15" castshadows="false">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+    </LightComponent>
   </Item>
   <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="Alien" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
