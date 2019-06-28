@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿#if FALSE
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -536,3 +537,6 @@ namespace Barotrauma.Networking
         }
     }
 }
+#endif
+
+//TODO: delete

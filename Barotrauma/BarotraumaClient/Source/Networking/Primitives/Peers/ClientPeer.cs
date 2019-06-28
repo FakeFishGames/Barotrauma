@@ -8,10 +8,15 @@ namespace Barotrauma.Networking
     {
         public delegate void MessageCallback(IReadMessage message);
         public delegate void StatusChangeCallback(ConnectionStatus status);
-
-        public MessageCallback OnConnectionValidated;
+        public delegate void PasswordCallback(int nonce, int retries);
+        public delegate void InitializationCompleteCallback();
+        
         public MessageCallback OnMessageReceived;
         public StatusChangeCallback OnStatusChanged;
+        public PasswordCallback OnRequestPassword;
+        public InitializationCompleteCallback OnInitializationComplete;
+
+        public string Name;
 
         public NetworkConnection ServerConnection { get; protected set; }
 

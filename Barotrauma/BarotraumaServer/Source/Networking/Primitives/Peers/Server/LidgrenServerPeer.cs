@@ -30,6 +30,7 @@ namespace Barotrauma.Networking
             public NetConnection Connection;
             public ConnectionInitialization InitializationStep;
             public double UpdateTime;
+            public double TimeOut;
             public int Retries;
             public UInt64? SteamID;
             public Int32? PasswordNonce;
@@ -42,6 +43,7 @@ namespace Barotrauma.Networking
                 SteamID = null;
                 PasswordNonce = null;
                 UpdateTime = Timing.TotalTime;
+                TimeOut = Timing.TotalTime + 20.0;
             }
         }
 
@@ -50,7 +52,7 @@ namespace Barotrauma.Networking
 
         private List<NetIncomingMessage> incomingLidgrenMessages;
 
-        public LidgrenServerPeer(ServerSettings settings)
+        public LidgrenServerPeer(int? ownerKey, ServerSettings settings)
         {
             serverSettings = settings;
             netPeerConfiguration = new NetPeerConfiguration("barotrauma");
@@ -73,6 +75,8 @@ namespace Barotrauma.Networking
             pendingClients = new List<PendingClient>();
 
             incomingLidgrenMessages = new List<NetIncomingMessage>();
+
+            OwnerKey = ownerKey;
         }
 
         public override void Start()
@@ -196,7 +200,8 @@ namespace Barotrauma.Networking
                     connectedClients.Remove(conn);
                     return;
                 }
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, 1, inc.LengthBytes - 1, conn);
+                UInt16 length = inc.ReadUInt16();
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, conn);
                 OnMessageReceived?.Invoke(conn, msg);
             }
         }
@@ -218,6 +223,8 @@ namespace Barotrauma.Networking
 
         private void ReadConnectionInitializationStep(PendingClient pendingClient, NetIncomingMessage inc)
         {
+            pendingClient.TimeOut = Timing.TotalTime + 20.0;
+
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
             if (pendingClient.InitializationStep != initializationStep) return;
 
@@ -236,7 +243,7 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    if (pendingClient.SteamID == 0)
+                    if (pendingClient.SteamID == null)
                     {
                         ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
                         if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
@@ -293,7 +300,7 @@ namespace Barotrauma.Networking
 
         private void UpdatePendingClient(PendingClient pendingClient)
         {
-            if (serverSettings.BanList.IsBanned(pendingClient.SteamID ?? 0))
+            if (serverSettings.BanList.IsBanned(pendingClient.Connection.RemoteEndPoint.Address, pendingClient.SteamID ?? 0))
             {
                 pendingClient.Connection.Disconnect("Initialization interrupted by ban");
                 pendingClients.Remove(pendingClient);
@@ -303,6 +310,13 @@ namespace Barotrauma.Networking
             {
                 LidgrenConnection newConnection = new LidgrenConnection(pendingClient.Name, pendingClient.Connection, pendingClient.SteamID ?? 0);
                 connectedClients.Add(newConnection);
+                pendingClients.Remove(pendingClient);
+                OnInitializationComplete?.Invoke(newConnection);
+            }
+
+            if (Timing.TotalTime > pendingClient.TimeOut)
+            {
+                pendingClient.Connection.Disconnect("Timed out");
                 pendingClients.Remove(pendingClient);
             }
 
@@ -336,7 +350,7 @@ namespace Barotrauma.Networking
             PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
             if (pendingClient == null) { return; }
 
-            if (serverSettings.BanList.IsBanned(null, steamID))
+            if (serverSettings.BanList.IsBanned(pendingClient.Connection.RemoteEndPoint.Address, steamID))
             {
                 pendingClient.Connection.Disconnect("SteamID banned");
                 pendingClients.Remove(pendingClient);
@@ -384,6 +398,7 @@ namespace Barotrauma.Networking
             bool isCompressed; int length;
             msg.PrepareForSending(msgData, out isCompressed, out length);
             lidgrenMsg.Write((byte)(isCompressed ? 0x1 : 0x0));
+            lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
             netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);

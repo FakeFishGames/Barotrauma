@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
         private Auth.Ticket steamAuthTicket;
         List<NetIncomingMessage> incomingLidgrenMessages;
 
-        public LidgrenClientPeer()
+        public LidgrenClientPeer(string name)
         {
             netPeerConfiguration = new NetPeerConfiguration("barotrauma");
 
@@ -38,6 +38,8 @@ namespace Barotrauma.Networking
             }
 
             incomingLidgrenMessages = new List<NetIncomingMessage>();
+
+            Name = name;
         }
 
         public override void Start(object endPoint)
@@ -88,19 +90,66 @@ namespace Barotrauma.Networking
             }
             else
             {
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, 1, inc.LengthBytes - 1, ServerConnection);
+                if (initializationStep != ConnectionInitialization.Success)
+                {
+                    OnInitializationComplete();
+                }
+                UInt16 length = inc.ReadUInt16();
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, ServerConnection);
                 OnMessageReceived?.Invoke(msg);
             }
         }
 
         private void HandleStatusChanged(NetIncomingMessage inc)
         {
-            throw new NotImplementedException();
+            NetConnectionStatus status = (NetConnectionStatus)inc.ReadByte();
         }
 
         private void ReadConnectionInitializationStep(NetIncomingMessage inc)
         {
-            throw new NotImplementedException();
+            ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
+            switch (step)
+            {
+                case ConnectionInitialization.SteamTicket:
+                    if (initializationStep != ConnectionInitialization.SteamTicket) { return; }
+                    NetOutgoingMessage outMsg = netClient.CreateMessage();
+                    outMsg.Write(0x2);
+                    outMsg.Write((byte)ConnectionInitialization.SteamTicket);
+                    outMsg.Write(Name);
+                    outMsg.Write(SteamManager.GetSteamID());
+                    outMsg.Write((UInt16)steamAuthTicket.Data.Length);
+                    outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
+                    netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    break;
+                case ConnectionInitialization.Password:
+                    if (initializationStep == ConnectionInitialization.SteamTicket) { initializationStep = ConnectionInitialization.Password; }
+                    if (initializationStep != ConnectionInitialization.Password) { return; }
+                    bool incomingNonce = inc.ReadBoolean(); inc.ReadPadBits();
+                    int retries = 0;
+                    if (incomingNonce)
+                    {
+                        passwordNonce = inc.ReadInt32();
+                    }
+                    else
+                    {
+                        retries = inc.ReadInt32();
+                    }
+                    OnRequestPassword?.Invoke(passwordNonce, retries);
+                    break;
+            }
+        }
+
+        private void SendPassword(string password, int nonce)
+        {
+            if (initializationStep != ConnectionInitialization.Password) { return; }
+            NetOutgoingMessage outMsg = netClient.CreateMessage();
+            outMsg.Write(0x2);
+            outMsg.Write((byte)ConnectionInitialization.Password);
+            string saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            saltedPw = saltedPw + Convert.ToString(nonce);
+            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
+            outMsg.Write(saltedPw);
+            netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
 
         public override void Close(string msg=null)
@@ -111,7 +160,29 @@ namespace Barotrauma.Networking
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
         {
-            throw new NotImplementedException();
+            NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
+            switch (deliveryMethod)
+            {
+                case DeliveryMethod.Unreliable:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
+                    break;
+                case DeliveryMethod.Reliable:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableUnordered;
+                    break;
+                case DeliveryMethod.ReliableOrdered:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
+                    break;
+            }
+
+            NetOutgoingMessage lidgrenMsg = netClient.CreateMessage();
+            byte[] msgData = new byte[1500];
+            bool isCompressed; int length;
+            msg.PrepareForSending(msgData, out isCompressed, out length);
+            lidgrenMsg.Write((byte)(isCompressed ? 0x1 : 0x0));
+            lidgrenMsg.Write((UInt16)length);
+            lidgrenMsg.Write(msgData, 0, length);
+
+            netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
         }
     }
 }

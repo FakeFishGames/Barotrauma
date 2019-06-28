@@ -108,17 +108,17 @@ namespace Barotrauma.Networking
 
         private int chunkLen;
 
-        private NetPeer peer;
+        private ServerPeer peer;
 
         public List<FileTransferOut> ActiveTransfers
         {
             get { return activeTransfers; }
         }
 
-        public FileSender(NetworkMember networkMember)
+        public FileSender(ServerPeer serverPeer, int mtu)
         {
-            peer = networkMember.NetPeer;
-            chunkLen = peer.Configuration.MaximumTransmissionUnit - 100;
+            peer = serverPeer;
+            chunkLen = mtu - 100;
 
             activeTransfers = new List<FileTransferOut>();
         }
@@ -167,10 +167,10 @@ namespace Barotrauma.Networking
 
         public void Update(float deltaTime)
         {
-            activeTransfers.RemoveAll(t => t.Connection.Status != NetConnectionStatus.Connected);
+            activeTransfers.RemoveAll(t => t.Connection.Status != NetworkConnectionStatus.Connected);
 
             var endedTransfers = activeTransfers.FindAll(t => 
-                t.Connection.Status != NetConnectionStatus.Connected ||
+                t.Connection.Status != NetworkConnectionStatus.Connected ||
                 t.Status == FileTransferStatus.Finished ||
                 t.Status == FileTransferStatus.Canceled || 
                 t.Status == FileTransferStatus.Error);

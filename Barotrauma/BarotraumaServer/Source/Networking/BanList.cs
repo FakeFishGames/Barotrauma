@@ -117,11 +117,13 @@ namespace Barotrauma.Networking
 
         public bool IsBanned(IPAddress IP, ulong steamID)
         {
+            if (IPAddress.IsLoopback(IP)) { return false; }
             return bannedPlayers.Any(bp => bp.CompareTo(IP) || (steamID > 0 && bp.SteamID == steamID));
         }
 
         public bool IsBanned(IPAddress IP)
         {
+            if (IPAddress.IsLoopback(IP)) { return false; }
             bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
             return bannedPlayers.Any(bp => bp.CompareTo(IP));
         }
