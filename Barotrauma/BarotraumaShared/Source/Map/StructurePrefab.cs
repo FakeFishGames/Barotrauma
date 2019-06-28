@@ -308,18 +308,24 @@ namespace Barotrauma
                 if (ResizeHorizontal) placeSize.X = position.X - placePosition.X;
                 if (ResizeVertical) placeSize.Y = placePosition.Y - position.Y;
 
-                newRect = Submarine.AbsRect(placePosition, placeSize);
-
-                if (PlayerInput.LeftButtonReleased())
+                //don't allow resizing width/height to less than the grid size
+                if (ResizeHorizontal && Math.Abs(placeSize.X) < Submarine.GridSize.X)
                 {
-                    //don't allow resizing width/height to zero
-                   if ((!ResizeHorizontal || placeSize.X != 0.0f) && (!ResizeVertical || placeSize.Y != 0.0f))
-                    {
-                        newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
+                    placeSize.X = Submarine.GridSize.X;
+                }
+                if (ResizeVertical && Math.Abs(placeSize.Y) < Submarine.GridSize.Y)
+                {
+                    placeSize.X = Submarine.GridSize.Y;
+                }
 
-                        var structure = new Structure(newRect, this, Submarine.MainSub);
-                        structure.Submarine = Submarine.MainSub;
-                    }
+                newRect = Submarine.AbsRect(placePosition, placeSize);
+                if (PlayerInput.LeftButtonReleased())
+                {                    
+                    newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
+                    var structure = new Structure(newRect, this, Submarine.MainSub)
+                    {
+                        Submarine = Submarine.MainSub
+                    };                    
 
                     selected = null;
                     return;
