@@ -111,6 +111,16 @@ namespace Barotrauma.Items.Components
                 {
                     if (targetItem.Prefab.DeconstructItems.Any())
                     {
+                        //drop all items that are inside the deconstructed item
+                        foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())
+                        {
+                            if (ic?.Inventory?.Items == null) { continue; }
+                            foreach (Item containedItem in ic.Inventory.Items)
+                            {
+                                containedItem.Drop(dropper: null, createNetworkEvent: true);
+                            }
+                        }
+
                         inputContainer.Inventory.RemoveItem(targetItem);
                         Entity.Spawner.AddToRemoveQueue(targetItem);
                         MoveInputQueue();
