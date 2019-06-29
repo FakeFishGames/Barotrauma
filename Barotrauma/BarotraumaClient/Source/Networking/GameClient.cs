@@ -346,111 +346,11 @@ namespace Barotrauma.Networking
 
                 reconnectBox.Header.Text = connectingText + new string('.', ((int)Timing.TotalTime % 3 + 1));
 
-                if (DateTime.Now > reqAuthTime)
-                {
-                    if (needAuth)
-                    {
-                        //request auth again
-                        NetOutgoingMessage reqAuthMsg = client.CreateMessage();
-                        WriteAuthRequest(reqAuthMsg);
-                        client.SendMessage(reqAuthMsg, NetDeliveryMethod.Unreliable);
-                    }
-                    else
-                    {
-                        //request init again
-                        NetOutgoingMessage outmsg = client.CreateMessage();
-                        outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
-                        if (requiresPw)
-                        {
-                            outmsg.Write(saltedPw);
-                        }
-                        outmsg.Write(GameMain.Version.ToString());
-
-                        var mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
-                        outmsg.Write((UInt16)mpContentPackages.Count());
-                        foreach (ContentPackage contentPackage in mpContentPackages)
-                        {
-                            outmsg.Write(contentPackage.Name);
-                            outmsg.Write(contentPackage.MD5hash.Hash);
-                        }
-                        outmsg.Write(name);
-                        client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
-
-                        DebugConsole.Log("Sending init request (" + (requiresPw ? "password required" : "no password required") + ")");
-                    }
-                    reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
-                }
-
                 yield return CoroutineStatus.Running;
 
                 if (DateTime.Now > timeOut) break;
+                
 
-                NetIncomingMessage inc;
-                // If new messages arrived
-                if ((inc = client.ReadMessage()) == null) continue;
-
-                string pwMsg = TextManager.Get("PasswordRequired");
-
-                try
-                {
-                    switch (inc.MessageType)
-                    {
-                        case NetIncomingMessageType.Data:
-                            DecompressIncomingMessage(inc);
-
-                            ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
-                            switch (header)
-                            {
-                                case ServerPacketHeader.AUTH_RESPONSE:
-                                    DebugConsole.Log("Received auth response (needauth: " + needAuth + ")");
-                                    if (needAuth)
-                                    {
-                                        if (inc.ReadBoolean())
-                                        {
-                                            DebugConsole.Log("  password required.");
-                                            //requires password
-                                            nonce = inc.ReadInt32();
-                                            requiresPw = true;
-                                        }
-                                        else
-                                        {
-                                            DebugConsole.Log("  password not required.");
-                                            requiresPw = false;
-                                            reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
-                                        }
-                                        needAuth = false; //got auth!
-                                    }
-                                    break;
-                                case ServerPacketHeader.AUTH_FAILURE:
-                                    //failed to authenticate, can still use same nonce
-                                    DebugConsole.Log("Received auth failure message");
-                                    pwMsg = inc.ReadString();
-                                    requiresPw = true;
-                                    break;
-                                case ServerPacketHeader.UPDATE_LOBBY:
-                                    DebugConsole.Log("Recived lobby update");
-                                    //server accepted client
-                                    ReadLobbyUpdate(inc);
-                                    CanStart = true;
-                                    break;
-                            }
-                            break;
-                        case NetIncomingMessageType.StatusChanged:
-                            NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
-                            if (connectionStatus == NetConnectionStatus.Disconnected)
-                            {
-                                ReadDisconnectMessage(inc, false);
-                                CancelConnect();
-                            }
-                            break;
-                    }
-                }
-
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Error while connecting to the server", e);
-                    break;
-                }
 
                 if (requiresPw && !CanStart && !connectCancelled)
                 {
@@ -474,54 +374,7 @@ namespace Barotrauma.Networking
 
                     while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                     {
-                        while (client.ReadMessage() != null)
-                        {
-                            switch (inc.MessageType)
-                            {
-                                case NetIncomingMessageType.StatusChanged:
-                                    NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
-                                    if (connectionStatus == NetConnectionStatus.Disconnected)
-                                    {
-                                        ReadDisconnectMessage(inc, false);
-                                        msgBox.Close(null, null);
-                                        CancelConnect();
-                                    }
-                                    break;
-                            }
-                        }
-
-                        if (DateTime.Now > reqAuthTime)
-                        {
-                            //request auth again to prevent timeout
-                            NetOutgoingMessage reqAuthMsg = client.CreateMessage();
-                            WriteAuthRequest(reqAuthMsg);
-                            client.SendMessage(reqAuthMsg, NetDeliveryMethod.Unreliable);
-                            reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 3);
-                        }
-
-                        okButton.Enabled = !string.IsNullOrWhiteSpace(passwordBox.Text);
-
-                        if (okButton.Selected)
-                        {
-                            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(passwordBox.Text)));
-                            saltedPw = saltedPw + Convert.ToString(nonce);
-                            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-
-                            timeOut = DateTime.Now + new TimeSpan(0, 0, 20);
-                            reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
-
-                            msgBox.Close(null, null);
-                            break;
-                        }
-                        else if (cancelButton.Selected)
-                        {
-                            msgBox.Close(null, null);
-                            CancelConnect();
-                        }
-                        else
-                        {
-                            yield return CoroutineStatus.Running;
-                        }
+                        yield return CoroutineStatus.Running;
                     }
                 }
             }
@@ -533,75 +386,8 @@ namespace Barotrauma.Networking
             }
 
             if (connectCancelled) yield return CoroutineStatus.Success;
-
-            if (client.ConnectionStatus != NetConnectionStatus.Connected)
-            {
-                steamAuthTicket?.Cancel();
-                steamAuthTicket = null;
-                var reconnect = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get("CouldNotConnectToServer"), new string[] { TextManager.Get("Retry"), TextManager.Get("Cancel") });
-
-                DebugConsole.NewMessage("Failed to connect to the server - connection status: " + client.ConnectionStatus.ToString(), Color.Orange);
-
-                reconnect.Buttons[0].OnClicked += RetryConnection;
-                reconnect.Buttons[0].OnClicked += reconnect.Close;
-                reconnect.Buttons[1].OnClicked += ReturnToServerList;
-                reconnect.Buttons[1].OnClicked += reconnect.Close;
-            }
-            else
-            {
-                if (Screen.Selected != GameMain.GameScreen)
-                {
-                    GameMain.NetLobbyScreen.Select();
-                }
-                connected = true;
-                chatBox.InputBox.Enabled = true;
-                if (GameMain.NetLobbyScreen?.TextBox != null)
-                {
-                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
-                }
-            }
-
+            
             yield return CoroutineStatus.Success;
-        }
-
-        private void WriteAuthRequest(IWriteMessage outmsg)
-        {
-            if (SteamManager.IsInitialized && SteamManager.USE_STEAM)
-            {
-                outmsg.Write((byte)ClientPacketHeader.REQUEST_STEAMAUTH);
-            }
-            else
-            {
-                DebugConsole.Log("Sending auth request");
-                outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
-            }
-
-            outmsg.Write(ownerKey);
-
-            if (SteamManager.IsInitialized && SteamManager.USE_STEAM)
-            {
-                if (steamAuthTicket == null)
-                {
-                    steamAuthTicket = SteamManager.GetAuthSessionTicket();
-                }
-
-                DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 3);
-                while ((steamAuthTicket.Data == null || steamAuthTicket.Data.Length == 0) &&
-                    DateTime.Now < timeOut)
-                {
-                    System.Threading.Thread.Sleep(10);
-                }
-
-                outmsg.Write(SteamManager.GetSteamID());
-                outmsg.Write(steamAuthTicket.Data.Length);
-                outmsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
-
-                DebugConsole.Log("Sending Steam auth request");
-                DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());
-                DebugConsole.Log("   Ticket data: " +
-                    ToolBox.LimitString(string.Concat(steamAuthTicket.Data.Select(b => b.ToString("X2"))), 16));
-                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);
-            }
         }
 
         public override void Update(float deltaTime)
@@ -694,32 +480,6 @@ namespace Barotrauma.Networking
         }
 
         private CoroutineHandle startGameCoroutine;
-
-        private void DecompressIncomingMessage(NetIncomingMessage inc)
-        {
-            byte[] data = inc.Data;
-            if (data[data.Length - 1] == 1)
-            {
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    stream.Write(data, 0, inc.LengthBytes-1);
-                    stream.Position = 0;
-                    using (MemoryStream decompressed = new MemoryStream())
-                    {
-                        using (DeflateStream deflate = new DeflateStream(stream, CompressionMode.Decompress, false))
-                        {
-                            deflate.CopyTo(decompressed);
-                        }
-                        byte[] newData = decompressed.ToArray();
-
-                        inc.Data = newData;
-                        inc.LengthBytes = newData.Length;
-                        inc.Position = 0;
-                    }
-
-                }
-            }
-        }
 
         /// <summary>
         /// Check for new incoming messages from server
