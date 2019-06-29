@@ -736,6 +736,7 @@ namespace Barotrauma
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -port " + port.ToString() +
                                    " -queryport " + queryPort.ToString() +
+                                   " -public " + isPublicBox.Selected.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -upnp " + useUpnpBox.Selected +
                                    " -maxplayers " + maxPlayersBox.Text +
