@@ -117,7 +117,7 @@ namespace Barotrauma.Items.Components
                             if (ic?.Inventory?.Items == null) { continue; }
                             foreach (Item containedItem in ic.Inventory.Items)
                             {
-                                containedItem.Drop(dropper: null, createNetworkEvent: true);
+                                containedItem?.Drop(dropper: null, createNetworkEvent: true);
                             }
                         }
 
