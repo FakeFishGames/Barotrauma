@@ -2105,11 +2105,13 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Submarine != null || rootContainer.ParentInventory?.Owner is Character);
 
             Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
-            
+
+            int width = ResizeHorizontal ? rect.Width : defaultRect.Width;
+            int height = ResizeVertical ? rect.Height : defaultRect.Height;
             element.Add(new XAttribute("rect",
                 (int)(rect.X - subPosition.X) + "," +
                 (int)(rect.Y - subPosition.Y) + "," +
-                defaultRect.Width + "," + defaultRect.Height));
+                width + "," + height));
             
             if (linkedTo != null && linkedTo.Count > 0)
             {

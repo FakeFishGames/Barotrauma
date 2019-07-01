@@ -18,11 +18,16 @@ namespace Barotrauma
             return Screen.Selected == GameMain.SubEditorScreen || GameMain.DebugDraw;
         }
 
+        public override bool SelectableInEditor
+        {
+            get { return !IsHidden(); }
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!editing && !GameMain.DebugDraw) return;
+            if (!editing && !GameMain.DebugDraw) { return; }
 
-            if (IsHidden()) return;
+            if (IsHidden()) { return; }
 
             //Rectangle drawRect =
             //    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);

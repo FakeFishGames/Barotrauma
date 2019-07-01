@@ -97,7 +97,7 @@ namespace Barotrauma
             }
             else
             {
-                string[] splitOptionNames = translatedOptionNames.Split(',');
+                string[] splitOptionNames = translatedOptionNames.Split(',', '，');
                 OptionNames = new string[Options.Length];
                 for (int i = 0; i < Options.Length && i < splitOptionNames.Length; i++)
                 {
