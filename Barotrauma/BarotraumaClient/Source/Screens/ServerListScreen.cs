@@ -35,6 +35,7 @@ namespace Barotrauma
         private readonly string[] columnLabel = new string[] { "ServerListCompatible", "ServerListHasPassword", "ServerListName", "ServerListRoundStarted", "ServerListPlayers", "ServerListPing" };
 
         private readonly GUILayoutGroup labelHolder;
+        private readonly List<GUITextBlock> labelTexts = new List<GUITextBlock>();
 
         //filters
         private readonly GUITextBox searchBox;
@@ -183,8 +184,7 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-
-            List<GUITextBlock> labelTexts = new List<GUITextBlock>();
+            
             for (int i = 0; i < columnRelativeWidth.Length; i++)
             {
                 var btn = new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), labelHolder.RectTransform),
@@ -195,7 +195,7 @@ namespace Barotrauma
                     SelectedColor = Color.Gray * 0.7f,
                     PressedColor = Color.Gray * 0.7f,
                     OutlineColor = Color.Black,
-                    Font = GUI.Font,
+                    ToolTip = TextManager.Get(columnLabel[i]),
                     ForceUpperCase = true,
                     UserData = columnLabel[i],
                     OnClicked = SortList
@@ -314,12 +314,15 @@ namespace Barotrauma
             serverListContainer.Recalculate();
             labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
             labelHolder.Recalculate();
-            GUITextBlock.AutoScaleAndNormalize(labelTexts);
 
             serverList.Content.RectTransform.SizeChanged += () =>
             {
                 labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
                 labelHolder.Recalculate();
+                foreach (GUITextBlock labelText in labelTexts)
+                {
+                    labelText.Text = ToolBox.LimitString(labelText.ToolTip, labelText.Font, labelText.Rect.Width);
+                }
             };
 
             button.SelectedColor = button.Color;
@@ -330,6 +333,10 @@ namespace Barotrauma
         {
             menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
             labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+            foreach (GUITextBlock labelText in labelTexts)
+            {
+                labelText.Text = ToolBox.LimitString(labelText.ToolTip, labelText.Font, labelText.Rect.Width);
+            }
         }
 
         private bool SortList(GUIButton button, object obj)
