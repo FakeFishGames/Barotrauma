@@ -206,6 +206,7 @@ namespace Barotrauma.Items.Components
                 wasBroken = false;
 #if SERVER
                 item.CreateServerEvent(this);
+                GameMain.Server.KarmaManager.OnItemRepaired(CurrentFixer, this);
 #endif
             }
         }

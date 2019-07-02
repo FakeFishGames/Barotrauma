@@ -79,6 +79,12 @@ namespace Barotrauma.Networking
             get { return entityEventManager; }
         }
 
+        public KarmaManager KarmaManager
+        {
+            get;
+            private set;
+        } = new KarmaManager();
+
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }

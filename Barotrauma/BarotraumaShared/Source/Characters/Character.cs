@@ -2257,8 +2257,6 @@ namespace Barotrauma
             speechBubbleColor = color;
         }
 
-        partial void AdjustKarma(Character attacker, AttackResult attackResult);
-        
         partial void DamageHUD(float amount);
 
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
@@ -2401,7 +2399,6 @@ namespace Barotrauma
                 OnAttacked?.Invoke(attacker, attackResult);
                 OnAttackedProjSpecific(attacker, attackResult);
             };
-            AdjustKarma(attacker, attackResult);
 
             if (attacker != null && attackResult.Damage > 0.0f)
             {
