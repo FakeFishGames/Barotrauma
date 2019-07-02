@@ -195,7 +195,23 @@
       </Attack>
     </Projectile>
   </Item>
-  
+
+  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.5" category="Equipment" linkable="true" impactsoundtag="impact_metal_light">
+    <Deconstruct time="10">
+      <Item identifier="plastic" copycondition="true"/>
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredItem identifier="plastic"/>
+    </Fabricate>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
+    <Body width="115" height="88" density="50" />
+    <ItemContainer hideitems="true" capacity="15" canbeselected="false" >
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <Containable identifiers="smground" />
+    </ItemContainer>
+  </Item>
+
   <Item name="SMG" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="300" />
@@ -214,12 +230,15 @@
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="12.0" />
       </StatusEffect>
+      <StatusEffect type="OnUse" target="Contained">
+        <Use />
+      </StatusEffect>
       <RequiredItems identifier="smground" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="50" />
     </RangedWeapon>
-    <ItemContainer capacity="15" hideitems="true">
+    <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="smground" />
+      <Containable identifiers="smgmagazine" />
     </ItemContainer>
   </Item>
 
@@ -502,7 +521,7 @@
       <Item identifier="titaniumaluminiumalloy" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="30"/>
+      <RequiredSkill identifier="weapons" level="50"/>
       <RequiredItem identifier="steel"/>
       <RequiredItem identifier="titaniumaluminiumalloy"/>
     </Fabricate>
@@ -517,7 +536,7 @@
         <Explosion range="150.0" force="5" shockwave="true" smoke="false" flames="true" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <RequiredItems identifiers="40mmgrenade" type="Contained" msg="ItemMsgAmmoRequired" />
-      <RequiredSkill identifier="weapons" level="30" />
+      <RequiredSkill identifier="weapons" level="60" />
     </RangedWeapon>
     <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />

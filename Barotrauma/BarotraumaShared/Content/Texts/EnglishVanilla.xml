@@ -3222,6 +3222,9 @@
   <entityname.smg>SMG</entityname.smg>
   <entitydescription.smg>A .45 caliber submachine gun.</entitydescription.smg>
 
+  <entityname.smgmagazine>SMG Magazine</entityname.smgmagazine>
+  <entitydescription.smgmagazine>A magazine for 15 .45 caliber rounds.</entitydescription.smgmagazine>
+
   <entityname.smground>SMG Round</entityname.smground>
   <entitydescription.smground>A .45 caliber submachine gun round.</entitydescription.smground>
 
