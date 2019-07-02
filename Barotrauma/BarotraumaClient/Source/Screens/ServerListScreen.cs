@@ -44,6 +44,8 @@ namespace Barotrauma
         private readonly GUITickBox filterFull;
         private readonly GUITickBox filterEmpty;
 
+        private string sortedBy;
+
         private readonly GUIButton serverPreviewToggleButton;
 
         //a timer for preventing the client from spamming the refresh button faster than AllowedRefreshInterval
@@ -370,6 +372,16 @@ namespace Barotrauma
         private bool SortList(GUIButton button, object obj)
         {
             if (!(obj is string sortBy)) { return false; }
+            SortList(sortBy, toggle: true);
+            return true;
+        }
+
+        private void SortList(string sortBy, bool toggle)
+        {
+            GUIButton button = labelHolder.GetChildByUserData(sortBy) as GUIButton;
+            if (button == null) { return; }
+
+            sortedBy = sortBy;
 
             var arrowUp = button.GetChildByUserData("arrowup");
             var arrowDown = button.GetChildByUserData("arrowdown");
@@ -385,7 +397,10 @@ namespace Barotrauma
             }
 
             bool ascending = arrowUp.Visible;
-            ascending = !ascending;
+            if (toggle)
+            {
+                ascending = !ascending;
+            }
 
             arrowUp.Visible = ascending;
             arrowDown.Visible = !ascending;
@@ -432,7 +447,6 @@ namespace Barotrauma
                         return 0;
                 }
             });
-            return true;
         }
         
         public override void Select()
@@ -647,6 +661,9 @@ namespace Barotrauma
                 //RelativeSpacing = 0.02f
             };
             UpdateServerInfo(serverInfo);
+
+            SortList(sortedBy, toggle: false);
+            FilterServers();
         }
 
         private void UpdateServerInfo(ServerInfo serverInfo)
@@ -753,6 +770,7 @@ namespace Barotrauma
             }
 
             serverContent.Recalculate();
+            SortList(sortedBy, toggle: false);
             FilterServers();
         }
 
