@@ -3215,6 +3215,9 @@
   <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
 
   <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
+
+  <causeofdeath.unknown>Unknown</causeofdeath.unknown>
+  <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
   
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
