@@ -1493,8 +1493,21 @@ namespace Barotrauma
 
         private void TryDeleteSub(Submarine sub)
         {
-            if (sub == null) return;
-            
+            if (sub == null) { return; }
+
+            //if the sub is included in a content package that only defines that one sub,
+            //delete the content package as well
+            ContentPackage subPackage = null;
+            foreach (ContentPackage cp in ContentPackage.List)
+            {
+                if (cp.Files.Count == 1 && Path.GetFullPath(cp.Files[0].Path) == Path.GetFullPath(sub.FilePath))
+                {
+                    subPackage = cp;
+                    break;
+                }
+            }
+            subPackage?.Delete();
+
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),
                 TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", sub.Name), 
@@ -1523,7 +1536,6 @@ namespace Barotrauma
             entityFilterBox.Text = "";
             if (CharacterMode) SetCharacterMode(false);
             if (WiringMode) SetWiringMode(false);
-
 
             saveFrame = null;
             loadFrame = null;
