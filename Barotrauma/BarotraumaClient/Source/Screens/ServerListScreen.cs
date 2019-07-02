@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private readonly GUIButton joinButton;
 
-        private readonly GUITextBox clientNameBox;//, ipBox;
+        private readonly GUITextBox clientNameBox, ipBox;
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
@@ -82,7 +82,7 @@ namespace Barotrauma
             var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"));
-            clientNameBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.5f), clientNameHolder.RectTransform), "")
+            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
             {
                 Text = GameMain.Config.DefaultPlayerName,
                 MaxTextLength = Client.MaxNameLength,
@@ -94,11 +94,11 @@ namespace Barotrauma
                 clientNameBox.Text = SteamManager.GetUsername();
             }
 
-            /*var ipBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+            var ipBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), ipBoxHolder.RectTransform), TextManager.Get("ServerIP"));
             ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), ipBoxHolder.RectTransform), "");
-            ipBox.OnTextChanged += RefreshJoinButtonState;
+            ipBox.OnTextChanged += (textBox, text) => { joinButton.Enabled = !string.IsNullOrEmpty(text); return true; };
             ipBox.OnSelected += (sender, key) =>
             {
                 if (sender.UserData is ServerInfo)
@@ -106,7 +106,7 @@ namespace Barotrauma
                     sender.Text = "";
                     sender.UserData = null;
                 }
-            };*/
+            };
 
             //-------------------------------------------------------------------------------------
             // Bottom row
@@ -256,6 +256,8 @@ namespace Barotrauma
                     if (obj is ServerInfo serverInfo)
                     {
                         joinButton.Enabled = true;
+                        ipBox.UserData = serverInfo;
+                        ipBox.Text = serverInfo.ServerName;
                         if (!serverPreview.Visible)
                         {
                             serverPreview.RectTransform.RelativeSize = new Vector2(0.3f, 1.0f);
@@ -318,20 +320,24 @@ namespace Barotrauma
 				OnClicked = (btn, userdata) => { RefreshServers(); return true; }
 			};
 
-            var directJoinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
+            /*var directJoinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("serverlistdirectjoin"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) => { ShowDirectJoinPrompt(); return true; }
-            };
+            };*/
 
             joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("ServerListJoin"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (serverList.SelectedData is ServerInfo selectedServer)
+                    if (ipBox.UserData is ServerInfo selectedServer)
                     {
                         JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                    }
+                    else if (!string.IsNullOrEmpty(ipBox.Text))
+                    {
+                        JoinServer(ipBox.Text, "");
                     }
                     return true;
                 },
@@ -495,7 +501,7 @@ namespace Barotrauma
             serverList.UpdateScrollBarSize();
         }
 
-        private void ShowDirectJoinPrompt()
+        /*private void ShowDirectJoinPrompt()
         {
             var msgBox = new GUIMessageBox(TextManager.Get("ServerListDirectJoin"), "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
                 relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
@@ -527,7 +533,7 @@ namespace Barotrauma
                 okButton.Enabled = !string.IsNullOrEmpty(text);
                 return true;
             };
-        }
+        }*/
 
         private void RefreshServers()
         {
@@ -535,6 +541,8 @@ namespace Barotrauma
             serverList.ClearChildren();
             serverPreview.ClearChildren();
             joinButton.Enabled = false;
+            ipBox.UserData = null;
+            ipBox.Text = "";
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), serverList.Content.RectTransform),
                 TextManager.Get("RefreshingServerList"), textAlignment: Alignment.Center)
