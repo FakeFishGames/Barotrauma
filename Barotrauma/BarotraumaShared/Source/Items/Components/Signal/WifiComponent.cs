@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
 
         public bool CanTransmit()
         {
-            return HasRequiredContainedItems(true);
+            return HasRequiredContainedItems(user: null, addMessage: false);
         }
         
         public IEnumerable<WifiComponent> GetReceiversInRange()
@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
             if (sender == null || sender.channel != channel) { return false; }
             if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
 
-            return HasRequiredContainedItems(false);
+            return HasRequiredContainedItems(user: null, addMessage: false);
         }
 
         public override void Update(float deltaTime, Camera cam)

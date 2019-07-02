@@ -1612,8 +1612,8 @@ namespace Barotrauma
                 return;
             }
 
-            if (condition == 0.0f) return;
-
+            if (condition == 0.0f) { return; }
+        
             bool remove = false;
 
             foreach (ItemComponent ic in components)
@@ -1622,7 +1622,7 @@ namespace Barotrauma
 #if CLIENT
                 isControlled = character == Character.Controlled;
 #endif
-                if (!ic.HasRequiredContainedItems(isControlled)) continue;
+                if (!ic.HasRequiredContainedItems(character, isControlled)) { continue; }
                 if (ic.Use(deltaTime, character))
                 {
                     ic.WasUsed = true;
@@ -1633,7 +1633,7 @@ namespace Barotrauma
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
-                    if (ic.DeleteOnUse) remove = true;
+                    if (ic.DeleteOnUse) { remove = true; }
                 }
             }
 
@@ -1645,7 +1645,7 @@ namespace Barotrauma
 
         public void SecondaryUse(float deltaTime, Character character = null)
         {
-            if (condition == 0.0f) return;
+            if (condition == 0.0f) { return; }
 
             bool remove = false;
 
@@ -1655,7 +1655,7 @@ namespace Barotrauma
 #if CLIENT
                 isControlled = character == Character.Controlled;
 #endif
-                if (!ic.HasRequiredContainedItems(isControlled)) continue;
+                if (!ic.HasRequiredContainedItems(character, isControlled)) { continue; }
                 if (ic.SecondaryUse(deltaTime, character))
                 {
                     ic.WasUsed = true;
@@ -1666,7 +1666,7 @@ namespace Barotrauma
 
                     ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
 
-                    if (ic.DeleteOnUse) remove = true;
+                    if (ic.DeleteOnUse) { remove = true; }
                 }
             }
 
@@ -1693,7 +1693,7 @@ namespace Barotrauma
             bool remove = false;
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredContainedItems(user == Character.Controlled)) continue;
+                if (!ic.HasRequiredContainedItems(user, addMessage: user == Character.Controlled)) continue;
 
                 bool success = Rand.Range(0.0f, 0.5f) < ic.DegreeOfSuccess(user);
                 ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
@@ -1704,7 +1704,7 @@ namespace Barotrauma
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
 
-                if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     GameMain.NetworkMember.CreateEntityEvent(this, new object[]
                     {

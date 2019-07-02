@@ -561,14 +561,14 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool HasRequiredContainedItems(bool addMessage, string msg = null)
+        public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
             
             foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
-                if (!item.OwnInventory.Items.Any(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)))
+                if (!ri.CheckRequirements(user, item))
                 {
 #if CLIENT
                     msg = msg ?? ri.Msg;
