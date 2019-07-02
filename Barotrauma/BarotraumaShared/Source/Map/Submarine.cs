@@ -1206,6 +1206,15 @@ namespace Barotrauma
                 }
             }
 
+            var contentPackageSubs = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Submarine);
+            foreach (string subPath in contentPackageSubs)
+            {
+                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subPath)))
+                {
+                    filePaths.Add(subPath);
+                }
+            }
+
             foreach (string path in filePaths)
             {
                 var sub = new Submarine(path);

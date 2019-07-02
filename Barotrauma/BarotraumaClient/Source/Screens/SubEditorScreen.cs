@@ -1153,11 +1153,13 @@ namespace Barotrauma
             var contentPackList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f - contentPackagesLabel.RectTransform.RelativeSize.Y),
                 horizontalArea.RectTransform, Anchor.BottomRight));
 
-
             List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
             foreach (ContentPackage contentPack in ContentPackage.List)
-            {
-                if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
+            {                
+                //don't show content packages that only define submarine files
+                //(it doesn't make sense to require another sub to be installed to install this one)
+                if (contentPack.Files.All(cp => cp.Type == ContentType.Submarine)) { continue; }
+                if (!contentPacks.Contains(contentPack.Name)) { contentPacks.Add(contentPack.Name); }
             }
 
             foreach (string contentPackageName in contentPacks)

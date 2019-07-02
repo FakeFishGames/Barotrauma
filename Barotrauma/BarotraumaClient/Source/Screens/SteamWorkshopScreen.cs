@@ -294,6 +294,8 @@ namespace Barotrauma
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
                 if (!string.IsNullOrEmpty(contentPackage.SteamWorkshopUrl) || contentPackage.HideInWorkshopMenu) { continue; }
+                //don't list content packages that only define one sub (they're visible in the "Submarines" section)
+                if (contentPackage.Files.Count == 1 && contentPackage.Files[0].Type == ContentType.Submarine) { continue; }
                 CreateMyItemFrame(contentPackage, myItemList);
             }
         }
