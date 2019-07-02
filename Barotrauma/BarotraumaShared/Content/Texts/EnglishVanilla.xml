@@ -3235,4 +3235,6 @@
   <serverlistrefresh>Scan Servers</serverlistrefresh>
 
   <yourname>Player name</yourname>
+
+  <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
 </infotexts>

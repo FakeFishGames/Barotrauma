@@ -96,7 +96,7 @@ namespace Barotrauma
         public string Path
         {
             get;
-            private set;
+            set;
         }
 
         public string SteamWorkshopUrl;
@@ -514,7 +514,7 @@ namespace Barotrauma
 
     public class ContentFile
     {
-        public readonly string Path;
+        public string Path;
         public ContentType Type;
 
         public Workshop.Item WorkShopItem;

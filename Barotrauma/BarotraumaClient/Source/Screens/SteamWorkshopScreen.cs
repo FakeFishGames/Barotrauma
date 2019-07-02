@@ -795,8 +795,6 @@ namespace Barotrauma
         }
         private void CreateWorkshopItem(Submarine sub)
         {
-            //SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
-
             string destinationFolder = Path.Combine("Mods", sub.Name);
             itemContentPackage = ContentPackage.CreatePackage(sub.Name, Path.Combine(destinationFolder, SteamManager.MetadataFileName), corePackage: false);
             SteamManager.CreateWorkshopItemStaging(itemContentPackage, out itemEditor);
@@ -890,7 +888,7 @@ namespace Barotrauma
                     TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEdit", "[itemname]", TextManager.EnsureUTF8(item.Title)));
                 return;
             }
-            //SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
+            SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
         }
 
         private void ShowCreateItemFrame()
