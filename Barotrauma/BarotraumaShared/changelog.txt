@@ -64,6 +64,8 @@ when save & quitting from the map.
 - Fixed too small collider sizes on a bunch of crafting materials.
 - Fixed order options ("hold fire"/"fire at will" etc) being displayed in one button instead of
 being split into separate buttons when playing the game in Chinese.
+- Fixed "Text Self_CauseOfDeathDescription.Unknown not found" console error if a character gets killed
+by being inside a respawn shuttle when it despawns.
 
 Networking fixes:
 - Fixed players always getting range banned when banned by a client.
@@ -72,6 +74,7 @@ Remora's drone).
 - More reliable fabricator and deconstructor syncing. Should fix items disappearing when multiple players
 attempt to use the device at the same time and strange timing inconsistencies when deconstructing
 multiple items in succession.
+- Fixed all servers showing "unknown" as the game mode in the server list. 
 
 Character editor fixes and improvements:
 - Nicer layout, made the panels hideable.
