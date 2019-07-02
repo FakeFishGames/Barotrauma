@@ -494,6 +494,75 @@
     </MeleeWeapon>
   </Item>
   
+  <Item name="Grenade Launcher" identifier="grenadelauncher" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="500" />
+    <Price locationtype="City" buyprice="1000" />
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+      <Item identifier="titaniumaluminiumalloy" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="weapons" level="30"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="titaniumaluminiumalloy"/>
+    </Fabricate>
+    <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" />
+    <Body width="90" height="30" density="50" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
+    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50">
+      <Sound file="Content/Items/Weapons/HarpoonGun1.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/HarpoonGun2.ogg" type="OnUse" />
+      <Sound file="Content/Items/Weapons/HarpoonGun3.ogg" type="OnUse" />
+      <StatusEffect type="OnUse">
+        <Explosion range="150.0" force="5" shockwave="true" smoke="false" flames="true" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
+      </StatusEffect>
+      <RequiredItems identifiers="40mmgrenade" type="Contained" msg="ItemMsgAmmoRequired" />
+      <RequiredSkill identifier="weapons" level="30" />
+    </RangedWeapon>
+    <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <Containable identifiers="40mmgrenade" />
+    </ItemContainer>
+  </Item>
+
+  <Item name="40mm Grenade" identifier="40mmgrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="150" />
+    <Price locationtype="City" buyprice="200" />
+    <Deconstruct time="5">
+      <Item identifier="iron" />
+      <Item identifier="uex" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredSkill identifier="weapons" level="30"/>
+      <RequiredItem identifier="iron"/>
+      <RequiredItem identifier="uex"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,64,64" />
+    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,0,97,143" depth="0.55" origin="0.5,0.5" />
+    <Body width="11" height="24" density="30" />
+    <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="false">
+      <Attack structuredamage="1" stun="0.2">
+        <Affliction identifier="internaldamage" strength="5" />
+      </Attack>
+      <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All" />
+      <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
+      <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
+        <Explosion range="250.0" structuredamage="5" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+          <Affliction identifier="bleeding" strength="40" />
+          <Affliction identifier="internaldamage" strength="60" />
+        </Explosion>
+      </StatusEffect>
+      <!--Destroy this after exploding-->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true" >
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" >
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
   <Item name="Bike Horn" identifier="bikehorn" category="Equipment" tags="weapon,smallitem" cargocontaineridentifier="metalcrate" description="HONK">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="769,385,64,64" depth="0.55" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/Old/clownshirt.png" sourcerect="32,50,32,14" depth="0.55" />

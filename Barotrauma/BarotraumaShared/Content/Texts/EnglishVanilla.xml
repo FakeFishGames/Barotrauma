@@ -3224,7 +3224,14 @@
 
   <entityname.smground>SMG Round</entityname.smground>
   <entitydescription.smground>A .45 caliber submachine gun round.</entitydescription.smground>
-  
+
+  <entityname.grenadelauncher>Grenade Launcher</entityname.grenadelauncher>
+  <entitydescription.grenadelauncher>A portable grenade launcher for 40mm grenades.</entitydescription.grenadelauncher>
+
+  <entityname.40mmgrenade>40mm grenade</entityname.40mmgrenade>
+  <entitydescription.40mmgrenade>Ammunition for grenade launcher.</entitydescription.40mmgrenade>
+
+
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
