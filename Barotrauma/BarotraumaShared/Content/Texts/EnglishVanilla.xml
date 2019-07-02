@@ -531,7 +531,6 @@
 
   <!-- Server list -->
   <joinserver>Join server</joinserver>
-  <yourname>Your name</yourname>
   <serverip>Server IP</serverip>
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
@@ -546,7 +545,6 @@
   <serverlistroundstarted>Round started</serverlistroundstarted>
   <serverlistroundnotstarted>Round has not started</serverlistroundnotstarted>
   <serverlistinfo>Info</serverlistinfo>
-  <serverlistrefresh>Refresh</serverlistrefresh>
   <serverlistjoin>Join</serverlistjoin>
   <serverlistunknownversion>Could not determine compatibility (unknown game version)</serverlistunknownversion>
   <serverlistnosteamqueryresponse>Could not determine compatibility with the server because it did not respond to queries. This may happen if the server is down or if the host has not forwarded their query port, but you may still attempt to connect to the server.</serverlistnosteamqueryresponse>
@@ -559,10 +557,6 @@
   <serverlistsubscribemissingpackagestooltip>Subscribe to the missing content packages in the Steam Workshop and open the Workshop menu where you can download and enable them.</serverlistsubscribemissingpackagestooltip>
   <serverlistsubscribemissingpackagestooltipnosteam>The missing content packages are available in the Steam Workshop, but Steam features are not available if you don't own Barotrauma on Steam.</serverlistsubscribemissingpackagestooltipnosteam>
   <filterservers>Filter servers</filterservers>
-  <filterpassword>No password required</filterpassword>
-  <filterincompatibleservers>Hide incompatible servers</filterincompatibleservers>
-  <filterfullservers>Hide full servers</filterfullservers>
-  <filteremptyservers>Hide empty servers</filteremptyservers>
   <nomatchingservers>No matching servers found.</nomatchingservers>
   <refreshingserverlist>Refreshing server list...</refreshingserverlist>
   <noservers>Could not find any servers.</noservers>
@@ -3207,7 +3201,7 @@
   <workshopfilenotfound>File [path] not found.</workshopfilenotfound>
 
   <debugconsolehelptext> Debug console - Press F3 to open/close, enter "help" for a list of available commands</debugconsolehelptext>
-  
+
   <voipnodevices>No audio capture devices found</voipnodevices>
 
   <wrongfiletype>Wrong file type!</wrongfiletype>
@@ -3215,7 +3209,9 @@
   <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
 
   <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
-  
+
+  <serverlistdirectjoin>Direct Join</serverlistdirectjoin>
+
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
@@ -3227,4 +3223,13 @@
   <workshop.contenttag.language>Language</workshop.contenttag.language>
 
   <serverlisthaspassword>Password</serverlisthaspassword>
+
+  <filterpassword>No password</filterpassword>
+  <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
+  <filterfullservers>Hide full</filterfullservers>
+  <filteremptyservers>Hide empty</filteremptyservers>
+
+  <serverlistrefresh>Scan Servers</serverlistrefresh>
+
+  <yourname>Player name</yourname>
 </infotexts>
