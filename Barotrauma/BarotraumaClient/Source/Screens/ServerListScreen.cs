@@ -194,14 +194,15 @@ namespace Barotrauma
             };
             filterTextList.Add(filterEmpty.TextBlock);
 
-            searchHolder.RectTransform.SizeChanged += () =>
+            filterContainer.RectTransform.SizeChanged += () =>
             {
+                filterContainer.RectTransform.RecalculateChildren(true, true);
                 filterTextList.ForEach(t => t.Text = t.ToolTip);
                 GUITextBlock.AutoScaleAndNormalize(filterTextList);
                 if (filterTextList[0].TextScale < 0.8f)
                 {
                     filterTextList.ForEach(t => t.TextScale = 1.0f);
-                    filterTextList.ForEach(t => t.Text = ToolBox.LimitString(t.Text, t.Font, (int)(searchHolder.Rect.Width * 0.8f)));
+                    filterTextList.ForEach(t => t.Text = ToolBox.LimitString(t.Text, t.Font, (int)(filterContainer.Rect.Width * 0.8f)));
                 }
             };
 
