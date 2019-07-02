@@ -3212,6 +3212,9 @@
 
   <serverlistdirectjoin>Direct Join</serverlistdirectjoin>
 
+  <causeofdeath.unknown>Unknown</causeofdeath.unknown>
+  <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
+  
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>

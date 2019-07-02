@@ -104,11 +104,13 @@ namespace Barotrauma.Networking
             };*/
 
             var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("GameMode"));
-            new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform), TextManager.Get(string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode), textAlignment: Alignment.Right);
+            new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform),
+                TextManager.Get(string.IsNullOrEmpty(GameMode) ? "Unknown" : "GameMode." + GameMode, returnNull: true) ?? GameMode,
+                textAlignment: Alignment.Right);
 
-           var traitors = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("Traitors"));
+            var traitors = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("Traitors"));
+
             new GUITextBlock(new RectTransform(Vector2.One, traitors.RectTransform), TextManager.Get(!TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString()), textAlignment: Alignment.Right);
-
 
             var subSelection = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnContainer.RectTransform), TextManager.Get("ServerListSubSelection"));
             new GUITextBlock(new RectTransform(Vector2.One, subSelection.RectTransform), TextManager.Get(!SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString()), textAlignment: Alignment.Right);
