@@ -152,6 +152,12 @@ namespace Barotrauma.Networking
             else
                 usingWhiteList.Selected = UsingWhiteList.Value;
 
+
+            columnContainer.RectTransform.SizeChanged += () =>
+            {
+                GUITextBlock.AutoScaleAndNormalize(allowSpectating.TextBlock, allowRespawn.TextBlock, voipEnabledTickBox.TextBlock, usingWhiteList.TextBlock);
+            };
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnContainer.RectTransform),
                 TextManager.Get("ServerListContentPackages"));
 

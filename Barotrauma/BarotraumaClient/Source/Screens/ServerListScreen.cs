@@ -150,7 +150,8 @@ namespace Barotrauma
 
             var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterContainer.RectTransform), TextManager.Get("FilterServers"), font: GUI.LargeFont)
             {
-                Padding = Vector4.Zero
+                Padding = Vector4.Zero,
+                AutoScale = true
             };
 
             float elementHeight = 0.05f;
@@ -165,15 +166,42 @@ namespace Barotrauma
 
             var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform)) { RelativeSpacing = 0.005f };
 
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterPassword"));
-            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
-            filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
+            List<GUITextBlock> filterTextList = new List<GUITextBlock>();
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterPassword"))
+            {
+                ToolTip = TextManager.Get("FilterPassword"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterPassword.TextBlock);
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"))
+            {
+                ToolTip = TextManager.Get("FilterIncompatibleServers"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterIncompatible.TextBlock);
+            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterFullServers"))
+            {
+                ToolTip = TextManager.Get("FilterFullServers"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterFull.TextBlock);
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterEmptyServers"))
+            {
+                ToolTip = TextManager.Get("FilterEmptyServers"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterEmpty.TextBlock);
 
-            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterFullServers"));
-            filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
-            filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
+            searchHolder.RectTransform.SizeChanged += () =>
+            {
+                filterTextList.ForEach(t => t.Text = t.ToolTip);
+                GUITextBlock.AutoScaleAndNormalize(filterTextList);
+                if (filterTextList[0].TextScale < 0.8f)
+                {
+                    filterTextList.ForEach(t => t.TextScale = 1.0f);
+                    filterTextList.ForEach(t => t.Text = ToolBox.LimitString(t.Text, t.Font, (int)(searchHolder.Rect.Width * 0.8f)));
+                }
+            };
 
             // server list ---------------------------------------------------------------------
 
