@@ -789,13 +789,25 @@ namespace Barotrauma
 
         private void CreateWorkshopItem()
         {
-            SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
+            //SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
         }
         private void CreateWorkshopItem(Submarine sub)
         {
-            SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
+            //SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
 
-            string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(sub.FilePath));
+            string destinationFolder = Path.Combine("Mods", sub.Name);
+            itemContentPackage = ContentPackage.CreatePackage(sub.Name, Path.Combine(destinationFolder, SteamManager.MetadataFileName), corePackage: false);
+            SteamManager.CreateWorkshopItemStaging(itemContentPackage, out itemEditor);
+
+            string submarineDir = Path.GetDirectoryName(sub.FilePath);
+            if (submarineDir != Path.GetDirectoryName(destinationFolder))
+            {
+                string destinationPath = Path.Combine(destinationFolder, Path.GetFileName(sub.FilePath));
+                File.Move(sub.FilePath, destinationPath);
+                sub.FilePath = destinationPath;
+            }
+
+            /*string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(sub.FilePath));
             try
             {
                 File.Copy(sub.FilePath, destinationPath);
@@ -804,17 +816,19 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Failed to copy submarine file \"" + sub.FilePath + "\" to the Workshop item staging folder.", e);
                 return;
-            }
+            }*/
 
-            itemContentPackage.AddFile(Path.Combine("Submarines", Path.GetFileName(sub.FilePath)), ContentType.Submarine);
+            itemContentPackage.AddFile(sub.FilePath, ContentType.Submarine);
             itemContentPackage.Name = sub.Name;
+            itemContentPackage.Save(itemContentPackage.Path);
+
             itemEditor.Title = sub.Name;
             itemEditor.Tags.Add("Submarine");
             itemEditor.Description = sub.Description;
 
             if (sub.PreviewImage != null)
             {
-                string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+                string previewImagePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(itemContentPackage.Path), SteamManager.PreviewImageName));
                 try
                 {
                     using (Stream s = File.Create(previewImagePath))
@@ -837,8 +851,13 @@ namespace Barotrauma
         }
         private void CreateWorkshopItem(ContentPackage contentPackage)
         {
-            SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
-            string modDirectory = "";
+            //SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
+
+            itemContentPackage = contentPackage;
+            SteamManager.CreateWorkshopItemStaging(itemContentPackage, out itemEditor);
+            itemEditor.Title = contentPackage.Name;
+
+            /*string modDirectory = "";
             foreach (ContentFile file in contentPackage.Files)
             {
                 itemContentPackage.AddFile(file.Path, file.Type);
@@ -858,12 +877,8 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(modDirectory))
             {
                 SaveUtil.CopyFolder(Path.Combine("Mods", modDirectory), Path.Combine(SteamManager.WorkshopItemStagingFolder, "Mods", modDirectory), copySubDirs: true);
-            }
+            }*/
 
-            itemContentPackage.CorePackage = contentPackage.CorePackage;
-            itemContentPackage.Name = contentPackage.Name;
-            itemContentPackage.Save(itemContentPackage.Path);
-            itemEditor.Title = contentPackage.Name;
         }
         private void CreateWorkshopItem(Facepunch.Steamworks.Workshop.Item item)
         {
@@ -873,7 +888,7 @@ namespace Barotrauma
                     TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEdit", "[itemname]", TextManager.EnsureUTF8(item.Title)));
                 return;
             }
-            SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
+            //SteamManager.CreateWorkshopItemStaging(item, out itemEditor, out itemContentPackage);
         }
 
         private void ShowCreateItemFrame()
@@ -987,7 +1002,7 @@ namespace Barotrauma
                         Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                         {
                             Multiselect = true,
-                            InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
+                            InitialDirectory = Path.GetFullPath(Path.GetDirectoryName(itemContentPackage.Path)),
                             Filter = TextManager.Get("WorkshopItemPreviewImage") + "|*.png",
                             Title = TextManager.Get("WorkshopItemPreviewImageDialogTitle")
                         };
@@ -1068,7 +1083,7 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopItemShowFolder"))
             {
                 IgnoreLayoutGroups = true,
-                OnClicked = (btn, userdata) => { System.Diagnostics.Process.Start(Path.GetFullPath(SteamManager.WorkshopItemStagingFolder)); return true; }
+                OnClicked = (btn, userdata) => { System.Diagnostics.Process.Start(Path.GetFullPath(Path.GetDirectoryName(itemContentPackage.Path))); return true; }
             };
             createItemFileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.35f), createItemContent.RectTransform));
             RefreshCreateItemFileList();
@@ -1096,7 +1111,7 @@ namespace Barotrauma
                     {
                         Barotrauma.OpenFileDialog ofd = new Barotrauma.OpenFileDialog()
                         {
-                            InitialDirectory = Path.GetFullPath(SteamManager.WorkshopItemStagingFolder),
+                            InitialDirectory = Path.GetFullPath(Path.GetDirectoryName(itemContentPackage.Path)),
                             Title = TextManager.Get("workshopitemaddfiles"),
                             Multiselect = true
                         };
@@ -1221,7 +1236,7 @@ namespace Barotrauma
 
         private void OnPreviewImageSelected(GUIImage previewImageElement, string filePath)
         {
-            string previewImagePath = Path.GetFullPath(Path.Combine(SteamManager.WorkshopItemStagingFolder, SteamManager.PreviewImageName));
+            string previewImagePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(itemContentPackage.Path), SteamManager.PreviewImageName));
             if (new FileInfo(filePath).Length > 1024 * 1024)
             {
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
@@ -1246,7 +1261,7 @@ namespace Barotrauma
         private void OnAddFilesSelected(string[] fileNames)
         {
             if (fileNames == null) { return; }
-            for (int i = 0; i < fileNames.Length; i++)
+            /*for (int i = 0; i < fileNames.Length; i++)
             {
                 string file = fileNames[i];
                 if (string.IsNullOrEmpty(file)) { continue; }
@@ -1275,7 +1290,7 @@ namespace Barotrauma
                 {
                     itemContentPackage.AddFile(filePathRelativeToStagingFolder, ContentType.None);
                 }
-            }
+            }*/
             itemContentPackage.Save(itemContentPackage.Path);
             RefreshCreateItemFileList();
         }
@@ -1289,9 +1304,9 @@ namespace Barotrauma
             foreach (ContentFile contentFile in itemContentPackage.Files)
             {
                 bool illegalPath = !ContentPackage.IsModFilePathAllowed(contentFile);
-                string pathInStagingFolder = Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
-                bool fileInStagingFolder = File.Exists(pathInStagingFolder);
-                bool fileExists = illegalPath ? File.Exists(contentFile.Path) : fileInStagingFolder;
+                //string pathInStagingFolder = Path.Combine(SteamManager.WorkshopItemStagingFolder, contentFile.Path);
+                //bool fileInStagingFolder = File.Exists(pathInStagingFolder);
+                bool fileExists = File.Exists(contentFile.Path);
 
                 var fileFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.12f), createItemFileList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     style: "ListBoxElement")
@@ -1309,7 +1324,7 @@ namespace Barotrauma
                 {
                     Selected = fileExists && !illegalPath,
                     Enabled = false,
-                    ToolTip = TextManager.Get(fileInStagingFolder ? "WorkshopItemFileIncluded" : "WorkshopItemFileNotIncluded")
+                    ToolTip = TextManager.Get(illegalPath ? "WorkshopItemFileNotIncluded" : "WorkshopItemFileIncluded")
                 };
 
                 var nameText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), content.RectTransform, Anchor.CenterLeft), contentFile.Path, font: GUI.SmallFont)
@@ -1408,8 +1423,8 @@ namespace Barotrauma
                 if (errorMsg == null)
                 {
                     new GUIMessageBox(
-                        TextManager.Get("Error"), 
-                        TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + item.Error);
+                        TextManager.Get("Error"),
+                        TextManager.GetWithVariable("WorkshopItemPublishFailed", "[itemname]", TextManager.EnsureUTF8(item.Title)) + " " + item.Error);
                 }
                 else
                 {

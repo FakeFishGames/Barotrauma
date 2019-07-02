@@ -14,6 +14,8 @@ namespace Barotrauma.Steam
         private Facepunch.Steamworks.Client client;
         private Server server;
 
+        public const string MetadataFileName = "filelist.xml";
+
         private Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
         {
             { "submarine", 10 },
