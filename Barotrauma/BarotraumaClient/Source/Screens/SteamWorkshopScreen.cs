@@ -261,7 +261,12 @@ namespace Barotrauma
 
         private void RefreshItemLists()
         {
-            SteamManager.GetSubscribedWorkshopItems((items) => { OnItemsReceived(items, subscribedItemList); });
+            SteamManager.GetSubscribedWorkshopItems((items) => 
+            {
+                //filter out the items published by the player (they're shown in the publish tab)
+                var mySteamID = SteamManager.GetSteamID();
+                OnItemsReceived(items.Where(it => it.OwnerId != mySteamID).ToList(), subscribedItemList);
+            });
             SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 20);
             SteamManager.GetPublishedWorkshopItems((items) => { OnItemsReceived(items, publishedItemList); });
 

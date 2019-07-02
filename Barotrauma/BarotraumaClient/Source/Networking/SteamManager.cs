@@ -593,6 +593,8 @@ namespace Barotrauma.Steam
             if (string.IsNullOrEmpty(item.Error))
             {
                 DebugConsole.NewMessage("Published workshop item " + item.Title + " successfully.", Microsoft.Xna.Framework.Color.LightGreen);
+                var newItem = instance.client.Workshop.GetItem(item.Id);
+                newItem?.Subscribe();
             }
             else
             {
