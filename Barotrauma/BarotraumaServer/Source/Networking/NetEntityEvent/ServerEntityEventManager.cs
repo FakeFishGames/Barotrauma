@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
     class ServerEntityEvent : NetEntityEvent
     {
         private IServerSerializable serializable;
-        
+                
 #if DEBUG
         public string StackTrace;
 #endif
@@ -21,11 +21,10 @@ namespace Barotrauma.Networking
             get { return createTime; }
         }
 
-        public ServerEntityEvent(IServerSerializable entity, UInt16 id)
-            : base(entity, id)
+        public ServerEntityEvent(IServerSerializable serializableEntity, UInt16 id)
+            : base(serializableEntity, id)
         {
-            serializable = entity;
-
+            serializable = serializableEntity;
             createTime = Timing.TotalTime;
 
 #if DEBUG

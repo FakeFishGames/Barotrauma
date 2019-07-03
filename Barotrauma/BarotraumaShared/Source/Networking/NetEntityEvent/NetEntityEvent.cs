@@ -21,16 +21,19 @@ namespace Barotrauma.Networking
         public readonly Entity Entity;
         public readonly UInt16 ID;
 
+        public readonly UInt16 EntityID;
+
         //arbitrary extra data that will be passed to the Write method of the serializable entity
         //(the index of an itemcomponent for example)
         protected object[] Data;
 
         public bool Sent;
 
-        protected NetEntityEvent(INetSerializable entity, UInt16 id)
+        protected NetEntityEvent(INetSerializable serializableEntity, UInt16 id)
         {
             this.ID = id;
-            this.Entity = entity as Entity;
+            this.Entity = serializableEntity as Entity;
+            this.EntityID = serializableEntity is Entity entity ? entity.ID : Entity.NullEntityID;
         }
 
         public void SetData(object[] data)
