@@ -45,7 +45,10 @@ namespace Barotrauma.Items.Components
             set
             {
                 base.IsActive = value;
-                if (!value) currPowerConsumption = 0.0f;
+                if (!value)
+                {
+                    currPowerConsumption = 0.0f;
+                }
             }
         }
 
