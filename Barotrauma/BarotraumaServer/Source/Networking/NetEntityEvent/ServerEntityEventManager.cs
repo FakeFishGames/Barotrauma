@@ -291,6 +291,11 @@ namespace Barotrauma.Networking
             bufferedEvents.Add(bufferedEvent);
         }
 
+        public void RefreshEntityIDs()
+        {
+            events.ForEach(e => e.RefreshEntityID());
+            uniqueEvents.ForEach(e => e.RefreshEntityID());
+        }
 
         /// <summary>
         /// Writes all the events that the client hasn't received yet into the outgoing message
