@@ -352,6 +352,7 @@ namespace Barotrauma
                 if (Indestructible) return;
 
                 float prev = condition;
+                bool wasInFullCondition = IsFullCondition;
 
                 condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
                 if (condition == 0.0f && prev > 0.0f)
@@ -368,9 +369,17 @@ namespace Barotrauma
                 
                 SetActiveSprite();
 
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !MathUtils.NearlyEqual(lastSentCondition, condition))
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == Prefab.Health)
+                    if (Math.Abs(lastSentCondition - condition) > 1.0f)
+                    {
+                        conditionUpdatePending = true;
+                    }
+                    else if (wasInFullCondition != IsFullCondition)
+                    {
+                        conditionUpdatePending = true;
+                    }
+                    else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= Prefab.Health))
                     {
                         conditionUpdatePending = true;
                     }
