@@ -14,12 +14,23 @@ namespace Barotrauma.Items.Components
 {
     partial class RepairTool : ItemComponent
     {
+        enum UseEnvironment
+        {
+            Air, Water, Both
+        };
+
         private readonly List<string> fixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
 
         private Vector2 debugRayStartPos, debugRayEndPos;
-        
+
+        [Serialize("Both", false)]
+        private UseEnvironment UsableIn
+        {
+            get; set;
+        }
+
         [Serialize(0.0f, false)]
         public float Range { get; set; }
 
@@ -110,6 +121,23 @@ namespace Barotrauma.Items.Components
             {
                 ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
                 return false;
+            }
+
+            if (character.AnimController.InWater)
+            {
+                if (UsableIn == UseEnvironment.Air)
+                {
+                    ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
+                    return false;
+                }
+            }
+            else
+            {
+                if (UsableIn == UseEnvironment.Water)
+                {
+                    ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
+                    return false;
+                }
             }
 
             Vector2 targetPosition = item.WorldPosition;

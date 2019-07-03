@@ -264,12 +264,18 @@
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-35" handle2="0,-27" msg="ItemMsgPickUpSelect" />
-    <RepairTool structurefixamount="0.0" range="300" barrelpos="35,13" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
+    <RepairTool structurefixamount="0.0" usablein="Air" range="300" barrelpos="35,13" fireprobability="0.2" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
       <ParticleEmitter particle="flamethrower" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="500" velocitymax="1000" highqualitycollisiondetection="true"/>
       <sound file="Content/Items/Tools/WeldingLoop.ogg" type="OnUse" range="500.0" loop="true" />
+
+      <!-- bubbles when usage fails (e.g. in water) -->
+      <StatusEffect type="OnFailure" target="UseTarget">
+        <ParticleEmitter particle="bubbles" particlespersecond="20" anglemin="0" anglemax="0" velocitymin="50" velocitymax="100" />
+      </StatusEffect>
+      
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="weldingfueltank" Condition="-6.0" />
       <StatusEffect type="OnUse" target="Contained" targetidentifiers="incendiumfueltank" Condition="-2.5" />
