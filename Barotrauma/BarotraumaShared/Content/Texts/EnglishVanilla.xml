@@ -3190,7 +3190,11 @@
   <connection.turretaimingout>position_out</connection.turretaimingout>
   <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
   <connection.sonardataout>data_out</connection.sonardataout>
+  
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
+  <label.navterminaldock>Dock</label.navterminaldock>
+  <label.navterminaldock>Undock</label.navterminaldock>
+  
   <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
 
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
@@ -3225,6 +3229,7 @@
   <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
   <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
   <workshop.contenttag.language>Language</workshop.contenttag.language>
+  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
 
   <serverlisthaspassword>Password</serverlisthaspassword>
 </infotexts>
