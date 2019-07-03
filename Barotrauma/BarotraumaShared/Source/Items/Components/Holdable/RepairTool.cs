@@ -152,16 +152,7 @@ namespace Barotrauma.Items.Components
             {
                 Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
-
-
-            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
-            {
-                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
-                {
-                    new FireSource(targetPosition);
-                }
-            }
-
+            
             UseProjSpecific(deltaTime);
 
             return true;
@@ -242,6 +233,17 @@ namespace Barotrauma.Items.Components
                 foreach (FireSource fs in fireSourcesInRange)
                 {
                     fs.Extinguish(deltaTime, ExtinguishAmount);
+                }
+            }
+
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
+                {
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f);
+                    if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
+                    new FireSource(displayPos);
                 }
             }
         }
