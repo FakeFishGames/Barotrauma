@@ -322,6 +322,8 @@ namespace Barotrauma
 
             string[] messages = serverMessage.Split('/');
 
+            bool translationsFound = false;
+
             try
             {
                 for (int i = 0; i < messages.Length; i++)
@@ -333,6 +335,7 @@ namespace Barotrauma
                         if (msg != null) // If a translation was found, otherwise use the original
                         {
                             messages[i] = msg;
+                            translationsFound = true;
                         }
                     }
                     else
@@ -343,6 +346,7 @@ namespace Barotrauma
                         if (msg != null) // If a translation was found, otherwise use the original
                         {
                             messages[i] = msg;
+                            translationsFound = true;
                         }
                         else
                         {
@@ -358,12 +362,19 @@ namespace Barotrauma
                     }
                 }
 
-                string translatedServerMessage = string.Empty;
-                for (int i = 0; i < messages.Length; i++)
+                if (translationsFound)
                 {
-                    translatedServerMessage += messages[i];
+                    string translatedServerMessage = string.Empty;
+                    for (int i = 0; i < messages.Length; i++)
+                    {
+                        translatedServerMessage += messages[i];
+                    }
+                    return translatedServerMessage;
                 }
-                return translatedServerMessage;
+                else
+                {
+                    return serverMessage;
+                }
             }
 
             catch (IndexOutOfRangeException exception)

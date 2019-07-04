@@ -75,8 +75,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
-            //activateButton.Enabled = !inSufficientPowerWarning.Visible;
+            inSufficientPowerWarning.Visible = CurrPowerConsumption > 0 && !hasPower;
         }
 
         private bool ToggleActive(GUIButton button, object obj)

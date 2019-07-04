@@ -11,6 +11,8 @@ namespace Barotrauma.Items.Components
         private float progressTimer;
         private float progressState;
 
+        private bool hasPower;
+
         private ItemContainer inputContainer, outputContainer;
 
         public ItemContainer InputContainer
@@ -58,7 +60,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (voltage < minVoltage) { return; }
+            hasPower = voltage >= minVoltage;
+            if (!hasPower) { return; }
 
             var repairable = item.GetComponent<Repairable>();
             if (repairable != null)
