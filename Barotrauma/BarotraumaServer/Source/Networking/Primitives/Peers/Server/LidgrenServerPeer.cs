@@ -345,7 +345,7 @@ namespace Barotrauma.Networking
             netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
+        public override void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
         {
             PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
             if (pendingClient == null) { return; }
@@ -434,6 +434,16 @@ namespace Barotrauma.Networking
         public override NetworkConnection GetConnectionBySteamID(ulong steamId)
         {
             return connectedClients.Find(c => c.SteamID == steamId);
+        }
+
+        public override void Disconnect(NetworkConnection conn,string msg=null)
+        {
+            if (!(conn is LidgrenConnection lidgrenConn)) { return; }
+            if (connectedClients.Contains(lidgrenConn))
+            {
+                connectedClients.Remove(lidgrenConn);
+            }
+            lidgrenConn.NetConnection.Disconnect(msg ?? "Disconnected");
         }
     }
 }

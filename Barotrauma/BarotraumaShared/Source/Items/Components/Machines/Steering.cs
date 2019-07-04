@@ -537,8 +537,8 @@ namespace Barotrauma.Items.Components
                 if (maintainPos)
                 {
                     newPosToMaintain = new Vector2(
-                        msg.ReadFloat(), 
-                        msg.ReadFloat());
+                        msg.ReadSingle(), 
+                        msg.ReadSingle());
                 }
                 else
                 {
@@ -547,7 +547,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newSteeringInput = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                newSteeringInput = new Vector2(msg.ReadSingle(), msg.ReadSingle());
             }
 
             if (!item.CanClientAccess(c)) return;

@@ -721,7 +721,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.IP.ToString(), Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             }));
@@ -730,7 +730,7 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("***************", client);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), client);
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.IP.ToString(), client);
                 }
                 GameMain.Server.SendConsoleMessage("***************", client);
             });

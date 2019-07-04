@@ -31,6 +31,8 @@ namespace Barotrauma.Networking
             Name = name;
             NetConnection = netConnection;
             SteamID = steamId;
+            IP = netConnection.RemoteEndPoint.Address;
+            EndPointString = IPString;
         }
     }
 }

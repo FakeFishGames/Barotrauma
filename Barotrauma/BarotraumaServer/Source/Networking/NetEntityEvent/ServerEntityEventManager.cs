@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
             public readonly Client Sender;
 
             public readonly UInt16 CharacterStateID;
-            public readonly IWriteMessage Data;
+            public readonly ReadWriteMessage Data;
 
             public readonly Character Character;
 
@@ -74,7 +74,7 @@ namespace Barotrauma.Networking
 
             public bool IsProcessed;
 
-            public BufferedEvent(Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, IWriteMessage data)
+            public BufferedEvent(Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, ReadWriteMessage data)
             {
                 this.Sender = sender;
                 this.Character = senderCharacter;
@@ -394,7 +394,8 @@ namespace Barotrauma.Networking
                 //find the first event that hasn't been sent in roundtriptime or at all
                 client.EntityEventLastSent.TryGetValue(eventList[i].ID, out double lastSent);
 
-                float minInterval = Math.Max(client.Connection.AverageRoundtripTime, (float)server.UpdateInterval.TotalSeconds * 2);
+                float avgRoundtripTime = 0.01f; //TODO: reimplement client.Connection.AverageRoundtripTime
+                float minInterval = Math.Max(avgRoundtripTime, (float)server.UpdateInterval.TotalSeconds * 2);
 
                 if (lastSent > Lidgren.Network.NetTime.Now - Math.Min(minInterval, 0.5f))
                 {
@@ -492,10 +493,11 @@ namespace Barotrauma.Networking
 
                     UInt16 characterStateID = msg.ReadUInt16();
 
-                    IWriteMessage buffer = new WriteOnlyMessage();
+                    ReadWriteMessage buffer = new ReadWriteMessage();
                     byte[] temp = new byte[msgLength-2];
                     msg.ReadBytes(temp, 0, msgLength - 2);
                     buffer.Write(temp, 0, msgLength - 2);
+                    buffer.BitPosition = 0;
                     BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
 
                     sender.LastSentEntityEventID++;

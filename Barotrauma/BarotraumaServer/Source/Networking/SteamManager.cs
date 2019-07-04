@@ -29,7 +29,7 @@ namespace Barotrauma.Steam
 
             RefreshServerDetails(server);
 
-            instance.server.Auth.OnAuthChange = server.OnAuthChange;
+            instance.server.Auth.OnAuthChange = server.ServerPeer.OnAuthChange;
             Instance.server.LogOnAnonymous();
 
             return true;

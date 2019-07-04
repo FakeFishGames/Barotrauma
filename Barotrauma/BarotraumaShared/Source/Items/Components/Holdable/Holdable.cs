@@ -571,7 +571,7 @@ namespace Barotrauma.Items.Components
         {
             base.ClientRead(type, msg, sendingTime);
             bool shouldBeAttached = msg.ReadBoolean();
-            Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
 
             if (!attachable)
             {

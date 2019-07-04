@@ -121,16 +121,16 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        /*public bool IPMatches(string ip)
+        public bool IPMatches(string ip)
         {
-            if (Connection?.RemoteEndPoint == null) { return false; }
-            if (Connection.RemoteEndPoint.Address.IsIPv4MappedToIPv6 && 
-                Connection.RemoteEndPoint.Address.MapToIPv4().ToString() == ip)
+            if (Connection?.IP == null) { return false; }
+            if (Connection.IP.IsIPv4MappedToIPv6 && 
+                Connection.IP.MapToIPv4().ToString() == ip)
             {
                 return true;
             }
-            return Connection.RemoteEndPoint.Address.ToString() == ip;
-        }*/
+            return Connection.IP.ToString() == ip;
+        }
 
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
         {

@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
 
                 tempBuffer.Write((UInt16)e.Entity.ID);
                 tempBuffer.Write((byte)tempEventBuffer.LengthBytes);
-                tempBuffer.Write(tempEventBuffer.Buffer, tempEventBuffer.LengthBytes);
+                tempBuffer.Write(tempEventBuffer.Buffer, 0, tempEventBuffer.LengthBytes);
                 tempBuffer.WritePadBits();
                 sentEvents.Add(e);                
 
@@ -77,7 +77,7 @@ namespace Barotrauma.Networking
             {
                 msg.Write(eventsToSync[0].ID);
                 msg.Write((byte)eventCount);
-                msg.Write(tempBuffer.Buffer, tempBuffer.LengthBytes);
+                msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             }
         }
 

@@ -186,7 +186,7 @@ namespace Barotrauma.Networking
                 transfer.WaitTimer -= deltaTime;
                 if (transfer.WaitTimer > 0.0f) continue;
                 
-                if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel)) continue;
+                //if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel)) continue;
 
                 transfer.WaitTimer = 0.05f;// transfer.Connection.AverageRoundtripTime;
 
@@ -194,12 +194,12 @@ namespace Barotrauma.Networking
                 long remaining = transfer.Data.Length - transfer.SentOffset;
                 int sendByteCount = (remaining > chunkLen ? chunkLen : (int)remaining);
                 
-                NetOutgoingMessage message;
+                IWriteMessage message;
 
                 //first message; send length, chunk length, file name etc
                 if (transfer.SentOffset == 0)
                 {
-                    message = peer.CreateMessage();
+                    message = new WriteOnlyMessage();
                     message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
 
                     //if the recipient is the owner of the server (= a client running the server from the main exe)
@@ -209,8 +209,7 @@ namespace Barotrauma.Networking
                         message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
                         message.Write((byte)transfer.FileType);
                         message.Write(transfer.FilePath);
-                        GameMain.Server.CompressOutgoingMessage(message);
-                        transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
+                        peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
                         transfer.Status = FileTransferStatus.Finished;
                         return;
                     }
@@ -221,8 +220,7 @@ namespace Barotrauma.Networking
                         message.Write((ushort)chunkLen);
                         message.Write((ulong)transfer.Data.Length);
                         message.Write(transfer.FileName);
-                        GameMain.Server.CompressOutgoingMessage(message);
-                        transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
+                        peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
 
                         transfer.Status = FileTransferStatus.Sending;
 
@@ -236,17 +234,16 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                message = peer.CreateMessage(1 + 1 + sendByteCount);
+                message = new WriteOnlyMessage();
                 message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
                 message.Write((byte)FileTransferMessageType.Data);
 
                 byte[] sendBytes = new byte[sendByteCount];
                 Array.Copy(transfer.Data, transfer.SentOffset, sendBytes, 0, sendByteCount);
 
-                message.Write(sendBytes);
+                message.Write(sendBytes, 0, sendByteCount);
 
-                GameMain.Server.CompressOutgoingMessage(message);
-                transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
+                peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
                 transfer.SentOffset += sendByteCount;
 
                 if (GameSettings.VerboseLogging)
