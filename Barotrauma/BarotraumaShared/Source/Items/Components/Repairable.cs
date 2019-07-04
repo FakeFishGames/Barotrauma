@@ -189,7 +189,11 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                item.Condition += deltaTime / (fixDuration / item.MaxCondition);
+                float conditionIncrease = deltaTime / (fixDuration / item.MaxCondition);
+                item.Condition += conditionIncrease;
+#if SERVER
+                GameMain.Server.KarmaManager.OnItemRepaired(CurrentFixer, this, conditionIncrease);
+#endif
             }
 
             if (wasBroken && item.IsFullCondition)
@@ -206,7 +210,6 @@ namespace Barotrauma.Items.Components
                 wasBroken = false;
 #if SERVER
                 item.CreateServerEvent(this);
-                GameMain.Server.KarmaManager.OnItemRepaired(CurrentFixer, this);
 #endif
             }
         }

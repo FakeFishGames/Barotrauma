@@ -361,7 +361,7 @@ namespace Barotrauma.Networking
             GetPropertyData("EndVoteRequiredRatio").AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                ((GUITextBlock)scrollBar.UserData).Text = endRoundLabel + (int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f) + " %";
+                ((GUITextBlock)scrollBar.UserData).Text = endRoundLabel + " " + (int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f) + " %";
                 return true;
             };
             slider.OnMoved(slider, slider.BarScroll);
@@ -378,7 +378,7 @@ namespace Barotrauma.Networking
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock text = scrollBar.UserData as GUITextBlock;
-                text.Text = intervalLabel + ToolBox.SecondsToReadableTime(scrollBar.BarScrollValue);
+                text.Text = intervalLabel + " " + ToolBox.SecondsToReadableTime(scrollBar.BarScrollValue);
                 return true;
             };
             slider.OnMoved(slider, slider.BarScroll);

@@ -590,12 +590,32 @@ namespace Barotrauma
                 }
             });
 
-            /*AssignOnExecute("togglekarma", (string[] args) =>
+            commands.Add(new Command("togglekarma", "togglekarma: Toggle the karma system on/off.", (string[] args) =>
             {
-                return;
                 if (GameMain.Server == null) return;
                 GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
-            });*/
+                NewMessage(GameMain.Server.ServerSettings.KarmaEnabled ? "Karma system enabled." : "Karma system disabled.", Color.LightGreen);
+            }));
+
+            commands.Add(new Command("showkarma", "showkarma: Show the current karma values of the players.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                NewMessage("***************", Color.Cyan);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, Color.Cyan);
+                }
+                NewMessage("***************", Color.Cyan);
+            }));
+            AssignOnClientRequestExecute("showkarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                GameMain.Server.SendConsoleMessage("***************", client);
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, Color.Cyan);
+                }
+                GameMain.Server.SendConsoleMessage("***************", client);
+            });
 
             AssignOnExecute("banip", (string[] args) =>
             {

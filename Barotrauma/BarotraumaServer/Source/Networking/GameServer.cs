@@ -83,7 +83,7 @@ namespace Barotrauma.Networking
         {
             get;
             private set;
-        } = new KarmaManager();
+        }
 
         public TimeSpan UpdateInterval
         {
@@ -115,7 +115,6 @@ namespace Barotrauma.Networking
             LastClientListUpdateID = 0;
 
             NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
-
             NetPeerConfiguration.Port = port;
             Port = port;
             QueryPort = queryPort;
@@ -130,6 +129,8 @@ namespace Barotrauma.Networking
             {
                 serverSettings.SetPassword(password);
             }
+
+            KarmaManager = new KarmaManager();
 
             NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
@@ -363,6 +364,7 @@ namespace Barotrauma.Networking
             unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);
 
             fileSender.Update(deltaTime);
+            KarmaManager.UpdateClients(ConnectedClients, deltaTime);
 
             if (serverSettings.VoiceChatEnabled)
             {
@@ -371,7 +373,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (respawnManager != null) respawnManager.Update(deltaTime);
+                if (respawnManager != null) { respawnManager.Update(deltaTime); }
 
                 entityEventManager.Update(connectedClients);
 

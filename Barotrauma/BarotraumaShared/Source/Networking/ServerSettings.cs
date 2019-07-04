@@ -669,14 +669,14 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize(60f, true)]
+        [Serialize(60f * 60.0f, true)]
         public float AutoBanTime
         {
             get;
             private set;
         }
 
-        [Serialize(360f, true)]
+        [Serialize(60.0f * 60.0f * 24.0f, true)]
         public float MaxAutoBanTime
         {
             get;

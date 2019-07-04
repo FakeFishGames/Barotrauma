@@ -301,9 +301,6 @@ namespace Barotrauma.Networking
             {
                 if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
             }
-            
-            AutoBanTime = doc.Root.GetAttributeFloat("autobantime", 60);
-            MaxAutoBanTime = doc.Root.GetAttributeFloat("maxautobantime", 360);
         }
 
         public void LoadClientPermissions()
