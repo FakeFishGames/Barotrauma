@@ -11,12 +11,6 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
-        enum Mode
-        {
-            Active,
-            Passive
-        };
-
         private bool dynamicDockingIndicator = true;
 
         private bool unsentChanges;
@@ -41,8 +35,6 @@ namespace Barotrauma.Items.Components
         private float displayBorderSize;
 
         private List<SonarBlip> sonarBlips;
-
-        private float prevPingRadius;
 
         private float prevPassivePingRadius;
 
@@ -102,7 +94,7 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("SonarTipActive"),
                 OnSelected = (GUITickBox box) =>
                 {
-                    IsActive = box.Selected;
+                    CurrentMode = box.Selected ? Mode.Active : Mode.Passive;
                     if (GameMain.Client != null)
                     {
                         unsentChanges = true;
@@ -250,7 +242,7 @@ namespace Barotrauma.Items.Components
             {
                 if (component is GUITextBlock textBlock)
                 {
-                    textBlock.TextColor = IsActive ? textBlock.Style.textColor : textBlock.Style.textColor * 0.5f;
+                    textBlock.TextColor = currentMode == Mode.Active ? textBlock.Style.textColor : textBlock.Style.textColor * 0.5f;
                 }
             }
 
@@ -269,14 +261,21 @@ namespace Barotrauma.Items.Components
             if (Level.Loaded != null)
             {
                 Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
-                foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * pingState / zoom))
+                for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
                 {
-                    //gather all nearby triggers that are causing the water to flow into the dictionary
-                    foreach (LevelTrigger trigger in levelObject.Triggers)
+                    var activePing = activePings[pingIndex];
+                    foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * activePing.State / zoom))
                     {
-                        Vector2 flow = trigger.GetWaterFlowVelocity();
-                        //ignore ones that are barely doing anything (flow^2 < 1)
-                        if (flow.LengthSquared() > 1.0f) levelTriggerFlows.Add(trigger, flow);
+                        //gather all nearby triggers that are causing the water to flow into the dictionary
+                        foreach (LevelTrigger trigger in levelObject.Triggers)
+                        {
+                            Vector2 flow = trigger.GetWaterFlowVelocity();
+                            //ignore ones that are barely doing anything (flow^2 < 1)
+                            if (flow.LengthSquared() > 1.0f && !levelTriggerFlows.ContainsKey(trigger))
+                            {
+                                levelTriggerFlows.Add(trigger, flow);
+                            }
+                        }
                     }
                 }
 
@@ -338,13 +337,18 @@ namespace Barotrauma.Items.Components
                 prevDockingDist = float.MaxValue;
             }
 
-            if (IsActive)
+            for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
-                float pingRadius = DisplayRadius * pingState / zoom;
-                UpdateDisruptions(transducerCenter, pingRadius / displayScale, prevPingRadius / displayScale);
-                Ping(transducerCenter, transducerCenter, 
-                    pingRadius, prevPingRadius, displayScale, range / zoom, passive: false, pingStrength: 2.0f);
-                prevPingRadius = pingRadius;
+                var activePing = activePings[pingIndex];
+                float pingRadius = DisplayRadius * activePing.State / zoom;
+                UpdateDisruptions(transducerCenter, pingRadius / displayScale, activePing.PrevPingRadius / displayScale);
+                Ping(transducerCenter, transducerCenter,
+                    pingRadius, activePing.PrevPingRadius, displayScale, range / zoom, passive: false, pingStrength: 2.0f);
+                activePing.PrevPingRadius = pingRadius;
+
+            }
+            if (currentMode == Mode.Active && currentPingIndex != -1)
+            {
                 return;
             }
 
@@ -384,17 +388,18 @@ namespace Barotrauma.Items.Components
                 screenBackground.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
             }
 
-            if (IsActive)
+            if (currentMode == Mode.Active && currentPingIndex != -1)
             {
-                if (isLastPingDirectional && directionalPingCircle != null)
+                var activePing = activePings[currentPingIndex];
+                if (activePing.IsDirectional && directionalPingCircle != null)
                 {
-                    directionalPingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState),
-                        rotate: MathUtils.VectorToAngle(lastPingDirection),
-                        scale: (DisplayRadius / directionalPingCircle.size.X) * pingState);
+                    directionalPingCircle.Draw(spriteBatch, center, Color.White * (1.0f - activePing.State),
+                    rotate: MathUtils.VectorToAngle(activePing.Direction),
+                    scale: (DisplayRadius / directionalPingCircle.size.X) * activePing.State);
                 }
                 else
                 {
-                    pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState), 0.0f, (DisplayRadius * 2 / pingCircle.size.X) * pingState);
+                    pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - activePing.State), 0.0f, (DisplayRadius * 2 / pingCircle.size.X) * activePing.State);
                 }
             }
 
@@ -436,7 +441,7 @@ namespace Barotrauma.Items.Components
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
             }
 
-            float directionalPingVisibility = useDirectionalPing && IsActive ? 1.0f : showDirectionalIndicatorTimer;
+            float directionalPingVisibility = useDirectionalPing && currentMode == Mode.Active ? 1.0f : showDirectionalIndicatorTimer;
             if (directionalPingVisibility > 0.0f)
             {
                 Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
@@ -741,22 +746,26 @@ namespace Barotrauma.Items.Components
             disruptedDirections.Clear();
             if (Level.Loaded == null) { return; }
 
-            foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(pingSource, range * pingState))
+            for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
-                if (levelObject.ActivePrefab?.SonarDisruption <= 0.0f) { continue; }
-
-                float disruptionStrength = levelObject.ActivePrefab.SonarDisruption;
-                Vector2 disruptionPos = new Vector2(levelObject.Position.X, levelObject.Position.Y);
-
-                float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
-                disruptedDirections.Add(new Pair<Vector2, float>((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
-
-                if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
+                var activePing = activePings[pingIndex];
+                foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(pingSource, range * activePing.State))
                 {
-                    for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
+                    if (levelObject.ActivePrefab?.SonarDisruption <= 0.0f) { continue; }
+
+                    float disruptionStrength = levelObject.ActivePrefab.SonarDisruption;
+                    Vector2 disruptionPos = new Vector2(levelObject.Position.X, levelObject.Position.Y);
+
+                    float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
+                    disruptedDirections.Add(new Pair<Vector2, float>((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
+
+                    if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
                     {
-                        var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
-                        sonarBlips.Add(blip);
+                        for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
+                        {
+                            var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                            sonarBlips.Add(blip);
+                        }
                     }
                 }
             }
@@ -1033,9 +1042,9 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
-            if (isLastPingDirectional)
+            if (currentPingIndex != -1 && activePings[currentPingIndex].IsDirectional)
             {
-                if (Vector2.Dot(lastPingDirection, dir) < DirectionalPingDotProduct)
+                if (Vector2.Dot(activePings[currentPingIndex].Direction, dir) < DirectionalPingDotProduct)
                 {
                     blip.FadeTimer = 0.0f;
                     return false;
@@ -1143,8 +1152,8 @@ namespace Barotrauma.Items.Components
         
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
-            msg.Write(IsActive);
-            if (IsActive)
+            msg.Write(currentMode == Mode.Active);
+            if (currentMode == Mode.Active)
             {
                 msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
                 msg.Write(useDirectionalPing);
@@ -1180,8 +1189,8 @@ namespace Barotrauma.Items.Components
                 StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
                 return;
             }
-            
-            IsActive = isActive;
+
+            CurrentMode = isActive ? Mode.Active : Mode.Passive;
             if (isActive)
             {
                 activeTickBox.Selected = true;
