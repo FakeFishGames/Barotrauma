@@ -71,7 +71,6 @@
   <tutorialbutton>Training</tutorialbutton>
   <newgamebutton>New Game</newgamebutton>
   <loadgamebutton>Load Game</loadgamebutton>
-  <joinserverbutton>Join Server</joinserverbutton>
   <hostserverbutton>Host Server</hostserverbutton>
   <subeditorbutton>Submarine Editor</subeditorbutton>
   <charactereditorbutton>Character Editor</charactereditorbutton>
@@ -530,7 +529,6 @@
   <cargospawnnotification>The purchased supplies have been delivered to [roomname].</cargospawnnotification>
 
   <!-- Server list -->
-  <joinserver>Join server</joinserver>
   <serverip>Server IP</serverip>
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
@@ -3235,4 +3233,7 @@
   <serverlistrefresh>Scan Servers</serverlistrefresh>
 
   <yourname>Player name</yourname>
+
+  <joinserver>Server browser</joinserver>
+  <joinserverbutton>Server browser</joinserverbutton>
 </infotexts>

@@ -120,7 +120,6 @@ namespace Barotrauma
 
             var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), bottomRow.RectTransform), isHorizontal: true)
             {
-                RelativeSpacing = 0.01f,
                 Stretch = true
             };
 
@@ -131,7 +130,7 @@ namespace Barotrauma
                 Color = new Color(12, 14, 15, 255) * 0.5f,
                 OutlineColor = Color.Black
             };
-            new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
+            var filterToggle = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -139,10 +138,11 @@ namespace Barotrauma
                     filters.Visible = !filters.Visible;
                     filters.IgnoreLayoutGroups = !filters.Visible;
                     serverListHolder.Recalculate();
-                    btn.Children.ForEach(c => c.SpriteEffects = filters.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                    btn.Children.ForEach(c => c.SpriteEffects = !filters.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
                     return true;
                 }
             };
+            filterToggle.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
 
             var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.RectTransform, Anchor.Center))
             {
@@ -279,10 +279,9 @@ namespace Barotrauma
             serverPreviewToggleButton = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
             {
                 Visible = false,
-                IgnoreLayoutGroups = true,
                 OnClicked = (btn, userdata) =>
                 {
-                    serverPreview.RectTransform.RelativeSize = new Vector2(0.3f, 1.0f);
+                    serverPreview.RectTransform.RelativeSize = new Vector2(0.25f, 1.0f);
                     serverPreview.Visible = !serverPreview.Visible;
                     serverPreview.IgnoreLayoutGroups = !serverPreview.Visible;
                     serverListHolder.Recalculate();
@@ -664,7 +663,7 @@ namespace Barotrauma
             {
                 UserData = serverInfo
             };
-            new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 1.0f), serverFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 //RelativeSpacing = 0.02f
@@ -700,7 +699,7 @@ namespace Barotrauma
                 UserData = "password"
             };
 
-			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
+			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2] * 1.1f, 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
 
             new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
             {
