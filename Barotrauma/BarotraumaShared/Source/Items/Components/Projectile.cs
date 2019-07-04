@@ -113,8 +113,22 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(1, false)]
+        public int HitScanCount
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, false)]
         public bool RemoveOnHit
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, false)]
+        public float Spread
         {
             get;
             set;
@@ -154,17 +168,20 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character != null && !characterUsable) return false;
+            if (character != null && !characterUsable) { return false; }
 
-            Vector2 launchDir = new Vector2((float)Math.Cos(item.body.Rotation), (float)Math.Sin(item.body.Rotation));
-
-            if (Hitscan)
+            for (int i = 0; i < HitScanCount; i++)
             {
-                DoHitscan(launchDir);
-            }
-            else
-            {
-                Launch(launchDir * launchImpulse * item.body.Mass);
+                float launchAngle = item.body.Rotation + MathHelper.ToRadians(Rand.Range(-Spread, Spread));
+                Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
+                if (Hitscan)
+                {
+                    DoHitscan(launchDir);
+                }
+                else
+                {
+                    Launch(launchDir * launchImpulse * item.body.Mass);
+                }
             }
 
             User = character;
