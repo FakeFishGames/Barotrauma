@@ -537,14 +537,13 @@ namespace Barotrauma
 
             float limpAmount = 
                 character.CharacterHealth.GetAfflictionStrength("damage", leftFoot, true) +
-                character.CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
+                character.CharacterHealth.GetAfflictionStrength("damage", rightFoot, true) +
+                character.CharacterHealth.GetAfflictionStrength("spaceherpes");
             limpAmount = MathHelper.Clamp(limpAmount / 100.0f, 0.0f, 1.0f);
 
             float walkCycleMultiplier = 1.0f;
             if (Stairs != null)
             {
-                //TODO: allow editing these values in character editor?
-                bool running = Math.Abs(targetMovement.X) > 2.0f;
                 TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.7f, 1.7f), TargetMovement.Y);                
                 walkCycleMultiplier *= 1.5f;                
             }
@@ -663,7 +662,13 @@ namespace Barotrauma
                 }
             }
 
-            if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, 50.0f);
+            if (TorsoAngle.HasValue)
+            {
+                float torsoAngle = TorsoAngle.Value;
+                float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                torsoAngle -= herpesStrength / 150.0f;
+                torso.body.SmoothRotate(torsoAngle * Dir, 50.0f);
+            }
             if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, 50.0f);
 
             if (!onGround)
@@ -689,7 +694,6 @@ namespace Barotrauma
                 for (int i = -1; i < 2; i += 2)
                 {
                     Limb foot = i == -1 ? leftFoot : rightFoot;
-                    Limb leg = i == -1 ? leftLeg : rightLeg;
 
                     Vector2 footPos = stepSize * -i;
                     footPos += new Vector2(Math.Sign(movement.X) * FootMoveOffset.X, FootMoveOffset.Y);
@@ -766,7 +770,6 @@ namespace Barotrauma
                     }
 
                     var foot = i == -1 ? rightFoot : leftFoot;
-                    Limb leg = i == -1 ? rightLeg : leftLeg;
 
                     if (!foot.Disabled)
                     {

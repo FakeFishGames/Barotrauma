@@ -66,6 +66,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionHusk.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionPsychosis.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Afflictions\AfflictionSpaceHerpes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\Buffs\BuffDurationIncrease.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\CharacterHealth.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />

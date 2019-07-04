@@ -191,7 +191,55 @@
       strengthchange="0.3"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="0,640,128,128" color="60,107,195,255" origin="0,0"/>
   </AfflictionHusk>
-  
+
+  <AfflictionSpaceHerpes
+    name="Space herpes"
+    identifier="spaceherpes"
+    description=""
+    type="spaceherpes"
+    causeofdeathdescription=""
+    selfcauseofdeathdescription=""
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="20"
+    maxstrength="100">
+    
+    <Effect minstrength="0" maxstrength="50"
+      minscreendistort="0.0"
+      maxscreendistort="0.0"
+      minradialdistort="0.0"
+      maxradialdistort="0.0">
+    </Effect>
+    <Effect minstrength="50" maxstrength="100"
+      minscreendistort="0.0"
+      maxscreendistort="0.5"
+      minradialdistort="0.0"
+      maxradialdistort="0.5">
+      <StatusEffect target="Character" SpeedMultiplier="0.6" setvalue="true"/>
+    </Effect>
+
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="896,768,128,128" color="195,136,60,255" origin="0,0"/>
+  </AfflictionSpaceHerpes>
+
+  <Affliction
+    name="Disoriented"
+    identifier="invertcontrols"
+    description=""
+    type="invertcontrols"
+    causeofdeathdescription=""
+    selfcauseofdeathdescription=""
+    limbspecific="false"
+    showiconthreshold="100"
+    maxstrength="100">
+    <Effect minstrength="50" maxstrength="100"
+      minscreendistort="0.0"
+      maxscreendistort="0.5"
+      minradialdistort="0.0"
+      maxradialdistort="0.5"
+      strengthchange="-1.0">
+      <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
+    </Effect>
+  </Affliction>
   <!-- Special afflictions -->
 
   <AfflictionPsychosis
@@ -684,5 +732,6 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="256,896,128,128" color="10,193,114,255" origin="0,0"/>
   </Affliction>
   
+
 
 </Afflictions>

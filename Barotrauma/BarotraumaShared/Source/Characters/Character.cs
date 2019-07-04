@@ -973,7 +973,30 @@ namespace Barotrauma
                 return false;
             }
 #endif
-            
+            if (inputType == InputType.Up || inputType == InputType.Down ||
+                inputType == InputType.Left || inputType == InputType.Right)
+            {
+                var invertControls = CharacterHealth.GetAffliction("invertcontrols");
+                if (invertControls != null)
+                {
+                    switch (inputType)
+                    {
+                        case InputType.Left:
+                            inputType = InputType.Right;
+                            break;
+                        case InputType.Right:
+                            inputType = InputType.Left;
+                            break;
+                        case InputType.Up:
+                            inputType = InputType.Down;
+                            break;
+                        case InputType.Down:
+                            inputType = InputType.Up;
+                            break;
+                    }
+                }
+            }
+
             return keys[(int)inputType].Held;
         }
 
