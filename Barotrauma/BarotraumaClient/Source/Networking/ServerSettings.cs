@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -91,7 +90,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminRead(NetBuffer incMsg)
+        public void ClientAdminRead(IReadMessage incMsg)
         {
             int count = incMsg.ReadUInt16();
             for (int i = 0; i < count; i++)
@@ -113,8 +112,8 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    UInt32 size = incMsg.ReadVariableUInt32();
-                    incMsg.Position += 8 * size;
+                    UInt64 size = incMsg.Read7BitEncoded();
+                    incMsg.BitPosition += (int)(8 * size);
                 }
             }
 
@@ -123,7 +122,7 @@ namespace Barotrauma.Networking
             Whitelist.ClientAdminRead(incMsg);
         }
 
-        public void ClientRead(NetBuffer incMsg)
+        public void ClientRead(IReadMessage incMsg)
         {
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
@@ -146,7 +145,7 @@ namespace Barotrauma.Networking
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
-            NetOutgoingMessage outMsg = GameMain.NetworkMember.NetPeer.CreateMessage();
+            IWriteMessage outMsg = new WriteOnlyMessage();
 
             outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
 
@@ -214,7 +213,7 @@ namespace Barotrauma.Networking
                 outMsg.Write(GameMain.NetLobbyScreen.SeedBox.Text);
             }
 
-            (GameMain.NetworkMember.NetPeer as NetClient).SendMessage(outMsg, NetDeliveryMethod.ReliableOrdered);
+            GameMain.Client.ClientPeer.Send(outMsg, DeliveryMethod.Reliable);
         }
 
         //GUI stuff

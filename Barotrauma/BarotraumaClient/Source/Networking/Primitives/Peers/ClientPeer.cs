@@ -7,7 +7,7 @@ namespace Barotrauma.Networking
     abstract class ClientPeer
     {
         public delegate void MessageCallback(IReadMessage message);
-        public delegate void StatusChangeCallback(ConnectionStatus status);
+        public delegate void StatusChangeCallback(ConnectionStatus status, string msg);
         public delegate void PasswordCallback(int nonce, int retries);
         public delegate void InitializationCompleteCallback();
         
