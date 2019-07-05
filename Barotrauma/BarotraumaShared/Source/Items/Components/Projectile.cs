@@ -176,7 +176,12 @@ namespace Barotrauma.Items.Components
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
                 if (Hitscan)
                 {
+                    Vector2 prevSimpos = item.SimPosition;
                     DoHitscan(launchDir);
+                    if (i < HitScanCount - 1)
+                    {
+                        item.SetTransform(prevSimpos, item.body.Rotation);
+                    }
                 }
                 else
                 {
