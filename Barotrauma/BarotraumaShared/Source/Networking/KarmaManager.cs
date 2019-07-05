@@ -33,6 +33,8 @@ namespace Barotrauma
         [Serialize(0.05f, false)]
         public float ItemRepairKarmaIncrease { get; set; }
 
+        [Serialize(0.5f, false)]
+        public float ReactorOverheatKarmaDecrease { get; set; }
         [Serialize(30.0f, false)]
         public float ReactorMeltdownKarmaDecrease { get; set; }
 
@@ -40,6 +42,9 @@ namespace Barotrauma
         public float DamageEnemyKarmaIncrease { get; set; }
         [Serialize(0.25f, false)]
         public float DamageFriendlyKarmaDecrease { get; set; }
+
+        [Serialize(15.0f, false)]
+        public float SpamFilterKarmaDecrease { get; set; }
 
         [Serialize(40.0f, false)]
         public float HerpesThreshold { get; set; }

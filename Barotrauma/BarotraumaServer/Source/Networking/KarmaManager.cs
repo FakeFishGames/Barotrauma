@@ -3,6 +3,7 @@ using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -41,6 +42,8 @@ namespace Barotrauma
 
             if (client.Character != null && !client.Character.Removed)
             {
+                //increase the strength of the herpes affliction in steps instead of linearly
+                //otherwise clients could determine their exact karma value from the strength
                 float herpesStrength = 0.0f;
                 if (client.Karma < 20)                
                     herpesStrength = 100.0f;                
@@ -70,6 +73,21 @@ namespace Barotrauma
         {
             if (target == null || attacker == null) { return; }
 
+            bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
+            if (GameMain.Server.TraitorManager != null)
+            {
+                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == target))
+                {
+                    //traitors always count as enemies
+                    isEnemy = true;
+                }
+                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == attacker && t.TargetCharacter == target))
+                {
+                    //target counts as an enemy to the traitor
+                    isEnemy = true;
+                }
+            }
+
             if (target.AIController is EnemyAIController || target.TeamID != attacker.TeamID)
             {
                 AdjustKarma(attacker, attackResult.Damage * DamageEnemyKarmaIncrease);
@@ -95,18 +113,36 @@ namespace Barotrauma
             }
             else
             {
-                AdjustKarma(attacker, -damageAmount * StructureRepairKarmaIncrease);
+                float karmaIncrease = -damageAmount * StructureRepairKarmaIncrease;
+                //mechanics get twice as much karma for repairing walls
+                if (attacker.Info?.Job.Prefab.Identifier == "mechanic") { karmaIncrease *= 2.0f; }
+                AdjustKarma(attacker, karmaIncrease);
             }
         }
 
         public void OnItemRepaired(Character character, Repairable repairable, float repairAmount)
         {
-            AdjustKarma(character, repairAmount * ItemRepairKarmaIncrease);
+            float karmaIncrease = repairAmount * ItemRepairKarmaIncrease;
+            if (repairable.HasRequiredSkills(character)) { karmaIncrease *= 2.0f; }
+            AdjustKarma(character, karmaIncrease);
+        }
+
+        public void OnReactorOverHeating(Character character)
+        {
+            AdjustKarma(character, -ReactorOverheatKarmaDecrease);
         }
 
         public void OnReactorMeltdown(Character character)
         {
             AdjustKarma(character, -ReactorMeltdownKarmaDecrease);
+        }
+
+        public void OnSpamFilterTriggered(Client client)
+        {
+            if (client != null)
+            {
+                client.Karma -= SpamFilterKarmaDecrease;
+            }
         }
 
         private void AdjustKarma(Character target, float amount)
