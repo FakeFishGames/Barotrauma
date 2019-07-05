@@ -457,9 +457,9 @@ namespace Barotrauma.Items.Components
             }
 
 #if SERVER
-            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(blameOnBroken))
+            if (GameMain.Server != null)
             {
-                blameOnBroken.Karma = 0.0f;
+                GameMain.Server.KarmaManager.OnReactorMeltdown(blameOnBroken?.Character);
             }
 #endif
         }

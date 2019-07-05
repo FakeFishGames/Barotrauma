@@ -31,13 +31,22 @@ namespace Barotrauma
         [Serialize(0.05f, false)]
         public float ItemRepairKarmaIncrease { get; set; }
 
+        [Serialize(30.0f, false)]
+        public float ReactorMeltdownKarmaDecrease { get; set; }
+
         [Serialize(0.1f, false)]
         public float DamageEnemyKarmaIncrease { get; set; }
         [Serialize(0.25f, false)]
         public float DamageFriendlyKarmaDecrease { get; set; }
 
+        [Serialize(40.0f, false)]
+        public float HerpesThreshold { get; set; }
+
         [Serialize(1.0f, false)]
         public float KickBanThreshold { get; set; }
+
+        private AfflictionPrefab herpesAffliction;
+
 
         private readonly List<Client> bannedClients = new List<Client>();
 
@@ -45,10 +54,13 @@ namespace Barotrauma
         {
             XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
             SerializableProperty.DeserializeProperties(this, doc?.Root);
+            herpesAffliction = AfflictionPrefab.List.Find(ap => ap.Identifier == "spaceherpes");
         }
 
         public void UpdateClients(IEnumerable<Client> clients, float deltaTime)
         {
+            if (!GameMain.Server.GameStarted) { return; }
+
             bannedClients.Clear();
             foreach (Client client in clients)
             {
@@ -70,6 +82,27 @@ namespace Barotrauma
             else if (client.Karma < KarmaIncreaseThreshold)
             {
                 client.Karma += KarmaIncrease * deltaTime;
+            }
+
+            if (client.Character != null && !client.Character.Removed)
+            {
+                float herpesStrength = 0.0f;
+                if (client.Karma < 20)                
+                    herpesStrength = 100.0f;                
+                else if (client.Karma < 30)                
+                    herpesStrength = 0.6f;                
+                else if (client.Karma < 40.0f)
+                    herpesStrength = 0.3f;
+                
+                var existingAffliction = client.Character.CharacterHealth.GetAffliction<AfflictionSpaceHerpes>("spaceherpes");
+                if (existingAffliction == null && herpesStrength > 0.0f)
+                {
+                    client.Character.CharacterHealth.ApplyAffliction(null, new Affliction(herpesAffliction, herpesStrength));
+                }
+                else
+                {
+                    existingAffliction.Strength = herpesStrength;
+                }
             }
 
             if (client.Karma < KickBanThreshold && client.Connection != GameMain.Server.OwnerConnection)
@@ -94,6 +127,13 @@ namespace Barotrauma
 
         public void OnStructureHealthChanged(Structure structure, Character attacker, float damageAmount)
         {
+            if (attacker == null) { return; }
+            //damaging/repairing ruin structures or enemy subs doesn't affect karma
+            if (structure.Submarine == null || structure.Submarine.TeamID != attacker.TeamID)
+            {
+                return;
+            }
+
             if (damageAmount > 0)
             {
                 AdjustKarma(attacker, -damageAmount * StructureDamageKarmaDecrease);
@@ -107,6 +147,11 @@ namespace Barotrauma
         public void OnItemRepaired(Character character, Repairable repairable, float repairAmount)
         {
             AdjustKarma(character, repairAmount * ItemRepairKarmaIncrease);
+        }
+
+        public void OnReactorMeltdown(Character character)
+        {
+            AdjustKarma(character, -ReactorMeltdownKarmaDecrease);
         }
 
         private void AdjustKarma(Character target, float amount)
