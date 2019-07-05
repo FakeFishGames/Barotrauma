@@ -37,7 +37,7 @@
       <LineSprite texture="Content/Items/Command/NavUI.png" sourcerect="181,141,109,4" origin="0,0.5"/>
     </Sonar>
     <CustomInterface canbeselected="true">
-      <GuiFrame relativesize="0.15,0.15" anchor="BottomRight" relativeoffset="0.25,0" style="ItemUI" />
+      <GuiFrame relativesize="0.15,0.15" anchor="TopRight" relativeoffset="0.25,0.75" style="ItemUI" />
       <Button text="Signal out #1" connection="signal_out1" />
       <Button text="Signal out #2" connection="signal_out2" />
       <Button text="Signal out #3" connection="signal_out3" />
