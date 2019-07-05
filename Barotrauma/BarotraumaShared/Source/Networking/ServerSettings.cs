@@ -126,6 +126,10 @@ namespace Barotrauma.Networking
                         if (size != 4) break;
                         property.SetValue(parentObject, msg.ReadFloat());
                         return;
+                    case "int":
+                        if (size != 4) break;
+                        property.SetValue(parentObject, msg.ReadInt32());
+                        return;
                     case "vector2":
                         if (size != 8) break;
                         x = msg.ReadFloat();
@@ -182,6 +186,10 @@ namespace Barotrauma.Networking
                     case "float":
                         msg.WriteVariableUInt32(4);
                         msg.Write((float)overrideValue);
+                        break;
+                    case "int":
+                        msg.WriteVariableUInt32(4);
+                        msg.Write((int)overrideValue);
                         break;
                     case "vector2":
                         msg.WriteVariableUInt32(8);
