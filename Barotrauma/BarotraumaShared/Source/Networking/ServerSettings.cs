@@ -31,6 +31,8 @@ namespace Barotrauma.Networking
     
     partial class ServerSettings : ISerializableEntity
     {
+        public const string SettingsFile = "serversettings.xml";
+
         [Flags]
         public enum NetFlags : byte
         {
