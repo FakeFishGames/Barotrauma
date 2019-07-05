@@ -92,7 +92,7 @@ namespace Barotrauma.Networking
             private SerializableProperty property;
             private string typeString;
 
-            private ServerSettings serverSettings;
+            private object parentObject;
 
             public string Name
             {
@@ -101,14 +101,14 @@ namespace Barotrauma.Networking
 
             public object Value
             {
-                get { return property.GetValue(serverSettings); }
+                get { return property.GetValue(parentObject); }
             }
             
-            public NetPropertyData(ServerSettings serverSettings, SerializableProperty property, string typeString)
+            public NetPropertyData(object parentObject, SerializableProperty property, string typeString)
             {
                 this.property = property;
                 this.typeString = typeString;
-                this.serverSettings = serverSettings;
+                this.parentObject = parentObject;
             }
             
             public void Read(NetBuffer msg)
@@ -124,20 +124,20 @@ namespace Barotrauma.Networking
                 {
                     case "float":
                         if (size != 4) break;
-                        property.SetValue(serverSettings, msg.ReadFloat());
+                        property.SetValue(parentObject, msg.ReadFloat());
                         return;
                     case "vector2":
                         if (size != 8) break;
                         x = msg.ReadFloat();
                         y = msg.ReadFloat();
-                        property.SetValue(serverSettings, new Vector2(x, y));
+                        property.SetValue(parentObject, new Vector2(x, y));
                         return;
                     case "vector3":
                         if (size != 12) break;
                         x = msg.ReadFloat();
                         y = msg.ReadFloat();
                         z = msg.ReadFloat();
-                        property.SetValue(serverSettings, new Vector3(x, y, z));
+                        property.SetValue(parentObject, new Vector3(x, y, z));
                         return;
                     case "vector4":
                         if (size != 16) break;
@@ -145,7 +145,7 @@ namespace Barotrauma.Networking
                         y = msg.ReadFloat();
                         z = msg.ReadFloat();
                         w = msg.ReadFloat();
-                        property.SetValue(serverSettings, new Vector4(x, y, z, w));
+                        property.SetValue(parentObject, new Vector4(x, y, z, w));
                         return;
                     case "color":
                         if (size != 4) break;
@@ -153,7 +153,7 @@ namespace Barotrauma.Networking
                         g = msg.ReadByte();
                         b = msg.ReadByte();
                         a = msg.ReadByte();
-                        property.SetValue(serverSettings, new Color(r, g, b, a));
+                        property.SetValue(parentObject, new Color(r, g, b, a));
                         return;
                     case "rectangle":
                         if (size != 16) break;
@@ -161,12 +161,12 @@ namespace Barotrauma.Networking
                         iy = msg.ReadInt32();
                         width = msg.ReadInt32();
                         height = msg.ReadInt32();
-                        property.SetValue(serverSettings, new Rectangle(ix, iy, width, height));
+                        property.SetValue(parentObject, new Rectangle(ix, iy, width, height));
                         return;
                     default:
                         msg.Position = oldPos; //reset position to properly read the string
                         string incVal = msg.ReadString();
-                        property.TrySetValue(serverSettings, incVal);
+                        property.TrySetValue(parentObject, incVal);
                         return;
                 }
 
@@ -176,7 +176,7 @@ namespace Barotrauma.Networking
 
             public void Write(NetBuffer msg, object overrideValue = null)
             {
-                if (overrideValue == null) overrideValue = property.GetValue(serverSettings);
+                if (overrideValue == null) overrideValue = property.GetValue(parentObject);
                 switch (typeString)
                 {
                     case "float":
@@ -230,14 +230,14 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        Dictionary<UInt32,NetPropertyData> netProperties;
+        Dictionary<UInt32, NetPropertyData> netProperties;
 
         partial void InitProjSpecific();
 
-        public ServerSettings(string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
-        {            
+        public ServerSettings(NetworkMember networkMember, string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
+        {
             ServerLog = new ServerLog(serverName);
-            
+
             Voting = new Voting();
 
             Whitelist = new WhiteList();
@@ -263,17 +263,30 @@ namespace Barotrauma.Networking
                 foreach (var property in saveProperties)
                 {
                     object value = property.GetValue(this);
-                    if (value == null) continue;
+                    if (value == null) { continue; }
 
                     string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(this, property, typeName);
-
                         UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
+                        if (netProperties.ContainsKey(key)){ throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
+                        netProperties.Add(key, netPropertyData);
+                    }
+                }
 
-                        if (netProperties.ContainsKey(key)) throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")");
+                var karmaProperties = SerializableProperty.GetProperties<Serialize>(networkMember.KarmaManager);
+                foreach (var property in karmaProperties)
+                {
+                    object value = property.GetValue(networkMember.KarmaManager);
+                    if (value == null) { continue; }
 
+                    string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
+                    if (typeName != null || property.PropertyType.IsEnum)
+                    {
+                        NetPropertyData netPropertyData = new NetPropertyData(networkMember.KarmaManager, property, typeName);
+                        UInt32 key = ToolBox.StringToUInt32Hash(property.Name, md5);
+                        if (netProperties.ContainsKey(key)) { throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
                         netProperties.Add(key, netPropertyData);
                     }
                 }

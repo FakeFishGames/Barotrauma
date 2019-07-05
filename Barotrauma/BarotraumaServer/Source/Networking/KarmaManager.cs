@@ -3,50 +3,15 @@ using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class KarmaManager
+    partial class KarmaManager : ISerializableEntity
     {
-        public static readonly string ConfigFile = "Data" + Path.DirectorySeparatorChar + "karmasettings.xml";
-
-        [Serialize(0.1f, false)]
-        public float KarmaDecay { get; set; }
-
-        [Serialize(50.0f, false)]
-        public float KarmaDecayThreshold { get; set; }
-
-        [Serialize(0.15f, false)]
-        public float KarmaIncrease { get; set; }
-
-        [Serialize(50.0f, false)]
-        public float KarmaIncreaseThreshold { get; set; }
-
-        [Serialize(0.05f, false)]
-        public float StructureRepairKarmaIncrease { get; set; }
-        [Serialize(0.1f, false)]
-        public float StructureDamageKarmaDecrease { get; set; }
-
-        [Serialize(0.05f, false)]
-        public float ItemRepairKarmaIncrease { get; set; }
-
-        [Serialize(0.1f, false)]
-        public float DamageEnemyKarmaIncrease { get; set; }
-        [Serialize(0.25f, false)]
-        public float DamageFriendlyKarmaDecrease { get; set; }
-
-        [Serialize(1.0f, false)]
-        public float KickBanThreshold { get; set; }
-
         private readonly List<Client> bannedClients = new List<Client>();
-
-        public KarmaManager()
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
-            SerializableProperty.DeserializeProperties(this, doc?.Root);
-        }
-
+        
         public void UpdateClients(IEnumerable<Client> clients, float deltaTime)
         {
             bannedClients.Clear();
@@ -118,5 +83,23 @@ namespace Barotrauma
 
             client.Karma += amount;
         }
+
+        public void Save()
+        {
+            XDocument doc = new XDocument(new XElement(Name));
+            SerializableProperty.SerializeProperties(this, doc.Root, true);
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                NewLineOnAttributes = true
+            };
+
+            using (var writer = XmlWriter.Create(ConfigFile, settings))
+            {
+                doc.Save(writer);
+            }
+        }
+
     }
 }

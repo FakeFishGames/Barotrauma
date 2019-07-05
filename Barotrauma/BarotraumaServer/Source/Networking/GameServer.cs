@@ -78,13 +78,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-
-        public KarmaManager KarmaManager
-        {
-            get;
-            private set;
-        }
-
+        
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -124,14 +118,12 @@ namespace Barotrauma.Networking
                 NetPeerConfiguration.EnableUPnP = true;
             }
 
-            serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
             }
-
-            KarmaManager = new KarmaManager();
-
+            
             NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
             NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
