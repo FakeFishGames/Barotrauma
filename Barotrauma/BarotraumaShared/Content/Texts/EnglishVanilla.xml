@@ -294,8 +294,6 @@
   <setlegacybindingstooltip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</setlegacybindingstooltip>
 
   <!-- Server settings -->
-  <serversettingsroundstab>Rounds</serversettingsroundstab>
-  <serversettingsservertab>Server</serversettingsservertab>
   <serversettingsbanlisttab>Banlist</serversettingsbanlisttab>
   <serversettingswhitelisttab>Whitelist</serversettingswhitelisttab>
   <serversettingssubselection>Submarine selection</serversettingssubselection>
@@ -3215,6 +3213,52 @@
   <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
 
   <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
+
+  <serversettingsgeneraltab>General</serversettingsgeneraltab>
+  <serversettingsantigriefingtab>Anti-griefing</serversettingsantigriefingtab>
+
+  <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
+  <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
+  
+  <Karma.KarmaDecay>Karma decay speed</Karma.KarmaDecay>
+  <Karma.KarmaDecayTooltip>How much karma decreases per second when it's above the decay threshold.</Karma.KarmaDecayTooltip>
+  
+  <Karma.KarmaDecayThreshold>Karma decay threshold</Karma.KarmaDecayThreshold>
+  <Karma.KarmaDecayThresholdTooltip>Karma gradually decreases when it's above this threshold.</Karma.KarmaDecayThresholdTooltip>
+  
+  <Karma.KarmaIncrease>Karma increase speed</Karma.KarmaIncrease>
+  <Karma.KarmaIncreaseTooltip>How much karma increases per second when it's below the increase threshold.</Karma.KarmaIncreaseTooltip>  
+  
+  <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
+  <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
+  
+  <Karma.StructureRepairKarmaIncrease>Structure repaired</Karma.StructureRepairKarmaIncrease>
+  <Karma.StructureRepairKarmaIncreaseTooltip>How much karma increases when repairing structures (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a wall from 0 health to 100).</Karma.StructureRepairKarmaIncreaseTooltip>
+  
+  <Karma.StructureDamageKarmaDecrease>Structure damaged</Karma.StructureDamageKarmaDecrease>
+  <Karma.StructureDamageKarmaDecreaseTooltip>How much karma decreases when damaging structures (per amount of damage done, for example a value of 0.05 would mean that karma decreases by 5 when taking a wall from 100 health to 0).</Karma.StructureDamageKarmaDecreaseTooltip>
+  
+  <Karma.ItemRepairKarmaIncrease>Item repaired</Karma.ItemRepairKarmaIncrease>
+  <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing items (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair an item from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
+  
+  <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
+  <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
+  
+  <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
+  <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
+
+  <Karma.ReactorMeltdownKarmaDecrease>Reactor meltdown</Karma.ReactorMeltdownKarmaDecrease>
+  <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases if the player causes a reactor meltdown.</Karma.DamageFriendlyKarmaDecreaseTooltip>
+  
+  <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
+  <Karma.HerpesThreshold>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThreshold>
+  
+  <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
+  <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>
+
+  <KarmaPreset.Default>Default</KarmaPreset.Default>
+  <KarmaPreset.Strict>Strict</KarmaPreset.Strict>
+  <KarmaPreset.Custom>Custom</KarmaPreset.Custom>
   
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
@@ -3227,4 +3271,13 @@
   <workshop.contenttag.language>Language</workshop.contenttag.language>
 
   <serverlisthaspassword>Password</serverlisthaspassword>
+
+  <serversettingsroundstab>Gameplay</serversettingsroundstab>
+
+
+
+
+
+
+
 </infotexts>

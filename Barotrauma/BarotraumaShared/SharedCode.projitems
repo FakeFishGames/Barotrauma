@@ -227,6 +227,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileTransfer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\INetSerializable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\KarmaManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetConfig.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEvent.cs" />

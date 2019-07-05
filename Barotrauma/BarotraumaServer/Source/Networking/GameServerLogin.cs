@@ -472,9 +472,10 @@ namespace Barotrauma.Networking
             unauthClient = null;
             ConnectedClients.Add(newClient);
 
-            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(newClient));
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(newClient));            
             if (previousPlayer != null)
             {
+                newClient.Karma = previousPlayer.Karma;
                 foreach (Client c in previousPlayer.KickVoters)
                 {
                     if (!connectedClients.Contains(c)) { continue; }
