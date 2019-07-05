@@ -222,6 +222,9 @@ namespace Barotrauma.Networking
         private GUIFrame[] settingsTabs;
         private GUIButton[] tabButtons;
         private int settingsTabIndex;
+
+        private GUIDropDown karmaPresetDD;
+        private GUIComponent karmaSettingsBlocker;
         
         enum SettingsTab
         {
@@ -736,11 +739,37 @@ namespace Barotrauma.Networking
             GetPropertyData("AutoBanTime").AssignGUIComponent(slider);
             slider.OnMoved(slider, slider.BarScroll);
 
+            // karma --------------------------------------------------------------------------
+
             var karmaBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsUseKarma"));
             GetPropertyData("KarmaEnabled").AssignGUIComponent(karmaBox);
 
-            var karmaSettingsContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), antigriefingTab.RectTransform));
-            GameMain.NetworkMember.KarmaManager.CreateSettingsFrame(karmaSettingsContainer.Content);
+            karmaPresetDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform));
+            foreach (string karmaPreset in GameMain.NetworkMember.KarmaManager.Presets.Keys)
+            {
+                karmaPresetDD.AddItem(TextManager.Get("KarmaPreset." + karmaPreset), karmaPreset);
+            }
+
+            var karmaSettingsContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), antigriefingTab.RectTransform), style: null);
+            var karmaSettingsList = new GUIListBox(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform));
+
+            karmaSettingsBlocker = new GUIFrame(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform, Anchor.CenterLeft) { MaxSize = new Point(karmaSettingsList.Content.Rect.Width, int.MaxValue) }, 
+                style: "InnerFrame");
+            karmaPresetDD.OnSelected = (selected, obj) =>
+            {
+                KarmaPreset = obj as string;
+                GameMain.NetworkMember.KarmaManager.SelectPreset(KarmaPreset);
+                karmaSettingsList.Content.ClearChildren();
+                karmaSettingsBlocker.Visible = !KarmaEnabled || KarmaPreset != "custom";
+                GameMain.NetworkMember.KarmaManager.CreateSettingsFrame(karmaSettingsList.Content);
+                return true;
+            };
+            karmaPresetDD.SelectItem(KarmaPreset);
+            karmaBox.OnSelected = (tb) =>
+            {
+                karmaSettingsBlocker.Visible = !tb.Selected;
+                return true;
+            };
 
             //--------------------------------------------------------------------------------
             //                              banlist

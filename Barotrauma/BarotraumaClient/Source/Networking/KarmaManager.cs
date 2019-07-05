@@ -16,22 +16,22 @@ namespace Barotrauma
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "KarmaIncrease");
             CreateLabeledSlider(parent, 0.0f, 50.0f, 1.0f, "KarmaIncreaseThreshold");
 
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), parent.RectTransform), TextManager.Get("Karma.PositiveActions"))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.12f), parent.RectTransform), TextManager.Get("Karma.PositiveActions"), textAlignment: Alignment.Center)
             {
                 CanBeFocused = false
             };
 
-            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "StructureRepairKarmaIncrease");
-            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "DamageEnemyKarmaIncrease");
-            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "ItemRepairKarmaIncrease");
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "StructureRepairKarmaIncrease");
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "DamageEnemyKarmaIncrease");
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "ItemRepairKarmaIncrease");
 
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), parent.RectTransform), TextManager.Get("Karma.NegativeActions"))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.12f), parent.RectTransform), TextManager.Get("Karma.NegativeActions"), textAlignment: Alignment.Center)
             {
                 CanBeFocused = false
             };
 
-            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "StructureDamageKarmaDecrease");
-            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "DamageFriendlyKarmaDecrease");
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "StructureDamageKarmaDecrease");
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "DamageFriendlyKarmaDecrease");
         }
 
         private void CreateLabeledSlider(GUIComponent parent, float min, float max, float step, string propertyName)
@@ -55,7 +55,10 @@ namespace Barotrauma
             slider.Range = new Vector2(min, max);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                label.Text = TextManager.AddPunctuation(':', labelText, scrollBar.BarScrollValue.Format(decimalCount: step <= 1.0f ? 1 : 0));
+                string formattedValueStr = step >= 1.0f ?
+                    ((int)scrollBar.BarScrollValue).ToString() :
+                    scrollBar.BarScrollValue.Format(decimalCount: step <= 0.1f ? 2 : 1);
+                label.Text = TextManager.AddPunctuation(':', labelText, formattedValueStr);
                 return true;
             };
             GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, slider);

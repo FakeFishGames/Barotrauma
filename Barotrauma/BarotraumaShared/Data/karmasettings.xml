@@ -9,4 +9,29 @@
   itemrepairkarmaincrease="0.05"
   damageenemykarmaincrease="0.1"
   damagefriendlykarmadecrease="0.25"
-  kickbanthreshold="1" />
+  kickbanthreshold="1">
+  <Preset
+    name="Default"
+    karmadecay="0.1"
+    karmadecaythreshold="50"
+    karmaincrease="0.15"
+    karmaincreasethreshold="50"
+    structurerepairkarmaincrease="0.05"
+    structuredamagekarmadecrease="0.1"
+    itemrepairkarmaincrease="0.05"
+    damageenemykarmaincrease="0.1"
+    damagefriendlykarmadecrease="0.2"
+    kickbanthreshold="1"/>
+  <Preset
+    name="Strict"
+    karmadecay="0.1"
+    karmadecaythreshold="50"
+    karmaincrease="0.15"
+    karmaincreasethreshold="40"
+    structurerepairkarmaincrease="0.05"
+    structuredamagekarmadecrease="0.1"
+    itemrepairkarmaincrease="0.05"
+    damageenemykarmaincrease="0.2"
+    damagefriendlykarmadecrease="0.4"
+    kickbanthreshold="5"/>
+</KarmaManager>

@@ -649,12 +649,26 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        private bool karmaEnabled;
         [Serialize(false, true)]
         public bool KarmaEnabled
         {
+            get { return karmaEnabled; }
+            set
+            {
+                karmaEnabled = value;
+#if CLIENT
+                if (karmaSettingsBlocker != null) { karmaSettingsBlocker.Visible = !karmaEnabled || karmaPresetDD.SelectedData as string != "custom"; }
+#endif
+            }
+        }
+
+        [Serialize("default", true)]
+        public string KarmaPreset
+        {
             get;
             set;
-        }
+        } = "default";
 
         [Serialize("sandbox", true)]
         public string GameModeIdentifier

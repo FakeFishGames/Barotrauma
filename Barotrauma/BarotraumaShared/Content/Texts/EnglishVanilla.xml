@@ -3246,10 +3246,13 @@
   
   <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
   <Karma.DamageFriendlyKarmaDecreaseTooltip>"How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
-  
-  
+    
   <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
   <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>
+
+  <KarmaPreset.Default>Default</KarmaPreset.Default>
+  <KarmaPreset.Strict>Strict</KarmaPreset.Strict>
+  <KarmaPreset.Custom>Custom</KarmaPreset.Custom>
   
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>

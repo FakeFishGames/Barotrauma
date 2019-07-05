@@ -40,11 +40,34 @@ namespace Barotrauma
 
         [Serialize(1.0f, false)]
         public float KickBanThreshold { get; set; }
-
+        
+        public Dictionary<string, XElement> Presets = new Dictionary<string, XElement>();
+        
         public KarmaManager()
         {
             XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc?.Root);
+            if (doc?.Root != null)
+            {
+                Presets["custom"] = doc.Root;
+                foreach (XElement subElement in doc.Root.Elements())
+                {
+                    string presetName = subElement.GetAttributeString("name", "");
+                    Presets[presetName.ToLowerInvariant()] = subElement;
+                }
+                SelectPreset("default");
+            }
+        }
+
+        public void SelectPreset(string presetName)
+        {
+            if (string.IsNullOrEmpty(presetName)) { return; }
+            presetName = presetName.ToLowerInvariant();
+            
+            if (presetName != "custom" && Presets.ContainsKey(presetName))
+            {
+                SerializableProperty.DeserializeProperties(this, Presets[presetName]);
+            }
         }
     }
 }
