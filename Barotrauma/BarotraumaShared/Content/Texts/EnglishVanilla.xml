@@ -3234,6 +3234,50 @@
   <entityname.40mmgrenade>40mm grenade</entityname.40mmgrenade>
   <entitydescription.40mmgrenade>Ammunition for grenade launcher.</entitydescription.40mmgrenade>
 
+  <entityname.shotgun>Riot Shotgun</entityname.shotgun>
+  <entitydescription.shotgun>A shotgun designed for crowd control.</entitydescription.shotgun>
+
+  <entityname.shotgunshell>Shotgun Shell</entityname.shotgunshell>
+  <entitydescription.shotgunshell>Ammunition for a shotgun. Lethal.</entitydescription.shotgunshell>
+
+  <entityname.stungun>Stun Gun</entityname.stungun>
+  <entitydescription.stungun>A device for firing electrified darts.</entitydescription.stungun>
+
+  <entityname.stungundart>Stun Gun Dart</entityname.stungundart>
+  <entitydescription.stungundart>Causes electric shock to incapacitate a target. Non-lethal.</entitydescription.stungundart>
+
+  <entityname.toyhammer>Toy Hammer</entityname.toyhammer>
+  <entitydescription.toyhammer>Non-lethal but extremely annoying.</entitydescription.toyhammer>
+
+  <entityname.coilgunammoboxexplosive>Exploding Ammunition Box</entityname.coilgunammoboxexplosive>
+  <entitydescription.coilgunammoboxexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunammoboxexplosive>
+
+  <entityname.coilgunammoboxpiercing>Piercing Ammunition Box</entityname.coilgunammoboxpiercing>
+  <entitydescription.coilgunammoboxpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunammoboxpiercing>
+
+  <entityname.crawlermask>Crawler Mask</entityname.crawlermask>
+  <entitydescription.crawlermask>Protects wearer's identity. Fun at certain parties.</entitydescription.crawlermask>
+
+  <entityname.huskstinger>Husk Stinger</entityname.huskstinger>
+  <entitydescription.huskstinger>A makeshift stabbing tool.</entitydescription.huskstinger>
+
+  <entityname.shellshield>Moloch Shell Fragment</entityname.shellshield>
+  <entitydescription.shellshield>A sturdy piece of a moloch's shell.</entitydescription.shellshield>
+
+  <entityname.hammerheadjacket>Hammerhead Jacket</entityname.hammerheadjacket>
+  <entitydescription.hammerheadjacket>Europa chic.</entitydescription.hammerheadjacket>
+
+  <entityname.hammerheadjacket>Mudraptor Armor</entityname.hammerheadjacket>
+  <entitydescription.hammerheadjacket>A protective shell of a mudraptor.</entitydescription.hammerheadjacket>
+
+  <entityname.accordion>Accordion</entityname.accordion>
+  <entitydescription.accordion>An old handmade accordion.</entitydescription.accordion>
+  
+  <entityname.bongodrums>Bongo Drums</entityname.bongodrums>
+  <entitydescription.bongodrums>An old handmade pair of bongo drums.</entitydescription.bongodrums>
+
+  <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
+  <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
 
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
@@ -3246,4 +3290,9 @@
   <workshop.contenttag.language>Language</workshop.contenttag.language>
 
   <serverlisthaspassword>Password</serverlisthaspassword>
+
+
+
+
+
 </infotexts>
