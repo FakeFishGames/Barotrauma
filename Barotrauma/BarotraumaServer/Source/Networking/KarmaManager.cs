@@ -11,8 +11,14 @@ namespace Barotrauma
 {
     partial class KarmaManager : ISerializableEntity
     {
+        private class ClientMemory
+        {
+            public List<Pair<Wire, float>> WireDisconnectTime = new List<Pair<Wire, float>>();
+        }
+
+        private readonly Dictionary<Client, ClientMemory> clientMemories = new Dictionary<Client, ClientMemory>();
         private readonly List<Client> bannedClients = new List<Client>();
-        
+
         public void UpdateClients(IEnumerable<Client> clients, float deltaTime)
         {
             if (!GameMain.Server.GameStarted) { return; }
@@ -60,6 +66,24 @@ namespace Barotrauma
                 else
                 {
                     existingAffliction.Strength = herpesStrength;
+                }
+
+                //check if the client has disconnected an excessive number of wires
+                if (clientMemories.ContainsKey(client))
+                {
+                    var clientMemory = clientMemories[client];
+                    if (clientMemory.WireDisconnectTime.Count > AllowedWireDisconnectionsPerMinute)
+                    {
+                        clientMemory.WireDisconnectTime.RemoveRange(0, clientMemory.WireDisconnectTime.Count - AllowedWireDisconnectionsPerMinute);
+                        if (clientMemory.WireDisconnectTime.All(w => Timing.TotalTime - w.Second < 60.0f))
+                        {
+                            float karmaDecrease = -WireDisconnectionKarmaDecrease;
+                            //engineers don't lose as much karma for removing lots of wires
+                            if (client.Character.Info?.Job.Prefab.Identifier == "engineer") { karmaDecrease *= 0.5f; }
+                            AdjustKarma(client.Character, karmaDecrease);
+                            clientMemory.WireDisconnectTime.Clear();
+                        }
+                    }
                 }
             }
 
@@ -135,6 +159,18 @@ namespace Barotrauma
         public void OnReactorMeltdown(Character character)
         {
             AdjustKarma(character, -ReactorMeltdownKarmaDecrease);
+        }
+
+        public void OnWireDisconnected(Character character, Wire wire)
+        {
+            if (character == null || wire == null) { return; }
+            Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
+            if (client == null) { return; }
+
+            if (!clientMemories.ContainsKey(client)) { clientMemories[client] = new ClientMemory(); }
+
+            clientMemories[client].WireDisconnectTime.RemoveAll(w => w.First == wire);
+            clientMemories[client].WireDisconnectTime.Add(new Pair<Wire, float>(wire, (float)Timing.TotalTime));
         }
 
         public void OnSpamFilterTriggered(Client client)

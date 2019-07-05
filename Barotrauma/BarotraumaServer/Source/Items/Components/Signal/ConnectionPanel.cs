@@ -76,6 +76,8 @@ namespace Barotrauma.Items.Components
 
                         existingWire.RemoveConnection(item);
 
+                        GameMain.Server.KarmaManager.OnWireDisconnected(c.Character, existingWire);
+
                         if (existingWire.Connections[0] == null && existingWire.Connections[1] == null)
                         {
                             GameServer.Log(c.Character.LogName + " disconnected a wire from " +
