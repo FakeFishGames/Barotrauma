@@ -2251,6 +2251,7 @@ namespace Barotrauma.Networking
                 previousPlayers.Add(previousPlayer);
             }
             previousPlayer.Name = client.Name;
+            previousPlayer.Karma = client.Karma;
             previousPlayer.KickVoters.Clear();
             foreach (Client c in connectedClients)
             {
@@ -3071,6 +3072,7 @@ namespace Barotrauma.Networking
         public string Name;
         public string IP;
         public UInt64 SteamID;
+        public float Karma;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)
