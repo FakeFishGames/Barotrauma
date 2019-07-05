@@ -74,6 +74,8 @@ namespace Barotrauma.Items.Components
                     uiElements.Add(btn);
                 }
             }
+
+            GameMain.Instance.OnResolutionChanged += () => GuiFrame.RectTransform.RecalculateScale(true);
         }
 
         public override void CreateEditingHUD(SerializableEntityEditor editor)
