@@ -388,6 +388,13 @@ namespace Barotrauma
                 }
             }
 
+            if (type == LimbType.Head)
+            {
+                //TODO: replace with sprite overlay
+                var herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                color = Color.Lerp(color, Color.LightGreen, herpesStrength / 100.0f);
+            }
+
             body.Dir = Dir;
 
             bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
