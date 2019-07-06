@@ -2489,7 +2489,6 @@
   <resetkarma>Reset Karma</resetkarma>
   <karmadecreased>Your Karma decreased by [karmadecrease].</karmadecreased>
   <karmaincreased>Your Karma increased by [karmaincrease].</karmaincreased>
-  <karmabanwarning>Warning: You will be banned from the server if your Karma decreases below [banthreshold].</karmabanwarning>
   <karmabanned>You have been banned from the server because your Karma decreased below [banthreshold].</karmabanned>
   <karmajobdisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</karmajobdisallowed>
 
@@ -3245,8 +3244,23 @@
   <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
 
   <Karma.ReactorMeltdownKarmaDecrease>Reactor meltdown</Karma.ReactorMeltdownKarmaDecrease>
-  <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases if the player causes a reactor meltdown.</Karma.DamageFriendlyKarmaDecreaseTooltip>
-  
+  <Karma.ReactorMeltdownKarmaDecreaseTooltip>How much karma decreases if the player causes a reactor meltdown.</Karma.ReactorMeltdownKarmaDecreaseTooltip>
+
+  <Karma.ReactorOverheatKarmaDecrease>Reactor overheat</Karma.ReactorOverheatKarmaDecrease>
+  <Karma.ReactorOverheatKarmaDecreaseTooltip>How much karma decreases per second if a reactor's temperature stays critical while the player is operating it.</Karma.ReactorOverheatKarmaDecreaseTooltip>
+
+  <Karma.ExtinguishFireKarmaIncrease>Extinguish fires</Karma.ExtinguishFireKarmaIncrease>
+  <Karma.ExtinguishFireKarmaIncreaseTooltip>How much karma increases per second when attempting to extinguish fires.</Karma.ExtinguishFireKarmaIncreaseTooltip>
+
+  <Karma.AllowedWireDisconnectionsPerMinute>Allowed wire disconnections per minute</Karma.AllowedWireDisconnectionsPerMinute>
+  <Karma.AllowedWireDisconnectionsPerMinuteTooltip>How many wires a player is allowed to disconnect per minute before they start losing karma.</Karma.AllowedWireDisconnectionsPerMinuteTooltip>
+
+  <Karma.WireDisconnectionKarmaDecrease>Allowed wire disconnections per minute</Karma.WireDisconnectionKarmaDecrease>
+  <Karma.WireDisconnectionKarmaDecreaseTooltip>How much karma decreases if a player disconnects more than the allowed number of wires per minute.</Karma.WireDisconnectionKarmaDecreaseTooltip>
+
+  <Karma.SpamFilterKarmaDecrease>Triggering the spam filter</Karma.SpamFilterKarmaDecrease>
+  <Karma.SpamFilterKarmaDecreaseTooltip>How much karma decreases if a player triggers the spam filter of the text chat.</Karma.SpamFilterKarmaDecreaseTooltip>
+
   <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
   <Karma.HerpesThreshold>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThreshold>
   
@@ -3256,6 +3270,9 @@
   <KarmaPreset.Default>Default</KarmaPreset.Default>
   <KarmaPreset.Strict>Strict</KarmaPreset.Strict>
   <KarmaPreset.Custom>Custom</KarmaPreset.Custom>
+
+  <karmadecreasedunknownamount>Your Karma has decreased.</karmadecreasedunknownamount>
+  <karmaincreasedunknownamount>Your Karma has increased.</karmaincreasedunknownamount>
   
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
@@ -3282,4 +3299,6 @@
 
   <joinserver>Server browser</joinserver>
   <joinserverbutton>Server browser</joinserverbutton>
+
+  <karmabanwarning>WARNING: Your Karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
 </infotexts>

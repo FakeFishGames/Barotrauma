@@ -230,6 +230,9 @@ namespace Barotrauma.Items.Components
                 foreach (FireSource fs in fireSourcesInRange)
                 {
                     fs.Extinguish(deltaTime, ExtinguishAmount);
+#if SERVER
+                    GameMain.Server.KarmaManager.OnExtinguishingFire(user, deltaTime);                    
+#endif
                 }
             }
         }
@@ -300,7 +303,7 @@ namespace Barotrauma.Items.Components
                         targetItem.WorldPosition,
                         levelResource.DeattachTimer / levelResource.DeattachDuration,
                         Color.Red, Color.Green);
-#endif                    
+#endif
                 }
                 FixItemProjSpecific(user, deltaTime, targetItem, prevCondition);
                 return true;
@@ -461,7 +464,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-#endif    
+#endif
             }
         }
     }

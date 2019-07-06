@@ -388,7 +388,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
                 {
-                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character);
+                    GameMain.Server.KarmaManager.OnReactorOverHeating(blameOnBroken.Character, deltaTime);
                 }
 #endif
 

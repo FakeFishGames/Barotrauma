@@ -2268,6 +2268,8 @@ namespace Barotrauma.Networking
             client.Dispose();
             connectedClients.Remove(client);
 
+            KarmaManager.OnClientDisconnected(client);
+
             UpdateVoteStatus();
 
             SendChatMessage(msg, ChatMessageType.Server);

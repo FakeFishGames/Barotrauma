@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml.Linq;
@@ -43,8 +44,17 @@ namespace Barotrauma
         [Serialize(0.25f, false)]
         public float DamageFriendlyKarmaDecrease { get; set; }
 
-        [Serialize(5, false)]
-        public int AllowedWireDisconnectionsPerMinute { get; set; }
+        [Serialize(1.0f, false)]
+        public float ExtinguishFireKarmaIncrease { get; set; }
+
+
+        private float allowedWireDisconnectionsPerMinute;
+        [Serialize(5.0f, false)]
+        public float AllowedWireDisconnectionsPerMinute
+        {
+            get { return allowedWireDisconnectionsPerMinute; }
+            set { allowedWireDisconnectionsPerMinute = Math.Max(0.0f, value); }
+        }
 
         [Serialize(0.25f, false)]
         public float WireDisconnectionKarmaDecrease { get; set; }
@@ -57,6 +67,9 @@ namespace Barotrauma
 
         [Serialize(1.0f, false)]
         public float KickBanThreshold { get; set; }
+
+        [Serialize(10.0f, false)]
+        public float KarmaNotificationInterval { get; set; }
 
         private readonly AfflictionPrefab herpesAffliction;
 

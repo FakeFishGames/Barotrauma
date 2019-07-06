@@ -470,6 +470,11 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (user != null)
             {
+                if (connections[0] != null || connections[1] != null)
+                {
+                    GameMain.Server.KarmaManager.OnWireDisconnected(c.Character, existingWire);
+                }
+
                 if (connections[0] != null && connections[1] != null)
                 {
                     GameServer.Log(user.LogName + " disconnected a wire from " + 
