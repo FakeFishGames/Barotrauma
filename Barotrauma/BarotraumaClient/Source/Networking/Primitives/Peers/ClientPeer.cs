@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
     {
         public delegate void MessageCallback(IReadMessage message);
         public delegate void StatusChangeCallback(ConnectionStatus status, string msg);
-        public delegate void PasswordCallback(int nonce, int retries);
+        public delegate void PasswordCallback(int salt, int retries);
         public delegate void InitializationCompleteCallback();
         
         public MessageCallback OnMessageReceived;
@@ -24,5 +24,6 @@ namespace Barotrauma.Networking
         public abstract void Close(string msg=null);
         public abstract void Update();
         public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod);
+        public abstract void SendPassword(string password);
     }
 }

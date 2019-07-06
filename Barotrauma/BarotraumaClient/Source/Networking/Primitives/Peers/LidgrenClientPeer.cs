@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         private NetPeerConfiguration netPeerConfiguration;
 
         private ConnectionInitialization initializationStep;
-        private int passwordNonce;
+        private int passwordSalt;
         private Auth.Ticket steamAuthTicket;
         List<NetIncomingMessage> incomingLidgrenMessages;
 
@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
             incomingLidgrenMessages = new List<NetIncomingMessage>();
 
             Name = name;
+
+            initializationStep = ConnectionInitialization.SteamTicket;
         }
 
         public override void Start(object endPoint)
@@ -83,8 +85,11 @@ namespace Barotrauma.Networking
         {
             byte incByte = inc.ReadByte();
             bool isCompressed = (incByte & 0x1) != 0;
-            bool isConnectionValidationStep = (incByte & 0x2) != 0;
-            if (isConnectionValidationStep && initializationStep != ConnectionInitialization.Success)
+            bool isConnectionInitializationStep = (incByte & 0x2) != 0;
+
+            DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
+
+            if (isConnectionInitializationStep && initializationStep != ConnectionInitialization.Success)
             {
                 ReadConnectionInitializationStep(inc);
             }
@@ -92,7 +97,7 @@ namespace Barotrauma.Networking
             {
                 if (initializationStep != ConnectionInitialization.Success)
                 {
-                    OnInitializationComplete();
+                    OnInitializationComplete?.Invoke();
                 }
                 UInt16 length = inc.ReadUInt16();
                 IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, ServerConnection);
@@ -116,12 +121,13 @@ namespace Barotrauma.Networking
         private void ReadConnectionInitializationStep(NetIncomingMessage inc)
         {
             ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
+            DebugConsole.NewMessage(step + " " + initializationStep);
             switch (step)
             {
                 case ConnectionInitialization.SteamTicket:
                     if (initializationStep != ConnectionInitialization.SteamTicket) { return; }
                     NetOutgoingMessage outMsg = netClient.CreateMessage();
-                    outMsg.Write(0x2);
+                    outMsg.Write((byte)0x2);
                     outMsg.Write((byte)ConnectionInitialization.SteamTicket);
                     outMsg.Write(Name);
                     outMsg.Write(SteamManager.GetSteamID());
@@ -132,31 +138,30 @@ namespace Barotrauma.Networking
                 case ConnectionInitialization.Password:
                     if (initializationStep == ConnectionInitialization.SteamTicket) { initializationStep = ConnectionInitialization.Password; }
                     if (initializationStep != ConnectionInitialization.Password) { return; }
-                    bool incomingNonce = inc.ReadBoolean(); inc.ReadPadBits();
+                    bool incomingSalt = inc.ReadBoolean(); inc.ReadPadBits();
                     int retries = 0;
-                    if (incomingNonce)
+                    if (incomingSalt)
                     {
-                        passwordNonce = inc.ReadInt32();
+                        passwordSalt = inc.ReadInt32();
                     }
                     else
                     {
                         retries = inc.ReadInt32();
                     }
-                    OnRequestPassword?.Invoke(passwordNonce, retries);
+                    OnRequestPassword?.Invoke(passwordSalt, retries);
                     break;
             }
         }
 
-        private void SendPassword(string password, int nonce)
+        public override void SendPassword(string password)
         {
             if (initializationStep != ConnectionInitialization.Password) { return; }
             NetOutgoingMessage outMsg = netClient.CreateMessage();
-            outMsg.Write(0x2);
+            outMsg.Write((byte)0x2);
             outMsg.Write((byte)ConnectionInitialization.Password);
-            string saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
-            saltedPw = saltedPw + Convert.ToString(nonce);
-            saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-            outMsg.Write(saltedPw);
+            byte[] saltedPw = ServerSettings.SaltPassword(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)), passwordSalt);
+            outMsg.Write((byte)saltedPw.Length);
+            outMsg.Write(saltedPw, 0, saltedPw.Length);
             netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
 

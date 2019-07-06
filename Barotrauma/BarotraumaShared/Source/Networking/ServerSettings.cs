@@ -309,7 +309,7 @@ namespace Barotrauma.Networking
         
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private float selectedLevelDifficulty;
-        private string password;
+        private byte[] password;
 
         public float AutoRestartTimer;
 
@@ -466,7 +466,7 @@ namespace Barotrauma.Networking
 
         public bool HasPassword
         {
-            get { return !string.IsNullOrEmpty(password); }
+            get { return password != null; }
         }
         
         [Serialize(true, true)]
@@ -681,21 +681,37 @@ namespace Barotrauma.Networking
         {
             if (string.IsNullOrEmpty(password))
             {
-                this.password = "";
+                this.password = null;
             }
             else
             {
-                this.password = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+                this.password = Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password));
             }
         }
 
-        public bool IsPasswordCorrect(string input, int nonce)
+        public static byte[] SaltPassword(byte[] password, int salt)
+        {
+            byte[] saltedPw = new byte[password.Length*2];
+            for (int i = 0; i < password.Length; i++)
+            {
+                saltedPw[(i * 2)] = password[i];
+                saltedPw[(i * 2) + 1] = (byte)((salt >> (8 * (i % 4))) & 0xff);
+            }
+            saltedPw = Lidgren.Network.NetUtility.ComputeSHAHash(saltedPw);
+            return saltedPw;
+        }
+
+        public bool IsPasswordCorrect(byte[] input, int salt)
         {
             if (!HasPassword) return true;
-            string saltedPw = password;
-            saltedPw = saltedPw + Convert.ToString(nonce);
-            saltedPw = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-            return input == saltedPw;
+            byte[] saltedPw = SaltPassword(password, salt);
+            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input)+" "+ToolBox.ByteArrayToString(saltedPw));
+            if (input.Length != saltedPw.Length) return false;
+            for (int i=0;i<input.Length;i++)
+            {
+                if (input[i] != saltedPw[i]) return false;
+            }
+            return true;
         }
 
         /// <summary>

@@ -304,7 +304,13 @@ namespace Barotrauma
 
         private static void AssignRelayToServer(string names, bool relay)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).RelayToServer = relay;
+            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (command == null)
+            {
+                DebugConsole.Log("Could not assign to relay to server: " + names);
+                return;
+            }
+            command.RelayToServer = relay;
         }
 
         private static void InitProjectSpecific()

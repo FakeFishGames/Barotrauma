@@ -33,7 +33,7 @@ namespace Barotrauma.Networking
             public double TimeOut;
             public int Retries;
             public UInt64? SteamID;
-            public Int32? PasswordNonce;
+            public Int32? PasswordSalt;
 
             public PendingClient(NetConnection conn)
             {
@@ -41,7 +41,7 @@ namespace Barotrauma.Networking
                 InitializationStep = ConnectionInitialization.SteamTicket;
                 Retries = 0;
                 SteamID = null;
-                PasswordNonce = null;
+                PasswordSalt = null;
                 UpdateTime = Timing.TotalTime;
                 TimeOut = Timing.TotalTime + 20.0;
             }
@@ -102,11 +102,13 @@ namespace Barotrauma.Networking
         {
             netServer.ReadMessages(incomingLidgrenMessages);
             
+            //process incoming connections first
             foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType == NetIncomingMessageType.ConnectionApproval))
             {
                 HandleConnection(inc);
             }
-
+            
+            //after processing connections, go ahead with the rest of the messages
             foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
             {
                 switch (inc.MessageType)
@@ -167,6 +169,8 @@ namespace Barotrauma.Networking
                 {
                     pendingClient = new PendingClient(inc.SenderConnection);
                     pendingClients.Add(pendingClient);
+
+                    DebugConsole.NewMessage("Approved");
                 }
 
                 inc.SenderConnection.Approve();
@@ -180,6 +184,9 @@ namespace Barotrauma.Networking
             byte incByte = inc.ReadByte();
             bool isCompressed = (incByte & 0x1) != 0;
             bool isConnectionInitializationStep = (incByte & 0x2) != 0;
+
+            DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
+
             if (isConnectionInitializationStep && pendingClient != null)
             {
                 ReadConnectionInitializationStep(pendingClient, inc);
@@ -226,6 +233,9 @@ namespace Barotrauma.Networking
             pendingClient.TimeOut = Timing.TotalTime + 20.0;
 
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
+
+            DebugConsole.NewMessage(initializationStep+" "+pendingClient.InitializationStep);
+
             if (pendingClient.InitializationStep != initializationStep) return;
 
             switch (initializationStep)
@@ -266,13 +276,15 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ConnectionInitialization.Password:
-                    string incPassword = inc.ReadString();
-                    if (pendingClient.PasswordNonce == null)
+                    int pwLength = inc.ReadByte();
+                    byte[] incPassword = new byte[pwLength];
+                    inc.ReadBytes(incPassword, 0, pwLength);
+                    if (pendingClient.PasswordSalt == null)
                     {
-                        DebugConsole.ThrowError("Received password message from client without nonce");
+                        DebugConsole.ThrowError("Received password message from client without salt");
                         return;
                     }
-                    if (serverSettings.IsPasswordCorrect(incPassword, pendingClient.PasswordNonce.Value))
+                    if (serverSettings.IsPasswordCorrect(incPassword, pendingClient.PasswordSalt.Value))
                     {
                         pendingClient.InitializationStep = ConnectionInitialization.Success;
                     }
@@ -306,6 +318,8 @@ namespace Barotrauma.Networking
                 pendingClients.Remove(pendingClient);
             }
 
+            //DebugConsole.NewMessage("pending client status: " + pendingClient.InitializationStep);
+
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
                 LidgrenConnection newConnection = new LidgrenConnection(pendingClient.Name, pendingClient.Connection, pendingClient.SteamID ?? 0);
@@ -329,11 +343,11 @@ namespace Barotrauma.Networking
             switch (pendingClient.InitializationStep)
             {
                 case ConnectionInitialization.Password:
-                    outMsg.Write(pendingClient.PasswordNonce == null); outMsg.WritePadBits();
-                    if (pendingClient.PasswordNonce == null)
+                    outMsg.Write(pendingClient.PasswordSalt == null); outMsg.WritePadBits();
+                    if (pendingClient.PasswordSalt == null)
                     {
-                        pendingClient.PasswordNonce = CryptoRandom.Instance.Next();
-                        outMsg.Write(pendingClient.PasswordNonce.Value);
+                        pendingClient.PasswordSalt = CryptoRandom.Instance.Next();
+                        outMsg.Write(pendingClient.PasswordSalt.Value);
                     }
                     else
                     {
@@ -342,12 +356,14 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
+            NetSendResult result = netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
+            DebugConsole.NewMessage("sent update to pending client: "+result);
         }
 
         public override void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
         {
             PendingClient pendingClient = pendingClients.Find(c => c.SteamID == steamID);
+            DebugConsole.NewMessage(steamID + " validation: " + status+", "+(pendingClient!=null));
             if (pendingClient == null) { return; }
 
             if (serverSettings.BanList.IsBanned(pendingClient.Connection.RemoteEndPoint.Address, steamID))
