@@ -130,6 +130,14 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                if (client.Character?.Info?.Job.Prefab.Identifier == "captain" && client.Character.SelectedConstruction != null)
+                {
+                    if (client.Character.SelectedConstruction.GetComponent<Steering>() != null)
+                    {
+                        client.Karma += SteerSubKarmaIncrease * deltaTime;
+                    }
+                }
             }
 
             if (client.Karma < KickBanThreshold && client.Connection != GameMain.Server.OwnerConnection)
