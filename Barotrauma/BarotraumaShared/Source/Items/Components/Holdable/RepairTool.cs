@@ -318,8 +318,7 @@ namespace Barotrauma.Items.Components
         private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            Gap leak = objective.OperateTarget as Gap;
-            if (leak == null) return true;
+            if (!(objective.OperateTarget is Gap leak)) { return true; }
 
             Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
             float dist = fromItemToLeak.Length();

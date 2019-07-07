@@ -198,11 +198,7 @@ namespace Barotrauma.Items.Components
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
 #if CLIENT
-                    if (sparkSounds.Count > 0)
-                    {
-                        var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
-                        SoundPlayer.PlaySound(sparkSound.Sound, pt.item.WorldPosition, sparkSound.Volume, sparkSound.Range,  pt.item.CurrentHull);
-                    }
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);                    
 
                     Vector2 baseVel = Rand.Vector(300.0f);
                     for (int i = 0; i < 10; i++)
