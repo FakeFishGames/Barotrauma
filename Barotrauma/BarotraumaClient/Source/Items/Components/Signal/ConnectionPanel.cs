@@ -70,8 +70,22 @@ namespace Barotrauma.Items.Components
             {
                 //delay reading the state until midround syncing is done
                 //because some of the wires connected to the panel may not exist yet
-                int bitsToRead = Connections.Count * Connection.MaxLinked * 16;
-                StartDelayedCorrection(type, msg.ExtractBits(bitsToRead), sendingTime, waitForMidRoundSync: true);
+                long msgStartPos = msg.Position;
+                foreach (Connection connection in Connections)
+                {
+                    for (int i = 0; i < Connection.MaxLinked; i++)
+                    {
+                        msg.ReadUInt16();
+                    }
+                }
+                ushort disconnectedWireCount = msg.ReadUInt16();
+                for (int i = 0; i < disconnectedWireCount; i++)
+                {
+                    msg.ReadUInt16();
+                }
+                int msgLength = (int)(msg.Position - msgStartPos);
+                msg.Position = msgStartPos;
+                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime, waitForMidRoundSync: true);
             }
             else
             {
@@ -106,6 +120,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            List<Wire> previousDisconnectedWires = new List<Wire>(DisconnectedWires);
             DisconnectedWires.Clear();
             ushort disconnectedWireCount = msg.ReadUInt16();
             for (int i = 0; i < disconnectedWireCount; i++)
@@ -135,6 +150,16 @@ namespace Barotrauma.Items.Components
                 if (wire.Item.ParentInventory == null && !connected)
                 {
                     wire.Item.Drop(null);
+                }
+            }
+
+            foreach (Wire disconnectedWire in previousDisconnectedWires)
+            {
+                if (disconnectedWire.Connections[0] == null &&
+                    disconnectedWire.Connections[1] == null &&
+                    !DisconnectedWires.Contains(disconnectedWire))
+                {
+                    disconnectedWire.Item.Drop(dropper: null);
                 }
             }
         }
