@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -90,18 +91,30 @@ namespace Barotrauma.Items.Components
                 section.Draw(spriteBatch, item.Color, drawOffset, depth, 0.3f);
             }
 
-            if (IsActive && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+
+            if (nodes.Count > 0)
             {
-                WireSection.Draw(
-                    spriteBatch,
-                    new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
-                    new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
-                    item.Color * 0.5f,
-                    depth,
-                    0.3f);
+                if (connections[0] == null)
+                {
+                    DrawHangingWire(spriteBatch, nodes[0] + drawOffset, depth);
+                }
+                if (connections[1] == null)
+                {
+                    DrawHangingWire(spriteBatch, nodes.Last() + drawOffset, depth);
+                }
+                if (IsActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+                {
+                    WireSection.Draw(
+                        spriteBatch,
+                        new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
+                        new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
+                        item.Color * 0.5f,
+                        depth,
+                        0.3f);
+                }
             }
 
-            if (!editing || !GameMain.SubEditorScreen.WiringMode) return;
+            if (!editing || !GameMain.SubEditorScreen.WiringMode) { return; }
 
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -125,6 +138,23 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        private void DrawHangingWire(SpriteBatch spriteBatch, Vector2 start, float depth)
+        {
+            float angle = (float)Math.Sin(GameMain.GameScreen.GameTime * 2.0f + item.ID) * 0.2f;
+            Vector2 endPos = start + new Vector2((float)Math.Sin(angle), -(float)Math.Cos(angle)) * 50.0f;
+
+            WireSection.Draw(
+                spriteBatch,
+                start, endPos,
+                Color.Orange, depth + 0.00001f, 0.2f);
+
+            WireSection.Draw(
+                spriteBatch,
+                start, start + (endPos - start) * 0.7f,
+                item.Color, depth, 0.3f);
+        }
+
 
         public static void UpdateEditing(List<Wire> wires)
         {

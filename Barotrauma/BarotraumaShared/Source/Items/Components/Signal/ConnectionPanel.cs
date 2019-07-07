@@ -15,6 +15,11 @@ namespace Barotrauma.Items.Components
 
         private Character user;
 
+        /// <summary>
+        /// Wires that have been disconnected from the panel, but not removed completely (visible at the bottom of the connection panel).
+        /// </summary>
+        public readonly HashSet<Wire> DisconnectedWires = new HashSet<Wire>();
+        
         [Serialize(false, true), Editable(ToolTip = "Locked connection panels cannot be rewired in-game.")]
         public bool Locked
         {
@@ -103,6 +108,23 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+#if CLIENT
+            foreach (Wire wire in DisconnectedWires)
+            {
+                if (Rand.Range(0.0f, 500.0f) < 1.0f)
+                {
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
+                    Vector2 baseVel = new Vector2(0.0f, -100.0f);
+                    for (int i = 0; i < 5; i++)
+                    {
+                        var particle = GameMain.ParticleManager.CreateParticle("spark", item.WorldPosition,
+                            baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
+                        if (particle != null) { particle.Size *= Rand.Range(0.5f, 1.0f); }
+                    }
+                }
+            }
+#endif
+
             if (user == null || user.SelectedConstruction != item)
             {
                 user = null;
@@ -192,11 +214,12 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            DisconnectedWires.Clear();
             foreach (Connection c in Connections)
             {
                 foreach (Wire wire in c.Wires)
                 {
-                    if (wire == null) continue;
+                    if (wire == null) { continue; }
 
                     if (wire.OtherConnection(c) == null) //wire not connected to anything else
                     {

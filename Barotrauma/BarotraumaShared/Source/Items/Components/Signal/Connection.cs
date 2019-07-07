@@ -222,6 +222,7 @@ namespace Barotrauma.Items.Components
             recipientsDirty = true;
             if (wire != null)
             {
+                ConnectionPanel.DisconnectedWires.Remove(wire);
                 var otherConnection = wire.OtherConnection(this);
                 if (otherConnection != null)
                 {
@@ -277,11 +278,9 @@ namespace Barotrauma.Items.Components
             
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wireId[i] == 0) continue;
+                if (wireId[i] == 0) { continue; }
 
-                Item wireItem = Entity.FindEntityByID(wireId[i]) as Item;
-
-                if (wireItem == null) continue;
+                if (!(Entity.FindEntityByID(wireId[i]) is Item wireItem)) { continue; }
                 wires[i] = wireItem.GetComponent<Wire>();
                 recipientsDirty = true;
 

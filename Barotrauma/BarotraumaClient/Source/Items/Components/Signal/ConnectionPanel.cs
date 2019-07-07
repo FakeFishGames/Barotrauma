@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawConnections(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (user != Character.Controlled || user == null) return;
+            if (user != Character.Controlled || user == null) { return; }
 
             HighlightedWire = null;
             Connection.DrawConnections(spriteBatch, this, user);
@@ -95,11 +95,10 @@ namespace Barotrauma.Items.Components
                 {
                     ushort wireId = msg.ReadUInt16();
 
-                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
-                    if (wireItem == null) continue;
+                    if (!(Entity.FindEntityByID(wireId) is Item wireItem)) { continue; }
 
                     Wire wireComponent = wireItem.GetComponent<Wire>();
-                    if (wireComponent == null) continue;
+                    if (wireComponent == null) { continue; }
 
                     newWires.Add(wireComponent);
 
