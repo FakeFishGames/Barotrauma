@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
             bool isCompressed = (incByte & 0x1) != 0;
             bool isConnectionInitializationStep = (incByte & 0x2) != 0;
 
-            DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
+            //DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
 
             if (isConnectionInitializationStep && initializationStep != ConnectionInitialization.Success)
             {
@@ -98,6 +98,7 @@ namespace Barotrauma.Networking
                 if (initializationStep != ConnectionInitialization.Success)
                 {
                     OnInitializationComplete?.Invoke();
+                    initializationStep = ConnectionInitialization.Success;
                 }
                 UInt16 length = inc.ReadUInt16();
                 IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, ServerConnection);

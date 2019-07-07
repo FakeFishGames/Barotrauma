@@ -252,16 +252,28 @@ namespace Barotrauma.Networking
 
             clientPeer = new LidgrenClientPeer(Name);
             clientPeer.OnStatusChanged += HandleStatusChanged;
-            clientPeer.OnInitializationComplete += () =>
+            clientPeer.OnInitializationComplete = () =>
             {
                 canStart = true;
+                connected = true;
+
+                if (Screen.Selected != GameMain.GameScreen)
+                {
+                    GameMain.NetLobbyScreen.Select();
+                }
+
+                chatBox.InputBox.Enabled = true;
+                if (GameMain.NetLobbyScreen?.TextBox != null)
+                {
+                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                }
             };
-            clientPeer.OnRequestPassword += (int salt, int retries) =>
+            clientPeer.OnRequestPassword = (int salt, int retries) =>
             {
                 if (pwRetries != retries) { requiresPw = true; }
                 pwRetries = retries;
             };
-            clientPeer.OnMessageReceived += ReadDataMessage;
+            clientPeer.OnMessageReceived = ReadDataMessage;
             
             System.Net.IPEndPoint IPEndPoint = null;
             try
@@ -1094,6 +1106,7 @@ namespace Barotrauma.Networking
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
+                DebugConsole.NewMessage(objHeader.ToString());
                 switch (objHeader)
                 {
                     case ServerNetObject.SYNC_IDS:

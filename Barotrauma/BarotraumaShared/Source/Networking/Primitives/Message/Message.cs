@@ -126,6 +126,12 @@ namespace Barotrauma.Networking
 
         internal static void Write(byte[] buf, ref int bitPos, String val)
         {
+            if (val == null)
+            {
+                Write7BitEncoded(buf, ref bitPos, 0);
+                return;
+            }
+
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             Write7BitEncoded(buf, ref bitPos, (UInt64)bytes.Length);
             for (int i = 0; i < val.Length; i++)
@@ -361,7 +367,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return lengthBits / 8;
+                return LengthBits / 8 + ((8-(LengthBits % 8))%8);
             }
         }
 
@@ -531,9 +537,9 @@ namespace Barotrauma.Networking
         public ReadOnlyMessage(byte[] inBuf, bool isCompressed, int startPos, int inLength, NetworkConnection sender)
         {
             Sender = sender;
-            byte[] decompressedData;
             if (isCompressed)
             {
+                byte[] decompressedData;
                 using (MemoryStream input = new MemoryStream(inBuf, startPos, inLength))
                 {
                     using (MemoryStream output = new MemoryStream())
@@ -543,15 +549,17 @@ namespace Barotrauma.Networking
                             dstream.CopyTo(output);
                         }
                         decompressedData = output.ToArray();
-                        inLength = decompressedData.Length;
                     }
                 }
+                Array.Copy(decompressedData, 0, buf, 0, decompressedData.Length);
+                lengthBits = decompressedData.Length * 8;
             }
             else
             {
-                decompressedData = inBuf;
+                Array.Copy(inBuf, startPos, buf, 0, inLength);
+                lengthBits = inLength * 8;
             }
-            Array.Copy(inBuf, buf, inLength);
+            seekPos = 0;
         }
 
         public bool ReadBoolean()

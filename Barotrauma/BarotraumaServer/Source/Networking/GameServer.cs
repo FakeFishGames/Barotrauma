@@ -128,6 +128,9 @@ namespace Barotrauma.Networking
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
                 serverPeer = new LidgrenServerPeer(OwnerKey, serverSettings);
 
+                serverPeer.OnInitializationComplete = OnInitializationComplete;
+                serverPeer.OnMessageReceived = ReadDataMessage;
+
                 fileSender = new FileSender(serverPeer, 1300);
                 fileSender.OnEnded += FileTransferChanged;
                 fileSender.OnStarted += FileTransferChanged;
@@ -178,6 +181,68 @@ namespace Barotrauma.Networking
             GameAnalyticsManager.AddDesignEvent("GameServer:Start");
 
             yield return CoroutineStatus.Success;
+        }
+
+        private void OnInitializationComplete(NetworkConnection connection)
+        {
+            string clName = connection.Name;
+            Client newClient = new Client(clName, GetNewClientID());
+            newClient.InitClientSync();
+            newClient.Connection = connection;
+            newClient.SteamID = connection.SteamID;
+            ConnectedClients.Add(newClient);
+
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(newClient));
+            if (previousPlayer != null)
+            {
+                foreach (Client c in previousPlayer.KickVoters)
+                {
+                    if (!connectedClients.Contains(c)) { continue; }
+                    newClient.AddKickVote(c);
+                }
+            }
+
+            LastClientListUpdateID++;
+
+            if (newClient.Connection == OwnerConnection)
+            {
+                newClient.GivePermission(ClientPermissions.All);
+                newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);
+
+                GameMain.Server.UpdateClientPermissions(newClient);
+                GameMain.Server.SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
+            }
+
+            GameMain.Server.SendChatMessage($"ServerMessage.JoinedServer~[client]={clName}", ChatMessageType.Server, null);
+            serverSettings.ServerDetailsChanged = true;
+
+            if (previousPlayer != null && previousPlayer.Name != newClient.Name)
+            {
+                GameMain.Server.SendChatMessage($"ServerMessage.PreviousClientName~[client]={clName}~[previousname]={previousPlayer.Name}", ChatMessageType.Server, null);
+                previousPlayer.Name = newClient.Name;
+            }
+
+            var savedPermissions = serverSettings.ClientPermissions.Find(cp =>
+                cp.SteamID > 0 ?
+                cp.SteamID == newClient.SteamID :
+                newClient.IPMatches(cp.IP));
+
+            if (savedPermissions != null)
+            {
+                newClient.SetPermissions(savedPermissions.Permissions, savedPermissions.PermittedCommands);
+            }
+            else
+            {
+                var defaultPerms = PermissionPreset.List.Find(p => p.Name == "None");
+                if (defaultPerms != null)
+                {
+                    newClient.SetPermissions(defaultPerms.Permissions, defaultPerms.PermittedCommands);
+                }
+                else
+                {
+                    newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
+                }
+            }
         }
 
         private IEnumerable<object> RegisterToMasterServer()
@@ -556,9 +621,9 @@ namespace Barotrauma.Networking
             }
         }
         
-        private void ReadDataMessage(IReadMessage inc)
+        private void ReadDataMessage(NetworkConnection sender, IReadMessage inc)
         {
-            var connectedClient = connectedClients.Find(c => c.Connection == inc.Sender);
+            var connectedClient = connectedClients.Find(c => c.Connection == sender);
 
             ClientPacketHeader header = (ClientPacketHeader)inc.ReadByte();
             switch (header)
