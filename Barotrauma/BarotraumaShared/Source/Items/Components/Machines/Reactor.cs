@@ -74,14 +74,14 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until a meltdown occurs."), Serialize(30.0f, true)]
+        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until a meltdown occurs."), Serialize(120.0f, true)]
         public float MeltdownDelay
         {
             get { return meltDownDelay; }
             set { meltDownDelay = Math.Max(value, 0.0f); }
         }
 
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until the reactor catches fire."), Serialize(10.0f, true)]
+        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until the reactor catches fire."), Serialize(30.0f, true)]
         public float FireDelay
         {
             get { return fireDelay; }
@@ -130,6 +130,13 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;
                 fuelConsumptionRate = Math.Max(value, 0.0f);
             }
+        }
+
+        [Serialize(false, true)]
+        public bool TemperatureCritical
+        {
+            get { return temperature > allowedTemperature.Y; }
+            set { /*do nothing*/ }
         }
 
         private float correctTurbineOutput;

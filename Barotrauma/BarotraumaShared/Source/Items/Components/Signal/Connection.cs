@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
 
         public readonly bool IsOutput;
         
-        public readonly List<StatusEffect> effects;
+        public readonly List<StatusEffect> Effects;
 
         public readonly ushort[] wireId;
 
@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
 
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
-            effects = new List<StatusEffect>();
+            Effects = new List<StatusEffect>();
 
             wireId = new ushort[MaxLinked];
 
@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
                         break;
 
                     case "statuseffect":
-                        effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
+                        Effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
                         break;
                 }
             }
@@ -252,10 +252,10 @@ namespace Barotrauma.Items.Components
                 }
 
                 bool broken = recipient.Item.Condition <= 0.0f;
-                foreach (StatusEffect effect in recipient.effects)
+                foreach (StatusEffect effect in recipient.Effects)
                 {
                     if (broken && effect.type != ActionType.OnBroken) continue;
-                    recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
+                    recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false);
                 }
             }
         }

@@ -451,7 +451,7 @@ namespace Barotrauma.Items.Components
                     }
 
                     bool broken = recipient.Item.Condition <= 0.0f;
-                    foreach (StatusEffect effect in recipient.effects)
+                    foreach (StatusEffect effect in recipient.Effects)
                     {
                         if (broken && effect.type != ActionType.OnBroken) continue;
                         recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
