@@ -96,7 +96,6 @@ namespace Barotrauma.Items.Components
                     ushort wireId = msg.ReadUInt16();
 
                     if (!(Entity.FindEntityByID(wireId) is Item wireItem)) { continue; }
-
                     Wire wireComponent = wireItem.GetComponent<Wire>();
                     if (wireComponent == null) { continue; }
 
@@ -107,16 +106,33 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            DisconnectedWires.Clear();
+            ushort disconnectedWireCount = msg.ReadUInt16();
+            for (int i = 0; i < disconnectedWireCount; i++)
+            {
+                ushort wireId = msg.ReadUInt16();
+                if (!(Entity.FindEntityByID(wireId) is Item wireItem)) { continue; }
+                Wire wireComponent = wireItem.GetComponent<Wire>();
+                if (wireComponent == null) { continue; }
+                DisconnectedWires.Add(wireComponent);
+            }
+
             foreach (Wire wire in prevWires)
             {
-                if (wire.Connections[0] == null && wire.Connections[1] == null)
+                bool connected = wire.Connections[0] != null || wire.Connections[1] != null;
+                if (!connected)
                 {
-                    wire.Item.Drop(null);
+                    foreach (Item item in Item.ItemList)
+                    {
+                        var connectionPanel = item.GetComponent<ConnectionPanel>();
+                        if (connectionPanel != null && connectionPanel.DisconnectedWires.Contains(wire))
+                        {
+                            connected = true;
+                            break;
+                        }
+                    }
                 }
-                //wires that are not in anyone's inventory (i.e. not currently being rewired) can never be connected to only one connection
-                // -> someone must have dropped the wire from the connection panel
-                else if (wire.Item.ParentInventory == null &&
-                    (wire.Connections[0] != null ^ wire.Connections[1] != null))
+                if (wire.Item.ParentInventory == null && !connected)
                 {
                     wire.Item.Drop(null);
                 }

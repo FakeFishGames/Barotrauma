@@ -79,9 +79,9 @@ namespace Barotrauma.Items.Components
                         (draggingConnected.Connections.Contains(c) && draggingConnected.Connections.Contains(null)))
                     {
                         int linkIndex = c.FindWireIndex(draggingConnected.Item);
-                        if (linkIndex > -1)
+                        if (linkIndex > -1 || panel.DisconnectedWires.Contains(draggingConnected))
                         {
-                            Inventory.draggingItem = c.wires[linkIndex].Item;
+                            Inventory.draggingItem = draggingConnected.Item;
                         }
                     }
                 }

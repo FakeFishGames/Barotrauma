@@ -242,6 +242,12 @@ namespace Barotrauma.Items.Components
                     msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
+
+            msg.Write((ushort)DisconnectedWires.Count());
+            foreach (Wire disconnectedWire in DisconnectedWires)
+            {
+                msg.Write(disconnectedWire.Item.ID);
+            }
         }
     }
 }

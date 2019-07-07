@@ -91,16 +91,12 @@ namespace Barotrauma.Items.Components
                 section.Draw(spriteBatch, item.Color, drawOffset, depth, 0.3f);
             }
 
-
             if (nodes.Count > 0)
             {
-                if (connections[0] == null)
+                if (!IsActive)
                 {
-                    DrawHangingWire(spriteBatch, nodes[0] + drawOffset, depth);
-                }
-                if (connections[1] == null)
-                {
-                    DrawHangingWire(spriteBatch, nodes.Last() + drawOffset, depth);
+                    if (connections[0] == null) { DrawHangingWire(spriteBatch, nodes[0] + drawOffset, depth); }
+                    if (connections[1] == null) { DrawHangingWire(spriteBatch, nodes.Last() + drawOffset, depth); }
                 }
                 if (IsActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
                 {

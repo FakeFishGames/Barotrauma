@@ -1602,9 +1602,16 @@ namespace Barotrauma
                 //locked wires are never interactable
                 if (wire.Locked) return false;
 
-                //wires are interactable if the character has selected either of the items the wire is connected to
-                if (wire.Connections[0]?.Item != null && SelectedConstruction == wire.Connections[0].Item) return true;
-                if (wire.Connections[1]?.Item != null && SelectedConstruction == wire.Connections[1].Item) return true;
+                //wires are interactable if the character has selected an item the wire is connected to,
+                //and it's disconnected from the other end
+                if (wire.Connections[0]?.Item != null && SelectedConstruction == wire.Connections[0].Item)
+                {
+                    return wire.Connections[1] == null;
+                }
+                if (wire.Connections[1]?.Item != null && SelectedConstruction == wire.Connections[1].Item)
+                {
+                    return wire.Connections[0] == null;
+                }
             }
 
             if (checkLinked && item.DisplaySideBySideWhenLinked)

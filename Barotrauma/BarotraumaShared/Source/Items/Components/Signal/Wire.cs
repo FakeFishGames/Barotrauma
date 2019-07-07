@@ -467,8 +467,11 @@ namespace Barotrauma.Items.Components
             foreach (Item item in Item.ItemList)
             {
                 var connectionPanel = item.GetComponent<ConnectionPanel>();
-                if (connectionPanel != null)
+                if (connectionPanel != null && connectionPanel.DisconnectedWires.Contains(this))
                 {
+#if SERVER
+                    connectionPanel.Item.CreateServerEvent(connectionPanel);
+#endif
                     connectionPanel.DisconnectedWires.Remove(this);
                 }
             }
