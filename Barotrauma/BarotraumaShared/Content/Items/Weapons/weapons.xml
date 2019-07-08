@@ -697,12 +697,12 @@
       <RequiredItem identifier="iron"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64" />
-    <Sprite texture="tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Tools/tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" stun="0.6">
         <Affliction identifier="internaldamage" strength="8" />
-        <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/honk.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
   </Item>
