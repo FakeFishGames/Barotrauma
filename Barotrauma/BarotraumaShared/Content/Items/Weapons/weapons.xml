@@ -200,24 +200,23 @@
   </Item>
 
   <Item name="SMG Magazine" identifier="smgmagazine" scale="0.5" category="Equipment" linkable="true" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="30" />
+    <Price locationtype="City" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="plastic" copycondition="true"/>
     </Deconstruct>
-    <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredItem identifier="plastic"/>
-    </Fabricate>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
     <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="smground" />
+      <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
       <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
         <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
       </StatusEffect>
     </ItemContainer>
+    <!--Magazines can be combined to raise condition.-->
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" />
-
   </Item>
 
   <Item name="SMG" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
@@ -238,6 +237,7 @@
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="12.0" />
       </StatusEffect>
+      <!--"Use" contained magazine to spawn projectiles.-->
       <StatusEffect type="OnUse" target="Contained">
         <Use />
       </StatusEffect>
@@ -499,11 +499,10 @@
   </Item>
   
   <Item name="Diving Knife" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
-    <!-- TODO: adjust prices -->
-    <Price locationtype="City" buyprice="20" />
-    <Price locationtype="Research" buyprice="20" />
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
-    <Price locationtype="Outpost" buyprice="30" />
+    <Price locationtype="Outpost" buyprice="20" />
     <Deconstruct time="10">
       <Item identifier="iron" />
     </Deconstruct>
@@ -530,11 +529,6 @@
       <Item identifier="steel" />
       <Item identifier="titaniumaluminiumalloy" />
     </Deconstruct>
-    <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="50"/>
-      <RequiredItem identifier="steel"/>
-      <RequiredItem identifier="titaniumaluminiumalloy"/>
-    </Fabricate>
     <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" />
     <Body width="90" height="30" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
@@ -548,6 +542,7 @@
       <RequiredItems identifiers="40mmgrenade" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="60" />
     </RangedWeapon>
+    <!--Holds one grenade at a time-->
     <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable identifiers="40mmgrenade" />
@@ -555,8 +550,8 @@
   </Item>
 
   <Item name="40mm Grenade" identifier="40mmgrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
-    <Price locationtype="Military" buyprice="150" />
-    <Price locationtype="City" buyprice="200" />
+    <Price locationtype="Military" buyprice="60" />
+    <Price locationtype="City" buyprice="100" />
     <Deconstruct time="5">
       <Item identifier="iron" />
       <Item identifier="uex" />
@@ -576,6 +571,7 @@
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
+      <!--Grenade launcher ammo explodes on impact-->
       <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
         <Explosion range="250.0" structuredamage="5" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="40" />
@@ -599,11 +595,6 @@
       <Item identifier="steel" />
       <Item identifier="titaniumaluminiumalloy" />
     </Deconstruct>
-    <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="50"/>
-      <RequiredItem identifier="steel"/>
-      <RequiredItem identifier="titaniumaluminiumalloy"/>
-    </Fabricate>
     <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" />
     <Body width="90" height="30" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
@@ -624,10 +615,13 @@
   </Item>
   
   <Item name="Shotgun Shell" identifier="shotgunshell" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="City" buyprice="15" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" />
     <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
     <Body width="8" height="3" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
+    <!--When fired, spawns 8 projectiles simultaneously.-->
     <Projectile characterusable="false" hitscan="true" hitscancount="8" removeonhit="true" spread="15">
       <Attack structuredamage="0.5" stun="0.125" targetforce="5">
         <Affliction identifier="gunshotwound" strength="6" />
@@ -656,7 +650,6 @@
       <Sound file="Content/Items/Weapons/Revolver3.ogg" type="OnUse" range="3000" />
       <StatusEffect type="OnUse" target="Contained">
         <Explosion range="100.0" force="2" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="2.0" />
-        <SpawnItem identifiers="stungundart" spawnposition="ContainedInventory" />
       </StatusEffect>
       <RequiredItems identifier="stungundart" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="20" />
@@ -672,6 +665,7 @@
     <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
     <Body width="8" height="3" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
+    <!--Non-lethal projectile sticks to characters and stuns them for 10 seconds.-->
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="0" targetforce="2">
         <Affliction identifier="stun" strength="10" />
@@ -683,17 +677,13 @@
   </Item>
 
   <Item name="Toy Hammer" identifier="toyhammer" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
-    <Price locationtype="City" buyprice="10" />
-    <Price locationtype="Research" buyprice="10" />
-    <Price locationtype="Military" buyprice="10" />
-    <Price locationtype="Mine" buyprice="10" />
-    <Price locationtype="Outpost" buyprice="10" />
     <Deconstruct time="10">
-      <Item identifier="iron" />
+      <Item identifier="bikehorn" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="iron"/>
+      <RequiredItem identifier="bikehorn"/>
+      <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64" />
     <Sprite texture="Content/Items/Tools/tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
