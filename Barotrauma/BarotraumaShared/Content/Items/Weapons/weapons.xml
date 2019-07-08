@@ -150,6 +150,9 @@
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
+      <StatusEffect type="OnImpact">
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
     </Projectile>
   </Item>
   
@@ -181,18 +184,18 @@
   </Item>  
   
   <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
-    <Price locationtype="Military" buyprice="35" />
-    <Price locationtype="City" buyprice="70" />
-    <Price locationtype="Outpost" buyprice="70" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" />
     <Sprite texture="weapons.png" sourcerect="1,1,16,9" depth="0.55" />
     <Body width="8" height="3" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
-    <Projectile characterusable="false" hitscan="true" removeonhit="true">
+    <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="8" unskilledspread="15">
       <Attack structuredamage="2.5" stun="0.125" targetforce="5">
         <Affliction identifier="gunshotwound" strength="15" />
         <Affliction identifier="internaldamage" strength="10" />
       </Attack>
+      <StatusEffect type="OnImpact">
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
     </Projectile>
   </Item>
 
@@ -224,10 +227,10 @@
       <Item identifier="steel" />
       <Item identifier="plastic" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64" />
-    <Sprite texture="weapons_new.png" sourcerect="0,0,117,64" depth="0.55" />
-    <Body width="28" height="20" density="50" />
-    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect"/>
+    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64" />-->
+    <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" />
+    <Body width="90" height="30" density="50" />
+    <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
     <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="90">
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/Revolver2.ogg" type="OnUse" range="3000" />
@@ -261,11 +264,6 @@
       <Item identifier="steel" />
       <Item identifier="plastic" />
     </Deconstruct>
-    <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="steel"/>
-      <RequiredItem identifier="plastic"/>
-    </Fabricate>
     <!-- physics body -->
     <Body width="215" height="119" density="40" />
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
@@ -614,7 +612,7 @@
       <Sound file="Content/Items/Weapons/Revolver2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/Revolver3.ogg" type="OnUse" range="3000" />
       <StatusEffect type="OnUse">
-        <Explosion range="150.0" force="5" shockwave="true" smoke="false" flames="true" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
+        <Explosion range="150.0" force="5" shockwave="true" smoke="false" Fflash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <RequiredItems identifiers="shotgunshell" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="60" />
@@ -676,7 +674,7 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="0" targetforce="2">
-        <Affliction identifier="stun" strength="20" />
+        <Affliction identifier="stun" strength="10" />
       </Attack>
       <StatusEffect type="OnImpact" target="This">
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
