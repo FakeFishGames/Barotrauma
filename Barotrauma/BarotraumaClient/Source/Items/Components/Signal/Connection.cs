@@ -75,7 +75,8 @@ namespace Barotrauma.Items.Components
                 if (draggingConnected != null)
                 {
                     //the wire can only be dragged out if it's not connected to anything at the other end
-                    if ((draggingConnected.Connections[0] == null && draggingConnected.Connections[1] == null) ||
+                    if (Screen.Selected == GameMain.SubEditorScreen ||
+                        (draggingConnected.Connections[0] == null && draggingConnected.Connections[1] == null) ||
                         (draggingConnected.Connections.Contains(c) && draggingConnected.Connections.Contains(null)))
                     {
                         int linkIndex = c.FindWireIndex(draggingConnected.Item);
@@ -176,7 +177,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wires[i] == null || wires[i].Hidden || (draggingConnected == wires[i] && mouseIn)) { continue; }
+                if (wires[i] == null || wires[i].Hidden || (draggingConnected == wires[i] && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
                 string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
