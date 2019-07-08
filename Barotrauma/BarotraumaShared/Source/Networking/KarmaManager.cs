@@ -41,6 +41,8 @@ namespace Barotrauma
 
         [Serialize(0.1f, false)]
         public float DamageEnemyKarmaIncrease { get; set; }
+        [Serialize(0.2f, false)]
+        public float HealFriendlyKarmaIncrease { get; set; }
         [Serialize(0.25f, false)]
         public float DamageFriendlyKarmaDecrease { get; set; }
 

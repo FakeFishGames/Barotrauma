@@ -3240,6 +3240,9 @@
   <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
   <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
   
+  <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
+  <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
+  
   <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
   <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
 
@@ -3262,7 +3265,7 @@
   <Karma.SpamFilterKarmaDecreaseTooltip>How much karma decreases if a player triggers the spam filter of the text chat.</Karma.SpamFilterKarmaDecreaseTooltip>
 
   <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
-  <Karma.HerpesThreshold>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThreshold>
+  <Karma.HerpesThresholdToolTip>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThresholdToolTip>
   
   <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
   <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>

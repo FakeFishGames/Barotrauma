@@ -13,7 +13,7 @@ namespace Barotrauma
 
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
         {
-            GameMain.Server.KarmaManager.OnCharacterAttacked(this, attacker, attackResult);
+            GameMain.Server.KarmaManager.OnCharacterHealthChanged(this, attacker, attackResult.Damage);
         }
 
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction)

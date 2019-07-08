@@ -99,9 +99,9 @@ namespace Barotrauma
                 if (client.Karma < 20)                
                     herpesStrength = 100.0f;                
                 else if (client.Karma < 30)                
-                    herpesStrength = 0.6f;                
+                    herpesStrength = 60.0f;                
                 else if (client.Karma < 40.0f)
-                    herpesStrength = 0.3f;
+                    herpesStrength = 30.0f;
                 
                 var existingAffliction = client.Character.CharacterHealth.GetAffliction<AfflictionSpaceHerpes>("spaceherpes");
                 if (existingAffliction == null && herpesStrength > 0.0f)
@@ -151,7 +151,7 @@ namespace Barotrauma
             clientMemories.Remove(client);
         }
 
-        public void OnCharacterAttacked(Character target, Character attacker, AttackResult attackResult)
+        public void OnCharacterHealthChanged(Character target, Character attacker, float damage)
         {
             if (target == null || attacker == null) { return; }
 
@@ -172,11 +172,18 @@ namespace Barotrauma
 
             if (target.AIController is EnemyAIController || target.TeamID != attacker.TeamID)
             {
-                AdjustKarma(attacker, attackResult.Damage * DamageEnemyKarmaIncrease);
+                if (damage > 0) { AdjustKarma(attacker, damage * DamageEnemyKarmaIncrease); }
             }
             else
             {
-                AdjustKarma(attacker, -attackResult.Damage * DamageFriendlyKarmaDecrease);
+                if (damage > 0)
+                {
+                    AdjustKarma(attacker, -damage * DamageFriendlyKarmaDecrease);
+                }
+                else
+                {
+                    AdjustKarma(attacker, -damage * HealFriendlyKarmaIncrease);
+                }
             }
         }
 

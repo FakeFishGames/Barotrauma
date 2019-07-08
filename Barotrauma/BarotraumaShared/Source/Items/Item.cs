@@ -1718,7 +1718,7 @@ namespace Barotrauma
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
 
-                if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     GameMain.NetworkMember.CreateEntityEvent(this, new object[]
                     {

@@ -23,6 +23,7 @@ namespace Barotrauma
             };
 
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "StructureRepairKarmaIncrease");
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "HealFriendlyKarmaIncrease");
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "DamageEnemyKarmaIncrease");
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "ItemRepairKarmaIncrease");
             CreateLabeledSlider(parent, 0.0f, 10.0f, 0.05f, "ExtinguishFireKarmaIncrease");
@@ -51,13 +52,13 @@ namespace Barotrauma
             };
 
             string labelText = TextManager.Get("Karma." + propertyName);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform),
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.8f), container.RectTransform),
                 labelText, font: GUI.SmallFont)
             {
                 ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
             };
 
-            var slider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform), barSize: 0.1f)
+            var slider = new GUIScrollBar(new RectTransform(new Vector2(0.3f, 0.8f), container.RectTransform), barSize: 0.1f)
             {
                 Step = step <= 0.0f ? 0.0f : step / (max - min),
                 Range = new Vector2(min, max),
