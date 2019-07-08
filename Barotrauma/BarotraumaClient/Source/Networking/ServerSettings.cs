@@ -536,8 +536,6 @@ namespace Barotrauma.Networking
             var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
 
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
-            /*var traitorRatioText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Traitor ratio: 20 %", "", settingsTabs[1], GUI.SmallFont);
-            var traitorRatioSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);*/
             var traitorRatioSlider = slider;
             traitorRatioBox.OnSelected = (GUITickBox) =>
             {
@@ -759,17 +757,22 @@ namespace Barotrauma.Networking
                 style: "InnerFrame");
             karmaPresetDD.OnSelected = (selected, obj) =>
             {
-                KarmaPreset = obj as string;
-                GameMain.NetworkMember.KarmaManager.SelectPreset(KarmaPreset);
-                karmaSettingsList.Content.ClearChildren();
-                karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
-
                 List<NetPropertyData> properties = netProperties.Values.ToList();
                 List<object> prevValues = new List<object>();
                 foreach (NetPropertyData prop in netProperties.Values)
                 {
                     prevValues.Add(prop.TempValue);
+                    if (prop.GUIComponent != null) { prop.Value = prop.GUIComponentValue; }
                 }
+                if (KarmaPreset == "custom")
+                {
+                    GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
+                    GameMain.NetworkMember?.KarmaManager?.Save();
+                }
+                KarmaPreset = obj as string;
+                GameMain.NetworkMember.KarmaManager.SelectPreset(KarmaPreset);
+                karmaSettingsList.Content.ClearChildren();
+                karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
                 GameMain.NetworkMember.KarmaManager.CreateSettingsFrame(karmaSettingsList.Content);
                 for (int i = 0; i < netProperties.Count; i++)
                 {
@@ -796,7 +799,6 @@ namespace Barotrauma.Networking
             //--------------------------------------------------------------------------------
 
             Whitelist.CreateWhiteListFrame(settingsTabs[(int)SettingsTab.Whitelist]);
-
         }
 
         private void CreateLabeledSlider(GUIComponent parent, string labelTag, out GUIScrollBar slider, out GUITextBlock label)
@@ -832,6 +834,11 @@ namespace Barotrauma.Networking
         {
             if (settingsFrame == null)
             {
+                if (KarmaPreset == "custom")
+                {
+                    GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
+                    GameMain.NetworkMember?.KarmaManager?.Save();
+                }
                 CreateSettingsFrame();
             }
             else
@@ -845,45 +852,6 @@ namespace Barotrauma.Networking
             }
 
             return false;
-        }
-
-        public void ManagePlayersFrame(GUIFrame infoFrame)
-        {
-            GUIListBox cList = new GUIListBox(new RectTransform(Vector2.One, infoFrame.RectTransform));
-            /*foreach (Client c in ConnectedClients)
-            {
-                var frame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), cList.Content.RectTransform),
-                    c.Name + " (" + c.Connection.RemoteEndPoint.Address.ToString() + ")", style: "ListBoxElement")
-                {
-                    Color = (c.InGame && c.Character != null && !c.Character.IsDead) ? Color.Gold * 0.2f : Color.Transparent,
-                    HoverColor = Color.LightGray * 0.5f,
-                    SelectedColor = Color.Gold * 0.5f
-                };
-
-                var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.85f), frame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) },
-                    isHorizontal: true);
-
-                var kickButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
-                    TextManager.Get("Kick"))
-                {
-                    UserData = c.Name,
-                    OnClicked = GameMain.NetLobbyScreen.KickPlayer
-                };
-
-                var banButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
-                    TextManager.Get("Ban"))
-                {
-                    UserData = c.Name,
-                    OnClicked = GameMain.NetLobbyScreen.BanPlayer
-                };
-
-                var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
-                    TextManager.Get("BanRange"))
-                {
-                    UserData = c.Name,
-                    OnClicked = GameMain.NetLobbyScreen.BanPlayerRange
-                };
-            }*/ //TODO: reimplement
         }
     }
 }

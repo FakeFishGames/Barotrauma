@@ -206,6 +206,10 @@ namespace Barotrauma.Networking
                 doc.Save(writer);
             }
 
+            if (KarmaPreset == "custom")
+            {
+                GameMain.Server?.KarmaManager?.SaveCustomPreset();
+            }
             GameMain.Server?.KarmaManager?.Save();
         }
 

@@ -2,10 +2,7 @@
 using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -276,30 +273,6 @@ namespace Barotrauma
             if (client == null) { return; }
 
             client.Karma += amount;
-        }
-
-        public void Save()
-        {
-            XDocument doc = new XDocument(new XElement(Name));
-            SerializableProperty.SerializeProperties(this, doc.Root, true);
-
-            foreach (KeyValuePair<string, XElement> preset in Presets)
-            {
-                if (preset.Key.ToLowerInvariant() == "custom") { continue; }
-                doc.Root.Add(preset.Value);
-            }
-
-            XmlWriterSettings settings = new XmlWriterSettings
-            {
-                Indent = true,
-                NewLineOnAttributes = true
-            };
-
-            using (var writer = XmlWriter.Create(ConfigFile, settings))
-            {
-                doc.Save(writer);
-            }
-        }
-
+        }        
     }
 }

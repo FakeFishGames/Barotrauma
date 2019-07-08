@@ -104,6 +104,7 @@ namespace Barotrauma.Networking
             public object Value
             {
                 get { return property.GetValue(parentObject); }
+                set { property.SetValue(parentObject, value); }
             }
             
             public NetPropertyData(object parentObject, SerializableProperty property, string typeString)
