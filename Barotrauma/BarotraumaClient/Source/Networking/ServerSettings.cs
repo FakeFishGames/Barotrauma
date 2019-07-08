@@ -731,7 +731,7 @@ namespace Barotrauma.Networking
 
             CreateLabeledSlider(antigriefingTab, "ServerSettingsAutobanTime", out slider, out sliderLabel);
             string autobanLabel = sliderLabel.Text + " ";
-            slider.Step = 0.05f;
+            slider.Step = 0.01f;
             slider.Range = new Vector2(0.0f, MaxAutoBanTime);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
@@ -762,7 +762,7 @@ namespace Barotrauma.Networking
                 KarmaPreset = obj as string;
                 GameMain.NetworkMember.KarmaManager.SelectPreset(KarmaPreset);
                 karmaSettingsList.Content.ClearChildren();
-                karmaSettingsBlocker.Visible = !KarmaEnabled || KarmaPreset != "custom";
+                karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
 
                 List<NetPropertyData> properties = netProperties.Values.ToList();
                 List<object> prevValues = new List<object>();
