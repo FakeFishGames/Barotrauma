@@ -153,6 +153,7 @@ namespace Barotrauma
         public void OnCharacterHealthChanged(Character target, Character attacker, float damage)
         {
             if (target == null || attacker == null) { return; }
+            if (target == attacker) { return; }
 
             bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
             if (GameMain.Server.TraitorManager != null)
