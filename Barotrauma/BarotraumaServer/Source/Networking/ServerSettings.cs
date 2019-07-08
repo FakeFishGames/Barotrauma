@@ -205,6 +205,8 @@ namespace Barotrauma.Networking
             {
                 doc.Save(writer);
             }
+
+            GameMain.Server?.KarmaManager?.Save();
         }
 
         private void LoadSettings()

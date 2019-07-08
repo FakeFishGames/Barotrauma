@@ -259,6 +259,12 @@ namespace Barotrauma
             XDocument doc = new XDocument(new XElement(Name));
             SerializableProperty.SerializeProperties(this, doc.Root, true);
 
+            foreach (KeyValuePair<string, XElement> preset in Presets)
+            {
+                if (preset.Key.ToLowerInvariant() == "custom") { continue; }
+                doc.Root.Add(preset.Value);
+            }
+
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 Indent = true,
