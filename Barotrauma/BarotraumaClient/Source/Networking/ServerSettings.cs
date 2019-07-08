@@ -767,7 +767,7 @@ namespace Barotrauma.Networking
             karmaPresetDD.SelectItem(KarmaPreset);
             karmaBox.OnSelected = (tb) =>
             {
-                karmaSettingsBlocker.Visible = !tb.Selected;
+                karmaSettingsBlocker.Visible = !tb.Selected || KarmaPreset != "custom";
                 return true;
             };
 
