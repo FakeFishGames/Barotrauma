@@ -1885,7 +1885,7 @@ namespace Barotrauma.Networking
                 {
                     for (int i = 0; i < TraitorManager.TraitorList.Count; i++)
                     {
-                        Log(TraitorManager.TraitorList[i].Character.Name + " is the traitor and the target is " + TraitorManager.TraitorList[i].TargetCharacter.Name, ServerLog.MessageType.ServerMessage);
+                        Log(string.Format("{0} is the traitor and the current task is {1}.", TraitorManager.TraitorList[i].Character.Name, TraitorManager.TraitorList[i].CurrentTask != null ? TraitorManager.TraitorList[i].DebugInfo : "(empty)"), ServerLog.MessageType.ServerMessage); ;
                     }
                 }
             }

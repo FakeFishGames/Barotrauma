@@ -919,7 +919,14 @@ namespace Barotrauma
                 if (traitorManager == null) return;
                 foreach (Traitor t in traitorManager.TraitorList)
                 {
-                    NewMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", Color.Cyan);
+                    if (t.CurrentTask != null)
+                    {
+                        NewMessage(string.Format("- Traitor {0} 's current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfo), Color.Cyan);
+                    }
+                    else
+                    {
+                        NewMessage(string.Format("- Traitor {0} has no current task.", t.Character.Name), Color.Cyan);
+                    }
                 }
                 NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
             }));
@@ -929,7 +936,14 @@ namespace Barotrauma
                 if (traitorManager == null) return;
                 foreach (Traitor t in traitorManager.TraitorList)
                 {
-                    GameMain.Server.SendConsoleMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", client);
+                    if (t.CurrentTask != null)
+                    {
+                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0} 's current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfo), client);
+                    }
+                    else
+                    {
+                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0} has no current task.", t.Character.Name), client);
+                    }
                 }
                 GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
             });
