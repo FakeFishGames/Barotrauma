@@ -171,7 +171,12 @@ namespace Barotrauma
 
             if (target.AIController is EnemyAIController || target.TeamID != attacker.TeamID)
             {
-                if (damage > 0) { AdjustKarma(attacker, damage * DamageEnemyKarmaIncrease); }
+                if (damage > 0)
+                {
+                    float karmaIncrease = damage * DamageEnemyKarmaIncrease;
+                    if (attacker?.Info?.Job.Prefab.Identifier == "securityofficer") { karmaIncrease *= 2.0f; }
+                    AdjustKarma(attacker, karmaIncrease);
+                }
             }
             else
             {
@@ -181,7 +186,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    AdjustKarma(attacker, -damage * HealFriendlyKarmaIncrease);
+                    float karmaIncrease = -damage * HealFriendlyKarmaIncrease;
+                    if (attacker?.Info?.Job.Prefab.Identifier == "medicaldoctor") { karmaIncrease *= 2.0f; }
+                    AdjustKarma(attacker, karmaIncrease);
                 }
             }
         }
