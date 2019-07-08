@@ -58,7 +58,7 @@ namespace Barotrauma
             foreach (Client client in clients)
             {
                 float karmaChange = client.Karma - clientMemories[client].PreviousNotifiedKarma;
-                if (karmaChange > KarmaNotificationInterval)
+                if (Math.Abs(karmaChange) > KarmaNotificationInterval)
                 {
                     if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
                     {
@@ -126,7 +126,6 @@ namespace Barotrauma
                             //engineers don't lose as much karma for removing lots of wires
                             if (client.Character.Info?.Job.Prefab.Identifier == "engineer") { karmaDecrease *= 0.5f; }
                             AdjustKarma(client.Character, karmaDecrease);
-                            clientMemory.WireDisconnectTime.Clear();
                         }
                     }
                 }

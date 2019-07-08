@@ -12,9 +12,9 @@ namespace Barotrauma
             CreateLabeledSlider(parent, 0.0f, 40.0f, 1.0f, "KickBanThreshold");
             CreateLabeledSlider(parent, 0.0f, 50.0f, 1.0f, "HerpesThreshold");
 
-            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "KarmaDecay");
+            CreateLabeledSlider(parent, 0.0f, 0.5f, 0.01f, "KarmaDecay");
             CreateLabeledSlider(parent, 50.0f, 100.0f, 1.0f, "KarmaDecayThreshold");
-            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.05f, "KarmaIncrease");
+            CreateLabeledSlider(parent, 0.0f, 0.5f, 0.01f, "KarmaIncrease");
             CreateLabeledSlider(parent, 0.0f, 50.0f, 1.0f, "KarmaIncreaseThreshold");
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.12f), parent.RectTransform), TextManager.Get("Karma.PositiveActions"), textAlignment: Alignment.Center)

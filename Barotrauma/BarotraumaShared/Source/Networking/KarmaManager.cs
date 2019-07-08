@@ -58,7 +58,7 @@ namespace Barotrauma
             set { allowedWireDisconnectionsPerMinute = Math.Max(0.0f, value); }
         }
 
-        [Serialize(4.0f, false)]
+        [Serialize(6.0f, false)]
         public float WireDisconnectionKarmaDecrease { get; set; }
 
         [Serialize(0.15f, false)]

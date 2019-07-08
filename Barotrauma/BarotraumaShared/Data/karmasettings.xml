@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <KarmaManager
-  karmadecay="0.1"
+  karmadecay="0.08"
   karmadecaythreshold="50"
-  karmaincrease="0.15"
+  karmaincrease="0.1"
   karmaincreasethreshold="50"
   structurerepairkarmaincrease="0.05"
   structuredamagekarmadecrease="0.1"
@@ -13,7 +13,7 @@
   damagefriendlykarmadecrease="0.2"
   extinguishfirekarmaincrease="1"
   allowedwiredisconnectionsperminute="5"
-  wiredisconnectionkarmadecrease="4.0"
+  wiredisconnectionkarmadecrease="6.0"
   steersubkarmaincrease="0.15"
   spamfilterkarmadecrease="15"
   herpesthreshold="40"
@@ -21,9 +21,9 @@
   karmanotificationinterval="10">
   <Preset
     name="Default"
-    karmadecay="0.1"
+    karmadecay="0.08"
     karmadecaythreshold="50"
-    karmaincrease="0.15"
+    karmaincrease="0.1"
     karmaincreasethreshold="50"
     structurerepairkarmaincrease="0.05"
     structuredamagekarmadecrease="0.1"
@@ -34,7 +34,7 @@
     damagefriendlykarmadecrease="0.2"
     extinguishfirekarmaincrease="1"
     allowedwiredisconnectionsperminute="5"
-    wiredisconnectionkarmadecrease="4.0"
+    wiredisconnectionkarmadecrease="6.0"
     steersubkarmaincrease="0.15"
     spamfilterkarmadecrease="15"
     herpesthreshold="40"
@@ -42,9 +42,9 @@
     karmanotificationinterval="10"/>
   <Preset
     name="Strict"
-    karmadecay="0.1"
+    karmadecay="0.08"
     karmadecaythreshold="50"
-    karmaincrease="0.1"
+    karmaincrease="0.08"
     karmaincreasethreshold="45"
     structurerepairkarmaincrease="0.05"
     structuredamagekarmadecrease="0.15"
@@ -54,8 +54,8 @@
     damageenemykarmaincrease="0.1"
     damagefriendlykarmadecrease="0.3"
     extinguishfirekarmaincrease="1"
-    allowedwiredisconnectionsperminute="5"
-    wiredisconnectionkarmadecrease="8.0"
+    allowedwiredisconnectionsperminute="4"
+    wiredisconnectionkarmadecrease="10.0"
     steersubkarmaincrease="0.15"
     spamfilterkarmadecrease="25"
     herpesthreshold="40"
