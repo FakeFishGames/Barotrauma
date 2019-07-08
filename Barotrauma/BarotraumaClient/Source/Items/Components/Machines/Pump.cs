@@ -167,7 +167,7 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
+            msg.WriteRangedIntegerDeprecated(-10, 10, (int)(flowPercentage / 10.0f));
             msg.Write(IsActive);
         }
 

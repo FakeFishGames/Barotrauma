@@ -409,7 +409,7 @@ namespace Barotrauma
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             LevelObject obj = extraData[0] as LevelObject;
-            msg.WriteRangedInteger(0, objects.Count, objects.IndexOf(obj));
+            msg.WriteRangedIntegerDeprecated(0, objects.Count, objects.IndexOf(obj));
             obj.ServerWrite(msg, c);
         }
     }

@@ -122,7 +122,7 @@ namespace Barotrauma.Networking
         private void ReadConnectionInitializationStep(NetIncomingMessage inc)
         {
             ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
-            DebugConsole.NewMessage(step + " " + initializationStep);
+            //DebugConsole.NewMessage(step + " " + initializationStep);
             switch (step)
             {
                 case ConnectionInitialization.SteamTicket:

@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
+            msg.WriteRangedIntegerDeprecated(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
 
             float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
             msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);

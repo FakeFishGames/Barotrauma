@@ -28,8 +28,8 @@ namespace Barotrauma.Items.Components
             int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
             int nodeCount = MathHelper.Clamp(nodes.Count - nodeStartIndex, 0, MaxNodesPerNetworkEvent);
 
-            msg.WriteRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent), eventIndex);
-            msg.WriteRangedInteger(0, MaxNodesPerNetworkEvent, nodeCount);
+            msg.WriteRangedIntegerDeprecated(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent), eventIndex);
+            msg.WriteRangedIntegerDeprecated(0, MaxNodesPerNetworkEvent, nodeCount);
             for (int i = nodeStartIndex; i < nodeStartIndex + nodeCount; i++)
             {
                 msg.Write(nodes[i].X);

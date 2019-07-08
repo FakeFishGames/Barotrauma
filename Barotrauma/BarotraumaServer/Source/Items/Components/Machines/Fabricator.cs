@@ -34,7 +34,7 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
-            msg.WriteRangedInteger(-1, fabricationRecipes.Count - 1, itemIndex);
+            msg.WriteRangedIntegerDeprecated(-1, fabricationRecipes.Count - 1, itemIndex);
             UInt16 userID = fabricatedItem == null || user == null ? (UInt16)0 : user.ID;
             msg.Write(userID);
         }

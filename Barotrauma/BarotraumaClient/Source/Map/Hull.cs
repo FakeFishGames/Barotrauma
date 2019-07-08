@@ -534,7 +534,7 @@ namespace Barotrauma
             msg.Write(FireSources.Count > 0);
             if (FireSources.Count > 0)
             {
-                msg.WriteRangedInteger(0, 16, Math.Min(FireSources.Count, 16));
+                msg.WriteRangedIntegerDeprecated(0, 16, Math.Min(FireSources.Count, 16));
                 for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
                 {
                     var fireSource = FireSources[i];

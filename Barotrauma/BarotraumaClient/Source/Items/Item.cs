@@ -863,7 +863,7 @@ namespace Barotrauma
 
             NetEntityEvent.Type eventType =
                 (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-
+            
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -943,17 +943,17 @@ namespace Barotrauma
             }
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
+            msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
+                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, componentIndex);
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
                     int containerIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, containerIndex);
                     (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.Treatment:

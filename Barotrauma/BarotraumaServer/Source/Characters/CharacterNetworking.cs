@@ -267,20 +267,20 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 3, 0);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 0);
                         Inventory.SharedWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(0, 3, 1);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 1);
                         Client owner = ((Client)extraData[1]);
                         msg.Write(owner == null ? (byte)0 : owner.ID);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 3, 2);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 2);
                         WriteStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
-                        msg.WriteRangedInteger(0, 3, 3);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 3);
                         if (Info?.Job == null)
                         {
                             msg.Write((byte)0);
@@ -415,10 +415,10 @@ namespace Barotrauma
             msg.Write(IsDead);
             if (IsDead)
             {
-                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
+                msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
                 if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
-                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
+                    msg.WriteRangedIntegerDeprecated(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
                 }
 
                 if (AnimController?.LimbJoints == null)

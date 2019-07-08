@@ -315,8 +315,7 @@ namespace Barotrauma
         public static IReadMessage ExtractBits(this IReadMessage originalBuffer, int numberOfBits)
         {
             var buffer = new ReadWriteMessage();
-            byte[] data = new byte[(int)Math.Ceiling(numberOfBits / (double)8)];
-
+            
             for (int i=0;i<numberOfBits;i++)
             {
                 bool bit = originalBuffer.ReadBoolean();

@@ -1807,7 +1807,7 @@ namespace Barotrauma
                 var propertyOwner = allProperties.Find(p => p.Second == property);
                 if (allProperties.Count > 1)
                 {
-                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.FindIndex(p => p.Second == property));
+                    msg.WriteRangedIntegerDeprecated(0, allProperties.Count - 1, allProperties.FindIndex(p => p.Second == property));
                 }
 
                 object value = property.GetValue(propertyOwner.First);

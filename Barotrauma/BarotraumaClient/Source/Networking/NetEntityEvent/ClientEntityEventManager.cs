@@ -175,7 +175,7 @@ namespace Barotrauma.Networking
                 
                 IServerSerializable entity = Entity.FindEntityByID(entityID) as IServerSerializable;
                 entities.Add(entity);
-
+                
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)
                 {

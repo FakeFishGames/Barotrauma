@@ -457,7 +457,7 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
-            msg.WriteRangedInteger(-1, fabricationRecipes.Count - 1, itemIndex);
+            msg.WriteRangedIntegerDeprecated(-1, fabricationRecipes.Count - 1, itemIndex);
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

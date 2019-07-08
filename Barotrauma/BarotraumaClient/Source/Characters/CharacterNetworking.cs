@@ -98,15 +98,15 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 3, 0);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 0);
                         Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Treatment:
-                        msg.WriteRangedInteger(0, 3, 1);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 3, 2);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 2);
                         break;
                 }
             }
@@ -124,7 +124,7 @@ namespace Barotrauma
                 msg.Write(inputCount);
                 for (int i = 0; i < inputCount; i++)
                 {
-                    msg.WriteRangedInteger(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
+                    msg.WriteRangedIntegerDeprecated(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
                     msg.Write(memInput[i].intAim);
                     if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
                         memInput[i].states.HasFlag(InputNetFlags.Deselect) ||

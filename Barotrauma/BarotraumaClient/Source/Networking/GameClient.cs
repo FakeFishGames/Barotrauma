@@ -655,7 +655,7 @@ namespace Barotrauma.Networking
                     CoroutineManager.StopCoroutines("WaitInServerQueue");
                 }
 
-                bool allowReconnect = true; //TODO: remove?
+                bool allowReconnect = false; //TODO: remove?
                 if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
                 {
                     DebugConsole.NewMessage("Attempting to reconnect...");
@@ -673,7 +673,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    string msg = "";
+                    /*string msg = "";
                     if (disconnectReason == DisconnectReason.Unknown)
                     {
                         DebugConsole.NewMessage("Do not attempt reconnect (not allowed).");
@@ -700,7 +700,7 @@ namespace Barotrauma.Networking
                     {
                         var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
                         msgBox.Buttons[0].OnClicked += ReturnToServerList;
-                    }
+                    }*/
                 }
             }
         }
@@ -1106,7 +1106,6 @@ namespace Barotrauma.Networking
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
-                DebugConsole.NewMessage(objHeader.ToString());
                 switch (objHeader)
                 {
                     case ServerNetObject.SYNC_IDS:

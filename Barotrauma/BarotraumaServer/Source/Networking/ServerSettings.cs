@@ -47,7 +47,7 @@ namespace Barotrauma.Networking
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
-            outMsg.WriteRangedInteger(1, 60, TickRate);
+            outMsg.WriteRangedIntegerDeprecated(1, 60, TickRate);
 
             WriteExtraCargo(outMsg);
 

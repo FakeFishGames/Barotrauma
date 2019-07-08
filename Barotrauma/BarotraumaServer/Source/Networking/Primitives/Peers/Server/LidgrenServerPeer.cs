@@ -207,7 +207,7 @@ namespace Barotrauma.Networking
                 }
                 UInt16 length = inc.ReadUInt16();
 
-                DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte + " " + length);
+                //DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte + " " + length);
 
                 IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, conn);
                 OnMessageReceived?.Invoke(conn, msg);
@@ -235,7 +235,7 @@ namespace Barotrauma.Networking
 
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
 
-            DebugConsole.NewMessage(initializationStep+" "+pendingClient.InitializationStep);
+            //DebugConsole.NewMessage(initializationStep+" "+pendingClient.InitializationStep);
 
             if (pendingClient.InitializationStep != initializationStep) return;
 
@@ -358,7 +358,7 @@ namespace Barotrauma.Networking
             }
 
             NetSendResult result = netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
-            DebugConsole.NewMessage("sent update to pending client: "+result);
+            //DebugConsole.NewMessage("sent update to pending client: "+result);
         }
 
         public override void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
