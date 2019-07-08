@@ -19,6 +19,8 @@ namespace Barotrauma
             public float PreviousNotifiedKarma;
         }
 
+        public bool TestMode = false;
+
         private readonly Dictionary<Client, ClientMemory> clientMemories = new Dictionary<Client, ClientMemory>();
         private readonly List<Client> bannedClients = new List<Client>();
 
@@ -41,7 +43,7 @@ namespace Barotrauma
                 UpdateClient(client, deltaTime);
             }
 
-            if (Timing.TotalTime > KarmaNotificationTime)
+            if (TestMode || Timing.TotalTime > KarmaNotificationTime)
             {
                 SendKarmaNotifications(clients);
                 KarmaNotificationTime = Timing.TotalTime + KarmaNotificationInterval;
@@ -58,7 +60,7 @@ namespace Barotrauma
             foreach (Client client in clients)
             {
                 float karmaChange = client.Karma - clientMemories[client].PreviousNotifiedKarma;
-                if (Math.Abs(karmaChange) > KarmaNotificationInterval)
+                if (Math.Abs(karmaChange) > KarmaNotificationInterval || (TestMode && Math.Abs(karmaChange) > 2.0f))
                 {
                     if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
                     {
@@ -141,7 +143,15 @@ namespace Barotrauma
 
             if (client.Karma < KickBanThreshold && client.Connection != GameMain.Server.OwnerConnection)
             {
-                bannedClients.Add(client);
+                if (TestMode)
+                {
+                    client.Karma = 50.0f;
+                    GameMain.Server.SendDirectChatMessage("BANNED! (not really because karma test mode is enabled)", client);
+                }
+                else
+                {
+                    bannedClients.Add(client);
+                }
             }
         }
 
