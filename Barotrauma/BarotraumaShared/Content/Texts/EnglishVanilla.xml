@@ -3234,8 +3234,8 @@
   <Karma.StructureDamageKarmaDecrease>Structure damaged</Karma.StructureDamageKarmaDecrease>
   <Karma.StructureDamageKarmaDecreaseTooltip>How much karma decreases when damaging structures (per amount of damage done, for example a value of 0.05 would mean that karma decreases by 5 when taking a wall from 100 health to 0).</Karma.StructureDamageKarmaDecreaseTooltip>
   
-  <Karma.ItemRepairKarmaIncrease>Item repaired</Karma.ItemRepairKarmaIncrease>
-  <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing items (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair an item from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
+  <Karma.ItemRepairKarmaIncrease>Device repaired</Karma.ItemRepairKarmaIncrease>
+  <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing devices (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a device from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
   
   <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
   <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
@@ -3258,7 +3258,7 @@
   <Karma.AllowedWireDisconnectionsPerMinute>Allowed wire disconnections per minute</Karma.AllowedWireDisconnectionsPerMinute>
   <Karma.AllowedWireDisconnectionsPerMinuteTooltip>How many wires a player is allowed to disconnect per minute before they start losing karma.</Karma.AllowedWireDisconnectionsPerMinuteTooltip>
 
-  <Karma.WireDisconnectionKarmaDecrease>Allowed wire disconnections per minute</Karma.WireDisconnectionKarmaDecrease>
+  <Karma.WireDisconnectionKarmaDecrease>Disconnect lots of wires</Karma.WireDisconnectionKarmaDecrease>
   <Karma.WireDisconnectionKarmaDecreaseTooltip>How much karma decreases if a player disconnects more than the allowed number of wires per minute.</Karma.WireDisconnectionKarmaDecreaseTooltip>
 
   <Karma.SpamFilterKarmaDecrease>Triggering the spam filter</Karma.SpamFilterKarmaDecrease>

@@ -30,6 +30,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUITextBox textBox) return textBox.Text;
                     else if (GUIComponent is GUIScrollBar scrollBar) return scrollBar.BarScrollValue;
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) return radioButtonGroup.Selected;
+                    else if (GUIComponent is GUIDropDown dropdown) return dropdown.SelectedData;
                     return null;
                 }
                 set
@@ -39,6 +40,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUITextBox textBox) textBox.Text = (string)value;
                     else if (GUIComponent is GUIScrollBar scrollBar) scrollBar.BarScrollValue = (float)value;
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (Enum)value;
+                    else if (GUIComponent is GUIDropDown dropdown) dropdown.SelectItem(value);
                 }
             }
 
@@ -761,10 +763,22 @@ namespace Barotrauma.Networking
                 GameMain.NetworkMember.KarmaManager.SelectPreset(KarmaPreset);
                 karmaSettingsList.Content.ClearChildren();
                 karmaSettingsBlocker.Visible = !KarmaEnabled || KarmaPreset != "custom";
+
+                List<NetPropertyData> properties = netProperties.Values.ToList();
+                List<object> prevValues = new List<object>();
+                foreach (NetPropertyData prop in netProperties.Values)
+                {
+                    prevValues.Add(prop.TempValue);
+                }
                 GameMain.NetworkMember.KarmaManager.CreateSettingsFrame(karmaSettingsList.Content);
+                for (int i = 0; i < netProperties.Count; i++)
+                {
+                    properties[i].TempValue = prevValues[i];
+                }
                 return true;
             };
             karmaPresetDD.SelectItem(KarmaPreset);
+            AssignGUIComponent("KarmaPreset", karmaPresetDD);
             karmaBox.OnSelected = (tb) =>
             {
                 karmaSettingsBlocker.Visible = !tb.Selected || KarmaPreset != "custom";

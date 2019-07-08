@@ -38,7 +38,7 @@ namespace Barotrauma
             CreateLabeledSlider(parent, 0.0f, 100.0f, 1.0f, "ReactorMeltdownKarmaDecrease");
             CreateLabeledSlider(parent, 0.0f, 10.0f, 0.05f, "ReactorOverheatKarmaDecrease");
             CreateLabeledSlider(parent, 0.0f, 20.0f, 1f, "AllowedWireDisconnectionsPerMinute");
-            CreateLabeledSlider(parent, 0.0f, 5.0f, 0.05f, "WireDisconnectionKarmaDecrease");
+            CreateLabeledSlider(parent, 0.0f, 20.0f, 0.5f, "WireDisconnectionKarmaDecrease");
             CreateLabeledSlider(parent, 0.0f, 30.0f, 1.0f, "SpamFilterKarmaDecrease");
         }
 
