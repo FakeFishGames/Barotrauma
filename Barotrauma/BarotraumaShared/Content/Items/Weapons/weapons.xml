@@ -539,13 +539,13 @@
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="true" smoke="false" flames="true" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
-      <RequiredItems identifiers="40mmgrenade" type="Contained" msg="ItemMsgAmmoRequired" />
+      <RequiredItems identifiers="40mmgrenade,40mmstungrenade" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="60" />
     </RangedWeapon>
     <!--Holds one grenade at a time-->
     <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
-      <Containable identifiers="40mmgrenade" />
+      <Containable identifiers="40mmgrenade,40mmstungrenade" />
     </ItemContainer>
   </Item>
 
@@ -576,6 +576,49 @@
         <Explosion range="250.0" structuredamage="5" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="40" />
           <Affliction identifier="internaldamage" strength="60" />
+        </Explosion>
+      </StatusEffect>
+      <!--Destroy this after exploding-->
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true" >
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" >
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+
+  <Item name="40mm Stun Grenade" identifier="40mmstungrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem" Scale="0.35" impactsoundtag="impact_metal_light">
+    <!--TODO: adjust prices-->
+    <Price locationtype="Military" buyprice="60" />
+    <Price locationtype="City" buyprice="100" />
+    <Deconstruct time="5">
+      <Item identifier="iron" />
+      <Item identifier="phosphorus" />
+      <Item identifier="flashpowder" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredSkill identifier="weapons" level="30"/>
+      <RequiredItem identifier="iron"/>
+      <RequiredItem identifier="phosphorus"/>
+      <RequiredItem identifier="flashpowder"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,64,64" />
+    <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="0,0,97,143" depth="0.55" origin="0.5,0.5" />
+    <Body width="11" height="24" density="30" />
+    <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="false">
+      <Attack structuredamage="1" stun="0.2">
+        <Affliction identifier="internaldamage" strength="5" />
+      </Attack>
+      <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All" />
+      <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
+      <!--Grenade launcher ammo explodes on impact-->
+      <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
+        <sound file="Content/Items/Weapons/StunGrenade.ogg" />
+        <Explosion range="250" force="0.1" smoke="false">
+          <Affliction identifier="internaldamage" strength="5" />
+          <Affliction identifier="stun" strength="15" />
         </Explosion>
       </StatusEffect>
       <!--Destroy this after exploding-->

@@ -3231,8 +3231,11 @@
   <entityname.grenadelauncher>Grenade Launcher</entityname.grenadelauncher>
   <entitydescription.grenadelauncher>A portable grenade launcher for 40mm grenades.</entitydescription.grenadelauncher>
 
-  <entityname.40mmgrenade>40mm grenade</entityname.40mmgrenade>
+  <entityname.40mmgrenade>40mm Grenade</entityname.40mmgrenade>
   <entitydescription.40mmgrenade>Ammunition for grenade launcher.</entitydescription.40mmgrenade>
+
+  <entityname.40mmstungrenade>40mm Stun Grenade</entityname.40mmstungrenade>
+  <entitydescription.40mmstungrenade>Ammunition for grenade launcher. Non-lethal.</entitydescription.40mmstungrenade>
 
   <entityname.shotgun>Riot Shotgun</entityname.shotgun>
   <entitydescription.shotgun>A shotgun designed for crowd control.</entitydescription.shotgun>
