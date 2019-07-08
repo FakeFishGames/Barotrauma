@@ -206,10 +206,15 @@
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
     <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />
-    <ItemContainer hideitems="true" capacity="15" canbeselected="false" >
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable identifiers="smground" />
+      <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
+        <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
+      </StatusEffect>
     </ItemContainer>
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" />
+
   </Item>
 
   <Item name="SMG" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon" Scale="0.32" impactsoundtag="impact_metal_light">
@@ -233,7 +238,7 @@
       <StatusEffect type="OnUse" target="Contained">
         <Use />
       </StatusEffect>
-      <RequiredItems identifier="smground" type="Contained" msg="ItemMsgAmmoRequired" />
+      <RequiredItems identifier="smgmagazine" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="50" />
     </RangedWeapon>
     <ItemContainer capacity="1" hideitems="true">
@@ -626,8 +631,8 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" hitscan="true" hitscancount="8" removeonhit="true" spread="15">
       <Attack structuredamage="0.5" stun="0.125" targetforce="5">
-        <Affliction identifier="gunshotwound" strength="2" />
-        <Affliction identifier="internaldamage" strength="1" />
+        <Affliction identifier="gunshotwound" strength="6" />
+        <Affliction identifier="internaldamage" strength="5" />
       </Attack>
       <StatusEffect type="OnImpact">
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
@@ -676,6 +681,30 @@
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
+  </Item>
+
+  <Item name="Toy Hammer" identifier="toyhammer" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <Price locationtype="City" buyprice="10" />
+    <Price locationtype="Research" buyprice="10" />
+    <Price locationtype="Military" buyprice="10" />
+    <Price locationtype="Mine" buyprice="10" />
+    <Price locationtype="Outpost" buyprice="10" />
+    <Deconstruct time="10">
+      <Item identifier="iron" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="30"/>
+      <RequiredItem identifier="iron"/>
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,0,64,64" />
+    <Sprite texture="tools.png" sourcerect="0,65,65,15" depth="0.55" origin="0.5,0.5" />
+    <Body width="60" height="10" density="50" />
+    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
+      <Attack structuredamage="2" stun="0.6">
+        <Affliction identifier="internaldamage" strength="8" />
+        <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
+      </Attack>
+    </MeleeWeapon>
   </Item>
 
   <Item name="Bike Horn" identifier="bikehorn" category="Equipment" tags="weapon,smallitem" cargocontaineridentifier="metalcrate" description="HONK">
