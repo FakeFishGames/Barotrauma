@@ -1,4 +1,6 @@
-﻿using Barotrauma.Items.Components;
+﻿#define ALLOW_BOT_TRAITORS
+using Barotrauma.Items.Components;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
 using System;
@@ -1824,7 +1826,7 @@ namespace Barotrauma.Networking
                     bots.Add(botInfo);
                 }
                 AssignBotJobs(bots, teamID);
-                
+
                 WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[n]);
                 for (int i = 0; i < teamClients.Count; i++)
                 {
@@ -1883,7 +1885,7 @@ namespace Barotrauma.Networking
 
                 foreach(var traitor in TraitorManager.TraitorList)
                 {
-                    Log(string.Format("{0} is the traitor and the current task is {1}.", traitor.Character.Name, traitor.CurrentTask?.DebugInfoText ?? "(empty)"), ServerLog.MessageType.ServerMessage);
+                    Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos ?? "(empty)"), ServerLog.MessageType.ServerMessage);
                 }
             }
 

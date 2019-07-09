@@ -1,6 +1,4 @@
-﻿#define ALLOW_LONE_TRAITOR // Set this to allow traitor in games with only one connected player, missions to kill someone will target that same player.
-
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.IO;
 
@@ -30,7 +28,7 @@ namespace Barotrauma
             DetonateLocations // SetExplosivesAtSpecificLocationsAndDetonateSimultaneously
         }
 
-        public class Task
+        public class Goal
         {
             // TODO(xxx): Task server messages interface needed? Or can we use generic serialization to handle list of tasks?
             public readonly Traitor Traitor;
@@ -41,61 +39,101 @@ namespace Barotrauma
 
             public virtual string DebugInfoText => "(debug info not implemented)";
 
-            public virtual void WriteTask(Lidgren.Network.NetBuffer buffer) { }
+            public virtual string InfoText => "(not implemented)";
+            // public virtual string DescriptionText => "(not implemented)";
 
-            protected Task()
+            public virtual bool IsCompleted => false;
+
+            protected Goal()
             {
                 throw new System.Exception("Attempt to instantiate Task with no implementation.");
             }
 
-            protected Task(Traitor traitor)
+            protected Goal(Traitor traitor)
             {
                 Traitor = traitor;
             }
         }
 
-        public class TaskDestroyCargo : Task
+        public class Objective
+        {
+            public readonly List<Goal> Goals = new List<Goal>();
+
+            public bool IsCompleted => Goals.TrueForAll(goal => goal.IsCompleted);
+            public bool IsPartiallyCompleted => Goals.Find(goal => goal.IsCompleted) != null;
+
+            public string GoalInfos => string.Join("\n", Goals.ConvertAll(goal => string.Concat("- ", goal.InfoText)));
+
+            public virtual string GetStartMessageText(Traitor traitor)
+            {
+                return TextManager.GetWithVariable("TraitorObjectiveStartMessage", "[traitorgoalinfos]", GoalInfos);
+            }
+
+            public virtual string GetStartMessageTextServer(Traitor traitor)
+            {
+                return TextManager.GetWithVariables("TraitorObjectiveStartMessageServer", new string[] { "[traitorname] [traitorgoalinfos]" }, new string[] { traitor.Character.Name, GoalInfos });
+            }
+
+            public virtual string GetEndMessageText(Traitor traitor)
+            {
+                var traitorIsDead = traitor.Character.IsDead;
+                var traitorIsDetained = traitor.Character.LockHands;
+                var messageTag = string.Format("TraitorObjectiveEndMessage{0}{1}", IsCompleted ? "Success" : "Failure", traitorIsDead ? "Dead" : traitorIsDetained ? "Detained" : "");
+                return TextManager.ReplaceGenderPronouns(
+                    TextManager.GetWithVariables(messageTag,
+                        new string[2] { "[traitorname]", "[traitorgoalinfos]" },
+                        new string[2] { traitor.Character.Name, GoalInfos }
+                    ), traitor.Character.Info.Gender) + "\n";
+            }
+
+            public Objective(params Goal[] goals)
+            {
+                Goals.AddRange(goals);
+            }
+        }
+
+        public class GoalDestroyCargo : Goal
         {
             public float DistanceFromSub;
         }
 
-        public class TaskJamSonar : Task
+        public class GoalJamSonar : Goal
         {
         }
 
-        public class TaskSabotagePumps : Task
-        {
-            public float Duration;
-        }
-
-        public class TaskSabotageOxygenGenerator : Task
+        public class GoalSabotagePumps : Goal
         {
             public float Duration;
         }
 
-        public class TaskSabotageDivingGear : Task
+        public class GoalSabotageOxygenGenerator : Goal
+        {
+            public float Duration;
+        }
+
+        public class GoalSabotageDivingGear : Goal
         {
         }
 
-        public class TaskDestroyOxygenTanks : Task
+        public class GoalDestroyOxygenTanks : Goal
         {
         }
 
-        public class TaskInfectWithHusk : Task
+        public class GoalInfectWithHusk : Goal
         {
             public Character Target;
         }
 
-        public class TaskSabotageAmmo : Task
+        public class GoalSabotageAmmo : Goal
         {
         }
 
-        public class TaskSabotageEngine : Task
+        public class GoalSabotageEngine : Goal
         {
             public float Duration;
         }
 
-        public class TaskKillTarget : Task
+        public class GoalKillTarget : Goal
         {
             public readonly Character Target;
 
@@ -142,88 +180,38 @@ namespace Barotrauma
                 }
             }
 
-            public override string DebugInfoText => string.Format("Kill targett {0}.", Target.Name);
-            /* TODO(xxx)
-            public static void WriteTask(Lidgren.Network.NetBuffer buffer, TaskKillTarget task)
-            {
-                buffer.Write(task.Traitor.Character.Name);
-                buffer.Write(task.Target.Name);
-            }
+            public override string DebugInfoText => string.Format("Kill target {0}.", Target.Name);
 
-            public static TaskKillTarget ReadTask(TraitorManager manager, Lidgren.Network.NetBuffer buffer)
-            {
-                var traitorName = buffer.ReadString();
-                return new TaskKillTarget(manager.TraitorList.Find(t => t.Character.Name == traitorName), xxx buffer.ReadString());
-            }
-            */
-            public TaskKillTarget(Traitor traitor, Character target): base(traitor)
+            public override string InfoText => TextManager.GetWithVariable("TraitorGoalKillTargetInfo", "[targetname]", Target.Name);
+
+            public override bool IsCompleted => Target.IsDead == true;
+            
+            public GoalKillTarget(Traitor traitor, Character target): base(traitor)
             {
                 Target = target;
             }
         }
 
-        public class TaskKillAllCrew : Task
+        public class GoalKillAllCrew : Goal
         {
         }
 
-        public class TaskCauseMeltdown : Task
+        public class GoalCauseMeltdown : Goal
         {
         }
 
-        public class TaskFloodPercentOfSub : Task
+        public class GoalFloodPercentOfSub : Goal
         {
             public float RequiredPercent;
         }
 
-        public class DetonateLocations : Task
+        public class GoalDetonateLocations : Goal
         {
             public class Location { } // TODO(xxx): Best way to identify target locations?
             public readonly List<Location> Locations = new List<Location>();
         }
 
-        public static class TaskFactory
-        {
-            public delegate Task TaskReader(Lidgren.Network.NetBuffer buffer);
-            public delegate void TaskWriter(Lidgren.Network.NetBuffer buffer);
-
-            public class TaskSerializer
-            {
-                public readonly TaskReader Reader;
-                public readonly TaskWriter Writer;
-
-                public TaskSerializer(TaskReader reader, TaskWriter writer)
-                {
-                    Reader = reader;
-                    Writer = writer;
-                }
-            }
-            /* TODO(xxx)
-            public static Dictionary<string, TaskSerializer> Serializers = new Dictionary<string, TaskSerializer>()
-            {
-                { typeof(TaskKillTarget).Name, new TaskSerializer(buffer => {
-                    var result = new TaskKillTarget();
-                    result.ReadTask(buffer);
-                    return result;
-                }, buffer => { }) }
-            };
-            */
-        }
-
-        public Task CurrentTask;
-
-        public void WriteStartMessage(Lidgren.Network.NetBuffer buffer)
-        {
-            if (CurrentTask != null)
-            {
-            }
-        }
-
-        public void ReadStartMessage(Lidgren.Network.NetBuffer buffer)
-        {
-            
-        }
-
-        // public Character TargetCharacter; //TODO(xxx): make a modular objective system (similar to crew missions) that allows for things OTHER than assasinations.
+        public Objective CurrentObjective;
 
         public Traitor(Character character)
         {
@@ -232,7 +220,7 @@ namespace Barotrauma
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            string greetingMessage = CurrentTask.StartMessageText;
+            string greetingMessage = CurrentObjective.GetStartMessageText(this);
             string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
                 new string[2] { "[codewords]", "[coderesponse]" }, new string[2] { codeWords, codeResponse });
             
@@ -253,7 +241,7 @@ namespace Barotrauma
             {
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
-                    CurrentTask.StartMessageServerText,
+                    CurrentObjective.GetStartMessageTextServer(this),
                     ChatMessageType.MessageBox,
                     null
                 );
@@ -291,12 +279,15 @@ namespace Barotrauma
 
             List<Character> characters = new List<Character>(); //ANYONE can be a target.
             List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
+            List<Character> targetCandidates = new List<Character>(); // Target candidates in shuffled order
+
             foreach (Client client in server.ConnectedClients)
             {
                 if (client.Character != null)
                 {
                     characters.Add(client.Character);
                     traitorCandidates.Add(client.Character);
+                    targetCandidates.Add(client.Character);
                 }
             }
 
@@ -304,13 +295,13 @@ namespace Barotrauma
             {
                 characters.Add(server.Character); //Add host character
                 traitorCandidates.Add(server.Character);
+                targetCandidates.Add(server.Character);
             }
-#if !ALLOW_LONE_TRAITOR
             if (characters.Count < 2)
             {
                 return;
             }
-#endif
+
             codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
             codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
 
@@ -325,25 +316,38 @@ namespace Barotrauma
                 //Add them to the list
                 traitorList.Add(new Traitor(traitorCharacter));
             }
-
+            var targetCandidatesCount = targetCandidates.Count;
+            for (int i = 0; i < targetCandidatesCount; ++i)
+            {
+                int swapIndex = Rand.Int(targetCandidatesCount);
+                if (i != swapIndex)
+                {
+                    var temp = targetCandidates[i];
+                    traitorCandidates[i] = targetCandidates[swapIndex];
+                    targetCandidates[swapIndex] = temp;
+                }
+            }
             //Now that traitors have been decided, let's do objectives in post for deciding things like Document Exchange.
             foreach (Traitor traitor in traitorList)
             {
                 Character traitorCharacter = traitor.Character;
-                int targetIndex = Rand.Int(characters.Count);
-#if !ALLOW_LONE_TRAITOR
-                while (characters[targetIndex] == traitorCharacter) //Cannot target self
+                int startPosition = Rand.Int(targetCandidatesCount);
+                int targetsCount = 1 + Rand.Int(targetCandidatesCount - 1);
+                List<Traitor.Goal> killGoals = new List<Traitor.Goal>(targetsCount);
+                for (int i = 0; i < targetsCount;)
                 {
-                    targetIndex = Rand.Int(characters.Count);
+                    var candidate = targetCandidates[(startPosition + i) % targetCandidatesCount];
+                    if (candidate != traitor.Character)
+                    {
+                        killGoals.Add(new Traitor.GoalKillTarget(traitor, candidate));
+                        ++i;
+                    }
                 }
-#endif
-                Character targetCharacter = characters[targetIndex];
-                traitor.CurrentTask = new Traitor.TaskKillTarget(traitor, targetCharacter);
+                traitor.CurrentObjective = new Traitor.Objective(killGoals.ToArray());
                 traitor.Greet(server, codeWords, codeResponse);
             }
         }
 
-        // <xxx>
         public void CargoDestroyed()
         {
         }
@@ -388,22 +392,6 @@ namespace Barotrauma
             }
         }
     
-        // SabotageAllDivingSuitsAndMasks,
-    /*
-            DestroyAllNonInventoryOxygenTanksOnSub,
-            CovertlyInfectSpecificMemberWithHusk,
-            SabotageAllCoilOrRailGunAmmo,
-            SabotageEngine // duration
-            // additional goals, all within x seconds
-            KillCrewMemberWithoutBeingSeenToDoSo,
-            KillAllCrew,
-            CauseMeltdown,
-            FloodPercentOfSub,
-            SetExplosivesAtSpecificLocationsAndDetonateSimultaneously
-            */
-
-        // </xxx>
-
         public string GetEndMessage()
         {
             if (GameMain.Server == null || traitorList.Count <= 0) return "";
@@ -412,7 +400,7 @@ namespace Barotrauma
 
             foreach (Traitor traitor in traitorList)
             {
-                endMessage += traitor.CurrentTask.EndMessageText;
+                endMessage += traitor.CurrentObjective.GetEndMessageText(traitor);
             }
 
             return endMessage;

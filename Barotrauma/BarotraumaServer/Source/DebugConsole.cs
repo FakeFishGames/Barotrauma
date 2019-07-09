@@ -919,13 +919,13 @@ namespace Barotrauma
                 if (traitorManager == null) return;
                 foreach (Traitor t in traitorManager.TraitorList)
                 {
-                    if (t.CurrentTask != null)
+                    if (t.CurrentObjective != null)
                     {
-                        NewMessage(string.Format("- Traitor {0}'s current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfoText), Color.Cyan);
+                        NewMessage(string.Format("- Traitor {0}'s current goals are:\n{1}", t.Character.Name, t.CurrentObjective.GoalInfos), Color.Cyan);
                     }
                     else
                     {
-                        NewMessage(string.Format("- Traitor {0} has no current task.", t.Character.Name), Color.Cyan);
+                        NewMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), Color.Cyan);
                     }
                 }
                 NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
@@ -936,13 +936,13 @@ namespace Barotrauma
                 if (traitorManager == null) return;
                 foreach (Traitor t in traitorManager.TraitorList)
                 {
-                    if (t.CurrentTask != null)
+                    if (t.CurrentObjective != null)
                     {
-                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0}'s current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfoText), client);
+                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0}'s current goals are:\n{1}.", t.Character.Name, t.CurrentObjective.GoalInfos), client);
                     }
                     else
                     {
-                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0} has no current task.", t.Character.Name), client);
+                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), client);
                     }
                 }
                 GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
