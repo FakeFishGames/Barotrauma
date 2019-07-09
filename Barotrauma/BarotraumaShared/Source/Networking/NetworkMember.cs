@@ -8,7 +8,6 @@ namespace Barotrauma.Networking
 {
     enum ClientPacketHeader
     {
-        REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
 

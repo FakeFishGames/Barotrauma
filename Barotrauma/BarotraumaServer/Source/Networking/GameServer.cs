@@ -92,9 +92,9 @@ namespace Barotrauma.Networking
         }
 
         public NetworkConnection OwnerConnection { get; private set; }
-        public int? OwnerKey { get; private set; }
+        private int? ownerKey;
 
-        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int? ownerKey = null)
+        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int? ownKey = null)
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
@@ -113,7 +113,7 @@ namespace Barotrauma.Networking
                 serverSettings.SetPassword(password);
             }
 
-            OwnerKey = ownerKey;
+            ownerKey = ownKey;
 
             entityEventManager = new ServerEntityEventManager(this);
             
@@ -126,10 +126,11 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                serverPeer = new LidgrenServerPeer(OwnerKey, serverSettings);
+                serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
 
                 serverPeer.OnInitializationComplete = OnInitializationComplete;
                 serverPeer.OnMessageReceived = ReadDataMessage;
+                serverPeer.OnDisconnect = OnClientDisconnect;
 
                 fileSender = new FileSender(serverPeer, 1300);
                 fileSender.OnEnded += FileTransferChanged;
@@ -243,6 +244,13 @@ namespace Barotrauma.Networking
                     newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
                 }
             }
+        }
+
+        private void OnClientDisconnect(NetworkConnection connection, string disconnectMsg)
+        {
+            Client connectedClient = connectedClients.Find(c => c.Connection == connection);
+
+            DisconnectClient(connectedClient, reason: disconnectMsg);
         }
 
         private IEnumerable<object> RegisterToMasterServer()
@@ -628,9 +636,6 @@ namespace Barotrauma.Networking
             ClientPacketHeader header = (ClientPacketHeader)inc.ReadByte();
             switch (header)
             {
-                case ClientPacketHeader.REQUEST_INIT:
-                    //TODO: reimplement ClientInitRequest(inc);
-                    break;
                 case ClientPacketHeader.RESPONSE_STARTGAME:
                     if (connectedClient != null)
                     {

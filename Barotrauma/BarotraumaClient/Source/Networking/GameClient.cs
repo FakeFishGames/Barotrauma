@@ -45,6 +45,7 @@ namespace Barotrauma.Networking
 
         private string serverIP, serverName;
 
+        private bool allowReconnect;
         private bool requiresPw;
         private int pwRetries;
         private bool canStart;
@@ -102,6 +103,8 @@ namespace Barotrauma.Networking
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
+
+            allowReconnect = true;
 
             netStats = new NetStats();
 
@@ -251,7 +254,7 @@ namespace Barotrauma.Networking
             ChatMessage.LastID = 0;
 
             clientPeer = new LidgrenClientPeer(Name);
-            clientPeer.OnStatusChanged += HandleStatusChanged;
+            clientPeer.OnDisconnect = OnDisconnect;
             clientPeer.OnInitializationComplete = () =>
             {
                 canStart = true;
@@ -312,7 +315,8 @@ namespace Barotrauma.Networking
 
         private bool RetryConnection(GUIButton button, object obj)
         {
-            if (clientPeer != null) clientPeer.Close();
+            if (clientPeer != null) { clientPeer.Close(); }
+            clientPeer = null;
             ConnectToServer(serverIP, serverName);
             return true;
         }
@@ -334,6 +338,7 @@ namespace Barotrauma.Networking
         {
             connectCancelled = true;
             clientPeer.Close();
+            clientPeer = null;
         }
 
         // Before main looping starts, we loop here and wait for approval message
@@ -613,94 +618,90 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void HandleStatusChanged(ConnectionStatus status, string msgStr)
+        private void OnDisconnect(string disconnectMsg)
         {
-            if (status == ConnectionStatus.Disconnected)
+            disconnectMsg = disconnectMsg ?? "";
+
+            string[] splitMsg = disconnectMsg.Split('/');
+            DisconnectReason disconnectReason = DisconnectReason.Unknown;
+            if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
+
+            DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+
+            if (disconnectReason == DisconnectReason.ServerFull)
             {
-                string disconnectMsg = msgStr ?? "";
+                //already waiting for a slot to free up, do nothing
+                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue")) return;
 
-                string[] splitMsg = disconnectMsg.Split('/');
-                DisconnectReason disconnectReason = DisconnectReason.Unknown;
-                if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
+                reconnectBox?.Close(); reconnectBox = null;
 
-                DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+                var queueBox = new GUIMessageBox(
+                    TextManager.Get("DisconnectReason.ServerFull"),
+                    TextManager.Get("ServerFullQuestionPrompt"), new string[] { TextManager.Get("Cancel"), TextManager.Get("ServerQueue") });
 
-                if (disconnectReason == DisconnectReason.ServerFull)
+                queueBox.Buttons[0].OnClicked += queueBox.Close;
+                queueBox.Buttons[1].OnClicked += queueBox.Close;
+                queueBox.Buttons[1].OnClicked += (btn, userdata) =>
                 {
-                    //already waiting for a slot to free up, do nothing
-                    if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue")) return;
-
                     reconnectBox?.Close(); reconnectBox = null;
+                    CoroutineManager.StartCoroutine(WaitInServerQueue(), "WaitInServerQueue");
+                    return true;
+                };
+                return;
+            }
+            else
+            {
+                //disconnected/denied for some other reason than the server being full
+                // -> stop queuing and show a message box
+                waitInServerQueueBox?.Close();
+                waitInServerQueueBox = null;
+                CoroutineManager.StopCoroutines("WaitInServerQueue");
+            }
+            
+            if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
+            {
+                DebugConsole.NewMessage("Attempting to reconnect...");
 
-                    var queueBox = new GUIMessageBox(
-                        TextManager.Get("DisconnectReason.ServerFull"),
-                        TextManager.Get("ServerFullQuestionPrompt"), new string[] { TextManager.Get("Cancel"), TextManager.Get("ServerQueue") });
+                string msg = TextManager.GetServerMessage(disconnectMsg);
+                msg = string.IsNullOrWhiteSpace(msg) ?
+                    TextManager.Get("ConnectionLostReconnecting") :
+                    msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
 
-                    queueBox.Buttons[0].OnClicked += queueBox.Close;
-                    queueBox.Buttons[1].OnClicked += queueBox.Close;
-                    queueBox.Buttons[1].OnClicked += (btn, userdata) =>
-                    {
-                        reconnectBox?.Close(); reconnectBox = null;
-                        CoroutineManager.StartCoroutine(WaitInServerQueue(), "WaitInServerQueue");
-                        return true;
-                    };
-                    return;
+                reconnectBox = new GUIMessageBox(
+                    TextManager.Get("ConnectionLost"),
+                    msg, new string[0]);
+                connected = false;
+                ConnectToServer(serverIP, serverName);
+            }
+            else
+            {
+                string msg = "";
+                if (disconnectReason == DisconnectReason.Unknown)
+                {
+                    DebugConsole.NewMessage("Do not attempt reconnect (not allowed).");
+                    msg = disconnectMsg;
                 }
                 else
                 {
-                    //disconnected/denied for some other reason than the server being full
-                    // -> stop queuing and show a message box
-                    waitInServerQueueBox?.Close();
-                    waitInServerQueueBox = null;
-                    CoroutineManager.StopCoroutines("WaitInServerQueue");
+                    DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
+                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
+
+                    for (int i = 1; i < splitMsg.Length; i++)
+                    {
+                        msg += TextManager.GetServerMessage(splitMsg[i]);
+                    }
                 }
 
-                bool allowReconnect = false; //TODO: remove?
-                if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
+                if (msg == Lidgren.Network.NetConnection.NoResponseMessage)
                 {
-                    DebugConsole.NewMessage("Attempting to reconnect...");
-
-                    string msg = TextManager.GetServerMessage(disconnectMsg);
-                    msg = string.IsNullOrWhiteSpace(msg) ?
-                        TextManager.Get("ConnectionLostReconnecting") :
-                        msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
-
-                    reconnectBox = new GUIMessageBox(
-                        TextManager.Get("ConnectionLost"),
-                        msg, new string[0]);
-                    connected = false;
-                    ConnectToServer(serverIP, serverName);
+                    //display a generic "could not connect" popup if the message is Lidgren's "failed to establish connection"
+                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"));
+                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
                 }
                 else
                 {
-                    /*string msg = "";
-                    if (disconnectReason == DisconnectReason.Unknown)
-                    {
-                        DebugConsole.NewMessage("Do not attempt reconnect (not allowed).");
-                        msg = disconnectMsg;
-                    }
-                    else
-                    {
-                        DebugConsole.NewMessage("Do not attempt to reconnect (DisconnectReason doesn't allow reconnection).");
-                        msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
-
-                        for (int i = 1; i < splitMsg.Length; i++)
-                        {
-                            msg += TextManager.GetServerMessage(splitMsg[i]);
-                        }
-                    }
-
-                    if (msg == Lidgren.Network.NetConnection.NoResponseMessage)
-                    {
-                        //display a generic "could not connect" popup if the message is Lidgren's "failed to establish connection"
-                        var msgBox = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"));
-                        msgBox.Buttons[0].OnClicked += ReturnToServerList;
-                    }
-                    else
-                    {
-                        var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
-                        msgBox.Buttons[0].OnClicked += ReturnToServerList;
-                    }*/
+                    var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
+                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
                 }
             }
         }
@@ -1586,8 +1587,10 @@ namespace Barotrauma.Networking
 
         public override void Disconnect()
         {
-            clientPeer.Close();
-            
+            allowReconnect = false;
+            if (clientPeer != null) clientPeer.Close();
+            clientPeer = null;
+
             foreach (var fileTransfer in FileReceiver.ActiveTransfers)
             {
                 fileTransfer.Dispose();

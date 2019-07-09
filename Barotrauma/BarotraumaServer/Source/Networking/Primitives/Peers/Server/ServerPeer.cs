@@ -8,14 +8,15 @@ namespace Barotrauma.Networking
     abstract class ServerPeer
     {
         public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
-        public delegate void StatusChangeCallback(NetworkConnection connection, ConnectionStatus status);
+        public delegate void DisconnectCallback(NetworkConnection connection, string reason);
         public delegate void InitializationCompleteCallback(NetworkConnection connection);
 
         public MessageCallback OnMessageReceived;
-        public StatusChangeCallback OnStatusChanged;
+        public DisconnectCallback OnDisconnect;
         public InitializationCompleteCallback OnInitializationComplete;
 
-        public int? OwnerKey { get; protected set; }
+        protected int? ownerKey;
+
         public NetworkConnection OwnerConnection { get; protected set; }
 
         public abstract void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status);

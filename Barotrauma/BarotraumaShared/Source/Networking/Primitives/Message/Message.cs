@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
 {
     public enum ConnectionInitialization
     {
-        SteamTicket = 0x1,
+        SteamTicketAndVersion = 0x1,
         Password = 0x2,
         Success = 0x0
     }
