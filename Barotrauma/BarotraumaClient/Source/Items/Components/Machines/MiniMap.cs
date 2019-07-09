@@ -161,10 +161,17 @@ namespace Barotrauma.Items.Components
                     hullDatas.Add(hull, hullData);
                 }
 
+                float alpha = 1.0f;
+                if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
+                    hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
+                {
+                    alpha = 0.5f;
+                }
+
                 if (hullData.Distort)
                 {
                     hullFrame.Children.First().Color = Color.Lerp(Color.Black, Color.DarkGray * 0.5f, Rand.Range(0.0f, 1.0f));
-                    hullFrame.Color = Color.DarkGray * 0.5f;
+                    hullFrame.Color = Color.DarkCyan * alpha * 0.5f;
                     continue;
                 }
                 
@@ -173,20 +180,23 @@ namespace Barotrauma.Items.Components
                     hullFrame.Parent.Rect.Width / (float)hull.Submarine.Borders.Width, 
                     hullFrame.Parent.Rect.Height / (float)hull.Submarine.Borders.Height);
                 
-                Color borderColor = Color.DarkCyan;
+                Color borderColor = Color.DarkCyan * alpha;
                 
                 float? gapOpenSum = 0.0f;
                 if (ShowHullIntegrity)
                 {
                     gapOpenSum = hull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
-                    borderColor = Color.Lerp(Color.DarkCyan, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
+                    borderColor = Color.Lerp(Color.DarkCyan * alpha, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
                 }
 
                 float? oxygenAmount = null;
                 if (!RequireOxygenDetectors || hullData?.Oxygen != null)
                 {
                     oxygenAmount = RequireOxygenDetectors ? hullData.Oxygen : hull.OxygenPercentage;
-                    GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f), true);
+                    GUI.DrawRectangle(
+                        spriteBatch, hullFrame.Rect, 
+                        Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f) * alpha, 
+                        true);
                 }
 
                 float? waterAmount = null;
@@ -201,8 +211,8 @@ namespace Barotrauma.Items.Components
 
                         waterRect.Inflate(-3, -3);
 
-                        GUI.DrawRectangle(spriteBatch, waterRect, new Color(85, 136, 147), true);
-                        GUI.DrawLine(spriteBatch, new Vector2(waterRect.X, waterRect.Y), new Vector2(waterRect.Right, waterRect.Y), Color.LightBlue);
+                        GUI.DrawRectangle(spriteBatch, waterRect, new Color(85, 136, 147) * alpha, true);
+                        GUI.DrawLine(spriteBatch, new Vector2(waterRect.X, waterRect.Y), new Vector2(waterRect.Right, waterRect.Y), Color.LightBlue * alpha);
                     }
                 }
 
@@ -215,7 +225,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    hullFrame.Children.First().Color = Color.DarkCyan * 0.8f;
+                    hullFrame.Children.First().Color = Color.DarkCyan * alpha * 0.8f;
                 }
 
                 if (mouseOnHull == hull)
@@ -245,7 +255,7 @@ namespace Barotrauma.Items.Components
                     hullWaterText.TextColor = waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount);
                 }
                 
-                hullFrame.Color = borderColor;
+                hullFrame.Color = borderColor * alpha;
             }
             
             foreach (Submarine sub in subs)
@@ -272,8 +282,6 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.DarkCyan * Rand.Range(0.3f, 0.35f), width: (int)(10 * GUI.Scale));
                 }
             }
-
-
         }
 
         private void GetLinkedHulls(Hull hull, List<Hull> linkedHulls)
