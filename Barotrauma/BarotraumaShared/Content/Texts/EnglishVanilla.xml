@@ -3258,6 +3258,12 @@
   <entityname.coilgunammoboxpiercing>Piercing Ammunition Box</entityname.coilgunammoboxpiercing>
   <entitydescription.coilgunammoboxpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunammoboxpiercing>
 
+  <entityname.coilgunboltexplosive>Exploding Coilgun Bolt</entityname.coilgunboltexplosive>
+  <entitydescription.coilgunboltexplosive>Ammunition for the coilgun. Explodes on impact.</entitydescription.coilgunboltexplosive>
+
+  <entityname.coilgunboltpiercing>Piercing Coilgun Bolt</entityname.coilgunboltpiercing>
+  <entitydescription.coilgunboltpiercing>Coilgun ammo that has piercing capabilities.</entitydescription.coilgunboltpiercing>
+
   <entityname.crawlermask>Crawler Mask</entityname.crawlermask>
   <entitydescription.crawlermask>Protects wearer's identity. Fun at certain parties.</entitydescription.crawlermask>
 
@@ -3267,11 +3273,8 @@
   <entityname.shellshield>Moloch Shell Fragment</entityname.shellshield>
   <entitydescription.shellshield>A sturdy piece of a moloch's shell.</entitydescription.shellshield>
 
-  <entityname.hammerheadjacket>Hammerhead Jacket</entityname.hammerheadjacket>
-  <entitydescription.hammerheadjacket>Europa chic.</entitydescription.hammerheadjacket>
-
-  <entityname.hammerheadjacket>Mudraptor Armor</entityname.hammerheadjacket>
-  <entitydescription.hammerheadjacket>A protective shell of a mudraptor.</entitydescription.hammerheadjacket>
+  <entityname.mudraptorshell>Mudraptor Shell</entityname.mudraptorshell>
+  <entitydescription.mudraptorshell>A protective shell of a mudraptor.</entitydescription.mudraptorshell>
 
   <entityname.accordion>Accordion</entityname.accordion>
   <entitydescription.accordion>An old handmade accordion.</entitydescription.accordion>
@@ -3293,6 +3296,7 @@
   <workshop.contenttag.language>Language</workshop.contenttag.language>
 
   <serverlisthaspassword>Password</serverlisthaspassword>
+
 
 
 
