@@ -162,10 +162,13 @@ namespace Barotrauma.Items.Components
                 }
 
                 float alpha = 1.0f;
-                if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
-                    hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
+                if (hull.RoomName != null)
                 {
-                    alpha = 0.5f;
+                    if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
+                        hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
+                    {
+                        alpha = 0.5f;
+                    }
                 }
 
                 if (hullData.Distort)
