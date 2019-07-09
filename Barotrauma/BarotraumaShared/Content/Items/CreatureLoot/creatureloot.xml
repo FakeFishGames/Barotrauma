@@ -98,5 +98,13 @@
       <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="0.6" setvalue="true" disabledeltatime="true" />
     </Wearable>
   </Item>
+  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,320,64,64" />
+    <Sprite texture="Content/Items/Jobgear/Security/riotgear.png" sourcerect="31,54,27,147" origin="0.5,0.5" depth="0.55" />
+    <Body width="40" height="145" density="30" />
+    <Holdable slots="RightHand+LeftHand" aimpos="60,-30" holdpos="45,-30" handle1="-10,0" handle2="10,0" controlpose="true" blocksplayers="true" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />
+    </Holdable>
+  </Item>
 
 </Items>
