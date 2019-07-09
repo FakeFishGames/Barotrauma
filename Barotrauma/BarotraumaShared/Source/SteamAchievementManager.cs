@@ -257,6 +257,8 @@ namespace Barotrauma
             }
 
 #if SERVER
+            // TODO(xxx): Need proper traitor end condition check, related on death handling logic here.
+            /*
             if (GameMain.Server?.TraitorManager != null)
             {
                 foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
@@ -273,6 +275,7 @@ namespace Barotrauma
                     }
                 }
             }
+            */
 #endif
         }
 

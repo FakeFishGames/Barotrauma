@@ -921,7 +921,7 @@ namespace Barotrauma
                 {
                     if (t.CurrentTask != null)
                     {
-                        NewMessage(string.Format("- Traitor {0} 's current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfo), Color.Cyan);
+                        NewMessage(string.Format("- Traitor {0}'s current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfoText), Color.Cyan);
                     }
                     else
                     {
@@ -938,7 +938,7 @@ namespace Barotrauma
                 {
                     if (t.CurrentTask != null)
                     {
-                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0} 's current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfo), client);
+                        GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0}'s current task is {1}.", t.Character.Name, t.CurrentTask.DebugInfoText), client);
                     }
                     else
                     {

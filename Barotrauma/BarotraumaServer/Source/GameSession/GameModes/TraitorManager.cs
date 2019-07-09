@@ -35,10 +35,13 @@ namespace Barotrauma
             // TODO(xxx): Task server messages interface needed? Or can we use generic serialization to handle list of tasks?
             public readonly Traitor Traitor;
 
-            public virtual string StartMessage => "(start message not implemented)";
-            public virtual string EndMessage => "(end message not implemented)";
+            public virtual string StartMessageText => "(start message not implemented)";
+            public virtual string StartMessageServerText => "(start message server not implemented)";
+            public virtual string EndMessageText => "(end message not implemented)";
 
-            public virtual string DebugInfo => "(debug info not implemented");
+            public virtual string DebugInfoText => "(debug info not implemented)";
+
+            public virtual void WriteTask(Lidgren.Network.NetBuffer buffer) { }
 
             protected Task()
             {
@@ -96,8 +99,9 @@ namespace Barotrauma
         {
             public readonly Character Target;
 
-            public override string StartMessage => TextManager.GetWithVariable("TraitorStartMessage", "[targetname]", Target.Name);
-            public override string EndMessage
+            public override string StartMessageText => TextManager.GetWithVariable("TraitorStartMessage", "[targetname]", Target.Name);
+            public override string StartMessageServerText => TextManager.GetWithVariables("TraitorStartMessageServer", new string[2] { "[targetname]", "[traitorname]" }, new string[2] { Target.Name, Traitor.Character.Name });
+            public override string EndMessageText
             {
                 get
                 {
@@ -138,8 +142,20 @@ namespace Barotrauma
                 }
             }
 
-            public override string DebugInfo => string.Format("Kill targett {0}.", Target.Name);
+            public override string DebugInfoText => string.Format("Kill targett {0}.", Target.Name);
+            /* TODO(xxx)
+            public static void WriteTask(Lidgren.Network.NetBuffer buffer, TaskKillTarget task)
+            {
+                buffer.Write(task.Traitor.Character.Name);
+                buffer.Write(task.Target.Name);
+            }
 
+            public static TaskKillTarget ReadTask(TraitorManager manager, Lidgren.Network.NetBuffer buffer)
+            {
+                var traitorName = buffer.ReadString();
+                return new TaskKillTarget(manager.TraitorList.Find(t => t.Character.Name == traitorName), xxx buffer.ReadString());
+            }
+            */
             public TaskKillTarget(Traitor traitor, Character target): base(traitor)
             {
                 Target = target;
@@ -165,10 +181,49 @@ namespace Barotrauma
             public readonly List<Location> Locations = new List<Location>();
         }
 
+        public static class TaskFactory
+        {
+            public delegate Task TaskReader(Lidgren.Network.NetBuffer buffer);
+            public delegate void TaskWriter(Lidgren.Network.NetBuffer buffer);
+
+            public class TaskSerializer
+            {
+                public readonly TaskReader Reader;
+                public readonly TaskWriter Writer;
+
+                public TaskSerializer(TaskReader reader, TaskWriter writer)
+                {
+                    Reader = reader;
+                    Writer = writer;
+                }
+            }
+            /* TODO(xxx)
+            public static Dictionary<string, TaskSerializer> Serializers = new Dictionary<string, TaskSerializer>()
+            {
+                { typeof(TaskKillTarget).Name, new TaskSerializer(buffer => {
+                    var result = new TaskKillTarget();
+                    result.ReadTask(buffer);
+                    return result;
+                }, buffer => { }) }
+            };
+            */
+        }
 
         public Task CurrentTask;
 
-        public Character TargetCharacter; //TODO(xxx): make a modular objective system (similar to crew missions) that allows for things OTHER than assasinations.
+        public void WriteStartMessage(Lidgren.Network.NetBuffer buffer)
+        {
+            if (CurrentTask != null)
+            {
+            }
+        }
+
+        public void ReadStartMessage(Lidgren.Network.NetBuffer buffer)
+        {
+            
+        }
+
+        // public Character TargetCharacter; //TODO(xxx): make a modular objective system (similar to crew missions) that allows for things OTHER than assasinations.
 
         public Traitor(Character character)
         {
@@ -177,7 +232,7 @@ namespace Barotrauma
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            string greetingMessage = TextManager.GetWithVariable("TraitorStartMessage", "[targetname]", TargetCharacter.Name);
+            string greetingMessage = CurrentTask.StartMessageText;
             string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
                 new string[2] { "[codewords]", "[coderesponse]" }, new string[2] { codeWords, codeResponse });
             
@@ -198,7 +253,7 @@ namespace Barotrauma
             {
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
-                    TextManager.GetWithVariables("TraitorStartMessageServer", new string[2] { "[targetname]", "[traitorname]" }, new string[2] { TargetCharacter.Name, Character.Name }),
+                    CurrentTask.StartMessageServerText,
                     ChatMessageType.MessageBox,
                     null
                 );
@@ -283,7 +338,7 @@ namespace Barotrauma
                 }
 #endif
                 Character targetCharacter = characters[targetIndex];
-                traitor.TargetCharacter = targetCharacter;
+                traitor.CurrentTask = new Traitor.TaskKillTarget(traitor, targetCharacter);
                 traitor.Greet(server, codeWords, codeResponse);
             }
         }
@@ -357,42 +412,7 @@ namespace Barotrauma
 
             foreach (Traitor traitor in traitorList)
             {
-                Character traitorCharacter = traitor.Character;
-                Character targetCharacter = traitor.TargetCharacter;
-                string messageTag;
-
-                // TODO(xxx): Mission completion criteria here
-                if (targetCharacter.IsDead) //Partial or complete mission success
-                {
-                    if (traitorCharacter.IsDead)
-                    {
-                        messageTag = "TraitorEndMessageSuccessTraitorDead";
-                    }
-                    else if (traitorCharacter.LockHands)
-                    {
-                        messageTag = "TraitorEndMessageSuccessTraitorDetained";
-                    }
-                    else
-                        messageTag = "TraitorEndMessageSuccess";
-                }
-                else //Partial or complete failure
-                {
-                    if (traitorCharacter.IsDead)
-                    {
-                        messageTag = "TraitorEndMessageFailureTraitorDead";
-                    }
-                    else if (traitorCharacter.LockHands)
-                    {
-                        messageTag = "TraitorEndMessageFailureTraitorDetained";
-                    }
-                    else
-                    {
-                        messageTag = "TraitorEndMessageFailure";
-                    }
-                }
-
-                endMessage += (TextManager.ReplaceGenderPronouns(TextManager.GetWithVariables(messageTag, new string[2] { "[traitorname]", "[targetname]" },
-                    new string[2] { traitorCharacter.Name, targetCharacter.Name }), traitorCharacter.Info.Gender) + "\n");
+                endMessage += traitor.CurrentTask.EndMessageText;
             }
 
             return endMessage;

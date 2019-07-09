@@ -980,7 +980,8 @@ namespace Barotrauma.Networking
             bool disguisesAllowed   = inc.ReadBoolean();
             bool rewiringAllowed    = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
-            string traitorTargetName = isTraitor ? inc.ReadString() : null;
+            // TODO(xxx): 
+            // string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
             bool allowRagdollButton = inc.ReadBoolean();
 
