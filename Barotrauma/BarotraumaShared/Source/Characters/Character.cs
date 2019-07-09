@@ -1890,12 +1890,16 @@ namespace Barotrauma
                             if (distSqr > NetConfig.DisableCharacterDistSqr)
                             {
                                 c.Enabled = false;
+                                if (c.IsDead && c.AIController is EnemyAIController)
+                                {
+                                    Entity.Spawner?.AddToRemoveQueue(c);
+                                }
                             }
                             else if (distSqr < NetConfig.EnableCharacterDistSqr)
                             {
                                 c.Enabled = true;
                             }
-                        }                        
+                        }
                     }
                     else if (Submarine.MainSub != null)
                     {
@@ -1905,12 +1909,16 @@ namespace Barotrauma
                         {
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition));
                         }
-                        
+
                         if (distSqr > NetConfig.DisableCharacterDistSqr)
                         {
                             c.Enabled = false;
+                            if (c.IsDead && c.AIController is EnemyAIController)
+                            {
+                                Entity.Spawner?.AddToRemoveQueue(c);
+                            }
                         }
-                        else if ( distSqr < NetConfig.EnableCharacterDistSqr)
+                        else if (distSqr < NetConfig.EnableCharacterDistSqr)
                         {
                             c.Enabled = true;
                         }
