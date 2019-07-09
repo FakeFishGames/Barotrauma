@@ -715,6 +715,7 @@
       </Attack>
       <StatusEffect type="OnImpact" target="This">
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+        <Remove />
       </StatusEffect>
     </Projectile>
   </Item>
