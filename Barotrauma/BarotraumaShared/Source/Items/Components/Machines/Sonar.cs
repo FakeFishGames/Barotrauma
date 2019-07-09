@@ -110,7 +110,6 @@ namespace Barotrauma.Items.Components
             get => currentMode;
             set
             {
-                System.Diagnostics.Debug.WriteLine("CurrentMode = "+value+" "+Environment.StackTrace);
                 currentMode = value;
                 if (value == Mode.Passive)
                 {
@@ -154,14 +153,13 @@ namespace Barotrauma.Items.Components
                 connectedTransducers.RemoveAll(t => t.DisconnectTimer <= 0.0f);
             }
 
-            for(var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
+            for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
                 activePings[pingIndex].State += deltaTime * PingFrequency;
             }
 
             if (currentMode == Mode.Active)
             {
-                System.Diagnostics.Debug.WriteLine("* active");
                 if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
                     (!UseTransducers || connectedTransducers.Count > 0))
                 {
@@ -209,10 +207,6 @@ namespace Barotrauma.Items.Components
                     currentPingIndex = -1;
                     aiPingCheckPending = false;
                 }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("* NOT active");
             }
 
             for (var pingIndex = 0; pingIndex < activePingsCount;)
