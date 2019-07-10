@@ -171,7 +171,14 @@ namespace Barotrauma.Networking
                 else
                 {
                     SteamP2PConnection conn = connectedClients.Find(c => c.SteamID == steamId);
-                    Disconnect(conn, "Disconnected");
+                    if (conn != null)
+                    {
+                        Disconnect(conn, "Disconnected");
+                    }
+                    else
+                    {
+                        disconnectingClients.Add(new DisconnectingClient(steamId));
+                    }
                 }
                 return;
             }
