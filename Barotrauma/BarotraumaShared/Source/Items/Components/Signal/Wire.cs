@@ -511,7 +511,10 @@ namespace Barotrauma.Items.Components
                 int wireIndex = connections[i].FindWireIndex(item);
                 if (wireIndex == -1) { continue; }
 #if SERVER
-                connections[i].Item.CreateServerEvent(connections[i].Item.GetComponent<ConnectionPanel>());
+                if (!connections[i].Item.Removed)
+                {
+                    connections[i].Item.CreateServerEvent(connections[i].Item.GetComponent<ConnectionPanel>());
+                }
 #endif
                 connections[i].SetWire(wireIndex, null);
                 connections[i] = null;
