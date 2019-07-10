@@ -42,7 +42,10 @@ namespace Barotrauma
 
             if (TestMode || Timing.TotalTime > KarmaNotificationTime)
             {
-                SendKarmaNotifications(clients);
+                foreach (Client client in clients)
+                {
+                    SendKarmaNotifications(client);
+                }
                 KarmaNotificationTime = Timing.TotalTime + KarmaNotificationInterval;
             }
 
@@ -52,31 +55,33 @@ namespace Barotrauma
             }
         }
 
-        private void SendKarmaNotifications(IEnumerable<Client> clients)
+        private void SendKarmaNotifications(Client client, string debugKarmaChangeReason = "")
         {
-            foreach (Client client in clients)
+            float karmaChange = client.Karma - clientMemories[client].PreviousNotifiedKarma;
+            if (Math.Abs(karmaChange) > KarmaNotificationInterval || (TestMode && Math.Abs(karmaChange) > 2.0f))
             {
-                float karmaChange = client.Karma - clientMemories[client].PreviousNotifiedKarma;
-                if (Math.Abs(karmaChange) > KarmaNotificationInterval || (TestMode && Math.Abs(karmaChange) > 2.0f))
+                if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
                 {
-                    if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
-                    {
-                        GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
-
-                    }
-                    else
-                    {
+                    GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
+                }
+                else
+                {
 #if DEBUG
-                        GameMain.Server.SendDirectChatMessage(
-                            (karmaChange < 0 ? $"You karma has decreased to {client.Karma}" : $"You karma has increased to {client.Karma}") + " (this message should not appear in release builds)", client);
+                    string msg =
+                        karmaChange < 0 ? $"You karma has decreased to {client.Karma}" : $"You karma has increased to {client.Karma}";
+                    if (!string.IsNullOrEmpty(debugKarmaChangeReason))
+                    {
+                        msg += $". Reason: {debugKarmaChangeReason}";
+                    }
+                    msg += " (this message should not appear in release builds)";
+                    GameMain.Server.SendDirectChatMessage(msg, client);
 
 #else
-                        GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
+                    GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
 #endif
-                    }
-                    clientMemories[client].PreviousNotifiedKarma = client.Karma;
                 }
-            }
+                clientMemories[client].PreviousNotifiedKarma = client.Karma;
+            }            
         }
 
         private void UpdateClient(Client client, float deltaTime)
@@ -124,7 +129,7 @@ namespace Barotrauma
                             float karmaDecrease = -WireDisconnectionKarmaDecrease;
                             //engineers don't lose as much karma for removing lots of wires
                             if (client.Character.Info?.Job.Prefab.Identifier == "engineer") { karmaDecrease *= 0.5f; }
-                            AdjustKarma(client.Character, karmaDecrease);
+                            AdjustKarma(client.Character, karmaDecrease, "Disconnected excessive number of wires");
                         }
                     }
                 }
@@ -133,7 +138,7 @@ namespace Barotrauma
                 {
                     if (client.Character.SelectedConstruction.GetComponent<Steering>() != null)
                     {
-                        client.Karma += SteerSubKarmaIncrease * deltaTime;
+                        AdjustKarma(client.Character, SteerSubKarmaIncrease * deltaTime, "Steering the sub");
                     }
                 }
             }
@@ -186,20 +191,20 @@ namespace Barotrauma
                 {
                     float karmaIncrease = damage * DamageEnemyKarmaIncrease;
                     if (attacker?.Info?.Job.Prefab.Identifier == "securityofficer") { karmaIncrease *= 2.0f; }
-                    AdjustKarma(attacker, karmaIncrease);
+                    AdjustKarma(attacker, karmaIncrease, "Damaged enemy");
                 }
             }
             else
             {
                 if (damage > 0)
                 {
-                    AdjustKarma(attacker, -damage * DamageFriendlyKarmaDecrease);
+                    AdjustKarma(attacker, -damage * DamageFriendlyKarmaDecrease, "Damaged friendly");
                 }
                 else
                 {
                     float karmaIncrease = -damage * HealFriendlyKarmaIncrease;
                     if (attacker?.Info?.Job.Prefab.Identifier == "medicaldoctor") { karmaIncrease *= 2.0f; }
-                    AdjustKarma(attacker, karmaIncrease);
+                    AdjustKarma(attacker, karmaIncrease, "Healed friendly");
                 }
             }
         }
@@ -215,14 +220,14 @@ namespace Barotrauma
 
             if (damageAmount > 0)
             {
-                AdjustKarma(attacker, -damageAmount * StructureDamageKarmaDecrease);
+                AdjustKarma(attacker, -damageAmount * StructureDamageKarmaDecrease, "Damaged structures");
             }
             else
             {
                 float karmaIncrease = -damageAmount * StructureRepairKarmaIncrease;
                 //mechanics get twice as much karma for repairing walls
                 if (attacker.Info?.Job.Prefab.Identifier == "mechanic") { karmaIncrease *= 2.0f; }
-                AdjustKarma(attacker, karmaIncrease);
+                AdjustKarma(attacker, karmaIncrease, "Repaired structures");
             }
         }
 
@@ -230,22 +235,22 @@ namespace Barotrauma
         {
             float karmaIncrease = repairAmount * ItemRepairKarmaIncrease;
             if (repairable.HasRequiredSkills(character)) { karmaIncrease *= 2.0f; }
-            AdjustKarma(character, karmaIncrease);
+            AdjustKarma(character, karmaIncrease, "Repaired item");
         }
 
         public void OnReactorOverHeating(Character character, float deltaTime)
         {
-            AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime);
+            AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
         }
 
         public void OnReactorMeltdown(Character character)
         {
-            AdjustKarma(character, -ReactorMeltdownKarmaDecrease);
+            AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
         }
 
         public void OnExtinguishingFire(Character character, float deltaTime)
         {
-            AdjustKarma(character, ExtinguishFireKarmaIncrease * deltaTime);
+            AdjustKarma(character, ExtinguishFireKarmaIncrease * deltaTime, "Extinguished a fire");
         }
 
         public void OnWireDisconnected(Character character, Wire wire)
@@ -265,10 +270,11 @@ namespace Barotrauma
             if (client != null)
             {
                 client.Karma -= SpamFilterKarmaDecrease;
+                SendKarmaNotifications(client, "Triggered the spam filter");
             }
         }
 
-        private void AdjustKarma(Character target, float amount)
+        private void AdjustKarma(Character target, float amount, string debugKarmaChangeReason = "")
         {
             if (target == null) { return; }
 
@@ -276,6 +282,10 @@ namespace Barotrauma
             if (client == null) { return; }
 
             client.Karma += amount;
-        }        
+            if (TestMode)
+            {
+                SendKarmaNotifications(client, debugKarmaChangeReason);
+            }
+        }
     }
 }
