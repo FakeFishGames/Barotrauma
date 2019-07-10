@@ -101,8 +101,12 @@ namespace Barotrauma.Networking
 
                     if (netProperties.ContainsKey(key))
                     {
+                        object prevValue = netProperties[key].Value;
                         netProperties[key].Read(incMsg);
-                        GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                        if (!netProperties[key].PropEquals(prevValue, netProperties[key]))
+                        {
+                            GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                        }
                         changed = true;
                     }
                     else

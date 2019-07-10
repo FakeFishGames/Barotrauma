@@ -52,31 +52,6 @@ namespace Barotrauma.Networking
                     return !PropEquals(TempValue, GUIComponentValue);
                 }
             }
-
-            public bool PropEquals(object a,object b)
-            {
-                switch (typeString)
-                {
-                    case "float":
-                        if (!(a is float?)) return false;
-                        if (!(b is float?)) return false;
-                        return (float)a == (float)b;
-                    case "int":
-                        if (!(a is int?)) return false;
-                        if (!(b is int?)) return false;
-                        return (int)a == (int)b;
-                    case "bool":
-                        if (!(a is bool?)) return false;
-                        if (!(b is bool?)) return false;
-                        return (bool)a == (bool)b;
-                    case "Enum":
-                        if (!(a is Enum)) return false;
-                        if (!(b is Enum)) return false;
-                        return ((Enum)a).Equals((Enum)b);
-                    default:
-                        return a.ToString().Equals(b.ToString(),StringComparison.InvariantCulture);
-                }
-            }
         }
         private Dictionary<string, bool> tempMonsterEnabled;
         

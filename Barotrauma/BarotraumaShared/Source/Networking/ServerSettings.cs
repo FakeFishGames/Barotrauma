@@ -106,14 +106,39 @@ namespace Barotrauma.Networking
                 get { return property.GetValue(parentObject); }
                 set { property.SetValue(parentObject, value); }
             }
-            
+
             public NetPropertyData(object parentObject, SerializableProperty property, string typeString)
             {
                 this.property = property;
                 this.typeString = typeString;
                 this.parentObject = parentObject;
             }
-            
+
+            public bool PropEquals(object a, object b)
+            {
+                switch (typeString)
+                {
+                    case "float":
+                        if (!(a is float?)) return false;
+                        if (!(b is float?)) return false;
+                        return MathUtils.NearlyEqual((float)a, (float)b);
+                    case "int":
+                        if (!(a is int?)) return false;
+                        if (!(b is int?)) return false;
+                        return (int)a == (int)b;
+                    case "bool":
+                        if (!(a is bool?)) return false;
+                        if (!(b is bool?)) return false;
+                        return (bool)a == (bool)b;
+                    case "Enum":
+                        if (!(a is Enum)) return false;
+                        if (!(b is Enum)) return false;
+                        return ((Enum)a).Equals((Enum)b);
+                    default:
+                        return a.ToString().Equals(b.ToString(), StringComparison.InvariantCulture);
+                }
+            }
+
             public void Read(NetBuffer msg)
             {
                 long oldPos = msg.Position;
