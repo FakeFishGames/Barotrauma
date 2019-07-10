@@ -14,12 +14,23 @@ namespace Barotrauma
 
             //the client's karma value when they were last sent a notification about it (e.g. "your karma is very low")
             public float PreviousNotifiedKarma;
+
+            public float StructureDamageAccumulator;
+            
+            private float structureDamagePerSecond;
+            public float StructureDamagePerSecond
+            {
+                get { return Math.Max(StructureDamageAccumulator, structureDamagePerSecond); }
+                set { structureDamagePerSecond = value; }
+            }
         }
 
-        public bool TestMode = false;
+        public bool TestMode = true;
 
         private readonly Dictionary<Client, ClientMemory> clientMemories = new Dictionary<Client, ClientMemory>();
         private readonly List<Client> bannedClients = new List<Client>();
+
+        private DateTime perSecondUpdate;
 
         private double KarmaNotificationTime;
 
@@ -30,14 +41,18 @@ namespace Barotrauma
             bannedClients.Clear();
             foreach (Client client in clients)
             {
-                if (!clientMemories.ContainsKey(client))
-                {
-                    clientMemories[client] = new ClientMemory()
-                    {
-                        PreviousNotifiedKarma = client.Karma
-                    };
-                }
+                var clientMemory = GetClientMemory(client);
                 UpdateClient(client, deltaTime);
+
+                if (perSecondUpdate < DateTime.Now)
+                {
+                    clientMemory.StructureDamagePerSecond = clientMemory.StructureDamageAccumulator;
+                    clientMemory.StructureDamageAccumulator = 0.0f;
+                }
+            }
+            if (perSecondUpdate < DateTime.Now)
+            {
+                perSecondUpdate = DateTime.Now + new TimeSpan(0, 0, 1);
             }
 
             if (TestMode || Timing.TotalTime > KarmaNotificationTime)
@@ -57,7 +72,8 @@ namespace Barotrauma
 
         private void SendKarmaNotifications(Client client, string debugKarmaChangeReason = "")
         {
-            float karmaChange = client.Karma - clientMemories[client].PreviousNotifiedKarma;
+            var clientMemory = GetClientMemory(client);
+            float karmaChange = client.Karma - clientMemory.PreviousNotifiedKarma;
             if (Math.Abs(karmaChange) > KarmaNotificationInterval || (TestMode && Math.Abs(karmaChange) > 2.0f))
             {
                 if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
@@ -80,7 +96,7 @@ namespace Barotrauma
                     GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
 #endif
                 }
-                clientMemories[client].PreviousNotifiedKarma = client.Karma;
+                clientMemory.PreviousNotifiedKarma = client.Karma;
             }            
         }
 
@@ -118,21 +134,18 @@ namespace Barotrauma
                 }
 
                 //check if the client has disconnected an excessive number of wires
-                if (clientMemories.ContainsKey(client))
+                var clientMemory = GetClientMemory(client);
+                if (clientMemory.WireDisconnectTime.Count > (int)AllowedWireDisconnectionsPerMinute)
                 {
-                    var clientMemory = clientMemories[client];
-                    if (clientMemory.WireDisconnectTime.Count > (int)AllowedWireDisconnectionsPerMinute)
+                    clientMemory.WireDisconnectTime.RemoveRange(0, clientMemory.WireDisconnectTime.Count - (int)AllowedWireDisconnectionsPerMinute);
+                    if (clientMemory.WireDisconnectTime.All(w => Timing.TotalTime - w.Second < 60.0f))
                     {
-                        clientMemory.WireDisconnectTime.RemoveRange(0, clientMemory.WireDisconnectTime.Count - (int)AllowedWireDisconnectionsPerMinute);
-                        if (clientMemory.WireDisconnectTime.All(w => Timing.TotalTime - w.Second < 60.0f))
-                        {
-                            float karmaDecrease = -WireDisconnectionKarmaDecrease;
-                            //engineers don't lose as much karma for removing lots of wires
-                            if (client.Character.Info?.Job.Prefab.Identifier == "engineer") { karmaDecrease *= 0.5f; }
-                            AdjustKarma(client.Character, karmaDecrease, "Disconnected excessive number of wires");
-                        }
+                        float karmaDecrease = -WireDisconnectionKarmaDecrease;
+                        //engineers don't lose as much karma for removing lots of wires
+                        if (client.Character.Info?.Job.Prefab.Identifier == "engineer") { karmaDecrease *= 0.5f; }
+                        AdjustKarma(client.Character, karmaDecrease, "Disconnected excessive number of wires");
                     }
-                }
+                }                
 
                 if (client.Character?.Info?.Job.Prefab.Identifier == "captain" && client.Character.SelectedConstruction != null)
                 {
@@ -220,6 +233,19 @@ namespace Barotrauma
 
             if (damageAmount > 0)
             {
+                if (StructureDamageKarmaDecrease <= 0.0f) { return; }
+                Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
+                if (client != null)
+                {
+                    //cap the damage so the karma can't decrease by more than MaxStructureDamageKarmaDecreasePerSecond per second
+                    var clientMemory = GetClientMemory(client);
+                    clientMemory.StructureDamageAccumulator += damageAmount;
+                    if (clientMemory.StructureDamagePerSecond + damageAmount >= MaxStructureDamageKarmaDecreasePerSecond / StructureDamageKarmaDecrease)
+                    {
+                        damageAmount -= (MaxStructureDamageKarmaDecreasePerSecond / StructureDamageKarmaDecrease) - clientMemory.StructureDamagePerSecond;
+                        if (damageAmount <= 0.0f) { return; }
+                    }
+                }
                 AdjustKarma(attacker, -damageAmount * StructureDamageKarmaDecrease, "Damaged structures");
             }
             else
@@ -263,6 +289,18 @@ namespace Barotrauma
 
             clientMemories[client].WireDisconnectTime.RemoveAll(w => w.First == wire);
             clientMemories[client].WireDisconnectTime.Add(new Pair<Wire, float>(wire, (float)Timing.TotalTime));
+        }
+
+        private ClientMemory GetClientMemory(Client client)
+        {
+            if (!clientMemories.ContainsKey(client))
+            {
+                clientMemories[client] = new ClientMemory()
+                {
+                    PreviousNotifiedKarma = client.Karma
+                };
+            }
+            return clientMemories[client];
         }
 
         public void OnSpamFilterTriggered(Client client)

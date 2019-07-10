@@ -31,6 +31,8 @@ namespace Barotrauma
         public float StructureRepairKarmaIncrease { get; set; }
         [Serialize(0.1f, true)]
         public float StructureDamageKarmaDecrease { get; set; }
+        [Serialize(30.0f, true)]
+        public float MaxStructureDamageKarmaDecreasePerSecond { get; set; }
 
         [Serialize(0.03f, true)]
         public float ItemRepairKarmaIncrease { get; set; }
