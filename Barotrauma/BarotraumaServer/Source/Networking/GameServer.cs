@@ -478,6 +478,8 @@ namespace Barotrauma.Networking
                     }
                 }
 
+                TraitorManager.Update(deltaTime);
+
                 bool isCrewDead =
                     connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsUnconscious);
 

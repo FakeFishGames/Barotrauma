@@ -22,6 +22,10 @@ namespace Barotrauma
 
             public virtual bool IsCompleted => false;
 
+            public virtual void Update(float deltaTime)
+            {
+            }
+
             protected Goal()
             {
                 throw new System.Exception("Attempt to instantiate Task with no implementation.");
@@ -35,12 +39,14 @@ namespace Barotrauma
 
         public class Objective
         {
-            public readonly List<Goal> Goals = new List<Goal>();
+            private readonly List<Goal> allGoals = new List<Goal>();
+            private readonly List<Goal> pendingGoals = new List<Goal>();
+            private readonly List<Goal> completedGoals = new List<Goal>();
 
-            public bool IsCompleted => Goals.TrueForAll(goal => goal.IsCompleted);
-            public bool IsPartiallyCompleted => Goals.Find(goal => goal.IsCompleted) != null;
+            public bool IsCompleted => pendingGoals.Count <= 0;
+            public bool IsPartiallyCompleted => completedGoals.Count > 0; 
 
-            public string GoalInfos => string.Join("\n", Goals.ConvertAll(goal => string.Concat("- ", goal.StatusText)));
+            public string GoalInfos => string.Join("\n", allGoals.ConvertAll(goal => string.Concat("- ", goal.StatusText)));
 
             public virtual string GetStartMessageText(Traitor traitor)
             {
@@ -64,9 +70,26 @@ namespace Barotrauma
                     ), traitor.Character.Info.Gender) + "\n";
             }
 
+            public void Update(float deltaTime)
+            {
+                for (int i = 0; i < pendingGoals.Count;) {
+                    var goal = pendingGoals[i];
+                    goal.Update(deltaTime);
+                    if (!goal.IsCompleted) {
+                        ++i;
+                    } else {
+                        completedGoals.Add(goal);
+                        pendingGoals.RemoveAt(i);
+                        Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == goal.Traitor.Character);
+                        GameMain.Server.SendDirectChatMessage(goal.CompletedText, traitorClient);
+                    }
+                }
+            }
+
             public Objective(params Goal[] goals)
             {
-                Goals.AddRange(goals);
+                allGoals.AddRange(goals);
+                pendingGoals.AddRange(goals);
             }
         }
 
@@ -90,10 +113,6 @@ namespace Barotrauma
         }
 
         public class GoalSabotageDivingGear : Goal
-        {
-        }
-
-        public class GoalDestroyOxygenTanks : Goal
         {
         }
 
@@ -143,11 +162,6 @@ namespace Barotrauma
             }
         }
 
-        public class GoalDestroyAllNonInventoryItemsWithTag : Goal
-        {
-
-        }
-
         public class GoalCauseReactorMeltdown : GoalItemConditionLessThan
         {
             public override string InfoText => TextManager.Get("TraitorGoalCauseReactorMeltDown");
@@ -158,6 +172,26 @@ namespace Barotrauma
             }
 
             public GoalCauseReactorMeltdown(Traitor traitor) : base(traitor, 0.0f, FindReactor())
+            {
+            }
+        }
+
+        public class GoalDestroyAllNonInventoryItemsWithTag : Goal
+        {
+            private readonly string Tag;
+
+            public override bool IsCompleted => GameMain.GameSession?.Submarine?.GetItems(true)?.TrueForAll(item => item.Tags.Contains(Tag)) ?? false;
+
+            public GoalDestroyAllNonInventoryItemsWithTag(Traitor traitor, string tag): base(traitor) {
+                Tag = tag;
+            }
+        }
+
+        public class GoalDestroyOxygenTanks : GoalDestroyAllNonInventoryItemsWithTag
+        {
+            public override string InfoText => TextManager.Get("TraitorGoalDestroyAllOxygenTanks");
+
+            public GoalDestroyOxygenTanks(Traitor traitor) : base(traitor, "oxygensource")
             {
             }
         }
@@ -313,14 +347,15 @@ namespace Barotrauma
                     }
                 }
                 goals.Add(new Traitor.GoalCauseReactorMeltdown(traitor));
+                goals.Add(new Traitor.GoalDestroyOxygenTanks(traitor));
                 traitor.CurrentObjective = new Traitor.Objective(goals.ToArray());
                 traitor.Greet(server, codeWords, codeResponse);
             }
         }
 
-        public void Update()
+        public void Update(float deltaTime)
         {
-
+            traitorList.ForEach(traitor => traitor.CurrentObjective?.Update(deltaTime));
         }
 
         public void CargoDestroyed()
