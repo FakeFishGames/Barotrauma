@@ -630,7 +630,7 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null && entity != null) explosion.Explode(entity.WorldPosition, entity);
+            if (explosion != null && entity != null) { explosion.Explode(entity.WorldPosition, damageSource: entity, attacker: user); }
 
             foreach (ISerializableEntity target in targets)
             {

@@ -77,7 +77,7 @@ namespace Barotrauma
             return prevExplosions.FindAll(e => e.Third >= Timing.TotalTime - maxSecondsAgo);
         }
         
-        public void Explode(Vector2 worldPosition, Entity damageSource)
+        public void Explode(Vector2 worldPosition, Entity damageSource, Character attacker = null)
         {
             prevExplosions.Add(new Triplet<Explosion, Vector2, float>(this, worldPosition, (float)Timing.TotalTime));
             if (prevExplosions.Count > 100)
@@ -98,7 +98,7 @@ namespace Barotrauma
             
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
-                RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f));
+                RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f), attacker);
             }
 
             if (empStrength > 0.0f)
@@ -130,7 +130,7 @@ namespace Barotrauma
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
-            DamageCharacters(worldPosition, attack, force, damageSource);
+            DamageCharacters(worldPosition, attack, force, damageSource, attacker);
             
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
@@ -173,7 +173,7 @@ namespace Barotrauma
                 MathHelper.Clamp(particlePos.Y, hull.WorldRect.Y - hull.WorldRect.Height, hull.WorldRect.Y));
         }
 
-        public static void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource)
+        public static void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker)
         {
             if (attack.Range <= 0.0f) return;
 
@@ -222,11 +222,13 @@ namespace Barotrauma
                         modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / c.AnimController.Limbs.Length));
                     }
                     c.LastDamageSource = damageSource;
-                    Character attacker = null;
-                    if (damageSource is Item item)
+                    if (attacker == null)
                     {
-                        attacker = item.GetComponent<Projectile>()?.User;
-                        if (attacker == null) attacker = item.GetComponent<MeleeWeapon>()?.User;
+                        if (damageSource is Item item)
+                        {
+                            attacker = item.GetComponent<Projectile>()?.User;
+                            if (attacker == null) attacker = item.GetComponent<MeleeWeapon>()?.User;
+                        }
                     }
 
                     //use a position slightly from the limb's position towards the explosion
@@ -280,7 +282,7 @@ namespace Barotrauma
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
-        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
+        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, Character attacker = null)
         {
             List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;
@@ -304,7 +306,7 @@ namespace Barotrauma
                     float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
                     if (distFactor <= 0.0f) continue;
                     
-                    structure.AddDamage(i, damage * distFactor);
+                    structure.AddDamage(i, damage * distFactor, attacker);
 
                     if (damagedStructures.ContainsKey(structure))
                     { 
