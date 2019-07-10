@@ -65,12 +65,12 @@ namespace Barotrauma.Networking
 
         public bool SpectateOnly;
         
-        private float karma = 50.0f;
+        private float karma = 100.0f;
         public float Karma
         {
             get
             {
-                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return 50.0f; }
+                if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return 100.0f; }
                 return karma;
             }
             set
