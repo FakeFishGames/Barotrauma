@@ -160,21 +160,21 @@ namespace Barotrauma.Items.Components
                     GetLinkedHulls(hull, hullData.LinkedHulls);
                     hullDatas.Add(hull, hullData);
                 }
-
-                float alpha = 1.0f;
+                
+                Color neutralColor = Color.DarkCyan;
                 if (hull.RoomName != null)
                 {
                     if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
                         hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
                     {
-                        alpha = 0.5f;
+                        neutralColor = new Color(9, 80, 159);
                     }
                 }
 
                 if (hullData.Distort)
                 {
                     hullFrame.Children.First().Color = Color.Lerp(Color.Black, Color.DarkGray * 0.5f, Rand.Range(0.0f, 1.0f));
-                    hullFrame.Color = Color.DarkCyan * alpha * 0.5f;
+                    hullFrame.Color = neutralColor * 0.5f;
                     continue;
                 }
                 
@@ -183,13 +183,13 @@ namespace Barotrauma.Items.Components
                     hullFrame.Parent.Rect.Width / (float)hull.Submarine.Borders.Width, 
                     hullFrame.Parent.Rect.Height / (float)hull.Submarine.Borders.Height);
                 
-                Color borderColor = Color.DarkCyan * alpha;
+                Color borderColor = neutralColor;
                 
                 float? gapOpenSum = 0.0f;
                 if (ShowHullIntegrity)
                 {
                     gapOpenSum = hull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
-                    borderColor = Color.Lerp(Color.DarkCyan * alpha, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
+                    borderColor = Color.Lerp(neutralColor, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
                 }
 
                 float? oxygenAmount = null;
@@ -198,7 +198,7 @@ namespace Barotrauma.Items.Components
                     oxygenAmount = RequireOxygenDetectors ? hullData.Oxygen : hull.OxygenPercentage;
                     GUI.DrawRectangle(
                         spriteBatch, hullFrame.Rect, 
-                        Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f) * alpha, 
+                        Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f), 
                         true);
                 }
 
@@ -214,8 +214,8 @@ namespace Barotrauma.Items.Components
 
                         waterRect.Inflate(-3, -3);
 
-                        GUI.DrawRectangle(spriteBatch, waterRect, new Color(85, 136, 147) * alpha, true);
-                        GUI.DrawLine(spriteBatch, new Vector2(waterRect.X, waterRect.Y), new Vector2(waterRect.Right, waterRect.Y), Color.LightBlue * alpha);
+                        GUI.DrawRectangle(spriteBatch, waterRect, new Color(85, 136, 147), true);
+                        GUI.DrawLine(spriteBatch, new Vector2(waterRect.X, waterRect.Y), new Vector2(waterRect.Right, waterRect.Y), Color.LightBlue);
                     }
                 }
 
@@ -228,7 +228,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    hullFrame.Children.First().Color = Color.DarkCyan * alpha * 0.8f;
+                    hullFrame.Children.First().Color = neutralColor * 0.8f;
                 }
 
                 if (mouseOnHull == hull)
@@ -258,7 +258,7 @@ namespace Barotrauma.Items.Components
                     hullWaterText.TextColor = waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount);
                 }
                 
-                hullFrame.Color = borderColor * alpha;
+                hullFrame.Color = borderColor;
             }
             
             foreach (Submarine sub in subs)
