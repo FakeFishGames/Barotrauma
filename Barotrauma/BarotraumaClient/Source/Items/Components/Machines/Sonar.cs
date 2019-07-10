@@ -28,7 +28,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox directionalTickBox;
         private GUIScrollBar directionalSlider;
 
-        private GUIComponent activeControlsContainer;
+        private GUILayoutGroup activeControlsContainer;
+        private GUIFrame controlContainer;
 
         private GUICustomComponent sonarView;
 
@@ -68,12 +69,11 @@ namespace Barotrauma.Items.Components
         {
             sonarBlips = new List<SonarBlip>();
             
-            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
-            sonarView = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
+            sonarView = new GUICustomComponent(new RectTransform(Point.Zero, GuiFrame.RectTransform, Anchor.CenterLeft),
                 (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
-            var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.TopLeft)
-                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, "SonarFrame");
+            controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.TopLeft)
+                { MinSize = new Point(150, 0) }, "SonarFrame");
 
             controlContainer.RectTransform.SetAsFirstChild();
 
@@ -192,6 +192,18 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+
+            SetUILayout();
+
+            GameMain.Instance.OnResolutionChanged += SetUILayout;
+            GameMain.Config.OnHUDScaleChanged += SetUILayout;
+        }
+
+        private void SetUILayout()
+        {
+            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
+            sonarView.RectTransform.NonScaledSize = new Point(viewSize);
+            controlContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
         }
 
         public override void OnItemLoaded()

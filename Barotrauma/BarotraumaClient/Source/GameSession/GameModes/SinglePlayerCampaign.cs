@@ -419,7 +419,8 @@ namespace Barotrauma
         public override void Save(XElement element)
         {
             XElement modeElement = new XElement("SinglePlayerCampaign",
-                new XAttribute("money", Money),
+                // Refunds the money when save & quitting from the map if there are items selected in the store
+                new XAttribute("money", Money + (CargoManager != null ? CargoManager.GetTotalItemCost() : 0)),
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);

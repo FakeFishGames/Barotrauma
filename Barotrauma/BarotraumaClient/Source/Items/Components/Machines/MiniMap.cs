@@ -17,10 +17,14 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock hullNameText, hullBreachText, hullAirQualityText, hullWaterText;
 
+        private string noPowerTip = "";
+
         private List<Submarine> displayedSubs = new List<Submarine>();
 
         partial void InitProjSpecific(XElement element)
         {
+            noPowerTip = TextManager.Get("SteeringNoPowerTip");
+
             GuiFrame.RectTransform.RelativeOffset = new Vector2(0.4f, 0.0f);
             new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
                 DrawHUDBack, null);
@@ -105,6 +109,16 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (voltage < minVoltage)
+        {
+                Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
+                Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
+
+                GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip,
+                    Color.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f);
+                return;
+            }
+
             foreach (GUIComponent child in submarineContainer.Children.First().Children)
             {
                 if (child.UserData is Hull hull)
@@ -143,6 +157,11 @@ namespace Barotrauma.Items.Components
                     hullFrame.Color = Color.DarkCyan * 0.3f;
                     hullFrame.Children.First().Color = Color.DarkCyan * 0.3f;
                 }
+            }
+
+            if (voltage < minVoltage)
+            {
+                return;
             }
 
             float scale = 1.0f;
