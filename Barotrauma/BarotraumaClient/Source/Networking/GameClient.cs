@@ -1363,7 +1363,7 @@ namespace Barotrauma.Networking
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
             for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > 1300 - 5)
+                if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > MsgConstants.MTU - 5)
                 {
                     //no more room in this packet
                     break;
@@ -1372,9 +1372,9 @@ namespace Barotrauma.Networking
             }
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
 
-            if (outmsg.LengthBytes > 1300)
+            if (outmsg.LengthBytes > MsgConstants.MTU)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + 1300);
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU);
             }
 
             clientPeer.Send(outmsg, DeliveryMethod.Unreliable);
@@ -1398,7 +1398,7 @@ namespace Barotrauma.Networking
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
             for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > 1300 - 5)
+                if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > MsgConstants.MTU - 5)
                 {
                     //not enough room in this packet
                     break;
@@ -1408,9 +1408,9 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
 
-            if (outmsg.LengthBytes > 1300)
+            if (outmsg.LengthBytes > MsgConstants.MTU)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + 1300);
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU);
             }
 
             clientPeer.Send(outmsg, DeliveryMethod.Unreliable);

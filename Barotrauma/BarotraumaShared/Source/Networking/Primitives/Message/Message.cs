@@ -13,6 +13,12 @@ namespace Barotrauma.Networking
         Success = 0x0
     }
 
+    public static class MsgConstants
+    {
+        public const int MTU = 1200;
+        public const int CompressionThreshold = 1000;
+    }
+
     internal static class MsgWriter
     {
         internal static void Write(byte[] buf, ref int bitPos, bool val)
@@ -649,7 +655,7 @@ namespace Barotrauma.Networking
 
         public void PrepareForSending(byte[] outBuf, out bool isCompressed, out int length)
         {
-            if (LengthBytes <= 1100)
+            if (LengthBytes <= MsgConstants.CompressionThreshold)
             {
                 isCompressed = false;
                 Array.Copy(buf, outBuf, LengthBytes);

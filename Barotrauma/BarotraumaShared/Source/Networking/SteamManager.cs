@@ -12,7 +12,13 @@ namespace Barotrauma.Steam
         public const uint AppID = 602960;
         
         private Facepunch.Steamworks.Client client;
-        private Server server;
+        private Facepunch.Steamworks.Server server;
+
+        private static List<string> initializationErrors = new List<string>();
+        public static IEnumerable<string> InitializationErrors
+        {
+            get { return initializationErrors; }
+        }
 
         private Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
         {
@@ -61,6 +67,65 @@ namespace Barotrauma.Steam
         {
             if (!USE_STEAM) return;
             instance = new SteamManager();
+        }
+
+        public static bool InitializeClient()
+        {
+            if (instance.client != null) { return true; }
+            bool clientInitialized = false;
+            try
+            {
+                instance.client = new Facepunch.Steamworks.Client(AppID);
+                clientInitialized = instance.client.IsSubscribed && instance.client.IsValid;
+
+                if (clientInitialized)
+                {
+                    DebugConsole.Log("Logged in as " + instance.client.Username + " (SteamID " + instance.client.SteamId + ")");
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                clientInitialized = false;
+                initializationErrors.Add("SteamDllNotFound");
+            }
+            catch (Exception)
+            {
+                clientInitialized = false;
+                initializationErrors.Add("SteamClientInitFailed");
+            }
+
+            if (!clientInitialized)
+            {
+                try
+                {
+
+                    Facepunch.Steamworks.Client.Instance.Dispose();
+                }
+                catch (Exception e)
+                {
+                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
+                }
+                instance.client = null;
+            }
+            return clientInitialized;
+        }
+
+        public static ulong GetSteamID()
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null)
+            {
+                return 0;
+            }
+            return instance.client.SteamId;
+        }
+
+        public static string GetUsername()
+        {
+            if (instance == null || !instance.isInitialized || instance.client == null)
+            {
+                return "";
+            }
+            return instance.client.Username;
         }
 
         public static void OverlayCustomURL(string url)

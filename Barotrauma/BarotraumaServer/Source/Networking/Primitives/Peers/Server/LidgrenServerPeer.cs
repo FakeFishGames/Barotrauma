@@ -512,7 +512,12 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
+        public override void InitializeSteamServerCallbacks(Server steamServer)
+        {
+            steamServer.Auth.OnAuthChange = OnAuthChange;
+        }
+
+        private void OnAuthChange(ulong steamID, ulong ownerID, ServerAuth.Status status)
         {
             if (netServer == null) { return; }
 
@@ -585,45 +590,7 @@ namespace Barotrauma.Networking
 
             netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
         }
-
-        public override NetworkConnection GetConnectionByName(string name)
-        {
-            if (netServer == null) { return null; } 
-
-            return connectedClients.Find(c => c.Name == name);
-        }
-
-        public override NetworkConnection GetConnectionByEndPoint(object endPoint)
-        {
-            if (netServer == null) { return null; }
-
-            if (endPoint is IPEndPoint)
-            {
-                IPEndPoint ipEndPoint = (IPEndPoint)endPoint;
-                return connectedClients.Find(c => c.IPEndPoint.Address.Equals(ipEndPoint.Address) && c.IPEndPoint.Port == ipEndPoint.Port);
-            }
-            else if (endPoint is string)
-            {
-                string strEndPoint = (string)endPoint;
-                int colonCount = strEndPoint.Count(c => c == ':');
-                if (colonCount == 1 || colonCount == 7)
-                {
-                    string[] split = strEndPoint.Split(':');
-                    string ip = string.Join(":", split, 0, split.Length-1); UInt16 port = UInt16.Parse(split[split.Length-1]);
-                    return connectedClients.Find(c => c.IPString == ip && c.Port == port);
-                }
-                return connectedClients.Find(c => c.IPString == strEndPoint);
-            }
-            return null;
-        }
-
-        public override NetworkConnection GetConnectionBySteamID(ulong steamId)
-        {
-            if (netServer == null) { return null; }
-
-            return connectedClients.Find(c => c.SteamID == steamId);
-        }
-
+        
         public override void Disconnect(NetworkConnection conn,string msg=null)
         {
             if (netServer == null) { return; }

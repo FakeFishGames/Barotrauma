@@ -217,6 +217,7 @@
     <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\Primitives\Peers\Server\LidgrenServerPeer.cs" />
     <Compile Include="Source\Networking\Primitives\Peers\Server\ServerPeer.cs" />
+    <Compile Include="Source\Networking\Primitives\Peers\Server\SteamP2PServerPeer.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerSettings.cs" />
     <Compile Include="Source\Networking\SteamManager.cs" />

@@ -239,6 +239,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IReadMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\IWriteMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\Message\Message.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Primitives\NetworkConnection\SteamP2PConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\RespawnManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerSettings.cs" />

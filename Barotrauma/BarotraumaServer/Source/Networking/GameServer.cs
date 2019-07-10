@@ -132,7 +132,7 @@ namespace Barotrauma.Networking
                 serverPeer.OnMessageReceived = ReadDataMessage;
                 serverPeer.OnDisconnect = OnClientDisconnect;
 
-                fileSender = new FileSender(serverPeer, 1300);
+                fileSender = new FileSender(serverPeer, MsgConstants.MTU);
                 fileSender.OnEnded += FileTransferChanged;
                 fileSender.OnStarted += FileTransferChanged;
 
@@ -1314,7 +1314,7 @@ namespace Barotrauma.Networking
                 }
 
                 //no more room in this packet
-                if (outmsg.LengthBytes + tempBuffer.LengthBytes > 1300 - 20)
+                if (outmsg.LengthBytes + tempBuffer.LengthBytes > MsgConstants.MTU - 20)
                 {
                     break;
                 }
@@ -1329,9 +1329,9 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
-            if (outmsg.LengthBytes > 1300)
+            if (outmsg.LengthBytes > MsgConstants.MTU)
             {
-                string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + 1300 + ")\n";
+                string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
                 errorMsg +=
                     "  Client list size: " + clientListBytes + " bytes\n" +
                     "  Chat message size: " + chatMessageBytes + " bytes\n" +
@@ -1361,9 +1361,9 @@ namespace Barotrauma.Networking
 
                 outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
-                if (outmsg.LengthBytes > 1300)
+                if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + 1300 + ")\n";
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
                     errorMsg +=
                         "  Event size: " + eventManagerBytes + " bytes\n";
 
@@ -1506,9 +1506,9 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (outmsg.LengthBytes > 1300)
+                if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + 1300 + ")");
+                    DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")");
                 }
 
                 serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
@@ -1520,7 +1520,7 @@ namespace Barotrauma.Networking
             c.ChatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.LastRecvChatMsgID));
             for (int i = 0; i < c.ChatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                if (outmsg.LengthBytes + c.ChatMsgQueue[i].EstimateLengthBytesServer(c) > 1300 - 5)
+                if (outmsg.LengthBytes + c.ChatMsgQueue[i].EstimateLengthBytesServer(c) > MsgConstants.MTU - 5)
                 {
                     //not enough room in this packet
                     return;

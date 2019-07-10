@@ -11,65 +11,10 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-        private static List<string> initializationErrors = new List<string>();
-        public static IEnumerable<string> InitializationErrors
-        {
-            get { return initializationErrors; }
-        }
-
         private SteamManager()
         {
-            try
-            {
-                client = new Facepunch.Steamworks.Client(AppID);
-                isInitialized = client.IsSubscribed && client.IsValid;
-
-                if (isInitialized)
-                {
-                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
-                }
-            }
-            catch (DllNotFoundException)
-            {
-                isInitialized = false;
-                initializationErrors.Add("SteamDllNotFound");
-            }
-            catch (Exception)
-            {
-                isInitialized = false;
-                initializationErrors.Add("SteamClientInitFailed");
-            }
-
-            if (!isInitialized)
-            {
-                try
-                {
-
-                    Facepunch.Steamworks.Client.Instance.Dispose();
-                }
-                catch (Exception e)
-                {
-                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
-                }
-            }
-        }
-
-        public static ulong GetSteamID()
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return 0;
-            }
-            return instance.client.SteamId;
-        }
-
-        public static string GetUsername()
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return "";
-            }
-            return instance.client.Username;
+            client = null;
+            isInitialized = InitializeClient();
         }
 
         public static ulong GetWorkshopItemIDFromUrl(string url)
