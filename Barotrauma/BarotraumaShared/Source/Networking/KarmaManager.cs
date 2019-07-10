@@ -32,7 +32,7 @@ namespace Barotrauma
         [Serialize(0.1f, true)]
         public float StructureDamageKarmaDecrease { get; set; }
 
-        [Serialize(0.05f, true)]
+        [Serialize(0.03f, true)]
         public float ItemRepairKarmaIncrease { get; set; }
 
         [Serialize(0.5f, true)]
