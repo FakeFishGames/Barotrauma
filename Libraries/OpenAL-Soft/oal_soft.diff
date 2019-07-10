@@ -1,0 +1,13 @@
+diff --git a/Alc/alc.cpp b/Alc/alc.cpp
+index fde655be..279f400a 100644
+--- a/Alc/alc.cpp
++++ b/Alc/alc.cpp
+@@ -956,7 +956,7 @@ static void alc_initconfig(void)
+         }
+         TRACE("Supported backends: %s\n", names.c_str());
+     }
+-    ReadALConfig();
++    //ReadALConfig();
+ 
+     str = getenv("__ALSOFT_SUSPEND_CONTEXT");
+     if(str && *str)
