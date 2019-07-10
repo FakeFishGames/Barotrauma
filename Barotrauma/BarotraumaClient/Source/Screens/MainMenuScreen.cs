@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -736,6 +737,7 @@ namespace Barotrauma
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -port " + port.ToString() +
                                    " -queryport " + queryPort.ToString() +
+                                   " -public " + isPublicBox.Selected.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -upnp " + useUpnpBox.Selected +
                                    " -maxplayers " + maxPlayersBox.Text +
@@ -940,6 +942,20 @@ namespace Barotrauma
 #region UI Methods      
         private void CreateHostServerFields()
         {
+            int port = NetConfig.DefaultPort;
+            int queryPort = NetConfig.DefaultQueryPort;
+            int maxPlayers = 8;
+            if (File.Exists(ServerSettings.SettingsFile))
+            {
+                XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
+                if (settingsDoc?.Root != null)
+                {
+                    port = settingsDoc.Root.GetAttributeInt("port", port);
+                    queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);
+                    maxPlayers = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
+                }
+            }
+
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
@@ -954,12 +970,16 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
-            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            { 
+                MaxTextLength = NetConfig.ServerNameMaxLength,
+                OverflowClip = true
+            };
 
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
             portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
-                Text = NetConfig.DefaultPort.ToString(),
+                Text = port.ToString(),
                 ToolTip = TextManager.Get("ServerPortToolTip")
             };
 
@@ -968,7 +988,7 @@ namespace Barotrauma
                 label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerQueryPort"), textAlignment: textAlignment);
                 queryPortBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
                 {
-                    Text = NetConfig.DefaultQueryPort.ToString(),
+                    Text = queryPort.ToString(),
                     ToolTip = TextManager.Get("ServerQueryPortToolTip")
                 };
             }
@@ -987,7 +1007,7 @@ namespace Barotrauma
 
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
-                Text = "8",
+                Text = maxPlayers.ToString(),
                 Enabled = false
             };
             new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)

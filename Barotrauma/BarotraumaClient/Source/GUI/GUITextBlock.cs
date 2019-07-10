@@ -389,7 +389,7 @@ namespace Barotrauma
         public static void AutoScaleAndNormalize(IEnumerable<GUITextBlock> textBlocks)
         {
             if (!textBlocks.Any()) { return; }
-            float minScale = textBlocks.First().TextScale;
+            float minScale = Math.Max(textBlocks.First().TextScale, 1.0f);
             foreach (GUITextBlock textBlock in textBlocks)
             {
                 textBlock.AutoScale = true;

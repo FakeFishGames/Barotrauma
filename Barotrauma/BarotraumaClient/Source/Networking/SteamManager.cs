@@ -242,6 +242,10 @@ namespace Barotrauma.Steam
 
                     if (s.Rules.ContainsKey("gamestarted")) serverInfo.GameStarted = s.Rules["gamestarted"] == "True";
 
+                    if (s.Rules.ContainsKey("gamemode"))
+                    {
+                        serverInfo.GameMode = s.Rules["gamemode"];
+                    }
                     if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
                         serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
                     {
@@ -596,7 +600,7 @@ namespace Barotrauma.Steam
             }
             else
             {
-                DebugConsole.ThrowError("Publishing workshop item " + item.Title + " failed. " + item.Error);
+                DebugConsole.NewMessage("Publishing workshop item " + item.Title + " failed. " + item.Error, Microsoft.Xna.Framework.Color.Red);
             }
 
             SaveUtil.ClearFolder(WorkshopItemStagingFolder);

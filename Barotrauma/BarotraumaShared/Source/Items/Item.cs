@@ -152,13 +152,12 @@ namespace Barotrauma
             get { return description ?? prefab.Description; }
             set { description = value; }
         }
-
-        private bool hiddenInGame;
+        
         [Editable, Serialize(false, true)]
         public bool HiddenInGame
         {
-            get { return hiddenInGame; }
-            set { hiddenInGame = value; }
+            get;
+            set;
         }
 
         public float ImpactTolerance
@@ -262,7 +261,26 @@ namespace Barotrauma
         /// </summary>
         public string ContainerIdentifier
         {
-            get { return Container?.prefab.Identifier ?? ""; }
+            get
+            {
+                return 
+                    Container?.prefab.Identifier ?? 
+                    ParentInventory?.Owner?.ToString() ?? 
+                    "";
+            }
+            set { /*do nothing*/ }
+        }
+
+        [Serialize(false, false)]
+        /// <summary>
+        /// Can be used by status effects or conditionals to check if the physics body of the item is active
+        /// </summary>
+        public bool PhysicsBodyActive
+        {
+            get
+            {
+                return body != null && body.Enabled;
+            }
             set { /*do nothing*/ }
         }
 
@@ -315,7 +333,7 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
-        public bool IsFullCondition => Condition >= MaxCondition;
+        public bool IsFullCondition => MathUtils.NearlyEqual(Condition, MaxCondition);
         public float MaxCondition => Prefab.Health;
         public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
 
@@ -334,6 +352,8 @@ namespace Barotrauma
                 if (Indestructible) return;
 
                 float prev = condition;
+                bool wasInFullCondition = IsFullCondition;
+
                 condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
                 if (condition == 0.0f && prev > 0.0f)
                 {
@@ -349,9 +369,17 @@ namespace Barotrauma
                 
                 SetActiveSprite();
 
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !MathUtils.NearlyEqual(lastSentCondition, condition))
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == Prefab.Health)
+                    if (Math.Abs(lastSentCondition - condition) > 1.0f)
+                    {
+                        conditionUpdatePending = true;
+                    }
+                    else if (wasInFullCondition != IsFullCondition)
+                    {
+                        conditionUpdatePending = true;
+                    }
+                    else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= Prefab.Health))
                     {
                         conditionUpdatePending = true;
                     }
@@ -2086,11 +2114,13 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Submarine != null || rootContainer.ParentInventory?.Owner is Character);
 
             Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
-            
+
+            int width = ResizeHorizontal ? rect.Width : defaultRect.Width;
+            int height = ResizeVertical ? rect.Height : defaultRect.Height;
             element.Add(new XAttribute("rect",
                 (int)(rect.X - subPosition.X) + "," +
                 (int)(rect.Y - subPosition.Y) + "," +
-                defaultRect.Width + "," + defaultRect.Height));
+                width + "," + height));
             
             if (linkedTo != null && linkedTo.Count > 0)
             {

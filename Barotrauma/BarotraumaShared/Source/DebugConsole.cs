@@ -105,7 +105,7 @@ namespace Barotrauma
         public static bool CheatsEnabled;
 
         private static List<ColoredText> unsavedMessages = new List<ColoredText>();
-        private static int messagesPerFile = 800;
+        private static int messagesPerFile = 5000;
         public const string SavePath = "ConsoleLogs";
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
@@ -648,6 +648,20 @@ namespace Barotrauma
             },null));
 
 #if DEBUG
+            commands.Add(new Command("teleportsub", "teleportsub [start/end]: Teleport the submarine to the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
+            {
+                if (Submarine.MainSub == null || Level.Loaded == null) return;
+
+                if (args.Length > 0 && args[0].ToLowerInvariant() == "start")
+                {
+                    Submarine.MainSub.SetPosition(Level.Loaded.StartPosition);
+                }
+                else
+                {
+                    Submarine.MainSub.SetPosition(Level.Loaded.EndPosition);
+                }
+            }, isCheat: true));
+
             commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -1582,7 +1596,14 @@ namespace Barotrauma
                 }
             }
 
-            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
+            string fileName = "DebugConsoleLog_";
+#if SERVER
+            fileName += "Server_";
+#else
+            fileName += "Client_";
+#endif
+
+            fileName += DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {

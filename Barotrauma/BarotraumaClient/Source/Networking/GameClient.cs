@@ -1093,6 +1093,7 @@ namespace Barotrauma.Networking
             bool loadSecondSub      = inc.ReadBoolean();
 
             bool disguisesAllowed   = inc.ReadBoolean();
+            bool rewiringAllowed    = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
@@ -1114,6 +1115,7 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
             serverSettings.AllowDisguises = disguisesAllowed;
+            serverSettings.AllowRewiring = rewiringAllowed;
             serverSettings.AllowRagdollButton = allowRagdollButton;
 
             if (campaign == null)
@@ -1706,6 +1708,8 @@ namespace Barotrauma.Networking
                 case FileTransferType.Submarine:
                     new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.GetWithVariable("FileDownloadedNotification", "[filename]", transfer.FileName));
                     var newSub = new Submarine(transfer.FilePath);
+                    if (newSub.IsFileCorrupted) { return; }
+
                     var existingSubs = Submarine.SavedSubmarines.Where(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash).ToList();
                     foreach (Submarine existingSub in existingSubs)
                     {
@@ -2494,7 +2498,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        BanPlayer(clientName, banReasonBox.Text, ban);
+                        BanPlayer(clientName, banReasonBox.Text, range: rangeBan);
                     }
                 }
                 else

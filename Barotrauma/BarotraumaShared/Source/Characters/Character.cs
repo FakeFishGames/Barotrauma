@@ -130,16 +130,20 @@ namespace Barotrauma
         {
             get
             {
-                if (ViewTarget == null) return AnimController.AimSourcePos;
+                if (ViewTarget == null) { return AnimController.AimSourcePos; }
+
+                Vector2 viewTargetWorldPos = ViewTarget.WorldPosition;
                 if (ViewTarget is Item targetItem)
                 {
                     Turret turret = targetItem.GetComponent<Turret>();
                     if (turret != null)
                     {
-                        return new Vector2(targetItem.Rect.X + turret.TransformedBarrelPos.X, targetItem.Rect.Y - turret.TransformedBarrelPos.Y);
+                        viewTargetWorldPos = new Vector2(
+                            targetItem.WorldRect.X + turret.TransformedBarrelPos.X, 
+                            targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
-                return ViewTarget.Position;
+                return Position + (viewTargetWorldPos - WorldPosition);
             }
         }
 
@@ -1517,7 +1521,7 @@ namespace Barotrauma
 
         public bool CanAccessInventory(Inventory inventory)
         {
-            if (!CanInteract) return false;
+            if (!CanInteract || inventory.Locked) { return false; }
 
             //the inventory belongs to some other character
             if (inventory.Owner is Character && inventory.Owner != this)
@@ -1558,7 +1562,11 @@ namespace Barotrauma
         {
             distanceToItem = -1.0f;
 
-            if (!CanInteract || item.HiddenInGame) return false;
+            bool hidden = item.HiddenInGame;
+#if CLIENT
+            if (Screen.Selected == GameMain.SubEditorScreen) { hidden = false; }
+#endif  
+            if (!CanInteract || hidden) return false;
 
             if (item.ParentInventory != null)
             {
@@ -1802,7 +1810,7 @@ namespace Barotrauma
             {
                 SelectCharacter(focusedCharacter);
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow)
+            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow && CanInteractWith(focusedCharacter, 160f, false))
             {
                 if (focusedCharacter == SelectedCharacter)
                 {

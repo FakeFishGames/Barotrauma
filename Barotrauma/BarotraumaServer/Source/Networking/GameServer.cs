@@ -97,6 +97,10 @@ namespace Barotrauma.Networking
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
+            if (name.Length > NetConfig.ServerNameMaxLength)
+            {
+                name = name.Substring(0, NetConfig.ServerNameMaxLength);
+            }
             
             this.name = name;
             
@@ -185,11 +189,7 @@ namespace Barotrauma.Networking
 
             if (SteamManager.USE_STEAM)
             {
-                SteamManager.CreateServer(this, isPublic);
-                if (isPublic)
-                {
-                    registeredToMaster = true;
-                }
+                registeredToMaster = SteamManager.CreateServer(this, isPublic);
             }
             if (isPublic && !GameMain.Config.UseSteamMatchmaking)
             {
@@ -1084,6 +1084,10 @@ namespace Barotrauma.Networking
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
                         KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? $"ServerMessage.KickedBy~[initiator]={sender.Name}" : kickReason);
                     }
+                    else
+                    {
+                        SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={kickedName}"), sender, ChatMessageType.Console);
+                    }
                     break;
                 case ClientPermissions.Ban:
                     string bannedName = inc.ReadString().ToLowerInvariant();
@@ -1104,11 +1108,15 @@ namespace Barotrauma.Networking
                             BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range);
                         }
                     }
+                    else
+                    {
+                        SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={bannedName}"), sender, ChatMessageType.Console);
+                    }
                     break;
                 case ClientPermissions.Unban:
-                    string unbannedName = inc.ReadString().ToLowerInvariant();
+                    string unbannedName = inc.ReadString();
                     string unbannedIP = inc.ReadString();
-                    UnbanPlayer(unbannedIP, unbannedIP);
+                    UnbanPlayer(unbannedName, unbannedIP);
                     break;
                 case ClientPermissions.ManageRound:
                     bool end = inc.ReadBoolean();
@@ -1784,6 +1792,8 @@ namespace Barotrauma.Networking
 
             if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
 
+            entityEventManager.RefreshEntityIDs();
+
             //assign jobs and spawnpoints separately for each team
             for (int n = 0; n < teamCount; n++)
             {
@@ -1969,6 +1979,7 @@ namespace Barotrauma.Networking
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
             msg.Write(serverSettings.AllowDisguises);
+            msg.Write(serverSettings.AllowRewiring);
 
             Traitor traitor = null;
             if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)

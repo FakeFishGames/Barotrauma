@@ -335,8 +335,12 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null);
 
             //server info ------------------------------------------------------------------
-            
-            ServerName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), infoFrameContent.RectTransform));
+
+            ServerName = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.05f), infoFrameContent.RectTransform))
+            {
+                MaxTextLength = NetConfig.ServerNameMaxLength,
+                OverflowClip = true
+            };
             ServerName.OnDeselected += (textBox, key) =>
             {
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
@@ -1608,13 +1612,13 @@ namespace Barotrauma
         public void BanPlayer(Client client)
         {
             if (GameMain.NetworkMember == null || client == null) { return; }
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: false);
         }
 
         public void BanPlayerRange(Client client)
         {
             if (GameMain.NetworkMember == null || client == null) { return; }
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: true);
         }
         
         public override void AddToGUIUpdateList()

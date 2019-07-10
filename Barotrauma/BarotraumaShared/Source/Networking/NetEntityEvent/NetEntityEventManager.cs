@@ -65,7 +65,7 @@ namespace Barotrauma.Networking
                     break;
                 }
 
-                tempBuffer.Write((UInt16)e.Entity.ID);
+                tempBuffer.Write(e.EntityID);
                 tempBuffer.Write((byte)tempEventBuffer.LengthBytes);
                 tempBuffer.Write(tempEventBuffer);
                 tempBuffer.WritePadBits();

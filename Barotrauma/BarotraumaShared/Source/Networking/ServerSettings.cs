@@ -31,6 +31,8 @@ namespace Barotrauma.Networking
     
     partial class ServerSettings : ISerializableEntity
     {
+        public const string SettingsFile = "serversettings.xml";
+
         [Flags]
         public enum NetFlags : byte
         {
@@ -539,7 +541,14 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-
+        
+        [Serialize(true, true)]
+        public bool AllowRewiring
+        {
+            get;
+            set;
+        }
+        
         private YesNoMaybe traitorsEnabled;
         public YesNoMaybe TraitorsEnabled
         {

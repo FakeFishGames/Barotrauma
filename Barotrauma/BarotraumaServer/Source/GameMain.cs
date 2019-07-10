@@ -295,6 +295,8 @@ namespace Barotrauma
             CloseServer();
 
             SteamManager.ShutDown();
+
+            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
             if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
         }
 

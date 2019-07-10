@@ -256,6 +256,18 @@ namespace Barotrauma
                 {
                     if (c.Info == null || c.Inventory == null) { continue; }
                     var inventoryElement = new XElement("inventory");
+
+                    // Recharge headset batteries
+                    var headset = c.Inventory.FindItemByIdentifier("headset");
+                    if (headset != null)
+                    {
+                        var battery = headset.OwnInventory.FindItemByTag("loadable");
+                        if (battery != null)
+                        {
+                            battery.Condition = battery.MaxCondition;
+                        }
+                    }
+
                     c.SaveInventory(c.Inventory, inventoryElement);
                     c.Info.InventoryData = inventoryElement;
                     c.Inventory?.DeleteAllItems();
@@ -407,7 +419,8 @@ namespace Barotrauma
         public override void Save(XElement element)
         {
             XElement modeElement = new XElement("SinglePlayerCampaign",
-                new XAttribute("money", Money),
+                // Refunds the money when save & quitting from the map if there are items selected in the store
+                new XAttribute("money", Money + (CargoManager != null ? CargoManager.GetTotalItemCost() : 0)),
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);

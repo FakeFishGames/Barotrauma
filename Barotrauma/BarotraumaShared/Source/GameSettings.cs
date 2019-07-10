@@ -267,7 +267,13 @@ namespace Barotrauma
         private static bool sendUserStatistics = true;
         public static bool SendUserStatistics
         {
-            get { return sendUserStatistics; }
+            get
+            {
+#if DEBUG
+                return false;
+#endif
+                return sendUserStatistics;
+            }
             set
             {
                 sendUserStatistics = value;
