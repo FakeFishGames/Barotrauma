@@ -250,17 +250,14 @@ namespace Barotrauma.Items.Components
             if (item.Condition <= RepairThreshold) { return true; }
             if (requiredItems.Any() && !hasValidIdCard)
             {
-                ForceOpen(ActionType.OnPicked);
+                ToggleState(ActionType.OnPicked);
             }
             return false;
         }
 
-        private void ForceOpen(ActionType actionType)
+        private void ToggleState(ActionType actionType)
         {
-            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: true); //crowbar function
-#if CLIENT
-            PlaySound(actionType, item.WorldPosition, picker);
-#endif
+            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
 
         public override bool Select(Character character)
@@ -272,7 +269,7 @@ namespace Barotrauma.Items.Components
                 {
                     float originalPickingTime = PickingTime;
                     PickingTime = 0;
-                    ForceOpen(ActionType.OnUse);
+                    ToggleState(ActionType.OnUse);
                     PickingTime = originalPickingTime;
                 }
                 else if (hasRequiredItems)
