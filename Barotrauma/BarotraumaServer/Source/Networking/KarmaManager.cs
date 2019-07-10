@@ -162,6 +162,9 @@ namespace Barotrauma
             if (target == null || attacker == null) { return; }
             if (target == attacker) { return; }
 
+            //damaging dead characters doesn't affect karma
+            if (target.IsDead || target.Removed) { return; }
+
             bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
             if (GameMain.Server.TraitorManager != null)
             {
