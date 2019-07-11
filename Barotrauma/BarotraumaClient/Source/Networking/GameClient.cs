@@ -2329,24 +2329,34 @@ namespace Barotrauma.Networking
 
             if (respawnManager != null)
             {
-                string respawnInfo = "";
+                string respawnText = "";
+                float textScale = 1.0f;
+                Color textColor = Color.White;
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.CountdownStarted)
+                    respawnManager.RespawnCountdownStarted)
                 {
-                    respawnInfo = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer));
+                    float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
+                    respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
                 }
-                else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
+                else if (respawnManager.CurrentState == RespawnManager.State.Transporting && 
+                    respawnManager.ReturnCountdownStarted)
                 {
-                    respawnInfo = respawnManager.TransportTimer <= 0.0f ?
+                    float timeLeft = (float)(respawnManager.ReturnTime - DateTime.Now).TotalSeconds;
+                    respawnText = timeLeft <= 0.0f ?
                         "" :
-                        TextManager.GetWithVariable("RespawnShuttleLeavingIn", "[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
+                        TextManager.GetWithVariable("RespawnShuttleLeavingIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                    if (timeLeft < 20.0f)
+                    {
+                        //oscillate between 0-1
+                        float phase = (float)(Math.Sin(timeLeft * MathHelper.Pi) + 1.0f) * 0.5f;
+                        textScale = 1.0f + phase * 0.5f;
+                        textColor = Color.Lerp(Color.Red, Color.White, 1.0f - phase);
+                    }
                 }
-
-                if (respawnManager != null)
+                
+                if (!string.IsNullOrEmpty(respawnText))
                 {
-                    GUI.DrawString(spriteBatch,
-                        new Vector2(120.0f, 10),
-                        respawnInfo, Color.White, null, 0, GUI.SmallFont);
+                    GUI.SmallFont.DrawString(spriteBatch, respawnText, new Vector2(120.0f, 10), textColor, 0.0f, Vector2.Zero, textScale, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0.0f);
                 }
             }
 

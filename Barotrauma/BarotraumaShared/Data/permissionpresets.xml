@@ -25,6 +25,7 @@
     <Command name="kickid"/>
     <Command name="campaigninfo"/>
     <Command name="campaigndestination"/>
+    <Command name="respawnnow"/>
   </Preset>
 
   <Preset 
@@ -76,5 +77,6 @@
     <Command name="power"/>
     <Command name="oxygen"/>
     <Command name="setclientcharacter"/>
+    <Command name="respawnnow"/>
   </Preset>
 </PermissionPresets>

@@ -305,6 +305,8 @@ namespace Barotrauma
             
             commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
 
+            commands.Add(new Command("respawnnow", "respawnnow: Trigger a respawn immediately if there are any clients waiting to respawn.", null));
+
             //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
