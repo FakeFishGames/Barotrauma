@@ -743,31 +743,33 @@ namespace Barotrauma
                 PressureProtection = 100.0f;
             }
 
+            List<XElement> inventoryElements = new List<XElement>();
+            List<float> inventoryCommonness = new List<float>();
+            List<XElement> healthElements = new List<XElement>();
+            List<float> healthCommonness = new List<float>();
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "inventory":
-                        Inventory = new CharacterInventory(subElement, this);
+                        inventoryElements.Add(subElement);
+                        inventoryCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
                         break;
                     case "health":
-                        CharacterHealth = new CharacterHealth(subElement, this);
+                        healthElements.Add(subElement);
+                        healthCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
                         break;
                     case "statuseffect":
                         statusEffects.Add(StatusEffect.Load(subElement, Name));
                         break;
                 }
             }
-            
-            List<XElement> healthElements = new List<XElement>();
-            List<float> healthCommonness = new List<float>();
-            foreach (XElement element in doc.Root.Elements())
+            if (inventoryElements.Count > 0)
             {
-                if (element.Name.ToString().ToLowerInvariant() != "health") continue;
-                healthElements.Add(element);
-                healthCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));
+                Inventory = new CharacterInventory(
+                    inventoryElements.Count == 1 ? inventoryElements[0] : ToolBox.SelectWeightedRandom(inventoryElements, inventoryCommonness, random), 
+                    this);
             }
-
             if (healthElements.Count == 0)
             {
                 CharacterHealth = new CharacterHealth(this);
