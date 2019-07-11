@@ -150,15 +150,60 @@ namespace Barotrauma
 
         public class GoalItemConditionLessThan : Goal
         {
-            private readonly List<Item> Targets = new List<Item>();
-            private readonly float Condition;
+            private readonly List<Item> targets = new List<Item>();
+            private readonly float condition;
 
-            public override bool IsCompleted => Targets.TrueForAll(target => target.Condition <= Condition);
+            public override bool IsCompleted => targets.TrueForAll(target => target.Condition <= condition);
 
             public GoalItemConditionLessThan(Traitor traitor, float condition, params Item[] targets): base(traitor)
             {
-                Targets.AddRange(targets);
-                Condition = condition;
+                this.targets.AddRange(targets);
+                this.condition = condition;
+            }
+        }
+
+        public class GoalWithDuration : Goal
+        {
+            private readonly Goal goal;
+            private readonly float requiredDuration;
+            private readonly bool countTotalDuration;
+
+            private bool isCompleted = false;
+            private float remainingDuration = float.NaN;
+
+            public override string StatusText => goal.StatusText;
+
+            public override string InfoText => goal.InfoText;
+            public override string CompletedText => goal.CompletedText;
+
+            public override bool IsCompleted => isCompleted;
+
+            public override void Update(float deltaTime)
+            {
+                base.Update(deltaTime);
+                if (goal.IsCompleted)
+                {
+                    if (!float.IsNaN(remainingDuration))
+                    {
+                        remainingDuration -= deltaTime;
+                    }
+                    else
+                    {
+                        remainingDuration = requiredDuration;
+                    }
+                    isCompleted |= remainingDuration <= 0.0f;
+                }
+                else if (!countTotalDuration)
+                {
+                    remainingDuration = float.NaN;
+                }
+            }
+
+            public GoalWithDuration(Traitor traitor, Goal goal, float requiredDuration, bool countTotalDuration) : base(traitor)
+            {
+                this.goal = goal;
+                this.requiredDuration = requiredDuration;
+                this.countTotalDuration = countTotalDuration;
             }
         }
 
