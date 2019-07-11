@@ -288,7 +288,7 @@ namespace Barotrauma
         /// <summary>
         /// Can be used by status effects or conditionals to modify the sound range
         /// </summary>
-        public float SoundRange
+        public new float SoundRange
         {
             get { return aiTarget == null ? 0.0f : aiTarget.SoundRange; }
             set { if (aiTarget != null) { aiTarget.SoundRange = Math.Max(0.0f, value); } }
@@ -298,7 +298,7 @@ namespace Barotrauma
         /// <summary>
         /// Can be used by status effects or conditionals to modify the sound range
         /// </summary>
-        public float SightRange
+        public new float SightRange
         {
             get { return aiTarget == null ? 0.0f : aiTarget.SightRange; }
             set { if (aiTarget != null) { aiTarget.SightRange = Math.Max(0.0f, value); } }

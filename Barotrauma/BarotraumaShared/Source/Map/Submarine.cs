@@ -1621,7 +1621,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
@@ -1652,7 +1651,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
