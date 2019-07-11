@@ -9,6 +9,8 @@ namespace Barotrauma.Steam
     {
         public const bool USE_STEAM = true;
 
+        public const int STEAMP2P_OWNER_PORT = 30000;
+
         public const uint AppID = 602960;
         
         private Facepunch.Steamworks.Client client;
@@ -69,54 +71,23 @@ namespace Barotrauma.Steam
             instance = new SteamManager();
         }
 
-        public static bool InitializeClient()
-        {
-            if (instance.client != null) { return true; }
-            bool clientInitialized = false;
-            try
-            {
-                instance.client = new Facepunch.Steamworks.Client(AppID);
-                clientInitialized = instance.client.IsSubscribed && instance.client.IsValid;
-
-                if (clientInitialized)
-                {
-                    DebugConsole.Log("Logged in as " + instance.client.Username + " (SteamID " + instance.client.SteamId + ")");
-                }
-            }
-            catch (DllNotFoundException)
-            {
-                clientInitialized = false;
-                initializationErrors.Add("SteamDllNotFound");
-            }
-            catch (Exception)
-            {
-                clientInitialized = false;
-                initializationErrors.Add("SteamClientInitFailed");
-            }
-
-            if (!clientInitialized)
-            {
-                try
-                {
-
-                    Facepunch.Steamworks.Client.Instance.Dispose();
-                }
-                catch (Exception e)
-                {
-                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
-                }
-                instance.client = null;
-            }
-            return clientInitialized;
-        }
-
         public static ulong GetSteamID()
         {
-            if (instance == null || !instance.isInitialized || instance.client == null)
+            if (instance == null || !instance.isInitialized)
             {
                 return 0;
             }
-            return instance.client.SteamId;
+
+            if (instance.client != null)
+            {
+                return instance.client.SteamId;
+            }
+            else if (instance.server != null)
+            {
+                return instance.server.SteamId;
+            }
+
+            return 0;
         }
 
         public static string GetUsername()

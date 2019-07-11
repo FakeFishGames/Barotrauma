@@ -6,13 +6,6 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    public enum ConnectionInitialization
-    {
-        SteamTicketAndVersion = 0x1,
-        Password = 0x2,
-        Success = 0x0
-    }
-
     public static class MsgConstants
     {
         public const int MTU = 1200;

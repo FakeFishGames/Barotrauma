@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    class LidgrenClientPeer : ClientPeer
+    class SteamP2POwnerPeer : ClientPeer
     {
         private NetClient netClient;
         private NetPeerConfiguration netPeerConfiguration;
@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
         private Auth.Ticket steamAuthTicket;
         List<NetIncomingMessage> incomingLidgrenMessages;
 
-        public LidgrenClientPeer(string name)
+        public SteamP2POwnerPeer(string name)
         {
             ServerConnection = null;
 
@@ -92,27 +92,7 @@ namespace Barotrauma.Networking
         {
             if (netClient == null) { return; }
 
-            byte incByte = inc.ReadByte();
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
-
-            //DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
-
-            if (isConnectionInitializationStep && initializationStep != ConnectionInitialization.Success)
-            {
-                ReadConnectionInitializationStep(inc);
-            }
-            else
-            {
-                if (initializationStep != ConnectionInitialization.Success)
-                {
-                    OnInitializationComplete?.Invoke();
-                    initializationStep = ConnectionInitialization.Success;
-                }
-                UInt16 length = inc.ReadUInt16();
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, ServerConnection);
-                OnMessageReceived?.Invoke(msg);
-            }
+            throw new NotImplementedException();
         }
 
         private void HandleStatusChanged(NetIncomingMessage inc)
@@ -191,7 +171,7 @@ namespace Barotrauma.Networking
             netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public override void Close(string msg=null)
+        public override void Close(string msg = null)
         {
             if (netClient == null) { return; }
 

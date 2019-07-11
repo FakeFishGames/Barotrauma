@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
 
         public NetworkConnection OwnerConnection { get; protected set; }
 
-        public abstract void InitializeSteamServerCallbacks(Facepunch.Steamworks.Server steamServer);
+        public abstract void InitializeSteamServerCallbacks(Facepunch.Steamworks.Server steamSrvr);
 
         public abstract void Start();
         public abstract void Close(string msg=null);

@@ -17,6 +17,47 @@ namespace Barotrauma.Steam
             isInitialized = InitializeClient();
         }
 
+        private static bool InitializeClient()
+        {
+            if (instance.client != null) { return true; }
+            bool clientInitialized = false;
+            try
+            {
+                instance.client = new Facepunch.Steamworks.Client(AppID);
+                clientInitialized = instance.client.IsSubscribed && instance.client.IsValid;
+
+                if (clientInitialized)
+                {
+                    DebugConsole.Log("Logged in as " + instance.client.Username + " (SteamID " + instance.client.SteamId + ")");
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                clientInitialized = false;
+                initializationErrors.Add("SteamDllNotFound");
+            }
+            catch (Exception)
+            {
+                clientInitialized = false;
+                initializationErrors.Add("SteamClientInitFailed");
+            }
+
+            if (!clientInitialized)
+            {
+                try
+                {
+
+                    Facepunch.Steamworks.Client.Instance.Dispose();
+                }
+                catch (Exception e)
+                {
+                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
+                }
+                instance.client = null;
+            }
+            return clientInitialized;
+        }
+
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
             try

@@ -14,16 +14,8 @@ namespace Barotrauma.Networking
         private NetPeerConfiguration netPeerConfiguration;
         private NetServer netServer;
 
-        private int maximumConnections
-        {
-            get { return netPeerConfiguration.MaximumConnections / 2; }
-        }
-
-        public int ConnectedClientsCount
-        {
-            get { return connectedClients.Count; }
-        }
-
+        private Facepunch.Steamworks.Server steamServer; 
+        
         private class PendingClient
         {
             public string Name;
@@ -64,6 +56,8 @@ namespace Barotrauma.Networking
             pendingClients = new List<PendingClient>();
 
             incomingLidgrenMessages = new List<NetIncomingMessage>();
+
+            steamServer = null;
 
             ownerKey = ownKey;
         }
@@ -120,6 +114,12 @@ namespace Barotrauma.Networking
             connectedClients.Clear();
 
             netServer = null;
+
+            if (steamServer != null)
+            {
+                steamServer.Auth.OnAuthChange = null;
+            }
+            steamServer = null;
         }
 
         public override void Update()
@@ -185,34 +185,31 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
             
-            if (inc.MessageType == NetIncomingMessageType.ConnectionApproval)
+            if (connectedClients.Count >= serverSettings.MaxPlayers)
             {
-                if (connectedClients.Count >= serverSettings.MaxPlayers)
-                {
-                    inc.SenderConnection.Deny(DisconnectReason.ServerFull.ToString());
-                    return;
-                }
-
-                if (serverSettings.BanList.IsBanned(inc.SenderConnection.RemoteEndPoint.Address, 0))
-                {
-                    //IP banned: deny immediately
-                    //TODO: use TextManager
-                    inc.SenderConnection.Deny("IP banned");
-                    return;
-                }
-
-                PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
-
-                if (pendingClient == null)
-                {
-                    pendingClient = new PendingClient(inc.SenderConnection);
-                    pendingClients.Add(pendingClient);
-
-                    DebugConsole.NewMessage("Approved");
-                }
-
-                inc.SenderConnection.Approve();
+                inc.SenderConnection.Deny(DisconnectReason.ServerFull.ToString());
+                return;
             }
+
+            if (serverSettings.BanList.IsBanned(inc.SenderConnection.RemoteEndPoint.Address, 0))
+            {
+                //IP banned: deny immediately
+                //TODO: use TextManager
+                inc.SenderConnection.Deny("IP banned");
+                return;
+            }
+
+            PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
+
+            if (pendingClient == null)
+            {
+                pendingClient = new PendingClient(inc.SenderConnection);
+                pendingClients.Add(pendingClient);
+
+                DebugConsole.NewMessage("Approved");
+            }
+
+            inc.SenderConnection.Approve();
         }
 
         private void HandleDataMessage(NetIncomingMessage inc)
@@ -222,8 +219,8 @@ namespace Barotrauma.Networking
             PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
 
             byte incByte = inc.ReadByte();
-            bool isCompressed = (incByte & 0x1) != 0;
-            bool isConnectionInitializationStep = (incByte & 0x2) != 0;
+            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
+            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
 
             if (isConnectionInitializationStep && pendingClient != null)
             {
@@ -406,7 +403,6 @@ namespace Barotrauma.Networking
                         if (pendingClient.Retries >= 3)
                         {
                             string banMsg = "Failed to enter correct password too many times";
-                            pendingClient.Connection.Disconnect(banMsg);
                             if (pendingClient.SteamID != null)
                             {
                                 serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.SteamID.Value, banMsg, null);
@@ -471,7 +467,7 @@ namespace Barotrauma.Networking
             pendingClient.UpdateTime = Timing.TotalTime + 1.0;
 
             NetOutgoingMessage outMsg = netServer.CreateMessage();
-            outMsg.Write((byte)0x2);
+            outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
             outMsg.Write((byte)pendingClient.InitializationStep);
             switch (pendingClient.InitializationStep)
             {
@@ -512,8 +508,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void InitializeSteamServerCallbacks(Server steamServer)
+        public override void InitializeSteamServerCallbacks(Server steamSrvr)
         {
+            steamServer = steamSrvr;
+
             steamServer.Auth.OnAuthChange = OnAuthChange;
         }
 
@@ -584,7 +582,7 @@ namespace Barotrauma.Networking
             byte[] msgData = new byte[1500];
             bool isCompressed; int length;
             msg.PrepareForSending(msgData, out isCompressed, out length);
-            lidgrenMsg.Write((byte)(isCompressed ? 0x1 : 0x0));
+            lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
