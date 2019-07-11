@@ -11,11 +11,11 @@
 
     <Sprite texture="machines.png" sourcerect="0,128,64,128" depth="0.8"/>
 
-    <Fabricator canbeselected = "true" powerconsumption="500.0">
-      <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
-
+    <Fabricator canbeselected="true" powerconsumption="500.0" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.3,0.6" maxsize="600,1000" style="ItemUI" anchor="Center"/>
+      <AlternativeLayout absoluteoffset="15,0"/>
       <sound file="Content/Items/Fabricators/Fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
-
+      <poweronsound file="Content/Items/PowerOnLight1.ogg" range="600" loop="false" />
     </Fabricator>
 		
 		<ConnectionPanel selectkey="Action" canbeselected = "true">
@@ -24,9 +24,9 @@
 			<output name="power_in" displayname="connection.powerin"/>
 		</ConnectionPanel>
 
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
-	</Item>
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" slotsperrow="5" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
+  </Item>
 
   <Item
     name="Medical Fabricator"
@@ -38,12 +38,11 @@
     description="A machine that can be used to manufacture various medicines.">
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="128,0,64,128"/>
-    
-    <Fabricator canbeselected = "true" powerconsumption="100.0">
-      <GuiFrame relativesize="0.4,0.4" minsize="600,400" maxsize="900,600" anchor="Center" style="ItemUI"/>
 
+    <Fabricator canbeselected = "true" powerconsumption="100.0" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.3,0.6" maxsize="600,1000" style="ItemUI" anchor="Center" />
       <sound file="Content/Items/Fabricators/Fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
-
+      <poweronsound file="Content/Items/PowerOnLight2.ogg" range="600" loop="false" />
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">
@@ -52,8 +51,8 @@
       <output name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
+    <ItemContainer capacity="4" canbeselected="true" hideitems="true" slotsperrow="4" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" slotsperrow="1" uilabel="Output" allowuioverlap="true"/>
   </Item>
 
   <Item
@@ -66,9 +65,10 @@
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="64,128,64,128"/>
 
-    <Deconstructor canbeselected = "true" powerconsumption="500.0">
-      <GuiFrame relativesize="0.15,0.35" minsize="300,400" maxsize="360,480" anchor="Center" style="ItemUI"/>
+    <Deconstructor canbeselected = "true" powerconsumption="500.0" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.45" maxsize="460,600" style="ItemUI" anchor="Center"/>
       <sound file="Content/Items/Fabricators/Deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <poweronsound file="Content/Items/PowerOnLight3.ogg" range="600" loop="false" />
     </Deconstructor>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">
@@ -77,7 +77,7 @@
       <output name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="5"/>
-    <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5"/>
+    <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="1" uilabel="Input" allowuioverlap="true"/>
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5" uilabel="Output" allowuioverlap="true"/>
   </Item>
 </Items>
