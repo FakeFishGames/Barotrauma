@@ -1829,9 +1829,10 @@ namespace Barotrauma.Networking
             steamAuthTicket?.Cancel();
             steamAuthTicket = null;
 
-            foreach (var fileTransfer in FileReceiver.ActiveTransfers)
+            List<FileReceiver.FileTransferIn> activeTransfers = new List<FileReceiver.FileTransferIn>(FileReceiver.ActiveTransfers);
+            foreach (var fileTransfer in activeTransfers)
             {
-                fileTransfer.Dispose();
+                FileReceiver.StopTransfer(fileTransfer, deleteFile: true);
             }
 
             if (HasPermission(ClientPermissions.ServerLog))
@@ -1842,7 +1843,8 @@ namespace Barotrauma.Networking
             if (GameMain.ServerChildProcess != null)
             {
                 int checks = 0;
-                while (!GameMain.ServerChildProcess.HasExited) {
+                while (!GameMain.ServerChildProcess.HasExited)
+                {
                     if (checks > 10)
                     {
                         GameMain.ServerChildProcess.Kill();
