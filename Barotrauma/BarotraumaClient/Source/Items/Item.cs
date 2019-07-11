@@ -880,7 +880,6 @@ namespace Barotrauma
                         }
                     }
                     break;
-
                 case NetEntityEvent.Type.InventoryState:
                     {
                         int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
@@ -968,6 +967,10 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData, true);
+                    break;
+                case NetEntityEvent.Type.Combine:
+                    UInt16 combineTargetID = (UInt16)extraData[1];
+                    msg.Write(combineTargetID);
                     break;
             }
             msg.WritePadBits();

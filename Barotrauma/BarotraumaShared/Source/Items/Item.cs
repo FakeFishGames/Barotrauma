@@ -1729,11 +1729,15 @@ namespace Barotrauma
 
         public bool Combine(Item item)
         {
+            if (item == this) { return false; }
             bool isCombined = false;
             foreach (ItemComponent ic in components)
             {
-                if (ic.Combine(item)) isCombined = true;
+                if (ic.Combine(item)) { isCombined = true; }
             }
+#if CLIENT
+            if (isCombined) { GameMain.Client?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Combine, item.ID }); }
+#endif
             return isCombined;
         }
 

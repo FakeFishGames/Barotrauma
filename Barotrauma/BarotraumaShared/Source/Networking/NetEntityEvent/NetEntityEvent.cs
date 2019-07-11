@@ -15,7 +15,8 @@ namespace Barotrauma.Networking
             ApplyStatusEffect,
             ChangeProperty,
             Control,
-            UpdateSkills
+            UpdateSkills,
+            Combine
         }
 
         public readonly Entity Entity;
