@@ -1792,7 +1792,8 @@
   <traitorgoalstatustextformat>{0} [{1}]</traitorgoalstatustextformat>
   <traitorgoalkilltargetinfo>Assassinate [targetname]</traitorgoalkilltargetinfo>
   <traitorgoalcausereactormeltdown>Cause reactor meltdown</traitorgoalcausereactormeltdown>
-  <traitorgoaldestroyalloxygentanks>Destroy all non inventory oxygen tanks on the sub</traitorgoaldestroyalloxygentanks>
+  <traitorgoaldestroyalloxygentanks>Destroy {0} percent of all non inventory oxygen tanks on the sub</traitorgoaldestroyalloxygentanks>
+  <traitorgoalfloodpercentofsub>Flood {0} percent of the sub</traitorgoalfloodpercentofsub>
 
   <!-- Causes of death -->
   <causeofdeath>Cause of death</causeofdeath>

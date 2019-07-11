@@ -39,6 +39,8 @@ namespace Barotrauma
 
         public class Objective
         {
+            public readonly Traitor Traitor;
+
             private readonly List<Goal> allGoals = new List<Goal>();
             private readonly List<Goal> pendingGoals = new List<Goal>();
             private readonly List<Goal> completedGoals = new List<Goal>();
@@ -48,26 +50,26 @@ namespace Barotrauma
 
             public string GoalInfos => string.Join("\n", allGoals.ConvertAll(goal => string.Concat("- ", goal.StatusText)));
 
-            public virtual string GetStartMessageText(Traitor traitor)
+            public virtual string GetStartMessageText()
             {
                 return TextManager.GetWithVariable("TraitorObjectiveStartMessage", "[traitorgoalinfos]", GoalInfos);
             }
 
-            public virtual string GetStartMessageTextServer(Traitor traitor)
+            public virtual string GetStartMessageTextServer()
             {
-                return TextManager.GetWithVariables("TraitorObjectiveStartMessageServer", new string[] { "[traitorname] [traitorgoalinfos]" }, new string[] { traitor.Character.Name, GoalInfos });
+                return TextManager.GetWithVariables("TraitorObjectiveStartMessageServer", new string[] { "[traitorname] [traitorgoalinfos]" }, new string[] { Traitor.Character.Name, GoalInfos });
             }
 
-            public virtual string GetEndMessageText(Traitor traitor)
+            public virtual string GetEndMessageText()
             {
-                var traitorIsDead = traitor.Character.IsDead;
-                var traitorIsDetained = traitor.Character.LockHands;
+                var traitorIsDead = Traitor.Character.IsDead;
+                var traitorIsDetained = Traitor.Character.LockHands;
                 var messageTag = string.Format("TraitorObjectiveEndMessage{0}{1}", IsCompleted ? "Success" : "Failure", traitorIsDead ? "Dead" : traitorIsDetained ? "Detained" : "");
                 return TextManager.ReplaceGenderPronouns(
                     TextManager.GetWithVariables(messageTag,
                         new string[2] { "[traitorname]", "[traitorgoalinfos]" },
-                        new string[2] { traitor.Character.Name, GoalInfos }
-                    ), traitor.Character.Info.Gender) + "\n";
+                        new string[2] { Traitor.Character.Name, GoalInfos }
+                    ), Traitor.Character.Info.Gender) + "\n";
             }
 
             public void Update(float deltaTime)
@@ -86,10 +88,45 @@ namespace Barotrauma
                 }
             }
 
-            public Objective(params Goal[] goals)
+            public Objective(Traitor traitor, params Goal[] goals)
             {
+                Traitor = traitor;
                 allGoals.AddRange(goals);
                 pendingGoals.AddRange(goals);
+            }
+        }
+
+        public class TraitorMission
+        {
+            private readonly List<Objective> pendingObjectives = new List<Objective>();
+            private readonly List<Objective> completedObjectives = new List<Objective>();
+
+            public virtual bool IsCompleted => pendingObjectives.Count <= 0;
+
+            // TODO(xxx): Mission start, end messages
+
+            public virtual void Update()
+            {
+                if (pendingObjectives.Count > 0) {
+                    var objective = pendingObjectives[0];
+                    if (objective.IsCompleted)
+                    {
+                        pendingObjectives.RemoveAt(0);
+                        completedObjectives.Add(objective);
+                        Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == objective.Traitor.Character);
+                        GameMain.Server.SendDirectChatMessage(objective.GetEndMessageText(), traitorClient);
+                        if (pendingObjectives.Count > 0)
+                        {
+                            Objective nextObjective = pendingObjectives[0];
+                            Client nextTraitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == objective.Traitor.Character);
+                            GameMain.Server.SendDirectChatMessage(nextObjective.GetStartMessageText(), nextTraitorClient);
+                        }
+                    }
+                } 
+            }
+
+            public TraitorMission(params Objective[] objectives) {
+                pendingObjectives.AddRange(objectives);
             }
         }
 
@@ -223,27 +260,72 @@ namespace Barotrauma
 
         public class GoalDestroyAllNonInventoryItemsWithTag : Goal
         {
-            private readonly string Tag;
+            private readonly string tag;
 
-            public override bool IsCompleted => GameMain.GameSession?.Submarine?.GetItems(true)?.TrueForAll(item => item.Tags.Contains(Tag)) ?? false;
+            private readonly float destroyPercent;
+            protected float DestroyPercent => destroyPercent;
 
-            public GoalDestroyAllNonInventoryItemsWithTag(Traitor traitor, string tag): base(traitor) {
-                Tag = tag;
+            private bool isCompleted = false;
+            public override bool IsCompleted => isCompleted;
+
+            public override void Update(float deltaTime)
+            {
+                base.Update(deltaTime);
+                if (isCompleted)
+                {
+                    return;
+                }
+                int total = 0;
+                int destroyed = 0;
+                foreach (var item in Item.ItemList) {
+                    // TODO(xxx): Verify the conditions checked for here..
+                    if (item == null || item.Prefab == null)
+                    {
+                        continue;
+                    }
+                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID || item.ParentInventory?.Owner is Character)
+                    {
+                        continue;
+                    }
+                    if (item.Prefab.Identifier != tag && !item.HasTag(tag))
+                    {
+                        continue;
+                    }
+                    ++total;
+                    if (item.CurrentHull == null || item.Condition <= 0.0f || (!(Traitor.Character.Submarine?.IsEntityFoundOnThisSub(item, true) ?? true))) {
+                        ++destroyed;
+                    }
+                }
+                isCompleted |= destroyed >= (int)(total * destroyPercent);
+            }
+
+            public GoalDestroyAllNonInventoryItemsWithTag(Traitor traitor, string tag, float destroyPercent) : base(traitor) {
+                this.tag = tag;
+                this.destroyPercent = destroyPercent;
             }
         }
 
         public class GoalDestroyOxygenTanks : GoalDestroyAllNonInventoryItemsWithTag
         {
-            public override string InfoText => TextManager.Get("TraitorGoalDestroyAllOxygenTanks");
+            public override string InfoText => TextManager.GetFormatted("TraitorGoalDestroyAllOxygenTanks", false, 100.0f * DestroyPercent);
 
-            public GoalDestroyOxygenTanks(Traitor traitor) : base(traitor, "oxygensource")
+            public GoalDestroyOxygenTanks(Traitor traitor) : base(traitor, "oxygensource", 0.5f)
             {
             }
         }
 
         public class GoalFloodPercentOfSub : Goal
         {
-            public float RequiredPercent;
+            private readonly float minimumFloodingAmount;
+
+            public override string InfoText => TextManager.GetFormatted("TraitorGoalFloodPercentOfSub", false, 100.0f * minimumFloodingAmount);
+
+            public override bool IsCompleted => GameMain.GameSession.EventManager.CurrentFloodingAmount >= minimumFloodingAmount;
+
+            public GoalFloodPercentOfSub(Traitor traitor, float minimumFloodingAmount) : base(traitor)
+            {
+                this.minimumFloodingAmount = minimumFloodingAmount;
+            }
         }
 
         public class GoalDetonateLocations : Goal
@@ -261,7 +343,7 @@ namespace Barotrauma
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            string greetingMessage = CurrentObjective.GetStartMessageText(this);
+            string greetingMessage = CurrentObjective.GetStartMessageText();
             string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
                 new string[2] { "[codewords]", "[coderesponse]" }, new string[2] { codeWords, codeResponse });
             
@@ -282,7 +364,7 @@ namespace Barotrauma
             {
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
-                    CurrentObjective.GetStartMessageTextServer(this),
+                    CurrentObjective.GetStartMessageTextServer(),
                     ChatMessageType.MessageBox,
                     null
                 );
@@ -301,6 +383,7 @@ namespace Barotrauma
         }
 
         private List<Traitor> traitorList = new List<Traitor>();
+        private Traitor.TraitorMission mission = new Traitor.TraitorMission();
 
         public string codeWords, codeResponse;
 
@@ -393,7 +476,8 @@ namespace Barotrauma
                 }
                 goals.Add(new Traitor.GoalCauseReactorMeltdown(traitor));
                 goals.Add(new Traitor.GoalDestroyOxygenTanks(traitor));
-                traitor.CurrentObjective = new Traitor.Objective(goals.ToArray());
+                goals.Add(new Traitor.GoalFloodPercentOfSub(traitor, 0.5f));
+                traitor.CurrentObjective = new Traitor.Objective(traitor, goals.ToArray());
                 traitor.Greet(server, codeWords, codeResponse);
             }
         }
@@ -455,7 +539,7 @@ namespace Barotrauma
 
             foreach (Traitor traitor in traitorList)
             {
-                endMessage += traitor.CurrentObjective.GetEndMessageText(traitor);
+                endMessage += traitor.CurrentObjective.GetEndMessageText();
             }
 
             return endMessage;
