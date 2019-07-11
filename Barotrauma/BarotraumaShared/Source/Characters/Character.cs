@@ -1891,6 +1891,17 @@ namespace Barotrauma
                                 distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.WorldPosition, c.WorldPosition));
                             }
 
+#if SERVER
+                            for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
+                            {
+                                var spectatePos = GameMain.Server.ConnectedClients[i].SpectatePos;
+                                if (spectatePos != null)
+                                {
+                                    distSqr = Math.Min(distSqr, Vector2.DistanceSquared(spectatePos.Value, c.WorldPosition));
+                                }
+                            }
+#endif
+
                             if (distSqr > NetConfig.DisableCharacterDistSqr)
                             {
                                 c.Enabled = false;
@@ -1908,6 +1919,10 @@ namespace Barotrauma
                         if (Controlled != null)
                         {
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition));
+                        }
+                        else
+                        {
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.WorldViewCenter, c.WorldPosition));
                         }
                         
                         if (distSqr > NetConfig.DisableCharacterDistSqr)

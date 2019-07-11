@@ -176,6 +176,14 @@ namespace Barotrauma
         public void Translate(Vector2 amount)
         {
             position += amount;
+
+            if (targetPos == Vector2.Zero)
+            {
+                if (GameMain.NetworkMember != null)
+                {
+                    GameMain.Client.SendSpectatePosition(position);
+                }
+            }
         }
 
         private void CreateMatrices()

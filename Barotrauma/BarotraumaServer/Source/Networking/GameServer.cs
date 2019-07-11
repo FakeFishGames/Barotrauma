@@ -726,6 +726,12 @@ namespace Barotrauma.Networking
 
                     ClientReadIngame(inc);
                     break;
+                case ClientPacketHeader.UPDATE_SPECTATING:
+                    if (connectedClient != null)
+                    {
+                        connectedClient.SpectatePos = new Vector2(inc.ReadInt32(), inc.ReadInt32());
+                    }
+                    break;
                 case ClientPacketHeader.CAMPAIGN_SETUP_INFO:
                     bool isNew = inc.ReadBoolean(); inc.ReadPadBits();
                     if (isNew)
@@ -1346,11 +1352,20 @@ namespace Barotrauma.Networking
                 foreach (Character character in Character.CharacterList)
                 {
                     if (!character.Enabled) continue;
-                    if (c.Character != null &&
-                        Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.DisableCharacterDistSqr)
+
+                    if (c.SpectatePos == null)
                     {
-                        continue;
+                        if (c.Character != null && Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (Vector2.DistanceSquared(character.WorldPosition, c.SpectatePos.Value) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
                     }
 
                     float updateInterval = character.GetPositionUpdateInterval(c);
