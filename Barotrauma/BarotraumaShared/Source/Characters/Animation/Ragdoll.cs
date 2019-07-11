@@ -1047,11 +1047,16 @@ namespace Barotrauma
 
         protected bool levitatingCollider = true;
 
+        /// <summary>
+        /// How long has the ragdoll stayed motionless
+        /// </summary>
+        private float bodyInRestTimer;
+
         public bool forceStanding;
 
         public void Update(float deltaTime, Camera cam)
         {
-            if (!character.Enabled || Frozen || Invalid) return;
+            if (!character.Enabled || Frozen || Invalid) { return; }
 
             CheckValidity();
 
@@ -1063,6 +1068,11 @@ namespace Barotrauma
 
             FindHull();
             PreventOutsideCollision();
+
+            if (!character.AllowInput)
+            {
+                CheckBodyInRest(deltaTime);
+            }
 
             splashSoundTimer -= deltaTime;
 
@@ -1313,6 +1323,29 @@ namespace Barotrauma
                 }
             }
             UpdateProjSpecific(deltaTime);
+        }
+
+        private void CheckBodyInRest(float deltaTime)
+        {
+            if (Collider.LinearVelocity.LengthSquared() > 0.01f || character.SelectedBy != null)
+            {
+                bodyInRestTimer = 0.0f;
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.PhysEnabled = true;
+                }
+            }
+            else if (Limbs.All(l => l != null && !l.body.Enabled || l.LinearVelocity.LengthSquared() < 0.001f))
+            {
+                bodyInRestTimer += deltaTime;
+                if (bodyInRestTimer > 1.0f)
+                {
+                    foreach (Limb limb in Limbs)
+                    {
+                        limb.body.PhysEnabled = false;
+                    }
+                }
+            }
         }
 
         public bool Invalid { get; private set; }

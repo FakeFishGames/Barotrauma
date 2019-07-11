@@ -329,6 +329,10 @@ namespace Barotrauma
                         item.AiTarget?.Draw(spriteBatch);
                     }
                 }
+                if (body != null)
+                {
+                    body.DebugDraw(spriteBatch, Color.White);
+                }
             }
 
             if (!editing || (body != null && !body.Enabled))
