@@ -1068,11 +1068,8 @@ namespace Barotrauma
 
             FindHull();
             PreventOutsideCollision();
-
-            if (!character.AllowInput)
-            {
-                CheckBodyInRest(deltaTime);
-            }
+            
+            CheckBodyInRest(deltaTime);            
 
             splashSoundTimer -= deltaTime;
 
@@ -1327,7 +1324,7 @@ namespace Barotrauma
 
         private void CheckBodyInRest(float deltaTime)
         {
-            if (Collider.LinearVelocity.LengthSquared() > 0.01f || character.SelectedBy != null)
+            if (Collider.LinearVelocity.LengthSquared() > 0.01f || character.SelectedBy != null || character.AllowInput)
             {
                 bodyInRestTimer = 0.0f;
                 foreach (Limb limb in Limbs)
