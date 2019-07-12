@@ -1902,6 +1902,12 @@ namespace Barotrauma
                             }
 #endif
 
+                            // Keep characters near the sub active during the end cinematic
+                            if (!GameMain.GameSession.GameMode.IsRunning && Submarine.MainSub != null)
+                            {
+                                distSqr = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition);
+                            }
+
                             if (distSqr > NetConfig.DisableCharacterDistSqr)
                             {
                                 c.Enabled = false;
