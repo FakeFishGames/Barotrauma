@@ -2309,6 +2309,7 @@
     <None Include="$(MSBuildThisFileDirectory)Submarines\Berilia.sub">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Berilia_Gtest_Tower.sub" />
     <None Include="$(MSBuildThisFileDirectory)Submarines\Dugong_Tutorial.sub">
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialOutpost.sub" />
