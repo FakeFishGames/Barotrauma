@@ -51,7 +51,6 @@ namespace Barotrauma.Networking
         AUTH_FAILURE,       //the server won't authorize player yet, however connection is still alive
         UPDATE_LOBBY,       //update state in lobby (votes and chat messages)
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
-        UPDATE_SPECTATING,
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
