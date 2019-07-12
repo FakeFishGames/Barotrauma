@@ -14,7 +14,6 @@ namespace Barotrauma.Networking
         REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
-        UPDATE_SPECTATING,
 
         SERVER_SETTINGS, //change server settings
         
@@ -36,7 +35,8 @@ namespace Barotrauma.Networking
         CHAT_MESSAGE,   //also self-explanatory
         VOTE,           //you get the idea
         CHARACTER_INPUT,
-        ENTITY_STATE
+        ENTITY_STATE,
+        SPECTATING_POS
     }
 
     enum ClientNetError

@@ -1628,6 +1628,7 @@ namespace Barotrauma.Networking
             outmsg.Write(LastClientListUpdateID);
 
             Character.Controlled?.ClientWrite(outmsg);
+            GameMain.GameScreen.Cam?.ClientWrite(outmsg);
 
             entityEventManager.Write(outmsg, client.ServerConnection);
 
@@ -2108,16 +2109,6 @@ namespace Barotrauma.Networking
             client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
 
             return false;
-        }
-
-        public void SendSpectatePosition(Vector2 pos)
-        {
-            NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)ClientPacketHeader.UPDATE_SPECTATING);
-            msg.Write((UInt32)pos.X);
-            msg.Write((UInt32)pos.Y);
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         public bool SetReadyToStart(GUITickBox tickBox)

@@ -726,12 +726,6 @@ namespace Barotrauma.Networking
 
                     ClientReadIngame(inc);
                     break;
-                case ClientPacketHeader.UPDATE_SPECTATING:
-                    if (connectedClient != null)
-                    {
-                        connectedClient.SpectatePos = new Vector2(inc.ReadInt32(), inc.ReadInt32());
-                    }
-                    break;
                 case ClientPacketHeader.CAMPAIGN_SETUP_INFO:
                     bool isNew = inc.ReadBoolean(); inc.ReadPadBits();
                     if (isNew)
@@ -1034,6 +1028,9 @@ namespace Barotrauma.Networking
                         break;
                     case ClientNetObject.VOTE:
                         serverSettings.Voting.ServerRead(inc, c);
+                        break;
+                    case ClientNetObject.SPECTATING_POS:
+                        c.SpectatePos = new Vector2(inc.ReadFloat(), inc.ReadFloat());
                         break;
                     default:
                         return;

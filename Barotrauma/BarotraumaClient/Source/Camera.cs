@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 
@@ -176,14 +178,15 @@ namespace Barotrauma
         public void Translate(Vector2 amount)
         {
             position += amount;
+        }
 
-            if (targetPos == Vector2.Zero)
-            {
-                if (GameMain.NetworkMember != null)
-                {
-                    GameMain.Client.SendSpectatePosition(position);
-                }
-            }
+        public void ClientWrite(NetOutgoingMessage msg)
+        {
+            if (Character.Controlled != null && !Character.Controlled.IsDead) return;
+
+            msg.Write((byte)ClientNetObject.SPECTATING_POS);
+            msg.Write(position.X);
+            msg.Write(position.Y);
         }
 
         private void CreateMatrices()
