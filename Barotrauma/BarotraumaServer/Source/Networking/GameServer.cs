@@ -2005,8 +2005,16 @@ namespace Barotrauma.Networking
 
         public void EndGame()
         {
-            if (!gameStarted) return;
-            Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            if (!gameStarted) { return; }
+            if (GameSettings.VerboseLogging)
+            {
+                Log("Ending the round...\n" + Environment.StackTrace, ServerLog.MessageType.ServerMessage);
+
+            }
+            else
+            {
+                Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            }
 
             string endMessage = "The round has ended." + '\n';
 
@@ -2067,32 +2075,15 @@ namespace Barotrauma.Networking
                     client.InGame = false;
                 }
             }
-
-            CoroutineManager.StartCoroutine(EndCinematic(), "EndCinematic");
-
-            GameMain.NetLobbyScreen.RandomizeSettings();
-        }
-
-        public IEnumerable<object> EndCinematic()
-        {
-            float endPreviewLength = 10.0f;
-
-            var cinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-
-            do
-            {
-                yield return CoroutineStatus.Running;
-            } while (cinematic.Running);
-
+            
             Submarine.Unload();
             entityEventManager.Clear();
-
             GameMain.NetLobbyScreen.Select();
             Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
-            yield return CoroutineStatus.Success;
+            GameMain.NetLobbyScreen.RandomizeSettings();
         }
-
+        
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
