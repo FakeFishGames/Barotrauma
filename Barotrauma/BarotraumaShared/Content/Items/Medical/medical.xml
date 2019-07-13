@@ -368,19 +368,19 @@
     <SuitableTreatment identifier="damage" suitability="-15" />
     
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
+      <StatusEffect type="OnUse" target="This" Condition="-20.0" disabledeltatime="true" />
       <StatusEffect type="OnFailure" target="This" Condition="-50.0" disabledeltatime="true" />
-      <RequiredSkill identifier="medical" level="22" />
-      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="8">
+      <RequiredSkill identifier="medical" level="50" />
+      <StatusEffect tags="medical" type="OnUse" target="This, Limb" duration="20">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
-        <ReduceAffliction identifier="bleeding" amount="7.5"></ReduceAffliction>
-        <ReduceAffliction identifier="burn" amount="7.5" />
+        <ReduceAffliction identifier="bleeding" amount="2"></ReduceAffliction>
+        <ReduceAffliction identifier="burn" amount="2" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="8.0">
+      <StatusEffect tags="medical" type="OnFailure" target="This, Limb" duration="20.0">
         <Sound file="Content/Items/Medical/Bandage1.ogg" range="500" />
-        <Affliction identifier="internaldamage" amount="1.875" />
-        <ReduceAffliction identifier="bleeding" amount="3.75"></ReduceAffliction>
-        <ReduceAffliction identifier="burn" amount="3.75" />
+        <Affliction identifier="internaldamage" amount="1.25" />
+        <ReduceAffliction identifier="bleeding" amount="1"></ReduceAffliction>
+        <ReduceAffliction identifier="burn" amount="1" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">

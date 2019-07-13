@@ -227,6 +227,10 @@ namespace Barotrauma.Steam
 
                     if (s.Rules.ContainsKey("gamestarted")) serverInfo.GameStarted = s.Rules["gamestarted"] == "True";
 
+                    if (s.Rules.ContainsKey("gamemode"))
+                    {
+                        serverInfo.GameMode = s.Rules["gamemode"];
+                    }
                     if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
                         serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
                     {

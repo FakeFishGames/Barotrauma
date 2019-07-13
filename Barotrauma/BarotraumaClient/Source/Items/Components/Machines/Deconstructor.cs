@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent inSufficientPowerWarning;
 
+        private bool pendingState;
+
         partial void InitProjSpecific(XElement element)
         {
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
@@ -72,19 +74,20 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
-            //activateButton.Enabled = !inSufficientPowerWarning.Visible;
+            inSufficientPowerWarning.Visible = CurrPowerConsumption > 0 && !hasPower;
         }
 
         private bool ToggleActive(GUIButton button, object obj)
         {
-            SetActive(!IsActive, Character.Controlled);
-
-            currPowerConsumption = IsActive ? powerConsumption : 0.0f;
-            
             if (GameMain.Client != null)
             {
+                pendingState = !IsActive;
                 item.CreateClientEvent(this);
+            }
+            else
+            {
+                SetActive(!IsActive, Character.Controlled);
+                currPowerConsumption = IsActive ? powerConsumption : 0.0f;
             }
 
             return true;
@@ -92,12 +95,13 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
-            msg.Write(IsActive);
+            msg.Write(pendingState);
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             SetActive(msg.ReadBoolean());
+            progressTimer = msg.ReadSingle();
         }
     }
 }

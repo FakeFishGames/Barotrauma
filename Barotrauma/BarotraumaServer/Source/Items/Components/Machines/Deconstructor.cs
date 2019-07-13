@@ -21,6 +21,7 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(IsActive);
+            msg.Write(progressTimer);
         }
     }
 }

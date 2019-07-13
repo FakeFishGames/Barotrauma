@@ -2450,12 +2450,12 @@
 
   <!-- New additions -->
   <creditsbutton>製作人員名單</creditsbutton>
-  <orderoptions.operatereactor>開啟，關停。</orderoptions.operatereactor>
-  <orderoptions.operateweapons>開火，停火。</orderoptions.operateweapons>
-  <orderoptions.steer>原地停留，返程，向目的地的進發。</orderoptions.steer>
-  <orderoptions.chargebatteries>開始充電，停止充電。</orderoptions.chargebatteries>
-  <orderoptions.pumpwater>開啟泵機，關閉泵機。</orderoptions.pumpwater>
-  <orderoptions.repairsystems>修理指定設備，修理全部設備。</orderoptions.repairsystems>
+  <orderoptions.operatereactor>開啟,關停</orderoptions.operatereactor>
+  <orderoptions.operateweapons>開火,停火</orderoptions.operateweapons>
+  <orderoptions.steer>原地停留,返程,向目的地的進發</orderoptions.steer>
+  <orderoptions.chargebatteries>開始充電,停止充電</orderoptions.chargebatteries>
+  <orderoptions.pumpwater>開啟泵機,關閉泵機</orderoptions.pumpwater>
+  <orderoptions.repairsystems>修理指定設備,修理全部設備</orderoptions.repairsystems>
 
   <ordername.dismissed>已駁回</ordername.dismissed>
   <ordername.follow>跟隨</ordername.follow>

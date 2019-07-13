@@ -1547,13 +1547,13 @@ namespace Barotrauma
 
                 Point? minSize = null;
                 DockingPort subPort = null;
+                float closestDistance = float.MaxValue;
                 if (Submarine.MainSub != null)
                 {
                     Point subSize = Submarine.MainSub.GetDockedBorders().Size;
                     Point outpostSize = outpost.GetDockedBorders().Size;
                     minSize = new Point(Math.Max(subSize.X, outpostSize.X), subSize.Y + outpostSize.Y);
 
-                    float closestDistance = float.MaxValue;
                     foreach (DockingPort port in DockingPort.List)
                     {
                         if (port.IsHorizontal || port.Docked) { continue; }
@@ -1569,17 +1569,43 @@ namespace Barotrauma
                     }
                 }
 
+                DockingPort outpostPort = null;
+                closestDistance = float.MaxValue;
+                foreach (DockingPort port in DockingPort.List)
+                {
+                    if (port.IsHorizontal || port.Docked) { continue; }
+                    if (port.Item.Submarine != outpost) { continue; }
+                    //the outpost port has to be at the bottom of the outpost
+                    if (port.Item.WorldPosition.Y > outpost.WorldPosition.Y) { continue; }
+                    float dist = Math.Abs(port.Item.WorldPosition.X - outpost.WorldPosition.X);
+                    if (dist < closestDistance)
+                    {
+                        outpostPort = port;
+                        closestDistance = dist;
+                    }
+                }
+
                 float subDockingPortOffset = subPort == null ? 0.0f : subPort.Item.WorldPosition.X - Submarine.MainSub.WorldPosition.X;
                 //don't try to compensate if the port is very far from the sub's center of mass
-                if (Math.Abs(subDockingPortOffset) > 2000.0f)
+                if (Math.Abs(subDockingPortOffset) > 5000.0f)
                 {
-                    subDockingPortOffset = MathHelper.Clamp(subDockingPortOffset, -2000.0f, 2000.0f);
+                    subDockingPortOffset = MathHelper.Clamp(subDockingPortOffset, -5000.0f, 5000.0f);
                     string warningMsg = "Docking port very far from the sub's center of mass (submarine: " + Submarine.MainSub.Name + ", dist: " + subDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
                     DebugConsole.NewMessage(warningMsg, Color.Orange);
                     GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
                 }
 
-                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, subDockingPortOffset));
+                float outpostDockingPortOffset = subPort == null ? 0.0f : outpostPort.Item.WorldPosition.X - outpost.WorldPosition.X;
+                //don't try to compensate if the port is very far from the outpost's center of mass
+                if (Math.Abs(outpostDockingPortOffset) > 5000.0f)
+                {
+                    outpostDockingPortOffset = MathHelper.Clamp(outpostDockingPortOffset, -5000.0f, 5000.0f);
+                    string warningMsg = "Docking port very far from the outpost's center of mass (outpost: " + outpost.Name + ", dist: " + outpostDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
+                    DebugConsole.NewMessage(warningMsg, Color.Orange);
+                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:OutpostDockingPortVeryFar" + outpost.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
+                }
+
+                outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, subDockingPortOffset - outpostDockingPortOffset));
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;

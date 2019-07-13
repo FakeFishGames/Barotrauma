@@ -206,6 +206,7 @@ namespace Barotrauma
                 case "togglehud":
                 case "toggleupperhud":
                 case "togglecharacternames":
+                case "fpscounter":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);

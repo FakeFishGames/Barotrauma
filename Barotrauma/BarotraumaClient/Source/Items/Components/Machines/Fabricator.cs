@@ -33,6 +33,8 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent inSufficientPowerWarning;
 
+        private FabricationRecipe pendingFabricatedItem;
+
         private Pair<Rectangle, string> tooltip;
 
         partial void InitProjSpecific()
@@ -402,7 +404,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
+        
         private bool StartButtonClicked(GUIButton button, object obj)
         {
             if (selectedItem == null) { return false; }
@@ -411,19 +413,22 @@ namespace Barotrauma.Items.Components
                 outputInventoryHolder.Flash(Color.Red);
                 return false;
             }
-
-            if (fabricatedItem == null)
+            
+            if (GameMain.Client != null)
             {
-                StartFabricating(selectedItem, Character.Controlled);
+                pendingFabricatedItem = fabricatedItem != null ? null : selectedItem;
+                item.CreateClientEvent(this);
             }
             else
             {
-                CancelFabricating(Character.Controlled);
-            }
-
-            if (GameMain.Client != null)
-            {
-                item.CreateClientEvent(this);
+                if (fabricatedItem == null)
+                {
+                    StartFabricating(selectedItem, Character.Controlled);
+                }
+                else
+                {
+                    CancelFabricating(Character.Controlled);
+                }
             }
 
             return true;
@@ -432,7 +437,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             activateButton.Enabled = false;
-            inSufficientPowerWarning.Visible = powerConsumption > 0 && voltage < minVoltage;
+            inSufficientPowerWarning.Visible = currPowerConsumption > 0 && !hasPower;
 
             var availableIngredients = GetAvailableIngredients();
             if (character != null)
@@ -456,7 +461,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
-            int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
+            int itemIndex = pendingFabricatedItem == null ? -1 : fabricationRecipes.IndexOf(pendingFabricatedItem);
             msg.WriteRangedIntegerDeprecated(-1, fabricationRecipes.Count - 1, itemIndex);
         }
 
@@ -473,8 +478,8 @@ namespace Barotrauma.Items.Components
             else
             {
                 //if already fabricating the selected item, return
-                if (fabricatedItem != null && fabricationRecipes.IndexOf(fabricatedItem) == itemIndex) return;
-                if (itemIndex < 0 || itemIndex >= fabricationRecipes.Count) return;
+                if (fabricatedItem != null && fabricationRecipes.IndexOf(fabricatedItem) == itemIndex) { return; }
+                if (itemIndex < 0 || itemIndex >= fabricationRecipes.Count) { return; }
 
                 SelectItem(user, fabricationRecipes[itemIndex]);
                 StartFabricating(fabricationRecipes[itemIndex], user);

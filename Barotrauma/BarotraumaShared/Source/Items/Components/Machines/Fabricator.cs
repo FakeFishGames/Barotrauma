@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
         private float timeUntilReady;
         private float requiredTime;
 
+        private bool hasPower;
+
         private Character user;
 
         private ItemContainer inputContainer, outputContainer;
@@ -197,8 +199,9 @@ namespace Barotrauma.Items.Components
 
             progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
-            if (voltage < minVoltage) { return; }
-
+            hasPower = voltage >= minVoltage;
+            if (!hasPower) { return; }
+            
             var repairable = item.GetComponent<Repairable>();
             if (repairable != null)
             {
@@ -214,43 +217,50 @@ namespace Barotrauma.Items.Components
 
             if (timeUntilReady > 0.0f) { return; }
 
-            var availableIngredients = GetAvailableIngredients();
-            foreach (FabricationRecipe.RequiredItem ingredient in fabricatedItem.RequiredItems)
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                for (int i = 0; i < ingredient.Amount; i++)
+                var availableIngredients = GetAvailableIngredients();
+                foreach (FabricationRecipe.RequiredItem ingredient in fabricatedItem.RequiredItems)
                 {
-                    var requiredItem = inputContainer.Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ingredient.ItemPrefab && it.Condition >= ingredient.ItemPrefab.Health * ingredient.MinCondition);
-                    if (requiredItem == null) continue;
-                    
-                    //Item4 = use condition bool
-                    if (ingredient.UseCondition && requiredItem.Condition - ingredient.ItemPrefab.Health * ingredient.MinCondition > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
+                    for (int i = 0; i < ingredient.Amount; i++)
                     {
-                        requiredItem.Condition -= ingredient.ItemPrefab.Health * ingredient.MinCondition;
-                        continue;
+                        var availableItem = availableIngredients.FirstOrDefault(it => it != null && it.Prefab == ingredient.ItemPrefab && it.Condition >= ingredient.ItemPrefab.Health * ingredient.MinCondition);
+                        if (availableItem == null) { continue; }
+                                            
+                        //Item4 = use condition bool
+                        if (ingredient.UseCondition && availableItem.Condition - ingredient.ItemPrefab.Health * ingredient.MinCondition > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
+                        {
+                            availableItem.Condition -= ingredient.ItemPrefab.Health * ingredient.MinCondition;
+                            continue;
+                        }
+                        availableIngredients.Remove(availableItem);
+                        Entity.Spawner.AddToRemoveQueue(availableItem);
+                        inputContainer.Inventory.RemoveItem(availableItem);
                     }
-                    Entity.Spawner.AddToRemoveQueue(requiredItem);
-                    inputContainer.Inventory.RemoveItem(requiredItem);
                 }
-            }
 
-            if (outputContainer.Inventory.Items.All(i => i != null))
-            {
-                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
-            }
-            else
-            {
-                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
-            }
-            
-            if ((GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) && user != null && !user.Removed)
-            {
-                foreach (Skill skill in fabricatedItem.RequiredSkills)
+                if (outputContainer.Inventory.Items.All(i => i != null))
                 {
-                    user.Info.IncreaseSkillLevel(skill.Identifier, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
+                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
                 }
-            }
+                else
+                {
+                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+                }
+            
+                if (user != null && !user.Removed)
+                {
+                    foreach (Skill skill in fabricatedItem.RequiredSkills)
+                    {
+                        user.Info.IncreaseSkillLevel(skill.Identifier, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
+                    }
+                }
 
-            CancelFabricating(null);
+                CancelFabricating(null);
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
         }
 
         private bool CanBeFabricated(FabricationRecipe fabricableItem)
@@ -327,6 +337,8 @@ namespace Barotrauma.Items.Components
                 {
                     var matchingItem = availableIngredients.Find(it => !usedItems.Contains(it) && IsItemValidIngredient(it, requiredItem));
                     if (matchingItem == null) { continue; }
+
+                    availableIngredients.Remove(matchingItem);
                     
                     if (matchingItem.ParentInventory == inputContainer.Inventory)
                     {

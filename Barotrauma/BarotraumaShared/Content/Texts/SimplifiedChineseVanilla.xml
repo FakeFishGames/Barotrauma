@@ -2445,12 +2445,12 @@
 
 <!-- New additions -->
 <creditsbutton>制作人员名单</creditsbutton>
-<orderoptions.operatereactor>开启，关停。</orderoptions.operatereactor>
-<orderoptions.operateweapons>开火，停火。</orderoptions.operateweapons>
-<orderoptions.steer>原地停留，返程，向目的地的进发。</orderoptions.steer>
-<orderoptions.chargebatteries>开始充电，停止充电。</orderoptions.chargebatteries>
-<orderoptions.pumpwater>开启泵机，关闭泵机。</orderoptions.pumpwater>
-<orderoptions.repairsystems>修理指定设备，修理全部设备。</orderoptions.repairsystems>
+<orderoptions.operatereactor>开启,关停</orderoptions.operatereactor>
+<orderoptions.operateweapons>开火,停火</orderoptions.operateweapons>
+<orderoptions.steer>原地停留,返程,向目的地的进发</orderoptions.steer>
+<orderoptions.chargebatteries>开始充电,停止充电</orderoptions.chargebatteries>
+<orderoptions.pumpwater>开启泵机,关闭泵机</orderoptions.pumpwater>
+<orderoptions.repairsystems>修理指定设备,修理全部设备</orderoptions.repairsystems>
 
 <ordername.dismissed>已驳回</ordername.dismissed>
 <ordername.follow>跟随</ordername.follow>

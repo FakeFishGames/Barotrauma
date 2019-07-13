@@ -296,6 +296,12 @@ namespace Barotrauma
             }
         }
 
+        public bool IsFileCorrupted
+        {
+            get;
+            private set;
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
@@ -321,12 +327,17 @@ namespace Barotrauma
                 int maxLoadRetries = 4;
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
-                    doc = OpenFile(filePath);
+                    doc = OpenFile(filePath, out Exception e);
+                    if (e != null && !(e is IOException)) { break; }
                     if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
                     DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null || doc.Root == null)
+                {
+                    IsFileCorrupted = true;
+                    return;
+                }
 
                 if (doc != null && doc.Root != null)
                 {
@@ -1138,7 +1149,11 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
-            savedSubmarines.Add(new Submarine(filePath));
+            var sub = new Submarine(filePath);
+            if (!sub.IsFileCorrupted)
+            {
+                savedSubmarines.Add(sub);
+            }
             savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
         }
 
@@ -1192,7 +1207,11 @@ namespace Barotrauma
 
             foreach (string path in filePaths)
             {
-                savedSubmarines.Add(new Submarine(path));
+                var sub = new Submarine(path);
+                if (!sub.IsFileCorrupted)
+                {
+                    savedSubmarines.Add(sub);
+                }
             }
         }
 
@@ -1200,8 +1219,14 @@ namespace Barotrauma
 
         public static XDocument OpenFile(string file)
         {
+            return OpenFile(file, out _);
+        }
+
+        public static XDocument OpenFile(string file, out Exception exception)
+        {
             XDocument doc = null;
             string extension = "";
+            exception = null;
 
             try
             {
@@ -1228,6 +1253,7 @@ namespace Barotrauma
                 }
                 catch (Exception e) 
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed!", e);
                     return null;
                 }                
@@ -1242,6 +1268,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
@@ -1256,6 +1283,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }

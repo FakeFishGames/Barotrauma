@@ -253,15 +253,19 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection connection in connections)
                 {
-                    if (!connection.IsPower) continue;
+                    if (!connection.IsPower) { continue; }
                     foreach (Connection recipient in connection.Recipients)
                     {
-                        if (!(recipient.Item is Item it)) continue;
+                        if (!(recipient.Item is Item it)) { continue; }
 
                         PowerTransfer pt = it.GetComponent<PowerTransfer>();
-                        if (pt == null) continue;
+                        if (pt == null) { continue; }
 
-                        load = Math.Max(load, pt.PowerLoad);
+                        //calculate how much external power there is in the grid 
+                        //(power coming from somewhere else than this reactor, e.g. batteries)
+                        float externalPower = CurrPowerConsumption - pt.CurrPowerConsumption;
+                        //reduce the external power from the load to prevent overloading the grid
+                        load = Math.Max(load, pt.PowerLoad - externalPower);
                     }
                 }
             }
