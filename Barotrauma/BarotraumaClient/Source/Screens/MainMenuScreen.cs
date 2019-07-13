@@ -739,7 +739,7 @@ namespace Barotrauma
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -upnp " + useUpnpBox.Selected +
                                    " -maxplayers " + maxPlayersBox.Text +
-                                    " -ownerkey " + ownerKey.ToString();
+                                   " -steamid " + Steam.SteamManager.GetSteamID(); //TODO: let the player choose which peers to use
 
                 string filename = exeName;
 #if LINUX || OSX
@@ -754,9 +754,9 @@ namespace Barotrauma
 #endif
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
-                Thread.Sleep(1000); //wait until the server is ready before connecting
+                Thread.Sleep(10000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(), name, ownerKey);
+                GameMain.Client = new GameClient(name, null, Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }
             catch (Exception e)
             {

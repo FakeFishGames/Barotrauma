@@ -15,8 +15,7 @@ namespace Barotrauma.Networking
         private NetPeerConfiguration netPeerConfiguration;
 
         private ConnectionInitialization initializationStep;
-        private int passwordSalt;
-        private Auth.Ticket steamAuthTicket;
+        private UInt64 steamID;
         List<NetIncomingMessage> incomingLidgrenMessages;
 
         public SteamP2POwnerPeer(string name)
@@ -26,6 +25,8 @@ namespace Barotrauma.Networking
             Name = name;
 
             netClient = null;
+
+            steamID = Steam.SteamManager.GetSteamID();
         }
 
         public override void Start(object endPoint)
@@ -39,26 +40,11 @@ namespace Barotrauma.Networking
 
             netClient = new NetClient(netPeerConfiguration);
 
-            steamAuthTicket = SteamManager.GetAuthSessionTicket();
-            //TODO: wait for GetAuthSessionTicketResponse_t
-
-            if (steamAuthTicket == null)
-            {
-                throw new Exception("GetAuthSessionTicket returned null");
-            }
-
             incomingLidgrenMessages = new List<NetIncomingMessage>();
 
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
-            if (!(endPoint is IPEndPoint ipEndPoint))
-            {
-                throw new InvalidCastException("endPoint is not IPEndPoint");
-            }
-            if (ServerConnection != null)
-            {
-                throw new InvalidOperationException("ServerConnection is not null");
-            }
+            IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Loopback, Steam.SteamManager.STEAMP2P_OWNER_PORT);
 
             netClient.Start();
             ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
@@ -92,7 +78,59 @@ namespace Barotrauma.Networking
         {
             if (netClient == null) { return; }
 
-            throw new NotImplementedException();
+            UInt64 recipientSteamId = inc.ReadUInt64();
+            byte incByte = inc.ReadByte();
+
+            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
+            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
+            bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
+            bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
+            bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
+
+            if (recipientSteamId != steamID)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                if (isDisconnectMessage)
+                {
+                    DebugConsole.ThrowError("Received disconnect message from owned server");
+                    return;
+                }
+                if (!isServerMessage)
+                {
+                    DebugConsole.ThrowError("Received non-server message from owned server");
+                    return;
+                }
+                if (isHeartbeatMessage)
+                {
+                    return; //TODO: implement timeout?
+                }
+                if (isConnectionInitializationStep)
+                {
+                    NetOutgoingMessage outMsg = netClient.CreateMessage();
+                    outMsg.Write(steamID);
+                    outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep));
+                    outMsg.Write(Name);
+                    netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+
+                    return;
+                }
+                else
+                {
+                    if (initializationStep != ConnectionInitialization.Success)
+                    {
+                        OnInitializationComplete?.Invoke();
+                        initializationStep = ConnectionInitialization.Success;
+                    }
+                    UInt16 length = inc.ReadUInt16();
+                    IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, ServerConnection);
+                    OnMessageReceived?.Invoke(msg);
+
+                    return;
+                }
+            }
         }
 
         private void HandleStatusChanged(NetIncomingMessage inc)
@@ -108,67 +146,10 @@ namespace Barotrauma.Networking
                     break;
             }
         }
-
-        private void ReadConnectionInitializationStep(NetIncomingMessage inc)
-        {
-            if (netClient == null) { return; }
-
-            ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
-            //DebugConsole.NewMessage(step + " " + initializationStep);
-            switch (step)
-            {
-                case ConnectionInitialization.SteamTicketAndVersion:
-                    if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
-                    NetOutgoingMessage outMsg = netClient.CreateMessage();
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
-                    outMsg.Write(Name);
-                    outMsg.Write(SteamManager.GetSteamID());
-                    outMsg.Write((UInt16)steamAuthTicket.Data.Length);
-                    outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
-
-                    outMsg.Write(GameMain.Version.ToString());
-
-                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
-                    outMsg.WriteVariableInt32(mpContentPackages.Count());
-                    foreach (ContentPackage contentPackage in mpContentPackages)
-                    {
-                        outMsg.Write(contentPackage.Name);
-                        outMsg.Write(contentPackage.MD5hash.Hash);
-                    }
-
-                    netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
-                    break;
-                case ConnectionInitialization.Password:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }
-                    if (initializationStep != ConnectionInitialization.Password) { return; }
-                    bool incomingSalt = inc.ReadBoolean(); inc.ReadPadBits();
-                    int retries = 0;
-                    if (incomingSalt)
-                    {
-                        passwordSalt = inc.ReadInt32();
-                    }
-                    else
-                    {
-                        retries = inc.ReadInt32();
-                    }
-                    OnRequestPassword?.Invoke(passwordSalt, retries);
-                    break;
-            }
-        }
-
+        
         public override void SendPassword(string password)
         {
-            if (netClient == null) { return; }
-
-            if (initializationStep != ConnectionInitialization.Password) { return; }
-            NetOutgoingMessage outMsg = netClient.CreateMessage();
-            outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-            outMsg.Write((byte)ConnectionInitialization.Password);
-            byte[] saltedPw = ServerSettings.SaltPassword(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)), passwordSalt);
-            outMsg.Write((byte)saltedPw.Length);
-            outMsg.Write(saltedPw, 0, saltedPw.Length);
-            netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            return; //owner doesn't send passwords
         }
 
         public override void Close(string msg = null)
@@ -176,7 +157,6 @@ namespace Barotrauma.Networking
             if (netClient == null) { return; }
 
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
-            steamAuthTicket?.Cancel(); steamAuthTicket = null;
             OnDisconnect?.Invoke(msg);
             netClient = null;
         }
@@ -203,6 +183,7 @@ namespace Barotrauma.Networking
             byte[] msgData = new byte[1500];
             bool isCompressed; int length;
             msg.PrepareForSending(msgData, out isCompressed, out length);
+            lidgrenMsg.Write(steamID);
             lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);

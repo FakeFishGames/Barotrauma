@@ -93,16 +93,18 @@ namespace Barotrauma.Networking
         }
 
         private int ownerKey;
+        private bool steamP2POwner;
 
         public bool IsServerOwner
         {
             get { return ownerKey > 0; }
         }
         
-        public GameClient(string newName, string ip, string serverName = null, int ownerKey = 0)
+        public GameClient(string newName, string ip, UInt64 steamId, string serverName = null, int ownerKey = 0, bool steamP2POwner = false)
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
+            this.steamP2POwner = steamP2POwner;
 
             allowReconnect = true;
 
@@ -212,7 +214,14 @@ namespace Barotrauma.Networking
 
             serverSettings = new ServerSettings("Server", 0, 0, 0, false, false);
 
-            ConnectToServer(ip, serverName);
+            if (steamId == 0)
+            {
+                ConnectToServer(ip, serverName);
+            }
+            else
+            {
+                ConnectToServer(steamId, serverName);
+            }
 
             //ServerLog = new ServerLog("");
 
@@ -277,7 +286,7 @@ namespace Barotrauma.Networking
                 pwRetries = retries;
             };
             clientPeer.OnMessageReceived = ReadDataMessage;
-            
+
             System.Net.IPEndPoint IPEndPoint = null;
             try
             {
@@ -289,7 +298,7 @@ namespace Barotrauma.Networking
                     TextManager.GetWithVariables("InvalidIPAddress", new string[2] { "[serverip]", "[port]" }, new string[2] { serverIP, Port.ToString() }));
                 return;
             }
-            
+
             // Connect client, to ip previously requested from user
             try
             {
@@ -298,6 +307,73 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Couldn't connect to " + hostIP + ". Error message: " + e.Message);
+                Disconnect();
+                chatBox.InputBox.Enabled = true;
+                if (GameMain.NetLobbyScreen?.TextBox != null)
+                {
+                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                }
+                GameMain.ServerListScreen.Select();
+                return;
+            }
+
+            updateInterval = new TimeSpan(0, 0, 0, 0, 150);
+
+            CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
+        }
+
+        private void ConnectToServer(UInt64 steamId, string hostName)
+        {
+            chatBox.InputBox.Enabled = false;
+            if (GameMain.NetLobbyScreen?.TextBox != null)
+            {
+                GameMain.NetLobbyScreen.TextBox.Enabled = false;
+            }
+
+            serverName = hostName;
+            
+            myCharacter = Character.Controlled;
+            ChatMessage.LastID = 0;
+
+            if (steamP2POwner)
+            {
+                clientPeer = new SteamP2POwnerPeer(Name);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+            clientPeer.OnDisconnect = OnDisconnect;
+            clientPeer.OnInitializationComplete = () =>
+            {
+                canStart = true;
+                connected = true;
+
+                if (Screen.Selected != GameMain.GameScreen)
+                {
+                    GameMain.NetLobbyScreen.Select();
+                }
+
+                chatBox.InputBox.Enabled = true;
+                if (GameMain.NetLobbyScreen?.TextBox != null)
+                {
+                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                }
+            };
+            clientPeer.OnRequestPassword = (int salt, int retries) =>
+            {
+                if (pwRetries != retries) { requiresPw = true; }
+                pwRetries = retries;
+            };
+            clientPeer.OnMessageReceived = ReadDataMessage;
+            
+            try
+            {
+                clientPeer.Start(steamId);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Couldn't connect to " + steamId.ToString() + ". Error message: " + e.Message);
                 Disconnect();
                 chatBox.InputBox.Enabled = true;
                 if (GameMain.NetLobbyScreen?.TextBox != null)

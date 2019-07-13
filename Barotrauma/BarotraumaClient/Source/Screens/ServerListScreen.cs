@@ -750,7 +750,7 @@ namespace Barotrauma
             try
             {
 #endif
-                GameMain.Client = new GameClient(clientNameBox.Text, ip, serverName);
+                GameMain.Client = new GameClient(clientNameBox.Text, ip, 0, serverName);
 #if !DEBUG
             }
             catch (Exception e)

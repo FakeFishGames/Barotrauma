@@ -93,8 +93,9 @@ namespace Barotrauma.Networking
 
         public NetworkConnection OwnerConnection { get; private set; }
         private int? ownerKey;
+        private UInt64? ownerSteamId;
 
-        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int? ownKey = null)
+        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int? ownKey = null, UInt64? steamId = null)
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
@@ -115,6 +116,8 @@ namespace Barotrauma.Networking
 
             ownerKey = ownKey;
 
+            ownerSteamId = steamId;
+
             entityEventManager = new ServerEntityEventManager(this);
             
             CoroutineManager.StartCoroutine(StartServer(isPublic));
@@ -126,7 +129,14 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
+                if (!ownerSteamId.HasValue || ownerSteamId.Value==0)
+                {
+                    serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
+                }
+                else
+                {
+                    serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, serverSettings);
+                }
 
                 serverPeer.OnInitializationComplete = OnInitializationComplete;
                 serverPeer.OnMessageReceived = ReadDataMessage;

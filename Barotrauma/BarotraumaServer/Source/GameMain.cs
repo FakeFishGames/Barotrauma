@@ -169,6 +169,7 @@ namespace Barotrauma
             bool enableUpnp = false;
             int maxPlayers = 10;
             int ownerKey = 0;
+            UInt64 steamId = 0;
 
             XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc?.Root == null)
@@ -224,6 +225,10 @@ namespace Barotrauma
                         int.TryParse(CommandLineArgs[i + 1], out ownerKey);
                         i++;
                         break;
+                    case "-steamid":
+                        UInt64.TryParse(CommandLineArgs[i + 1], out steamId);
+                        i++;
+                        break;
                 }
             }
 
@@ -235,7 +240,8 @@ namespace Barotrauma
                 password,
                 enableUpnp,
                 maxPlayers,
-                ownerKey);
+                ownerKey,
+                steamId);
         }
 
         public void CloseServer()

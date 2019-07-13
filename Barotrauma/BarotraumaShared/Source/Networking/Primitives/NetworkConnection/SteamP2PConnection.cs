@@ -8,9 +8,10 @@ namespace Barotrauma.Networking
     {
         public double Timeout = 0.0;
 
-        public SteamP2PConnection(UInt64 steamId)
+        public SteamP2PConnection(string name, UInt64 steamId)
         {
             SteamID = steamId;
+            Name = name;
             Heartbeat();
         }
 

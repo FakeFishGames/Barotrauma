@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Linq;
+using System.Threading;
 using Lidgren.Network;
 using Facepunch.Steamworks;
 
@@ -14,9 +15,11 @@ namespace Barotrauma.Networking
         private NetPeerConfiguration netPeerConfiguration;
         private NetServer netServer;
 
+        private NetConnection netConnection;
+
         private Facepunch.Steamworks.Server steamServer;
         
-        private UInt64 steamID;
+        private UInt64 ownerSteamID;
         
         private class PendingClient
         {
@@ -39,6 +42,11 @@ namespace Barotrauma.Networking
                 TimeOut = Timing.TotalTime + 20.0;
                 AuthSessionStarted = false;
             }
+
+            public void Heartbeat()
+            {
+                TimeOut = Timing.TotalTime + 5.0;
+            }
         }
 
         private List<SteamP2PConnection> connectedClients;
@@ -60,6 +68,8 @@ namespace Barotrauma.Networking
             steamServer = null;
 
             ownerKey = null;
+
+            ownerSteamID = steamId;
         }
 
         public override void Start()
@@ -83,15 +93,6 @@ namespace Barotrauma.Networking
             netServer = new NetServer(netPeerConfiguration);
 
             netServer.Start();
-
-            if (serverSettings.EnableUPnP)
-            {
-                InitUPnP();
-
-                while (DiscoveringUPnP()) { }
-
-                FinishUPnP();
-            }
         }
 
         public override void Close(string msg = null)
@@ -157,50 +158,153 @@ namespace Barotrauma.Networking
 
             incomingLidgrenMessages.Clear();
         }
-
-        private void InitUPnP()
-        {
-            if (netServer == null) { return; }
-
-            netServer.UPnP.ForwardPort(netPeerConfiguration.Port, "barotrauma");
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                netServer.UPnP.ForwardPort(serverSettings.QueryPort, "barotrauma");
-            }
-        }
-
-        private bool DiscoveringUPnP()
-        {
-            if (netServer == null) { return false; }
-
-            return netServer.UPnP.Status == UPnPStatus.Discovering;
-        }
-
-        private void FinishUPnP()
-        {
-            //do nothing
-        }
-
+        
         private void HandleConnection(NetIncomingMessage inc)
         {
             if (netServer == null) { return; }
             
-            throw new NotImplementedException();
+            if (netConnection != null && inc.SenderConnection != netConnection)
+            {
+                inc.SenderConnection.Deny("Owner is already connected");
+                return;
+            }
+
+            if (IPAddress.IsLoopback(inc.SenderConnection.RemoteEndPoint.Address.MapToIPv4()))
+            {
+                inc.SenderConnection.Approve();
+                netConnection = inc.SenderConnection;
+                
+                return;
+            }
+
+            inc.SenderConnection.Deny("Incoming connection is not loopback");
         }
 
         private void HandleDataMessage(NetIncomingMessage inc)
         {
             if (netServer == null) { return; }
 
-            throw new NotImplementedException();
+            if (inc.SenderConnection != netConnection) { return; }
+
+            UInt64 senderSteamId = inc.ReadUInt64();
+
+            byte incByte = inc.ReadByte();
+            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
+            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
+            bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
+            bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
+            bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
+            
+            if (isServerMessage)
+            {
+                return;
+            }
+
+            if (senderSteamId != ownerSteamID) //sender is remote, handle disconnects and heartbeats
+            {
+                PendingClient pendingClient = pendingClients.Find(c => c.SteamID == senderSteamId);
+                SteamP2PConnection connectedClient = connectedClients.Find(c => c.SteamID == senderSteamId);
+                
+                pendingClient?.Heartbeat();
+                connectedClient?.Heartbeat();
+
+                if (serverSettings.BanList.IsBanned(senderSteamId))
+                {
+                    if (pendingClient != null)
+                    {
+                        RemovePendingClient(pendingClient, "Banned");
+                    }
+                    else if (connectedClient != null)
+                    {
+                        Disconnect(connectedClient, "Banned");
+                    }
+                    return;
+                }
+                else if (isDisconnectMessage)
+                {
+                    if (pendingClient != null)
+                    {
+                        RemovePendingClient(pendingClient, "Disconnected");
+                    }
+                    else if (connectedClient != null)
+                    {
+                        Disconnect(connectedClient, "Disconnected");
+                    }
+                    return;
+                }
+                else if (isHeartbeatMessage)
+                {
+                    //message exists solely as a heartbeat, ignore its contents
+                    return;
+                }
+                else if (isConnectionInitializationStep)
+                {
+                    if (pendingClient != null)
+                    {
+                        ReadConnectionInitializationStep(pendingClient, new ReadOnlyMessage(inc.Data, false, inc.PositionInBytes, inc.LengthBytes - inc.PositionInBytes, null));
+                    }
+                }
+                else if (connectedClient != null)
+                {
+                    UInt16 length = inc.ReadUInt16();
+                    
+                    IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, connectedClient);
+                    OnMessageReceived?.Invoke(connectedClient, msg);
+                }
+            }
+            else //sender is owner
+            {
+                if (OwnerConnection != null) { (OwnerConnection as SteamP2PConnection).Heartbeat(); }
+
+                if (isDisconnectMessage)
+                {
+                    DebugConsole.ThrowError("Received disconnect message from owner");
+                    return;
+                }
+                if (isServerMessage)
+                {
+                    DebugConsole.ThrowError("Received server message from owner");
+                    return;
+                }
+                if (isConnectionInitializationStep)
+                {
+                    if (OwnerConnection == null)
+                    {
+                        string ownerName = inc.ReadString();
+                        OwnerConnection = new SteamP2PConnection(ownerName, ownerSteamID);
+                        
+                        OnInitializationComplete?.Invoke(OwnerConnection);
+                    }
+                    return;
+                }
+                if (isHeartbeatMessage)
+                {
+                    return;
+                }
+                else
+                {
+                    UInt16 length = inc.ReadUInt16();
+
+                    IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, OwnerConnection);
+                    OnMessageReceived?.Invoke(OwnerConnection, msg);
+                }
+            }
         }
 
         private void HandleStatusChanged(NetIncomingMessage inc)
         {
             if (netServer == null) { return; }
 
+            DebugConsole.NewMessage(inc.SenderConnection.Status.ToString());
+
             switch (inc.SenderConnection.Status)
             {
+                case NetConnectionStatus.Connected:
+                    NetOutgoingMessage outMsg = netServer.CreateMessage();
+                    outMsg.Write(ownerSteamID);
+                    outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage));
+                    netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                    break;
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
                     throw new NotImplementedException();
@@ -208,7 +312,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void ReadConnectionInitializationStep(PendingClient pendingClient, NetIncomingMessage inc)
+        private void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc)
         {
             if (netServer == null) { return; }
 
@@ -226,7 +330,8 @@ namespace Barotrauma.Networking
                     string name = Client.SanitizeName(inc.ReadString());
                     UInt64 steamId = inc.ReadUInt64();
                     UInt16 ticketLength = inc.ReadUInt16();
-                    byte[] ticket = inc.ReadBytes(ticketLength);
+                    byte[] ticket = new byte[ticketLength];
+                    inc.ReadBytes(ticket, 0, ticketLength);
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
@@ -241,12 +346,12 @@ namespace Barotrauma.Networking
                         RemovePendingClient(pendingClient,
                                     $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version.ToString()}~[clientversion]={version}");
 
-                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
-                        DebugConsole.NewMessage(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
+                        GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
+                        DebugConsole.NewMessage(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
                         return;
                     }
 
-                    Int32 contentPackageCount = inc.ReadVariableInt32();
+                    Int32 contentPackageCount = (int)inc.Read7BitEncoded();
                     List<ClientContentPackage> contentPackages = new List<ClientContentPackage>();
                     for (int i = 0; i < contentPackageCount; i++)
                     {
@@ -260,7 +365,7 @@ namespace Barotrauma.Networking
                     {
                         if (!contentPackage.HasMultiplayerIncompatibleContent) continue;
                         bool packageFound = false;
-                        for (int i = 0; i < contentPackageCount; i++)
+                        for (int i = 0; i < (int)contentPackageCount; i++)
                         {
                             if (contentPackages[i].Name == contentPackage.Name && contentPackages[i].Hash == contentPackage.MD5hash.Hash)
                             {
@@ -275,7 +380,7 @@ namespace Barotrauma.Networking
                     {
                         RemovePendingClient(pendingClient,
                             $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(missingPackages[0])}");
-                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
+                        GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
                         return;
                     }
                     else if (missingPackages.Count > 1)
@@ -284,11 +389,11 @@ namespace Barotrauma.Networking
                         missingPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
                         RemovePendingClient(pendingClient,
                             $"DisconnectMessage.MissingContentPackages~[missingcontentpackages]={string.Join(", ", packageStrs)}");
-                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
+                        GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                         return;
                     }
 
-                    if (pendingClient.SteamID == null)
+                    if (!pendingClient.AuthSessionStarted)
                     {
                         ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
                         if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
@@ -296,17 +401,8 @@ namespace Barotrauma.Networking
                             RemovePendingClient(pendingClient, "Steam auth session failed to start: " + authSessionStartState.ToString());
                             return;
                         }
-                        pendingClient.SteamID = steamId;
                         pendingClient.Name = name;
                         pendingClient.AuthSessionStarted = true;
-                    }
-                    else //TODO: could remove since this seems impossible
-                    {
-                        if (pendingClient.SteamID != steamId)
-                        {
-                            RemovePendingClient(pendingClient, "SteamID mismatch");
-                            return;
-                        }
                     }
                     break;
                 case ConnectionInitialization.Password:
@@ -368,14 +464,14 @@ namespace Barotrauma.Networking
 
             //DebugConsole.NewMessage("pending client status: " + pendingClient.InitializationStep);
 
-            if (connectedClients.Count >= serverSettings.MaxPlayers)
+            if (connectedClients.Count >= serverSettings.MaxPlayers-1)
             {
                 RemovePendingClient(pendingClient, DisconnectReason.ServerFull.ToString());
             }
 
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
-                SteamP2PConnection newConnection = new SteamP2PConnection(pendingClient.SteamID);
+                SteamP2PConnection newConnection = new SteamP2PConnection(pendingClient.Name, pendingClient.SteamID);
                 connectedClients.Add(newConnection);
                 pendingClients.Remove(pendingClient);
                 OnInitializationComplete?.Invoke(newConnection);
@@ -390,7 +486,9 @@ namespace Barotrauma.Networking
             pendingClient.UpdateTime = Timing.TotalTime + 1.0;
 
             NetOutgoingMessage outMsg = netServer.CreateMessage();
-            outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
+            outMsg.Write(pendingClient.SteamID);
+            outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep |
+                                PacketHeader.IsServerMessage));
             outMsg.Write((byte)pendingClient.InitializationStep);
             switch (pendingClient.InitializationStep)
             {
@@ -408,9 +506,10 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            throw new NotImplementedException("Send connection initialization step to client");
-            //NetSendResult result = netServer.SendMessage(outMsg, pendingClient.Connection, NetDeliveryMethod.ReliableUnordered);
-            //DebugConsole.NewMessage("sent update to pending client: "+result);
+            if (netConnection != null)
+            {
+                NetSendResult result = netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+            }
         }
 
         private void RemovePendingClient(PendingClient pendingClient, string reason)
@@ -482,7 +581,7 @@ namespace Barotrauma.Networking
             if (netServer == null) { return; }
 
             if (!(conn is SteamP2PConnection steamp2pConn)) return;
-            if (!connectedClients.Contains(steamp2pConn))
+            if (!connectedClients.Contains(steamp2pConn) && conn != OwnerConnection)
             {
                 DebugConsole.ThrowError("Tried to send message to unauthenticated connection: " + steamp2pConn.SteamID.ToString());
                 return;
@@ -506,11 +605,12 @@ namespace Barotrauma.Networking
             byte[] msgData = new byte[1500];
             bool isCompressed; int length;
             msg.PrepareForSending(msgData, out isCompressed, out length);
-            lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
+            lidgrenMsg.Write(conn.SteamID);
+            lidgrenMsg.Write((byte)((isCompressed ? PacketHeader.IsCompressed : PacketHeader.None) | PacketHeader.IsServerMessage));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            throw new NotImplementedException("Implement sending to client");//netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
+            netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
         }
 
         public override void Disconnect(NetworkConnection conn, string msg = null)

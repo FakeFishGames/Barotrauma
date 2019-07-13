@@ -17,18 +17,18 @@ namespace Barotrauma.Steam
             isInitialized = InitializeClient();
         }
 
-        private static bool InitializeClient()
+        private bool InitializeClient()
         {
-            if (instance.client != null) { return true; }
+            if (client != null) { return true; }
             bool clientInitialized = false;
             try
             {
-                instance.client = new Facepunch.Steamworks.Client(AppID);
-                clientInitialized = instance.client.IsSubscribed && instance.client.IsValid;
+                client = new Facepunch.Steamworks.Client(AppID);
+                clientInitialized = client.IsSubscribed && client.IsValid;
 
                 if (clientInitialized)
                 {
-                    DebugConsole.Log("Logged in as " + instance.client.Username + " (SteamID " + instance.client.SteamId + ")");
+                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
                 }
             }
             catch (DllNotFoundException)
@@ -46,14 +46,13 @@ namespace Barotrauma.Steam
             {
                 try
                 {
-
                     Facepunch.Steamworks.Client.Instance.Dispose();
                 }
                 catch (Exception e)
                 {
                     if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
                 }
-                instance.client = null;
+                client = null;
             }
             return clientInitialized;
         }
