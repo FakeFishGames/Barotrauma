@@ -341,7 +341,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                throw new NotImplementedException();
+                clientPeer = new SteamP2PClientPeer(Name);
             }
             clientPeer.OnDisconnect = OnDisconnect;
             clientPeer.OnInitializationComplete = () =>
