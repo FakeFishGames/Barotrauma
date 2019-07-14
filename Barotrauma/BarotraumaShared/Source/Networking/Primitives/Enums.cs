@@ -2,11 +2,11 @@
 
 namespace Barotrauma.Networking
 {
-    public enum DeliveryMethod
+    public enum DeliveryMethod : byte
     {
-        Unreliable,
-        Reliable,
-        ReliableOrdered
+        Unreliable = 0x0,
+        Reliable = 0x1,
+        ReliableOrdered = 0x2
     }
 
     public enum ConnectionInitialization : byte

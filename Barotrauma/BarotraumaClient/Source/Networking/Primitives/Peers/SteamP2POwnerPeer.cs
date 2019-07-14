@@ -18,6 +18,19 @@ namespace Barotrauma.Networking
         private UInt64 steamID;
         List<NetIncomingMessage> incomingLidgrenMessages;
 
+        class RemotePeer
+        {
+            public UInt64 SteamID;
+            public double? DisconnectTime;
+
+            public RemotePeer(UInt64 steamId)
+            {
+                SteamID = steamId;
+                DisconnectTime = null;
+            }
+        }
+        List<RemotePeer> remotePeers;
+
         public SteamP2POwnerPeer(string name)
         {
             ServerConnection = null;
@@ -48,11 +61,57 @@ namespace Barotrauma.Networking
 
             netClient.Start();
             ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
+
+            Steam.SteamManager.Instance.Networking.OnIncomingConnection = OnIncomingConnection;
+            Steam.SteamManager.Instance.Networking.OnP2PData = OnP2PData;
+        }
+
+        private bool OnIncomingConnection(UInt64 steamId)
+        {
+            if (!remotePeers.Any(p => p.SteamID == steamId))
+            {
+                remotePeers.Add(new RemotePeer(steamId));
+            }
+
+            return true; //accept all connections, the server will figure things out later
+        }
+
+        private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
+        {
+            if (!remotePeers.Any(p => p.SteamID == steamID)) { return; }
+
+            NetOutgoingMessage outMsg = netClient.CreateMessage();
+            outMsg.Write(steamId);
+            outMsg.Write(data, 1, dataLength - 1);
+
+            NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
+            switch ((DeliveryMethod)data[0])
+            {
+                case DeliveryMethod.Unreliable:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
+                    break;
+                case DeliveryMethod.Reliable:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableUnordered;
+                    break;
+                case DeliveryMethod.ReliableOrdered:
+                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
+                    break;
+            }
+
+            netClient.SendMessage(outMsg, lidgrenDeliveryMethod);
         }
 
         public override void Update()
         {
             if (netClient == null) { return; }
+
+            for (int i=remotePeers.Count-1;i>=0;i--)
+            {
+                if (remotePeers[i].DisconnectTime != null && remotePeers[i].DisconnectTime < Timing.TotalTime)
+                {
+                    ClosePeerSession(remotePeers[i]);
+                }
+            }
 
             netClient.ReadMessages(incomingLidgrenMessages);
 
@@ -79,6 +138,9 @@ namespace Barotrauma.Networking
             if (netClient == null) { return; }
 
             UInt64 recipientSteamId = inc.ReadUInt64();
+
+            int p2pDataStart = inc.PositionInBytes;
+
             byte incByte = inc.ReadByte();
 
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
@@ -89,7 +151,40 @@ namespace Barotrauma.Networking
 
             if (recipientSteamId != steamID)
             {
-                throw new NotImplementedException();
+                if (!isServerMessage)
+                {
+                    DebugConsole.ThrowError("Received non-server message meant for remote peer");
+                    return;
+                }
+
+                RemotePeer peer = remotePeers.Find(p => p.SteamID == recipientSteamId);
+
+                if (peer == null) { return; }
+
+                if (isDisconnectMessage)
+                {
+                    DisconnectPeer(peer, inc.ReadString());
+                }
+
+                Facepunch.Steamworks.Networking.SendType sendType;
+                switch (inc.DeliveryMethod)
+                {
+                    case NetDeliveryMethod.ReliableUnordered:
+                    case NetDeliveryMethod.ReliableSequenced:
+                    case NetDeliveryMethod.ReliableOrdered:
+                        //the documentation seems to suggest that the Reliable send type
+                        //enforces packet order (TODO: verify)
+                        sendType = Facepunch.Steamworks.Networking.SendType.Reliable;
+                        break;
+                    default:
+                        sendType = Facepunch.Steamworks.Networking.SendType.Unreliable;
+                        break;
+                }
+
+                byte[] p2pData = new byte[inc.LengthBytes - p2pDataStart];
+                Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
+
+                Steam.SteamManager.Instance.Networking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, sendType);
             }
             else
             {
@@ -133,6 +228,34 @@ namespace Barotrauma.Networking
             }
         }
 
+        private void DisconnectPeer(RemotePeer peer, string msg)
+        {
+            if (string.IsNullOrWhiteSpace(msg))
+            {
+                if (peer.DisconnectTime != null)
+                {
+                    peer.DisconnectTime = Timing.TotalTime + 1.0;
+                }
+
+                IWriteMessage outMsg = new WriteOnlyMessage();
+                outMsg.Write((byte)(PacketHeader.IsServerMessage | PacketHeader.IsDisconnectMessage));
+                outMsg.Write(msg);
+
+                Steam.SteamManager.Instance.Networking.SendP2PPacket(peer.SteamID, outMsg.Buffer, outMsg.LengthBytes,
+                                                                     Facepunch.Steamworks.Networking.SendType.Reliable);
+            }
+            else
+            {
+                ClosePeerSession(peer);
+            }
+        }
+
+        private void ClosePeerSession(RemotePeer peer)
+        {
+            Steam.SteamManager.Instance.Networking.CloseSession(peer.SteamID);
+            remotePeers.Remove(peer);
+        }
+
         private void HandleStatusChanged(NetIncomingMessage inc)
         {
             if (netClient == null) { return; }
@@ -159,6 +282,9 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             OnDisconnect?.Invoke(msg);
             netClient = null;
+
+            Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
+            Steam.SteamManager.Instance.Networking.OnP2PData = null;
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)

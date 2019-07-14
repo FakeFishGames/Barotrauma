@@ -11,6 +11,8 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
+        public Facepunch.Steamworks.Networking Networking => client.Networking;
+
         private SteamManager()
         {
             client = null;

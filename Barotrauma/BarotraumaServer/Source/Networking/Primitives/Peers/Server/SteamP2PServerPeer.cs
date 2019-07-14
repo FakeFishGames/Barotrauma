@@ -239,6 +239,15 @@ namespace Barotrauma.Networking
                 }
                 else if (isConnectionInitializationStep)
                 {
+                    if (pendingClient == null && connectedClient == null)
+                    {
+                        if (!serverSettings.BanList.IsBanned(senderSteamId))
+                        {
+                            pendingClient = new PendingClient(senderSteamId);
+                            pendingClients.Add(pendingClient);
+                        }
+                    }
+                    
                     if (pendingClient != null)
                     {
                         ReadConnectionInitializationStep(pendingClient, new ReadOnlyMessage(inc.Data, false, inc.PositionInBytes, inc.LengthBytes - inc.PositionInBytes, null));
@@ -351,7 +360,7 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    Int32 contentPackageCount = (int)inc.Read7BitEncoded();
+                    int contentPackageCount = (int)inc.Read7BitEncoded();
                     List<ClientContentPackage> contentPackages = new List<ClientContentPackage>();
                     for (int i = 0; i < contentPackageCount; i++)
                     {
