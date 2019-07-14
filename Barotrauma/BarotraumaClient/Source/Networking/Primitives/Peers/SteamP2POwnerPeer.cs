@@ -64,6 +64,8 @@ namespace Barotrauma.Networking
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = OnIncomingConnection;
             Steam.SteamManager.Instance.Networking.OnP2PData = OnP2PData;
+
+            remotePeers = new List<RemotePeer>();
         }
 
         private bool OnIncomingConnection(UInt64 steamId)

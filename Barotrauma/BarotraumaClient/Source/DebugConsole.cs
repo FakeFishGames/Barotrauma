@@ -352,7 +352,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("startclient", "", (string[] args) =>
+            commands.Add(new Command("startlidgrenclient", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
 
@@ -362,6 +362,15 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("startsteamp2pclient", "", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+
+                if (GameMain.Client == null)
+                {
+                    GameMain.Client = new GameClient("Name", null, UInt64.Parse(args[0]));
+                }
+            }));
 
             commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
             {
