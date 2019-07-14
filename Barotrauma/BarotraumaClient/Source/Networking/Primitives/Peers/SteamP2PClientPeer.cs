@@ -49,6 +49,14 @@ namespace Barotrauma.Networking
             incomingInitializationMessages = new List<IReadMessage>();
             incomingDataMessages = new List<IReadMessage>();
 
+            IWriteMessage outMsg = new WriteOnlyMessage();
+            outMsg.Write((byte)DeliveryMethod.Reliable);
+            outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
+            outMsg.Write((byte)ConnectionInitialization.ConnectionStarted);
+
+            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
+                                                           Facepunch.Steamworks.Networking.SendType.Reliable);
+
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
         }
 

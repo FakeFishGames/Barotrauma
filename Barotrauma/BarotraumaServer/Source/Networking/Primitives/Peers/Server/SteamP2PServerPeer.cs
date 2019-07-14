@@ -202,6 +202,8 @@ namespace Barotrauma.Networking
 
             if (senderSteamId != ownerSteamID) //sender is remote, handle disconnects and heartbeats
             {
+                DebugConsole.NewMessage(senderSteamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+
                 PendingClient pendingClient = pendingClients.Find(c => c.SteamID == senderSteamId);
                 SteamP2PConnection connectedClient = connectedClients.Find(c => c.SteamID == senderSteamId);
                 
@@ -239,18 +241,17 @@ namespace Barotrauma.Networking
                 }
                 else if (isConnectionInitializationStep)
                 {
-                    if (pendingClient == null && connectedClient == null)
-                    {
-                        if (!serverSettings.BanList.IsBanned(senderSteamId))
-                        {
-                            pendingClient = new PendingClient(senderSteamId);
-                            pendingClients.Add(pendingClient);
-                        }
-                    }
-                    
                     if (pendingClient != null)
                     {
                         ReadConnectionInitializationStep(pendingClient, new ReadOnlyMessage(inc.Data, false, inc.PositionInBytes, inc.LengthBytes - inc.PositionInBytes, null));
+                    }
+                    else
+                    {
+                        ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
+                        if (initializationStep == ConnectionInitialization.ConnectionStarted)
+                        {
+                            pendingClients.Add(new PendingClient(senderSteamId));
+                        }
                     }
                 }
                 else if (connectedClient != null)

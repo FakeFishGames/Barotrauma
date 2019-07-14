@@ -11,9 +11,13 @@ namespace Barotrauma.Networking
 
     public enum ConnectionInitialization : byte
     {
+        //used by all peer implementations
         SteamTicketAndVersion = 0x1,
         Password = 0x2,
-        Success = 0x0
+        Success = 0x0,
+
+        //used only by SteamP2P implementations
+        ConnectionStarted = 0x3
     }
 
     [Flags]
