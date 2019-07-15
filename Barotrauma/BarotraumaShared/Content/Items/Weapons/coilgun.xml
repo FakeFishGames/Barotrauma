@@ -257,6 +257,10 @@
     <Body width="64" height="5" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="10" severlimbsprobability="0.5">
+        <Affliction identifier="internaldamage" strength="10" />
+        <Affliction identifier="bleeding" strength="0.5" />
+      </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="-5" anglemax="5" particleamount="5" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
