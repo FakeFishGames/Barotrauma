@@ -36,7 +36,8 @@ namespace Barotrauma
         Afflictions,
         Buffs,
         Tutorials,
-        UIStyle
+        UIStyle,
+        TraitorMissions
     }
 
     public class ContentPackage

@@ -242,6 +242,7 @@
     <Compile Include="Source\Utils\MonogameTypes\Rectangle.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Vector4.cs" />
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
+    <Compile Include="Source\GameSession\GameModes\TraitorMission.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">

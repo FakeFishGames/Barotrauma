@@ -928,7 +928,7 @@ namespace Barotrauma
                         NewMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), Color.Cyan);
                     }
                 }
-                NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
+                NewMessage("The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", Color.Cyan);
             }));
             AssignOnClientRequestExecute("traitorlist", (Client client, Vector2 cursorPos, string[] args) =>
             {
@@ -945,7 +945,7 @@ namespace Barotrauma
                         GameMain.Server.SendConsoleMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), client);
                     }
                 }
-                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
+                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", client);
             });
 
             commands.Add(new Command("setpassword|setserverpassword|password", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>

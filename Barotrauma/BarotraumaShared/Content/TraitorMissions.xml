@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TraitorMissions>
+  <TraitorMission identifier="example">
+    <Objective>
+      <Goal type="assassinate">
+        <InfoText id="Assassinate [targetname]." />
+      </Goal>
+      <!--
+      <Goal type="sabotage">
+        
+      </Goal>
+      <Goal type="destroyitems">
+
+      </Goal>
+      -->
+    </Objective>
+    <!--
+    <Objective>
+      <Goal type="floodsub">
+      </Goal>
+    </Objective>
+    -->
+  </TraitorMission>
+</TraitorMissions>
+

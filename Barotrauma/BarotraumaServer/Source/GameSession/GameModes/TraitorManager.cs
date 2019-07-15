@@ -12,7 +12,8 @@ namespace Barotrauma
 
         public class Goal
         {
-            public readonly Traitor Traitor;
+            public Traitor Traitor { get; private set; }
+            public TraitorMission Mission { get; internal set; }
 
             public virtual string StatusText => TextManager.GetFormatted("TraitorGoalStatusTextFormat", false, InfoText, IsCompleted ? "done" : "pending");
 
@@ -22,24 +23,23 @@ namespace Barotrauma
 
             public virtual bool IsCompleted => false;
 
+            public virtual void Start(GameServer server, Traitor traitor)
+            {
+                Traitor = traitor;
+            }
+
             public virtual void Update(float deltaTime)
             {
             }
 
             protected Goal()
             {
-                throw new System.Exception("Attempt to instantiate Task with no implementation.");
-            }
-
-            protected Goal(Traitor traitor)
-            {
-                Traitor = traitor;
             }
         }
 
         public class Objective
         {
-            public readonly Traitor Traitor;
+            public Traitor Traitor { get; private set; }
 
             private readonly List<Goal> allGoals = new List<Goal>();
             private readonly List<Goal> pendingGoals = new List<Goal>();
@@ -72,6 +72,15 @@ namespace Barotrauma
                     ), Traitor.Character.Info.Gender) + "\n";
             }
 
+            public void Start(GameServer server, Traitor traitor)
+            {
+                Traitor = traitor;
+                foreach (var goal in allGoals)
+                {
+                    goal.Start(server, traitor);
+                }
+            }
+
             public void Update(float deltaTime)
             {
                 for (int i = 0; i < pendingGoals.Count;) {
@@ -88,9 +97,8 @@ namespace Barotrauma
                 }
             }
 
-            public Objective(Traitor traitor, params Goal[] goals)
+            public Objective(params Goal[] goals)
             {
-                Traitor = traitor;
                 allGoals.AddRange(goals);
                 pendingGoals.AddRange(goals);
             }
@@ -98,12 +106,70 @@ namespace Barotrauma
 
         public class TraitorMission
         {
+            private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
+
+            private readonly List<Objective> allObjectives = new List<Objective>();
             private readonly List<Objective> pendingObjectives = new List<Objective>();
             private readonly List<Objective> completedObjectives = new List<Objective>();
 
             public virtual bool IsCompleted => pendingObjectives.Count <= 0;
 
+            private readonly List<Traitor> traitorList = new List<Traitor>();
+            public List<Traitor> TraitorList => traitorList;
+
+            public string CodeWords { get; private set; }
+            public string CodeResponse { get; private set; }
+
             // TODO(xxx): Mission start, end messages
+
+            public virtual void Start(GameServer server)
+            {
+                List<Character> characters = new List<Character>(); //ANYONE can be a target.
+                List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
+
+                foreach (Client client in server.ConnectedClients)
+                {
+                    if (client.Character != null)
+                    {
+                        characters.Add(client.Character);
+#if !SERVER_IS_TRAITOR
+                    if (server.Character == null)
+#endif
+                        {
+                            traitorCandidates.Add(client.Character);
+                        }
+                    }
+                }
+
+                if (server.Character != null)
+                {
+                    characters.Add(server.Character); //Add host character
+                    traitorCandidates.Add(server.Character);
+                }
+#if !ALLOW_SOLO_TRAITOR
+                if (characters.Count < 2)
+                {
+                    return;
+                }
+#endif
+                CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
+                CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
+
+                int traitorIndex = Rand.Int(traitorCandidates.Count);
+                Character traitorCharacter = traitorCandidates[traitorIndex];
+                traitorCandidates.Remove(traitorCharacter);
+
+                traitorList.Add(new Traitor(traitorCharacter));
+
+                foreach (var traitor in traitorList)
+                {
+                    foreach (var objective in allObjectives)
+                    {
+                        objective.Start(server, traitor);
+                    }
+                    traitor.Greet(server, CodeWords, CodeResponse);
+                }
+            }
 
             public virtual void Update()
             {
@@ -125,7 +191,26 @@ namespace Barotrauma
                 } 
             }
 
+            public Character FindKillTarget(GameServer server, Character traitor)
+            {
+                int connectedClientsCount = server.ConnectedClients.Count;
+                int targetIndex = Rand.Int(connectedClientsCount);
+                for (int i = 0; i < connectedClientsCount; ++i)
+                {
+                    var client = server.ConnectedClients[i];
+                    if (client.Character != null && client.Character != traitor && --targetIndex <= 0)
+                    {
+                        return client.Character;
+                    }
+                }
+#if !ALLOW_SOLO_TRAITOR
+                return traitor;
+#endif
+                return null;
+            }
+
             public TraitorMission(params Objective[] objectives) {
+                allObjectives.AddRange(objectives);
                 pendingObjectives.AddRange(objectives);
             }
         }
@@ -169,15 +254,20 @@ namespace Barotrauma
 
         public class GoalKillTarget : Goal
         {
-            public readonly Character Target;
+            public Character Target { get; private set; }
 
             public override string InfoText => TextManager.GetWithVariable("TraitorGoalKillTargetInfo", "[targetname]", Target.Name);
 
             public override bool IsCompleted => Target.IsDead == true;
-            
-            public GoalKillTarget(Traitor traitor, Character target): base(traitor)
+
+            public override void Start(GameServer server, Traitor traitor)
             {
-                Target = target;
+                base.Start(server, traitor);
+                Target = traitor.Mission.FindKillTarget(server, traitor.Character);
+            }
+
+            public GoalKillTarget(): base()
+            {
             }
         }
 
@@ -192,7 +282,7 @@ namespace Barotrauma
 
             public override bool IsCompleted => targets.TrueForAll(target => target.Condition <= condition);
 
-            public GoalItemConditionLessThan(Traitor traitor, float condition, params Item[] targets): base(traitor)
+            public GoalItemConditionLessThan(float condition, params Item[] targets): base()
             {
                 this.targets.AddRange(targets);
                 this.condition = condition;
@@ -236,7 +326,7 @@ namespace Barotrauma
                 }
             }
 
-            public GoalWithDuration(Traitor traitor, Goal goal, float requiredDuration, bool countTotalDuration) : base(traitor)
+            public GoalWithDuration(Goal goal, float requiredDuration, bool countTotalDuration) : base()
             {
                 this.goal = goal;
                 this.requiredDuration = requiredDuration;
@@ -253,7 +343,7 @@ namespace Barotrauma
                 return GameMain.GameSession.Submarine.GetItems(false).Find(item => item.GetComponent<Items.Components.Reactor>() != null);
             }
 
-            public GoalCauseReactorMeltdown(Traitor traitor) : base(traitor, 0.0f, FindReactor())
+            public GoalCauseReactorMeltdown() : base(0.0f, FindReactor())
             {
             }
         }
@@ -299,7 +389,7 @@ namespace Barotrauma
                 isCompleted |= destroyed >= (int)(total * destroyPercent);
             }
 
-            public GoalDestroyAllNonInventoryItemsWithTag(Traitor traitor, string tag, float destroyPercent) : base(traitor) {
+            public GoalDestroyAllNonInventoryItemsWithTag(string tag, float destroyPercent) : base() {
                 this.tag = tag;
                 this.destroyPercent = destroyPercent;
             }
@@ -309,7 +399,7 @@ namespace Barotrauma
         {
             public override string InfoText => TextManager.GetFormatted("TraitorGoalDestroyAllOxygenTanks", false, 100.0f * DestroyPercent);
 
-            public GoalDestroyOxygenTanks(Traitor traitor) : base(traitor, "oxygensource", 0.5f)
+            public GoalDestroyOxygenTanks() : base("oxygensource", 0.5f)
             {
             }
         }
@@ -322,7 +412,7 @@ namespace Barotrauma
 
             public override bool IsCompleted => GameMain.GameSession.EventManager.CurrentFloodingAmount >= minimumFloodingAmount;
 
-            public GoalFloodPercentOfSub(Traitor traitor, float minimumFloodingAmount) : base(traitor)
+            public GoalFloodPercentOfSub(float minimumFloodingAmount) : base()
             {
                 this.minimumFloodingAmount = minimumFloodingAmount;
             }
@@ -334,6 +424,7 @@ namespace Barotrauma
             public readonly List<Location> Locations = new List<Location>();
         }
 
+        public TraitorMission Mission;
         public Objective CurrentObjective;
 
         public Traitor(Character character)
@@ -375,17 +466,10 @@ namespace Barotrauma
 
     partial class TraitorManager
     {
-        private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
-
-        public List<Traitor> TraitorList
-        {
-            get { return traitorList; }
-        }
-
-        private List<Traitor> traitorList = new List<Traitor>();
-        private Traitor.TraitorMission mission = new Traitor.TraitorMission();
-
-        public string codeWords, codeResponse;
+        public Traitor.TraitorMission Mission { get; private set; }
+        public List<Traitor> TraitorList => Mission?.TraitorList;
+        public string CodeWords => Mission.CodeWords;
+        public string CodeResponse => Mission.CodeResponse;
 
         public TraitorManager(GameServer server, int traitorCount)
         {
@@ -397,89 +481,15 @@ namespace Barotrauma
             Start(server, traitorCount);
         }
 
+        List<Traitor> traitorList = new List<Traitor>(); // TODO(xxx) replaced by Mission.TraitorList?;
+
         private void Start(GameServer server, int traitorCount)
         {
             if (server == null) return;
 
-            List<Character> characters = new List<Character>(); //ANYONE can be a target.
-            List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
-            List<Character> targetCandidates = new List<Character>(); // Target candidates in shuffled order
-
-            foreach (Client client in server.ConnectedClients)
-            {
-                if (client.Character != null)
-                {
-                    characters.Add(client.Character);
-#if !SERVER_IS_TRAITOR
-                    if (server.Character == null)
-#endif
-                    {
-                        traitorCandidates.Add(client.Character);
-                    }
-                    targetCandidates.Add(client.Character);
-                }
-            }
-
-            if (server.Character != null)
-            {
-                characters.Add(server.Character); //Add host character
-                traitorCandidates.Add(server.Character);
-                targetCandidates.Add(server.Character);
-            }
-#if !ALLOW_SOLO_TRAITOR
-            if (characters.Count < 2)
-            {
-                return;
-            }
-#endif
-
-            codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
-            codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
-
-            while (traitorCount-- > 0 && traitorCandidates.Count > 0)
-            {
-                int traitorIndex = Rand.Int(traitorCandidates.Count);
-                Character traitorCharacter = traitorCandidates[traitorIndex];
-                traitorCandidates.Remove(traitorCharacter);
-
-                //Add them to the list
-                traitorList.Add(new Traitor(traitorCharacter));
-            }
-            var targetCandidatesCount = targetCandidates.Count;
-            for (int i = 0; i < targetCandidatesCount; ++i)
-            {
-                int swapIndex = Rand.Int(targetCandidatesCount);
-                if (i != swapIndex)
-                {
-                    var temp = targetCandidates[i];
-                    traitorCandidates[i] = targetCandidates[swapIndex];
-                    targetCandidates[swapIndex] = temp;
-                }
-            }
-            //Now that traitors have been decided, let's do objectives in post for deciding things like Document Exchange.
-            foreach (Traitor traitor in traitorList)
-            {
-                Character traitorCharacter = traitor.Character;
-                int startPosition = Rand.Int(targetCandidatesCount);
-                int targetsCount = 1 + Rand.Int(targetCandidatesCount - 1);
-                List<Traitor.Goal> goals = new List<Traitor.Goal>(targetsCount);
-                for (int i = 0; i < targetsCount;)
-                {
-                    var candidate = targetCandidates[(startPosition + i) % targetCandidatesCount];
-#if !ALLOW_SOLO_TRAITOR
-                    if (candidate != traitor.Character)
-#endif
-                    {
-                        goals.Add(new Traitor.GoalKillTarget(traitor, candidate));
-                        ++i;
-                    }
-                }
-                goals.Add(new Traitor.GoalCauseReactorMeltdown(traitor));
-                goals.Add(new Traitor.GoalDestroyOxygenTanks(traitor));
-                goals.Add(new Traitor.GoalFloodPercentOfSub(traitor, 0.5f));
-                traitor.CurrentObjective = new Traitor.Objective(traitor, goals.ToArray());
-                traitor.Greet(server, codeWords, codeResponse);
-            }
+            // TODO(xxx): Change mission to request 1..n traitors and handle assignments for all traitors?
+            Mission = TraitorMissionPrefab.RandomPrefab().Instantiate(server, 1);
+            Mission.Start(server);
         }
 
         public void Update(float deltaTime)
