@@ -617,6 +617,13 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("***************", client);
             });
 
+            commands.Add(new Command("togglekarmatestmode", "togglekarmatestmode: Toggle the karma test mode on/off. When test mode is enabled, clients get notified when their karma value changes (including the reason for the increase/decrease) and the server doesn't ban clients whose karma decreases below the ban threshold.", (string[] args) =>
+            {
+                if (GameMain.Server?.KarmaManager == null) return;
+                GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;
+                NewMessage(GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.", Color.LightGreen);
+            }));
+
             AssignOnExecute("banip", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
