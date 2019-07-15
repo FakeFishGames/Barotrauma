@@ -27,7 +27,7 @@ namespace Barotrauma.Networking
         public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
         private GUIComponent buttonContainer;
-        private RoundEndCinematic endCinematic;
+        public RoundEndCinematic EndCinematic;
 
         private NetStats netStats;
 
@@ -691,7 +691,7 @@ namespace Barotrauma.Networking
                 if (updateTimer > DateTime.Now) { return; }
                 SendIngameUpdate();
             }
-            else if (endCinematic != null)
+            else if (EndCinematic != null)
             {
                 if (updateTimer > DateTime.Now) { return; }
                 SendIngameUpdate();
@@ -1209,7 +1209,7 @@ namespace Barotrauma.Networking
             float endPreviewLength = 10.0f;
             if (Screen.Selected == GameMain.GameScreen)
             {
-                endCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+                EndCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
                 float secondsLeft = endPreviewLength;
                 do
                 {
@@ -1217,7 +1217,7 @@ namespace Barotrauma.Networking
                     yield return CoroutineStatus.Running;
                 } while (secondsLeft > 0.0f && Screen.Selected == GameMain.GameScreen);
             }
-            endCinematic = null;
+            EndCinematic = null;
 
             Submarine.Unload();
             GameMain.NetLobbyScreen.Select();

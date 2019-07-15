@@ -48,6 +48,7 @@ namespace Barotrauma.Networking
         {
             get
             {
+                if (IsCinematicRunning() && Submarine.MainSub != null) return Submarine.MainSub.WorldPosition;
                 if (character == null || character.IsDead)
                 {
                     return spectate_position;
@@ -62,6 +63,16 @@ namespace Barotrauma.Networking
             {
                 spectate_position = value.Value;
             }
+        }
+
+        private bool IsCinematicRunning()
+        {
+#if SERVER
+            return GameMain.Server.EndCinematic != null;
+#endif
+#if CLIENT
+            return GameMain.Client.EndCinematic != null;
+#endif
         }
 
         private bool muted;

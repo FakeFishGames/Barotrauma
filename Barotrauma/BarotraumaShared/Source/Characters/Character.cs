@@ -1902,12 +1902,6 @@ namespace Barotrauma
                             }
 #endif
 
-                            // Keep characters near the sub active during the end cinematic
-                            if (!GameMain.GameSession.GameMode.IsRunning && Submarine.MainSub != null)
-                            {
-                                distSqr = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition);
-                            }
-
                             if (distSqr > NetConfig.DisableCharacterDistSqr)
                             {
                                 c.Enabled = false;
@@ -1928,7 +1922,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.WorldViewCenter, c.WorldPosition));
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.GetPosition(), c.WorldPosition));
                         }
                         
                         if (distSqr > NetConfig.DisableCharacterDistSqr)
@@ -1940,7 +1934,6 @@ namespace Barotrauma
                             c.Enabled = true;
                         }
                     }
-
                 }
             }
 

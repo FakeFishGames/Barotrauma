@@ -58,7 +58,7 @@ namespace Barotrauma.Networking
         
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
-        private RoundEndCinematic endCinematic;
+        public RoundEndCinematic EndCinematic;
 
         public TraitorManager TraitorManager;
 
@@ -1244,7 +1244,7 @@ namespace Barotrauma.Networking
 
         private void ClientWrite(Client c)
         {
-            if ((gameStarted && c.InGame) || endCinematic != null)
+            if ((gameStarted && c.InGame) || EndCinematic != null)
             {
                 ClientWriteIngame(c);
             }
@@ -2081,22 +2081,22 @@ namespace Barotrauma.Networking
                 }
             }
 
-            CoroutineManager.StartCoroutine(EndCinematic(), "EndCinematic");
+            CoroutineManager.StartCoroutine(StartEndCinematic(), "EndCinematic");
 
             GameMain.NetLobbyScreen.RandomizeSettings();
         }
 
-        public IEnumerable<object> EndCinematic()
+        public IEnumerable<object> StartEndCinematic()
         {
             float endPreviewLength = 10.0f;
 
-            endCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+            EndCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
 
             do
             {
                 yield return CoroutineStatus.Running;
-            } while (endCinematic.Running);
-            endCinematic = null;
+            } while (EndCinematic.Running);
+            EndCinematic = null;
 
             Submarine.Unload();
             entityEventManager.Clear();

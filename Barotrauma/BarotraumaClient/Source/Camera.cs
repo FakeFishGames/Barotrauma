@@ -173,6 +173,11 @@ namespace Barotrauma
             get { return targetPos; }
             set { targetPos = value; }
         }
+
+        public Vector2 GetPosition()
+        {
+            return position;
+        }
                 
         // Auxiliary function to move the camera
         public void Translate(Vector2 amount)
