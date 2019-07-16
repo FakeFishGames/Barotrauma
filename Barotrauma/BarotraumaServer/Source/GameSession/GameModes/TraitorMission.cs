@@ -55,7 +55,7 @@ namespace Barotrauma {
             public Traitor.Goal Instantiate(GameServer server)
             {
                 switch (Config.GetAttributeString("type", "")) {
-                    case "assassinate":
+                    case "killtarget":
                         return new Traitor.GoalKillTarget();
                     case "destroyitems":
                         // TODO(xxX)
@@ -73,25 +73,30 @@ namespace Barotrauma {
 
         public class Objective
         {
+            public string InfoText { get; private set; }
             public readonly List<Goal> Goals;
 
             public Traitor.Objective Instantiate(GameServer server)
             {
-                return new Traitor.Objective(Goals.ConvertAll(goal => goal.Instantiate(server)).ToArray());
+                return new Traitor.Objective(InfoText, Goals.ConvertAll(goal => goal.Instantiate(server)).ToArray());
             }
 
-            public Objective(List<Goal> goals)
+            public Objective(string infoText, List<Goal> goals)
             {
+                InfoText = infoText;
                 Goals = goals;
             }
         }
 
         public readonly string Identifier;
+        public readonly string StartText;
         public readonly List<Objective> Objectives = new List<Objective>();
 
         public Traitor.TraitorMission Instantiate(GameServer server, int traitorCount)
         {
-            return new Traitor.TraitorMission(Objectives.ConvertAll(objective => objective.Instantiate(server)).ToArray());
+            return new Traitor.TraitorMission(
+                StartText, 
+                Objectives.ConvertAll(objective => objective.Instantiate(server)).ToArray());
         }
 
         protected Goal LoadGoal(XElement goalRoot)
@@ -103,10 +108,14 @@ namespace Barotrauma {
         protected Objective LoadObjective(XElement objectiveRoot)
         {
             var goals = new List<Goal>();
+            string infoText = null;
             foreach (var element in objectiveRoot.Elements())
             {
                 switch(element.Name.ToString().ToLowerInvariant())
                 {
+                    case "infotext":
+                        infoText = element.GetAttributeString("id", "");
+                        break;
                     case "goal":
                         {
                             var goal = LoadGoal(element);
@@ -118,7 +127,7 @@ namespace Barotrauma {
                         break;
                 }
             }
-            return new Objective(goals);
+            return new Objective(infoText, goals);
         }
 
         public TraitorMissionPrefab(XElement missionRoot)
@@ -128,6 +137,9 @@ namespace Barotrauma {
             {
                 switch (element.Name.ToString().ToLowerInvariant())
                 {
+                    case "startinfotext":
+                        StartText = element.GetAttributeString("id", "");
+                        break;
                     case "objective":
                         {
                             var objective = LoadObjective(element);

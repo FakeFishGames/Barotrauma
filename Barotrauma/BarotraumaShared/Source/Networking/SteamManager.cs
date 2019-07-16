@@ -7,7 +7,7 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-        public const bool USE_STEAM = true;
+        public const bool USE_STEAM = false/*true*/;
 
         public const int STEAMP2P_OWNER_PORT = 30000;
 

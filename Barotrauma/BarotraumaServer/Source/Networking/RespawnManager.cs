@@ -265,9 +265,9 @@ namespace Barotrauma.Networking
                 else
                 {
                     //tell the respawning client they're no longer a traitor
-                    if (GameMain.Server.TraitorManager != null && GameMain.Server.TraitorManager.TraitorList != null && clients[i].Character != null)
+                    if (GameMain.Server.TraitorManager != null && clients[i].Character != null)
                     {
-                        if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == clients[i].Character))
+                        if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == clients[i].Character))
                         {
                             GameMain.Server.SendDirectChatMessage(TextManager.Get("traitorrespawnmessage"), clients[i], ChatMessageType.MessageBox);
                         }

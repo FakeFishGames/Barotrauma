@@ -47,8 +47,10 @@ namespace Barotrauma
             private readonly List<Goal> completedGoals = new List<Goal>();
 
             public bool IsCompleted => pendingGoals.Count <= 0;
-            public bool IsPartiallyCompleted => completedGoals.Count > 0; 
+            public bool IsPartiallyCompleted => completedGoals.Count > 0;
+            public bool IsStarted { get; private set; } = false;
 
+            public string InfoText { get; private set; } // TODO
             public string GoalInfos => string.Join("\n", allGoals.ConvertAll(goal => string.Concat("- ", goal.StatusText)));
 
             public virtual string GetStartMessageText()
@@ -80,6 +82,15 @@ namespace Barotrauma
                 {
                     goal.Start(server, traitor);
                 }
+                IsStarted = true;
+                Client traitorClient = server.ConnectedClients.Find(c => c.Character == traitor.Character);
+                GameMain.Server.SendDirectChatMessage(GetStartMessageText(), traitorClient);
+            }
+
+            public void End(GameServer server)
+            {
+                Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
+                GameMain.Server.SendDirectChatMessage(GetEndMessageText(), traitorClient);
             }
 
             public void Update(float deltaTime)
@@ -98,8 +109,9 @@ namespace Barotrauma
                 }
             }
 
-            public Objective(params Goal[] goals)
+            public Objective(string infoText, params Goal[] goals)
             {
+                InfoText = infoText;
                 allGoals.AddRange(goals);
                 pendingGoals.AddRange(goals);
             }
@@ -115,15 +127,20 @@ namespace Barotrauma
 
             public virtual bool IsCompleted => pendingObjectives.Count <= 0;
 
-            private readonly List<Traitor> traitorList = new List<Traitor>();
-            public List<Traitor> TraitorList => traitorList;
+            public readonly Dictionary<string, Traitor> Traitors = new Dictionary<string, Traitor>();
 
+            public string StartText { get; private set; }
             public string CodeWords { get; private set; }
             public string CodeResponse { get; private set; }
 
             // TODO(xxx): Mission start, end messages
 
-            public virtual void Start(GameServer server, int traitorCount)
+            public Objective GetCurrentObjective(Traitor traitor)
+            {
+                return pendingObjectives.Count > 0 ? pendingObjectives[0] : null;
+            }
+
+            public virtual void Start(GameServer server, params string[] traitorRoles)
             {
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
@@ -156,41 +173,37 @@ namespace Barotrauma
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
 
-                int traitorIndex = Rand.Int(traitorCandidates.Count);
-                Character traitorCharacter = traitorCandidates[traitorIndex];
-                traitorCandidates.Remove(traitorCharacter);
-
-                traitorList.Add(new Traitor(traitorCharacter));
-
-                // TODO(xxx): Handle correctly for multiple traitors
-                foreach (var traitor in traitorList)
+                foreach (var role in traitorRoles)
                 {
-                    foreach (var objective in allObjectives)
-                    {
-                        objective.Start(server, traitor);
-                    }
+
+                    int traitorIndex = Rand.Int(traitorCandidates.Count);
+                    Character traitorCharacter = traitorCandidates[traitorIndex];
+                    traitorCandidates.Remove(traitorCharacter);
+
+                    var traitor = new Traitor(this, role, traitorCharacter);
+                    Traitors.Add(role, traitor);
                     traitor.Greet(server, CodeWords, CodeResponse);
                 }
             }
 
             public virtual void Update(float deltaTime)
             {
-                // traitorList.ForEach(traitor => traitor.CurrentObjective?.Update(deltaTime));
                 if (pendingObjectives.Count > 0) {
                     var objective = pendingObjectives[0];
-                    objective.Update(deltaTime);
+                    if (objective != null)
+                    {
+                        if (!objective.IsStarted)
+                        {
+                            objective.Start(GameMain.Server, Traitors["traitor"]);
+
+                        }
+                        objective.Update(deltaTime);
+                    }
                     if (objective.IsCompleted)
                     {
                         pendingObjectives.RemoveAt(0);
                         completedObjectives.Add(objective);
-                        Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == objective.Traitor.Character);
-                        GameMain.Server.SendDirectChatMessage(objective.GetEndMessageText(), traitorClient);
-                        if (pendingObjectives.Count > 0)
-                        {
-                            Objective nextObjective = pendingObjectives[0];
-                            Client nextTraitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == objective.Traitor.Character);
-                            GameMain.Server.SendDirectChatMessage(nextObjective.GetStartMessageText(), nextTraitorClient);
-                        }
+                        objective.End(GameMain.Server);
                     }
                 }
             }
@@ -207,13 +220,15 @@ namespace Barotrauma
                         return client.Character;
                     }
                 }
-#if !ALLOW_SOLO_TRAITOR
+#if ALLOW_SOLO_TRAITOR
                 return traitor;
-#endif
+#else
                 return null;
+#endif
             }
 
-            public TraitorMission(params Objective[] objectives) {
+            public TraitorMission(string startText, params Objective[] objectives) {
+                StartText = startText;
                 allObjectives.AddRange(objectives);
                 pendingObjectives.AddRange(objectives);
             }
@@ -260,9 +275,15 @@ namespace Barotrauma
         {
             public Character Target { get; private set; }
 
-            public override string InfoText => TextManager.GetWithVariable("TraitorGoalKillTargetInfo", "[targetname]", Target.Name);
+            public override string InfoText => TextManager.GetWithVariable("TraitorGoalKillTargetInfo", "[targetname]", Target?.Name ?? "(unknown)");
 
-            public override bool IsCompleted => Target.IsDead == true;
+            private bool isCompleted = false;
+            public override bool IsCompleted => isCompleted;
+            public override void Update(float deltaTime)
+            {
+                base.Update(deltaTime);
+                isCompleted = Target?.IsDead ?? false;
+            }
 
             public override void Start(GameServer server, Traitor traitor)
             {
@@ -424,31 +445,38 @@ namespace Barotrauma
             public readonly List<Location> Locations = new List<Location>();
         }
 
-        public TraitorMission Mission;
-        public Objective CurrentObjective;
+        public string Role { get; private set; }
+        public TraitorMission Mission { get; private set; }
+        public Objective CurrentObjective => Mission.GetCurrentObjective(this);
 
-        public Traitor(Character character)
+        public Traitor(TraitorMission mission, string role, Character character)
         {
+            Mission = mission;
+            Role = role;
             Character = character;
         }
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            string greetingMessage = CurrentObjective.GetStartMessageText();
-            string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
+            string greetingMessage = TextManager.GetWithVariables(Mission.StartText, new string[] {
+                "[codewords]", "[coderesponse]"/*, "[traitorname]"*/
+            }, new string[] {
+                codeWords, codeResponse/*, Character.Name*/
+            });
+            /*string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
                 new string[2] { "[codewords]", "[coderesponse]" }, new string[2] { codeWords, codeResponse });
-            
+            */
             var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
-            var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);
+            /* var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);*/
 
-            var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
+            // var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
             var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
             GameMain.Server.SendDirectChatMessage(greetingChatMsg, traitorClient);
-            GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, traitorClient);
+            // GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, traitorClient);
             GameMain.Server.SendDirectChatMessage(greetingMsgBox, traitorClient);
-            GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, traitorClient);
+            // GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, traitorClient);
 
             Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);
             if (traitorClient != ownerClient && ownerClient != null && ownerClient.Character == null)
@@ -467,9 +495,10 @@ namespace Barotrauma
     partial class TraitorManager
     {
         public Traitor.TraitorMission Mission { get; private set; }
-        public List<Traitor> TraitorList => Mission?.TraitorList;
         public string CodeWords => Mission?.CodeWords;
         public string CodeResponse => Mission?.CodeResponse;
+
+        public Dictionary<string, Traitor>.ValueCollection Traitors => Mission?.Traitors?.Values;
 
         public TraitorManager(GameServer server, int traitorCount)
         {
@@ -490,7 +519,7 @@ namespace Barotrauma
             Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate(server, traitorCount);
             if (Mission != null)
             {
-                Mission.Start(server, traitorCount);
+                Mission.Start(server, "traitor");
             }
         }
 
@@ -558,9 +587,9 @@ namespace Barotrauma
 
             string endMessage = "";
 
-            foreach (Traitor traitor in Mission.TraitorList)
+            foreach (var traitor in Mission.Traitors)
             {
-                endMessage += traitor.CurrentObjective?.GetEndMessageText() ?? "";
+                endMessage += traitor.Value.CurrentObjective?.GetEndMessageText() ?? "";
             }
 
             return endMessage;
