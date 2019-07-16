@@ -410,8 +410,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (item.ParentInventory != null)
                         {
-                            Character owner = (Character)item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(item)) item.Unequip(owner);
+                            if (item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(item))
+                            {
+                                item.Unequip(owner);
+                            }
                             item.ParentInventory.RemoveItem(item);
                         }
                         Entity.Spawner.AddToRemoveQueue(item);
@@ -424,8 +426,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (this.Item.ParentInventory != null)
                         {
-                            Character owner = (Character)this.Item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(this.Item)) this.Item.Unequip(owner);
+                            if (this.Item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(this.Item))
+                            {
+                                this.Item.Unequip(owner);
+                            }
                             this.Item.ParentInventory.RemoveItem(this.Item);
                         }
                         Entity.Spawner.AddToRemoveQueue(this.Item);
