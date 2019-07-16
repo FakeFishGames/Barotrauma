@@ -706,6 +706,15 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waistPos.Y - colliderPos.Y - 0.4f, footPos.Y);
 
+#if CLIENT
+                    if ((i == 1 && Math.Sign(Math.Sin(WalkPos)) > 0 && Math.Sign(walkPosY) < 0) ||
+                        (i == -1 && Math.Sign(Math.Sin(WalkPos)) < 0 && Math.Sign(walkPosY) > 0))
+                    {
+                        PlayImpactSound(foot);
+                    }
+
+#endif
+
                     if (!foot.Disabled)
                     {
                         foot.DebugRefPos = colliderPos;
