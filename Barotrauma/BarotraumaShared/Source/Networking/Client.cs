@@ -48,7 +48,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                if (IsCinematicRunning() && Submarine.MainSub != null) return Submarine.MainSub.WorldPosition;
+                if (IsCinematicRunning()) return GetCinematicCameraPosition();
                 if (character == null || character.IsDead)
                 {
                     return spectate_position;
@@ -72,6 +72,16 @@ namespace Barotrauma.Networking
 #endif
 #if CLIENT
             return GameMain.Client.EndCinematic != null;
+#endif
+        }
+
+        private Vector2 GetCinematicCameraPosition()
+        {
+#if SERVER
+            return GameMain.Server.EndCinematic.AssignedCamera.GetPosition();
+#endif
+#if CLIENT
+            return GameMain.Client.EndCinematic.AssignedCamera.GetPosition();
 #endif
         }
 

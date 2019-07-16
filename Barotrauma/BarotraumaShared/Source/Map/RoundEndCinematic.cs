@@ -12,6 +12,8 @@ namespace Barotrauma
             private set;
         }
 
+        public Camera AssignedCamera;
+
         private float duration;
         
         public RoundEndCinematic(Submarine submarine, Camera cam, float duration)
@@ -25,6 +27,7 @@ namespace Barotrauma
             if (!submarines.Any(s => s != null)) return;
 
             this.duration = duration;
+            AssignedCamera = cam;
 
             Running = true;
             CoroutineManager.StartCoroutine(Update(submarines, cam));
