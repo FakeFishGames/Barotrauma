@@ -346,7 +346,6 @@ namespace Barotrauma
                 UseGridLayout = true,
                 CheckSelected = MapEntityPrefab.GetSelected
             };
-            UpdateEntityList();
 
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
@@ -603,13 +602,15 @@ namespace Barotrauma
             }
 
 
-            entityList.Content.RectTransform.SortChildren((i1, i2) => 
+            entityList.Content.RectTransform.SortChildren((i1, i2) =>
                 (i1.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((i2.GUIComponent.UserData as MapEntityPrefab).Name));
         }
-        
+
         public override void Select()
         {
             base.Select();
+
+            UpdateEntityList();
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
