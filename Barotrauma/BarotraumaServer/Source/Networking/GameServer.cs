@@ -1243,7 +1243,7 @@ namespace Barotrauma.Networking
 
         private void ClientWrite(Client c)
         {
-            if ((gameStarted && c.InGame)/* || EndCinematic != null*/)
+            if (gameStarted && c.InGame)
             {
                 ClientWriteIngame(c);
             }

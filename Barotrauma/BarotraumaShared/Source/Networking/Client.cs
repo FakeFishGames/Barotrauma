@@ -43,7 +43,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        // TODO: Add updating & reading of the specteate position during cinematic
         private Vector2 spectate_position;
         public Vector2? SpectatePos
         {
