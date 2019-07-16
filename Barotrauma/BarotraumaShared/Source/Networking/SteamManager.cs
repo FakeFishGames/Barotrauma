@@ -11,8 +11,8 @@ namespace Barotrauma.Steam
 
         public const int STEAMP2P_OWNER_PORT = 30000;
 
-        public const uint AppID = 480; //TODO: CHANGE BACK
-        
+        public const uint AppID = 602960;
+
         private Facepunch.Steamworks.Client client;
         private Facepunch.Steamworks.Server server;
 
