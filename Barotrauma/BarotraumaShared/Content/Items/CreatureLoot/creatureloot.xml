@@ -72,6 +72,11 @@
     <Body width="75" height="50" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
       <sprite texture="Content/Characters/Crawler/crawler.png" limb="Head" inheritlimbdepth="true" hidelimb="false" inherittexturescale="true" hideotherwearables="false" sourcerect="152,0,104,84" origin="0.5,0.6485507" />
+      <StatusEffect type="OnWearing" target="Character" delay="7" stackable="false" >
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" type="OnUse" range="300" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" type="OnUse" range="300" />
+        <Sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" type="OnUse" range="300" />
+      </StatusEffect>-->
     </Wearable>
   </Item>
   <Item name="Husk Stinger" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
