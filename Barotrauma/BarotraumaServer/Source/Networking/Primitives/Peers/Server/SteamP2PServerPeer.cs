@@ -19,7 +19,11 @@ namespace Barotrauma.Networking
 
         private Facepunch.Steamworks.Server steamServer;
         
-        private UInt64 ownerSteamID;
+        public UInt64 OwnerSteamID
+        {
+            get;
+            private set;
+        }
         
         private class PendingClient
         {
@@ -69,7 +73,7 @@ namespace Barotrauma.Networking
 
             ownerKey = null;
 
-            ownerSteamID = steamId;
+            OwnerSteamID = steamId;
         }
 
         public override void Start()
@@ -201,7 +205,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (senderSteamId != ownerSteamID) //sender is remote, handle disconnects and heartbeats
+            if (senderSteamId != OwnerSteamID) //sender is remote, handle disconnects and heartbeats
             {
                 DebugConsole.NewMessage(senderSteamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
 
@@ -282,7 +286,7 @@ namespace Barotrauma.Networking
                     if (OwnerConnection == null)
                     {
                         string ownerName = inc.ReadString();
-                        OwnerConnection = new SteamP2PConnection(ownerName, ownerSteamID);
+                        OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID);
                         
                         OnInitializationComplete?.Invoke(OwnerConnection);
                     }
@@ -312,7 +316,7 @@ namespace Barotrauma.Networking
             {
                 case NetConnectionStatus.Connected:
                     NetOutgoingMessage outMsg = netServer.CreateMessage();
-                    outMsg.Write(ownerSteamID);
+                    outMsg.Write(OwnerSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage));
                     netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
                     break;

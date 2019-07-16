@@ -198,6 +198,8 @@ namespace Barotrauma.Steam
                 {
                     if (!rulesReceived || s.Rules == null) { return; }
 
+                    if (s.Rules.ContainsKey("steamid")) serverInfo.SteamID = s.Rules["steamid"];
+
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
 

@@ -67,6 +67,14 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
             Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
             Instance.server.SetKey("gamemode", server.ServerSettings.GameModeIdentifier);
+            if (server.ServerPeer is Networking.SteamP2PServerPeer serverPeer)
+            {
+                Instance.server.SetKey("steamid", SteamIDUInt64ToString(serverPeer.OwnerSteamID));
+            }
+            else
+            {
+                Instance.server.SetKey("steamid", "n/a");
+            }
             
             instance.server.DedicatedServer = true;
 

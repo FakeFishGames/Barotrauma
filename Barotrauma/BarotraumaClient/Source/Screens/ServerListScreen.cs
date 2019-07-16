@@ -332,7 +332,14 @@ namespace Barotrauma
                 {
                     if (ipBox.UserData is ServerInfo selectedServer)
                     {
-                        JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                        if (SteamManager.SteamIDStringToUInt64(selectedServer.SteamID) == 0)
+                        {
+                            JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                        }
+                        else
+                        {
+                            JoinServer(selectedServer.SteamID, selectedServer.ServerName);
+                        }
                     }
                     else if (!string.IsNullOrEmpty(ipBox.Text))
                     {
