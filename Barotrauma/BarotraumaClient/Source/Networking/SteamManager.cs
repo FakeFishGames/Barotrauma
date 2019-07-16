@@ -490,7 +490,7 @@ namespace Barotrauma.Steam
 
             if (!CheckWorkshopItemEnabled(existingItem, checkContentFiles: false))
             {
-                if (!EnableWorkShopItem(existingItem, allowFileOverwrite: false, out string errorMsg))
+                if (!EnableWorkShopItem(existingItem, false, out string errorMsg))
                 {
                     DebugConsole.ThrowError(errorMsg);
                     new GUIMessageBox(
