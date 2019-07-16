@@ -110,7 +110,15 @@ namespace Barotrauma
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnExecute = onExecute;
+            var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (matchingCommand == null)
+            {
+                throw new Exception("AssignOnExecute failed. Command matching the name(s) \""+names+"\" not found.");
+            }
+            else
+            {
+                matchingCommand.OnExecute = onExecute;
+            }
         }
 
         static DebugConsole()

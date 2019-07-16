@@ -219,7 +219,15 @@ namespace Barotrauma
 
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnClientRequestExecute = onClientRequestExecute;
+            var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (matchingCommand == null)
+            {
+                throw new Exception("AssignOnClientRequestExecute failed. Command matching the name(s) \"" + names + "\" not found.");
+            }
+            else
+            {
+                matchingCommand.OnClientRequestExecute = onClientRequestExecute;
+            }
         }
 
         private static void InitProjectSpecific()
