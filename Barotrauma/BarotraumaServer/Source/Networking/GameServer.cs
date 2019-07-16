@@ -1885,9 +1885,12 @@ namespace Barotrauma.Networking
                 int traitorCount = Rand.Range(1, max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
 
-                foreach(var traitor in TraitorManager.TraitorList)
+                if (TraitorManager.TraitorList != null)
                 {
-                    Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos ?? "(empty)"), ServerLog.MessageType.ServerMessage);
+                    foreach(var traitor in TraitorManager.TraitorList)
+                    {
+                        Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos ?? "(empty)"), ServerLog.MessageType.ServerMessage);
+                    }
                 }
             }
 
@@ -1956,7 +1959,7 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.AllowRewiring);
 
             Traitor traitor = null;
-            if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)
+            if (TraitorManager != null && TraitorManager.TraitorList != null && TraitorManager.TraitorList.Count > 0)
                 traitor = TraitorManager.TraitorList.Find(t => t.Character == client.Character);
             if (traitor != null)
             {

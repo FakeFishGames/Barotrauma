@@ -77,12 +77,12 @@ namespace Barotrauma {
 
             public Traitor.Objective Instantiate(GameServer server)
             {
-                return new Traitor.Objective(Goals.ConvertAll(goal => goal.Instantiate(server)).FindAll(g => g != null).ToArray());
+                return new Traitor.Objective(Goals.ConvertAll(goal => goal.Instantiate(server)).ToArray());
             }
 
             public Objective(List<Goal> goals)
             {
-                this.Goals = goals;
+                Goals = goals;
             }
         }
 
@@ -108,7 +108,13 @@ namespace Barotrauma {
                 switch(element.Name.ToString().ToLowerInvariant())
                 {
                     case "goal":
-                        goals.Add(LoadGoal(element));
+                        {
+                            var goal = LoadGoal(element);
+                            if (goal != null)
+                            {
+                                goals.Add(goal);
+                            }
+                        }
                         break;
                 }
             }
@@ -123,7 +129,13 @@ namespace Barotrauma {
                 switch (element.Name.ToString().ToLowerInvariant())
                 {
                     case "objective":
-                        Objectives.Add(LoadObjective(element));
+                        {
+                            var objective = LoadObjective(element);
+                            if (objective != null)
+                            {
+                                Objectives.Add(objective);
+                            }
+                        }
                         break;
                 }
             }

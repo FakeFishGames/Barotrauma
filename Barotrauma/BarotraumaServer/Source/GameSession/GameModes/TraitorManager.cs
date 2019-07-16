@@ -1,4 +1,5 @@
-﻿#define SERVER_IS_TRAITOR
+﻿// #define DISABLE_MISSIONS
+#define SERVER_IS_TRAITOR
 #define ALLOW_SOLO_TRAITOR
 using Barotrauma.Networking;
 using System.Collections.Generic;
@@ -122,7 +123,7 @@ namespace Barotrauma
 
             // TODO(xxx): Mission start, end messages
 
-            public virtual void Start(GameServer server)
+            public virtual void Start(GameServer server, int traitorCount)
             {
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
@@ -133,7 +134,7 @@ namespace Barotrauma
                     {
                         characters.Add(client.Character);
 #if !SERVER_IS_TRAITOR
-                    if (server.Character == null)
+                        if (server.Character == null)
 #endif
                         {
                             traitorCandidates.Add(client.Character);
@@ -161,6 +162,7 @@ namespace Barotrauma
 
                 traitorList.Add(new Traitor(traitorCharacter));
 
+                // TODO(xxx): Handle correctly for multiple traitors
                 foreach (var traitor in traitorList)
                 {
                     foreach (var objective in allObjectives)
@@ -171,10 +173,12 @@ namespace Barotrauma
                 }
             }
 
-            public virtual void Update()
+            public virtual void Update(float deltaTime)
             {
+                // traitorList.ForEach(traitor => traitor.CurrentObjective?.Update(deltaTime));
                 if (pendingObjectives.Count > 0) {
                     var objective = pendingObjectives[0];
+                    objective.Update(deltaTime);
                     if (objective.IsCompleted)
                     {
                         pendingObjectives.RemoveAt(0);
@@ -188,7 +192,7 @@ namespace Barotrauma
                             GameMain.Server.SendDirectChatMessage(nextObjective.GetStartMessageText(), nextTraitorClient);
                         }
                     }
-                } 
+                }
             }
 
             public Character FindKillTarget(GameServer server, Character traitor)
@@ -264,10 +268,6 @@ namespace Barotrauma
             {
                 base.Start(server, traitor);
                 Target = traitor.Mission.FindKillTarget(server, traitor.Character);
-            }
-
-            public GoalKillTarget(): base()
-            {
             }
         }
 
@@ -468,8 +468,8 @@ namespace Barotrauma
     {
         public Traitor.TraitorMission Mission { get; private set; }
         public List<Traitor> TraitorList => Mission?.TraitorList;
-        public string CodeWords => Mission.CodeWords;
-        public string CodeResponse => Mission.CodeResponse;
+        public string CodeWords => Mission?.CodeWords;
+        public string CodeResponse => Mission?.CodeResponse;
 
         public TraitorManager(GameServer server, int traitorCount)
         {
@@ -481,20 +481,28 @@ namespace Barotrauma
             Start(server, traitorCount);
         }
 
-        List<Traitor> traitorList = new List<Traitor>(); // TODO(xxx) replaced by Mission.TraitorList?;
-
         private void Start(GameServer server, int traitorCount)
         {
+#if DISABLE_MISSIONS
+            return;
+#endif
             if (server == null) return;
-
-            // TODO(xxx): Change mission to request 1..n traitors and handle assignments for all traitors?
-            Mission = TraitorMissionPrefab.RandomPrefab().Instantiate(server, 1);
-            Mission.Start(server);
+            Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate(server, traitorCount);
+            if (Mission != null)
+            {
+                Mission.Start(server, traitorCount);
+            }
         }
 
         public void Update(float deltaTime)
         {
-            traitorList.ForEach(traitor => traitor.CurrentObjective?.Update(deltaTime));
+#if DISABLE_MISSIONS
+            return;
+#endif
+            if (Mission != null)
+            {
+                Mission.Update(deltaTime);
+            }
         }
 
         public void CargoDestroyed()
@@ -543,13 +551,16 @@ namespace Barotrauma
     
         public string GetEndMessage()
         {
-            if (GameMain.Server == null || traitorList.Count <= 0) return "";
+#if DISABLE_MISSIONS
+            return "";
+#endif
+            if (GameMain.Server == null || Mission == null) return "";
 
             string endMessage = "";
 
-            foreach (Traitor traitor in traitorList)
+            foreach (Traitor traitor in Mission.TraitorList)
             {
-                endMessage += traitor.CurrentObjective.GetEndMessageText();
+                endMessage += traitor.CurrentObjective?.GetEndMessageText() ?? "";
             }
 
             return endMessage;
