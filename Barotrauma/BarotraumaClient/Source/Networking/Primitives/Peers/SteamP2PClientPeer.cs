@@ -234,7 +234,7 @@ namespace Barotrauma.Networking
             SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
                                                                    Facepunch.Steamworks.Networking.SendType.Reliable);
         }
-
+        
         public override void Close(string msg = null)
         {
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;

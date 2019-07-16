@@ -756,7 +756,7 @@ namespace Barotrauma
 #endif
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
-                Thread.Sleep(10000); //wait until the server is ready before connecting
+                Thread.Sleep(1000); //wait until the server is ready before connecting
 
                 GameMain.Client = new GameClient(name, null, Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }

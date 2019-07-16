@@ -143,12 +143,6 @@ namespace Barotrauma.Networking
 
         public bool ShowNetStats;
 
-        public int Port
-        {
-            get;
-            set;
-        }
-
         public int TickRate
         {
             get { return serverSettings.TickRate; }

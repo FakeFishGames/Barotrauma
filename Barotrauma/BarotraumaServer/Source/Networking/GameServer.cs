@@ -84,12 +84,10 @@ namespace Barotrauma.Networking
             get { return updateInterval; }
         }
 
+        public int Port => serverSettings?.Port ?? 0;
+
         //only used when connected to steam
-        public int QueryPort
-        {
-            get;
-            set;
-        }
+        public int QueryPort => serverSettings?.QueryPort ?? 0;
 
         public NetworkConnection OwnerConnection { get; private set; }
         private int? ownerKey;

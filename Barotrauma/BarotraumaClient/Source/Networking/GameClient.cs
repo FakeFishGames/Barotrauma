@@ -239,23 +239,20 @@ namespace Barotrauma.Networking
 
             serverName = hostName;
 
+            int port;
             string[] address = hostIP.Split(':');
             if (address.Length == 1)
             {
                 serverIP = hostIP;
-                Port = NetConfig.DefaultPort;
+                port = NetConfig.DefaultPort;
             }
             else
             {
                 serverIP = string.Join(":", address.Take(address.Length - 1));
-                if (!int.TryParse(address[address.Length - 1], out int port))
+                if (!int.TryParse(address[address.Length - 1], out port))
                 {
                     DebugConsole.ThrowError("Invalid port: " + address[address.Length - 1] + "!");
-                    Port = NetConfig.DefaultPort;
-                }
-                else
-                {
-                    Port = port;
+                    port = NetConfig.DefaultPort;
                 }
             }
 
@@ -290,12 +287,12 @@ namespace Barotrauma.Networking
             System.Net.IPEndPoint IPEndPoint = null;
             try
             {
-                IPEndPoint = new System.Net.IPEndPoint(Lidgren.Network.NetUtility.Resolve(serverIP), Port);
+                IPEndPoint = new System.Net.IPEndPoint(Lidgren.Network.NetUtility.Resolve(serverIP), port);
             }
             catch
             {
                 new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"),
-                    TextManager.GetWithVariables("InvalidIPAddress", new string[2] { "[serverip]", "[port]" }, new string[2] { serverIP, Port.ToString() }));
+                    TextManager.GetWithVariables("InvalidIPAddress", new string[2] { "[serverip]", "[port]" }, new string[2] { serverIP, port.ToString() }));
                 return;
             }
 

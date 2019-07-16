@@ -182,5 +182,32 @@ namespace Barotrauma.Steam
             instance.server = null;
             instance = null;
         }
+
+        public static UInt64 SteamIDStringToUInt64(string str)
+        {
+            UInt64 retVal;
+            if (UInt64.TryParse(str, out retVal) && retVal >(1<<52)) { return retVal; }
+            if (str.ToUpper().IndexOf("STEAM_") != 0) { return 0; }
+            string[] split = str.Substring(6).Split(':');
+            if (split.Length != 3) { return 0; }
+
+            UInt64 universe = 0; UInt64 y = 0; UInt64 accountNumber = 0;
+            if (!UInt64.TryParse(split[0], out universe)) { return 0; }
+            if (!UInt64.TryParse(split[1], out y)) { return 0; }
+            if (!UInt64.TryParse(split[2], out accountNumber)) { return 0; }
+
+            UInt64 accountInstance = 1; UInt64 accountType = 1;
+
+            return (universe << 56) | (accountType << 52) | (accountInstance << 32) | (accountNumber << 1) | y;
+        }
+
+        public static string SteamIDUInt64ToString(UInt64 uint64)
+        {
+            UInt64 y = uint64 & 0x1;
+            UInt64 accountNumber = (uint64 >> 1) & 0x7fffffff;
+            UInt64 universe = (uint64 >> 56) & 0xff;
+
+            return "STEAM_" + universe.ToString() + ":" + y.ToString() + ":" + accountNumber.ToString();
+        }
     }
 }
