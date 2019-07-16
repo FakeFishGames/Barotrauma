@@ -1519,47 +1519,50 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
-                if (Screen.Selected == GameMain.SubEditorScreen)
+                
+                if (picker.IsKeyDown(InputType.Aim))
                 {
-                    pickHit = picker.IsKeyHit(InputType.Select);
-                    selectHit = picker.IsKeyHit(InputType.Select);
+                    pickHit = false;
+                    selectHit = false;
                 }
                 else
                 {
-                    if (picker.IsKeyDown(InputType.Aim))
+                    if (forceSelectKey)
                     {
-                        pickHit = false;
-                        selectHit = false;
+                        if (ic.PickKey == InputType.Select) pickHit = true;
+                        if (ic.SelectKey == InputType.Select) selectHit = true;
+                    }
+                    else if (forceActionKey)
+                    {
+                        if (ic.PickKey == InputType.Use) pickHit = true;
+                        if (ic.SelectKey == InputType.Use) selectHit = true;
                     }
                     else
                     {
-                        if (forceSelectKey)
-                        {
-                            if (ic.PickKey == InputType.Select) pickHit = true;
-                            if (ic.SelectKey == InputType.Select) selectHit = true;
-                        }
-                        else if (forceActionKey)
-                        {
-                            if (ic.PickKey == InputType.Use) pickHit = true;
-                            if (ic.SelectKey == InputType.Use) selectHit = true;
-                        }
-                        else
-                        {
-                            pickHit = picker.IsKeyHit(ic.PickKey);
-                            selectHit = picker.IsKeyHit(ic.SelectKey);
+                        pickHit = picker.IsKeyHit(ic.PickKey);
+                        selectHit = picker.IsKeyHit(ic.SelectKey);
 
 #if CLIENT
-                            //if the cursor is on a UI component, disable interaction with the left mouse button
-                            //to prevent accidentally selecting items when clicking UI elements
-                            if (picker == Character.Controlled && GUI.MouseOn != null)
-                            {
-                                if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
-                                if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
-                            }
-#endif
+                        //if the cursor is on a UI component, disable interaction with the left mouse button
+                        //to prevent accidentally selecting items when clicking UI elements
+                        if (picker == Character.Controlled && GUI.MouseOn != null)
+                        {
+                            if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
+                            if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
                         }
+#endif
                     }
                 }
+#if CLIENT
+                //use the non-mouse interaction key (E on both default and legacy keybinds) in wiring mode
+                //LMB is used to manipulate wires, so using E to select connection panels is much easier
+                if (Screen.Selected == GameMain.SubEditorScreen && GameMain.SubEditorScreen.WiringMode)
+                {
+                    pickHit = selectHit = GameMain.Config.KeyBind(InputType.Use).MouseButton == null ?
+                        picker.IsKeyHit(InputType.Use) :
+                        picker.IsKeyHit(InputType.Select);
+                }
+#endif
 
                 if (!pickHit && !selectHit) continue;
 

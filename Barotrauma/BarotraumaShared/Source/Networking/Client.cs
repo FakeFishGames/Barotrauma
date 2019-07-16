@@ -43,12 +43,12 @@ namespace Barotrauma.Networking
             }
         }
 
+        // TODO: Add updating & reading of the specteate position during cinematic
         private Vector2 spectate_position;
         public Vector2? SpectatePos
         {
             get
             {
-                if (IsCinematicRunning()) return GetCinematicCameraPosition();
                 if (character == null || character.IsDead)
                 {
                     return spectate_position;
@@ -63,26 +63,6 @@ namespace Barotrauma.Networking
             {
                 spectate_position = value.Value;
             }
-        }
-
-        private bool IsCinematicRunning()
-        {
-#if SERVER
-            return GameMain.Server.EndCinematic != null;
-#endif
-#if CLIENT
-            return GameMain.Client.EndCinematic != null;
-#endif
-        }
-
-        private Vector2 GetCinematicCameraPosition()
-        {
-#if SERVER
-            return GameMain.Server.EndCinematic.AssignedCamera.GetPosition();
-#endif
-#if CLIENT
-            return GameMain.Client.EndCinematic.AssignedCamera.GetPosition();
-#endif
         }
 
         private bool muted;

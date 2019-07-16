@@ -58,7 +58,6 @@ namespace Barotrauma.Networking
         
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
-        public RoundEndCinematic EndCinematic;
 
         public TraitorManager TraitorManager;
 
@@ -1244,7 +1243,7 @@ namespace Barotrauma.Networking
 
         private void ClientWrite(Client c)
         {
-            if ((gameStarted && c.InGame) || EndCinematic != null)
+            if ((gameStarted && c.InGame)/* || EndCinematic != null*/)
             {
                 ClientWriteIngame(c);
             }
@@ -2018,8 +2017,16 @@ namespace Barotrauma.Networking
 
         public void EndGame()
         {
-            if (!gameStarted) return;
-            Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            if (!gameStarted) { return; }
+            if (GameSettings.VerboseLogging)
+            {
+                Log("Ending the round...\n" + Environment.StackTrace, ServerLog.MessageType.ServerMessage);
+
+            }
+            else
+            {
+                Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            }
 
             string endMessage = "The round has ended." + '\n';
 
@@ -2081,32 +2088,14 @@ namespace Barotrauma.Networking
                 }
             }
 
-            CoroutineManager.StartCoroutine(StartEndCinematic(), "EndCinematic");
-
-            GameMain.NetLobbyScreen.RandomizeSettings();
-        }
-
-        public IEnumerable<object> StartEndCinematic()
-        {
-            float endPreviewLength = 10.0f;
-
-            EndCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-
-            do
-            {
-                yield return CoroutineStatus.Running;
-            } while (EndCinematic.Running);
-            EndCinematic = null;
-
             Submarine.Unload();
             entityEventManager.Clear();
-
             GameMain.NetLobbyScreen.Select();
             Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
-            yield return CoroutineStatus.Success;
+            GameMain.NetLobbyScreen.RandomizeSettings();
         }
-
+        
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
