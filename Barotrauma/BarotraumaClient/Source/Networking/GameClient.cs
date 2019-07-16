@@ -92,6 +92,7 @@ namespace Barotrauma.Networking
             get { return entityEventManager.MidRoundSyncing; }
         }
 
+        private object serverEndpoint;
         private int ownerKey;
         private bool steamP2POwner;
 
@@ -216,12 +217,13 @@ namespace Barotrauma.Networking
 
             if (steamId == 0)
             {
-                ConnectToServer(ip, serverName);
+                serverEndpoint = ip;
             }
             else
             {
-                ConnectToServer(steamId, serverName);
+                serverEndpoint = steamId;
             }
+            ConnectToServer(serverEndpoint, serverName);
 
             //ServerLog = new ServerLog("");
 
@@ -229,7 +231,7 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen = new NetLobbyScreen();
         }
 
-        private void ConnectToServer(string hostIP, string hostName)
+        private void ConnectToServer(object endpoint, string hostName)
         {
             chatBox.InputBox.Enabled = false;
             if (GameMain.NetLobbyScreen?.TextBox != null)
@@ -238,107 +240,58 @@ namespace Barotrauma.Networking
             }
 
             serverName = hostName;
+            
+            myCharacter = Character.Controlled;
+            ChatMessage.LastID = 0;
 
-            int port;
-            string[] address = hostIP.Split(':');
-            if (address.Length == 1)
+            object translatedEndpoint = null;
+            if (endpoint is string hostIP)
             {
-                serverIP = hostIP;
-                port = NetConfig.DefaultPort;
-            }
-            else
-            {
-                serverIP = string.Join(":", address.Take(address.Length - 1));
-                if (!int.TryParse(address[address.Length - 1], out port))
+                int port;
+                string[] address = hostIP.Split(':');
+                if (address.Length == 1)
                 {
-                    DebugConsole.ThrowError("Invalid port: " + address[address.Length - 1] + "!");
+                    serverIP = hostIP;
                     port = NetConfig.DefaultPort;
                 }
-            }
-
-            myCharacter = Character.Controlled;
-            ChatMessage.LastID = 0;
-
-            clientPeer = new LidgrenClientPeer(Name);
-            clientPeer.OnDisconnect = OnDisconnect;
-            clientPeer.OnInitializationComplete = () =>
-            {
-                canStart = true;
-                connected = true;
-
-                if (Screen.Selected != GameMain.GameScreen)
+                else
                 {
-                    GameMain.NetLobbyScreen.Select();
+                    serverIP = string.Join(":", address.Take(address.Length - 1));
+                    if (!int.TryParse(address[address.Length - 1], out port))
+                    {
+                        DebugConsole.ThrowError("Invalid port: " + address[address.Length - 1] + "!");
+                        port = NetConfig.DefaultPort;
+                    }
                 }
 
-                chatBox.InputBox.Enabled = true;
-                if (GameMain.NetLobbyScreen?.TextBox != null)
+                clientPeer = new LidgrenClientPeer(Name);
+
+                System.Net.IPEndPoint IPEndPoint = null;
+                try
                 {
-                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                    IPEndPoint = new System.Net.IPEndPoint(Lidgren.Network.NetUtility.Resolve(serverIP), port);
                 }
-            };
-            clientPeer.OnRequestPassword = (int salt, int retries) =>
-            {
-                if (pwRetries != retries) { requiresPw = true; }
-                pwRetries = retries;
-            };
-            clientPeer.OnMessageReceived = ReadDataMessage;
-
-            System.Net.IPEndPoint IPEndPoint = null;
-            try
-            {
-                IPEndPoint = new System.Net.IPEndPoint(Lidgren.Network.NetUtility.Resolve(serverIP), port);
-            }
-            catch
-            {
-                new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"),
-                    TextManager.GetWithVariables("InvalidIPAddress", new string[2] { "[serverip]", "[port]" }, new string[2] { serverIP, port.ToString() }));
-                return;
-            }
-
-            // Connect client, to ip previously requested from user
-            try
-            {
-                clientPeer.Start(IPEndPoint);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Couldn't connect to " + hostIP + ". Error message: " + e.Message);
-                Disconnect();
-                chatBox.InputBox.Enabled = true;
-                if (GameMain.NetLobbyScreen?.TextBox != null)
+                catch
                 {
-                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                    new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"),
+                        TextManager.GetWithVariables("InvalidIPAddress", new string[2] { "[serverip]", "[port]" }, new string[2] { serverIP, port.ToString() }));
+                    return;
                 }
-                GameMain.ServerListScreen.Select();
-                return;
+
+                translatedEndpoint = IPEndPoint;
             }
-
-            updateInterval = new TimeSpan(0, 0, 0, 0, 150);
-
-            CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
-        }
-
-        private void ConnectToServer(UInt64 steamId, string hostName)
-        {
-            chatBox.InputBox.Enabled = false;
-            if (GameMain.NetLobbyScreen?.TextBox != null)
+            else if (endpoint is UInt64)
             {
-                GameMain.NetLobbyScreen.TextBox.Enabled = false;
-            }
+                if (steamP2POwner)
+                {
+                    clientPeer = new SteamP2POwnerPeer(Name);
+                }
+                else
+                {
+                    clientPeer = new SteamP2PClientPeer(Name);
+                }
 
-            serverName = hostName;
-            
-            myCharacter = Character.Controlled;
-            ChatMessage.LastID = 0;
-
-            if (steamP2POwner)
-            {
-                clientPeer = new SteamP2POwnerPeer(Name);
-            }
-            else
-            {
-                clientPeer = new SteamP2PClientPeer(Name);
+                translatedEndpoint = endpoint;
             }
             clientPeer.OnDisconnect = OnDisconnect;
             clientPeer.OnInitializationComplete = () =>
@@ -364,13 +317,14 @@ namespace Barotrauma.Networking
             };
             clientPeer.OnMessageReceived = ReadDataMessage;
             
+            // Connect client, to endpoint previously requested from user
             try
             {
-                clientPeer.Start(steamId);
+                clientPeer.Start(translatedEndpoint);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't connect to " + steamId.ToString() + ". Error message: " + e.Message);
+                DebugConsole.ThrowError("Couldn't connect to " + endpoint.ToString() + ". Error message: " + e.Message);
                 Disconnect();
                 chatBox.InputBox.Enabled = true;
                 if (GameMain.NetLobbyScreen?.TextBox != null)
@@ -385,12 +339,12 @@ namespace Barotrauma.Networking
 
             CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
         }
-
+        
         private bool RetryConnection(GUIButton button, object obj)
         {
             if (clientPeer != null) { clientPeer.Close(); }
             clientPeer = null;
-            ConnectToServer(serverIP, serverName);
+            ConnectToServer(serverEndpoint, serverName);
             return true;
         }
 
@@ -410,7 +364,7 @@ namespace Barotrauma.Networking
         private void CancelConnect()
         {
             connectCancelled = true;
-            clientPeer.Close();
+            clientPeer?.Close();
             clientPeer = null;
         }
 
@@ -445,7 +399,17 @@ namespace Barotrauma.Networking
 
                 yield return CoroutineStatus.Running;
 
-                if (DateTime.Now > timeOut) break;
+                if (DateTime.Now > timeOut)
+                {
+                    clientPeer?.Close(Lidgren.Network.NetConnection.NoResponseMessage);
+                    clientPeer = null;
+                    if (reconnectBox != null)
+                    {
+                        reconnectBox.Close(null, null);
+                        reconnectBox = null;
+                    }
+                    break;
+                }
                 
                 if (requiresPw && !canStart && !connectCancelled)
                 {
@@ -545,10 +509,10 @@ namespace Barotrauma.Networking
             UpdateHUD(deltaTime);
 
             base.Update(deltaTime);
-
+            
             try
             {
-                clientPeer.Update();
+                clientPeer?.Update();
             }
             catch (Exception e)
             {
@@ -699,6 +663,11 @@ namespace Barotrauma.Networking
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
             if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
 
+            if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage)
+            {
+                allowReconnect = false;
+            }
+
             DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
 
             if (disconnectReason == DisconnectReason.ServerFull)
@@ -744,10 +713,12 @@ namespace Barotrauma.Networking
                     TextManager.Get("ConnectionLost"),
                     msg, new string[0]);
                 connected = false;
-                ConnectToServer(serverIP, serverName);
+                ConnectToServer(serverEndpoint, serverName);
             }
             else
             {
+                connectCancelled = true;
+
                 string msg = "";
                 if (disconnectReason == DisconnectReason.Unknown)
                 {
@@ -796,7 +767,7 @@ namespace Barotrauma.Networking
             {
                 if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
                 {
-                    ConnectToServer(serverIP, serverName);
+                    ConnectToServer(serverEndpoint, serverName);
                     yield return new WaitForSeconds(2.0f);
                 }
                 yield return new WaitForSeconds(0.5f);
@@ -1663,7 +1634,7 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             allowReconnect = false;
-            if (clientPeer != null) clientPeer.Close();
+            clientPeer?.Close();
             clientPeer = null;
 
             foreach (var fileTransfer in FileReceiver.ActiveTransfers)
