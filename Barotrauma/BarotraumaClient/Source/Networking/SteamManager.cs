@@ -30,7 +30,7 @@ namespace Barotrauma.Steam
 
                 if (clientInitialized)
                 {
-                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
+                    DebugConsole.NewMessage("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
                 }
             }
             catch (DllNotFoundException)

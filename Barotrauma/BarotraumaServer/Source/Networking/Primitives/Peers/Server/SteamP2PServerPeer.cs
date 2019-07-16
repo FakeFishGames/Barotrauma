@@ -197,6 +197,7 @@ namespace Barotrauma.Networking
             
             if (isServerMessage)
             {
+                DebugConsole.ThrowError("got server message from" + senderSteamId.ToString());
                 return;
             }
 
@@ -494,6 +495,8 @@ namespace Barotrauma.Networking
 
             if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
             pendingClient.UpdateTime = Timing.TotalTime + 1.0;
+
+            DebugConsole.NewMessage("updating pendingclient " + pendingClient.SteamID.ToString(), Microsoft.Xna.Framework.Color.Orange);
 
             NetOutgoingMessage outMsg = netServer.CreateMessage();
             outMsg.Write(pendingClient.SteamID);

@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
         private NetPeerConfiguration netPeerConfiguration;
 
         private ConnectionInitialization initializationStep;
-        private UInt64 steamID;
+        private UInt64 selfSteamID;
         List<NetIncomingMessage> incomingLidgrenMessages;
 
         class RemotePeer
@@ -39,7 +39,7 @@ namespace Barotrauma.Networking
 
             netClient = null;
 
-            steamID = Steam.SteamManager.GetSteamID();
+            selfSteamID = Steam.SteamManager.GetSteamID();
         }
 
         public override void Start(object endPoint)
@@ -61,15 +61,17 @@ namespace Barotrauma.Networking
 
             netClient.Start();
             ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
+            
+            remotePeers = new List<RemotePeer>();
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = OnIncomingConnection;
             Steam.SteamManager.Instance.Networking.OnP2PData = OnP2PData;
-
-            remotePeers = new List<RemotePeer>();
+            Steam.SteamManager.Instance.Networking.SetListenChannel(0, true);
         }
 
         private bool OnIncomingConnection(UInt64 steamId)
         {
+            DebugConsole.NewMessage("incoming connection from: " + steamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
             if (!remotePeers.Any(p => p.SteamID == steamId))
             {
                 remotePeers.Add(new RemotePeer(steamId));
@@ -80,7 +82,13 @@ namespace Barotrauma.Networking
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
         {
-            if (!remotePeers.Any(p => p.SteamID == steamID)) { return; }
+            DebugConsole.NewMessage("got data from: "+steamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+            if (!remotePeers.Any(p => p.SteamID == steamId))
+            {
+                DebugConsole.ThrowError(">:( " + steamId.ToString() + " " + remotePeers[0].SteamID.ToString());
+                return;
+            }
+            DebugConsole.NewMessage("relaying");
 
             NetOutgoingMessage outMsg = netClient.CreateMessage();
             outMsg.Write(steamId);
@@ -151,7 +159,7 @@ namespace Barotrauma.Networking
             bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
             bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
 
-            if (recipientSteamId != steamID)
+            if (recipientSteamId != selfSteamID)
             {
                 if (!isServerMessage)
                 {
@@ -161,11 +169,14 @@ namespace Barotrauma.Networking
 
                 RemotePeer peer = remotePeers.Find(p => p.SteamID == recipientSteamId);
 
+                DebugConsole.NewMessage((peer?.ToString() ?? "null") + " " + recipientSteamId.ToString());
+
                 if (peer == null) { return; }
 
                 if (isDisconnectMessage)
                 {
                     DisconnectPeer(peer, inc.ReadString());
+                    return;
                 }
 
                 Facepunch.Steamworks.Networking.SendType sendType;
@@ -186,7 +197,8 @@ namespace Barotrauma.Networking
                 byte[] p2pData = new byte[inc.LengthBytes - p2pDataStart];
                 Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
 
-                Steam.SteamManager.Instance.Networking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, sendType);
+                bool successSend = Steam.SteamManager.Instance.Networking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, sendType);
+                DebugConsole.NewMessage(successSend.ToString()+" "+sendType+" sending p2p packet to " + recipientSteamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
             }
             else
             {
@@ -207,7 +219,7 @@ namespace Barotrauma.Networking
                 if (isConnectionInitializationStep)
                 {
                     NetOutgoingMessage outMsg = netClient.CreateMessage();
-                    outMsg.Write(steamID);
+                    outMsg.Write(selfSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep));
                     outMsg.Write(Name);
                     netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
@@ -287,6 +299,7 @@ namespace Barotrauma.Networking
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
             Steam.SteamManager.Instance.Networking.OnP2PData = null;
+            Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
@@ -311,7 +324,7 @@ namespace Barotrauma.Networking
             byte[] msgData = new byte[1500];
             bool isCompressed; int length;
             msg.PrepareForSending(msgData, out isCompressed, out length);
-            lidgrenMsg.Write(steamID);
+            lidgrenMsg.Write(selfSteamID);
             lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
