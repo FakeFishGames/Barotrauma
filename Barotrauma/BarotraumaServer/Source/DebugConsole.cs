@@ -590,14 +590,14 @@ namespace Barotrauma
                 }
             });
 
-            commands.Add(new Command("togglekarma", "togglekarma: Toggle the karma system on/off.", (string[] args) =>
+            AssignOnExecute("togglekarma", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
                 NewMessage(GameMain.Server.ServerSettings.KarmaEnabled ? "Karma system enabled." : "Karma system disabled.", Color.LightGreen);
-            }));
+            });
 
-            commands.Add(new Command("resetkarma", "resetkarma [client]: Resets the karma value of the specified client to 100.", (string[] args) =>
+            AssignOnExecute("resetkarma", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
@@ -608,17 +608,22 @@ namespace Barotrauma
                 }
                 client.Karma = 100.0f;
                 NewMessage("Set the karma of the client \"" + args[0] + "\" to 100.", Color.LightGreen);
-            },
-            () =>
+            });
+            AssignOnClientRequestExecute("resetkarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
-                if (GameMain.Server == null) return null;
-                return new string[][]
+                if (GameMain.Server == null || args.Length == 0) return;
+                var targetClient = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (targetClient == null)
                 {
-                    GameMain.Server.ConnectedClients.Select(c => c.Name).ToArray()
-                };
-            }));
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                targetClient.Karma = 100.0f;
+                GameMain.Server.SendDirectChatMessage("Set the karma of the client \"" + args[0] + "\" to 100.", client);
+                NewMessage("Client \"" + client.Name + "\" set the karma of \"" + args[0] + "\" to 100.", Color.LightGreen);
+            });
 
-            commands.Add(new Command("setkarma", "setkarma [client] [0-100]: Sets the karma of the specified client to the specified value.", (string[] args) =>
+            AssignOnExecute("setkarma", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length < 2) return;
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
@@ -634,18 +639,27 @@ namespace Barotrauma
                 }
                 client.Karma = karmaValue;
                 NewMessage("Set the karma of the client \"" + args[0] + "\" to " + karmaValue + ".", Color.LightGreen);
-            },
-            () =>
+            });
+            AssignOnClientRequestExecute("setkarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
-                if (GameMain.Server == null) return null;
-                return new string[][]
+                if (GameMain.Server == null || args.Length < 2) return;
+                var targetClient = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (targetClient == null)
                 {
-                    GameMain.Server.ConnectedClients.Select(c => c.Name).ToArray(),
-                     new string[]{ "50" }
-                };
-            }));
+                    GameMain.Server.SendDirectChatMessage("Client \"" + args[0] + "\" not found.", client);
+                    return;
+                }
+                if (!float.TryParse(args[1], out float karmaValue) || karmaValue < 0.0f || karmaValue > 100.0f)
+                {
+                    GameMain.Server.SendDirectChatMessage("\"" + args[1] + "\" is not a valid karma value. You need to enter a number between 0-100.", client);
+                    return;
+                }
+                targetClient.Karma = karmaValue;
+                GameMain.Server.SendDirectChatMessage("Set the karma of the client \"" + args[0] + "\" to " + karmaValue + ".", client);
+                NewMessage("Client \"" + client.Name + "\" set the karma of \"" + args[0] + "\" to " + karmaValue + ".", Color.LightGreen);
+            });
 
-            commands.Add(new Command("showkarma", "showkarma: Show the current karma values of the players.", (string[] args) =>
+            AssignOnExecute("showkarma", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 NewMessage("***************", Color.Cyan);
@@ -654,23 +668,22 @@ namespace Barotrauma
                     NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
-            }));
+            });
             AssignOnClientRequestExecute("showkarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
                 GameMain.Server.SendConsoleMessage("***************", client);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, Color.Cyan);
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, client);
                 }
                 GameMain.Server.SendConsoleMessage("***************", client);
             });
-
-            commands.Add(new Command("togglekarmatestmode", "togglekarmatestmode: Toggle the karma test mode on/off. When test mode is enabled, clients get notified when their karma value changes (including the reason for the increase/decrease) and the server doesn't ban clients whose karma decreases below the ban threshold.", (string[] args) =>
+            AssignOnExecute("togglekarmatestmode", (string[] args) =>
             {
                 if (GameMain.Server?.KarmaManager == null) return;
                 GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;
                 NewMessage(GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.", Color.LightGreen);
-            }));
+            });
 
             AssignOnExecute("banip", (string[] args) =>
             {

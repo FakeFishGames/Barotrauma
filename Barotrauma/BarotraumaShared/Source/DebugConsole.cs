@@ -300,7 +300,28 @@ namespace Barotrauma
             
             commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
 
-            //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
+            commands.Add(new Command("showkarma", "showkarma: Show the current karma values of the players.", null));
+            commands.Add(new Command("togglekarma", "togglekarma: Toggle the karma system on/off.", null));
+            commands.Add(new Command("resetkarma", "resetkarma [client]: Resets the karma value of the specified client to 100.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember?.ConnectedClients == null) { return null; }
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
+            commands.Add(new Command("setkarma", "setkarma [client] [0-100]: Sets the karma of the specified client to the specified value.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember?.ConnectedClients == null) { return null; }
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                    new string[] { "50" }
+                };
+            }));
+            commands.Add(new Command("togglekarmatestmode", "togglekarmatestmode: Toggle the karma test mode on/off. When test mode is enabled, clients get notified when their karma value changes (including the reason for the increase/decrease) and the server doesn't ban clients whose karma decreases below the ban threshold.", null));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
