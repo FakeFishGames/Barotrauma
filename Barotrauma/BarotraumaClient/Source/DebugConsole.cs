@@ -364,11 +364,9 @@ namespace Barotrauma
 
             commands.Add(new Command("startsteamp2pclient", "", (string[] args) =>
             {
-                if (args.Length == 0) return;
-
                 if (GameMain.Client == null)
                 {
-                    GameMain.Client = new GameClient("Name", null, UInt64.Parse(args[0]));
+                    GameMain.Client = new GameClient("Name", null, 76561198977850505); //this is juan's alt account, feel free to abuse this one
                 }
             }));
 

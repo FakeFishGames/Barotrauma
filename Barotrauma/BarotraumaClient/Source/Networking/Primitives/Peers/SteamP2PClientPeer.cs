@@ -43,6 +43,7 @@ namespace Barotrauma.Networking
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = OnIncomingConnection;
             Steam.SteamManager.Instance.Networking.OnP2PData = OnP2PData;
+            Steam.SteamManager.Instance.Networking.SetListenChannel(0, true);
 
             ServerConnection = new SteamP2PConnection("Server", hostSteamId);
 
@@ -62,11 +63,13 @@ namespace Barotrauma.Networking
 
         private bool OnIncomingConnection(UInt64 steamId)
         {
+            DebugConsole.NewMessage("incoming connection: " + steamId.ToString());
             return steamId == hostSteamId;
         }
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
         {
+            DebugConsole.NewMessage("got p2p data: " + steamId.ToString());
             if (steamId != hostSteamId) { return; }
 
             byte incByte = data[0];
@@ -209,7 +212,9 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, buf.Length, sendType);
+            Array.Copy(bufAux, 0, buf, 2, length);
+
+            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length+2, sendType);
         }
 
         public override void SendPassword(string password)
@@ -231,6 +236,7 @@ namespace Barotrauma.Networking
         {
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
             Steam.SteamManager.Instance.Networking.OnP2PData = null;
+            Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
 
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             OnDisconnect?.Invoke(msg);

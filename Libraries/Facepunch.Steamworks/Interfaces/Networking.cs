@@ -67,7 +67,7 @@ namespace Facepunch.Steamworks
 
         /// <summary>
         /// Enable or disable listening on a specific channel.
-        /// If you donp't enable the channel we won't listen to it,
+        /// If you don't enable the channel we won't listen to it,
         /// so you won't be able to receive messages on it.
         /// </summary>
         public void SetListenChannel( int ChannelId, bool Listen )
