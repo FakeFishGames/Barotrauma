@@ -189,7 +189,7 @@ namespace Barotrauma.Networking
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
         {
-            byte[] buf = new byte[msg.LengthBytes + 2];
+            byte[] buf = new byte[msg.LengthBytes + 4];
             buf[0] = (byte)deliveryMethod;
 
             byte[] bufAux = new byte[msg.LengthBytes];
@@ -197,6 +197,11 @@ namespace Barotrauma.Networking
             msg.PrepareForSending(bufAux, out isCompressed, out length);
 
             buf[1] = (byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None);
+
+            buf[2] = (byte)(length & 0xff);
+            buf[3] = (byte)((length >> 8) & 0xff);
+
+            Array.Copy(bufAux, 0, buf, 4, length);
 
             Facepunch.Steamworks.Networking.SendType sendType;
             switch (deliveryMethod)
@@ -212,9 +217,7 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            Array.Copy(bufAux, 0, buf, 2, length);
-
-            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length+2, sendType);
+            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
         }
 
         public override void SendPassword(string password)
