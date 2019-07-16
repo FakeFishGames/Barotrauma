@@ -389,7 +389,10 @@ namespace Barotrauma.Items.Components
                     item.Use(1.0f);
                     break;
                 case "toggle":
-                    IsActive = !isActive;
+                    if (signal != "0")
+                    {
+                        IsActive = !isActive;
+                    }
                     break;
                 case "set_active":
                 case "set_state":
