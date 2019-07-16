@@ -597,6 +597,54 @@ namespace Barotrauma
                 NewMessage(GameMain.Server.ServerSettings.KarmaEnabled ? "Karma system enabled." : "Karma system disabled.", Color.LightGreen);
             }));
 
+            commands.Add(new Command("resetkarma", "resetkarma [client]: Resets the karma value of the specified client to 100.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (client == null)
+                {
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                client.Karma = 100.0f;
+                NewMessage("Set the karma of the client \"" + args[0] + "\" to 100.", Color.LightGreen);
+            },
+            () =>
+            {
+                if (GameMain.Server == null) return null;
+                return new string[][]
+                {
+                    GameMain.Server.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
+
+            commands.Add(new Command("setkarma", "setkarma [client] [0-100]: Sets the karma of the specified client to the specified value.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 2) return;
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
+                if (client == null)
+                {
+                    ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                if (!float.TryParse(args[1], out float karmaValue) || karmaValue < 0.0f || karmaValue > 100.0f)
+                {
+                    ThrowError("\"" + args[1] + "\" is not a valid karma value. You need to enter a number between 0-100.");
+                    return;
+                }
+                client.Karma = karmaValue;
+                NewMessage("Set the karma of the client \"" + args[0] + "\" to " + karmaValue + ".", Color.LightGreen);
+            },
+            () =>
+            {
+                if (GameMain.Server == null) return null;
+                return new string[][]
+                {
+                    GameMain.Server.ConnectedClients.Select(c => c.Name).ToArray(),
+                     new string[]{ "50" }
+                };
+            }));
+
             commands.Add(new Command("showkarma", "showkarma: Show the current karma values of the players.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
