@@ -65,20 +65,25 @@ namespace Barotrauma.Items.Components
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
-                
+
+        public float IsActiveTimer;
         public virtual bool IsActive
         {
             get { return isActive; }
             set 
             {
 #if CLIENT
-                if (!value && isActive)
+                if (!value)
                 {
-                    StopSounds(ActionType.OnActive);                    
+                    IsActiveTimer = 0.0f;
+                    if (isActive)
+                    {
+                        StopSounds(ActionType.OnActive);
+                    }
                 }
 #endif
                 if (AITarget != null) AITarget.Enabled = value;
-                isActive = value; 
+                isActive = value;
             }
         }
 
