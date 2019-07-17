@@ -218,7 +218,7 @@
       <StatusEffect target="Character" SpeedMultiplier="0.6" setvalue="true"/>
     </Effect>
 
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="896,768,128,128" color="195,136,60,255" origin="0,0"/>
+    <icon texture="Content/UI/IconAtlas.png" sourcerect="0,384,128,128" color="193,162,122,255" origin="0,0"/>
   </AfflictionSpaceHerpes>
 
   <Affliction

@@ -128,6 +128,7 @@ namespace Barotrauma
         }
 
         public WearableSprite HuskSprite { get; private set; }
+        public WearableSprite HerpesSprite { get; private set; }
 
         public void LoadHuskSprite()
         {
@@ -137,6 +138,16 @@ namespace Barotrauma
             if (element != null)
             {
                 HuskSprite = new WearableSprite(element.Element("sprite"), WearableType.Husk);
+            }
+        }
+        public void LoadHerpesSprite()
+        {
+            var info = character.Info;
+            if (info == null) { return; }
+            var element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), WearableType.Herpes).FirstOrDefault();
+            if (element != null)
+            {
+                HerpesSprite = new WearableSprite(element.Element("sprite"), WearableType.Herpes);
             }
         }
 
@@ -387,14 +398,7 @@ namespace Barotrauma
                     color *= SeveredFadeOutTime - severedFadeOutTimer;
                 }
             }
-
-            if (type == LimbType.Head)
-            {
-                //TODO: replace with sprite overlay
-                var herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
-                color = Color.Lerp(color, Color.LightGreen, herpesStrength / 100.0f);
-            }
-
+            
             body.Dir = Dir;
 
             bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
@@ -432,6 +436,14 @@ namespace Barotrauma
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (onlyDrawable == null)
             {
+                if (HerpesSprite != null)
+                {
+                    float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                    if (herpesStrength > 0.0f)
+                    {
+                        DrawWearable(HerpesSprite, depthStep, spriteBatch, color * (herpesStrength / 100.0f), spriteEffect);
+                    }
+                }
                 if (HuskSprite != null && (character.SpeciesName == "Humanhusk" || (character.SpeciesName == "Human" &&
                     character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active)))
                 {
@@ -592,6 +604,9 @@ namespace Barotrauma
 
             HuskSprite?.Sprite.Remove();
             HuskSprite = null;
+
+            HerpesSprite?.Sprite.Remove();
+            HerpesSprite = null;
         }
     }
 }

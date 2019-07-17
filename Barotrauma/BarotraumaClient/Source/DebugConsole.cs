@@ -1804,6 +1804,11 @@ namespace Barotrauma
                     limb.HuskSprite.Sprite.ReloadXML();
                     limb.HuskSprite.Sprite.ReloadTexture();
                 }
+                if (limb.HerpesSprite != null)
+                {
+                    limb.HerpesSprite.Sprite.ReloadXML();
+                    limb.HerpesSprite.Sprite.ReloadTexture();
+                }
             }
         }
 
