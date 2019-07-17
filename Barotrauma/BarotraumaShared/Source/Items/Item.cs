@@ -1154,7 +1154,14 @@ namespace Barotrauma
                 {
                     ic.Update(deltaTime, cam);
 #if CLIENT
-                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);
+                    if (ic.IsActive)
+                    {
+                        if (ic.IsActiveTimer > 0.02f)
+                        {
+                            ic.PlaySound(ActionType.OnActive, WorldPosition);
+                        }
+                        ic.IsActiveTimer += deltaTime;
+                    }
 #endif
                 }
             }
