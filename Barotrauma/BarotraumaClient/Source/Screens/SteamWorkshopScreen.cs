@@ -278,9 +278,11 @@ namespace Barotrauma
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
                 if (sub.HasTag(SubmarineTag.HideInMenus)) { continue; }
-                //ignore subs that are part of some content package
+                //ignore subs that are part of a workshop/vanilla content package
                 string subPath = Path.GetFullPath(sub.FilePath);
-                if (ContentPackage.List.Any(cp => cp.Files.Any(f => f.Type == ContentType.Submarine && Path.GetFullPath(f.Path) == subPath)))
+                if (ContentPackage.List.Any(cp =>
+                    cp.Files.Any(f => f.Type == ContentType.Submarine && Path.GetFullPath(f.Path) == subPath) &&
+                    (!string.IsNullOrEmpty(cp.SteamWorkshopUrl) || cp == GameMain.VanillaContent)))
                 {
                     continue;
                 }
@@ -821,6 +823,8 @@ namespace Barotrauma
             itemContentPackage.AddFile(sub.FilePath, ContentType.Submarine);
             itemContentPackage.Name = sub.Name;
             itemContentPackage.Save(itemContentPackage.Path);
+            ContentPackage.List.Add(itemContentPackage);
+            GameMain.Config.SelectedContentPackages.Add(itemContentPackage);
 
             itemEditor.Title = sub.Name;
             itemEditor.Tags.Add("Submarine");
@@ -894,8 +898,16 @@ namespace Barotrauma
         private void ShowCreateItemFrame()
         {
             createItemFrame.ClearChildren();
+            
+            if (itemEditor == null) { return; }
 
-            if (itemEditor == null) return;
+            if (itemContentPackage == null)
+            {
+                string errorMsg = "Failed to edit workshop item (content package null)\n" + Environment.StackTrace;
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.ShowCreateItemFrame:ContentPackageNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
 
             var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.92f, 0.92f), createItemFrame.RectTransform, Anchor.Center))
             {
@@ -1196,6 +1208,9 @@ namespace Barotrauma
                             itemEditor = null;
                             SelectTab(Tab.Browse);
                             deleteVerification.Close();
+                            createItemFrame.ClearChildren();
+                            itemContentPackage.SteamWorkshopUrl = "";
+                            itemContentPackage.Save(itemContentPackage.Path);
                             return true;
                         };
                         deleteVerification.Buttons[1].OnClicked = deleteVerification.Close;
@@ -1433,6 +1448,7 @@ namespace Barotrauma
             }
 
             createItemFrame.ClearChildren();
+            RefreshItemLists();
             SelectTab(Tab.Browse);
         }
 
