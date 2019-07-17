@@ -1276,36 +1276,39 @@ namespace Barotrauma
         private void OnAddFilesSelected(string[] fileNames)
         {
             if (fileNames == null) { return; }
-            /*for (int i = 0; i < fileNames.Length; i++)
+            for (int i = 0; i < fileNames.Length; i++)
             {
-                string file = fileNames[i];
-                if (string.IsNullOrEmpty(file)) { continue; }
-                file = file.Trim();
-                if (!File.Exists(file)) { continue; }
+                string file = fileNames[i]?.Trim();
+                if (string.IsNullOrEmpty(file) || !File.Exists(file)) { continue; }
 
-                string filePathRelativeToStagingFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, SteamManager.WorkshopItemStagingFolder));
-                string filePathRelativeToBaseFolder = UpdaterUtil.GetRelativePath(file, Environment.CurrentDirectory);
-                //file is not inside the staging folder
-                if (filePathRelativeToStagingFolder.StartsWith(".."))
+                string modFolder = Path.GetDirectoryName(itemContentPackage.Path);                
+                string filePathRelativeToModFolder = UpdaterUtil.GetRelativePath(file, Path.Combine(Environment.CurrentDirectory, modFolder));
+                string destinationPath = Path.Combine(modFolder, Path.GetFileName(file));
+
+                //file is not inside the mod folder, we need to move it
+                if (filePathRelativeToModFolder.StartsWith("..") || 
+                    Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
                 {
-                    //submarines can be included in the content package directly
-                    string basePath = Path.GetDirectoryName(filePathRelativeToBaseFolder.Replace("..", ""));
-                    if (basePath == "Submarines")
+                    string tryPath = destinationPath;
+                    //add a number to the filename if a file with the same name already exists
+                    i = 2;
+                    while (File.Exists(destinationPath))
                     {
-                        string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(file));
+                        destinationPath = Path.Combine(modFolder, $"{Path.GetFileNameWithoutExtension(file)} ({i}){Path.GetExtension(file)}");
+                        i++;
+                    }
+                    try
+                    {
                         File.Copy(file, destinationPath);
-                        itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.Submarine);
                     }
-                    else
+                    catch (Exception e)
                     {
-                        itemContentPackage.AddFile(filePathRelativeToBaseFolder, ContentType.None);
+                        DebugConsole.ThrowError("Copying the file \""+file+"\" to the mod folder failed.", e);
+                        return;
                     }
                 }
-                else
-                {
-                    itemContentPackage.AddFile(filePathRelativeToStagingFolder, ContentType.None);
-                }
-            }*/
+                itemContentPackage.AddFile(destinationPath, ContentType.None);
+            }
             itemContentPackage.Save(itemContentPackage.Path);
             RefreshCreateItemFileList();
         }
