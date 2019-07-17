@@ -1788,8 +1788,9 @@
   <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
   <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
   <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
   <!-- Traitor goals (new) -->
-  <traitorgoalstatustextformat>{0} [{1}]</traitorgoalstatustextformat>
+  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
   <traitorgoalkilltargetinfo>Assassinate [targetname]</traitorgoalkilltargetinfo>
   <traitorgoalcausereactormeltdown>Cause reactor meltdown</traitorgoalcausereactormeltdown>
   <traitorgoaldestroyalloxygentanks>Destroy {0} percent of all non inventory oxygen tanks on the sub</traitorgoaldestroyalloxygentanks>

@@ -51,23 +51,86 @@ namespace Barotrauma {
             {
             }
 
+            private delegate bool TargetFilter(string value, Character character);
+            private static Dictionary<string, TargetFilter> targetFilters = new Dictionary<string, TargetFilter>()
+            {
+                { "job", (value, character) => value.Equals(character.Info.Job.Name, StringComparison.OrdinalIgnoreCase) },
+            };
 
             public Traitor.Goal Instantiate(GameServer server)
             {
-                switch (Config.GetAttributeString("type", "")) {
+                Traitor.Goal goal = null;
+                switch (Config.GetAttributeString("type", "").ToLower(System.Globalization.CultureInfo.InvariantCulture)) {
                     case "killtarget":
-                        return new Traitor.GoalKillTarget();
+                        {
+                            List<Traitor.TraitorMission.CharacterFilter> filters = new List<Traitor.TraitorMission.CharacterFilter>();
+                            foreach (var attribute in Config.Attributes())
+                            {
+                                if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
+                                {
+                                    filters.Add((character) => filter(attribute.Value, character));
+                                }
+                            }
+                            goal = new Traitor.GoalKillTarget((character) => filters.All(f => f(character)));
+                        }
+                        break;
                     case "destroyitems":
-                        // TODO(xxX)
+                        goal = new Traitor.GoalDestroyItemsWithTag(Config.GetAttributeString("tag", ""), Config.GetAttributeFloat("percentage", 100.0f));
                         break;
                     case "sabotage":
+                        // return new Traitor.GoalItemConditionLessThan();
                         // TODO(xxX)
                         break;
                     case "floodsub":
-                        // TODO(xxX)
+                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f));
                         break;
                 }
-                return null;
+                if (goal == null)
+                {
+                    return goal;
+                }
+                foreach (var element in Config.Elements())
+                {
+                    switch (element.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture))
+                    {
+                        case "infotext":
+                            {
+                                var id = element.GetAttributeString("id", null);
+                                if (id != null)
+                                {
+                                    goal.InfoTextId = id;
+                                }
+                            }
+                            break;
+                        case "completedtext":
+                            {
+                                var id = element.GetAttributeString("id", null);
+                                if (id != null)
+                                {
+                                    goal.CompletedTextId = id;
+                                }
+                            }
+                            break;
+                    }
+                }
+                foreach (var element in Config.Elements())
+                {
+                    switch (element.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture))
+                    {
+                        case "modifier":
+                            {
+                                var modifierType = element.GetAttributeString("type", "");
+                                switch (modifierType)
+                                {
+                                    case "duration":
+                                        goal = new Traitor.GoalWithDuration(goal, Config.GetAttributeFloat("duration", 5.0f), Config.GetAttributeBool("cumulative", false));
+                                        break;
+                                }
+                            }
+                            break;
+                    }
+                }
+                return goal;
             }
         }
 

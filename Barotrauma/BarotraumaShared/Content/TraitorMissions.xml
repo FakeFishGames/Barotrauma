@@ -9,6 +9,9 @@
      <Goal type="killtarget">
        <InfoText id="traitorgoalkilltargetinfo" />
      </Goal>
+     <Goal type="destroyitems">
+       <Modifier type="duration" duration="30" cumulative="true" />
+     </Goal>
      <!--
      <Goal type="sabotage">
 

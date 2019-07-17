@@ -4,6 +4,7 @@
 using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -16,11 +17,25 @@ namespace Barotrauma
             public Traitor Traitor { get; private set; }
             public TraitorMission Mission { get; internal set; }
 
-            public virtual string StatusText => TextManager.GetFormatted("TraitorGoalStatusTextFormat", false, InfoText, IsCompleted ? "done" : "pending");
+            public virtual string StatusTextId { get; set; } = "TraitorGoalStatusTextFormat";
+            public virtual string InfoTextId { get; set; } = null;
+            public virtual string CompletedTextId { get; set; } = null;
 
-            public virtual string InfoText => "(not implemented)";
-            public virtual string CompletedText => StatusText;
-            // public virtual string DescriptionText => "(not implemented)";
+            public virtual IEnumerable<string> StatusTextKeys => new string[] { "[infotext]", "[status]" };
+            public virtual IEnumerable<string> StatusTextValues => new string[] {
+                InfoText,
+                TextManager.Get(IsCompleted ? "done" : "pending")
+            };
+
+            public virtual IEnumerable<string> InfoTextKeys => new string[] { };
+            public virtual IEnumerable<string> InfoTextValues => new string[] { };
+
+            public virtual IEnumerable<string> CompletedTextKeys => new string[] { };
+            public virtual IEnumerable<string> CompletedTextValues => new string[] { };
+
+            public virtual string StatusText => TextManager.GetWithVariables(StatusTextId, StatusTextKeys.ToArray(), StatusTextValues.ToArray());
+            public virtual string InfoText => TextManager.GetWithVariables(InfoTextId, InfoTextKeys.ToArray(), InfoTextValues.ToArray());
+            public virtual string CompletedText => CompletedTextId != null ? TextManager.GetWithVariables(CompletedTextId, CompletedTextKeys.ToArray(), CompletedTextValues.ToArray()) : StatusText;
 
             public virtual bool IsCompleted => false;
 
@@ -51,7 +66,13 @@ namespace Barotrauma
             public bool IsStarted { get; private set; } = false;
 
             public string InfoText { get; private set; } // TODO
-            public string GoalInfos => string.Join("\n", allGoals.ConvertAll(goal => string.Concat("- ", goal.StatusText)));
+            public string GoalInfos => string.Join("", allGoals.ConvertAll(goal => TextManager.GetWithVariables("traitorobjectivegoalinfoformat", new string[] {
+                "[statustext]",
+                "[linebreak]"
+            }, new string[] {
+                goal.StatusText,
+                "\n"
+            })));
 
             public virtual string GetStartMessageText()
             {
@@ -208,14 +229,15 @@ namespace Barotrauma
                 }
             }
 
-            public Character FindKillTarget(GameServer server, Character traitor)
+            public delegate bool CharacterFilter(Character character);
+            public Character FindKillTarget(GameServer server, Character traitor, CharacterFilter filter)
             {
                 int connectedClientsCount = server.ConnectedClients.Count;
                 int targetIndex = Rand.Int(connectedClientsCount);
                 for (int i = 0; i < connectedClientsCount; ++i)
                 {
-                    var client = server.ConnectedClients[i];
-                    if (client.Character != null && client.Character != traitor && --targetIndex <= 0)
+                    var client = server.ConnectedClients[(targetIndex + i) % connectedClientsCount];
+                    if (client.Character != null && client.Character != traitor && (filter == null || filter(client.Character)))
                     {
                         return client.Character;
                     }
@@ -234,48 +256,13 @@ namespace Barotrauma
             }
         }
 
-        public class GoalDestroyCargo : Goal
-        {
-            public float DistanceFromSub;
-        }
-
-        public class GoalJamSonar : Goal
-        {
-        }
-
-        public class GoalSabotagePumps : Goal
-        {
-            public float Duration;
-        }
-
-        public class GoalSabotageOxygenGenerator : Goal
-        {
-            public float Duration;
-        }
-
-        public class GoalSabotageDivingGear : Goal
-        {
-        }
-
-        public class GoalInfectWithHusk : Goal
-        {
-            public Character Target;
-        }
-
-        public class GoalSabotageAmmo : Goal
-        {
-        }
-
-        public class GoalSabotageEngine : Goal
-        {
-            public float Duration;
-        }
-
         public class GoalKillTarget : Goal
         {
+            public TraitorMission.CharacterFilter Filter { get; private set; }
             public Character Target { get; private set; }
 
-            public override string InfoText => TextManager.GetWithVariable("TraitorGoalKillTargetInfo", "[targetname]", Target?.Name ?? "(unknown)");
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]" });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { Target?.Name ?? "(unknown)" });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
@@ -288,12 +275,14 @@ namespace Barotrauma
             public override void Start(GameServer server, Traitor traitor)
             {
                 base.Start(server, traitor);
-                Target = traitor.Mission.FindKillTarget(server, traitor.Character);
+                Target = traitor.Mission.FindKillTarget(server, traitor.Character, Filter);
             }
-        }
 
-        public class GoalKillAllCrew : Goal
-        {
+            public GoalKillTarget(TraitorMission.CharacterFilter filter) : base()
+            {
+                InfoTextId = "TraitorGoalKillTargetInfo";
+                Filter = filter;
+            }
         }
 
         public class GoalItemConditionLessThan : Goal
@@ -319,8 +308,16 @@ namespace Barotrauma
             private bool isCompleted = false;
             private float remainingDuration = float.NaN;
 
-            public override string StatusText => goal.StatusText;
+            public override IEnumerable<string> StatusTextKeys => goal.StatusTextKeys;
+            public override IEnumerable<string> StatusTextValues => goal.StatusTextValues;
 
+            public override IEnumerable<string> InfoTextKeys => goal.InfoTextKeys;//.Concat(new string[] { "[duration]" });
+            public override IEnumerable<string> InfoTextValues => goal.InfoTextValues;//.Concat(new string[] { string.Format("{0:f}", requiredDuration) });
+
+            public override IEnumerable<string> CompletedTextKeys => goal.CompletedTextKeys;
+            public override IEnumerable<string> CompletedTextValues => goal.CompletedTextValues;
+
+            public override string StatusText => goal.StatusText;
             public override string InfoText => goal.InfoText;
             public override string CompletedText => goal.CompletedText;
 
@@ -357,8 +354,6 @@ namespace Barotrauma
 
         public class GoalCauseReactorMeltdown : GoalItemConditionLessThan
         {
-            public override string InfoText => TextManager.Get("TraitorGoalCauseReactorMeltDown");
-
             private static Item FindReactor()
             {
                 return GameMain.GameSession.Submarine.GetItems(false).Find(item => item.GetComponent<Items.Components.Reactor>() != null);
@@ -366,10 +361,11 @@ namespace Barotrauma
 
             public GoalCauseReactorMeltdown() : base(0.0f, FindReactor())
             {
+                InfoTextId = "TraitorGoalCauseReactorMeltDown";
             }
         }
 
-        public class GoalDestroyAllNonInventoryItemsWithTag : Goal
+        public class GoalDestroyItemsWithTag : Goal
         {
             private readonly string tag;
 
@@ -410,13 +406,13 @@ namespace Barotrauma
                 isCompleted |= destroyed >= (int)(total * destroyPercent);
             }
 
-            public GoalDestroyAllNonInventoryItemsWithTag(string tag, float destroyPercent) : base() {
+            public GoalDestroyItemsWithTag(string tag, float destroyPercent) : base() {
                 this.tag = tag;
                 this.destroyPercent = destroyPercent;
             }
         }
 
-        public class GoalDestroyOxygenTanks : GoalDestroyAllNonInventoryItemsWithTag
+        public class GoalDestroyOxygenTanks : GoalDestroyItemsWithTag
         {
             public override string InfoText => TextManager.GetFormatted("TraitorGoalDestroyAllOxygenTanks", false, 100.0f * DestroyPercent);
 
