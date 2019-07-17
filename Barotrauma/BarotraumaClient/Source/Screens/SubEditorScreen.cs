@@ -71,6 +71,12 @@ namespace Barotrauma
         private Color primaryColor = new Color(12, 14, 15, 190);
         private Color secondaryColor = new Color(12, 14, 15, 215);
 
+        private const int submarineNameLimit = 30;
+        private GUITextBlock submarineNameCharacterCount;
+
+        private const int submarineDescriptionLimit = 500;
+        private GUITextBlock submarineDescriptionCharacterCount;
+
         public override Camera Cam
         {
             get { return cam; }
@@ -950,32 +956,60 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.45f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(750, 400) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(750, 400) });
             var paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.02f };
 
             //var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogHeader"), font: GUI.LargeFont);
 
             var columnArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), paddedSaveFrame.RectTransform), isHorizontal: true) { Stretch = true };
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), columnArea.RectTransform)) { RelativeSpacing = 0.02f, Stretch = true };
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.55f, 1.0f), columnArea.RectTransform)) { RelativeSpacing = 0.01f, Stretch = true };
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.42f, 1.0f), columnArea.RectTransform)) { RelativeSpacing = 0.02f, Stretch = true };
 
             // left column ----------------------------------------------------------------------- 
 
-            var saveSubLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.03f), leftColumn.RectTransform),
+            var nameHeaderGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.03f), leftColumn.RectTransform), true);
+            var saveSubLabel = new GUITextBlock(new RectTransform(new Vector2(.5f, 1f), nameHeaderGroup.RectTransform),
                 TextManager.Get("SaveSubDialogName"));
 
-            nameBox = new GUITextBox(new RectTransform(new Vector2(0.65f, 0.05f), leftColumn.RectTransform))
+            submarineNameCharacterCount = new GUITextBlock(new RectTransform(new Vector2(.5f, 1f), nameHeaderGroup.RectTransform), string.Empty, textAlignment: Alignment.TopRight);
+
+            nameBox = new GUITextBox(new RectTransform(new Vector2(.95f, 0.05f), leftColumn.RectTransform))
             {
                 OnEnterPressed = ChangeSubName,
                 Text = GetSubName()
             };
+            nameBox.OnTextChanged += (textBox, text) =>
+            {
+                if (text.Length > submarineNameLimit)
+                {
+                    nameBox.Text = text.Substring(0, submarineNameLimit);
+                    nameBox.Flash(Color.Red);
+                    return true;
+                }
 
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.03f), leftColumn.RectTransform), TextManager.Get("SaveSubDialogDescription"));
+                submarineNameCharacterCount.Text = text.Length + " / " + submarineNameLimit;
+                return true;
+            };
+
+            submarineNameCharacterCount.Text = nameBox.Text.Length + " / " + submarineNameLimit;
+
+            var descriptionHeaderGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.03f), leftColumn.RectTransform), true);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), descriptionHeaderGroup.RectTransform), TextManager.Get("SaveSubDialogDescription"));
+            submarineDescriptionCharacterCount = new GUITextBlock(new RectTransform(new Vector2(.5f, 1f), descriptionHeaderGroup.RectTransform), string.Empty, textAlignment: Alignment.TopRight);
 
             var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform));
-            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), font: GUI.SmallFont, wrap: true);
+            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform, Anchor.Center), font: GUI.SmallFont, wrap: true);
+
             descriptionBox.OnTextChanged += (textBox, text) =>
             {
+                if (text.Length > submarineDescriptionLimit)
+                {
+                    descriptionBox.Text = text.Substring(0, submarineDescriptionLimit);
+                    descriptionBox.Flash(Color.Red);
+                    return true;
+                }
+
                 Vector2 textSize = textBox.Font.MeasureString(descriptionBox.WrappedText);
                 textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(descriptionContainer.Rect.Height, (int)textSize.Y + 10));
                 descriptionContainer.UpdateScrollBarSize();
@@ -984,6 +1018,7 @@ namespace Barotrauma
                 return true;
             };
             descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
+            submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
@@ -1768,7 +1803,9 @@ namespace Barotrauma
             {
                 textBox.UserData = text;
             }
-            
+
+            submarineDescriptionCharacterCount.Text = text.Length + " / " + submarineDescriptionLimit;
+
             return true;
         }
         
@@ -2145,6 +2182,10 @@ namespace Barotrauma
                 {
                     dummyCharacter.SelectedConstruction.AddToGUIUpdateList();
                 }
+                else if (WiringMode && MapEntity.SelectedList.Count == 1 && MapEntity.SelectedList[0] is Item item && item.GetComponent<Wire>() != null)
+                {
+                    MapEntity.SelectedList[0].AddToGUIUpdateList();
+                }
             }
             else
             {
@@ -2304,9 +2345,9 @@ namespace Barotrauma
                         dummyCharacter.SelectedConstruction = null;
                     }*/
                 }
-                else if (MapEntity.FilteredSelectedList.Count == 1)
+                else if (MapEntity.SelectedList.Count == 1)
                 {
-                    (MapEntity.FilteredSelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
+                    (MapEntity.SelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                 }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);

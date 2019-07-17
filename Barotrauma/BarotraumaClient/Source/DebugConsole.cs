@@ -133,17 +133,7 @@ namespace Barotrauma
 
             if (PlayerInput.KeyHit(Keys.F3))
             {
-                isOpen = !isOpen;
-                if (isOpen)
-                {
-                    textBox.Select();
-                    AddToGUIUpdateList();
-                }
-                else
-                {
-                    GUI.ForceMouseOn(null);
-                    textBox.Deselect();
-                }
+                Toggle();
             }
             else if (isOpen && PlayerInput.KeyHit(Keys.Escape))
             {
@@ -179,6 +169,21 @@ namespace Barotrauma
             }
         }
 
+        public static void Toggle()
+        {
+            isOpen = !isOpen;
+            if (isOpen)
+            {
+                textBox.Select();
+                AddToGUIUpdateList();
+            }
+            else
+            {
+                GUI.ForceMouseOn(null);
+                textBox.Deselect();
+            }
+        }
+
         public static void Draw(SpriteBatch spriteBatch)
         {
             if (!isOpen) return;
@@ -206,6 +211,7 @@ namespace Barotrauma
                 case "togglehud":
                 case "toggleupperhud":
                 case "togglecharacternames":
+                case "fpscounter":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);

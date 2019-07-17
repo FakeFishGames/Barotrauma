@@ -887,6 +887,7 @@ namespace Barotrauma
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
             if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
+            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
             base.OnExiting(sender, args);
         }
     }

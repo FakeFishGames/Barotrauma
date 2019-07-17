@@ -79,7 +79,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,0,64,64" />
     <Sprite texture="securitygear.png" sourcerect="0,59,33,24" depth="0.6" />
     <Body width="30" height="15" density="40" />
-    <Wearable slots="Any,RightHand+LeftHand" msg="ItemMsgPickUpSelect">
+    <Wearable slots="Any,RightHand+LeftHand" msg="ItemMsgPickUpSelect" autoequipwhenfull="false">
       <sprite texture="securitygear.png" limb="RightHand" sourcerect="32,62,16,16" origin="0.5,-0.5" depth="0.01" />
       <sprite texture="securitygear.png" limb="LeftHand" sourcerect="32,62,16,16" origin="0.5,-0.5" depth="0.01" />
       <StatusEffect type="OnWearing" target="Character" lockhands="true" setvalue="true" />

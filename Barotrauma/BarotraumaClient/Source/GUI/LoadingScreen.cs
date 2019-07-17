@@ -178,25 +178,27 @@ namespace Barotrauma
             }
             else if (DrawLoadingText)
             {
-                string loadText = "";
-                if (LoadState == 100.0f)
+                if (TextManager.Initialized)
                 {
-                    loadText = TextManager.Get("PressAnyKey");
-                }
-                else
-                {
-                    loadText = TextManager.Get("Loading");
-                    if (LoadState != null)
+                    string loadText;
+                    if (LoadState == 100.0f)
                     {
-                        loadText += " " + (int)LoadState + " %";
+                        loadText = TextManager.Get("PressAnyKey");
                     }
-                }
-
-                if (GUI.LargeFont != null)
-                {
-                    GUI.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
-                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
-                        Color.White);
+                    else
+                    {
+                        loadText = TextManager.Get("Loading");
+                        if (LoadState != null)
+                        {
+                            loadText += " " + (int)LoadState + " %";
+                        }
+                    }
+                    if (GUI.LargeFont != null)
+                    {
+                        GUI.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
+                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
+                            Color.White);
+                    }
                 }
 
                 if (GUI.Font != null && selectedTip != null)

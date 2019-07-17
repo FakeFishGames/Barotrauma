@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
         };
         private GUITickBox maintainPosTickBox, levelEndTickBox, levelStartTickBox;
 
-        private GUIComponent statusContainer, dockingContainer;
+        private GUIComponent statusContainer, dockingContainer, controlContainer;
 
         private bool dockingNetworkMessagePending;
 
@@ -86,9 +86,8 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
-            var controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.CenterLeft)
-                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.99f), (int)(viewSize * 0.05f)) }, "SonarFrame");
+            controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.CenterLeft)
+                { MinSize = new Point(150, 0) }, "SonarFrame");
             var paddedControlContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center))
             {
                 RelativeSpacing = 0.03f,
@@ -96,7 +95,7 @@ namespace Barotrauma.Items.Components
             };
 
             statusContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
-                { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, "SonarFrame");
+                { MinSize = new Point(150, 0) }, "SonarFrame");
             var paddedStatusContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), statusContainer.RectTransform, Anchor.Center))
             {
                 RelativeSpacing = 0.03f,
@@ -295,12 +294,12 @@ namespace Barotrauma.Items.Components
             autoPilotLevelEndTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
                 GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.Name);
 
-            steerArea = new GUICustomComponent(new RectTransform(new Point(viewSize), GuiFrame.RectTransform, Anchor.CenterLeft),
+            steerArea = new GUICustomComponent(new RectTransform(Point.Zero, GuiFrame.RectTransform, Anchor.CenterLeft),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
 
             //docking interface ----------------------------------------------------
             dockingContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
-            { MinSize = new Point(150, 0), AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0) }, style: null);
+            { MinSize = new Point(150, 0) }, style: null);
             var paddedDockingContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), dockingContainer.RectTransform, Anchor.Center), style: null);
 
             //TODO: add new texts for these ("Dock" & "Undock")
@@ -364,6 +363,21 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+
+            SetUILayout();
+
+            GameMain.Instance.OnResolutionChanged += SetUILayout;
+            GameMain.Config.OnHUDScaleChanged += SetUILayout;
+        }
+
+        private void SetUILayout()
+        {
+            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
+
+            controlContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.99f), (int)(viewSize * 0.05f));
+            statusContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
+            steerArea.RectTransform.NonScaledSize = new Point(viewSize);
+            dockingContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
         }
 
         private void FindConnectedDockingPort()
@@ -721,9 +735,7 @@ namespace Barotrauma.Items.Components
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
                 if (sourcePort.Item.Submarine != controlledSub) { continue; }
 
-                int sourceDir = sourcePort.IsHorizontal ?
-                    Math.Sign(sourcePort.Item.WorldPosition.X - sourcePort.Item.Submarine.WorldPosition.X) :
-                    Math.Sign(sourcePort.Item.WorldPosition.Y - sourcePort.Item.Submarine.WorldPosition.Y);
+                int sourceDir = sourcePort.GetDir();
 
                 foreach (DockingPort targetPort in DockingPort.List)
                 {
@@ -731,9 +743,7 @@ namespace Barotrauma.Items.Components
                     if (targetPort.Item.Submarine == controlledSub || targetPort.IsHorizontal != sourcePort.IsHorizontal) { continue; }
                     if (Level.Loaded != null && targetPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
-                    int targetDir = targetPort.IsHorizontal ?
-                        Math.Sign(targetPort.Item.WorldPosition.X - targetPort.Item.Submarine.WorldPosition.X) :
-                        Math.Sign(targetPort.Item.WorldPosition.Y - targetPort.Item.Submarine.WorldPosition.Y);
+                    int targetDir = targetPort.GetDir();
 
                     if (sourceDir == targetDir) { continue; }
 

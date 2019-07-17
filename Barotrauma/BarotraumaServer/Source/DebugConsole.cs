@@ -568,10 +568,8 @@ namespace Barotrauma
                 NewMessage(client.Name + " has the following permissions:", Color.White);
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
-                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
-                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                    NewMessage("   - " + attributes[0].Description, Color.White);
+                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) { continue; }
+                    NewMessage("   - " + TextManager.Get("ClientPermission." + permission), Color.White);
                 }
                 if (client.HasPermission(ClientPermissions.ConsoleCommands))
                 {
@@ -1523,7 +1521,11 @@ namespace Barotrauma
                 "showperm",
                 (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (args.Length < 2) return;
+                    if (args.Length < 1)
+                    {
+                        GameMain.Server.SendConsoleMessage("showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", senderClient);
+                        return;
+                    }
 
                     int.TryParse(args[0], out int id);
                     var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
@@ -1542,10 +1544,8 @@ namespace Barotrauma
                     GameMain.Server.SendConsoleMessage(client.Name + " has the following permissions:", senderClient);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
-                        if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
-                        System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                        DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                        GameMain.Server.SendConsoleMessage("   - " + attributes[0].Description, senderClient);
+                        if (permission == ClientPermissions.None || !client.HasPermission(permission)) { continue; }
+                        GameMain.Server.SendConsoleMessage("   - " + TextManager.Get("ClientPermission." + permission), senderClient);
                     }
                     if (client.HasPermission(ClientPermissions.ConsoleCommands))
                     {

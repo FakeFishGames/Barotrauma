@@ -89,6 +89,17 @@ namespace Barotrauma
             sb.AppendLine(exception.StackTrace);
             sb.AppendLine("\n");
 
+            if (exception.InnerException != null)
+            {
+                sb.AppendLine("InnerException: " + exception.InnerException.Message);
+                if (exception.InnerException.TargetSite != null)
+                {
+                    sb.AppendLine("Target site: " + exception.InnerException.TargetSite.ToString());
+                }
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.InnerException.StackTrace);
+            }
+
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
             {

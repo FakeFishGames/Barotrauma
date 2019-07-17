@@ -71,7 +71,6 @@
   <tutorialbutton>Training</tutorialbutton>
   <newgamebutton>New Game</newgamebutton>
   <loadgamebutton>Load Game</loadgamebutton>
-  <joinserverbutton>Join Server</joinserverbutton>
   <hostserverbutton>Host Server</hostserverbutton>
   <subeditorbutton>Submarine Editor</subeditorbutton>
   <charactereditorbutton>Character Editor</charactereditorbutton>
@@ -530,7 +529,6 @@
   <cargospawnnotification>The purchased supplies have been delivered to [roomname].</cargospawnnotification>
 
   <!-- Server list -->
-  <joinserver>Join server</joinserver>
   <serverip>Server IP</serverip>
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
@@ -3214,6 +3212,8 @@
 
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
+
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
   
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
@@ -3237,4 +3237,8 @@
   <yourname>Player name</yourname>
 
   <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
+
+  <joinserver>Server browser</joinserver>
+  <joinserverbutton>Server browser</joinserverbutton>
+
 </infotexts>

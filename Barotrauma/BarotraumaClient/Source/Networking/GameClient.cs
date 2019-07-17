@@ -32,6 +32,8 @@ namespace Barotrauma.Networking
 
         protected GUITickBox cameraFollowsSub;
 
+        private RoundEndCinematic endCinematic;
+
         private ClientPermissions permissions = ClientPermissions.None;
         private List<string> permittedConsoleCommands = new List<string>();
 
@@ -800,7 +802,7 @@ namespace Barotrauma.Networking
                                     GameMain.GameSession.WinningTeam = winningTeam;
                                     GameMain.GameSession.Mission.Completed = true;
                                 }
-                                CoroutineManager.StartCoroutine(EndGame(endMessage));
+                                CoroutineManager.StartCoroutine(EndGame(endMessage), "EndGame");
                                 break;
                             case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
                                 UInt16 saveCount = inc.ReadUInt16();
@@ -1059,6 +1061,12 @@ namespace Barotrauma.Networking
             if (Character != null) Character.Remove();
             HasSpawned = false;
 
+            while (CoroutineManager.IsCoroutineRunning("EndGame"))
+            {
+                if (endCinematic != null) { endCinematic.Stop(); }
+                yield return CoroutineStatus.Running;
+            }
+
             GameMain.LightManager.LightingEnabled = true;
 
             //enable spectate button in case we fail to start the round now
@@ -1199,17 +1207,15 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
             respawnManager = null;
-
-            float endPreviewLength = 10.0f;
+            
             if (Screen.Selected == GameMain.GameScreen)
             {
-                new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-                float secondsLeft = endPreviewLength;
-                do
+                endCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam);
+                while (endCinematic.Running && Screen.Selected == GameMain.GameScreen)
                 {
-                    secondsLeft -= CoroutineManager.UnscaledDeltaTime;
                     yield return CoroutineStatus.Running;
-                } while (secondsLeft > 0.0f && Screen.Selected == GameMain.GameScreen);
+                }
+                endCinematic = null;
             }
 
             Submarine.Unload();
@@ -1829,9 +1835,10 @@ namespace Barotrauma.Networking
             steamAuthTicket?.Cancel();
             steamAuthTicket = null;
 
-            foreach (var fileTransfer in FileReceiver.ActiveTransfers)
+            List<FileReceiver.FileTransferIn> activeTransfers = new List<FileReceiver.FileTransferIn>(FileReceiver.ActiveTransfers);
+            foreach (var fileTransfer in activeTransfers)
             {
-                fileTransfer.Dispose();
+                FileReceiver.StopTransfer(fileTransfer, deleteFile: true);
             }
 
             if (HasPermission(ClientPermissions.ServerLog))
@@ -1842,7 +1849,8 @@ namespace Barotrauma.Networking
             if (GameMain.ServerChildProcess != null)
             {
                 int checks = 0;
-                while (!GameMain.ServerChildProcess.HasExited) {
+                while (!GameMain.ServerChildProcess.HasExited)
+                {
                     if (checks > 10)
                     {
                         GameMain.ServerChildProcess.Kill();

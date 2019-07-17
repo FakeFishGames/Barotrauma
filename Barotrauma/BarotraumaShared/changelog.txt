@@ -39,6 +39,8 @@ Misc bugfixes:
 place it in the level. Caused large submarines sometimes to collide with walls when docked to outposts 
 where the port is offset from the center.
 - Fixed corrupted sub files causing crashes.
+- Fixed item editing HUD not appearing on any other item after one item has been selected in-game 
+(e.g. editing the channel on a wifi component prevented editing other items).
 - Fixed ladders and other resizeable items reverting to their original size if they're resized and 
 the sub is saved and reloaded.
 - Fixed inability to resize gaps in the sub editor after they've been placed.
@@ -57,17 +59,23 @@ to another (often happens in the reactor interface).
 - Ignore keyboard inputs (delete, arrow keys, copy/paste) in the sub editor when a textbox is selected.
 Prevents accidentally deleting items/structures when attempting to delete text from a textbox.
 - Toolboxes can't be put inside other toolboxes or in the doctor's clothes.
-- Fixed: Items bought from the store during a singleplayer campaign session being deducted from the credits 
+- Fixed items bought from the store during a singleplayer campaign session being deducted from the credits 
 when save & quitting from the map.
 - Flares stop emitting particles when inside an inventory.
+- Fixed oxygen not flowing through horizontal gaps between subs (e.g. between Remora and the drone).
 - Decreased the size of the mountain in the RidgeBasic level type to prevent it from blocking the main path.
 - Fixed too small collider sizes on a bunch of crafting materials.
 - Fixed order options ("hold fire"/"fire at will" etc) being displayed in one button instead of
 being split into separate buttons when playing the game in Chinese.
 - Fixed "Text Self_CauseOfDeathDescription.Unknown not found" console error if a character gets killed
 by being inside a respawn shuttle when it despawns.
+- Fixed sonar not scaling properly when resolution is changed mid-round.
+- Fixed fabricators & deconstructors displaying the "insufficient power" warning when power is low 
+(but still high enough for the devices to run).
 
 Networking fixes:
+- Fixed another ID mismatch problem that occasionally caused clients to get kicked out in multiplayer, 
+usually with an error message warning about a missing item.
 - Fixed players always getting range banned when banned by a client.
 - Fixed turrets not being aimed correctly in multiplayer if they're in another sub (e.g. the coilgun in 
 Remora's drone).
@@ -75,6 +83,8 @@ Remora's drone).
 attempt to use the device at the same time and strange timing inconsistencies when deconstructing
 multiple items in succession.
 - Fixed all servers showing "unknown" as the game mode in the server list. 
+- Fixed server not allowing forward slashes in host messages.
+- Fixed repair interface sometimes getting stuck close to 100% in multiplayer.
 
 Character editor fixes and improvements:
 - Nicer layout, made the panels hideable.

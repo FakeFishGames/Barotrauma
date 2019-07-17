@@ -19,6 +19,8 @@ namespace Barotrauma.Items.Components
         private float timeUntilReady;
         private float requiredTime;
 
+        private bool hasPower;
+
         private Character user;
 
         private ItemContainer inputContainer, outputContainer;
@@ -198,8 +200,9 @@ namespace Barotrauma.Items.Components
 
             progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
-            if (voltage < minVoltage) { return; }
-
+            hasPower = voltage >= minVoltage;
+            if (!hasPower) { return; }
+            
             var repairable = item.GetComponent<Repairable>();
             if (repairable != null)
             {
