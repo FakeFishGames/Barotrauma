@@ -66,34 +66,46 @@ namespace Barotrauma
             public bool IsStarted { get; private set; } = false;
 
             public string InfoText { get; private set; } // TODO
-            public string GoalInfos => string.Join("", allGoals.ConvertAll(goal => TextManager.GetWithVariables("traitorobjectivegoalinfoformat", new string[] {
-                "[statustext]",
-                "[linebreak]"
+
+            public virtual string GoalInfoFormatId { get; set; } = "TraitorObjectiveGoalInfoFormat";
+            public string GoalInfos => string.Join("", allGoals.ConvertAll(goal => TextManager.GetWithVariables(GoalInfoFormatId, new string[] {
+                "[statustext]"
             }, new string[] {
-                goal.StatusText,
-                "\n"
+                goal.StatusText
             })));
 
-            public virtual string GetStartMessageText()
-            {
-                return TextManager.GetWithVariable("TraitorObjectiveStartMessage", "[traitorgoalinfos]", GoalInfos);
-            }
+            public virtual string StartMessageTextId { get; set; } = "TraitorObjectiveStartMessage";
+            public virtual IEnumerable<string> StartMessageKeys => new string[] { "[traitorgoalinfos]" };
+            public virtual IEnumerable<string> StartMessageValues => new string[] { GoalInfos };
 
-            public virtual string GetStartMessageTextServer()
-            {
-                return TextManager.GetWithVariables("TraitorObjectiveStartMessageServer", new string[] { "[traitorname] [traitorgoalinfos]" }, new string[] { Traitor.Character.Name, GoalInfos });
-            }
+            public virtual string StartMessageText => TextManager.GetWithVariables(StartMessageTextId, StartMessageKeys.ToArray(), StartMessageValues.ToArray());
 
-            public virtual string GetEndMessageText()
+            public virtual string StartMessageServerTextId { get; set; } = "TraitorObjectiveStartMessageServer";
+            public virtual IEnumerable<string> StartMessageServerKeys => StartMessageKeys.Concat(new string[] { "[traitorname]" });
+            public virtual IEnumerable<string> StartMessageServerValues => StartMessageValues.Concat(new string[] { Traitor?.Character?.Name ?? "(unknown)" });
+
+            public virtual string StartMessageServerText => TextManager.GetWithVariables(StartMessageServerTextId, StartMessageServerKeys.ToArray(), StartMessageServerValues.ToArray());
+
+            public virtual string EndMessageSuccessTextId { get; set; } = "TraitorObjectiveSuccess";
+            public virtual string EndMessageSuccessDeadTextId { get; set; } = "TraitorObjectiveSuccessDead";
+            public virtual string EndMessageSuccessDetainedTextId { get; set; } = "TraitorObjectiveSuccessDetained";
+            public virtual string EndMessageFailureTextId { get; set; } = "TraitorObjectiveFailure";
+            public virtual string EndMessageFailureDeadTextId { get; set; } = "TraitorObjectiveFailureDead";
+            public virtual string EndMessageFailureDetainedTextId { get; set; } = "TraitorObjectiveFailureDetained";
+
+            public virtual IEnumerable<string> EndMessageKeys => new string[] { "[traitorname]", "[traitorgoalinfos]" };
+            public virtual IEnumerable<string> EndMessageValues => new string[] { Traitor?.Character?.Name ?? "(unknown)", GoalInfos };
+            public virtual string EndMessageText
             {
-                var traitorIsDead = Traitor.Character.IsDead;
-                var traitorIsDetained = Traitor.Character.LockHands;
-                var messageTag = string.Format("TraitorObjectiveEndMessage{0}{1}", IsCompleted ? "Success" : "Failure", traitorIsDead ? "Dead" : traitorIsDetained ? "Detained" : "");
-                return TextManager.ReplaceGenderPronouns(
-                    TextManager.GetWithVariables(messageTag,
-                        new string[2] { "[traitorname]", "[traitorgoalinfos]" },
-                        new string[2] { Traitor.Character.Name, GoalInfos }
-                    ), Traitor.Character.Info.Gender) + "\n";
+                get
+                {
+                    var traitorIsDead = Traitor.Character.IsDead;
+                    var traitorIsDetained = Traitor.Character.LockHands;
+                    var messageId = IsCompleted
+                        ? (traitorIsDead ? EndMessageSuccessDeadTextId : traitorIsDetained ? EndMessageSuccessDetainedTextId : EndMessageSuccessTextId)
+                        : (traitorIsDead ? EndMessageFailureDeadTextId : traitorIsDetained ? EndMessageFailureDetainedTextId : EndMessageFailureTextId);
+                    return TextManager.ReplaceGenderPronouns(TextManager.GetWithVariables(messageId, EndMessageKeys.ToArray(), EndMessageValues.ToArray()), Traitor.Character.Info.Gender);
+                }
             }
 
             public void Start(GameServer server, Traitor traitor)
@@ -105,13 +117,13 @@ namespace Barotrauma
                 }
                 IsStarted = true;
                 Client traitorClient = server.ConnectedClients.Find(c => c.Character == traitor.Character);
-                GameMain.Server.SendDirectChatMessage(GetStartMessageText(), traitorClient);
+                GameMain.Server.SendDirectChatMessage(StartMessageText, traitorClient);
             }
 
             public void End(GameServer server)
             {
                 Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
-                GameMain.Server.SendDirectChatMessage(GetEndMessageText(), traitorClient);
+                GameMain.Server.SendDirectChatMessage(EndMessageText, traitorClient);
             }
 
             public void Update(float deltaTime)
@@ -365,6 +377,10 @@ namespace Barotrauma
             }
         }
 
+        public class GoalSabotageSpecificItem : Goal
+        {
+        }
+
         public class GoalDestroyItemsWithTag : Goal
         {
             private readonly string tag;
@@ -372,8 +388,8 @@ namespace Barotrauma
             private readonly bool matchTag;
             private readonly bool matchInventory;
 
-            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag });
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]", "[tag]" });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:f}", DestroyPercent * 100.0f), tag });
 
             private readonly float destroyPercent;
             protected float DestroyPercent => destroyPercent;
@@ -381,8 +397,8 @@ namespace Barotrauma
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
-            int totalCount = 0;
-            int targetCount = 0;
+            private int totalCount = 0;
+            private int targetCount = 0;
 
             protected int CountMatchingItems(bool includeDestroyed)
             {
@@ -426,6 +442,7 @@ namespace Barotrauma
             }
 
             public GoalDestroyItemsWithTag(string tag, float destroyPercent, bool matchTag, bool matchIdentifier, bool matchInventory) : base() {
+                InfoTextId = "TraitorGoalDestroyItems";
                 this.tag = tag;
                 this.destroyPercent = destroyPercent;
                 this.matchTag = matchTag;
@@ -438,12 +455,14 @@ namespace Barotrauma
         {
             private readonly float minimumFloodingAmount;
 
-            public override string InfoText => TextManager.GetFormatted("TraitorGoalFloodPercentOfSub", false, 100.0f * minimumFloodingAmount);
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]" });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:2f}", minimumFloodingAmount * 100.0f) });
 
             public override bool IsCompleted => GameMain.GameSession.EventManager.CurrentFloodingAmount >= minimumFloodingAmount;
 
             public GoalFloodPercentOfSub(float minimumFloodingAmount) : base()
             {
+                InfoTextId = "TraitorGoalFloodPercentOfSub";
                 this.minimumFloodingAmount = minimumFloodingAmount;
             }
         }
@@ -492,7 +511,7 @@ namespace Barotrauma
             {
                 var ownerMsg = ChatMessage.Create(
                     null,//TextManager.Get("NewTraitor"),
-                    CurrentObjective.GetStartMessageTextServer(),
+                    CurrentObjective.StartMessageServerText,
                     ChatMessageType.MessageBox,
                     null
                 );
@@ -598,7 +617,7 @@ namespace Barotrauma
 
             foreach (var traitor in Mission.Traitors)
             {
-                endMessage += traitor.Value.CurrentObjective?.GetEndMessageText() ?? "";
+                endMessage += traitor.Value.CurrentObjective?.EndMessageText ?? "";
             }
 
             return endMessage;

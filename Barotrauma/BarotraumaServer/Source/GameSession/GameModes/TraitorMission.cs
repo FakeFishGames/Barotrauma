@@ -77,7 +77,7 @@ namespace Barotrauma {
                     case "destroyitems":
                         goal = new Traitor.GoalDestroyItemsWithTag(
                             Config.GetAttributeString("tag", ""),
-                            Config.GetAttributeFloat("percentage", 100.0f),
+                            Config.GetAttributeFloat("percentage", 100.0f) / 100.0f,
                             Config.GetAttributeBool("matchIdentifier", true),
                             Config.GetAttributeBool("matchTag", true),
                             Config.GetAttributeBool("matchInventory", false));
@@ -87,7 +87,7 @@ namespace Barotrauma {
                         // TODO(xxX)
                         break;
                     case "floodsub":
-                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
+                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100);
                         break;
                 }
                 if (goal == null)
@@ -141,18 +141,54 @@ namespace Barotrauma {
 
         public class Objective
         {
-            public string InfoText { get; private set; }
-            public readonly List<Goal> Goals;
+            public string InfoText { get; internal set; }
+            public string StartMessageTextId { get; internal set; }
+            public string StartMessageServerTextId { get; internal set; }
+            public string EndMessageSuccessTextId { get; internal set; }
+            public string EndMessageSuccessDeadTextId { get; internal set; }
+            public string EndMessageSuccessDetainedTextId { get; internal set; }
+            public string EndMessageFailureTextId { get; internal set; }
+            public string EndMessageFailureDeadTextId { get; internal set; }
+            public string EndMessageFailureDetainedTextId { get; internal set; }
+
+            public readonly List<Goal> Goals = new List<Goal>();
 
             public Traitor.Objective Instantiate(GameServer server)
             {
-                return new Traitor.Objective(InfoText, Goals.ConvertAll(goal => goal.Instantiate(server)).ToArray());
-            }
-
-            public Objective(string infoText, List<Goal> goals)
-            {
-                InfoText = infoText;
-                Goals = goals;
+                var result = new Traitor.Objective(InfoText, Goals.ConvertAll(goal => goal.Instantiate(server)).ToArray());
+                if (StartMessageTextId != null)
+                {
+                    result.StartMessageTextId = StartMessageTextId;
+                }
+                if (StartMessageServerTextId != null)
+                {
+                    result.StartMessageServerTextId = StartMessageServerTextId;
+                }
+                if (EndMessageSuccessTextId != null)
+                {
+                    result.EndMessageSuccessTextId = EndMessageSuccessTextId;
+                }
+                if (EndMessageSuccessDeadTextId != null)
+                {
+                    result.EndMessageSuccessDeadTextId = EndMessageSuccessDeadTextId;
+                }
+                if (EndMessageSuccessDetainedTextId != null)
+                {
+                    result.EndMessageSuccessDetainedTextId = EndMessageSuccessDetainedTextId;
+                }
+                if (EndMessageFailureTextId != null)
+                {
+                    result.EndMessageFailureTextId = EndMessageFailureTextId;
+                }
+                if (EndMessageFailureDeadTextId != null)
+                {
+                    result.EndMessageFailureDeadTextId = EndMessageFailureDeadTextId;
+                }
+                if (EndMessageFailureDetainedTextId != null)
+                {
+                    result.EndMessageFailureDetainedTextId = EndMessageFailureDetainedTextId;
+                }
+                return result;
             }
         }
 
@@ -175,27 +211,50 @@ namespace Barotrauma {
 
         protected Objective LoadObjective(XElement objectiveRoot)
         {
-            var goals = new List<Goal>();
-            string infoText = null;
+            var result = new Objective();
             foreach (var element in objectiveRoot.Elements())
             {
                 switch(element.Name.ToString().ToLowerInvariant())
                 {
                     case "infotext":
-                        infoText = element.GetAttributeString("id", "");
+                        result.InfoText = element.GetAttributeString("id", null);
+                        break;
+                    case "startmessage":
+                        result.StartMessageTextId = element.GetAttributeString("id", null);
+                        break;
+                    case "startmessageserver":
+                        result.StartMessageServerTextId = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagesuccess":
+                        result.EndMessageSuccessTextId = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagesuccessdead":
+                        result.EndMessageSuccessDeadTextId = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagesuccessdetained":
+                        result.EndMessageSuccessDetainedTextId = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagefailure":
+                        result.EndMessageFailureTextId = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagefailuredead":
+                        result.EndMessageFailureDeadTextId = element.GetAttributeString("id", null);
+                        break;
+                    case "endmessagefailuredetained":
+                        result.EndMessageFailureDetainedTextId = element.GetAttributeString("id", null);
                         break;
                     case "goal":
                         {
                             var goal = LoadGoal(element);
                             if (goal != null)
                             {
-                                goals.Add(goal);
+                                result.Goals.Add(goal);
                             }
                         }
                         break;
                 }
             }
-            return new Objective(infoText, goals);
+            return result;
         }
 
         public TraitorMissionPrefab(XElement missionRoot)
