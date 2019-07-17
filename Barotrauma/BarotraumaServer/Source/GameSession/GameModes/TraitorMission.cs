@@ -75,7 +75,12 @@ namespace Barotrauma {
                         }
                         break;
                     case "destroyitems":
-                        goal = new Traitor.GoalDestroyItemsWithTag(Config.GetAttributeString("tag", ""), Config.GetAttributeFloat("percentage", 100.0f));
+                        goal = new Traitor.GoalDestroyItemsWithTag(
+                            Config.GetAttributeString("tag", ""),
+                            Config.GetAttributeFloat("percentage", 100.0f),
+                            Config.GetAttributeBool("matchIdentifier", true),
+                            Config.GetAttributeBool("matchTag", true),
+                            Config.GetAttributeBool("matchInventory", false));
                         break;
                     case "sabotage":
                         // return new Traitor.GoalItemConditionLessThan();

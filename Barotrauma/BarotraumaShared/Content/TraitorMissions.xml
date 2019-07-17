@@ -6,27 +6,16 @@
    <FailEndInfoText id=""/>
    <Objective>
      <InfoText id=""/>
-     <Goal type="killtarget">
+     <Goal type="killtarget" job="engineer">
        <InfoText id="traitorgoalkilltargetinfo" />
      </Goal>
-     <Goal type="destroyitems">
+     <Goal type="destroyitems" tag="oxygensource" percentage="50">
        <Modifier type="duration" duration="30" cumulative="true" />
      </Goal>
-     <!--
-     <Goal type="sabotage">
-
-       <Mod type="time" value=""
-     </Goal>
-     <Goal type="destroyitems">
-
-     </Goal>
-     -->
    </Objective>
-   <!--
    <Objective>
-     <Goal type="floodsub">
+     <Goal type="floodsub" percentage="50">
      </Goal>
    </Objective>
-   -->
  </TraitorMission>
 </TraitorMissions>

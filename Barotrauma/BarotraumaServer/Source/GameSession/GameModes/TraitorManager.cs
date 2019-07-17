@@ -311,8 +311,8 @@ namespace Barotrauma
             public override IEnumerable<string> StatusTextKeys => goal.StatusTextKeys;
             public override IEnumerable<string> StatusTextValues => goal.StatusTextValues;
 
-            public override IEnumerable<string> InfoTextKeys => goal.InfoTextKeys;//.Concat(new string[] { "[duration]" });
-            public override IEnumerable<string> InfoTextValues => goal.InfoTextValues;//.Concat(new string[] { string.Format("{0:f}", requiredDuration) });
+            public override IEnumerable<string> InfoTextKeys => goal.InfoTextKeys.Concat(new string[] { "[duration]" });
+            public override IEnumerable<string> InfoTextValues => goal.InfoTextValues.Concat(new string[] { string.Format("{0:f}", requiredDuration) });
 
             public override IEnumerable<string> CompletedTextKeys => goal.CompletedTextKeys;
             public override IEnumerable<string> CompletedTextValues => goal.CompletedTextValues;
@@ -368,6 +368,12 @@ namespace Barotrauma
         public class GoalDestroyItemsWithTag : Goal
         {
             private readonly string tag;
+            private readonly bool matchIdentifier;
+            private readonly bool matchTag;
+            private readonly bool matchInventory;
+
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]" });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag });
 
             private readonly float destroyPercent;
             protected float DestroyPercent => destroyPercent;
@@ -378,72 +384,53 @@ namespace Barotrauma
             int totalCount = 0;
             int targetCount = 0;
 
-            public override void Update(float deltaTime)
+            protected int CountMatchingItems(bool includeDestroyed)
             {
-                base.Update(deltaTime);
-                if (isCompleted)
-                {
-                    return;
-                }
-                int total = 0;
-                int destroyed = 0;
-                foreach (var item in Item.ItemList) {
-                    // TODO(xxx): Verify the conditions checked for here..
-                    if (item == null || item.Prefab == null)
-                    {
-                        continue;
-                    }
-                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID || item.ParentInventory?.Owner is Character)
-                    {
-                        continue;
-                    }
-                    if (item.Prefab.Identifier != tag && !item.HasTag(tag))
-                    {
-                        continue;
-                    }
-                    ++total;
-                    if (item.CurrentHull == null || item.Condition <= 0.0f || (!(Traitor.Character.Submarine?.IsEntityFoundOnThisSub(item, true) ?? true))) {
-                        ++destroyed;
-                    }
-                }
-                isCompleted |= total - destroyed >= targetCount;
-            }
-
-            public override void Start(GameServer server, Traitor traitor)
-            {
-                base.Start(server, traitor);
-                totalCount = 0;
+                int result = 0;
                 foreach (var item in Item.ItemList)
                 {
                     if (item == null || item.Prefab == null)
                     {
                         continue;
                     }
-                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID || item.ParentInventory?.Owner is Character)
+                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
                     {
                         continue;
                     }
-                    if (item.Prefab.Identifier != tag && !item.HasTag(tag))
+                    if (!matchInventory && item.ParentInventory?.Owner is Character)
                     {
                         continue;
                     }
-                    ++totalCount;
+                    if (!includeDestroyed && (item.Condition <= 0.0f || /* item.CurrentHull == null || */!Traitor.Character.Submarine.IsEntityFoundOnThisSub(item, true)))
+                    {
+                        continue;
+                    }
+                    if ((matchIdentifier && item.prefab.Identifier == tag) || (matchTag && item.HasTag(tag))) {
+                        ++result;
+                    }
                 }
+                return result;
+            }
+
+            public override void Update(float deltaTime)
+            {
+                base.Update(deltaTime);
+                isCompleted = CountMatchingItems(false) <= targetCount;
+            }
+
+            public override void Start(GameServer server, Traitor traitor)
+            {
+                base.Start(server, traitor);
+                totalCount = CountMatchingItems(true);
                 targetCount = (int)(destroyPercent * totalCount);
             }
 
-            public GoalDestroyItemsWithTag(string tag, float destroyPercent) : base() {
+            public GoalDestroyItemsWithTag(string tag, float destroyPercent, bool matchTag, bool matchIdentifier, bool matchInventory) : base() {
                 this.tag = tag;
                 this.destroyPercent = destroyPercent;
-            }
-        }
-
-        public class GoalDestroyOxygenTanks : GoalDestroyItemsWithTag
-        {
-            public override string InfoText => TextManager.GetFormatted("TraitorGoalDestroyAllOxygenTanks", false, 100.0f * DestroyPercent);
-
-            public GoalDestroyOxygenTanks() : base("oxygensource", 0.5f)
-            {
+                this.matchTag = matchTag;
+                this.matchIdentifier = matchIdentifier;
+                this.matchInventory = matchInventory;
             }
         }
 
