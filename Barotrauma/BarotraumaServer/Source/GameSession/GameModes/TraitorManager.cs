@@ -375,6 +375,9 @@ namespace Barotrauma
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
+            int totalCount = 0;
+            int targetCount = 0;
+
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
@@ -403,7 +406,30 @@ namespace Barotrauma
                         ++destroyed;
                     }
                 }
-                isCompleted |= destroyed >= (int)(total * destroyPercent);
+                isCompleted |= total - destroyed >= targetCount;
+            }
+
+            public override void Start(GameServer server, Traitor traitor)
+            {
+                base.Start(server, traitor);
+                totalCount = 0;
+                foreach (var item in Item.ItemList)
+                {
+                    if (item == null || item.Prefab == null)
+                    {
+                        continue;
+                    }
+                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID || item.ParentInventory?.Owner is Character)
+                    {
+                        continue;
+                    }
+                    if (item.Prefab.Identifier != tag && !item.HasTag(tag))
+                    {
+                        continue;
+                    }
+                    ++totalCount;
+                }
+                targetCount = (int)(destroyPercent * totalCount);
             }
 
             public GoalDestroyItemsWithTag(string tag, float destroyPercent) : base() {
