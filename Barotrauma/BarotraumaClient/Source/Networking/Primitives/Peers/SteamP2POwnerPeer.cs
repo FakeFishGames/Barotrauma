@@ -6,6 +6,7 @@ using Lidgren.Network;
 using Facepunch.Steamworks;
 using Barotrauma.Steam;
 using System.Linq;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -71,7 +72,6 @@ namespace Barotrauma.Networking
 
         private bool OnIncomingConnection(UInt64 steamId)
         {
-            DebugConsole.NewMessage("incoming connection from: " + steamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
             if (!remotePeers.Any(p => p.SteamID == steamId))
             {
                 remotePeers.Add(new RemotePeer(steamId));
@@ -82,13 +82,10 @@ namespace Barotrauma.Networking
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
         {
-            DebugConsole.NewMessage("got data from: "+steamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
             if (!remotePeers.Any(p => p.SteamID == steamId))
             {
-                DebugConsole.ThrowError(">:( " + steamId.ToString() + " " + remotePeers[0].SteamID.ToString());
                 return;
             }
-            DebugConsole.NewMessage("relaying");
 
             NetOutgoingMessage outMsg = netClient.CreateMessage();
             outMsg.Write(steamId);
@@ -168,9 +165,7 @@ namespace Barotrauma.Networking
                 }
 
                 RemotePeer peer = remotePeers.Find(p => p.SteamID == recipientSteamId);
-
-                DebugConsole.NewMessage((peer?.ToString() ?? "null") + " " + recipientSteamId.ToString());
-
+                
                 if (peer == null) { return; }
 
                 if (isDisconnectMessage)
@@ -198,7 +193,6 @@ namespace Barotrauma.Networking
                 Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
 
                 bool successSend = Steam.SteamManager.Instance.Networking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, sendType);
-                DebugConsole.NewMessage(successSend.ToString()+" "+sendType+" sending p2p packet to " + recipientSteamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
             }
             else
             {
@@ -214,7 +208,7 @@ namespace Barotrauma.Networking
                 }
                 if (isHeartbeatMessage)
                 {
-                    return; //TODO: implement timeout?
+                    return; //timeout is handled by Lidgren, ignore this message
                 }
                 if (isConnectionInitializationStep)
                 {
@@ -292,6 +286,18 @@ namespace Barotrauma.Networking
         public override void Close(string msg = null)
         {
             if (netClient == null) { return; }
+
+            for (int i=remotePeers.Count-1;i>=0;i--)
+            {
+                DisconnectPeer(remotePeers[i], msg ?? DisconnectReason.ServerShutdown.ToString());
+            }
+
+            Thread.Sleep(100);
+
+            for (int i = remotePeers.Count - 1; i >= 0; i--)
+            {
+                ClosePeerSession(remotePeers[i]);
+            }
 
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             OnDisconnect?.Invoke(msg);

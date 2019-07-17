@@ -32,6 +32,7 @@ namespace Barotrauma
 #endif
                 game = new GameMain(args);
                 inputThread = new Thread(new ThreadStart(DebugConsole.UpdateCommandLine));
+                inputThread.IsBackground = true;
                 inputThread.Start();
                 game.Run();
                 inputThread.Abort(); inputThread.Join();

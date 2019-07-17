@@ -2145,7 +2145,7 @@ namespace Barotrauma.Networking
                 targetmsg += $"/\n/ServerMessage.Reason/: /{reason}";
             }
 
-            if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
+            if (client.SteamID != 0) { SteamManager.StopAuthSession(client.SteamID); }
 
             var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
             if (previousPlayer == null)
@@ -2165,7 +2165,7 @@ namespace Barotrauma.Networking
             connectedClients.Remove(client);
 
             UpdateVoteStatus();
-
+            
             SendChatMessage(msg, ChatMessageType.Server);
 
             UpdateCrewFrame();

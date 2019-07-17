@@ -1477,7 +1477,7 @@ namespace Barotrauma
         public static void NewMessage(string msg, Color color, bool isCommand = false)
         {
             if (string.IsNullOrEmpty((msg))) return;
-
+            
             var newMsg = new ColoredText(msg, color, isCommand);
             lock (queuedMessages)
             {

@@ -43,13 +43,13 @@ namespace Barotrauma.Networking
                 SteamID = steamId;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime;
-                TimeOut = Timing.TotalTime + 20.0;
+                TimeOut = 20.0;
                 AuthSessionStarted = false;
             }
 
             public void Heartbeat()
             {
-                TimeOut = Timing.TotalTime + 5.0;
+                TimeOut = 5.0;
             }
         }
 
@@ -105,12 +105,12 @@ namespace Barotrauma.Networking
 
             for (int i = pendingClients.Count - 1; i >= 0; i--)
             {
-                RemovePendingClient(pendingClients[i], DisconnectReason.ServerShutdown.ToString());
+                RemovePendingClient(pendingClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
             }
 
             for (int i = connectedClients.Count - 1; i >= 0; i--)
             {
-                Disconnect(connectedClients[i], DisconnectReason.ServerShutdown.ToString());
+                Disconnect(connectedClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
             }
 
             netServer.Shutdown(msg ?? DisconnectReason.ServerShutdown.ToString());
@@ -169,7 +169,7 @@ namespace Barotrauma.Networking
             
             if (netConnection != null && inc.SenderConnection != netConnection)
             {
-                inc.SenderConnection.Deny("Owner is already connected");
+                inc.SenderConnection.Deny(DisconnectReason.SessionTaken.ToString()+"/ Owner is already connected");
                 return;
             }
 
@@ -181,7 +181,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            inc.SenderConnection.Deny("Incoming connection is not loopback");
+            inc.SenderConnection.Deny(DisconnectReason.Kicked.ToString()+"/ Incoming connection is not loopback");
         }
 
         private void HandleDataMessage(NetIncomingMessage inc)
@@ -207,8 +207,6 @@ namespace Barotrauma.Networking
 
             if (senderSteamId != OwnerSteamID) //sender is remote, handle disconnects and heartbeats
             {
-                DebugConsole.NewMessage(senderSteamId.ToString(), Microsoft.Xna.Framework.Color.Yellow);
-
                 PendingClient pendingClient = pendingClients.Find(c => c.SteamID == senderSteamId);
                 SteamP2PConnection connectedClient = connectedClients.Find(c => c.SteamID == senderSteamId);
                 
@@ -219,11 +217,11 @@ namespace Barotrauma.Networking
                 {
                     if (pendingClient != null)
                     {
-                        RemovePendingClient(pendingClient, "Banned");
+                        RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ Banned");
                     }
                     else if (connectedClient != null)
                     {
-                        Disconnect(connectedClient, "Banned");
+                        Disconnect(connectedClient, DisconnectReason.Banned.ToString() + "/ Banned");
                     }
                     return;
                 }
@@ -231,11 +229,13 @@ namespace Barotrauma.Networking
                 {
                     if (pendingClient != null)
                     {
-                        RemovePendingClient(pendingClient, "Disconnected");
+                        string disconnectMsg = $"ServerMessage.HasDisconnected~[client]={pendingClient.Name}";
+                        RemovePendingClient(pendingClient, disconnectMsg);
                     }
                     else if (connectedClient != null)
                     {
-                        Disconnect(connectedClient, "Disconnected");
+                        string disconnectMsg = $"ServerMessage.HasDisconnected~[client]={connectedClient.Name}";
+                        Disconnect(connectedClient, disconnectMsg, false);
                     }
                     return;
                 }
@@ -321,8 +321,7 @@ namespace Barotrauma.Networking
                     netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
                     break;
                 case NetConnectionStatus.Disconnected:
-                    string disconnectMsg = inc.ReadString();
-                    throw new NotImplementedException();
+                    Close(DisconnectReason.ServerShutdown.ToString() + "/ Owner disconnected");
                     break;
             }
         }
@@ -331,7 +330,7 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            pendingClient.TimeOut = Timing.TotalTime + 20.0;
+            pendingClient.TimeOut = 20.0;
 
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
 
@@ -350,7 +349,7 @@ namespace Barotrauma.Networking
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
-                        RemovePendingClient(pendingClient, "The name \"" + name + "\" is invalid");
+                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName.ToString() + "/ The name \"" + name + "\" is invalid");
                         return;
                     }
 
@@ -413,7 +412,7 @@ namespace Barotrauma.Networking
                         ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
                         if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
                         {
-                            RemovePendingClient(pendingClient, "Steam auth session failed to start: " + authSessionStartState.ToString());
+                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ Steam auth session failed to start: " + authSessionStartState.ToString());
                             return;
                         }
                         pendingClient.Name = name;
@@ -442,7 +441,7 @@ namespace Barotrauma.Networking
                             string banMsg = "Failed to enter correct password too many times";
                             serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.SteamID, banMsg, null);
 
-                            RemovePendingClient(pendingClient, banMsg);
+                            RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ "+banMsg);
                             return;
                         }
                     }
@@ -473,7 +472,7 @@ namespace Barotrauma.Networking
 
             if (serverSettings.BanList.IsBanned(pendingClient.SteamID))
             {
-                RemovePendingClient(pendingClient, "Initialization interrupted by ban");
+                RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ Initialization interrupted by ban");
                 return;
             }
 
@@ -483,7 +482,7 @@ namespace Barotrauma.Networking
             {
                 RemovePendingClient(pendingClient, DisconnectReason.ServerFull.ToString());
             }
-
+            
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
                 SteamP2PConnection newConnection = new SteamP2PConnection(pendingClient.Name, pendingClient.SteamID);
@@ -492,16 +491,15 @@ namespace Barotrauma.Networking
                 OnInitializationComplete?.Invoke(newConnection);
             }
 
-            if (Timing.TotalTime > pendingClient.TimeOut)
+            pendingClient.TimeOut -= Timing.Step;
+            if (pendingClient.TimeOut < 0.0)
             {
-                RemovePendingClient(pendingClient, "Timed out");
+                RemovePendingClient(pendingClient,  Lidgren.Network.NetConnection.NoResponseMessage);
             }
 
             if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
             pendingClient.UpdateTime = Timing.TotalTime + 1.0;
-
-            DebugConsole.NewMessage("updating pendingclient " + pendingClient.SteamID.ToString(), Microsoft.Xna.Framework.Color.Orange);
-
+            
             NetOutgoingMessage outMsg = netServer.CreateMessage();
             outMsg.Write(pendingClient.SteamID);
             outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep |
@@ -535,6 +533,8 @@ namespace Barotrauma.Networking
 
             if (pendingClients.Contains(pendingClient))
             {
+                SendDisconnectMessage(pendingClient.SteamID, reason);
+
                 pendingClients.Remove(pendingClient);
 
                 if (pendingClient.AuthSessionStarted)
@@ -543,8 +543,6 @@ namespace Barotrauma.Networking
                     pendingClient.SteamID = 0;
                     pendingClient.AuthSessionStarted = false;
                 }
-
-                throw new NotImplementedException("Implement pendingclient disconnect"); //pendingClient.Connection.Disconnect(reason);
             }
         }
 
@@ -569,7 +567,7 @@ namespace Barotrauma.Networking
                     SteamP2PConnection connection = connectedClients.Find(c => c.SteamID == steamID);
                     if (connection != null)
                     {
-                        Disconnect(connection, "Steam authentication status changed: " + status.ToString());
+                        Disconnect(connection, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam authentication status changed: " + status.ToString());
                     }
                 }
                 return;
@@ -577,7 +575,7 @@ namespace Barotrauma.Networking
 
             if (serverSettings.BanList.IsBanned(steamID))
             {
-                RemovePendingClient(pendingClient, "SteamID banned");
+                RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ SteamID banned");
                 return;
             }
 
@@ -588,7 +586,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                RemovePendingClient(pendingClient, "Steam authentication failed: " + status.ToString());
+                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ Steam authentication failed: " + status.ToString());
                 return;
             }
         }
@@ -630,18 +628,36 @@ namespace Barotrauma.Networking
             netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
         }
 
-        public override void Disconnect(NetworkConnection conn, string msg = null)
+        private void SendDisconnectMessage(UInt64 steamId, string msg)
+        {
+            if (netServer == null) { return; }
+            if (string.IsNullOrWhiteSpace(msg)) { return; }
+
+            NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
+            lidgrenMsg.Write(steamId);
+            lidgrenMsg.Write((byte)(PacketHeader.IsDisconnectMessage | PacketHeader.IsServerMessage));
+            lidgrenMsg.Write(msg);
+
+            netServer.SendMessage(lidgrenMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void Disconnect(NetworkConnection conn, string msg, bool sendDisconnectMessage)
         {
             if (netServer == null) { return; }
 
             if (!(conn is SteamP2PConnection steamp2pConn)) { return; }
             if (connectedClients.Contains(steamp2pConn))
             {
+                if (sendDisconnectMessage) SendDisconnectMessage(steamp2pConn.SteamID, msg);
                 connectedClients.Remove(steamp2pConn);
-                throw new NotImplementedException("Implement connectedclient disconnect");
                 OnDisconnect?.Invoke(conn, msg);
                 Steam.SteamManager.StopAuthSession(conn.SteamID);
             }
+        }
+
+        public override void Disconnect(NetworkConnection conn, string msg = null)
+        {
+            Disconnect(conn, msg, true);
         }
     }
 }

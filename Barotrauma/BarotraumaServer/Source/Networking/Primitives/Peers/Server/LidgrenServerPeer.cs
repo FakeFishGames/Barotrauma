@@ -36,7 +36,7 @@ namespace Barotrauma.Networking
                 SteamID = null;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime;
-                TimeOut = Timing.TotalTime + 20.0;
+                TimeOut = 20.0;
                 AuthSessionStarted = false;
             }
         }
@@ -100,12 +100,12 @@ namespace Barotrauma.Networking
 
             for (int i=pendingClients.Count-1;i>=0;i--)
             {
-                RemovePendingClient(pendingClients[i], DisconnectReason.ServerShutdown.ToString());
+                RemovePendingClient(pendingClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
             }
 
             for (int i=connectedClients.Count-1;i>=0;i--)
             {
-                Disconnect(connectedClients[i], DisconnectReason.ServerShutdown.ToString());
+                Disconnect(connectedClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
             }
 
             netServer.Shutdown(msg ?? DisconnectReason.ServerShutdown.ToString());
@@ -195,7 +195,7 @@ namespace Barotrauma.Networking
             {
                 //IP banned: deny immediately
                 //TODO: use TextManager
-                inc.SenderConnection.Deny("IP banned");
+                inc.SenderConnection.Deny(DisconnectReason.Banned.ToString()+"/ IP banned");
                 return;
             }
 
@@ -205,8 +205,6 @@ namespace Barotrauma.Networking
             {
                 pendingClient = new PendingClient(inc.SenderConnection);
                 pendingClients.Add(pendingClient);
-
-                DebugConsole.NewMessage("Approved");
             }
 
             inc.SenderConnection.Approve();
@@ -233,19 +231,19 @@ namespace Barotrauma.Networking
                 {
                     if (pendingClient != null)
                     {
-                        RemovePendingClient(pendingClient, "Received data message from unauthenticated client");
+                        RemovePendingClient(pendingClient, DisconnectReason.AuthenticationRequired.ToString()+"/ Received data message from unauthenticated client");
                     }
                     else if (inc.SenderConnection.Status != NetConnectionStatus.Disconnected &&
                              inc.SenderConnection.Status != NetConnectionStatus.Disconnecting)
                     {
-                        inc.SenderConnection.Disconnect("Received data message from unauthenticated client");
+                        inc.SenderConnection.Disconnect(DisconnectReason.AuthenticationRequired.ToString() + "/ Received data message from unauthenticated client");
                     }
                     return;
                 }
                 if (pendingClient != null) { pendingClients.Remove(pendingClient); }
                 if (serverSettings.BanList.IsBanned(conn.IPEndPoint.Address, conn.SteamID))
                 {
-                    Disconnect(conn, "Received data message from banned client");
+                    Disconnect(conn, DisconnectReason.Banned.ToString()+"/ Received data message from banned client");
                     return;
                 }
                 UInt16 length = inc.ReadUInt16();
@@ -264,10 +262,11 @@ namespace Barotrauma.Networking
             switch (inc.SenderConnection.Status)
             {
                 case NetConnectionStatus.Disconnected:
-                    string disconnectMsg = inc.ReadString();
+                    string disconnectMsg;
                     LidgrenConnection conn = connectedClients.Find(c => c.NetConnection == inc.SenderConnection);
                     if (conn != null)
                     {
+                        disconnectMsg = $"ServerMessage.HasDisconnected~[client]={conn.Name}";
                         Disconnect(conn, disconnectMsg);
                     }
                     else
@@ -275,6 +274,7 @@ namespace Barotrauma.Networking
                         PendingClient pendingClient = pendingClients.Find(c => c.Connection == inc.SenderConnection);
                         if (pendingClient != null)
                         {
+                            disconnectMsg = $"ServerMessage.HasDisconnected~[client]={pendingClient.Name}";
                             RemovePendingClient(pendingClient, disconnectMsg);
                         }
                     }
@@ -286,7 +286,7 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            pendingClient.TimeOut = Timing.TotalTime + 20.0;
+            pendingClient.TimeOut = 20.0;
 
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
 
@@ -304,7 +304,7 @@ namespace Barotrauma.Networking
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
-                        RemovePendingClient(pendingClient, "The name \"" +name+"\" is invalid");
+                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName.ToString() + "/ The name \"" +name+"\" is invalid");
                         return;
                     }
 
@@ -367,7 +367,7 @@ namespace Barotrauma.Networking
                         ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
                         if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
                         {
-                            RemovePendingClient(pendingClient, "Steam auth session failed to start: " +authSessionStartState.ToString());
+                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ Steam auth session failed to start: " +authSessionStartState.ToString());
                             return;
                         }
                         pendingClient.SteamID = steamId;
@@ -378,7 +378,7 @@ namespace Barotrauma.Networking
                     {
                         if (pendingClient.SteamID != steamId)
                         {
-                            RemovePendingClient(pendingClient, "SteamID mismatch");
+                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ SteamID mismatch");
                             return;
                         }
                     }
@@ -408,7 +408,7 @@ namespace Barotrauma.Networking
                                 serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.SteamID.Value, banMsg, null);
                             }
                             serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.Connection.RemoteEndPoint.Address, banMsg, null);
-                            RemovePendingClient(pendingClient, banMsg);
+                            RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+" /"+banMsg);
                             return;
                         }
                     }
@@ -439,7 +439,7 @@ namespace Barotrauma.Networking
 
             if (serverSettings.BanList.IsBanned(pendingClient.Connection.RemoteEndPoint.Address, pendingClient.SteamID ?? 0))
             {
-                RemovePendingClient(pendingClient, "Initialization interrupted by ban");
+                RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString());
                 return;
             }
 
@@ -458,9 +458,11 @@ namespace Barotrauma.Networking
                 OnInitializationComplete?.Invoke(newConnection);
             }
 
-            if (Timing.TotalTime > pendingClient.TimeOut)
+
+            pendingClient.TimeOut -= Timing.Step;
+            if (pendingClient.TimeOut < 0.0)
             {
-                RemovePendingClient(pendingClient, "Timed out");
+                RemovePendingClient(pendingClient, Lidgren.Network.NetConnection.NoResponseMessage);
             }
 
             if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
@@ -529,7 +531,7 @@ namespace Barotrauma.Networking
                     LidgrenConnection connection = connectedClients.Find(c => c.SteamID == steamID);
                     if (connection != null)
                     {
-                        Disconnect(connection, "Steam authentication status changed: " + status.ToString());
+                        Disconnect(connection, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam authentication status changed: " + status.ToString());
                     }
                 }
                 return;
@@ -537,7 +539,7 @@ namespace Barotrauma.Networking
 
             if (serverSettings.BanList.IsBanned(pendingClient.Connection.RemoteEndPoint.Address, steamID))
             {
-                RemovePendingClient(pendingClient,"SteamID banned");
+                RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString() + "/ SteamID banned");
                 return;
             }
 
@@ -548,7 +550,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                RemovePendingClient(pendingClient, "Steam authentication failed: " +status.ToString());
+                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam authentication failed: " + status.ToString());
                 return;
             }
         }

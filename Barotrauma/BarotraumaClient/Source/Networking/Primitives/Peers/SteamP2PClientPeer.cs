@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using Barotrauma.Steam;
 using Facepunch.Steamworks;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -13,6 +14,8 @@ namespace Barotrauma.Networking
         private ConnectionInitialization initializationStep;
         private int passwordSalt;
         private Auth.Ticket steamAuthTicket;
+        private double timeout;
+        private double heartbeatTimer;
 
         private List<IReadMessage> incomingInitializationMessages;
         private List<IReadMessage> incomingDataMessages;
@@ -59,17 +62,18 @@ namespace Barotrauma.Networking
                                                            Facepunch.Steamworks.Networking.SendType.Reliable);
 
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
+
+            timeout = 20.0;
+            heartbeatTimer = 1.0;
         }
 
         private bool OnIncomingConnection(UInt64 steamId)
         {
-            DebugConsole.NewMessage("incoming connection: " + steamId.ToString());
             return steamId == hostSteamId;
         }
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
         {
-            DebugConsole.NewMessage("got p2p data: " + steamId.ToString());
             if (steamId != hostSteamId) { return; }
 
             byte incByte = data[0];
@@ -111,6 +115,27 @@ namespace Barotrauma.Networking
 
         public override void Update()
         {
+            timeout -= Timing.Step;
+            heartbeatTimer -= Timing.Step;
+
+            if (heartbeatTimer < 0.0)
+            {
+                IWriteMessage outMsg = new WriteOnlyMessage();
+                outMsg.Write((byte)DeliveryMethod.Unreliable);
+                outMsg.Write((byte)PacketHeader.IsHeartbeatMessage);
+
+                SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
+                                                                       Facepunch.Steamworks.Networking.SendType.Unreliable);
+
+                heartbeatTimer = 5.0;
+            }
+
+            if (timeout < 0.0)
+            {
+                Close(Lidgren.Network.NetConnection.NoResponseMessage);
+                return;
+            }
+
             if (initializationStep != ConnectionInitialization.Success)
             {
                 if (incomingDataMessages.Count > 0)
@@ -166,6 +191,7 @@ namespace Barotrauma.Networking
                         outMsg.Write(contentPackage.MD5hash.Hash);
                     }
 
+                    heartbeatTimer = 5.0;
                     SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
                                                                    Facepunch.Steamworks.Networking.SendType.Reliable);
                     break;
@@ -217,6 +243,7 @@ namespace Barotrauma.Networking
                     break;
             }
 
+            heartbeatTimer = 5.0;
             SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
         }
 
@@ -231,15 +258,28 @@ namespace Barotrauma.Networking
             outMsg.Write((byte)saltedPw.Length);
             outMsg.Write(saltedPw, 0, saltedPw.Length);
 
+            heartbeatTimer = 5.0;
             SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
                                                                    Facepunch.Steamworks.Networking.SendType.Reliable);
         }
         
         public override void Close(string msg = null)
         {
+            IWriteMessage outMsg = new WriteOnlyMessage();
+            outMsg.Write((byte)DeliveryMethod.Reliable);
+            outMsg.Write((byte)PacketHeader.IsDisconnectMessage);
+            outMsg.Write(msg ?? "Disconnected");
+
+            SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
+                                                                   Facepunch.Steamworks.Networking.SendType.Reliable);
+
+            Thread.Sleep(100);
+
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
             Steam.SteamManager.Instance.Networking.OnP2PData = null;
             Steam.SteamManager.Instance.Networking.SetListenChannel(0, false);
+
+            Steam.SteamManager.Instance.Networking.CloseSession(hostSteamId);
 
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             OnDisconnect?.Invoke(msg);
