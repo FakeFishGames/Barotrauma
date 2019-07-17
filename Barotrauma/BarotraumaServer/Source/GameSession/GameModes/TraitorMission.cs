@@ -87,7 +87,7 @@ namespace Barotrauma {
                         // TODO(xxX)
                         break;
                     case "floodsub":
-                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f));
+                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
                         break;
                 }
                 if (goal == null)
