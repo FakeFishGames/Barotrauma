@@ -1,15 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <!-- Elements ************************************************************************************************ -->
-  <Item name="Carbon" identifier="carbon" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of steel and plastic." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Carbon" identifier="carbon" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of steel and plastic." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Mine" buyprice="7" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="9,105,96,83" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="10,110,93,76" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -17,17 +17,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Iron" identifier="iron" category="Material" Tags="smallitem" canbepicked="true" description="Can be used in the manufacture of simple tools, or refined into steel by mixing it with carbon." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Iron" identifier="iron" category="Material" Tags="smallitem" canbepicked="true" description="Can be used in the manufacture of simple tools, or refined into steel by mixing it with carbon." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="5" />
     <Price locationtype="Military" buyprice="5" />
     <Price locationtype="City" buyprice="5" />
     <Price locationtype="Outpost" buyprice="5" />
     <Price locationtype="Mine" buyprice="3" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="9,186,96,76" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="9,186,94,73" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -35,17 +34,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Tin" identifier="tin" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of various electrical components." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Tin" identifier="tin" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of various electrical components." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="11" />
     <Price locationtype="Military" buyprice="11" />
     <Price locationtype="City" buyprice="11" />
     <Price locationtype="Outpost" buyprice="11" />
     <Price locationtype="Mine" buyprice="7" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="298,182,98,80" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="300,184,94,77" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -53,17 +51,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Lead" identifier="lead" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of various types of ammunition." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Lead" identifier="lead" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of various types of ammunition." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="18" />
     <Price locationtype="Military" buyprice="18" />
     <Price locationtype="City" buyprice="18" />
     <Price locationtype="Outpost" buyprice="18" />
     <Price locationtype="Mine" buyprice="12" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="203,185,97,78" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="203,185,94,76" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -71,16 +68,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Phosphorus" identifier="phosphorus" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of lamps, explosives and some medical compounds." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Phosphorus" identifier="phosphorus" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of lamps, explosives and some medical compounds." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="15" />
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="15" />
     <Price locationtype="Outpost" buyprice="15" />
     <Price locationtype="Mine" buyprice="10" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="307,10,50,95" depth="0.55" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="307,13,46,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
@@ -89,17 +85,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Copper" identifier="copper" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of electrical wiring." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Copper" identifier="copper" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of electrical wiring." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="22" />
     <Price locationtype="Military" buyprice="22" />
     <Price locationtype="City" buyprice="22" />
     <Price locationtype="Outpost" buyprice="22" />
     <Price locationtype="Mine" buyprice="15" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="103,183,99,78" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="107,184,95,76" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -107,17 +102,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Zinc" identifier="zinc" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of batteries and tonic liquid." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Zinc" identifier="zinc" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of batteries and tonic liquid." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="26" />
     <Price locationtype="Military" buyprice="26" />
     <Price locationtype="City" buyprice="26" />
     <Price locationtype="Outpost" buyprice="26" />
     <Price locationtype="Mine" buyprice="18" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="203,105,96,81" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="204,105,93,80" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -125,16 +119,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Sodium" identifier="sodium" category="Material" Tags="smallitem" canbepicked="true" description="Medical fabricators can combine sodium and chloride to create a saline solution, which can be used as a treatment for blood loss or as an ingredient for more complex medicine." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Sodium" identifier="sodium" category="Material" Tags="smallitem" canbepicked="true" description="Medical fabricators can combine sodium and chloride to create a saline solution, which can be used as a treatment for blood loss or as an ingredient for more complex medicine." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="33" />
     <Price locationtype="Military" buyprice="33" />
     <Price locationtype="City" buyprice="33" />
     <Price locationtype="Outpost" buyprice="33" />
     <Price locationtype="Mine" buyprice="23" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="58,11,50,94" depth="0.55" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="59,14,47,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="59" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
@@ -143,17 +136,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Silicon" identifier="silicon" category="Material" Tags="smallitem" canbepicked="true" description="Used as an ingredient in aluminium alloys, plastic and various electrical components." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Silicon" identifier="silicon" category="Material" Tags="smallitem" canbepicked="true" description="Used as an ingredient in aluminium alloys, plastic and various electrical components." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="31" />
     <Price locationtype="Military" buyprice="31" />
     <Price locationtype="City" buyprice="31" />
     <Price locationtype="Outpost" buyprice="31" />
     <Price locationtype="Mine" buyprice="21" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="392,106,93,81" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="393,109,92,77" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -161,16 +153,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Calcium" identifier="calcium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Calcium" identifier="calcium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="31" />
     <Price locationtype="Military" buyprice="31" />
     <Price locationtype="City" buyprice="31" />
     <Price locationtype="Outpost" buyprice="31" />
     <Price locationtype="Mine" buyprice="21" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="257,11,48,94" depth="0.55" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="258,13,47,88" depth="0.55" origin="0.5,0.5" />
     <Body width="28" height="58" density="15" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
@@ -179,17 +170,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Aluminium" identifier="aluminium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Aluminium" identifier="aluminium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="42" />
     <Price locationtype="Military" buyprice="42" />
     <Price locationtype="City" buyprice="42" />
     <Price locationtype="Outpost" buyprice="42" />
     <Price locationtype="Mine" buyprice="29" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="106,106,96,80" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="106,106,94,79" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -197,17 +187,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Uranium" identifier="uranium" category="Material" Tags="smallitem" canbepicked="true" description="Can be refined in a fabricator to create fuel rods for a nuclear reactor, or used in the manufacture of nuclear weapons." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Uranium" identifier="uranium" category="Material" Tags="smallitem" canbepicked="true" description="Can be refined in a fabricator to create fuel rods for a nuclear reactor, or used in the manufacture of nuclear weapons." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
     <Price locationtype="Mine" buyprice="35" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="8,260,99,83" depth="0.55" origin="0.5,0.5" />
-    <Body width="58" height="24" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="8,260,98,82" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="65" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -215,8 +204,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Potassium" identifier="potassium" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Potassium" identifier="potassium" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -224,8 +212,8 @@
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Mine" buyprice="7" />
     <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="154,10,49,94" depth="0.55" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="155,13,46,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
@@ -242,17 +230,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Titanium" identifier="titanium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Titanium" identifier="titanium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="65" />
     <Price locationtype="Military" buyprice="65" />
     <Price locationtype="City" buyprice="65" />
     <Price locationtype="Outpost" buyprice="65" />
     <Price locationtype="Mine" buyprice="45" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" origin="0.5,0.5" />
     <Sprite texture="CraftingElements1.png" sourcerect="301,107,92,77" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -260,16 +247,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Magnesium" identifier="magnesium" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Magnesium" identifier="magnesium" category="Material" Tags="smallitem" canbepicked="true" description="Used in the manufacture of explosives and medical compounds. Reacts violently when in contact with water." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="65" />
     <Price locationtype="Military" buyprice="65" />
     <Price locationtype="City" buyprice="65" />
     <Price locationtype="Outpost" buyprice="65" />
     <Price locationtype="Mine" buyprice="45" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="204,9,51,95" depth="0.55" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="205,13,47,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="15" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
@@ -286,16 +272,15 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Lithium" identifier="lithium" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of batteries and antipsychotic drugs." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Lithium" identifier="lithium" category="Material" Tags="smallitem" canbepicked="true" description="Most commonly used in the manufacture of batteries and antipsychotic drugs." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="88" />
     <Price locationtype="Military" buyprice="88" />
     <Price locationtype="City" buyprice="88" />
     <Price locationtype="Outpost" buyprice="88" />
     <Price locationtype="Mine" buyprice="61" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="6,11,51,91" depth="0.55" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="7,14,49,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="59" density="15" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
@@ -304,15 +289,14 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Chlorine" identifier="chlorine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Most commonly used saline, a common treatment for blood loss, and chloral hydrate, a powerful sedative." useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Chlorine" identifier="chlorine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Most commonly used saline, a common treatment for blood loss, and chloral hydrate, a powerful sedative." useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="11" />
     <Price locationtype="Military" buyprice="11" />
     <Price locationtype="City" buyprice="11" />
     <Price locationtype="Mine" buyprice="7" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="110,14,46,90" depth="0.6" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="110,14,45,88" depth="0.6" origin="0.5,0.5" />
     <Body width="29" height="57" density="20" />
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <!-- Remove the item when fully used -->
@@ -321,17 +305,16 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  
-  <Item name="Thorium" identifier="thorium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Thorium" identifier="thorium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="125" />
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="125" />
     <Price locationtype="Mine" buyprice="87" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="107,259,95,84" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="108,263,92,79" depth="0.55" origin="0.5,0.5" />
+    <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -339,7 +322,6 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <!-- Compounds ************************************************************************************************ -->
   <Item name="Steel Bar" identifier="steel" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
@@ -349,16 +331,16 @@
     <Price locationtype="Outpost" buyprice="30" />
     <Price locationtype="Mine" buyprice="17" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem identifier="carbon"/>
-      <RequiredItem identifier="iron"/>
+      <RequiredItem identifier="carbon" />
+      <RequiredItem identifier="iron" />
     </Fabricate>
     <Deconstruct time="5">
       <Item identifier="carbon" />
       <Item identifier="iron" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="6,343,115,58" depth="0.55" origin="0.5,0.5" />
-    <Body width="56" height="28" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="8,343,108,54" depth="0.55" origin="0.5,0.5" />
+    <Body width="100" height="50" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -366,7 +348,6 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <Item name="Titanium-Aluminium Alloy" identifier="titaniumaluminiumalloy" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
@@ -375,16 +356,16 @@
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Mine" buyprice="122" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem identifier="titanium"/>
-      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="titanium" />
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <Deconstruct time="5">
       <Item identifier="aluminium" />
       <Item identifier="titanium" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="125,407,114,57" depth="0.55" origin="0.5,0.5" />
-    <Body width="114" height="57" density="50" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="125,407,111,55" depth="0.55" origin="0.5,0.5" />
+    <Body width="100" height="50" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -392,7 +373,6 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <Item name="Plastic" identifier="plastic" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="40" />
@@ -400,12 +380,12 @@
     <Price locationtype="City" buyprice="40" />
     <Price locationtype="Outpost" buyprice="40" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem identifier="silicon"/>
-      <RequiredItem identifier="carbon"/>
+      <RequiredItem identifier="silicon" />
+      <RequiredItem identifier="carbon" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="405,200,85,60" depth="0.55" />
-    <Body width="85" height="60" density="20" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="405,200,85,60" depth="0.55" origin="0.5,0.5" />
+    <Body width="80" height="55" density="20" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -413,7 +393,6 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <Item name="Ballistic Fiber" identifier="ballisticfiber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="125" />
@@ -421,12 +400,12 @@
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="110" />
     <Fabricate suitablefabricators="fabricator" requiredtime="5">
-      <RequiredItem identifier="plastic"/>
-      <RequiredItem identifier="titanium"/>
+      <RequiredItem identifier="plastic" />
+      <RequiredItem identifier="titanium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="706,770,62,61" origin="0.5,0.5" />
     <Sprite texture="CraftingElements2.png" sourcerect="0,140,89,134" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="20" />
+    <Body width="80" height="110" density="20" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -434,28 +413,26 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <Item name="Organic Fiber" identifier="organicfiber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="Military" buyprice="40" />
     <Price locationtype="City" buyprice="40" />
     <Price locationtype="Outpost" buyprice="60" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64" origin="0.5,0.5" />
     <Sprite texture="CraftingElements2.png" sourcerect="102,157,113,122" depth="0.55" origin="0.5,0.5" />
-    <Body width="24" height="12" density="20" />
+    <Body width="100" height="100" density="20" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
-  
-  <Item name="Rubber" identifier="rubber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft"> 
+  <Item name="Rubber" identifier="rubber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="20" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="265,441,74,71" depth="0.55" origin="1,1" />
-    <Body width="24" height="12" density="8" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="266,443,70,64" depth="0.55" origin="0.5,0.5" />
+    <Body width="10" radius="20" density="8" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -463,20 +440,16 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Flash Powder" identifier="flashpowder" category="Material" 
-        cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" 
-        impacttolerance="8" useinhealthinterface="true"
-        scale="0.4" impactsoundtag="impact_metal_light">
+  <Item name="Flash Powder" identifier="flashpowder" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" impacttolerance="8" useinhealthinterface="true" scale="0.4" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
     <Fabricate suitablefabricators="fabricator,medicalfabricator" requiredtime="5">
-      <RequiredItem identifier="magnesium"/>
-      <RequiredItem identifier="potassium"/>
+      <RequiredItem identifier="magnesium" />
+      <RequiredItem identifier="potassium" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" />
-    <Sprite texture="CraftingElements1.png" sourcerect="255,268,45,87" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" origin="0.5,0.5" />
+    <Sprite texture="CraftingElements1.png" sourcerect="255,268,45,85" origin="0.5,0.5" />
     <Body width="45" height="87" density="20" />
     <Throwable characterusable="false" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
@@ -494,11 +467,10 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  
   <Item name="Incendium Bar" identifier="incendium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="105,439,52,61" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="60" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false" msg="ItemMsgPickUpSelect">
@@ -514,11 +486,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="Fulgurium Bar" identifier="fulgurium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light"> 
+  <Item name="Fulgurium Bar" identifier="fulgurium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,835,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,835,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="186,351,59,67" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -528,11 +499,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <Item name="Physicorium Bar" identifier="physicorium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="97,349,58,71" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -542,11 +512,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
   <Item name="Dementonite Bar" identifier="dementonite" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="15,356,60,54" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">

@@ -11,7 +11,7 @@
     <Fabricate suitablefabricators="fabricator" displayname="OxygenTankEmpty" outcondition="0.0">
       <RequiredItem identifier="aluminium" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="356,223,39,110" depth="0.55" origin="0.5,0.5" />
     <Body width="38" height="109" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
@@ -39,7 +39,7 @@
       <RequiredItem identifier="liquidoxygenite" />
       <RequiredItem identifier="liquidoxygenite" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,65,66" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,896,65,66" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="473,223,39,112" depth="0.55" />
     <Body width="39" height="112" density="9.9" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
@@ -68,7 +68,7 @@
       <RequiredItem identifier="rubber" />
       <RequiredItem identifier="rubber" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,322,57,62" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="515,322,57,62" origin="0.5,0.5" />
     <Sprite name="Diving Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.55" sourcerect="96,0,96,96" origin="0.5,0.5" />
     <Body width="26" height="18" density="15" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
@@ -116,7 +116,7 @@
       <RequiredItem identifier="rubber" />
       <RequiredItem identifier="rubber" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="449,320,63,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,320,64,64" origin="0.5,0.5" />
     <!--
     <Sprite name="Diving Suit" texture="DivingSuit_Item.png" sourcerect="157,0,90,307" depth="0.55" origin="0.4888889,0.5439739" />
     -->
@@ -209,7 +209,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank,incendiumfueltank" />
       <StatusEffect type="OnWearing" target="Contained">
-        <RequiredItem identifier="oxygensource" type="Contained" matchonempty="true"/>
+        <RequiredItem identifier="oxygensource" type="Contained" matchonempty="true" />
         <Conditional condition="lt 5.0" />
         <Sound file="Content/Items/WarningBeep.ogg" range="500" />
       </StatusEffect>

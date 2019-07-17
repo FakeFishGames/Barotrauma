@@ -1,65 +1,52 @@
-﻿<Items>
-  <Item
-    name="Nuclear Reactor"
-    identifier="reactor1"
-    tags="reactor"
-    type ="Reactor"
-    linkable="true"
-    category="Machine">
-    
-    <trigger/>
-
-    <Sprite texture="reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="Nuclear Reactor" identifier="reactor1" tags="reactor" type="Reactor" linkable="true" category="Machine">
+    <trigger />
+    <Sprite texture="reactor.png" sourcerect="0,0,321,192" depth="0.8" />
     <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="40" />
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
-
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.5,0.38" minsize="900,400" maxsize="2688,1166" anchor="Center" style="ItemUI"/>
-      <GraphLine texture="Content/Items/Reactor/graphLine.png"/>
-      <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65"/>
-      <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65"/>
-      <MeterPointer texture="Content/Items/MachineInterface.png" sourcerect="367,22,14,118" origin="0.5,0.93"/>
-      <SectorSprite texture="Content/Items/MachineInterface.png" sourcerect="329,160,90,172" origin="0.98,0.5"/>
-      <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0"/>
-      <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0"/>
-      <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5"/>
-      
-      <RequiredSkill identifier="electrical" level="30"/>
-
-      <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
+      <GuiFrame relativesize="0.5,0.38" minsize="900,400" maxsize="2688,1166" anchor="Center" style="ItemUI" />
+      <GraphLine texture="Content/Items/Reactor/graphLine.png" />
+      <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65" />
+      <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65" />
+      <MeterPointer texture="Content/Items/MachineInterface.png" sourcerect="367,22,14,118" origin="0.5,0.93" />
+      <SectorSprite texture="Content/Items/MachineInterface.png" sourcerect="329,160,90,172" origin="0.98,0.5" />
+      <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0" />
+      <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0" />
+      <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5" />
+      <RequiredSkill identifier="electrical" level="30" />
+      <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true" />
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
-        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All"/>
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
         <Explosion range="800" structuredamage="100" force="5.0">
-          <Affliction identifier="burn" strength="200"/>
-          <Affliction identifier="internaldamage" strength="50"/>
-          <Affliction identifier="radiationsickness" strength="50"/>
-          <Affliction identifier="stun" strength="5"/>
+          <Affliction identifier="burn" strength="200" />
+          <Affliction identifier="internaldamage" strength="50" />
+          <Affliction identifier="radiationsickness" strength="50" />
+          <Affliction identifier="stun" strength="5" />
         </Explosion>
       </StatusEffect>
     </Reactor>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <output name="power_out" displayname="connection.powerout"/>
-      <output name="temperature_out" displayname="connection.temperatureout"/>
-      <input name="shutdown" displayname="connection.shutdown"/>
-      <output name="meltdown_warning" displayname="connection.meltdownwarning"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <output name="power_out" displayname="connection.powerout" />
+      <output name="temperature_out" displayname="connection.temperatureout" />
+      <input name="shutdown" displayname="connection.shutdown" />
+      <output name="meltdown_warning" displayname="connection.meltdownwarning" />
     </ConnectionPanel>
-
     <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="FuelRods">
       <Containable identifiers="fuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true" />
       </Containable>
       <Containable identifiers="fulguriumfuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="150.0" disabledeltatime="true" />
       </Containable>
       <Containable identifiers="thoriumfuelrod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true" />
       </Containable>
     </ItemContainer>
-    
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
@@ -69,86 +56,51 @@
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-
-  <Item
-    name="Fuel Rod"
-    identifier="fuelrod"
-    Tags="smallitem,reactorfuel"
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-    
-    <Price locationtype="Military" buyprice="100"/>
-    <Price locationtype="Research" buyprice="100"/>
-    <Price locationtype="City" buyprice="150"/>
-    <Price locationtype="Outpost" buyprice="200"/>
+  <Item name="Fuel Rod" identifier="fuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" scale="0.5">
+    <Price locationtype="Military" buyprice="100" />
+    <Price locationtype="Research" buyprice="100" />
+    <Price locationtype="City" buyprice="150" />
+    <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Mine" buyprice="200" />
-    
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="uranium" mincondition="0.5"/>
+      <Item identifier="steel" />
+      <Item identifier="uranium" mincondition="0.5" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="uranium"/>
-      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="uranium" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,64,64,64"/>
-    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="371,3,19,68"/>
-
-    <Body radius="6" width="20" height="70" density="5"/>
-
-    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="371,3,19,68" />
+    <Body radius="6" width="20" height="70" density="5" />
+    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-
-  <Item
-    name="Fulgurium Fuel Rod"
-    identifier="fulguriumfuelrod"
-    Tags="smallitem,reactorfuel"
-    cargocontaineridentifier="metalcrate"
-    health="150"
-    scale="0.5">
-
+  <Item name="Fulgurium Fuel Rod" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5">
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="fulgurium" mincondition="0.95"/>
+      <Item identifier="steel" />
+      <Item identifier="fulgurium" mincondition="0.95" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="fulgurium"/>
-      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="fulgurium" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,64,64,64"/>
-    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="391,3,19,68"/>
-
-    <Body radius="6" width="20" height="70" density="5"/>
-
-    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="391,3,19,68" />
+    <Body radius="6" width="20" height="70" density="5" />
+    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-
-  <Item
-    name="Thorium Fuel Rod"
-    identifier="thoriumfuelrod"
-    Tags="smallitem,reactorfuel"
-    cargocontaineridentifier="metalcrate"
-    health="200"
-    scale="0.5">
-
+  <Item name="Thorium Fuel Rod" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5">
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="thorium" mincondition="0.95"/>
+      <Item identifier="steel" />
+      <Item identifier="thorium" mincondition="0.95" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
-      <RequiredItem identifier="thorium"/>
-      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="thorium" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
-
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,64,64,64"/>
-    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="411,3,19,68"/>
-
-    <Body radius="6" width ="21" height="71" density="5"/>
-
-    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,64,64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" depth="0.55" sourcerect="411,3,19,68" />
+    <Body radius="6" width="21" height="71" density="5" />
+    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  
 </Items>
-

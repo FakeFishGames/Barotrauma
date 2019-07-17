@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  
-  <Item name="Railgun" identifier="railgun" 
-        description="A heavy turret that uses electromagnetic force to launch shells at very high velocities. Requires very large surges of power (usually supplied by supercapacitors) and has a low rate of fire, and as such it's most often used against large and heavily armored targets."
-        Tags="turret" category="Machine" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
+  <Item name="Railgun" identifier="railgun" description="A heavy turret that uses electromagnetic force to launch shells at very high velocities. Requires very large surges of power (usually supplied by supercapacitors) and has a low rate of fire, and as such it's most often used against large and heavily armored targets." Tags="turret" category="Machine" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
     <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
     <StaticBody width="80" radius="80" />
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="126, 89" rotationlimits="180,360" powerconsumption="20000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="100" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
@@ -34,10 +31,7 @@
       <input name="trigger_in" displayname="connection.turrettriggerin" />
     </ConnectionPanel>
   </Item>
-  
-  <Item name="Periscope"
-        description="A device that can be used to observe the outside of the sub by connecting it to a camera, or to control weapons such as the railgun and coilgun."
-        identifier="periscope" tags="railgunequipment" category="Machine" type="Controller" disableitemusagewhenselected="true" scale="0.5" isshootable="true" requireaimtouse="false" requireaimtosecondaryuse="false">
+  <Item name="Periscope" description="A device that can be used to observe the outside of the sub by connecting it to a camera, or to control weapons such as the railgun and coilgun." identifier="periscope" tags="railgunequipment" category="Machine" type="Controller" disableitemusagewhenselected="true" scale="0.5" isshootable="true" requireaimtouse="false" requireaimtosecondaryuse="false">
     <Sprite texture="TurretsAndDepthCharges.png" depth="0.1" sourcerect="2,210,134,203" origin="0.5,0.5" />
     <Controller UserPos="-35.0, -50.0" direction="Right" canbeselected="true" msg="ItemMsgInteractSelect">
       <limbposition limb="Head" position="-10,-135" />
@@ -48,13 +42,11 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem identifier="screwdriver" type="Equipped" />
-      <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim"/>
-      <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot"/>
+      <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim" />
+      <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot" />
     </ConnectionPanel>
   </Item>
-  
-  <Item name="Railgun Loader" 
-        identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
+  <Item name="Railgun Loader" identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="6" itempos="53,-140" iteminterval="48,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
@@ -69,7 +61,6 @@
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  
   <Item name="Railgun Loader Single" identifier="railgunloadersinglevertical" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,276,84,236" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="43,-130" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
@@ -77,7 +68,6 @@
       <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
-  
   <Item name="Railgun Loader Single" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="86,278,241,86" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="130,-43" iteminterval="0,0" itemrotation="180" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
@@ -85,7 +75,6 @@
       <Containable identifiers="railgunammo" />
     </ItemContainer>
   </Item>
-  
   <Item name="Railgun Shell" identifier="railgunshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
@@ -94,18 +83,18 @@
       <Item identifier="steel" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="mechanical" level="25"/>
-      <RequiredItem identifier="steel"/>
+      <RequiredSkill identifier="mechanical" level="25" />
+      <RequiredItem identifier="steel" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,128,64,64" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="2,91,215,33" depth="0.55" origin="0.5,0.5" />
     <Body width="215" height="30" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="55" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="100" />
         <Affliction identifier="bleeding" strength="10" />
-		    <Affliction identifier="stun" strength="10" />
+        <Affliction identifier="stun" strength="10" />
       </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3" />
@@ -119,7 +108,6 @@
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  
   <Item name="Nuclear Shell" identifier="nuclearshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="200" />
     <Deconstruct time="10">
@@ -128,15 +116,15 @@
       <Item identifier="uex" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="30">
-      <RequiredSkill identifier="mechanical" level="40"/>
-      <RequiredItem identifier="steel"/>
-      <RequiredItem identifier="uranium"/>
-      <RequiredItem identifier="uex"/>
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem identifier="steel" />
+      <RequiredItem identifier="uranium" />
+      <RequiredItem identifier="uex" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,128,64,64" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,131,217,33" depth="0.55" origin="0.5,0.5" />
     <Body width="215" height="30" density="35" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="75" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="100" />
@@ -147,7 +135,7 @@
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
           <Affliction identifier="burn" strength="500" />
-          <Affliction identifier="radiationsickness" strength="100"/>
+          <Affliction identifier="radiationsickness" strength="100" />
           <Affliction identifier="internaldamage" strength="400" />
           <Affliction identifier="stun" strength="10" />
         </Explosion>
@@ -168,20 +156,19 @@
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
-  
   <Item name="Physicorium Railgun Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="400" />
     <Deconstruct time="20">
       <Item identifier="physicorium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="mechanical" level="30"/>
-      <RequiredItem identifier="physicorium"/>
+      <RequiredSkill identifier="mechanical" level="30" />
+      <RequiredItem identifier="physicorium" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,959,61,65" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,959,61,65" origin="0.5,0.5" />
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="1,170,216,34" depth="0.55" origin="0.5,0.5" />
     <Body width="215" height="30" density="35" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="150" />
