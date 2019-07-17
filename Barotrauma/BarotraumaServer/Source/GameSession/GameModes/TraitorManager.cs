@@ -456,7 +456,7 @@ namespace Barotrauma
             private readonly float minimumFloodingAmount;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:2f}", minimumFloodingAmount * 100.0f) });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:f}", minimumFloodingAmount * 100.0f) });
 
             public override bool IsCompleted => GameMain.GameSession.EventManager.CurrentFloodingAmount >= minimumFloodingAmount;
 
@@ -544,7 +544,7 @@ namespace Barotrauma
             return;
 #endif
             if (server == null) return;
-            Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate(server, traitorCount);
+            Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
             if (Mission != null)
             {
                 Mission.Start(server, "traitor");

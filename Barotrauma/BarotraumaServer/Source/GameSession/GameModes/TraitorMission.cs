@@ -43,12 +43,8 @@ namespace Barotrauma {
 
             public Goal(string type, XElement config)
             {
-                this.Type = type;
-                this.Config = config;
-            }
-
-            public void SelectTarget(GameServer server)
-            {
+                Type = type;
+                Config = config;
             }
 
             private delegate bool TargetFilter(string value, Character character);
@@ -57,7 +53,7 @@ namespace Barotrauma {
                 { "job", (value, character) => value.Equals(character.Info.Job.Name, StringComparison.OrdinalIgnoreCase) },
             };
 
-            public Traitor.Goal Instantiate(GameServer server)
+            public Traitor.Goal Instantiate()
             {
                 Traitor.Goal goal = null;
                 switch (Config.GetAttributeString("type", "").ToLower(System.Globalization.CultureInfo.InvariantCulture)) {
@@ -153,9 +149,9 @@ namespace Barotrauma {
 
             public readonly List<Goal> Goals = new List<Goal>();
 
-            public Traitor.Objective Instantiate(GameServer server)
+            public Traitor.Objective Instantiate()
             {
-                var result = new Traitor.Objective(InfoText, Goals.ConvertAll(goal => goal.Instantiate(server)).ToArray());
+                var result = new Traitor.Objective(InfoText, Goals.ConvertAll(goal => goal.Instantiate()).ToArray());
                 if (StartMessageTextId != null)
                 {
                     result.StartMessageTextId = StartMessageTextId;
@@ -196,11 +192,11 @@ namespace Barotrauma {
         public readonly string StartText;
         public readonly List<Objective> Objectives = new List<Objective>();
 
-        public Traitor.TraitorMission Instantiate(GameServer server, int traitorCount)
+        public Traitor.TraitorMission Instantiate()
         {
             return new Traitor.TraitorMission(
                 StartText, 
-                Objectives.ConvertAll(objective => objective.Instantiate(server)).ToArray());
+                Objectives.ConvertAll(objective => objective.Instantiate()).ToArray());
         }
 
         protected Goal LoadGoal(XElement goalRoot)
