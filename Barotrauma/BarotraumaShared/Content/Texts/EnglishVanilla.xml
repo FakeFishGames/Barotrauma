@@ -120,7 +120,6 @@
   <modstab>Subscribed Mods</modstab>
   <downloadbutton>Subscribe</downloadbutton>
   <subscribedmods>Mods</subscribedmods>
-  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Click the 'Find more mods' button below to get started!</nosubscribedmods>
   <popularmods>Popular mods</popularmods>
   <findmodsbutton>Find more mods...</findmodsbutton>
   <workshopitemunsubscribe>Unsubscribe</workshopitemunsubscribe>
@@ -3241,4 +3240,5 @@
   <joinserver>Server browser</joinserver>
   <joinserverbutton>Server browser</joinserverbutton>
 
+  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
 </infotexts>

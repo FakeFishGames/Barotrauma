@@ -472,6 +472,7 @@ namespace Barotrauma
                             OnClicked = (btn, userdata) =>
                             {
                                 item.UnSubscribe();
+                                subscribedItemList.RemoveChild(subscribedItemList.Content.GetChildByUserData(item));
                                 return true;
                             }
                         };
