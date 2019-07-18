@@ -12,6 +12,8 @@ namespace Barotrauma
             private set;
         }
 
+        public Camera AssignedCamera;
+
         private float duration;
 
         private CoroutineHandle updateCoroutine;
@@ -27,6 +29,7 @@ namespace Barotrauma
             if (!submarines.Any(s => s != null)) return;
 
             this.duration = duration;
+            AssignedCamera = cam;
 
             Running = true;
             updateCoroutine = CoroutineManager.StartCoroutine(Update(submarines, cam));

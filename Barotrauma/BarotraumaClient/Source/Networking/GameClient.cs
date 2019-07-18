@@ -32,7 +32,7 @@ namespace Barotrauma.Networking
 
         protected GUITickBox cameraFollowsSub;
 
-        private RoundEndCinematic endCinematic;
+        public RoundEndCinematic EndCinematic;
 
         private ClientPermissions permissions = ClientPermissions.None;
         private List<string> permittedConsoleCommands = new List<string>();
@@ -1063,7 +1063,7 @@ namespace Barotrauma.Networking
 
             while (CoroutineManager.IsCoroutineRunning("EndGame"))
             {
-                if (endCinematic != null) { endCinematic.Stop(); }
+                if (EndCinematic != null) { EndCinematic.Stop(); }
                 yield return CoroutineStatus.Running;
             }
 
@@ -1200,6 +1200,15 @@ namespace Barotrauma.Networking
 
             if (GameMain.GameSession != null) { GameMain.GameSession.GameMode.End(endMessage); }
 
+            // Enable characters near the main sub for the endCinematic
+            foreach (Character c in Character.CharacterList)
+            {
+                if (Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.EnableCharacterDistSqr)
+                {
+                    c.Enabled = true;
+                }
+            }
+
             ServerSettings.ServerDetailsChanged = true;
 
             gameStarted = false;
@@ -1210,12 +1219,12 @@ namespace Barotrauma.Networking
             
             if (Screen.Selected == GameMain.GameScreen)
             {
-                endCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam);
-                while (endCinematic.Running && Screen.Selected == GameMain.GameScreen)
+                EndCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam);
+                while (EndCinematic.Running && Screen.Selected == GameMain.GameScreen)
                 {
                     yield return CoroutineStatus.Running;
                 }
-                endCinematic = null;
+                EndCinematic = null;
             }
 
             Submarine.Unload();
@@ -1634,6 +1643,7 @@ namespace Barotrauma.Networking
             outmsg.Write(LastClientListUpdateID);
 
             Character.Controlled?.ClientWrite(outmsg);
+            GameMain.GameScreen.Cam?.ClientWrite(outmsg);
 
             entityEventManager.Write(outmsg, client.ServerConnection);
 

@@ -1029,6 +1029,9 @@ namespace Barotrauma.Networking
                     case ClientNetObject.VOTE:
                         serverSettings.Voting.ServerRead(inc, c);
                         break;
+                    case ClientNetObject.SPECTATING_POS:
+                        c.SpectatePos = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+                        break;
                     default:
                         return;
                 }
@@ -1346,11 +1349,20 @@ namespace Barotrauma.Networking
                 foreach (Character character in Character.CharacterList)
                 {
                     if (!character.Enabled) continue;
-                    if (c.Character != null &&
-                        Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.DisableCharacterDistSqr)
+
+                    if (c.SpectatePos == null)
                     {
-                        continue;
+                        if (c.Character != null && Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (Vector2.DistanceSquared(character.WorldPosition, c.SpectatePos.Value) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
                     }
 
                     float updateInterval = character.GetPositionUpdateInterval(c);
@@ -2075,7 +2087,7 @@ namespace Barotrauma.Networking
                     client.InGame = false;
                 }
             }
-            
+
             Submarine.Unload();
             entityEventManager.Clear();
             GameMain.NetLobbyScreen.Select();
