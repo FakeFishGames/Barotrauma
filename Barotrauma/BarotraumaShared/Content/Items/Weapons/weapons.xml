@@ -721,7 +721,6 @@
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" stun="0.6">
-        <Affliction identifier="internaldamage" strength="8" />
         <Sound file="Content/Items/Weapons/honk.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
