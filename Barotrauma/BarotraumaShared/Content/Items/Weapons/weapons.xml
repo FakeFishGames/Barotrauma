@@ -564,6 +564,7 @@
           <Affliction identifier="bleeding" strength="40" />
           <Affliction identifier="internaldamage" strength="60" />
         </Explosion>
+        <sound file="Content/Items/Weapons/StunGrenade.ogg" />
       </StatusEffect>
       <!--Destroy this after exploding-->
       <StatusEffect type="OnUse" target="This" disabledeltatime="true" >
