@@ -159,6 +159,7 @@ namespace Barotrauma
                 OnSelected = (component, userdata) =>
                 {
                     if (GUI.MouseOn is GUIButton || GUI.MouseOn?.Parent is GUIButton) { return false; }
+                    if (GUI.MouseOn is GUITickBox || GUI.MouseOn?.Parent is GUITickBox) { return false; }
                     myItemList.Deselect();
                     if (userdata is Facepunch.Steamworks.Workshop.Item item)
                     {
@@ -185,16 +186,6 @@ namespace Barotrauma
                     {
                         CreateWorkshopItem(contentPackage);
                     }
-                    ShowCreateItemFrame();
-                    return true;
-                }
-            };
-
-            new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), leftColumn.RectTransform), TextManager.Get("CreateWorkshopItem"))
-            {
-                OnClicked = (btn, userData) => 
-                {
-                    CreateWorkshopItem();
                     ShowCreateItemFrame();
                     return true;
                 }
@@ -269,7 +260,11 @@ namespace Barotrauma
             });
             SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 20);
             SteamManager.GetPublishedWorkshopItems((items) => { OnItemsReceived(items, publishedItemList); });
+            RefreshMyItemList();
+        }
 
+        private void RefreshMyItemList()
+        {
             myItemList.ClearChildren();
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), myItemList.Content.RectTransform), TextManager.Get("WorkshopLabelSubmarines"), textAlignment: Alignment.Center, font: GUI.LargeFont)
             {
@@ -278,14 +273,28 @@ namespace Barotrauma
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
                 if (sub.HasTag(SubmarineTag.HideInMenus)) { continue; }
-                //ignore subs that are part of a workshop/vanilla content package
                 string subPath = Path.GetFullPath(sub.FilePath);
-                if (ContentPackage.List.Any(cp =>
-                    cp.Files.Any(f => f.Type == ContentType.Submarine && Path.GetFullPath(f.Path) == subPath) &&
-                    (!string.IsNullOrEmpty(cp.SteamWorkshopUrl) || cp == GameMain.VanillaContent)))
+
+                //ignore subs that are part of the vanilla content package
+                if (GameMain.VanillaContent != null &&
+                    GameMain.VanillaContent.GetFilesOfType(ContentType.Submarine).Any(s => Path.GetFullPath(s) == subPath))
                 {
                     continue;
                 }
+                //ignore subs that are part of a workshop content package
+                if (ContentPackage.List.Any(cp => !string.IsNullOrEmpty(cp.SteamWorkshopUrl) &&
+                    cp.Files.Any(f => f.Type == ContentType.Submarine && Path.GetFullPath(f.Path) == subPath)))
+                {
+                    continue;
+                }
+                //ignore subs that are defined in a content package with more files than just the sub 
+                //(these will be listed in the "content packages" section)
+                if (ContentPackage.List.Any(cp => cp.Files.Count > 1 &&
+                    cp.Files.Any(f => f.Type == ContentType.Submarine && Path.GetFullPath(f.Path) == subPath)))
+                {
+                    continue;
+                }
+
                 CreateMyItemFrame(sub, myItemList);
             }
 
@@ -791,10 +800,10 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item.Modified.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
         }
 
-        private void CreateWorkshopItem()
+        /*private void CreateWorkshopItem()
         {
-            //SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
-        }
+            SteamManager.CreateWorkshopItemStaging("ModName", out itemEditor, out itemContentPackage);
+        }*/
         private void CreateWorkshopItem(Submarine sub)
         {
             string destinationFolder = Path.Combine("Mods", sub.Name);
@@ -805,21 +814,13 @@ namespace Barotrauma
             if (submarineDir != Path.GetDirectoryName(destinationFolder))
             {
                 string destinationPath = Path.Combine(destinationFolder, Path.GetFileName(sub.FilePath));
-                File.Move(sub.FilePath, destinationPath);
+                if (!File.Exists(destinationPath))
+                {
+                    File.Move(sub.FilePath, destinationPath);
+                }
                 sub.FilePath = destinationPath;
             }
-
-            /*string destinationPath = Path.Combine(SteamManager.WorkshopItemStagingFolder, "Submarines", Path.GetFileName(sub.FilePath));
-            try
-            {
-                File.Copy(sub.FilePath, destinationPath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to copy submarine file \"" + sub.FilePath + "\" to the Workshop item staging folder.", e);
-                return;
-            }*/
-
+            
             itemContentPackage.AddFile(sub.FilePath, ContentType.Submarine);
             itemContentPackage.Name = sub.Name;
             itemContentPackage.Save(itemContentPackage.Path);
@@ -1045,7 +1046,16 @@ namespace Barotrauma
                     return true;
                 }
             };
-            
+
+            //if preview image has not been set, but there's a PreviewImage file inside the mod folder, use that by default
+            if (string.IsNullOrEmpty(itemEditor.PreviewImage))
+            {
+                string previewImagePath = Path.Combine(Path.GetDirectoryName(itemContentPackage.Path), SteamManager.PreviewImageName);
+                if (File.Exists(previewImagePath))
+                {
+                    itemEditor.PreviewImage = previewImagePath;
+                }
+            }
             if (!string.IsNullOrEmpty(itemEditor.PreviewImage))
             {
                 if (itemPreviewSprites.ContainsKey(itemEditor.PreviewImage))
@@ -1104,11 +1114,11 @@ namespace Barotrauma
             {
                 RelativeSpacing = 0.05f
             };
-            
+
             new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonContainer.RectTransform, Anchor.TopRight), TextManager.Get("WorkshopItemRefreshFileList"))
             {
                 ToolTip = TextManager.Get("WorkshopItemRefreshFileListTooltip"),
-                OnClicked = (btn, userdata) => 
+                OnClicked = (btn, userdata) =>
                 {
                     itemContentPackage = new ContentPackage(itemContentPackage.Path);
                     RefreshCreateItemFileList();
@@ -1130,19 +1140,20 @@ namespace Barotrauma
                         if (ofd.ShowDialog() == DialogResult.OK)
                         {
                             OnAddFilesSelected(ofd.FileNames);
+                            RefreshMyItemList();
                         }
                     }
                     catch
                     {
                         //use a custom prompt if OpenFileDialog fails (Linux/Mac)
                         var msgBox = new GUIMessageBox(TextManager.Get("workshopitemaddfiles"), "", relativeSize: new Vector2(0.4f, 0.2f),
-                            buttons: new string[] { TextManager.Get("Cancel"), TextManager.Get("OK") });
+                        buttons: new string[] { TextManager.Get("Cancel"), TextManager.Get("OK") });
 
                         var pathBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform, Anchor.Center) { MinSize = new Point(0, 25) });
 
                         msgBox.Buttons[0].OnClicked += msgBox.Close;
                         msgBox.Buttons[1].OnClicked += msgBox.Close;
-                        msgBox.Buttons[1].OnClicked += (btn2, userdata2) => 
+                        msgBox.Buttons[1].OnClicked += (btn2, userdata2) =>
                         {
                             if (string.IsNullOrEmpty(pathBox?.Text)) { return true; }
                             string[] filePaths = pathBox.Text.Split(',');
@@ -1157,6 +1168,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+
 
             //the item has been already published if it has a non-zero ID -> allow adding a changenote
             if (itemEditor.Id > 0)

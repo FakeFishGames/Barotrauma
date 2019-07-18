@@ -283,8 +283,7 @@ namespace Barotrauma.Steam
         #endregion
 
         #region Workshop
-
-        //public const string WorkshopItemStagingFolder = "NewWorkshopItem";
+        
         public const string WorkshopItemPreviewImageFolder = "Workshop";
         public const string PreviewImageName = "PreviewImage.png";
         public const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
@@ -420,53 +419,29 @@ namespace Barotrauma.Steam
         }
 
         /// <summary>
-        /// Creates a new folder, copies the specified files there and creates a metadata file with install instructions.
+        /// Creates a new empty content package
         /// </summary>
-        /*public static void CreateWorkshopItemStaging(List<ContentFile> contentFiles, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
+        public static void CreateWorkshopItemStaging(string itemName, out Workshop.Editor itemEditor, out ContentPackage contentPackage)
         {
-            var stagingFolder = new DirectoryInfo(WorkshopItemStagingFolder);
-            if (stagingFolder.Exists)
-            {
-                SaveUtil.ClearFolder(stagingFolder.FullName);
-            }
-            else
-            {
-                stagingFolder.Create();
-            }
-            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Submarines"));
-            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods"));
-            Directory.CreateDirectory(Path.Combine(WorkshopItemStagingFolder, "Mods", "ModName"));
+            string dirPath = Path.Combine("Mods", ToolBox.RemoveInvalidFileNameChars(itemName));
+            Directory.CreateDirectory("Mods");
+            Directory.CreateDirectory(dirPath);
 
             itemEditor = instance.client.Workshop.CreateItem(Workshop.ItemType.Community);
             itemEditor.Visibility = Workshop.Editor.VisibilityType.Public;
             itemEditor.WorkshopUploadAppId = AppID;
-            itemEditor.Folder = stagingFolder.FullName;
+            itemEditor.Folder = dirPath;
 
-            string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
-            File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
-
-            //copy content files to the staging folder
-            List<string> copiedFilePaths = new List<string>();
-            foreach (ContentFile file in contentFiles)
+            string previewImagePath = Path.GetFullPath(Path.Combine(dirPath, PreviewImageName));
+            if (!File.Exists(previewImagePath))
             {
-                string relativePath = UpdaterUtil.GetRelativePath(Path.GetFullPath(file.Path), Environment.CurrentDirectory);
-                string destinationPath = Path.Combine(stagingFolder.FullName, relativePath);
-                //make sure the directory exists
-                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-                File.Copy(file.Path, destinationPath);
-                copiedFilePaths.Add(destinationPath);
+                File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
             }
-            System.Diagnostics.Debug.Assert(copiedFilePaths.Count == contentFiles.Count);
-
+            
             //create a new content package and include the copied files in it
-            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(itemEditor.Folder, MetadataFileName), false);
-            for (int i = 0; i < copiedFilePaths.Count; i++)
-            {
-                contentPackage.AddFile(copiedFilePaths[i], contentFiles[i].Type);
-            }
-
-            contentPackage.Save(Path.Combine(stagingFolder.FullName, MetadataFileName));
-        }*/
+            contentPackage = ContentPackage.CreatePackage(itemName, Path.Combine(dirPath, MetadataFileName), false);
+            contentPackage.Save(Path.Combine(dirPath, MetadataFileName));
+        }
 
         /// <summary>
         /// Creates a copy of the specified workshop item in the staging folder and an editor that can be used to edit and update the item
@@ -622,18 +597,7 @@ namespace Barotrauma.Steam
             {
                 DebugConsole.NewMessage("Publishing workshop item " + item.Title + " failed. " + item.Error, Microsoft.Xna.Framework.Color.Red);
             }
-
-            /*SaveUtil.ClearFolder(WorkshopItemStagingFolder);
-            File.Delete(PreviewImageName);
-            try
-            {
-                Directory.Delete(WorkshopItemStagingFolder);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to delete Workshop item staging folder.", e);
-            }*/
-
+            
             yield return CoroutineStatus.Success;
         }
 
@@ -1043,8 +1007,7 @@ namespace Barotrauma.Steam
         public static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
             string fileName = contentPackage.Name;
-            string invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            foreach (char c in invalidChars) fileName = fileName.Replace(c.ToString(), "");
+            string invalidChars = ToolBox.RemoveInvalidFileNameChars(fileName);
             return contentPackage.GameVersion > new Version(0, 9, 1, 0) ?
                 Path.Combine("Mods", fileName, MetadataFileName) :
                 Path.Combine("Data", "ContentPackages", fileName + ".xml"); //legacy support
