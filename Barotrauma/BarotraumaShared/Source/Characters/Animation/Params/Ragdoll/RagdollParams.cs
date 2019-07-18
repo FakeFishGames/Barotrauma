@@ -66,7 +66,6 @@ namespace Barotrauma
             .Concat(Joints.Select(j => j as RagdollSubParams)));
 
         public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
-        public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
         public static string GetDefaultFile(string speciesName, ContentPackage contentPackage = null) => $"{GetFolder(speciesName, contentPackage)}{GetDefaultFileName(speciesName)}.xml";
 
         private static readonly object[] dummyParams = new object[]
@@ -84,11 +83,11 @@ namespace Barotrauma
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
-            var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName, contentPackage))?.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
+            string configFilePath = Character.GetConfigFile(speciesName, contentPackage);
+            var folder = XMLExtensions.TryLoadXml(configFilePath)?.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
-                //DebugConsole.NewMessage("[RagollParams] Using the default folder.");
-                folder = GetDefaultFolder(speciesName);
+                folder = Path.Combine(Path.GetDirectoryName(configFilePath), "Ragdolls") + Path.DirectorySeparatorChar;
             }
             return folder;
         }
