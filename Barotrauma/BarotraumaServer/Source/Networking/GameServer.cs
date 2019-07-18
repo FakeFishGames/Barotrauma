@@ -139,6 +139,7 @@ namespace Barotrauma.Networking
                 serverPeer.OnInitializationComplete = OnInitializationComplete;
                 serverPeer.OnMessageReceived = ReadDataMessage;
                 serverPeer.OnDisconnect = OnClientDisconnect;
+                serverPeer.OnShutdown = Disconnect;
 
                 fileSender = new FileSender(serverPeer, MsgConstants.MTU);
                 fileSender.OnEnded += FileTransferChanged;
@@ -2923,8 +2924,7 @@ namespace Barotrauma.Networking
         {
             serverSettings.BanList.Save();
             serverSettings.SaveSettings();
-            SteamManager.CloseServer();
-
+            
             if (registeredToMaster)
             {
                 if (restClient != null)
@@ -2944,7 +2944,9 @@ namespace Barotrauma.Networking
             }
 
             GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");
-            serverPeer.Close(DisconnectReason.ServerShutdown.ToString());
+            serverPeer?.Close(DisconnectReason.ServerShutdown.ToString());
+
+            SteamManager.CloseServer();
         }
     }
     

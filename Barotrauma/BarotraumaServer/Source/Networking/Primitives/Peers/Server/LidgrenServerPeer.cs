@@ -120,6 +120,8 @@ namespace Barotrauma.Networking
                 steamServer.Auth.OnAuthChange = null;
             }
             steamServer = null;
+
+            OnShutdown?.Invoke();
         }
 
         public override void Update()

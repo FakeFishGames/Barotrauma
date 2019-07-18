@@ -101,6 +101,9 @@ namespace Barotrauma
 
         private GameTime fixedTime;
 
+        private string StartupConnectName;
+        private string StartupConnectEndpoint;
+
         private static SpriteBatch spriteBatch;
 
         private Viewport defaultViewport;
@@ -174,6 +177,41 @@ namespace Barotrauma
             Config = new GameSettings();
 
             ConsoleArguments = args;
+
+            StartupConnectName = null;
+            StartupConnectEndpoint = null;
+            for (int i=0;i<ConsoleArguments.Length-2;i++)
+            {
+                if (ConsoleArguments[i].Trim().ToLower().Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    int j = i + 2;
+
+                    string name = "";
+                    if (ConsoleArguments[i+1].Trim()[0] == '"')
+                    {
+                        name = ConsoleArguments[i + 1].Trim().Substring(1);
+                        for (;j<ConsoleArguments.Length-1;j++)
+                        {
+                            name += " " + ConsoleArguments[j].Trim();
+                            if (name.Contains('"'))
+                            {
+                                name = name.Substring(0, name.IndexOf('"'));
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        name = ConsoleArguments[i + 1].Trim();
+                    }
+                    string endpoint = ConsoleArguments[j].Trim();
+
+                    StartupConnectName = name;
+                    StartupConnectEndpoint = endpoint;
+
+                    break;
+                }
+            }
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -659,6 +697,17 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
+                    if (!string.IsNullOrWhiteSpace(StartupConnectEndpoint))
+                    {
+                        UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(StartupConnectEndpoint);
+                        Client = new GameClient(SteamManager.GetUsername(),
+                                                serverSteamId != 0 ? null : StartupConnectEndpoint,
+                                                serverSteamId,
+                                                string.IsNullOrWhiteSpace(StartupConnectName) ? StartupConnectEndpoint : StartupConnectName);
+                        StartupConnectEndpoint = null;
+                        StartupConnectName = null;
+                    }
+
                     SoundPlayer.Update((float)Timing.Step);
 
                     if (PlayerInput.KeyHit(Keys.Escape) && WindowActive)

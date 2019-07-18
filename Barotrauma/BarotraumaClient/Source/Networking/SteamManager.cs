@@ -12,6 +12,7 @@ namespace Barotrauma.Steam
     partial class SteamManager
     {
         public Facepunch.Steamworks.Networking Networking => client.Networking;
+        public Facepunch.Steamworks.User User => client.User;
 
         private SteamManager()
         {
@@ -58,7 +59,7 @@ namespace Barotrauma.Steam
             }
             return clientInitialized;
         }
-
+        
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
             try

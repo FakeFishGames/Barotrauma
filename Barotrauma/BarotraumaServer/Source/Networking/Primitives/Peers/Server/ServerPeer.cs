@@ -10,10 +10,12 @@ namespace Barotrauma.Networking
         public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
         public delegate void DisconnectCallback(NetworkConnection connection, string reason);
         public delegate void InitializationCompleteCallback(NetworkConnection connection);
+        public delegate void ShutdownCallback();
 
         public MessageCallback OnMessageReceived;
         public DisconnectCallback OnDisconnect;
         public InitializationCompleteCallback OnInitializationComplete;
+        public ShutdownCallback OnShutdown;
 
         protected int? ownerKey;
 
