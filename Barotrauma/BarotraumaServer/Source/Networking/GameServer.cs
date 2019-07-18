@@ -1409,6 +1409,7 @@ namespace Barotrauma.Networking
             foreach (Client client in connectedClients)
             {
                 outmsg.Write(client.ID);
+                outmsg.Write(client.SteamID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 outmsg.Write(client.Muted);

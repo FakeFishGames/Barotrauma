@@ -644,6 +644,7 @@
   <rank>Rank</rank>
   <customrank>Custom</customrank>
   <permissions>Permissions</permissions>
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
   <kick>Kick</kick>
   <votetokick>Vote to kick</votetokick>
   <ban>Ban</ban>

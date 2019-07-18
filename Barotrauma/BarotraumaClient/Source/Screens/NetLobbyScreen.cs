@@ -1531,7 +1531,22 @@ namespace Barotrauma
 
             var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
             var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
-            
+
+            if (selectedClient.SteamID != 0)
+            {
+                var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                        TextManager.Get("ViewSteamProfile"))
+                {
+                    UserData = selectedClient
+                };
+
+                viewSteamProfileButton.OnClicked = (bt, userdata) =>
+                {
+                    Steam.SteamManager.Instance.Overlay.OpenUrl("https://steamcommunity.com/profiles/" + selectedClient.SteamID.ToString());
+                    return true;
+                };
+            }
+
             if (!myClient)
             {
                 if (GameMain.Client.HasPermission(ClientPermissions.Ban))

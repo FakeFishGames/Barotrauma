@@ -1082,6 +1082,7 @@ namespace Barotrauma.Networking
             for (int i = 0; i < clientCount; i++)
             {
                 byte id             = inc.ReadByte();
+                UInt64 steamId      = inc.ReadUInt64();
                 string name         = inc.ReadString();
                 UInt16 characterID  = inc.ReadUInt16();
                 bool muted          = inc.ReadBoolean();
@@ -1091,6 +1092,7 @@ namespace Barotrauma.Networking
                 tempClients.Add(new TempClient
                 {
                     ID = id,
+                    SteamID = steamId,
                     Name = name,
                     CharacterID = characterID,
                     Muted = muted,
@@ -1110,6 +1112,7 @@ namespace Barotrauma.Networking
                     {
                         existingClient = new Client(tc.Name, tc.ID)
                         {
+                            SteamID = tc.SteamID,
                             Muted = tc.Muted,
                             AllowKicking = tc.AllowKicking
                         };

@@ -6,8 +6,6 @@ namespace Barotrauma.Networking
 {
     partial class Client : IDisposable
     {
-        public ulong SteamID;
-
         public bool VoiceEnabled = true;
 
         public UInt16 LastRecvClientListUpdate = 0;

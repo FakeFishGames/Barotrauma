@@ -10,7 +10,8 @@ namespace Barotrauma.Networking
 
         public string Name;
         public byte ID;
-        
+        public UInt64 SteamID;
+
         public Character.TeamType TeamID;
 
         private Character character;
