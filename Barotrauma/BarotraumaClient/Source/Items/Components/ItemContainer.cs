@@ -73,6 +73,9 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false)]
+        public bool KeepOpenWhenEquipped { get; set; }
+
         public Vector2 DrawSize
         {
             //use the extents of the item as the draw size

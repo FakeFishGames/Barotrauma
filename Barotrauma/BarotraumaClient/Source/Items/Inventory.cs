@@ -273,6 +273,11 @@ namespace Barotrauma
         {
         }
 
+        public virtual bool IsInventoryHoverAvailable(Character owner)
+        {
+            return true;
+        }
+
         protected virtual bool HideSlot(int i)
         {
             return slots[i].Disabled || (hideEmptySlot[i] && Items[i] == null);
