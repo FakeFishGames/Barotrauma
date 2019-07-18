@@ -159,7 +159,7 @@
       <RequiredItem identifier="screwdriver" type="Equipped" />
     </Repairable>
   </Item>
-  <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." impactsoundtag="impact_metal_light">
+  <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable" scale="0.3" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="125" />
     <Price locationtype="Military" buyprice="125" />
@@ -173,11 +173,11 @@
       <RequiredItem identifier="lithium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
+    <Sprite texture="battery.png" sourcerect="3,336,57,40" depth="0.8" />
     <Body width="25" height="17" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
+  <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" scale="0.3" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="zinc" />
       <Item identifier="fulgurium" />
@@ -186,8 +186,8 @@
       <RequiredItem identifier="fulgurium" />
       <RequiredItem identifier="zinc" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="103,28,25,17" depth="0.8" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="514,832,64,64" origin="0.5,0.5" />
+    <Sprite texture="battery.png" sourcerect="64,336,62,41" depth="0.8" />
     <Body width="23" height="17" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
