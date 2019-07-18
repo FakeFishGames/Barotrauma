@@ -192,14 +192,14 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.5" category="Equipment" linkable="true" impactsoundtag="impact_metal_light">
+  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.32" category="Equipment" linkable="true" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Deconstruct time="10">
       <Item identifier="plastic" copycondition="true"/>
     </Deconstruct>
-    <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
-    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,960,64,64" />
+    <Sprite texture="weapons_new.png" depth="0.54" sourcerect="136,296,52,69" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
@@ -516,7 +516,7 @@
       <Item identifier="titaniumaluminiumalloy" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,831,64,64" origin="0.5,0.5" />
-    <Sprite texture="weapons_new.png" sourcerect="219,274,290,102" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" sourcerect="241,277,266,85" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="30" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50">
@@ -718,9 +718,9 @@
       <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,960,64,64" origin="0.5,0.5" />
-    <Sprite texture="weapons_new.png" sourcerect="241,420,68,55" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="weapons_new.png" sourcerect="243,420,121,55" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="10" density="50" />
-    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
+    <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="40" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" stun="0.6">
         <Sound file="Content/Items/Weapons/honk.ogg" range="800" />
       </Attack>
