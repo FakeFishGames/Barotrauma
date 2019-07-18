@@ -64,14 +64,7 @@ namespace Barotrauma
         public static Submarine MainSub
         {
             get { return MainSubs[0]; }
-            set
-            {
-                if (value == null || MainSubs[0] == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("*******\n" + Environment.StackTrace.ToString());
-                }
-                MainSubs[0] = value;
-            }
+            set { MainSubs[0] = value; }
         }
         private static List<Submarine> loaded = new List<Submarine>();
 
