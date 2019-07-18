@@ -487,6 +487,7 @@ namespace Barotrauma
             string[] modDirectories = Directory.GetDirectories("Mods");
             foreach (string modDirectory in modDirectories)
             {
+                if (System.IO.Path.GetFileName(modDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar)) == "ExampleMod") { continue; }
                 string modFilePath = System.IO.Path.Combine(modDirectory, Steam.SteamManager.MetadataFileName);
                 if (File.Exists(modFilePath))
                 {
