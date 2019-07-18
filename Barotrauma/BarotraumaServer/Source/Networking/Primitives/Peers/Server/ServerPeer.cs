@@ -11,11 +11,13 @@ namespace Barotrauma.Networking
         public delegate void DisconnectCallback(NetworkConnection connection, string reason);
         public delegate void InitializationCompleteCallback(NetworkConnection connection);
         public delegate void ShutdownCallback();
+        public delegate void OwnerDeterminedCallback(NetworkConnection connection);
 
         public MessageCallback OnMessageReceived;
         public DisconnectCallback OnDisconnect;
         public InitializationCompleteCallback OnInitializationComplete;
         public ShutdownCallback OnShutdown;
+        public OwnerDeterminedCallback OnOwnerDetermined;
 
         protected int? ownerKey;
 

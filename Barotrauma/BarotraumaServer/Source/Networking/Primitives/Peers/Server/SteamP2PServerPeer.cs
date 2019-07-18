@@ -291,6 +291,7 @@ namespace Barotrauma.Networking
                         OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID);
                         
                         OnInitializationComplete?.Invoke(OwnerConnection);
+                        OnOwnerDetermined?.Invoke(OwnerConnection);
                     }
                     return;
                 }

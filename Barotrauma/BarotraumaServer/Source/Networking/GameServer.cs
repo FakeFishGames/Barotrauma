@@ -140,6 +140,7 @@ namespace Barotrauma.Networking
                 serverPeer.OnMessageReceived = ReadDataMessage;
                 serverPeer.OnDisconnect = OnClientDisconnect;
                 serverPeer.OnShutdown = Disconnect;
+                serverPeer.OnOwnerDetermined = OnOwnerDetermined;
 
                 fileSender = new FileSender(serverPeer, MsgConstants.MTU);
                 fileSender.OnEnded += FileTransferChanged;
@@ -187,6 +188,11 @@ namespace Barotrauma.Networking
             GameAnalyticsManager.AddDesignEvent("GameServer:Start");
 
             yield return CoroutineStatus.Success;
+        }
+
+        private void OnOwnerDetermined(NetworkConnection connection)
+        {
+            OwnerConnection = connection;
         }
 
         private void OnInitializationComplete(NetworkConnection connection)

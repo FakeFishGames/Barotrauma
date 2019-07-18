@@ -98,7 +98,7 @@ namespace Barotrauma.Networking
 
         public bool IsServerOwner
         {
-            get { return ownerKey > 0; }
+            get { return ownerKey > 0 || steamP2POwner; }
         }
         
         public GameClient(string newName, string ip, UInt64 steamId, string serverName = null, int ownerKey = 0, bool steamP2POwner = false)
@@ -823,7 +823,7 @@ namespace Barotrauma.Networking
             permissions = newPermissions;
             this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
             //don't show the "permissions changed" popup if the client owns the server
-            if (ownerKey == 0)
+            if (!IsServerOwner)
             {
                 GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");
 
