@@ -1797,7 +1797,8 @@
   <!-- Traitor goals (new) -->
   <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat> <!--Should we add time limit and duration info here?-->
   <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
-  <traitorgoalkilltargetinfo>Assassinate [targetname]</traitorgoalkilltargetinfo>
+  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
+  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
   <traitorgoalfinditeminfo>Find your next objective inside [target] in [targethullname].</traitorgoalfinditeminfo> 
   <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
   <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non inventory [tag] on the sub.</traitorgoaldestroyitems>
