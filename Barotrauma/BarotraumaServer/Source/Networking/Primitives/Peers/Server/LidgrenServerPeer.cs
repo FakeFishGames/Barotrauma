@@ -455,6 +455,7 @@ namespace Barotrauma.Networking
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
                 LidgrenConnection newConnection = new LidgrenConnection(pendingClient.Name, pendingClient.Connection, pendingClient.SteamID ?? 0);
+                newConnection.Status = NetworkConnectionStatus.Connected;
                 connectedClients.Add(newConnection);
                 pendingClients.Remove(pendingClient);
                 OnInitializationComplete?.Invoke(newConnection);
@@ -600,6 +601,7 @@ namespace Barotrauma.Networking
             if (!(conn is LidgrenConnection lidgrenConn)) { return; }
             if (connectedClients.Contains(lidgrenConn))
             {
+                lidgrenConn.Status = NetworkConnectionStatus.Disconnected;
                 connectedClients.Remove(lidgrenConn);
                 OnDisconnect?.Invoke(conn, msg);
                 Steam.SteamManager.StopAuthSession(conn.SteamID);

@@ -1012,6 +1012,11 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("printsendertransfers", "", (string[] args) =>
+            {
+                GameMain.Server.PrintSenderTransters();
+            }));
+
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
                 if (args.Length == 0) return;

@@ -62,7 +62,8 @@ namespace Barotrauma.Networking
 
             netClient.Start();
             ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
-            
+            ServerConnection.Status = NetworkConnectionStatus.Connected;
+
             remotePeers = new List<RemotePeer>();
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = OnIncomingConnection;

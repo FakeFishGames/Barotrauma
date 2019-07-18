@@ -60,6 +60,16 @@ namespace Barotrauma.Networking
 
         private FileReceiver fileReceiver;
 
+#if DEBUG
+        public void PrintReceiverTransters()
+        {
+            foreach (var transfer in fileReceiver.ActiveTransfers)
+            {
+                DebugConsole.NewMessage(transfer.FileName + " " + transfer.Progress.ToString());
+            }
+        }
+#endif
+
         //has the client been given a character to control this round
         public bool HasSpawned;
 

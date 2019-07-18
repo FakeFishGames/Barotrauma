@@ -246,7 +246,7 @@ namespace Barotrauma
 
         public void CloseServer()
         {
-            Server.Disconnect();
+            Server?.Disconnect();
             Server = null;
         }
 

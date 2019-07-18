@@ -954,6 +954,11 @@ namespace Barotrauma
             }, isCheat: false));
 
 #if DEBUG
+            commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
+            {
+                GameMain.Client.PrintReceiverTransters();
+            }));
+
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
                 foreach (MapEntityPrefab me in MapEntityPrefab.List)

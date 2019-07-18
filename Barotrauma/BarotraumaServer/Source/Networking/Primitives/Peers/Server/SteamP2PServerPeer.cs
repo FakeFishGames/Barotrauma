@@ -103,6 +103,8 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
+            if (OwnerConnection != null) OwnerConnection.Status = NetworkConnectionStatus.Disconnected;
+
             for (int i = pendingClients.Count - 1; i >= 0; i--)
             {
                 RemovePendingClient(pendingClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
@@ -289,6 +291,7 @@ namespace Barotrauma.Networking
                     {
                         string ownerName = inc.ReadString();
                         OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID);
+                        OwnerConnection.Status = NetworkConnectionStatus.Connected;
                         
                         OnInitializationComplete?.Invoke(OwnerConnection);
                         OnOwnerDetermined?.Invoke(OwnerConnection);
@@ -489,6 +492,7 @@ namespace Barotrauma.Networking
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
                 SteamP2PConnection newConnection = new SteamP2PConnection(pendingClient.Name, pendingClient.SteamID);
+                newConnection.Status = NetworkConnectionStatus.Connected;
                 connectedClients.Add(newConnection);
                 pendingClients.Remove(pendingClient);
                 OnInitializationComplete?.Invoke(newConnection);
@@ -652,6 +656,7 @@ namespace Barotrauma.Networking
             if (connectedClients.Contains(steamp2pConn))
             {
                 if (sendDisconnectMessage) SendDisconnectMessage(steamp2pConn.SteamID, msg);
+                steamp2pConn.Status = NetworkConnectionStatus.Disconnected;
                 connectedClients.Remove(steamp2pConn);
                 OnDisconnect?.Invoke(conn, msg);
                 Steam.SteamManager.StopAuthSession(conn.SteamID);

@@ -64,6 +64,15 @@ namespace Barotrauma.Networking
         private ServerEntityEventManager entityEventManager;
 
         private FileSender fileSender;
+#if DEBUG
+        public void PrintSenderTransters()
+        {
+            foreach (var transfer in fileSender.ActiveTransfers)
+            {
+                DebugConsole.NewMessage(transfer.FileName + " " + transfer.Progress.ToString());
+            }
+        }
+#endif
 
         public override List<Client> ConnectedClients
         {
@@ -139,7 +148,7 @@ namespace Barotrauma.Networking
                 serverPeer.OnInitializationComplete = OnInitializationComplete;
                 serverPeer.OnMessageReceived = ReadDataMessage;
                 serverPeer.OnDisconnect = OnClientDisconnect;
-                serverPeer.OnShutdown = Disconnect;
+                serverPeer.OnShutdown = GameMain.Instance.CloseServer;
                 serverPeer.OnOwnerDetermined = OnOwnerDetermined;
 
                 fileSender = new FileSender(serverPeer, MsgConstants.MTU);
@@ -1198,7 +1207,7 @@ namespace Barotrauma.Networking
                 {
                     c.Character.ClientDisconnected = true;
                 }
-
+                
                 ClientWriteLobby(c);
 
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && 
@@ -1213,9 +1222,9 @@ namespace Barotrauma.Networking
                         if (c.LastCampaignSaveSendTime.Second > Lidgren.Network.NetTime.Now - 5.0f)
                         {
                             return;
-                        }                        
+                        }
                     }
-
+                    
                     if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
                     {
                         fileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
@@ -2929,31 +2938,36 @@ namespace Barotrauma.Networking
 
         public override void Disconnect()
         {
-            serverSettings.BanList.Save();
-            serverSettings.SaveSettings();
-            
-            if (registeredToMaster)
+            if (started)
             {
-                if (restClient != null)
+                started = false;
+
+                serverSettings.BanList.Save();
+                serverSettings.SaveSettings();
+
+                if (registeredToMaster)
                 {
-                    var request = new RestRequest("masterserver2.php", Method.GET);
-                    request.AddParameter("action", "removeserver");
-                    request.AddParameter("serverport", Port);
-                    restClient.Execute(request);
-                    restClient = null;
+                    if (restClient != null)
+                    {
+                        var request = new RestRequest("masterserver2.php", Method.GET);
+                        request.AddParameter("action", "removeserver");
+                        request.AddParameter("serverport", Port);
+                        restClient.Execute(request);
+                        restClient = null;
+                    }
                 }
+
+                if (serverSettings.SaveServerLogs)
+                {
+                    Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
+                    serverSettings.ServerLog.Save();
+                }
+
+                GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");
+                serverPeer?.Close(DisconnectReason.ServerShutdown.ToString());
+
+                SteamManager.CloseServer();
             }
-
-            if (serverSettings.SaveServerLogs)
-            {
-                Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
-                serverSettings.ServerLog.Save();
-            }
-
-            GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");
-            serverPeer?.Close(DisconnectReason.ServerShutdown.ToString());
-
-            SteamManager.CloseServer();
         }
     }
     

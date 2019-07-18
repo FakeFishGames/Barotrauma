@@ -62,6 +62,7 @@ namespace Barotrauma.Networking
 
             netClient.Start();
             ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
+            ServerConnection.Status = NetworkConnectionStatus.Connected;
         }
 
         public override void Update()

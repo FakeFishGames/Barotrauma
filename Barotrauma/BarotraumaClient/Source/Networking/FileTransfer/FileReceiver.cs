@@ -189,11 +189,14 @@ namespace Barotrauma.Networking
                 t.Status == FileTransferStatus.Finished), "List of active file transfers contains entires that should have been removed");
 
             byte transferMessageType = inc.ReadByte();
+
+            DebugConsole.NewMessage(((FileTransferMessageType)transferMessageType).ToString());
+
             switch (transferMessageType)
             {
                 case (byte)FileTransferMessageType.Initiate:
                     {
-                        var existingTransfer = activeTransfers.First();//Find(t => t.SequenceChannel == inc.SequenceChannel);
+                        var existingTransfer = activeTransfers.Count>0 ? activeTransfers.First() : null;//Find(t => t.SequenceChannel == inc.SequenceChannel);
                         if (existingTransfer != null)
                         {
                             GameMain.Client.CancelFileTransfer(0);//inc.SequenceChannel);

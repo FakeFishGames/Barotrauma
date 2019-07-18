@@ -8,9 +8,7 @@ namespace Barotrauma.Networking
     public enum NetworkConnectionStatus
     {
         Connected = 0x1,
-        Pending = 0x2,
-        Disconnected = 0x4,
-        Banned = 0x4 | 0x8
+        Disconnected = 0x2
     }
 
     public abstract class NetworkConnection
@@ -32,6 +30,6 @@ namespace Barotrauma.Networking
             protected set;
         }
 
-        public NetworkConnectionStatus Status;
+        public NetworkConnectionStatus Status = NetworkConnectionStatus.Disconnected;
     }
 }
