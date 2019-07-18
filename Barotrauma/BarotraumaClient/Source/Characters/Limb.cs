@@ -442,12 +442,14 @@ namespace Barotrauma
                     if (herpesStrength > 0.0f)
                     {
                         DrawWearable(HerpesSprite, depthStep, spriteBatch, color * (herpesStrength / 100.0f), spriteEffect);
+                        depthStep += 0.000001f;
                     }
                 }
                 if (HuskSprite != null && (character.SpeciesName == "Humanhusk" || (character.SpeciesName == "Human" &&
                     character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active)))
                 {
                     DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
+                    depthStep += 0.000001f;
                 }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
