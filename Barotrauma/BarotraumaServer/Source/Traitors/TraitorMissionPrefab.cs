@@ -56,7 +56,7 @@ namespace Barotrauma {
             public Traitor.Goal Instantiate()
             {
                 Traitor.Goal goal = null;
-                switch (Config.GetAttributeString("type", "").ToLower(System.Globalization.CultureInfo.InvariantCulture)) {
+                switch (Config.GetAttributeString("type", "").ToLowerInvariant()) {
                     case "killtarget":
                         {
                             List<Traitor.TraitorMission.CharacterFilter> filters = new List<Traitor.TraitorMission.CharacterFilter>();
@@ -79,7 +79,7 @@ namespace Barotrauma {
                             Config.GetAttributeBool("matchInventory", false));
                         break;
                     case "sabotage":
-                        goal = new Traitor.GoalSabotageItem(Config.GetAttributeString("tag", null), Config.GetAttributeFloat("threshold", 0.0f) / 100.0f);
+                        goal = new Traitor.GoalSabotageItems(Config.GetAttributeString("tag", null), Config.GetAttributeFloat("threshold", 0.0f) / 100.0f);
                         break;
                     case "floodsub":
                         goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100);
@@ -91,7 +91,7 @@ namespace Barotrauma {
                 }
                 foreach (var element in Config.Elements())
                 {
-                    switch (element.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture))
+                    switch (element.Name.ToString().ToLowerInvariant())
                     {
                         case "modifier":
                             {
@@ -99,7 +99,9 @@ namespace Barotrauma {
                                 switch (modifierType)
                                 {
                                     case "duration":
-                                        goal = new Traitor.GoalWithDuration(goal, element.GetAttributeFloat("duration", 5.0f), element.GetAttributeBool("cumulative", false));
+                                        {
+                                            goal = new Traitor.GoalWithDuration(goal, element.GetAttributeFloat("duration", 5.0f), element.GetAttributeBool("cumulative", false));
+                                        }
                                         break;
                                 }
                             }
@@ -108,7 +110,7 @@ namespace Barotrauma {
                 }
                 foreach (var element in Config.Elements())
                 {
-                    switch (element.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture))
+                    switch (element.Name.ToString().ToLowerInvariant())
                     {
                         case "infotext":
                             {
