@@ -45,6 +45,8 @@ the submarine (or vice versa), the docking interface would not activate on the n
 - Fixed inability to combine items in multiplayer.
 - Fixed inability to scroll the crew list with the mouse wheel when the cursor is over certain parts 
 of the list.
+- Fixed sonar pings stopping mid-way when active sonar is turned off, which could be exploited to stop
+the pings before they reach a monster further away from the sub.
 - Fixed clients not seeing other characters when entering spectator mode after their character has been
 eaten by a creature.
 - Fixed clients not seeing other characters in spectator mode after the distance between the submarine 
@@ -61,12 +63,23 @@ Misc additions and changes:
 - Search for default animation/ragdoll folders from the folder where the character file is located, not
 from "Content/Characters". Fixes mods not being able to load animation/ragdoll files if the file paths
 are not defined explicitly in the character configuration file.
+- Improved performance by deleting dead monsters that are far away from the sub and by disabling physics
+on dead bodies when they stay still long enough.
 - In wiring mode, items are selected by pressing E instead of clicking. Selecting items with the left
 mouse button made it very difficult to manipulate the wires because it was easy to accidentally select
 some device instead of a wire node. 
 - Added limits to submarine name and description length.
 - Delete incomplete file downloads when disconnecting from a server while a file transfer is active.
 Prevents console errors about corrupted submarine/save files caused by the partially downloaded files.
+- Increased Humpback's battery capacity.
+- Added widgets for manipulating coilgun/railgun rotation limits in the sub editor.
+- Show ballast tanks and airlocks in a different color on the status monitor to make it easier to 
+distinguish which rooms are actually flooding and which are supposed to have water in them.
+- Option to define multiple inventory variants for a character (e.g. to add variation to monster loot).
+- Start playing the main menu music during the loading screen.
+- More reliable human walk sounds (played at specific points of the walk cycle instead of relying on 
+impacts between the feet and the floor).
+- Option to show a 16x16 grid and snap the cursor to it in the sprite editor.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.1.0
