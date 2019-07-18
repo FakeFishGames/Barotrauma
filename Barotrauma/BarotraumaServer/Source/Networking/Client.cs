@@ -71,6 +71,7 @@ namespace Barotrauma.Networking
             get
             {
                 if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return 100.0f; }
+                if (HasPermission(ClientPermissions.KarmaImmunity)) { return 100.0f; }
                 return karma;
             }
             set

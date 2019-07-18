@@ -723,6 +723,7 @@
   <clientpermission.manageround>Manage round</clientpermission.manageround>
   <clientpermission.managesettings>Manage settings</clientpermission.managesettings>
   <clientpermission.managepermissions>Manage permissions</clientpermission.managepermissions>
+  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Mission types -->
   <missiontype.none>None</missiontype.none>
