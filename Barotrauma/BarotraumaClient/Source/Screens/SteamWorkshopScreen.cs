@@ -1397,6 +1397,7 @@ namespace Barotrauma
                         itemContentPackage.RemoveFile(contentFile);
                         itemContentPackage.Save(itemContentPackage.Path);
                         RefreshCreateItemFileList();
+                        RefreshMyItemList();
                         return true;
                     }
                 };

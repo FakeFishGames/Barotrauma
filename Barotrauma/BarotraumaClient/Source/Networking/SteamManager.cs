@@ -561,8 +561,7 @@ namespace Barotrauma.Steam
                 DebugConsole.ThrowError("Cannot publish workshop item \"" + item.Title + "\" - folder not set.");
                 return;
             }
-
-            contentPackage.Name = item.Title;
+            
             contentPackage.GameVersion = GameMain.Version;
             contentPackage.Save(contentPackage.Path);
 
@@ -633,7 +632,7 @@ namespace Barotrauma.Steam
 
             if (contentPackage.GameVersion > new Version(0, 9, 1, 0))
             {
-                SaveUtil.CopyFolder(item.Directory.FullName, Path.GetDirectoryName(GetWorkshopItemContentPackagePath(contentPackage)), copySubDirs: true);
+                SaveUtil.CopyFolder(item.Directory.FullName, Path.GetDirectoryName(GetWorkshopItemContentPackagePath(contentPackage)), copySubDirs: true, overwriteExisting: true);
             }
             else //legacy support
             {
