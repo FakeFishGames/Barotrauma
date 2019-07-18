@@ -101,8 +101,8 @@ namespace Barotrauma
 
         private GameTime fixedTime;
 
-        private string StartupConnectName;
-        private string StartupConnectEndpoint;
+        private string ConnectName;
+        private string ConnectEndpoint;
 
         private static SpriteBatch spriteBatch;
 
@@ -178,40 +178,10 @@ namespace Barotrauma
 
             ConsoleArguments = args;
 
-            StartupConnectName = null;
-            StartupConnectEndpoint = null;
-            for (int i=0;i<ConsoleArguments.Length-2;i++)
-            {
-                if (ConsoleArguments[i].Trim().ToLower().Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    int j = i + 2;
+            ConnectName = null;
+            ConnectEndpoint = null;
 
-                    string name = "";
-                    if (ConsoleArguments[i+1].Trim()[0] == '"')
-                    {
-                        name = ConsoleArguments[i + 1].Trim().Substring(1);
-                        for (;j<ConsoleArguments.Length-1;j++)
-                        {
-                            name += " " + ConsoleArguments[j].Trim();
-                            if (name.Contains('"'))
-                            {
-                                name = name.Substring(0, name.IndexOf('"'));
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        name = ConsoleArguments[i + 1].Trim();
-                    }
-                    string endpoint = ConsoleArguments[j].Trim();
-
-                    StartupConnectName = name;
-                    StartupConnectEndpoint = endpoint;
-
-                    break;
-                }
-            }
+            ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint);
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -532,6 +502,7 @@ namespace Barotrauma
             if (SteamManager.USE_STEAM)
             {
                 SteamWorkshopScreen     = new SteamWorkshopScreen();
+                SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
             }
 
             SubEditorScreen         = new SubEditorScreen();
@@ -623,6 +594,13 @@ namespace Barotrauma
             }
         }
 
+        public void OnInvitedToGame(Facepunch.Steamworks.SteamFriend friend, string connectCommand)
+        {
+            ToolBox.ParseConnectCommand(connectCommand.Split(' '), out ConnectName, out ConnectEndpoint);
+
+            DebugConsole.NewMessage(ConnectName+", "+ConnectEndpoint,Color.Yellow);
+        }
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -697,15 +675,22 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
-                    if (!string.IsNullOrWhiteSpace(StartupConnectEndpoint))
+                    if (!string.IsNullOrWhiteSpace(ConnectEndpoint))
                     {
-                        UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(StartupConnectEndpoint);
+                        if (Client != null)
+                        {
+                            Client.Disconnect();
+                            Client = null;
+
+                            GameMain.MainMenuScreen.Select();
+                        }
+                        UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(ConnectEndpoint);
                         Client = new GameClient(SteamManager.GetUsername(),
-                                                serverSteamId != 0 ? null : StartupConnectEndpoint,
+                                                serverSteamId != 0 ? null : ConnectEndpoint,
                                                 serverSteamId,
-                                                string.IsNullOrWhiteSpace(StartupConnectName) ? StartupConnectEndpoint : StartupConnectName);
-                        StartupConnectEndpoint = null;
-                        StartupConnectName = null;
+                                                string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);
+                        ConnectEndpoint = null;
+                        ConnectName = null;
                     }
 
                     SoundPlayer.Update((float)Timing.Step);

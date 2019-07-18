@@ -76,6 +76,8 @@ namespace Barotrauma.Networking
         {
             if (steamId != hostSteamId) { return; }
 
+            timeout = 20.0;
+
             byte incByte = data[0];
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
             bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;

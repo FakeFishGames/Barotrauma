@@ -13,6 +13,7 @@ namespace Barotrauma.Steam
     {
         public Facepunch.Steamworks.Networking Networking => client.Networking;
         public Facepunch.Steamworks.User User => client.User;
+        public Facepunch.Steamworks.Friends Friends => client.Friends;
 
         private SteamManager()
         {

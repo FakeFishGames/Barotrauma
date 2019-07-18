@@ -298,7 +298,7 @@ namespace Barotrauma.Networking
             {
                 SteamManager.Instance.User.ClearRichPresence();
                 SteamManager.Instance.User.SetRichPresence("status", "Playing on " + serverName);
-                SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName + "\" " + serverEndpoint);
+                SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"","\\\"") + "\" " + serverEndpoint);
 
                 canStart = true;
                 connected = true;
