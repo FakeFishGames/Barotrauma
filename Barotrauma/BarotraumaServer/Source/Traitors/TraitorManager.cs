@@ -39,9 +39,10 @@ namespace Barotrauma
 
             public virtual bool IsCompleted => false;
 
-            public virtual void Start(GameServer server, Traitor traitor)
+            public virtual bool Start(GameServer server, Traitor traitor)
             {
                 Traitor = traitor;
+                return true;
             }
 
             public virtual void Update(float deltaTime)
@@ -108,17 +109,31 @@ namespace Barotrauma
                 }
             }
 
-            public void Start(GameServer server, Traitor traitor)
+            public bool Start(GameServer server, Traitor traitor)
             {
                 Traitor = traitor;
-                foreach (var goal in allGoals)
+                for (var i = 0; i < pendingGoals.Count; ++i)
                 {
-                    goal.Start(server, traitor);
+                    var goal = pendingGoals[i];
+                    if (goal.Start(server, traitor))
+                    {
+                        ++i;
+                    }
+                    else
+                    {
+                        completedGoals.Add(goal);
+                        pendingGoals.RemoveAt(i);
+                    }
+                }
+                if (pendingGoals.Count <= 0)
+                {
+                    return false;
                 }
                 IsStarted = true;
                 Client traitorClient = server.ConnectedClients.Find(c => c.Character == traitor.Character);
                 GameMain.Server.SendDirectChatMessage(StartMessageText, traitorClient);
                 GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, StartMessageText, ChatMessageType.MessageBox, null), traitorClient);
+                return true;
             }
 
             public void End(GameServer server)
@@ -223,23 +238,26 @@ namespace Barotrauma
 
             public virtual void Update(float deltaTime)
             {
-                if (pendingObjectives.Count > 0) {
+                while (pendingObjectives.Count > 0) {
                     var objective = pendingObjectives[0];
-                    if (objective != null)
+                    if (!objective.IsStarted)
                     {
-                        if (!objective.IsStarted)
+                        if (!objective.Start(GameMain.Server, Traitors["traitor"]))
                         {
-                            objective.Start(GameMain.Server, Traitors["traitor"]);
-
+                            pendingObjectives.RemoveAt(0);
+                            completedObjectives.Add(objective);
+                            continue;
                         }
-                        objective.Update(deltaTime);
                     }
+                    objective.Update(deltaTime);
                     if (objective.IsCompleted)
                     {
                         pendingObjectives.RemoveAt(0);
                         completedObjectives.Add(objective);
                         objective.End(GameMain.Server);
+                        continue;
                     }
+                    break;
                 }
             }
 
@@ -280,16 +298,21 @@ namespace Barotrauma
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
+
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
                 isCompleted = Target?.IsDead ?? false;
             }
 
-            public override void Start(GameServer server, Traitor traitor)
+            public override bool Start(GameServer server, Traitor traitor)
             {
-                base.Start(server, traitor);
+                if (!base.Start(server, traitor))
+                {
+                    return false;
+                }
                 Target = traitor.Mission.FindKillTarget(server, traitor.Character, Filter);
+                return Target != null && !Target.IsDead;
             }
 
             public GoalKillTarget(TraitorMission.CharacterFilter filter) : base()
@@ -358,6 +381,15 @@ namespace Barotrauma
                 }
             }
 
+            public override bool Start(GameServer server, Traitor traitor)
+            {
+                if (!base.Start(server, traitor))
+                {
+                    return false;
+                }
+                return goal.Start(server, traitor);
+            }
+
             public GoalWithDuration(Goal goal, float requiredDuration, bool countTotalDuration) : base()
             {
                 this.goal = goal;
@@ -379,8 +411,31 @@ namespace Barotrauma
             }
         }
 
-        public class GoalSabotageSpecificItem : Goal
+        public class GoalSabotageItem : Goal
         {
+            private readonly string tag;
+            private readonly float conditionThreshold;
+
+            public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]", "[conditionthreshold]" });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag, string.Format("{0:f}", conditionThreshold * 100.0f });
+
+            private bool isCompleted = false;
+            public override bool IsCompleted => IsCompleted;
+
+            public override void Update(float deltaTime)
+            {
+                base.Update(deltaTime);
+            }
+
+            public GoalSabotageItem(string tag, float conditionThreshold) : base() {
+                this.tag = tag;
+                this.conditionThreshold = conditionThreshold;
+                foreach (var item in Item.ItemList)
+                {
+                    // if (item.GetComponent
+                }
+
+            }
         }
 
         public class GoalDestroyItemsWithTag : Goal
@@ -436,11 +491,19 @@ namespace Barotrauma
                 isCompleted = CountMatchingItems(false) <= targetCount;
             }
 
-            public override void Start(GameServer server, Traitor traitor)
+            public override bool Start(GameServer server, Traitor traitor)
             {
-                base.Start(server, traitor);
+                if (!base.Start(server, traitor))
+                {
+                    return false;
+                }
                 totalCount = CountMatchingItems(true);
+                if (totalCount <= 0)
+                {
+                    return false;
+                }
                 targetCount = (int)(destroyPercent * totalCount);
+                return true;
             }
 
             public GoalDestroyItemsWithTag(string tag, float destroyPercent, bool matchTag, bool matchIdentifier, bool matchInventory) : base() {
@@ -489,24 +552,16 @@ namespace Barotrauma
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
             string greetingMessage = TextManager.GetWithVariables(Mission.StartText, new string[] {
-                "[codewords]", "[coderesponse]"/*, "[traitorname]"*/
+                "[codewords]", "[coderesponse]"
             }, new string[] {
-                codeWords, codeResponse/*, Character.Name*/
+                codeWords, codeResponse
             });
-            /*string moreAgentsMessage = TextManager.GetWithVariables("TraitorMoreAgentsMessage",
-                new string[2] { "[codewords]", "[coderesponse]" }, new string[2] { codeWords, codeResponse });
-            */
             var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
-            /* var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);*/
-
-            // var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
             var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
             GameMain.Server.SendDirectChatMessage(greetingChatMsg, traitorClient);
-            // GameMain.Server.SendDirectChatMessage(moreAgentsChatMsg, traitorClient);
             GameMain.Server.SendDirectChatMessage(greetingMsgBox, traitorClient);
-            // GameMain.Server.SendDirectChatMessage(moreAgentsMsgBox, traitorClient);
 
             Client ownerClient = server.ConnectedClients.Find(c => c.Connection == server.OwnerConnection);
             if (traitorClient != ownerClient && ownerClient != null && ownerClient.Character == null)
