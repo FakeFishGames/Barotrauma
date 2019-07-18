@@ -417,7 +417,7 @@ namespace Barotrauma
             private readonly float conditionThreshold;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[tag]", "[conditionthreshold]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag, string.Format("{0:f}", conditionThreshold * 100.0f });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { tag, string.Format("{0:f}", conditionThreshold * 100.0f) });
 
             private bool isCompleted = false;
             public override bool IsCompleted => IsCompleted;

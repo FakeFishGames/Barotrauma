@@ -188,7 +188,6 @@
     <Compile Include="Source\GameSession\GameModes\CharacterCampaignData.cs" />
     <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
@@ -242,7 +241,8 @@
     <Compile Include="Source\Utils\MonogameTypes\Rectangle.cs" />
     <Compile Include="Source\Utils\MonogameTypes\Vector4.cs" />
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorMission.cs" />
+    <Compile Include="Source\Traitors\TraitorManager.cs" />
+    <Compile Include="Source\Traitors\TraitorMission.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
@@ -291,6 +291,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Source\Traitors\" />
   </ItemGroup>
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
