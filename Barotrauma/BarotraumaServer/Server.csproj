@@ -242,7 +242,15 @@
     <Compile Include="Source\Utils\MonogameTypes\Vector4.cs" />
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
     <Compile Include="Source\Traitors\TraitorManager.cs" />
+    <Compile Include="Source\Traitors\TraitorMissionPrefab.cs" />
+    <Compile Include="Source\Traitors\Goals\Goal.cs" />
+    <Compile Include="Source\Traitors\Objective.cs" />
     <Compile Include="Source\Traitors\TraitorMission.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalKillTarget.cs" />
+    <Compile Include="Source\Traitors\Goals\Modifiers\GoalWithDuration.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalSabotageItems.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalDestroyItemsWithTag.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalFloodPercentOfSub.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
@@ -294,6 +302,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Source\Traitors\" />
+    <Folder Include="Source\Traitors\Goals\" />
+    <Folder Include="Source\Traitors\Goals\Modifiers\" />
   </ItemGroup>
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />

@@ -47,10 +47,11 @@
       </Goal>
 
       <!--"Sabotage target" goal. Sabotage item by equipping a repair tool and interacting with the item. -->
-      <!--<Goal type="sabotage" targetid="pump" targettag="ballast" numberoftargets="2" targetall="false" sabotagetime="30" cumulative="true" sabotagethreshold="30">
-        --><!--Sometimes we want to find the item using both the id and tag. Separate parameters for the number of instances of the given item we want to sabotage and if we want to target all of them. Also parameters for how long they have to be sabotaged and a condition threshold for what counts as sabotaged.--><!--
+      <Goal type="sabotage" targetid="pump" tag="ballast" numberoftargets="2" targetall="false" threshold="30">
+        --><!--Sometimes we want to find the item using both the id and tag. Separate parameters for the number of instances of the given item we want to sabotage and if we want to target all of them. Also parameters for how long they have to be sabotaged and a condition threshold for what counts as sabotaged.-->
         <InfoText id="traitorgoalsabotageinfo" />
-      </Goal>-->
+        <Modifier type="duration" duration="30" cumulative="true" />
+      </Goal>
     </Objective>
 
     <!--Objective 3: Cause a reactor meltdown in 90 seconds-->
