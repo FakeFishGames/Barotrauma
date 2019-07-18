@@ -76,28 +76,26 @@ namespace Barotrauma
             float karmaChange = client.Karma - clientMemory.PreviousNotifiedKarma;
             if (Math.Abs(karmaChange) > KarmaNotificationInterval || (TestMode && Math.Abs(karmaChange) > 2.0f))
             {
-                if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
+                if (TestMode)
                 {
-                    GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
-                }
-                else
-                {
-#if DEBUG
                     string msg =
                         karmaChange < 0 ? $"You karma has decreased to {client.Karma}" : $"You karma has increased to {client.Karma}";
                     if (!string.IsNullOrEmpty(debugKarmaChangeReason))
                     {
                         msg += $". Reason: {debugKarmaChangeReason}";
                     }
-                    msg += " (this message should not appear in release builds)";
                     GameMain.Server.SendDirectChatMessage(msg, client);
-
-#else
+                }
+                else if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
+                {
+                    GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
+                }
+                else
+                {
                     GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
-#endif
                 }
                 clientMemory.PreviousNotifiedKarma = client.Karma;
-            }            
+            }
         }
 
         private void UpdateClient(Client client, float deltaTime)
