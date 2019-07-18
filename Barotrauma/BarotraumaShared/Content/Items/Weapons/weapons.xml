@@ -177,7 +177,7 @@
     </ItemContainer>
   </Item>  
   
-  <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+  <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light" scale="0.2">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="128,3,40,14" depth="0.55" origin="0.5,0.5" />
     <Body width="8" height="3" density="40" />
