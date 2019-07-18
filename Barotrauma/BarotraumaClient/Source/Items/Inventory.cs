@@ -189,6 +189,21 @@ namespace Barotrauma
 
         protected static HashSet<SlotReference> highlightedSubInventorySlots = new HashSet<SlotReference>();
 
+        private bool useOpenStateAnimation = true;
+        public bool UseOpenStateAnimation
+        {
+            get
+            {
+                return useOpenStateAnimation;
+            }
+
+            set
+            {
+                if (value) openState = 0f;
+                useOpenStateAnimation = value;
+            }
+        }
+
         protected static SlotReference selectedSlot;
 
         public InventorySlot[] slots;
@@ -443,9 +458,17 @@ namespace Barotrauma
                 subRect.Y = startY;
 
                 float totalHeight = itemCapacity / columns * (subRect.Height + spacing.Y);
-                subInventory.openState = subInventory.HideTimer >= 0.5f ?
-                    Math.Min(subInventory.openState + deltaTime * 5.0f, 1.0f) :
-                    Math.Max(subInventory.openState - deltaTime * 3.0f, 0.0f);
+
+                if (subInventory.useOpenStateAnimation)
+                {
+                    subInventory.openState = subInventory.HideTimer >= 0.5f ?
+                        Math.Min(subInventory.openState + deltaTime * 5.0f, 1.0f) :
+                        Math.Max(subInventory.openState - deltaTime * 3.0f, 0.0f);
+                }
+                else
+                {
+                    subInventory.openState = subInventory.HideTimer >= 0.5f ? 1f : 0f;
+                }
 
                 for (int i = 0; i < itemCapacity; i++)
                 { 

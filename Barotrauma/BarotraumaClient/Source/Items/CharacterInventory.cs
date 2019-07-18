@@ -492,7 +492,7 @@ namespace Barotrauma
                     selectedSlot.Inventory = subInventory;
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
                     {
-                        ShowSubInventory(selectedSlot, deltaTime, cam, hideSubInventories);
+                        ShowSubInventory(selectedSlot, deltaTime, cam, hideSubInventories, true);
                     }
                 }
             }
@@ -521,15 +521,12 @@ namespace Barotrauma
                     if (character.HasEquippedItem(item))
                     {
                         var itemContainer = item.GetComponent<ItemContainer>();
-                        if (itemContainer != null && itemContainer.KeepOpenWhenEquipped)
+                        if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                         {
-                            if (!highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
-                            {
-                                ShowSubInventory(new SlotReference(this, slot, i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories);
-                            }
+                            ShowSubInventory(new SlotReference(this, slot, i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, false);
                         }
                     }
-                }
+                } 
             }            
 
             //cancel dragging if too far away from the container of the dragged item
@@ -612,11 +609,12 @@ namespace Barotrauma
             }
         }
 
-        private void ShowSubInventory(SlotReference slotRef, float deltaTime, Camera cam, List<SlotReference> hideSubInventories)
+        private void ShowSubInventory(SlotReference slotRef, float deltaTime, Camera cam, List<SlotReference> hideSubInventories, bool useAnimation)
         {
             highlightedSubInventorySlots.Add(slotRef);
+            slotRef.Inventory.UseOpenStateAnimation = useAnimation;
+            slotRef.Inventory.HideTimer = 1f;
             UpdateSubInventory(deltaTime, slotRef.SlotIndex, cam);
-            slotRef.Inventory.HideTimer = 1.0f;
 
             //hide previously opened subinventories if this one overlaps with them
             Rectangle hoverArea = GetSubInventoryHoverArea(slotRef);
