@@ -53,7 +53,6 @@ namespace Barotrauma
 
             public override bool Start(GameServer server, Traitor traitor)
             {
-                GameServer.Log("START goal with duration, child goal = " + goal.InfoTextId + " should be wrapped...", ServerLog.MessageType.Chat);
                 if (!base.Start(server, traitor))
                 {
                     return false;
