@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" translatedname="English">
 
   <!-- Loading Screen -->
@@ -1208,7 +1208,6 @@
   <entityname.titanite>Titanite</entityname.titanite>
   <entitydescription.titanite>A mineral containing titanium and iron.</entitydescription.titanite>
   <entityname.brockite>Brockite</entityname.brockite>
-  <entitydescription.brockite>A mineral containing titanium and phosphorus.</entitydescription.brockite>
   <entityname.thorianite>Thorianite</entityname.thorianite>
   <entitydescription.thorianite>A rare mineral containing thorium.</entitydescription.thorianite>
   <entityname.amblygonite>Amblygonite</entityname.amblygonite>
@@ -1781,6 +1780,7 @@
   <traitorendmessagefailuretraitordetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task failed—[genderpronoun] was successfully detained.</traitorendmessagefailuretraitordetained>
   <traitorrespawnmessage>Your traitor objective was unsuccessful. You are no longer a traitor, so play nice!</traitorrespawnmessage>
   <traitortargetmessage>[traitorname] had a secret objective to assassinate you—and the task was successful.</traitortargetmessage>
+
 
   <!-- Causes of death -->
   <causeofdeath>Cause of death</causeofdeath>
@@ -3182,7 +3182,11 @@
   <connection.turretaimingout>position_out</connection.turretaimingout>
   <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
   <connection.sonardataout>data_out</connection.sonardataout>
+
   <label.outpostinfodisplay1>Welcome. Oxygen Levels: Nominal. Power Levels: Nominal. Radiation Levels: Suboptimal. Weather Forecast For Today: Cold and Damp.</label.outpostinfodisplay1>
+  <label.navterminaldock>Dock</label.navterminaldock>
+  <label.navterminaldock>Undock</label.navterminaldock>
+
   <connectionerrornoresponse>No response from the server. There may be a connection issue at the server's end.</connectionerrornoresponse>
 
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
@@ -3212,7 +3216,46 @@
 
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
+
+  <pending>Pending</pending>
+  <inprogress>In progress</inprogress>
+  <complete>Complete</complete>
+
+  <!-- Traitor mission (new) -->
+  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
+  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
+  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
+
+  <!-- Traitor objectives (new) -->
+  <traitorobjectivestartmessage>You have a new objective, following goals need to be completed:\n[traitorgoalinfos]</traitorobjectivestartmessage>
+  <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
+  <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
+  <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
+  <traitorobjectiveendmessagesuccessdetained>[traitorname] was a traitor and succeeded in completing the given goals but was detained, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
+  <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
+  <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
+  <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
   
+  <!-- Traitor goals (new) -->
+  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat>
+  <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
+  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
+  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
+  <traitorgoalfinditeminfo>Find your next objective inside [target] in [targethullname].</traitorgoalfinditeminfo>
+  <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
+  <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
+  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the sub.</traitorgoalfloodpercentofsub>
+  <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
+  <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
+  <traitorgoalsabotageinfo>Sabotage [target] for at least [duration] seconds.</traitorgoalsabotageinfo>
+  <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
+  <traitorgoaltamperoxygeninfo>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
+  <traitorgoaltampercoilguninfo>Load dummy ammunition into a coilgun loader.</traitorgoaltampercoilguninfo>
+  <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
+  <traitorgoaltamperrailguninfo>Load a dummy shell into a railgun loader.</traitorgoaltamperrailguninfo>
+  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loaders.</traitorgoaltamperrailguninfomulti>
+
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
@@ -3222,6 +3265,7 @@
   <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
   <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
   <workshop.contenttag.language>Language</workshop.contenttag.language>
+  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
 
   <serverlisthaspassword>Password</serverlisthaspassword>
 
