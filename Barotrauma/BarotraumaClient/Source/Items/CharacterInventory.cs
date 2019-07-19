@@ -518,6 +518,7 @@ namespace Barotrauma
                         HandleButtonEquipStates(item, slot, deltaTime);
                     }
 
+                    if (HideSlot(i)) continue;
                     if (character.HasEquippedItem(item))
                     {
                         var itemContainer = item.GetComponent<ItemContainer>();
