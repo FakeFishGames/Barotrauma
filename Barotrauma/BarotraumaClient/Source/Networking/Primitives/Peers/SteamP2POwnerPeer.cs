@@ -12,6 +12,7 @@ namespace Barotrauma.Networking
 {
     class SteamP2POwnerPeer : ClientPeer
     {
+        private bool isActive;
         private NetClient netClient;
         private NetPeerConfiguration netPeerConfiguration;
 
@@ -39,13 +40,14 @@ namespace Barotrauma.Networking
             Name = name;
 
             netClient = null;
+            isActive = false;
 
             selfSteamID = Steam.SteamManager.GetSteamID();
         }
 
         public override void Start(object endPoint)
         {
-            if (netClient != null) { return; }
+            if (isActive) { return; }
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma");
 
@@ -69,10 +71,14 @@ namespace Barotrauma.Networking
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = OnIncomingConnection;
             Steam.SteamManager.Instance.Networking.OnP2PData = OnP2PData;
             Steam.SteamManager.Instance.Networking.SetListenChannel(0, true);
+
+            isActive = true;
         }
 
         private bool OnIncomingConnection(UInt64 steamId)
         {
+            if (!isActive) { return false; }
+
             if (!remotePeers.Any(p => p.SteamID == steamId))
             {
                 remotePeers.Add(new RemotePeer(steamId));
@@ -83,6 +89,8 @@ namespace Barotrauma.Networking
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
         {
+            if (!isActive) { return; }
+
             if (!remotePeers.Any(p => p.SteamID == steamId))
             {
                 return;
@@ -111,7 +119,7 @@ namespace Barotrauma.Networking
 
         public override void Update()
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             for (int i=remotePeers.Count-1;i>=0;i--)
             {
@@ -143,7 +151,7 @@ namespace Barotrauma.Networking
 
         private void HandleDataMessage(NetIncomingMessage inc)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             UInt64 recipientSteamId = inc.ReadUInt64();
 
@@ -267,7 +275,7 @@ namespace Barotrauma.Networking
 
         private void HandleStatusChanged(NetIncomingMessage inc)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             NetConnectionStatus status = (NetConnectionStatus)inc.ReadByte();
             switch (status)
@@ -286,7 +294,9 @@ namespace Barotrauma.Networking
 
         public override void Close(string msg = null)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
+
+            isActive = false;
 
             for (int i=remotePeers.Count-1;i>=0;i--)
             {
@@ -301,8 +311,9 @@ namespace Barotrauma.Networking
             }
 
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
-            OnDisconnect?.Invoke(msg);
             netClient = null;
+
+            OnDisconnect?.Invoke(msg);
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
             Steam.SteamManager.Instance.Networking.OnP2PData = null;
@@ -311,7 +322,7 @@ namespace Barotrauma.Networking
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
             switch (deliveryMethod)

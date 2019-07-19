@@ -373,7 +373,7 @@ namespace Barotrauma.Networking
 
             return true;
         }
-
+        
         private bool connectCancelled;
         private void CancelConnect()
         {
@@ -763,6 +763,8 @@ namespace Barotrauma.Networking
                     var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
                     msgBox.Buttons[0].OnClicked += ReturnToServerList;
                 }
+
+                Disconnect();
             }
         }
 

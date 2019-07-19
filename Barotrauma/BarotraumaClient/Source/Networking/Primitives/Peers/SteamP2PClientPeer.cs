@@ -10,6 +10,7 @@ namespace Barotrauma.Networking
 {
     class SteamP2PClientPeer : ClientPeer
     {
+        private bool isActive;
         private UInt64 hostSteamId;
         private ConnectionInitialization initializationStep;
         private int passwordSalt;
@@ -25,6 +26,8 @@ namespace Barotrauma.Networking
             ServerConnection = null;
 
             Name = name;
+
+            isActive = false;
         }
 
         public override void Start(object endPoint)
@@ -65,15 +68,19 @@ namespace Barotrauma.Networking
 
             timeout = 20.0;
             heartbeatTimer = 1.0;
+
+            isActive = true;
         }
 
         private bool OnIncomingConnection(UInt64 steamId)
         {
+            if (!isActive) { return false; }
             return steamId == hostSteamId;
         }
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
         {
+            if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
 
             timeout = 20.0;
@@ -117,6 +124,8 @@ namespace Barotrauma.Networking
 
         public override void Update()
         {
+            if (!isActive) { return; }
+
             timeout -= Timing.Step;
             heartbeatTimer -= Timing.Step;
 
@@ -168,6 +177,8 @@ namespace Barotrauma.Networking
 
         private void ReadConnectionInitializationStep(IReadMessage inc)
         {
+            if (!isActive) { return; }
+
             ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
             //DebugConsole.NewMessage(step + " " + initializationStep);
             switch (step)
@@ -217,6 +228,8 @@ namespace Barotrauma.Networking
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
         {
+            if (!isActive) { return; }
+
             byte[] buf = new byte[msg.LengthBytes + 4];
             buf[0] = (byte)deliveryMethod;
 
@@ -251,6 +264,8 @@ namespace Barotrauma.Networking
 
         public override void SendPassword(string password)
         {
+            if (!isActive) { return; }
+
             if (initializationStep != ConnectionInitialization.Password) { return; }
             IWriteMessage outMsg = new WriteOnlyMessage();
             outMsg.Write((byte)DeliveryMethod.Reliable);
@@ -267,6 +282,10 @@ namespace Barotrauma.Networking
         
         public override void Close(string msg = null)
         {
+            if (!isActive) { return; }
+
+            isActive = false;
+
             IWriteMessage outMsg = new WriteOnlyMessage();
             outMsg.Write((byte)DeliveryMethod.Reliable);
             outMsg.Write((byte)PacketHeader.IsDisconnectMessage);

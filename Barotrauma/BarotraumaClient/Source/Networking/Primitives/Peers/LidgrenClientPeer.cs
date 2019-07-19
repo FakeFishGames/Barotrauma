@@ -11,6 +11,7 @@ namespace Barotrauma.Networking
 {
     class LidgrenClientPeer : ClientPeer
     {
+        private bool isActive;
         private NetClient netClient;
         private NetPeerConfiguration netPeerConfiguration;
 
@@ -26,11 +27,12 @@ namespace Barotrauma.Networking
             Name = name;
 
             netClient = null;
+            isActive = false;
         }
 
         public override void Start(object endPoint)
         {
-            if (netClient != null) { return; }
+            if (isActive) { return; }
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma");
 
@@ -63,11 +65,13 @@ namespace Barotrauma.Networking
             netClient.Start();
             ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
             ServerConnection.Status = NetworkConnectionStatus.Connected;
+
+            isActive = true;
         }
 
         public override void Update()
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             netClient.ReadMessages(incomingLidgrenMessages);
 
@@ -91,7 +95,7 @@ namespace Barotrauma.Networking
 
         private void HandleDataMessage(NetIncomingMessage inc)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             byte incByte = inc.ReadByte();
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
@@ -118,7 +122,7 @@ namespace Barotrauma.Networking
 
         private void HandleStatusChanged(NetIncomingMessage inc)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             NetConnectionStatus status = (NetConnectionStatus)inc.ReadByte();
             switch (status)
@@ -132,7 +136,7 @@ namespace Barotrauma.Networking
 
         private void ReadConnectionInitializationStep(NetIncomingMessage inc)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
             //DebugConsole.NewMessage(step + " " + initializationStep);
@@ -180,7 +184,7 @@ namespace Barotrauma.Networking
 
         public override void SendPassword(string password)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             if (initializationStep != ConnectionInitialization.Password) { return; }
             NetOutgoingMessage outMsg = netClient.CreateMessage();
@@ -194,17 +198,19 @@ namespace Barotrauma.Networking
 
         public override void Close(string msg=null)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
+
+            isActive = false;
 
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
+            netClient = null;
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             OnDisconnect?.Invoke(msg);
-            netClient = null;
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
         {
-            if (netClient == null) { return; }
+            if (!isActive) { return; }
 
             NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
             switch (deliveryMethod)
