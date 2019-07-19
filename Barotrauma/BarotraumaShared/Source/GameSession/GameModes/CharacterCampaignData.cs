@@ -13,7 +13,7 @@ namespace Barotrauma
 
         public readonly string Name;
 
-        public string ClientIP
+        public string ClientEndPoint
         {
             get;
             private set;
@@ -42,7 +42,7 @@ namespace Barotrauma
         public CharacterCampaignData(XElement element)
         {
             Name = element.GetAttributeString("name", "Unnamed");
-            ClientIP = element.GetAttributeString("ip", "");
+            ClientEndPoint = element.GetAttributeString("endpoint", null) ?? element.GetAttributeString("ip", "");
             string steamID = element.GetAttributeString("steamid", "");
             if (!string.IsNullOrEmpty(steamID))
             {
@@ -69,7 +69,7 @@ namespace Barotrauma
         {
             XElement element = new XElement("CharacterCampaignData", 
                 new XAttribute("name", Name),
-                new XAttribute("ip", ClientIP),
+                new XAttribute("endpoint", ClientEndPoint),
                 new XAttribute("steamid", SteamID));
 
             CharacterInfo?.Save(element);

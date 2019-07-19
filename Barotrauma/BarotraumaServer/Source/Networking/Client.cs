@@ -119,15 +119,19 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public bool IPMatches(string ip)
+        public bool EndpointMatches(string endpoint)
         {
-            if (Connection?.IP == null) { return false; }
-            if (Connection.IP.IsIPv4MappedToIPv6 && 
-                Connection.IP.MapToIPv4().ToString() == ip)
+            if (Connection is LidgrenConnection lidgrenConn)
             {
-                return true;
+                if (lidgrenConn.IPEndPoint?.Address == null) { return false; }
+                if ((lidgrenConn.IPEndPoint?.Address.IsIPv4MappedToIPv6 ?? false) &&
+                    lidgrenConn.IPEndPoint?.Address.MapToIPv4().ToString() == endpoint)
+                {
+                    return true;
+                }
             }
-            return Connection.IP.ToString() == ip;
+            
+            return Connection.EndPointString == endpoint;
         }
 
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)

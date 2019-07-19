@@ -412,7 +412,7 @@ namespace Barotrauma
                 });
             }));
             
-            commands.Add(new Command("banip", "banip [ip]: Ban the IP address from the server.", null));
+            commands.Add(new Command("banendpoint|banip", "banendpoint [endpoint]: Ban the IP address/SteamID from the server.", null));
             
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", (string[] args) =>
             {

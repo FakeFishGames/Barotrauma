@@ -137,6 +137,15 @@ namespace Barotrauma.Networking
 
             netServer.ReadMessages(incomingLidgrenMessages);
 
+            foreach (SteamP2PConnection conn in connectedClients)
+            {
+                conn.Decay();
+                if (conn.Timeout < 0.0)
+                {
+                    Disconnect(conn, "Timed out");
+                }
+            }
+
             //process incoming connections first
             foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType == NetIncomingMessageType.ConnectionApproval))
             {

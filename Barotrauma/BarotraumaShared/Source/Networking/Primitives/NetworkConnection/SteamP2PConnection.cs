@@ -11,13 +11,19 @@ namespace Barotrauma.Networking
         public SteamP2PConnection(string name, UInt64 steamId)
         {
             SteamID = steamId;
+            EndPointString = SteamID.ToString();
             Name = name;
             Heartbeat();
         }
 
+        public void Decay()
+        {
+            Timeout -= Timing.Step;
+        }
+
         public void Heartbeat()
         {
-            Timeout = Timing.TotalTime + 5.0;
+            Timeout = 20.0;
         }
     }
 }

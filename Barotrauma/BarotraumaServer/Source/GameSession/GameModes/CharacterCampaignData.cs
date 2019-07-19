@@ -6,7 +6,7 @@ namespace Barotrauma
     {
         partial void InitProjSpecific(Client client)
         {
-            ClientIP = client.Connection.IP.ToString();
+            ClientEndPoint = client.Connection.EndPointString;
             SteamID = client.SteamID;
             CharacterInfo = client.CharacterInfo;
         }
@@ -19,7 +19,7 @@ namespace Barotrauma
             }
             else
             {
-                return ClientIP == client.Connection.IP.ToString();
+                return ClientEndPoint == client.Connection.EndPointString;
             }
         }
 

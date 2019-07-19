@@ -56,25 +56,17 @@ namespace Barotrauma.Networking
 
         public class SavedClientPermission
         {
-            public readonly string IP;
+            public readonly string EndPoint;
             public readonly ulong SteamID;
             public readonly string Name;
             public List<DebugConsole.Command> PermittedCommands;
 
             public ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, IPAddress ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            public SavedClientPermission(string name, string endpoint, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
-                this.IP = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
-                this.Permissions = permissions;
-                this.PermittedCommands = permittedCommands;
-            }
-            public SavedClientPermission(string name, string ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
-            {
-                this.Name = name;
-                this.IP = ip;
-
+                this.EndPoint = endpoint;
                 this.Permissions = permissions;
                 this.PermittedCommands = permittedCommands;
             }

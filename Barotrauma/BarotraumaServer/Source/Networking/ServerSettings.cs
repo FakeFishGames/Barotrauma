@@ -321,7 +321,7 @@ namespace Barotrauma.Networking
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");
-                string clientIP = clientElement.GetAttributeString("ip", "");
+                string clientEndPoint = clientElement.GetAttributeString("endpoint", null) ?? clientElement.GetAttributeString("ip", "");
                 string steamIdStr = clientElement.GetAttributeString("steamid", "");
 
                 if (string.IsNullOrWhiteSpace(clientName))
@@ -329,7 +329,7 @@ namespace Barotrauma.Networking
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
                     continue;
                 }
-                if (string.IsNullOrWhiteSpace(clientIP) && string.IsNullOrWhiteSpace(steamIdStr))
+                if (string.IsNullOrWhiteSpace(clientEndPoint) && string.IsNullOrWhiteSpace(steamIdStr))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an IP address or a Steam ID.");
                     continue;
@@ -402,7 +402,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    ClientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                    ClientPermissions.Add(new SavedClientPermission(clientName, clientEndPoint, permissions, permittedCommands));
                 }
             }
         }
@@ -472,7 +472,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    clientElement.Add(new XAttribute("ip", clientPermission.IP));
+                    clientElement.Add(new XAttribute("endpoint", clientPermission.EndPoint));
                 }
 
                 if (matchingPreset == null)

@@ -14,16 +14,13 @@ namespace Barotrauma.Networking
     public abstract class NetworkConnection
     {
         public string Name;
-        public IPAddress IP
-        {
-            get;
-            protected set;
-        }
+
         public UInt64 SteamID
         {
             get;
             protected set;
         }
+
         public string EndPointString
         {
             get;

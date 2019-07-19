@@ -194,6 +194,7 @@ namespace Barotrauma
                     return client.HasPermission(ClientPermissions.Kick);
                 case "ban":
                 case "banip":
+                case "banendpoint":
                     return client.HasPermission(ClientPermissions.Ban);
                 case "unban":
                 case "unbanip":
@@ -1422,11 +1423,11 @@ namespace Barotrauma
             );
 
             AssignOnClientExecute(
-                "banip",
+                "banendpoint|banip",
                 (string[] args) =>
                 {
                     if (GameMain.Client == null || args.Length == 0) return;
-                    ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
+                    ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
                     {
                         ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                         {
@@ -1442,7 +1443,7 @@ namespace Barotrauma
                             }
 
                             GameMain.Client.SendConsoleCommand(
-                                "banip " +
+                                "banendpoint " +
                                 args[0] + " " +
                                 (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
                                 reason);

@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public string OwnerClientIP;
+        public string OwnerClientEndPoint;
         public string OwnerClientName;
         public bool ClientDisconnected;
         public float KillDisconnectedTimer;

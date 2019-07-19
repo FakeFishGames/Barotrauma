@@ -246,7 +246,7 @@ namespace Barotrauma.Networking
             var savedPermissions = serverSettings.ClientPermissions.Find(cp =>
                 cp.SteamID > 0 ?
                 cp.SteamID == newClient.SteamID :
-                newClient.IPMatches(cp.IP));
+                newClient.EndpointMatches(cp.EndPoint));
 
             if (savedPermissions != null)
             {
@@ -435,7 +435,7 @@ namespace Barotrauma.Networking
                     Client owner = connectedClients.Find(c =>
                         c.InGame && !c.NeedsMidRoundSync &&
                         c.Name == character.OwnerClientName &&
-                        c.IPMatches(character.OwnerClientIP));
+                        c.EndpointMatches(character.OwnerClientEndPoint));
 
                     if (owner != null && (!serverSettings.AllowSpectating || !owner.SpectateOnly))
                     {
@@ -1790,7 +1790,7 @@ namespace Barotrauma.Networking
                     }
 
                     teamClients[i].Character = spawnedCharacter;
-                    spawnedCharacter.OwnerClientIP = teamClients[i].Connection.ToString();
+                    spawnedCharacter.OwnerClientEndPoint = teamClients[i].Connection.EndPointString;
                     spawnedCharacter.OwnerClientName = teamClients[i].Name;
                 }
 
@@ -2103,10 +2103,15 @@ namespace Barotrauma.Networking
 
             if (client.SteamID == 0 || range)
             {
-                string ip = client.Connection.IP.IsIPv4MappedToIPv6 ?
-                    client.Connection.IP.MapToIPv4().ToString() :
-                    client.Connection.IP.ToString();
-                if (range) { ip = serverSettings.BanList.ToRange(ip); }
+                string ip = "";
+                if (client.Connection is LidgrenConnection lidgrenConn)
+                {
+                    ip = lidgrenConn.IPEndPoint.Address.IsIPv4MappedToIPv6 ?
+                    lidgrenConn.IPEndPoint.Address.MapToIPv4().ToString() :
+                    lidgrenConn.IPEndPoint.Address.ToString();
+                    if (range) { ip = serverSettings.BanList.ToRange(ip); }
+                }
+                
                 serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);
             }
             if (client.SteamID > 0)
@@ -2561,12 +2566,12 @@ namespace Barotrauma.Networking
             }
             else
             {
-                serverSettings.ClientPermissions.RemoveAll(cp => client.IPMatches(cp.IP));
+                serverSettings.ClientPermissions.RemoveAll(cp => client.EndpointMatches(cp.EndPoint));
                 if (client.Permissions != ClientPermissions.None)
                 {
                     serverSettings.ClientPermissions.Add(new ServerSettings.SavedClientPermission(
                         client.Name,
-                        client.Connection.IP,
+                        client.Connection.EndPointString,
                         client.Permissions,
                         client.PermittedConsoleCommands));
                 }
@@ -2641,7 +2646,7 @@ namespace Barotrauma.Networking
             if (client.Character != null)
             {
                 client.Character.IsRemotePlayer = false;
-                client.Character.OwnerClientIP = null;
+                client.Character.OwnerClientEndPoint = null;
                 client.Character.OwnerClientName = null;
             }
 
@@ -2663,7 +2668,7 @@ namespace Barotrauma.Networking
                     newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
                 }
 
-                newCharacter.OwnerClientIP = client.Connection.EndPointString;
+                newCharacter.OwnerClientEndPoint = client.Connection.EndPointString;
                 newCharacter.OwnerClientName = client.Name;
                 newCharacter.IsRemotePlayer = true;
                 newCharacter.Enabled = true;
@@ -2974,21 +2979,21 @@ namespace Barotrauma.Networking
     partial class PreviousPlayer
     {
         public string Name;
-        public string IP;
+        public string EndPoint;
         public UInt64 SteamID;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)
         {
             Name = c.Name;
-            IP = c.Connection?.IP?.ToString() ?? "";
+            EndPoint = c.Connection?.EndPointString ?? "";
             SteamID = c.SteamID;
         }
 
         public bool MatchesClient(Client c)
         {
             if (c.SteamID > 0 && SteamID > 0) { return c.SteamID == SteamID; }
-            return c.IPMatches(IP);
+            return c.EndpointMatches(EndPoint);
         }
     }
 }
