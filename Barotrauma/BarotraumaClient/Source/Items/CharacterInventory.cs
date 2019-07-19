@@ -229,7 +229,7 @@ namespace Barotrauma
                 case Layout.Default:
                     {
                         int personalSlotCount = SlotTypes.Count(s => PersonalSlots.HasFlag(s));
-                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s));
+                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s)) + 2;
 
                         int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (slotSize.X + spacing) / 2;
                         int upperX = HUDLayoutSettings.PortraitArea.X - slotSize.X * 2;
@@ -253,6 +253,9 @@ namespace Barotrauma
                             {
                                 SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                                 x += slotSize.X + spacing;
+
+                                // Add a bigger spacing between the hand slots & regular inventory slots to prevent overlapping of subinventories when a crate is equipped
+                                if (SlotTypes[i] == InvSlotType.RightHand) x += slotSize.X + spacing;
                             }
                         }
 
@@ -518,7 +521,7 @@ namespace Barotrauma
                         HandleButtonEquipStates(item, slot, deltaTime);
                     }
 
-                    if (HideSlot(i)) continue;
+                    if (HideSlot(i) || CharacterHealth.OpenHealthWindow != null) continue;
                     if (character.HasEquippedItem(item))
                     {
                         var itemContainer = item.GetComponent<ItemContainer>();

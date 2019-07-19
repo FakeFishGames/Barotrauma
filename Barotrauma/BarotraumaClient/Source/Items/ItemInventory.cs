@@ -44,7 +44,7 @@ namespace Barotrauma
 
         public override bool IsInventoryHoverAvailable(Character owner)
         {
-            return !container.KeepOpenWhenEquipped || (!(owner is Character)) || !owner.HasEquippedItem(container.Item);
+            return CharacterHealth.OpenHealthWindow != null || !container.KeepOpenWhenEquipped || (!(owner is Character)) || !owner.HasEquippedItem(container.Item);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
