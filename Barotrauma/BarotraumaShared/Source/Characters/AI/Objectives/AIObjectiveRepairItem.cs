@@ -37,14 +37,21 @@ namespace Barotrauma
             float isSelected = character.SelectedConstruction == Item ? 50 : 0;
             float devotion = (Math.Min(Priority, 10) + isSelected) / 100;
             float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
+
+            bool isCompleted = Item.IsFullCondition;
+            if (isCompleted && character.SelectedConstruction == Item)
+            {
+                character?.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, true), null, 0.0f, "itemrepaired", 10.0f);
+            }
+
             return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + damagePriority * distanceFactor * successFactor * PriorityModifier, 0, 1));
         }
 
         public override bool IsCompleted()
         {
             bool isCompleted = Item.IsFullCondition;
-            if (isCompleted)
-            {                
+            if (isCompleted && character.SelectedConstruction == Item)
+            {
                 character?.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, true), null, 0.0f, "itemrepaired", 10.0f);
             }
             return isCompleted;

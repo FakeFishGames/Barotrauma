@@ -154,13 +154,13 @@ namespace Microsoft.Xna.Framework.Graphics
         {
             lock (GraphicsDevice._d3dContext)
             {
-                try
-                {
+                /*try
+                {*/
                     _swapChain.Present(PresentInterval.GetSyncInterval(), PresentFlags.None);
-                }
+                /*}
                 catch (SharpDX.SharpDXException)
                 {
-                }
+                }*/
             }
         }
 

@@ -7,7 +7,7 @@
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Mine" buyprice="7" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="10,110,93,76" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -24,7 +24,7 @@
     <Price locationtype="City" buyprice="5" />
     <Price locationtype="Outpost" buyprice="5" />
     <Price locationtype="Mine" buyprice="3" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="9,186,94,73" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -41,7 +41,7 @@
     <Price locationtype="City" buyprice="11" />
     <Price locationtype="Outpost" buyprice="11" />
     <Price locationtype="Mine" buyprice="7" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="300,184,94,77" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -58,7 +58,7 @@
     <Price locationtype="City" buyprice="18" />
     <Price locationtype="Outpost" buyprice="18" />
     <Price locationtype="Mine" buyprice="12" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="203,185,94,76" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -75,7 +75,7 @@
     <Price locationtype="City" buyprice="15" />
     <Price locationtype="Outpost" buyprice="15" />
     <Price locationtype="Mine" buyprice="10" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="307,13,46,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -92,7 +92,7 @@
     <Price locationtype="City" buyprice="22" />
     <Price locationtype="Outpost" buyprice="22" />
     <Price locationtype="Mine" buyprice="15" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="107,184,95,76" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -109,7 +109,7 @@
     <Price locationtype="City" buyprice="26" />
     <Price locationtype="Outpost" buyprice="26" />
     <Price locationtype="Mine" buyprice="18" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="204,105,93,80" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -126,7 +126,7 @@
     <Price locationtype="City" buyprice="33" />
     <Price locationtype="Outpost" buyprice="33" />
     <Price locationtype="Mine" buyprice="23" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="59,14,47,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="59" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -143,7 +143,7 @@
     <Price locationtype="City" buyprice="31" />
     <Price locationtype="Outpost" buyprice="31" />
     <Price locationtype="Mine" buyprice="21" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="393,109,92,77" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -160,7 +160,7 @@
     <Price locationtype="City" buyprice="31" />
     <Price locationtype="Outpost" buyprice="31" />
     <Price locationtype="Mine" buyprice="21" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="258,13,47,88" depth="0.55" origin="0.5,0.5" />
     <Body width="28" height="58" density="15" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -177,7 +177,7 @@
     <Price locationtype="City" buyprice="42" />
     <Price locationtype="Outpost" buyprice="42" />
     <Price locationtype="Mine" buyprice="29" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="106,106,94,79" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -194,7 +194,7 @@
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="50" />
     <Price locationtype="Mine" buyprice="35" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="900,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="8,260,98,82" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="65" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -212,7 +212,7 @@
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Mine" buyprice="7" />
     <!-- TODO: sprite -->
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="155,13,46,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -237,7 +237,7 @@
     <Price locationtype="City" buyprice="65" />
     <Price locationtype="Outpost" buyprice="65" />
     <Price locationtype="Mine" buyprice="45" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="301,107,92,77" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -254,7 +254,7 @@
     <Price locationtype="City" buyprice="65" />
     <Price locationtype="Outpost" buyprice="65" />
     <Price locationtype="Mine" buyprice="45" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="205,13,47,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="58" density="15" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -279,7 +279,7 @@
     <Price locationtype="City" buyprice="88" />
     <Price locationtype="Outpost" buyprice="88" />
     <Price locationtype="Mine" buyprice="61" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="7,14,49,88" depth="0.55" origin="0.5,0.5" />
     <Body width="29" height="59" density="15" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -295,7 +295,7 @@
     <Price locationtype="Military" buyprice="11" />
     <Price locationtype="City" buyprice="11" />
     <Price locationtype="Mine" buyprice="7" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,256,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="110,14,45,88" depth="0.6" origin="0.5,0.5" />
     <Body width="29" height="57" density="20" />
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
@@ -312,7 +312,7 @@
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="125" />
     <Price locationtype="Mine" buyprice="87" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,192,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="108,263,92,79" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="60" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -338,7 +338,7 @@
       <Item identifier="carbon" />
       <Item identifier="iron" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="8,343,108,54" depth="0.55" origin="0.5,0.5" />
     <Body width="100" height="50" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -363,7 +363,7 @@
       <Item identifier="aluminium" />
       <Item identifier="titanium" />
     </Deconstruct>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="125,407,111,55" depth="0.55" origin="0.5,0.5" />
     <Body width="100" height="50" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -383,7 +383,7 @@
       <RequiredItem identifier="silicon" />
       <RequiredItem identifier="carbon" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="405,200,85,60" depth="0.55" origin="0.5,0.5" />
     <Body width="80" height="55" density="20" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -419,7 +419,7 @@
     <Price locationtype="Military" buyprice="40" />
     <Price locationtype="City" buyprice="40" />
     <Price locationtype="Outpost" buyprice="60" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,768,64,64" />
     <Sprite texture="CraftingElements2.png" sourcerect="102,157,113,122" depth="0.55" origin="0.5,0.5" />
     <Body width="100" height="100" density="20" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" />
@@ -430,7 +430,7 @@
     <Price locationtype="Military" buyprice="10" />
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="20" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,770,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="266,443,70,64" depth="0.55" origin="0.5,0.5" />
     <Body width="10" radius="20" density="8" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -448,7 +448,7 @@
       <RequiredItem identifier="magnesium" />
       <RequiredItem identifier="potassium" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,256,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="255,268,45,85" origin="0.5,0.5" />
     <Body width="45" height="87" density="20" />
     <Throwable characterusable="false" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
@@ -470,7 +470,7 @@
   <Item name="Incendium Bar" identifier="incendium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="105,439,52,61" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="60" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" characterusable="false" msg="ItemMsgPickUpSelect">
@@ -489,7 +489,7 @@
   <Item name="Fulgurium Bar" identifier="fulgurium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,835,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="325,835,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="186,351,59,67" depth="0.55" origin="0.5,0.5" />
     <Body width="60" height="26" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -502,7 +502,7 @@
   <Item name="Physicorium Bar" identifier="physicorium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="97,349,58,71" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">
@@ -515,7 +515,7 @@
   <Item name="Dementonite Bar" identifier="dementonite" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" />
     <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="15,356,60,54" depth="0.55" origin="0.5,0.5" />
     <Body width="24" height="12" density="50" />
     <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect">

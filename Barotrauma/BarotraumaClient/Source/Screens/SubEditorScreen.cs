@@ -346,7 +346,6 @@ namespace Barotrauma
                 UseGridLayout = true,
                 CheckSelected = MapEntityPrefab.GetSelected
             };
-            UpdateEntityList();
 
             //empty guiframe as a separator
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
@@ -603,13 +602,15 @@ namespace Barotrauma
             }
 
 
-            entityList.Content.RectTransform.SortChildren((i1, i2) => 
+            entityList.Content.RectTransform.SortChildren((i1, i2) =>
                 (i1.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((i2.GUIComponent.UserData as MapEntityPrefab).Name));
         }
-        
+
         public override void Select()
         {
             base.Select();
+
+            UpdateEntityList();
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
@@ -1493,8 +1494,21 @@ namespace Barotrauma
 
         private void TryDeleteSub(Submarine sub)
         {
-            if (sub == null) return;
-            
+            if (sub == null) { return; }
+
+            //if the sub is included in a content package that only defines that one sub,
+            //delete the content package as well
+            ContentPackage subPackage = null;
+            foreach (ContentPackage cp in ContentPackage.List)
+            {
+                if (cp.Files.Count == 1 && Path.GetFullPath(cp.Files[0].Path) == Path.GetFullPath(sub.FilePath))
+                {
+                    subPackage = cp;
+                    break;
+                }
+            }
+            subPackage?.Delete();
+
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),
                 TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", sub.Name), 
@@ -1523,7 +1537,6 @@ namespace Barotrauma
             entityFilterBox.Text = "";
             if (CharacterMode) SetCharacterMode(false);
             if (WiringMode) SetWiringMode(false);
-
 
             saveFrame = null;
             loadFrame = null;

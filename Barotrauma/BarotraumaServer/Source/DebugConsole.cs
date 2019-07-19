@@ -989,6 +989,16 @@ namespace Barotrauma
                 };
             }));
 
+
+            AssignOnExecute("respawnnow", (string[] args) =>
+            {
+                if (GameMain.Server?.RespawnManager == null) { return; }
+                if (GameMain.Server.RespawnManager.CurrentState != RespawnManager.State.Transporting)
+                {
+                    GameMain.Server.RespawnManager.ForceRespawn();
+                }
+            });
+
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.GameScreen) return;

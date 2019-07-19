@@ -278,7 +278,7 @@ namespace Barotrauma
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 DrawString(spriteBatch, new Vector2(10, 40),
-                    "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
+                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == FarseerPhysics.Dynamics.BodyType.Dynamic && b.Enabled).Count} dynamic)",
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 if (Screen.Selected.Cam != null)
@@ -1394,8 +1394,8 @@ namespace Barotrauma
                         Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
 
                         //make sure we don't move the interfaces out of the screen
-                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
-                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
 
                         //move by 10 units in the desired direction and repeat until nothing overlaps
                         //(or after 100 iterations, in which case we'll just give up and let them overlap)

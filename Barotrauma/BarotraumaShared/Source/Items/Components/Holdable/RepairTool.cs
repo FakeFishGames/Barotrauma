@@ -325,9 +325,7 @@ namespace Barotrauma.Items.Components
             else if (targetBody.UserData is Item targetItem)
             {
                 targetItem.IsHighlighted = true;
-
-                float prevCondition = targetItem.Condition;
-
+                
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
@@ -344,7 +342,7 @@ namespace Barotrauma.Items.Components
                         Color.Red, Color.Green);
 #endif                    
                 }
-                FixItemProjSpecific(user, deltaTime, targetItem, prevCondition);
+                FixItemProjSpecific(user, deltaTime, targetItem);
                 return true;
             }
             return false;
@@ -352,7 +350,7 @@ namespace Barotrauma.Items.Components
     
         partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
-        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition);
+        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem);
 
         private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

@@ -485,6 +485,22 @@ namespace Barotrauma
                 List.Add(package);                               
             }
         }
+
+        public void Delete()
+        {
+            try
+            {
+                File.Delete(Path);
+                GameMain.Config.SelectedContentPackages.Remove(this);
+                GameMain.Config.SaveNewPlayerConfig();
+            }
+            catch (IOException e)
+            {
+                DebugConsole.ThrowError("Failed to delete content package \"" + Name + "\".", e);
+                return;
+            }
+            List.Remove(this);
+        }
     }
 
     public class ContentFile

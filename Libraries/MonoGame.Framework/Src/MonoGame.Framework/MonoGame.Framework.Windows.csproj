@@ -30,14 +30,16 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <DebugType>none</DebugType>
-    <OutputPath>bin\Windows\AnyCPU\Release</OutputPath>
+    <DebugType>pdbonly</DebugType>
+    <OutputPath>..\..\Windows\</OutputPath>
     <IntermediateOutputPath>obj\Windows\AnyCPU\Release</IntermediateOutputPath>
-    <DocumentationFile>bin\Windows\AnyCPU\Release\MonoGame.Framework.xml</DocumentationFile>
+    <DocumentationFile>..\..\Windows\MonoGame.Framework.xml</DocumentationFile>
     <DefineConstants>XNADESIGNPROVIDED;TRACE;WINDOWS;DIRECTX;WINDOWS_MEDIA_SESSION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

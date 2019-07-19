@@ -180,7 +180,7 @@
     mountaincountmin="1"
     mountaincountmax="1"
     mountainheightmin="80000"
-    mountainheightmax="120000"
+    mountainheightmax="100000"
     ruincount="3"
     bottomholeprobability="0.6"
     waterparticlescale="1">

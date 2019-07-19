@@ -105,7 +105,7 @@ namespace Barotrauma
         public static bool CheatsEnabled;
 
         private static List<ColoredText> unsavedMessages = new List<ColoredText>();
-        private static int messagesPerFile = 800;
+        private static int messagesPerFile = 5000;
         public const string SavePath = "ConsoleLogs";
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
@@ -304,6 +304,8 @@ namespace Barotrauma
             commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", null));
             
             commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
+
+            commands.Add(new Command("respawnnow", "respawnnow: Trigger a respawn immediately if there are any clients waiting to respawn.", null));
 
             //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
 
@@ -1596,7 +1598,14 @@ namespace Barotrauma
                 }
             }
 
-            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
+            string fileName = "DebugConsoleLog_";
+#if SERVER
+            fileName += "Server_";
+#else
+            fileName += "Client_";
+#endif
+
+            fileName += DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {
