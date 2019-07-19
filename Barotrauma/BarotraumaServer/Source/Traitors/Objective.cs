@@ -101,6 +101,7 @@ namespace Barotrauma
                 {
                     return;
                 }
+                int completedCount = completedGoals.Count;
                 for (int i = 0; i < pendingGoals.Count;)
                 {
                     var goal = pendingGoals[i];

@@ -79,6 +79,7 @@ namespace Barotrauma
 
             public virtual void Update(float deltaTime)
             {
+                int previousCompletedCount = completedObjectives.Count;
                 while (pendingObjectives.Count > 0)
                 {
                     var objective = pendingObjectives[0];
@@ -93,10 +94,13 @@ namespace Barotrauma
                     {
                         pendingObjectives.RemoveAt(0);
                         completedObjectives.Add(objective);
-                        objective.End(GameMain.Server);
                         continue;
                     }
                     break;
+                }
+                for (int i = previousCompletedCount; i < completedObjectives.Count; ++i) {
+                    var objective = completedObjectives[i];
+                    objective.End(GameMain.Server);
                 }
             }
 

@@ -29,10 +29,10 @@
       <InfoText id="traitorobjectivestartmessage"/>
       <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
       <!--"Find item" goal: Find next objective by interacting with the given item.-->
-      <!--<Goal type="finditem"> --><!--If target is not defined, fallback to a random item. Item and location are communicated in this goal's info text, e.g "Find your next objective in a [targetitem.name] in [targetitem.hull].--><!--
+      <Goal type="finditem" identifier="wrench"> <!--If target is not defined, fallback to a random item. Item and location are communicated in this goal's info text, e.g "Find your next objective in a [targetitem.name] in [targetitem.hull].-->
         <InfoText id="traitorgoalfinditeminfo" />
-        <InfoTextFailure id="traitorgoalfinditemfailure"/> --><!--Goal is failed if someone interacts with the item first.--><!--
-      </Goal>-->
+        <InfoTextFailure id="traitorgoalfinditemfailure"/> --><!--Goal is failed if someone interacts with the item first.-->
+      </Goal>
     </Objective>
 
     <!--Objective 2: Assassinate an engineer, sabotage ballast pumps-->

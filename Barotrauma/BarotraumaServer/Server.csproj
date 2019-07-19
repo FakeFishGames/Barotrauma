@@ -251,6 +251,7 @@
     <Compile Include="Source\Traitors\Goals\GoalSabotageItems.cs" />
     <Compile Include="Source\Traitors\Goals\GoalDestroyItemsWithTag.cs" />
     <Compile Include="Source\Traitors\Goals\GoalFloodPercentOfSub.cs" />
+    <Compile Include="Source\Traitors\Goals\GoalFindItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
