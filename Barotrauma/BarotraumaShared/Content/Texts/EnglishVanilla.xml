@@ -426,7 +426,6 @@
   <dontshownotificationagain>Don't show this again</dontshownotificationagain>
   <video>Video</video>
   <search>Search</search>
-  <pending>Pending</pending>
 
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
@@ -1779,38 +1778,6 @@
   <traitorrespawnmessage>Your traitor objective was unsuccessful. You are no longer a traitor, so play nice!</traitorrespawnmessage>
   <traitortargetmessage>[traitorname] had a secret objective to assassinate you—and the task was successful.</traitortargetmessage>
 
-  <!-- Traitor mission (new) -->
-  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
-  <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
-  <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
-  
-  <!-- Traitor objectives (new) -->
-  <traitorobjectivestartmessage>You have a new objective, following goals need to be completed:\n[traitorgoalinfos]</traitorobjectivestartmessage>
-  <traitorobjectivestartmessageserver>[traitorname] is the traitor and has the following goals:\n[traitorgoalinfos]</traitorobjectivestartmessageserver>
-  <traitorobjectiveendmessagesuccess>[traitorname] was a traitor and succeeded in completing the given goals:\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
-  <traitorobjectiveendmessagesuccessdead>[traitorname] was a traitor and succeeded in completing the given goals but regrettably died in the process, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
-  <traitorobjectiveendmessagesuccessdetained>[traitorname] was a traitor and succeeded in completing the given goals but was detained, goals:\n[traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
-  <traitorobjectiveendmessagefailure>[traitorname] was a traitor but failed to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailure>
-  <traitorobjectiveendmessagefailuredead>[traitorname] was a traitor but died while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
-  <traitorobjectiveendmessagefailuredetained>[traitorname] was a traitor but got detained while failing to complete the given goals:\n[traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
-  <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
-  <!-- Traitor goals (new) -->
-  <traitorgoalstatustextformat>[infotext] ([status])</traitorgoalstatustextformat> <!--Should we add time limit and duration info here?-->
-  <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
-  <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
-  <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
-  <traitorgoalfinditeminfo>Find your next objective inside [target] in [targethullname].</traitorgoalfinditeminfo> 
-  <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
-  <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non inventory [tag] on the sub.</traitorgoaldestroyitems>
-  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the sub.</traitorgoalfloodpercentofsub>
-  <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo> 
-  <traitorgoalsabotageinfo>Sabotage [target] for at least [duration] seconds.</traitorgoalsabotageinfo>
-  <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
-  <traitorgoaltamperoxygeninfo>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
-  <traitorgoaltampercoilguninfo>Load dummy ammunition into a coilgun loader.</traitorgoaltampercoilguninfo>
-  <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
-  <traitorgoaltamperrailguninfo>Load a dummy shell into a railgun loader.</traitorgoaltamperrailguninfo>
-  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loaders.</traitorgoaltamperrailguninfomulti>
 
   <!-- Causes of death -->
   <causeofdeath>Cause of death</causeofdeath>
@@ -3278,7 +3245,6 @@
   <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
   <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
 
-  <!-- New items -->
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
 
