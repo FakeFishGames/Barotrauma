@@ -3399,7 +3399,25 @@
   <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
   <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
 
-
+  <servertag.casual>Casual</servertag.casual>
+  <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
+  <servertag.serious>Serious</servertag.serious>
+  <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
+  <servertag.roleplaying>Roleplaying</servertag.roleplaying>
+  <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
+  <servertag.custom>Custom</servertag.custom>
+  <servertagdescription.custom>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.custom>
+  <servertag.modded>Modded</servertag.modded>
+  <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
+  <servertag.247>24/7</servertag.247>
+  <servertagdescription.247>Runs around the clock.</servertagdescription.247>
+  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
+  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
+  <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
+  <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
+  <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
+  <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+  
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
