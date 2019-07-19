@@ -3417,6 +3417,8 @@
   <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
   <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
   <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
   
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
