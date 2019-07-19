@@ -3411,10 +3411,12 @@
   <servertagdescription.serious>The crew should focus on working together efficiently and completing their objective. No unnecessary messing around.</servertagdescription.serious>
   <servertag.roleplaying>Roleplaying</servertag.roleplaying>
   <servertagdescription.roleplaying>The crew should aim to act like a real submarine crew. Chain of command is important, as is taking care of your responsibilities and following orders. Speaking out-of-character should be avoided when a round is running.</servertagdescription.roleplaying>
-  <servertag.custom>Custom</servertag.custom>
-  <servertagdescription.custom>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.custom>
+  <servertag.somethingdifferent>Something different</servertag.somethingdifferent>
+  <servertagdescription.somethingdifferent>Gameplay differs significantly from the usual Barotrauma gameplay. Modded servers, very unconventional subs, battle royale rounds, shuttle racing, deathrun maps... Anything goes!</servertagdescription.somethingdifferent>
   <servertag.modded>Modded</servertag.modded>
   <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
+  <servertag.carnage>Carnage</servertag.carnage>
+  <servertagdescription.carnage>Fighting your crew mates is not only allowed, but encouraged. The server may still enforce rules on who you are allowed to harm and how.</servertagdescription.carnage>
   <servertag.247>24/7</servertag.247>
   <servertagdescription.247>Runs around the clock.</servertagdescription.247>
   <servertag.friendlyfireenabled>Friendly fire enabled</servertag.friendlyfireenabled>
