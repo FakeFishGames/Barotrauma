@@ -313,7 +313,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="382,31,27,54" depth="0.55" origin="0.5,0.5" />
-    <Body width="11" height="24" density="30" />
+    <Body width="26" height="50" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -346,7 +346,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,450,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="454,7,27,54" depth="0.55" origin="0.5,0.5185185" />
-    <Body width="60" height="150" density="30" />
+    <Body width="26" height="50" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -380,7 +380,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="413,0,40,61" depth="0.55" origin="0.5,0.5" />
-    <Body width="97" height="143" density="30" />
+    <Body width="40" height="60" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -418,7 +418,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="68,320,56,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="353,31,26,54" depth="0.55" origin="0.5,0.5" />
-    <Body width="12" height="27" density="30" />
+    <Body width="24" height="52" density="30" />
     <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
     <ItemComponent characterusable="false">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -456,7 +456,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="770,0,58,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="1,407,191,63" depth="0.55" origin="0.5,0.5" />
-    <Body width="90" height="30" density="30" />
+    <Body width="150" height="30" density="30" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-20,-10" holdangle="45" reload="0.75" range="100" combatPriority="50" msg="ItemMsgPickUpSelect">
       <Attack stun="0.2">
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
@@ -517,7 +517,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,831,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="219,274,290,102" depth="0.55" origin="0.5,0.5" />
-    <Body width="90" height="30" density="50" />
+    <Body width="280" height="100" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50">
       <Sound file="Content/Items/Weapons/HarpoonGun1.ogg" type="OnUse" />
@@ -550,7 +550,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="171,30,59,24" depth="0.55" origin="0.5,0.5" />
-    <Body width="11" height="24" density="30" />
+    <Body width="58" height="24" density="30" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="false">
       <Attack structuredamage="1" stun="0.2">
@@ -593,7 +593,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="171,1,60,27" depth="0.55" origin="0.5,0.5" />
-    <Body width="11" height="24" density="30" />
+    <Body width="58" height="24" density="30" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="false">
       <Attack structuredamage="1" stun="0.2">
@@ -628,7 +628,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,830,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="0,191,289,84" depth="0.55" origin="0.5,0.5" />
-    <Body width="90" height="30" density="50" />
+    <Body width="280" height="50" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50" reload="1.5">
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
@@ -650,7 +650,7 @@
     <Price locationtype="City" buyprice="15" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="127,23,36,17" depth="0.55" origin="0.9999992,0.9999997" />
-    <Body width="8" height="3" density="40" />
+    <Body width="35" height="15" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <!--When fired, spawns 8 projectiles simultaneously.-->
     <Projectile characterusable="false" hitscan="true" hitscancount="8" removeonhit="true" spread="15">
@@ -673,7 +673,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,830,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="0,293,130,76" depth="0.55" origin="0.5,0.5" />
-    <Body width="28" height="20" density="50" />
+    <Body width="130" height="70" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect"/>
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="60">
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
@@ -694,7 +694,7 @@
   <Item name="Stun Gun Dart" identifier="stungundart" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="766,576,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="127,49,36,9" depth="0.55" origin="0.5,0.5" />
-    <Body width="8" height="3" density="40" />
+    <Body width="35" height="8" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <!--Non-lethal projectile sticks to characters and stuns them for 10 seconds.-->
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
@@ -719,7 +719,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="241,420,68,55" depth="0.55" origin="0.5,0.5" />
-    <Body width="60" height="10" density="50" />
+    <Body width="65" height="48" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" stun="0.6">
         <Sound file="Content/Items/Weapons/honk.ogg" range="800" />
