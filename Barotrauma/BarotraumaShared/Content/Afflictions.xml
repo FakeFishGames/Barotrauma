@@ -79,6 +79,7 @@
     selfcauseofdeathdescription="You have bled to death."
     limbspecific="true"
     maxstrength="100"
+    karmachangeonapplied="-1"
     damageoverlayalpha="1">
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
@@ -183,7 +184,8 @@
     limbspecific="false"
     indicatorlimb="Torso"
     activationthreshold="0"
-    showiconthreshold="40"
+    showiconthreshold="40"    
+    karmachangeonapplied="-1"
     maxstrength="100"
     achievementonremoved="healhusk">
     <Effect minstrength="0" maxstrength="100"
@@ -250,7 +252,8 @@
     limbspecific="false"
     indicatorlimb="Head"
     activationthreshold="0"
-    showiconthreshold="40"
+    showiconthreshold="40"    
+    karmachangeonapplied="-1"
     maxstrength="100"
     achievementonremoved="healpsychosis">
     <Effect minstrength="0" maxstrength="100"
@@ -375,7 +378,8 @@
     selfcauseofdeathdescription="You have died of opiate overdose."
     limbspecific="false"
     indicatorlimb="Head"
-    showiconthreshold="50"
+    showiconthreshold="50"    
+    karmachangeonapplied="-1"
     maxstrength="100">
     <!-- No effects except slight distortion at this level -->
     <Effect minstrength="0" maxstrength="50"
@@ -410,7 +414,8 @@
     limbspecific="false"
     indicatorlimb="Head"    
     showiconthreshold="20"
-    maxstrength="100"
+    maxstrength="100"    
+    karmachangeonapplied="-0.1"
     achievementonremoved="healopiateaddiction">
     <Effect minstrength="0" maxstrength="20" strengthchange="-0.05"/>
     
@@ -446,6 +451,7 @@
     selfcauseofdeathdescription="You have died of gunshot wounds."
     limbspecific="true"
     maxstrength="100"
+    karmachangeonapplied="-1"
     damageoverlayalpha="1"
     strengthchange="-0.1">
     <Effect minstrength="0" maxstrength="100"
@@ -465,6 +471,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="10"
+    karmachangeonapplied="-1"
     maxstrength="100">
     <!-- Cause burns depending on strength -->
     <Effect minstrength="0" maxstrength="25">
@@ -508,6 +515,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-20"
     maxstrength="100">
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
@@ -536,6 +544,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-10"
     maxstrength="100">
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
@@ -564,6 +573,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-5"
     maxstrength="100">
     <!-- Slowly cause psychosis -->
     <!-- Non-lethal -->
@@ -585,6 +595,7 @@
     limbspecific="false"
     indicatorlimb="Torso"
     showiconthreshold="5"
+    karmachangeonapplied="-10"
     maxstrength="100">
     <!-- Decrease vitality, slow player down -->
     <!-- Becomes lethal in ~100 seconds -->

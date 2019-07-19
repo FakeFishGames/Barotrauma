@@ -686,7 +686,7 @@ namespace Barotrauma
                 }
                 GameMain.Server.SendConsoleMessage("***************", client);
             });
-            AssignOnExecute("togglekarmatestmode", (string[] args) =>
+            AssignOnExecute("togglekarmatestmode|karmatestmode", (string[] args) =>
             {
                 if (GameMain.Server?.KarmaManager == null) return;
                 GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;

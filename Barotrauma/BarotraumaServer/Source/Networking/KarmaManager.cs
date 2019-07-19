@@ -25,7 +25,7 @@ namespace Barotrauma
             }
         }
 
-        public bool TestMode = true;
+        public bool TestMode = false;
 
         private readonly Dictionary<Client, ClientMemory> clientMemories = new Dictionary<Client, ClientMemory>();
         private readonly List<Client> bannedClients = new List<Client>();
@@ -173,7 +173,7 @@ namespace Barotrauma
             clientMemories.Remove(client);
         }
 
-        public void OnCharacterHealthChanged(Character target, Character attacker, float damage)
+        public void OnCharacterHealthChanged(Character target, Character attacker, float damage, IEnumerable<Affliction> appliedAfflictions = null)
         {
             if (target == null || attacker == null) { return; }
             if (target == attacker) { return; }
@@ -193,6 +193,15 @@ namespace Barotrauma
                 {
                     //target counts as an enemy to the traitor
                     isEnemy = true;
+                }
+            }
+
+            if (appliedAfflictions != null)
+            {
+                foreach (Affliction affliction in appliedAfflictions)
+                {
+                    if (MathUtils.NearlyEqual(affliction.Prefab.KarmaChangeOnApplied, 0.0f)) { continue; }
+                    damage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength; 
                 }
             }
 
@@ -219,6 +228,7 @@ namespace Barotrauma
                 }
             }
         }
+        
 
         public void OnStructureHealthChanged(Structure structure, Character attacker, float damageAmount)
         {
