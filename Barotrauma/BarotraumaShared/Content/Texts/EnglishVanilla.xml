@@ -120,7 +120,6 @@
   <modstab>Subscribed Mods</modstab>
   <downloadbutton>Subscribe</downloadbutton>
   <subscribedmods>Mods</subscribedmods>
-  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Click the 'Find more mods' button below to get started!</nosubscribedmods>
   <popularmods>Popular mods</popularmods>
   <findmodsbutton>Find more mods...</findmodsbutton>
   <workshopitemunsubscribe>Unsubscribe</workshopitemunsubscribe>
@@ -3286,6 +3285,8 @@
   
   <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
   <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
+
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
   
   <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
   <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
@@ -3351,8 +3352,13 @@
 
   <yourname>Player name</yourname>
 
+  <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
+
   <joinserver>Server browser</joinserver>
   <joinserverbutton>Server browser</joinserverbutton>
 
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
+
+  <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
+
 </infotexts>
