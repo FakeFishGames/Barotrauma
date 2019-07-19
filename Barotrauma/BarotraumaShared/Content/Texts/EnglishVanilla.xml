@@ -722,7 +722,6 @@
   <clientpermission.manageround>Manage round</clientpermission.manageround>
   <clientpermission.managesettings>Manage settings</clientpermission.managesettings>
   <clientpermission.managepermissions>Manage permissions</clientpermission.managepermissions>
-  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Mission types -->
   <missiontype.none>None</missiontype.none>
@@ -3399,6 +3398,13 @@
   <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
   <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
 
+  <serverplaystyle>Play style</serverplaystyle>
+  <servertags>Server tags</servertags>
+  <servermotd>Message of the day</servermotd>
+  <serverbanner>Server banner</serverbanner>
+  <serverlogo>Server logo</serverlogo>
+  <servertagline>Tagline</servertagline>
+  
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
   <servertag.serious>Serious</servertag.serious>
@@ -3411,12 +3417,22 @@
   <servertagdescription.modded>One or more mods enabled. Installing mods from the Workshop may be required to join the server.</servertagdescription.modded>
   <servertag.247>24/7</servertag.247>
   <servertagdescription.247>Runs around the clock.</servertagdescription.247>
-  <servertag.nofriendlyfire>Friendly fire off</servertag.nofriendlyfire>
-  <servertagdescription.nofriendlyfire>Causing damage to your crew mates is disabled.</servertagdescription.nofriendlyfire>
+  <servertag.friendlyfireenabled>Friendly fire enabled</servertag.friendlyfireenabled>
+  <servertagdescription.friendlyfireenabled>Causing damage to your crew mates is enabled.</servertagdescription.friendlyfireenabled>
+  <servertag.friendlyfiredisabled>Friendly fire disabled</servertag.friendlyfiredisabled>
+  <servertagdescription.friendlyfiredisabled>Causing damage to your crew mates is disabled.</servertagdescription.friendlyfiredisabled>
   <servertag.voipdisabled>Voice chat disabled</servertag.voipdisabled>
   <servertagdescription.voipdisabled>Voice chat is disabled.</servertagdescription.voipdisabled>
+  <servertag.voipenabled>Voice chat enabled</servertag.voipenabled>
+  <servertagdescription.voipenabled>Voice chat is enabled.</servertagdescription.voipenabled>
   <servertag.karmadisabled>Karma disabled</servertag.karmadisabled>
   <servertagdescription.karmadisabled>Karma system is disabled.</servertagdescription.karmadisabled>
+  <servertag.karmaenabled>Karma enabled</servertag.karmaenabled>
+  <servertagdescription.karmaenabled>Karma system is enabled.</servertagdescription.karmaenabled>
+  <servertag.traitors>Traitors enabled</servertag.traitors>
+  <servertagdescription.traitors>Traitors are enabled.</servertagdescription.traitors>
+
+  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <viewsteamprofile>View Steam profile</viewsteamprofile>
   
@@ -3452,5 +3468,10 @@
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
 
   <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
+
+
+
+
+
 
 </infotexts>
