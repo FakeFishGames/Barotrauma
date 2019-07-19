@@ -152,7 +152,14 @@ namespace Barotrauma {
 
             public Traitor.Objective Instantiate()
             {
-                var result = new Traitor.Objective(InfoText, Goals.ConvertAll(goal => goal.Instantiate()).ToArray());
+                var result = new Traitor.Objective(InfoText, Goals.ConvertAll(goal => {
+                    var instance = goal.Instantiate();
+                    if (instance == null)
+                    {
+                        GameServer.Log(string.Format("Failed to instantiate goal \"{0}\".", goal.Type), ServerLog.MessageType.Error);
+                    }
+                    return instance;
+                }).FindAll(goal => goal != null).ToArray());
                 if (StartMessageTextId != null)
                 {
                     result.StartMessageTextId = StartMessageTextId;

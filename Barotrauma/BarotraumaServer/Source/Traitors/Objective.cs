@@ -64,7 +64,7 @@ namespace Barotrauma
             public bool Start(GameServer server, Traitor traitor)
             {
                 Traitor = traitor;
-                for (var i = 0; i < pendingGoals.Count; ++i)
+                for (var i = 0; i < pendingGoals.Count;)
                 {
                     var goal = pendingGoals[i];
                     if (goal.Start(server, traitor))
@@ -97,6 +97,10 @@ namespace Barotrauma
 
             public void Update(float deltaTime)
             {
+                if (!IsStarted)
+                {
+                    return;
+                }
                 for (int i = 0; i < pendingGoals.Count;)
                 {
                     var goal = pendingGoals[i];
@@ -109,8 +113,14 @@ namespace Barotrauma
                     {
                         completedGoals.Add(goal);
                         pendingGoals.RemoveAt(i);
-                        Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == goal.Traitor.Character);
-                        GameMain.Server.SendDirectChatMessage(goal.CompletedText, traitorClient);
+                        if (GameMain.Server != null)
+                        {
+                            Client traitorClient = GameMain.Server.ConnectedClients?.Find(c => c.Character == goal.Traitor.Character);
+                            if (traitorClient != null)
+                            {
+                                GameMain.Server.SendDirectChatMessage(goal.CompletedText, traitorClient);
+                            }
+                        }
                     }
                 }
             }

@@ -45,6 +45,7 @@ namespace Barotrauma
             {
                 this.tag = tag;
                 this.conditionThreshold = conditionThreshold;
+                InfoTextId = "TraitorGoalSabotageInfo";
             }
         }
     }

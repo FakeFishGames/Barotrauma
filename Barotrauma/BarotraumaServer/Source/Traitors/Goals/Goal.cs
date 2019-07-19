@@ -11,15 +11,17 @@ namespace Barotrauma
             public Traitor Traitor { get; private set; }
             public TraitorMission Mission { get; internal set; }
 
-            public virtual string StatusTextId { get; set; } = "TraitorGoalStatusTextFormat";
-            public virtual string InfoTextId { get; set; } = null;
-            public virtual string CompletedTextId { get; set; } = null;
+            private string statusTextId = "TraitorGoalStatusTextFormat";
+            public virtual string StatusTextId { get => statusTextId; set { statusTextId = value; } }
+
+            private string infoTextId = null;
+            public virtual string InfoTextId { get => infoTextId; set { infoTextId = value; } }
+
+            private string completedTextId = null;
+            public virtual string CompletedTextId { get => completedTextId; set { completedTextId = value; } }
 
             public virtual IEnumerable<string> StatusTextKeys => new string[] { "[infotext]", "[status]" };
-            public virtual IEnumerable<string> StatusTextValues => new string[] {
-               InfoText,
-               TextManager.Get(IsCompleted ? "done" : "pending")
-            };
+            public virtual IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.Get(IsCompleted ? "done" : "pending") };
 
             public virtual IEnumerable<string> InfoTextKeys => new string[] { };
             public virtual IEnumerable<string> InfoTextValues => new string[] { };
@@ -32,6 +34,7 @@ namespace Barotrauma
             public virtual string CompletedText => CompletedTextId != null ? TextManager.GetWithVariables(CompletedTextId, CompletedTextKeys.ToArray(), CompletedTextValues.ToArray()) : StatusText;
 
             public virtual bool IsCompleted => false;
+            public virtual bool IsStarted => Traitor != null;
 
             public virtual bool Start(GameServer server, Traitor traitor)
             {

@@ -82,14 +82,11 @@ namespace Barotrauma
                 while (pendingObjectives.Count > 0)
                 {
                     var objective = pendingObjectives[0];
-                    if (!objective.IsStarted)
+                    if (!objective.IsStarted && !objective.Start(GameMain.Server, Traitors["traitor"]))
                     {
-                        if (!objective.Start(GameMain.Server, Traitors["traitor"]))
-                        {
-                            pendingObjectives.RemoveAt(0);
-                            completedObjectives.Add(objective);
-                            continue;
-                        }
+                        pendingObjectives.RemoveAt(0);
+                        completedObjectives.Add(objective);
+                        continue;
                     }
                     objective.Update(deltaTime);
                     if (objective.IsCompleted)

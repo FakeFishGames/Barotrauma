@@ -13,22 +13,26 @@ namespace Barotrauma
             private readonly bool countTotalDuration;
 
             public override IEnumerable<string> StatusTextKeys => goal.StatusTextKeys;
-            public override IEnumerable<string> StatusTextValues => goal.StatusTextValues;
+            public override IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.Get(IsCompleted ? "done" : "pending") };
 
-            public override IEnumerable<string> InfoTextKeys => goal.InfoTextKeys.Concat(new string[] { "[duration]" }).ToArray();
-            public override IEnumerable<string> InfoTextValues => goal.InfoTextValues.Concat(new string[] { string.Format("{0:f}", requiredDuration) }).ToArray();
+            public override IEnumerable<string> InfoTextKeys => goal.InfoTextKeys.Concat(new string[] { "[duration]" });
+            public override IEnumerable<string> InfoTextValues => goal.InfoTextValues.Concat(new string[] { string.Format("{0:f}", requiredDuration) });
 
             public override IEnumerable<string> CompletedTextKeys => goal.CompletedTextKeys;
             public override IEnumerable<string> CompletedTextValues => goal.CompletedTextValues;
 
+            public override string InfoText => TextManager.GetWithVariables(InfoTextId, InfoTextKeys.ToArray(), InfoTextValues.ToArray());
+
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
+            public override bool IsStarted => base.IsStarted && goal.IsStarted;
 
             private float remainingDuration = float.NaN;
 
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
+                goal.Update(deltaTime);
                 if (goal.IsCompleted)
                 {
                     if (!float.IsNaN(remainingDuration))
@@ -49,6 +53,7 @@ namespace Barotrauma
 
             public override bool Start(GameServer server, Traitor traitor)
             {
+                GameServer.Log("START goal with duration, child goal = " + goal.InfoTextId + " should be wrapped...", ServerLog.MessageType.Chat);
                 if (!base.Start(server, traitor))
                 {
                     return false;
