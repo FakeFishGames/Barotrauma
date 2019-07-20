@@ -668,8 +668,15 @@ namespace Barotrauma.Networking
                     break;
             }
         }
-
+        
         private void OnDisconnect(string disconnectMsg)
+        {
+            HandleDisconnectMessage(disconnectMsg);
+
+            Disconnect();
+        }
+
+        private void HandleDisconnectMessage(string disconnectMsg)
         {
             SteamManager.Instance.User.ClearRichPresence();
 
@@ -763,8 +770,6 @@ namespace Barotrauma.Networking
                     var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
                     msgBox.Buttons[0].OnClicked += ReturnToServerList;
                 }
-
-                Disconnect();
             }
         }
 
@@ -1458,7 +1463,7 @@ namespace Barotrauma.Networking
 
             Character.Controlled?.ClientWrite(outmsg);
 
-            entityEventManager.Write(outmsg, clientPeer.ServerConnection);
+            entityEventManager.Write(outmsg, clientPeer?.ServerConnection);
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
             for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
