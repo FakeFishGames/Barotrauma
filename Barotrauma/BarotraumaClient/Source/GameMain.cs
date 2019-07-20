@@ -501,8 +501,11 @@ namespace Barotrauma
 
             if (SteamManager.USE_STEAM)
             {
-                SteamWorkshopScreen     = new SteamWorkshopScreen();
-                SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                SteamWorkshopScreen = new SteamWorkshopScreen();
+                if (SteamManager.IsInitialized)
+                {
+                    SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                }
             }
 
             SubEditorScreen         = new SubEditorScreen();
