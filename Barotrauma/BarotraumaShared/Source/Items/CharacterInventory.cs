@@ -110,7 +110,25 @@ namespace Barotrauma
         public override bool CanBePut(Item item, int i)
         {
             return base.CanBePut(item, i) && item.AllowedSlots.Contains(SlotTypes[i]);
-        } 
+        }
+
+        /// <summary>
+        /// If there is no room in the generic inventory (InvSlotType.Any), check if the item can be auto-equipped into its respective limbslot
+        /// </summary>
+        public bool TryPutItemWithAutoEquipCheck(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        {
+            // Does not auto-equip the item if specified and no suitable any slot found (for example handcuffs are not auto-equipped)
+            if (item.AllowedSlots.Contains(InvSlotType.Any))
+            {
+                var wearable = item.GetComponent<Wearable>();
+                if (wearable != null && !wearable.AutoEquipWhenFull && CheckIfAnySlotAvailable(item, false) == -1)
+                {
+                    return false;
+                }
+            }
+
+            return TryPutItem(item, user, allowedSlots, createNetworkEvent);
+        }
 
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
@@ -139,29 +157,10 @@ namespace Barotrauma
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any))
             {
-                for (int i = 0; i < capacity; i++)
+                int freeIndex = CheckIfAnySlotAvailable(item, inWrongSlot);
+                if (freeIndex > -1)
                 {
-                    if (SlotTypes[i] != InvSlotType.Any) continue;
-                    if (Items[i] == item)
-                    {
-                        PutItem(item, i, user, true, createNetworkEvent);
-                        item.Unequip(character);
-                        return true;
-                    }
-                }
-                for (int i = 0; i < capacity; i++)
-                {
-                    if (SlotTypes[i] != InvSlotType.Any) continue;
-                    if (inWrongSlot)
-                    {
-                        if (Items[i] != item && Items[i] != null) continue;
-                    }
-                    else
-                    {
-                        if (Items[i] != null) continue;
-                    }
-
-                    PutItem(item, i, user, true, createNetworkEvent);
+                    PutItem(item, freeIndex, user, true, createNetworkEvent);
                     item.Unequip(character);
                     return true;
                 }
@@ -242,8 +241,35 @@ namespace Barotrauma
                 }
             }
 
-
             return placedInSlot > -1;
+        }
+
+        public int CheckIfAnySlotAvailable(Item item, bool inWrongSlot)
+        {
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (SlotTypes[i] != InvSlotType.Any) continue;
+                    if (Items[i] == item)
+                    {
+                        return i;
+                    }
+                }
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (SlotTypes[i] != InvSlotType.Any) continue;
+                    if (inWrongSlot)
+                    {
+                        if (Items[i] != item && Items[i] != null) continue;
+                    }
+                    else
+                    {
+                        if (Items[i] != null) continue;
+                    }
+
+                    return i;
+                }
+
+            return -1;
         }
 
         public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)

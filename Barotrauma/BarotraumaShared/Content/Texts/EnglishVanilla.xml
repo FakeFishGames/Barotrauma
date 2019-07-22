@@ -3215,6 +3215,8 @@
 
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
+
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
   
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>

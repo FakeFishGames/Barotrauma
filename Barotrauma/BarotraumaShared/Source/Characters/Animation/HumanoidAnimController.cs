@@ -579,7 +579,7 @@ namespace Barotrauma
             if (limpAmount > 0.0f)
             {
                 //make the footpos oscillate when limping
-                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f));
+                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f)) * Dir;
             }
 
             movement = overrideTargetMovement == Vector2.Zero ?

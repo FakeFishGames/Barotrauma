@@ -328,6 +328,9 @@ namespace Barotrauma.Items.Components
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return true;
 
+                fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
+                if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
+
                 hits.Add(new HitscanResult(fixture, rayStart, -dir, 0.0f));
                 return true;
             }, ref aabb);

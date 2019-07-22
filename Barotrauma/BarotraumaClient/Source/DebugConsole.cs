@@ -133,17 +133,7 @@ namespace Barotrauma
 
             if (PlayerInput.KeyHit(Keys.F3))
             {
-                isOpen = !isOpen;
-                if (isOpen)
-                {
-                    textBox.Select();
-                    AddToGUIUpdateList();
-                }
-                else
-                {
-                    GUI.ForceMouseOn(null);
-                    textBox.Deselect();
-                }
+                Toggle();
             }
             else if (isOpen && PlayerInput.KeyHit(Keys.Escape))
             {
@@ -176,6 +166,21 @@ namespace Barotrauma
                     ExecuteCommand(textBox.Text);
                     textBox.Text = "";
                 }
+            }
+        }
+
+        public static void Toggle()
+        {
+            isOpen = !isOpen;
+            if (isOpen)
+            {
+                textBox.Select();
+                AddToGUIUpdateList();
+            }
+            else
+            {
+                GUI.ForceMouseOn(null);
+                textBox.Deselect();
             }
         }
 
