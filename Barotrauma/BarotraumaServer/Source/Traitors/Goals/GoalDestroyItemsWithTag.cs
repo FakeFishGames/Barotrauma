@@ -14,7 +14,7 @@ namespace Barotrauma
             private readonly bool matchInventory;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]", "[tag]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:f}", DestroyPercent * 100.0f), tag });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:0}", DestroyPercent * 100.0f), tag });
 
             private readonly float destroyPercent;
             protected float DestroyPercent => destroyPercent;

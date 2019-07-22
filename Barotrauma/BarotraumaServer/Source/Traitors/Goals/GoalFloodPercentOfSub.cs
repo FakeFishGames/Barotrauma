@@ -11,7 +11,7 @@ namespace Barotrauma
             private readonly float minimumFloodingAmount;
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]" });
-            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:f}", minimumFloodingAmount * 100.0f) });
+            public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:0}", minimumFloodingAmount * 100.0f) });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
