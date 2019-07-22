@@ -86,7 +86,8 @@ namespace Barotrauma
                             int inputLines = Math.Max((int)Math.Ceiling(input.Length / (float)Console.WindowWidth), 1);
                             Console.CursorLeft = 0;
                             Console.Write(new string(' ', consoleWidth));
-                            Console.CursorTop -= inputLines; Console.CursorLeft = 0;
+                            Console.CursorTop = Math.Max(Console.CursorTop - inputLines, 0);
+                            Console.CursorLeft = 0;
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
@@ -121,9 +122,9 @@ namespace Barotrauma
                         switch (key.Key)
                         {
                             case ConsoleKey.Enter:
-                                lock (DebugConsole.QueuedCommands)
+                                lock (QueuedCommands)
                                 {
-                                    DebugConsole.QueuedCommands.Add(input);
+                                    QueuedCommands.Add(input);
                                 }
                                 input = "";
                                 memoryIndex = -1;
