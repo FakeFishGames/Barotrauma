@@ -21,10 +21,12 @@ namespace Barotrauma
 
             public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
 
-            protected ItemPrefab FindItemPrefab(string identifier)
+            protected ItemPrefab FindRandomItemPrefab(string identifier)
             {
-                foreach (var prefab in MapEntityPrefab.List)
-                {
+                var prefabsCount = MapEntityPrefab.List.Count;
+                var startIndex = Rand.Int(prefabsCount);
+                for(int i = 0; i < prefabsCount; ++i) {
+                    var prefab = MapEntityPrefab.List[(startIndex + i) % prefabsCount];
                     if (prefab is ItemPrefab && prefab.Identifier == identifier)
                     {
                         return (ItemPrefab)prefab;
@@ -39,7 +41,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-                targetPrefab = FindItemPrefab(identifier);
+                targetPrefab = FindRandomItemPrefab(identifier);
                 if (targetPrefab == null)
                 {
                     return false;
