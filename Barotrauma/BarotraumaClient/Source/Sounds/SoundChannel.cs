@@ -305,7 +305,7 @@ namespace Barotrauma.Sounds
                     float retVal = -1.0f;
                     lock (mutex)
                     {
-                        retVal = streamAmplitude; //TODO: implement
+                        retVal = streamAmplitude;
                     }
                     return retVal;
                 }
@@ -346,6 +346,7 @@ namespace Barotrauma.Sounds
         private int queueStartIndex;
         private readonly uint[] streamBuffers;
         private uint[] unqueuedBuffers;
+        private float[] streamBufferAmplitudes;
 
         private object mutex;
 
@@ -439,6 +440,7 @@ namespace Barotrauma.Sounds
 
                         streamBuffers = new uint[4];
                         unqueuedBuffers = new uint[4];
+                        streamBufferAmplitudes = new float[4];
                         for (int i = 0; i < 4; i++)
                         {
                             Al.GenBuffer(out streamBuffers[i]);
@@ -591,6 +593,14 @@ namespace Barotrauma.Sounds
                         int index = queueStartIndex;
                         short[] buffer = streamShortBuffer;
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
+                        float readAmplitude = 0.0f;
+
+                        for (int i=0;i<readSamples;i++)
+                        {
+                            float sampleF = ((float)buffer[i]) / ((float)short.MaxValue);
+                            readAmplitude = Math.Max(readAmplitude, Math.Abs(sampleF));
+                        }
+
                         if (FilledByNetwork)
                         {
                             if (Sound is VoipSound voipSound)
@@ -629,6 +639,8 @@ namespace Barotrauma.Sounds
                         
                         if (readSamples > 0)
                         {
+                            streamBufferAmplitudes[index] = readAmplitude;
+
                             Al.BufferData<short>(streamBuffers[index], Sound.ALFormat, buffer, readSamples, Sound.SampleRate);
 
                             alError = Al.GetError();
@@ -640,6 +652,7 @@ namespace Barotrauma.Sounds
 
                             Al.SourceQueueBuffer(alSource, streamBuffers[index]);
                             queueStartIndex = (queueStartIndex + 1) % 4;
+
                             alError = Al.GetError();
                             if (alError != Al.NoError)
                             {
@@ -656,12 +669,19 @@ namespace Barotrauma.Sounds
                         }
                         buffersToRequeue--;
                     }
-                    
+
+                    streamAmplitude = streamBufferAmplitudes[queueStartIndex];
+
                     Al.GetSourcei(alSource, Al.SourceState, out state);
                     if (state != Al.Playing)
                     {
                         Al.SourcePlay(alSource);
                     }
+                }
+
+                if (reachedEndSample)
+                {
+                    streamAmplitude = 0.0f;
                 }
             }
         }
