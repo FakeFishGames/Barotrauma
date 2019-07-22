@@ -404,6 +404,11 @@ namespace Barotrauma
             return container.Inventory;
         }
 
+        protected virtual ItemInventory GetActiveEquippedSubInventory(int slotIndex)
+        {
+            return null;
+        }
+
         float openState;
 
         public void UpdateSubInventory(float deltaTime, int slotIndex, Camera cam)

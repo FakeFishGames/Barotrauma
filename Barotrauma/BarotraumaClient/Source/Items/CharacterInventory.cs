@@ -107,6 +107,17 @@ namespace Barotrauma
             SetSlotPositions(layout);
         }
 
+        protected override ItemInventory GetActiveEquippedSubInventory(int slotIndex)
+        {
+            var item = Items[slotIndex];
+            if (item == null) return null;
+
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null || !container.KeepOpenWhenEquipped || !character.HasEquippedItem(container.Item)) return null;
+
+            return container.Inventory;
+        }
+
         protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
             base.PutItem(item, i, user, removeItem, createNetworkEvent);
@@ -522,7 +533,7 @@ namespace Barotrauma
                     }
 
                     if (HideSlot(i) || CharacterHealth.OpenHealthWindow != null) continue;
-                    if (character.HasEquippedItem(item))
+                    if (character.HasEquippedItem(item)) // Keep a subinventory display open permanently when the container is equipped
                     {
                         var itemContainer = item.GetComponent<ItemContainer>();
                         if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
@@ -805,7 +816,24 @@ namespace Barotrauma
                     }
                     break;
                 case QuickUseAction.TakeFromContainer:
-                    success = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+
+                    // Check open subinventories and put the item in it if equipped
+                    ItemInventory activeSubInventory = null;
+                    for (int i = 0; i < capacity; i++)
+                    {
+                        activeSubInventory = GetActiveEquippedSubInventory(i);
+                        if (activeSubInventory != null)
+                        {
+                            success = activeSubInventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                            break;
+                        }
+                    }                            
+
+                    // No subinventory found or placing unsuccessful -> put in the character's inventory
+                    if (!success)
+                    {
+                        success = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    }
                     break;  
             }
 
