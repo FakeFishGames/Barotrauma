@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public class Goal
+        public abstract class Goal
         {
             public Traitor Traitor { get; private set; }
             public TraitorMission Mission { get; internal set; }
@@ -33,7 +33,7 @@ namespace Barotrauma
             public virtual string InfoText => TextManager.GetWithVariables(InfoTextId, InfoTextKeys.ToArray(), InfoTextValues.ToArray());
             public virtual string CompletedText => CompletedTextId != null ? TextManager.GetWithVariables(CompletedTextId, CompletedTextKeys.ToArray(), CompletedTextValues.ToArray()) : StatusText;
 
-            public virtual bool IsCompleted => false;
+            public abstract bool IsCompleted { get; }
             public virtual bool IsStarted => Traitor != null;
 
             public virtual bool Start(GameServer server, Traitor traitor)

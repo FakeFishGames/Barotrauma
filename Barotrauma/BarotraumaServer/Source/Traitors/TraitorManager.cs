@@ -9,12 +9,6 @@ namespace Barotrauma
     {
         public readonly Character Character;
 
-        public class GoalDetonateLocations : Goal
-        {
-            public class Location { } // TODO(xxx): Best way to identify target locations?
-            public readonly List<Location> Locations = new List<Location>();
-        }
-
         public string Role { get; private set; }
         public TraitorMission Mission { get; private set; }
         public Objective CurrentObjective => Mission.GetCurrentObjective(this);
