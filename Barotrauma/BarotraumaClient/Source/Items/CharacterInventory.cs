@@ -668,8 +668,28 @@ namespace Barotrauma
                 }
                 else if (allowInventorySwap)
                 {
-                    return item.ParentInventory is CharacterInventory ?
-                        QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                    if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory
+                    {
+                        return item.ParentInventory is CharacterInventory ?
+                            QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                    }
+                    else
+                    {
+                        var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                        if (selectedContainer != null &&
+                            selectedContainer.Inventory != null &&
+                            !selectedContainer.Inventory.Locked &&
+                            allowInventorySwap)
+                        {
+                            // Move the item from the subinventory to the selected container
+                            return QuickUseAction.PutToContainer;
+                        }
+                        else
+                        {
+                            // Take from the subinventory and place it in the character's main inventory if no target container is selected
+                            return QuickUseAction.TakeFromContainer;
+                        }
+                    }
                 }
             }
             else
