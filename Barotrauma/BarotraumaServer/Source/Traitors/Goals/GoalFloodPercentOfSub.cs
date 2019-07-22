@@ -13,7 +13,20 @@ namespace Barotrauma
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[percentage]" });
             public override IEnumerable<string> InfoTextValues => base.InfoTextValues.Concat(new string[] { string.Format("{0:f}", minimumFloodingAmount * 100.0f) });
 
-            public override bool IsCompleted => GameMain.GameSession.EventManager.CurrentFloodingAmount >= minimumFloodingAmount;
+            private bool isCompleted = false;
+            public override bool IsCompleted => isCompleted;
+
+            public override void Update(float deltaTime)
+            {
+                base.Update(deltaTime);
+                var floodingAmount = 0.0f;
+                foreach (Hull hull in Hull.hullList)
+                {
+                    if (hull.Submarine == null || hull.Submarine.IsOutpost) { continue; }
+                    floodingAmount += hull.WaterVolume / hull.Volume / Hull.hullList.Count;
+                }
+                isCompleted = floodingAmount >= minimumFloodingAmount;
+            }
 
             public GoalFloodPercentOfSub(float minimumFloodingAmount) : base()
             {

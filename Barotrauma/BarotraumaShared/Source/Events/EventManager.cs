@@ -44,8 +44,6 @@ namespace Barotrauma
             get { return currentIntensity; }
         }
 
-        public float CurrentFloodingAmount => floodingAmount;
-
         public List<ScriptedEvent> Events
         {
             get { return events; }

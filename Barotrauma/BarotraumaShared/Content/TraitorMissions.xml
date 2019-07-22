@@ -35,6 +35,12 @@
       </Goal>
     </Objective>
 
+    <Objective>
+      <Goal type="floodsub" percentage="2">
+        <InfoText id="traitorgoalfloodpercentofsub" />
+      </Goal>
+    </Objective>
+
     <!--Objective 2: Assassinate an engineer, sabotage ballast pumps-->
     <Objective>
       <InfoText id="traitorobjectivestartmessage"/>

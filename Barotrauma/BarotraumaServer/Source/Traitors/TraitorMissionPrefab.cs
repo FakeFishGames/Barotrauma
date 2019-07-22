@@ -82,7 +82,7 @@ namespace Barotrauma {
                         goal = new Traitor.GoalSabotageItems(Config.GetAttributeString("tag", null), Config.GetAttributeFloat("threshold", 0.0f) / 100.0f);
                         break;
                     case "floodsub":
-                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100);
+                        goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
                         break;
                     case "finditem":
                         goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeStringArray("allowedContainers", new string[] { "steelcabinet", "mediumsteelcabinet", "suppliescabinet" }));
