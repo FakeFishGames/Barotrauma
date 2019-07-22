@@ -45,10 +45,15 @@
     <targetpriority tag="humanhusk" state="Attack" priority="0"/>
   </ai>
 
-  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any" accessiblewhenalive="false">
+  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any" accessiblewhenalive="false" commonness="10">
     <Item identifier="huskeggs"/>
     <Item identifier="huskeggs"/>
   </inventory>
+  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any" accessiblewhenalive="false" commonness="1">
+    <Item identifier="huskeggs"/>
+    <Item identifier="huskstinger"/>
+  </inventory>
+
 
 </Character>
 
