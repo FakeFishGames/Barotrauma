@@ -3917,13 +3917,13 @@ namespace SteamNative
 				
 				Native.SteamAPI_ISteamGameServer_SetBotPlayerCount(_ptr, cBotplayers);
 			}
-			public virtual void /*void*/ ISteamGameServer_SetServerName( string /*const char **/ pszServerName )
+			public virtual void /*void*/ ISteamGameServer_SetServerName( IntPtr /*const char **/ pszServerName )
 			{
 				if ( _ptr == IntPtr.Zero ) throw new System.Exception( "ISteamGameServer _ptr is null!" );
 				
 				Native.SteamAPI_ISteamGameServer_SetServerName(_ptr, pszServerName);
 			}
-			public virtual void /*void*/ ISteamGameServer_SetMapName( string /*const char **/ pszMapName )
+			public virtual void /*void*/ ISteamGameServer_SetMapName( IntPtr /*const char **/ pszMapName )
 			{
 				if ( _ptr == IntPtr.Zero ) throw new System.Exception( "ISteamGameServer _ptr is null!" );
 				
@@ -3953,7 +3953,7 @@ namespace SteamNative
 				
 				Native.SteamAPI_ISteamGameServer_ClearAllKeyValues(_ptr);
 			}
-			public virtual void /*void*/ ISteamGameServer_SetKeyValue( string /*const char **/ pKey, string /*const char **/ pValue )
+			public virtual void /*void*/ ISteamGameServer_SetKeyValue( IntPtr /*const char **/ pKey, IntPtr /*const char **/ pValue )
 			{
 				if ( _ptr == IntPtr.Zero ) throw new System.Exception( "ISteamGameServer _ptr is null!" );
 				
@@ -4958,13 +4958,13 @@ namespace SteamNative
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern bool /*bool*/ SteamAPI_ISteamGameServer_WasRestartRequested( IntPtr ISteamGameServer );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetMaxPlayerCount( IntPtr ISteamGameServer, int /*int*/ cPlayersMax );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetBotPlayerCount( IntPtr ISteamGameServer, int /*int*/ cBotplayers );
-				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetServerName( IntPtr ISteamGameServer, string /*const char **/ pszServerName );
-				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetMapName( IntPtr ISteamGameServer, string /*const char **/ pszMapName );
+				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetServerName( IntPtr ISteamGameServer, IntPtr /*const char **/ pszServerName );
+				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetMapName( IntPtr ISteamGameServer, IntPtr /*const char **/ pszMapName );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetPasswordProtected( IntPtr ISteamGameServer, [MarshalAs(UnmanagedType.U1)] bool /*bool*/ bPasswordProtected );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetSpectatorPort( IntPtr ISteamGameServer, ushort /*uint16*/ unSpectatorPort );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetSpectatorServerName( IntPtr ISteamGameServer, string /*const char **/ pszSpectatorServerName );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_ClearAllKeyValues( IntPtr ISteamGameServer );
-				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetKeyValue( IntPtr ISteamGameServer, string /*const char **/ pKey, string /*const char **/ pValue );
+				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetKeyValue( IntPtr ISteamGameServer, IntPtr /*const char **/ pKey, IntPtr /*const char **/ pValue );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetGameTags( IntPtr ISteamGameServer, string /*const char **/ pchGameTags );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetGameData( IntPtr ISteamGameServer, string /*const char **/ pchGameData );
 				[DllImport( "steam_api.dll", CallingConvention = CallingConvention.Cdecl )] internal static extern void /*void*/ SteamAPI_ISteamGameServer_SetRegion( IntPtr ISteamGameServer, string /*const char **/ pszRegion );

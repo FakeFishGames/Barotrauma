@@ -77,12 +77,16 @@ namespace Barotrauma.Networking
             bool recipientSpectating = recipient.Character == null || recipient.Character.IsDead;
             bool senderSpectating = sender.Character == null || sender.Character.IsDead;
 
-            //spectators cannot speak with in-game players or vice versa
-            //TODO: allow spectators to hear the voice chat if close enough to the speaker?
-            if (recipientSpectating != senderSpectating) { return false; }
+            //TODO: only allow spectators to hear the voice chat if close enough to the speaker?
+
+            //non-spectators cannot hear spectators
+            if (senderSpectating && !recipientSpectating) { return false; }
 
             //both spectating, no need to do radio/distance checks
             if (recipientSpectating && senderSpectating) { return true; }
+
+            //spectators can hear non-spectators
+            if (!senderSpectating && recipientSpectating) { return true; }
 
             //sender can't speak
             if (sender.Character != null && sender.Character.SpeechImpediment >= 100.0f) { return false; }

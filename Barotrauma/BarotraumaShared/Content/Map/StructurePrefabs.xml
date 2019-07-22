@@ -531,11 +531,11 @@
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,432,359,159" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF1p3>
-  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="180" bodyheight="121" bodyoffset="-40,0" castshadow="false" health="400">
+  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="250" bodyheight="30" bodyoffset="0,0" bodyrotation="-20" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,752,270,121" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p1>
-  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="151" bodyoffset="60,0" castshadow="false" ishorizontal="false" health="400">
+  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="158" bodyoffset="60,-3" castshadow="false" ishorizontal="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="1,593,269,160" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p2>
@@ -706,7 +706,7 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,0,96,512" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">&gt;
+  <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="129,0,256,160" depth="0.1" origin="0.5,0.5" /><backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" /></shellA>
   <shellA name="Shell A 34 deg" identifier="shella34deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="116" bodyheight="60" bodyrotation="-34">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="864,117,98,156" depth="0.1" origin="0.5,0.5" />
@@ -1227,22 +1227,22 @@
   <bunk name="Bunk" identifier="bunk" width="173" height="129">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,129,173,129" depth="0.9" />
   </bunk>
-  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="10000">
+  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="200">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,384,256,80" depth="0.06" />
   </RuinWallHorizontal>
-  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="10000">
+  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="200">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="128,0,80,256" depth="0.061" />
   </RuinWallVertical>
-  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="100000">
+  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="10000">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,256,256,128" depth="0.06" />
   </RuinWallHeavyHorizontal>
-  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="100000">
+  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="10000">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,0,128,256" depth="0.061" />
   </RuinWallHeavyVertical>
-  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="2500">
+  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="100">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,464,256,48" depth="0.062" />
   </RuinWallHorizontalSmall>
-  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="2500">
+  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="100">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="202,0,54,256" depth="0.063" />
   </RuinWallVerticalSmall>
   <RuinBack1 name="Ruin BackWall 1" identifier="RuinBack1" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">

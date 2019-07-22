@@ -102,6 +102,14 @@ namespace Barotrauma
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
 
+        private static void AddToList(Sprite elem)
+        {
+            lock (list)
+            {
+                list.Add(elem);
+            }
+        }
+
         public Sprite(XElement element, string path = "", string file = "", bool? preMultiplyAlpha = null, bool lazyLoad = false)
         {
             this.lazyLoad = lazyLoad;
@@ -128,7 +136,7 @@ namespace Barotrauma
             RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
             ID = GetID(SourceElement);
-            list.Add(this);
+            AddToList(this);
         }
 
         internal void LoadParams(SpriteParams spriteParams, bool isFlipped)
@@ -147,13 +155,13 @@ namespace Barotrauma
         public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)
         {
             Init(newFile, newOrigin: newOrigin, preMultiplyAlpha: preMultiplyAlpha);
-            list.Add(this);
+            AddToList(this);
         }
         
         public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? origin = null, float rotation = 0, bool preMultiplyAlpha = true)
         {
             Init(newFile, sourceRectangle: sourceRectangle, newOrigin: origin, newRotation: rotation, preMultiplyAlpha: preMultiplyAlpha);
-            list.Add(this);
+            AddToList(this);
         }
         
         private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0, 
@@ -198,7 +206,10 @@ namespace Barotrauma
 
         public void Remove()
         {
-            list.Remove(this);
+            lock (list)
+            {
+                list.Remove(this);
+            }
 
             DisposeTexture();
         }

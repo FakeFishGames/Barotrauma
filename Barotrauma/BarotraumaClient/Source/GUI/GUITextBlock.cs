@@ -20,6 +20,7 @@ namespace Barotrauma
         protected Color textColor;
 
         private string wrappedText;
+        private string censoredText;
 
         public delegate string TextGetterHandler();
         public TextGetterHandler TextGetter;
@@ -175,6 +176,17 @@ namespace Barotrauma
                 SetTextPos();
             }
         }
+
+        public bool Censor
+        {
+            get;
+            set;
+        }
+
+        public string CensoredText
+        {
+            get { return censoredText; }
+        }
                 
         /// <summary>
         /// This is the new constructor.
@@ -204,6 +216,8 @@ namespace Barotrauma
 
             RectTransform.ScaleChanged += SetTextPos;
             RectTransform.SizeChanged += SetTextPos;
+
+            Censor = false;
         }
 
         public void CalculateHeightFromText()
@@ -225,13 +239,19 @@ namespace Barotrauma
         {
             if (text == null) return;
 
+            censoredText = "";
+            for (int i=0;i<text.Length;i++)
+            {
+                censoredText += "\u2022";
+            }
+
             var rect = Rect;
 
             overflowClipActive = false;
             wrappedText = text;
             
-            TextSize = MeasureText(text);           
-
+            TextSize = MeasureText(text);
+            
             if (Wrap && rect.Width > 0)
             {
                 wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale);
@@ -338,7 +358,7 @@ namespace Barotrauma
                 }
 
                 Font.DrawString(spriteBatch,
-                    Wrap ? wrappedText : text,
+                    Censor ? censoredText : (Wrap ? wrappedText : text),
                     pos,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, TextScale,
@@ -369,7 +389,7 @@ namespace Barotrauma
         public static void AutoScaleAndNormalize(IEnumerable<GUITextBlock> textBlocks)
         {
             if (!textBlocks.Any()) { return; }
-            float minScale = textBlocks.First().TextScale;
+            float minScale = Math.Max(textBlocks.First().TextScale, 1.0f);
             foreach (GUITextBlock textBlock in textBlocks)
             {
                 textBlock.AutoScale = true;

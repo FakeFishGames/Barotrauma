@@ -3,7 +3,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -75,6 +75,8 @@ namespace Barotrauma
         {
             settingsFrame = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), GUI.Canvas, Anchor.Center));
 
+            Vector2 tickBoxScale = Vector2.One * 0.05f;
+
             var settingsFramePadding = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { RelativeSpacing = 0.01f, IsHorizontal = true };
 
             /// General tab --------------------------------------------------------------
@@ -96,7 +98,7 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(32, 32), contentPackageList.Content.RectTransform), contentPackage.Name)
+                var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
                 {
                     UserData = contentPackage,
                     OnSelected = SelectContentPackage,
@@ -106,18 +108,15 @@ namespace Barotrauma
                 {
                     tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                                    .Replace("[packagename]", contentPackage.Name)
-                                    .Replace("[packageversion]", contentPackage.GameVersion.ToString())
-                                    .Replace("[gameversion]", GameMain.Version.ToString());
+                    tickBox.ToolTip = TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
+                        new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
                 }
                 else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
                 {
                     tickBox.TextColor = Color.Red;
                     tickBox.Enabled = false;
-                    tickBox.ToolTip = TextManager.Get("ContentPackageMissingCoreFiles")
-                                    .Replace("[packagename]", contentPackage.Name)
-                                    .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes));
+                    tickBox.ToolTip = TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
+                        new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
                 }
             }
 
@@ -135,7 +134,7 @@ namespace Barotrauma
                 if (newLanguage == Language) return true;
                 
                 Language = newLanguage;
-                ApplySettings();
+                UnsavedSettings = true;
 
                 var msgBox = new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
                 //change fonts to the default font of the new language to make sure
@@ -187,45 +186,38 @@ namespace Barotrauma
             var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Graphics].RectTransform, Anchor.TopRight)
             { RelativeOffset = new Vector2(0.025f, 0.02f) })
             { RelativeSpacing = 0.01f };
-
-            var supportedDisplayModes = new List<DisplayMode>();
-            foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
-            {
-                if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
-#if OSX
-                // Monogame currently doesn't support retina displays
-                // so we need to disable resolutions above the viewport size.
-
-                // In a bundled .app you just disable HiDPI in the info.plist
-                // but that's probably not gonna happen.
-                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
-#endif
-                supportedDisplayModes.Add(mode);
-            }
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
-            var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), elementCount: supportedDisplayModes.Count)
+            var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform))
             {
                 OnSelected = SelectResolution,
-#if !LINUX
-                ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed
-#endif
-        };
+                ButtonEnabled = GameMain.Config.WindowMode != WindowMode.BorderlessWindowed
+            };
 
-            foreach (DisplayMode mode in supportedDisplayModes)
-            {
-                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
-                resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
-                if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
-            }
-
-            if (resolutionDD.SelectedItemData == null)
-            {
-                resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
-            }
-
+            var supportedDisplayModes = UpdateResolutionDD(resolutionDD);
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+
+            displayModeDD.OnSelected = (guiComponent, obj) =>
+            {
+                UnsavedSettings = true;
+                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+                supportedDisplayModes = UpdateResolutionDD(resolutionDD);
+                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode != WindowMode.BorderlessWindowed;
+                GameMain.Instance.ApplyGraphicsSettings();
+                if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+                {
+                    GraphicsWidth = GameMain.GraphicsWidth;
+                    GraphicsHeight = GameMain.GraphicsHeight;
+                    var displayMode = supportedDisplayModes.Find(m => m.Width == GameMain.GraphicsWidth && m.Height == GameMain.GraphicsHeight);
+                    if (displayMode != null)
+                    {
+                        resolutionDD.SelectItem(displayMode);
+                    }
+                }
+                return true;
+            };
 
             displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
             displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
@@ -243,17 +235,8 @@ namespace Barotrauma
                 displayModeDD.SelectItem(GameMain.Config.WindowMode);
             }
 #endif
-            displayModeDD.OnSelected = (guiComponent, obj) =>
-            {
-                UnsavedSettings = true;
-                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
-#if !LINUX
-                resolutionDD.ButtonEnabled = GameMain.Config.WindowMode == WindowMode.Windowed;
-#endif
-                return true;
-            };
 
-            GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), TextManager.Get("EnableVSync"))
+            GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableVSync"))
             {
                 ToolTip = TextManager.Get("EnableVSyncToolTip"),
                 OnSelected = (GUITickBox box) =>
@@ -269,7 +252,7 @@ namespace Barotrauma
             };
 
             //TODO: remove hardcoded texts after the texts have been added to localization
-            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), leftColumn.RectTransform), 
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), 
                 TextManager.Get("PauseOnFocusLost", returnNull: true) ?? "Pause on focus lost");
             pauseOnFocusLostBox.Selected = PauseOnFocusLost;
             pauseOnFocusLostBox.ToolTip = TextManager.Get("PauseOnFocusLostToolTip", returnNull: true) ?? "Pauses the game when its window is not in focus. Note that the game won't be paused when a multiplayer session is active.";
@@ -334,7 +317,7 @@ namespace Barotrauma
             };
             lightScrollBar.OnMoved(lightScrollBar, lightScrollBar.BarScroll);
 
-            new GUITickBox(new RectTransform(new Point(32, 32), rightColumn.RectTransform), TextManager.Get("SpecularLighting"))
+            new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("SpecularLighting"))
             {
                 ToolTip = TextManager.Get("SpecularLightingToolTip"),
                 Selected = SpecularityEnabled,
@@ -346,7 +329,7 @@ namespace Barotrauma
                 }
             };
 
-            new GUITickBox(new RectTransform(new Point(32, 32), rightColumn.RectTransform), TextManager.Get("ChromaticAberration"))
+            new GUITickBox(new RectTransform(tickBoxScale, rightColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("ChromaticAberration"))
             {
                 ToolTip = TextManager.Get("ChromaticAberrationToolTip"),
                 Selected = ChromaticAberrationEnabled,
@@ -446,7 +429,7 @@ namespace Barotrauma
             };
             voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
 
-            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(new Point(32, 32), audioSliders.RectTransform), TextManager.Get("MuteOnFocusLost"));
+            GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
             muteOnFocusLostBox.OnSelected = (tickBox) =>
@@ -458,13 +441,13 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("VoiceChat"));
 
-            IList<string> deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
+            IList<string> deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
             foreach (string name in deviceNames)
             {
                 DebugConsole.NewMessage(name + " " + name.Length.ToString(), Color.Lime);
             }
 
-            GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(new Point(32, 32), audioSliders.RectTransform), TextManager.Get("DirectionalVoiceChat"));
+            GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DirectionalVoiceChat"));
             directionalVoiceChat.Selected = UseDirectionalVoiceChat;
             directionalVoiceChat.ToolTip = TextManager.Get("DirectionalVoiceChatToolTip");
             directionalVoiceChat.OnSelected = (tickBox) =>
@@ -474,45 +457,74 @@ namespace Barotrauma
                 return true;
             };
 
-
-            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice)) VoiceCaptureDevice = deviceNames[0];
-#if (!OSX)
-            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.EnsureUTF8(VoiceCaptureDevice), deviceNames.Count);
-            foreach (string name in deviceNames)
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice) || !(deviceNames?.Contains(VoiceCaptureDevice) ?? false))
             {
-                deviceList.AddItem(TextManager.EnsureUTF8(name), name);
+                VoiceCaptureDevice = deviceNames?.Count > 0 ? deviceNames[0] : null;
             }
-            deviceList.OnSelected = (GUIComponent selected, object obj) =>
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
-                string name = obj as string;
-                if (VoiceCaptureDevice == name) { return true; }
+                VoiceSetting = VoiceMode.Disabled;
+            }
+#if (!OSX)
+            var deviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TrimAudioDeviceName(VoiceCaptureDevice), deviceNames.Count);
+            if (deviceNames?.Count > 0)
+            {
+                foreach (string name in deviceNames)
+                {
+                    deviceList.AddItem(TrimAudioDeviceName(name), name);
+                }
+                deviceList.OnSelected = (GUIComponent selected, object obj) =>
+                {
+                    string name = obj as string;
+                    if (VoiceCaptureDevice == name) { return true; }
 
-                VoipCapture.ChangeCaptureDevice(name);
-                return true;
-            };
+                    VoipCapture.ChangeCaptureDevice(name);
+                    return true;
+                };
+            }
+            else
+            {
+                deviceList.AddItem(TextManager.Get("VoipNoDevices") ?? "N/A", null);
+                deviceList.ButtonEnabled = false;
+                deviceList.Select(0);
+            }
+
 #else
-            var suavemente = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), 
-                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice)))
+            var defaultDeviceGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), audioSliders.RectTransform), true, Anchor.CenterLeft);
+            var currentDeviceTextBlock = new GUITextBlock(new RectTransform(new Vector2(.7f, 0.75f), null), 
+                TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice)))
             {
                 ToolTip = TextManager.Get("CurrentDeviceToolTip.OSX"),
-                TextAlignment = Alignment.CenterX
+                TextAlignment = Alignment.CenterLeft
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.15f), audioSliders.RectTransform), TextManager.Get("RefreshDefaultDevice"))
+            string refreshText = ToolBox.WrapText(TextManager.Get("RefreshDefaultDevice"), defaultDeviceGroup.RectTransform.Rect.Width * 0.3f, GUI.Font);
+            var currentDeviceButton = new GUIButton(new RectTransform(new Vector2(.3f, 0.75f), defaultDeviceGroup.RectTransform), refreshText)
             {
                 ToolTip = TextManager.Get("RefreshDefaultDeviceToolTip"),
                 OnClicked = (bt, userdata) =>
                 {
-                    deviceNames = Alc.GetString((IntPtr)null, AlcGetStringList.CaptureDeviceSpecifier);
-                    if (VoiceCaptureDevice == deviceNames[0]) return true;
+                    deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);
+                    if (deviceNames?.Count > 0)
+                    {
+                        if (VoiceCaptureDevice == deviceNames[0]) return true;
 
-                    VoipCapture.ChangeCaptureDevice(deviceNames[0]);
-                    suavemente.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TextManager.EnsureUTF8(VoiceCaptureDevice));
-                    suavemente.Flash(Color.Blue);
+                        VoipCapture.ChangeCaptureDevice(deviceNames[0]);
+                        currentDeviceTextBlock.Text = TextManager.AddPunctuation(':', TextManager.Get("CurrentDevice"), TrimAudioDeviceName(VoiceCaptureDevice));
+                        currentDeviceTextBlock.Flash(Color.Blue);
+                    }
+                    else
+                    {
+                        currentDeviceTextBlock.Text = TextManager.Get("VoipNoDevices") ?? "N/A";
+                        currentDeviceTextBlock.Flash(Color.Red);
+                    }
 
                     return true;
                 }
             };
+            currentDeviceButton.OnClicked(currentDeviceButton, null);
+
+            currentDeviceTextBlock.RectTransform.Parent = defaultDeviceGroup.RectTransform;
 #endif
             //var radioButtonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.12f), audioSliders.RectTransform));
 
@@ -520,7 +532,7 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(new Point(32, 32), audioSliders.RectTransform), TextManager.Get(langStr))
+                var tick = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr))
                 {
                     ToolTip = TextManager.Get(langStr + "ToolTip")
                 };
@@ -628,6 +640,10 @@ namespace Barotrauma
                 }
             };
             voiceMode.Selected = VoiceSetting;
+            if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
+            {
+                voiceMode.Enabled = false;
+            }
 
             /// Controls tab -------------------------------------------------------------
             var controlsLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Controls].RectTransform, Anchor.TopCenter)
@@ -654,7 +670,7 @@ namespace Barotrauma
             };
             aimAssistSlider.OnMoved(aimAssistSlider, aimAssistSlider.BarScroll);
 
-            new GUITickBox(new RectTransform(new Point(32, 32), controlsLayoutGroup.RectTransform), TextManager.Get("EnableMouseLook"))
+            new GUITickBox(new RectTransform(tickBoxScale, controlsLayoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableMouseLook"))
             {
                 ToolTip = TextManager.Get("EnableMouseLookToolTip"),
                 Selected = EnableMouseLook,
@@ -779,6 +795,76 @@ namespace Barotrauma
             SelectTab(selectedTab);
         }
 
+        private List<DisplayMode> UpdateResolutionDD(GUIDropDown resolutionDD)
+        {
+            var supportedDisplayModes = new List<DisplayMode>();
+            foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
+            {
+                if (supportedDisplayModes.Any(m => m.Width == mode.Width && m.Height == mode.Height)) { continue; }
+#if OSX
+                // Monogame currently doesn't support retina displays
+                // so we need to disable resolutions above the viewport size.
+
+                // In a bundled .app you just disable HiDPI in the info.plist
+                // but that's probably not gonna happen.
+                if (mode.Width > GameMain.Instance.GraphicsDevice.DisplayMode.Width || mode.Height > GameMain.Instance.GraphicsDevice.DisplayMode.Height) { continue; }
+#endif
+                supportedDisplayModes.Add(mode);
+            }
+            supportedDisplayModes.Sort((a, b) =>
+            {
+                if (a.Width < b.Width)
+                {
+                    return -1;
+                }
+                if (a.Width > b.Width)
+                {
+                    return 1;
+                }
+                if (a.Height < b.Height)
+                {
+                    return -1;
+                }
+                if (a.Height > b.Height)
+                {
+                    return 1;
+                }
+                return 0;
+            });
+
+            resolutionDD.ClearChildren();
+
+            foreach (DisplayMode mode in supportedDisplayModes)
+            {
+                if (mode.Width < MinSupportedResolution.X || mode.Height < MinSupportedResolution.Y) { continue; }
+                resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
+                if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
+            }
+
+            if (resolutionDD.SelectedItemData == null)
+            {
+                resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
+            }
+
+            resolutionDD.ListBox.RectTransform.Resize(new Point(resolutionDD.Rect.Width, resolutionDD.Rect.Height * MathHelper.Clamp(supportedDisplayModes.Count, 2, 10)));
+
+            return supportedDisplayModes;
+        }
+
+        private string TrimAudioDeviceName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) { return string.Empty; }
+            string[] prefixes = { "OpenAL Soft on " };
+            foreach (string prefix in prefixes)
+            {
+                if (name.StartsWith(prefix, StringComparison.InvariantCulture))
+                {
+                    return name.Remove(0, prefix.Length);
+                }
+            }
+            return name;
+        }
+        
         private Tab currentTab;
         private void SelectTab(Tab tab)
         {
@@ -978,12 +1064,12 @@ namespace Barotrauma
 
             SettingsFrame.Flash(Color.Green);
 
-            if (GameMain.WindowMode != GameMain.Config.WindowMode)
+            if (GameMain.WindowMode != GameMain.Config.WindowMode || GameMain.Config.GraphicsWidth != GameMain.GraphicsWidth || GameMain.Config.GraphicsHeight != GameMain.GraphicsHeight)
             {
                 GameMain.Instance.ApplyGraphicsSettings();
             }
 
-            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
+            /*if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
 #if OSX
                 if (GameMain.Config.WindowMode != WindowMode.BorderlessWindowed)
@@ -993,7 +1079,7 @@ namespace Barotrauma
 #if OSX
                 }
 #endif
-            }
+            }*/
         }
 
         private bool ApplyClicked(GUIButton button, object userData)

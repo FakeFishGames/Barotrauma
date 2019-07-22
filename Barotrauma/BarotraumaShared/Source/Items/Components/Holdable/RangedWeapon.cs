@@ -43,12 +43,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        /// <summary>
-        /// How useful the weapon is in combat? Used by AI to sort the used weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
-        /// </summary>
-        [Serialize(0f, false)]
-        public float CombatPriority { get; private set; }
-
         public Vector2 TransformedBarrelPos
         {
             get
@@ -170,6 +164,7 @@ namespace Barotrauma.Items.Components
             projectile.Item.SetTransform(projectilePos, rotation);
 
             projectile.Use(deltaTime);
+            if (projectile.Item.Removed) { return true; }
             projectile.User = character;
 
             projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));

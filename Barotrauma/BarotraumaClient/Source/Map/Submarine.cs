@@ -310,7 +310,7 @@ namespace Barotrauma
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
             if (realWorldDimensions != Vector2.Zero)
             {
-                string dimensionsStr = TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
+                string dimensionsStr = TextManager.GetWithVariables("DimensionsFormat", new string[2] { "[width]", "[height]" }, new string[2] { ((int)realWorldDimensions.X).ToString(), ((int)realWorldDimensions.Y).ToString() });
 
                 var dimensionsText = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
                     TextManager.Get("Dimensions"), textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)

@@ -112,6 +112,7 @@ namespace Barotrauma
             List<Vector2> positions = new List<Vector2>();
             foreach (var allowedPosition in availablePositions)
             {
+                if (Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(allowedPosition.Position.ToVector2())))) { continue; }
                 positions.Add(allowedPosition.Position.ToVector2());
             }
 

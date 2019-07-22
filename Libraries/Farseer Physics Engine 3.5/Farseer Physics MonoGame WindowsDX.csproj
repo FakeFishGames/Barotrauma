@@ -258,13 +258,14 @@
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\MonoGame.Framework\Windows\MonoGame.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="MonoGame.Framework.WindowsDX">
-      <HintPath>..\NuGet\MonoGame.Framework.WindowsDX.3.7.1.189\lib\net45\MonoGame.Framework.dll</HintPath>
-    </Reference>
     <Reference Include="SharpDX">
       <HintPath>..\NuGet\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
     </Reference>

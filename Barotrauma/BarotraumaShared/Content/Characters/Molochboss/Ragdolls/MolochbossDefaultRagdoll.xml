@@ -2,24 +2,23 @@
   <collider radius="309" width="635" name="Main Collider" height="0" />
   <limb id="3" name="Torso" type="Torso" radius="309" width="635" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="36,0,1588,669" origin="0.4949142,0.4817872" depth="0.1" subdivisions="15,15"></deformablesprite>
-    <attack cooldown="15" range="800" damagerange="400" duration="0.25" force="50" targetforce="0" structuresoundtype="StructureBlunt" context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="FallBack" secondarycooldown="0" structuredamage="55" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="" torque="0" applyforcesonlyonce="False" targetimpulse="1250" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0">
+    <attack cooldown="15" range="800" damagerange="400" duration="0.25" force="50" targetforce="0" structuresoundtype="StructureBlunt" context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="FallBack" secondarycooldown="0" structuredamage="55" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="" torque="0" applyforcesonlyonce="False" targetimpulse="1250" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" cooldownrandomfactor="0.1">
       <Affliction identifier="internaldamage" strength="200" />
       <Affliction identifier="stun" strength="5" />
     </attack>
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
-    <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="-90,110" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
+    <damagemodifier armorsector="-90,110" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
-  <limb id="16" name="Blatter" type="None" radius="457" width="311" notes="1bc_Blatter" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <!--<sprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="423,1025,1226,915" origin="0.5,0.5" depth="0" />-->
+  <limb id="16" name="Bladder" type="None" radius="457" width="311" notes="1bc_Bladder" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="423,1025,1226,915" depth="0.29" origin="0.5,0.5" subdivisions="15,15">
       <Spritedeformation type="noise" resolution="5,5" frequency="0.5" amplitude="1" changespeed="0.1" blendmode="add" />
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.5" blendmode="add" usemovementsine="true" sineoffset="0.75" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="2" amplitude="0.2" blendmode="add" row0="0,0 0,0 0,0 0,0 0," row1="0,0 0,0.5 0,0.5 0,0 0,0" row2="0,0 0,0.75 0,1 0,0.75 0,0" row3="0,1 0,1 0,1 0,1 0,1" row4="0,0.5 0,0.25 0,0.75 0,0.25 0,0.5" usemovementsine="true" sineoffset="0.75" />
     </deformablesprite>
+    <damagemodifier isarmor="false" armorsector="75,285" afflictiontypes="bleeding,damage" damagemultiplier="2" damagesound="LimbSlash" deflectprojectiles="false" />
   </limb>
   <limb id="7" name="TentacleArm11" type="LeftArm" width="100" height="300" notes="2bl_TentacleArm11" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
-    <!--!<sprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,663,147,327" origin="0.5,0.5" depth="0" />-->
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,663,147,327" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
@@ -299,7 +298,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" />
     </deformablesprite>
   </limb>
-  <joint name="Joint Torso - Blatter" limb1="3" limb2="16" limb1anchor="36.95913,117.7716" limb2anchor="20.72723,333.17" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0" />
+  <joint name="Joint Torso - Bladder" limb1="3" limb2="16" limb1anchor="36.95913,117.7716" limb2anchor="20.72723,333.17" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0" />
   <joint name="Joint Torso - Skirt11" limb1="3" limb2="0" limb1anchor="8.091979,-501.8178" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="30.42601" lowerlimit="-29.72463" stiffness="0" />
   <joint name="Joint Torso - Skirt21" limb1="3" limb2="1" limb1anchor="-307.8923,-199.8343" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="30.42601" lowerlimit="-29.72463" stiffness="0" />
   <joint name="Joint Torso - Skirt31" limb1="3" limb2="2" limb1anchor="-208.6266,-396.8431" limb2anchor="0,84" canbesevered="True" limitenabled="True" upperlimit="30.42601" lowerlimit="-29.72463" stiffness="0" />

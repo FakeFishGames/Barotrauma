@@ -115,6 +115,12 @@ namespace Barotrauma
 
                 var prevOpenHealthWindow = openHealthWindow;
 
+                if (prevOpenHealthWindow != null)
+                {
+                    prevOpenHealthWindow.selectedLimbIndex = -1;
+                    prevOpenHealthWindow.highlightedLimbIndex = -1;
+                }
+
                 openHealthWindow = value;
                 toggledThisFrame = true;
                 if (Character.Controlled == null) { return; }

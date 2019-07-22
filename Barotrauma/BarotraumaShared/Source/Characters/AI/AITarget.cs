@@ -22,6 +22,11 @@ namespace Barotrauma
         
         private float soundRange;
         private float sightRange;
+
+        /// <summary>
+        /// How long does it take for the ai target to fade out if not kept alive.
+        /// </summary>
+        public float FadeOutTime { get; private set; } = 3;
         
         public float SoundRange
         {
@@ -121,6 +126,7 @@ namespace Barotrauma
             MinSoundRange = element.GetAttributeFloat("minsoundrange", SoundRange);
             MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
             MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
+            FadeOutTime = element.GetAttributeFloat("fadeouttime", FadeOutTime);
             SonarLabel = element.GetAttributeString("sonarlabel", "");
             string typeString = element.GetAttributeString("type", "Any");
             if (Enum.TryParse(typeString, out TargetType t))

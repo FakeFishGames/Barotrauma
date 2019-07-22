@@ -1,0 +1,16 @@
+"DepotBuildConfig"
+{
+  "DepotID" "1026341"
+  "contentroot" "ReleaseWindows"
+  "FileMapping"
+  {
+    "LocalPath" "*"
+    "DepotPath" "."
+    "recursive" "1"
+  }
+  "FileExclusion" "config_player.xml"
+  "FileExclusion" "Thumbs.db"
+  "FileExclusion" "*.png"
+  "FileExclusion" "*.ogg"
+  "FileExclusion" "*.mp4"
+}

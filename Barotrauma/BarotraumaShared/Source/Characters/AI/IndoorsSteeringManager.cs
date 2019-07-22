@@ -154,6 +154,7 @@ namespace Barotrauma
                 
                 currentTarget = target;
                 Vector2 pos = host.SimPosition;
+                // TODO: remove this and handle differently?
                 if (character != null && character.Submarine == null)
                 {
                     var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
@@ -163,7 +164,7 @@ namespace Barotrauma
                     }
                 }
 
-                var newPath = pathFinder.FindPath(pos, target, "(Character: " + character.Name + ")");
+                var newPath = pathFinder.FindPath(pos, target, character.Submarine, "(Character: " + character.Name + ")");
                 bool useNewPath = currentPath == null || needsNewPath;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                 {
@@ -448,7 +449,8 @@ namespace Barotrauma
 
         private float? GetNodePenalty(PathNode node, PathNode nextNode)
         {
-            if (character == null) { return 0.0f; }         
+            if (character == null) { return 0.0f; }
+            if (nextNode.Waypoint.isObstructed) { return null; }
             float penalty = 0.0f;
             if (nextNode.Waypoint.ConnectedGap != null && nextNode.Waypoint.ConnectedGap.Open < 0.9f)
             {

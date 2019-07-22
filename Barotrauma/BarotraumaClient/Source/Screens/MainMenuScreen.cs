@@ -9,12 +9,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
 
         private GUIComponent buttonsParent;
 
@@ -37,7 +38,11 @@ namespace Barotrauma
         private GUIComponent titleText;
 
         private CreditsPlayer creditsPlayer;
-        
+
+        #if OSX
+        private bool firstLoadOnMac = true;
+        #endif
+
         #region Creation
         public MainMenuScreen(GameMain game)
         {
@@ -360,9 +365,9 @@ namespace Barotrauma
                 OnClicked = SelectTab
             };
         }
-#endregion
+        #endregion
 
-#region Selection
+        #region Selection
         public override void Select()
         {
             base.Select();
@@ -378,6 +383,25 @@ namespace Barotrauma
             ResetButtonStates(null);
 
             GameAnalyticsManager.SetCustomDimension01("");
+
+            #if OSX
+            // Hack for adjusting the viewport properly after splash screens on older Macs
+            if (firstLoadOnMac)
+            {
+                firstLoadOnMac = false;
+
+                menuTabs[(int)Tab.Empty] = new GUIFrame(new RectTransform(new Vector2(1f, 1f), GUI.Canvas), "", Color.Transparent)
+                {
+                    CanBeFocused = false
+                };
+                var emptyList = new GUIListBox(new RectTransform(new Vector2(0.0f, 0.0f), menuTabs[(int)Tab.Empty].RectTransform))
+                {
+                    CanBeFocused = false
+                };
+
+                SelectTab(null, Tab.Empty);
+            }
+            #endif
         }
 
         public override void Deselect()
@@ -701,36 +725,40 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                int ownerKey = Math.Max(CryptoRandom.Instance.Next(),1);
+                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault();
+                if (string.IsNullOrEmpty(exeName))
+                {
+                    DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");
+                    exeName = "DedicatedServer.exe";
+                }
+
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
 
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -port " + port.ToString() +
                                    " -queryport " + queryPort.ToString() +
+                                   " -public " + isPublicBox.Selected.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -upnp " + useUpnpBox.Selected +
-                                   " -playercount " + maxPlayersBox.Text +
+                                   " -maxplayers " + maxPlayersBox.Text +
                                     " -ownerkey " + ownerKey.ToString();
 
-                string filename = "DedicatedServer.exe";
-#if LINUX
-                filename = "./DedicatedServer";
-#elif OSX
-                filename = "mono";
-                arguments = "./DedicatedServer.exe " + arguments;
+                string filename = exeName;
+#if LINUX || OSX
+                filename = "./" + Path.GetFileNameWithoutExtension(exeName);
 #endif
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = filename,
-                    Arguments = arguments
+                    Arguments = arguments,
 #if !DEBUG
-                    ,
                     WindowStyle = ProcessWindowStyle.Hidden
 #endif
                 };
                 GameMain.ServerChildProcess = Process.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(),ownerKey);
+                GameMain.Client = new GameClient(name, "127.0.0.1:" + port.ToString(), name, ownerKey);
             }
             catch (Exception e)
             {
@@ -914,6 +942,20 @@ namespace Barotrauma
 #region UI Methods      
         private void CreateHostServerFields()
         {
+            int port = NetConfig.DefaultPort;
+            int queryPort = NetConfig.DefaultQueryPort;
+            int maxPlayers = 8;
+            if (File.Exists(ServerSettings.SettingsFile))
+            {
+                XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
+                if (settingsDoc?.Root != null)
+                {
+                    port = settingsDoc.Root.GetAttributeInt("port", port);
+                    queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);
+                    maxPlayers = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
+                }
+            }
+
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
@@ -928,12 +970,16 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
-            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            { 
+                MaxTextLength = NetConfig.ServerNameMaxLength,
+                OverflowClip = true
+            };
 
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
             portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
-                Text = NetConfig.DefaultPort.ToString(),
+                Text = port.ToString(),
                 ToolTip = TextManager.Get("ServerPortToolTip")
             };
 
@@ -942,7 +988,7 @@ namespace Barotrauma
                 label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerQueryPort"), textAlignment: textAlignment);
                 queryPortBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
                 {
-                    Text = NetConfig.DefaultQueryPort.ToString(),
+                    Text = queryPort.ToString(),
                     ToolTip = TextManager.Get("ServerQueryPortToolTip")
                 };
             }
@@ -961,7 +1007,7 @@ namespace Barotrauma
 
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
-                Text = "8",
+                Text = maxPlayers.ToString(),
                 Enabled = false
             };
             new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)
@@ -971,7 +1017,10 @@ namespace Barotrauma
             };
             
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
-            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            {
+                Censor = true
+            };
             
             isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
             {

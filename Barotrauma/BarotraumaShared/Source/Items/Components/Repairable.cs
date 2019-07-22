@@ -9,11 +9,13 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static float SkillIncreaseMultiplier = 0.4f;
+        public static float SkillIncreasePerRepair = 5.0f;
 
         private string header;
 
         private float deteriorationTimer;
+
+        bool wasBroken;
 
         public float LastActiveTime;
 
@@ -122,6 +124,16 @@ namespace Barotrauma.Items.Components
             Update(deltaTime, cam);
         }
 
+        public void ResetDeterioration()
+        {
+            deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+            item.Condition = item.Prefab.Health;
+#if SERVER
+            //let the clients know the initial deterioration delay
+            item.CreateServerEvent(this);
+#endif
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
@@ -163,16 +175,13 @@ namespace Barotrauma.Items.Components
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
-            foreach (Skill skill in requiredSkills)
+            
+            //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
+            if (item.Condition < ShowRepairUIThreshold)
             {
-                float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                if (characterSkillLevel >= skill.Level) successFactor += 1.0f / requiredSkills.Count;
-                CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                    SkillIncreaseMultiplier * deltaTime / Math.Max(characterSkillLevel, 1.0f),
-                     CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                wasBroken = true;
             }
 
-            bool wasBroken = !item.IsFullCondition;
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
             if (fixDuration <= 0.0f)
             {
@@ -185,8 +194,16 @@ namespace Barotrauma.Items.Components
 
             if (wasBroken && item.IsFullCondition)
             {
+                foreach (Skill skill in requiredSkills)
+                {
+                    float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
+                    CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
+                        SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
+                        CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                }
                 SteamAchievementManager.OnItemRepaired(item, currentFixer);
                 deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+                wasBroken = false;
 #if SERVER
                 item.CreateServerEvent(this);
 #endif

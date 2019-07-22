@@ -1,6 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using System;
 using System.Collections.Generic;
 
@@ -58,7 +58,7 @@ namespace Barotrauma.Sounds
         {
             VoipConfig.SetupEncoding();
 
-            ALFormat = ALFormat.Mono16;
+            ALFormat = Al.FormatMono16;
             SampleRate = VoipConfig.FREQUENCY;
 
             queue = q;

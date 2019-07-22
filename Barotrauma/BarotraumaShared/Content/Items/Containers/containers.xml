@@ -41,14 +41,14 @@
     <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.84" sourcerect="210,197,182,176" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="40,-65" iteminterval="50,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="railgunshell,nuclearshell" />
+      <Containable identifiers="railgunshell,nuclearshell,railgunammo" />
     </ItemContainer>
   </Item>
   <Item name="Coilgun Ammunition Shelf" identifier="coilgunammoshelf" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="3,379,140,306" canflipx="false" origin="0.5,0.5" />
     <ItemContainer capacity="3" canbeselected="true" hideitems="false" itempos="70,-52" iteminterval="0,-96" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="coilgunammobox" />
+      <Containable identifiers="coilgunammobox,coilgunammo" />
     </ItemContainer>
   </Item>
   <Item name="Medicine Cabinet" identifier="medcabinet" linkable="true" pickdistance="150" waterproof="true">

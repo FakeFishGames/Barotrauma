@@ -191,13 +191,13 @@ namespace SteamNative
 			bool /*bool*/ ISteamGameServer_WasRestartRequested();
 			void /*void*/ ISteamGameServer_SetMaxPlayerCount( int /*int*/ cPlayersMax );
 			void /*void*/ ISteamGameServer_SetBotPlayerCount( int /*int*/ cBotplayers );
-			void /*void*/ ISteamGameServer_SetServerName( string /*const char **/ pszServerName );
-			void /*void*/ ISteamGameServer_SetMapName( string /*const char **/ pszMapName );
+			void /*void*/ ISteamGameServer_SetServerName( IntPtr /*const char **/ pszServerName );
+			void /*void*/ ISteamGameServer_SetMapName( IntPtr /*const char **/ pszMapName );
 			void /*void*/ ISteamGameServer_SetPasswordProtected( [MarshalAs(UnmanagedType.U1)] bool /*bool*/ bPasswordProtected );
 			void /*void*/ ISteamGameServer_SetSpectatorPort( ushort /*uint16*/ unSpectatorPort );
 			void /*void*/ ISteamGameServer_SetSpectatorServerName( string /*const char **/ pszSpectatorServerName );
 			void /*void*/ ISteamGameServer_ClearAllKeyValues();
-			void /*void*/ ISteamGameServer_SetKeyValue( string /*const char **/ pKey, string /*const char **/ pValue );
+			void /*void*/ ISteamGameServer_SetKeyValue( IntPtr /*const char **/ pKey, IntPtr /*const char **/ pValue );
 			void /*void*/ ISteamGameServer_SetGameTags( string /*const char **/ pchGameTags );
 			void /*void*/ ISteamGameServer_SetGameData( string /*const char **/ pchGameData );
 			void /*void*/ ISteamGameServer_SetRegion( string /*const char **/ pszRegion );

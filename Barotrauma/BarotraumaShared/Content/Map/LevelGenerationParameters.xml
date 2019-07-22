@@ -30,7 +30,7 @@
     ambientlightcolor="27,30,36,255"
     backgroundtexturecolor="20,40,50,255"
     backgroundcolor="54,60,72,255"
-    wallcolor="255,255,255,255"
+    wallcolor="192,192,192,255"
     minwidth="45000"
     maxwidth="45000"
     voronoisiteinterval="2000,2000"
@@ -59,9 +59,13 @@
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/Zones/Ice/Zone4BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
+    <WallSpecular
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/Ice/Zone4BaseTextureEdge.png" />
+      texture="Content/Map/iceWallEdge.png" />
+    <WallEdgeSpecular
+      texture="Content/Map/IceWallEdgeSpecular.png" />
   </ColdCavernsTutorial>
   <ColdCavernsBasic
     biomes="Cold Caverns"
@@ -70,7 +74,7 @@
     ambientlightcolor="27,30,36,255"
     backgroundtexturecolor="20,40,50,255"
     backgroundcolor="54,60,72,255"
-    wallcolor="255,255,255,255"
+    wallcolor="192,192,192,255"
     minwidth="100000"
     maxwidth="200000"
     voronoisiteinterval="2000,2000"
@@ -99,9 +103,13 @@
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/Zones/Ice/Zone4BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
+    <WallSpecular
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/Ice/Zone4BaseTextureEdge.png" />
+      texture="Content/Map/iceWallEdge.png" />
+    <WallEdgeSpecular
+      texture="Content/Map/IceWallEdgeSpecular.png" />
   </ColdCavernsBasic>
   <ColdCavernsMaze
     biomes="Cold Caverns"
@@ -110,7 +118,7 @@
     ambientlightcolor="27,30,36,255"
     backgroundtexturecolor="20,40,50,255"
     backgroundcolor="27,30,36,255"
-    wallcolor="255,255,255,255"
+    wallcolor="192,192,192,255"
     minwidth="60000"
     maxwidth="100000"
     voronoisiteinterval="1500,1500"
@@ -139,9 +147,13 @@
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/Zones/Ice/Zone4BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
+    <WallSpecular
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/Ice/Zone4BaseTextureEdge.png" />
+      texture="Content/Map/iceWallEdge.png" />
+    <WallEdgeSpecular
+      texture="Content/Map/IceWallEdgeSpecular.png" />
   </ColdCavernsMaze>
   <RidgeBasic
     biomes="Europan Ridge"
@@ -150,7 +162,7 @@
     ambientlightcolor="20,22,27,255"
     backgroundtexturecolor="20,40,50,255"
     backgroundcolor="27,30,36,255"
-    wallcolor="255,255,255,255"
+    wallcolor="192,192,192,255"
     minwidth="75000"
     maxwidth="150000"
     voronoisiteinterval="1500,1500"
@@ -168,7 +180,7 @@
     mountaincountmin="1"
     mountaincountmax="1"
     mountainheightmin="80000"
-    mountainheightmax="120000"
+    mountainheightmax="100000"
     ruincount="3"
     bottomholeprobability="0.6"
     waterparticlescale="1">
@@ -179,9 +191,13 @@
     <WaterParticles
       texture="Content/Map/BackgroundColorful.png" />
     <Wall
-      texture="Content/Map/Zones/ThermalReefs/Zone2BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
+    <WallSpecular
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/ThermalReefs/Zone2BaseTextureEdge.png" />
+      texture="Content/Map/iceWallEdge.png" />
+    <WallEdgeSpecular
+      texture="Content/Map/IceWallEdgeSpecular.png" />
   </RidgeBasic>
   <PlateauBasic
     biomes="The Aphotic Plateau"
@@ -190,7 +206,7 @@
     ambientlightcolor="18,29,29,255"
     backgroundtexturecolor="20,20,10,255"
     backgroundcolor="20,20,10,255"
-    wallcolor="255,255,255,255"
+    wallcolor="75,75,60,255"
     minwidth="100000"
     maxwidth="200000"
     voronoisiteinterval="2000,2000"
@@ -219,9 +235,13 @@
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/Zones/Tundra/Zone3BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
+    <WallSpecular
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/Tundra/Zone3BaseTextureEdge.png" />
+      texture="Content/Map/iceWallEdge.png" />
+    <WallEdgeSpecular
+      texture="Content/Map/IceWallEdgeSpecular.png" />
   </PlateauBasic>
   <VoidBasic
     biomes="The Great Void"
@@ -230,7 +250,7 @@
     ambientlightcolor="27,30,36,255"
     backgroundtexturecolor="20,40,50,255"
     backgroundcolor="54,60,72,255"
-    wallcolor="255,255,255,255"
+    wallcolor="148,163,162,255"
     minwidth="100000"
     maxwidth="200000"
     voronoisiteinterval="2000,2000"
@@ -259,9 +279,13 @@
     <WaterParticles
       texture="Content/Map/dustparticles.png" />
     <Wall
-      texture="Content/Map/Zones/Tundra/Zone3BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
+    <WallSpecular
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/Tundra/Zone3BaseTextureEdge.png" />
+      texture="Content/Map/iceWallEdge.png" />
+    <WallEdgeSpecular
+      texture="Content/Map/IceWallEdgeSpecular.png" />
   </VoidBasic>
   <WastesBasic
     biomes="Hydrothermal Wastes"
@@ -270,7 +294,7 @@
     ambientlightcolor="30,10,5,255"
     backgroundtexturecolor="25,20,0,255"
     backgroundcolor="75,75,75,255"
-    wallcolor="255,255,255,255"
+    wallcolor="40,40,40,255"
     minwidth="75000"
     maxwidth="150000"
     voronoisiteinterval="1500,1500"
@@ -299,9 +323,13 @@
     <WaterParticles
       texture="Content/Map/BackgroundSmoke.png" />
     <Wall
-      texture="Content/Map/Zones/Volcanic/Zone1BaseTexture.png" premultiplyalpha="false"/>
+      texture="Content/Map/iceBackground.png" premultiplyalpha="false"/>
+    <WallSpecular
+      texture="Content/Map/IceBackgroundSpecular.png" premultiplyalpha="false"/>
     <WallEdge
-      texture="Content/Map/Zones/Volcanic/Zone1BaseTextureEdge.png" />
+      texture="Content/Map/iceWallEdge.png" />
+    <WallEdgeSpecular
+      texture="Content/Map/IceWallEdgeSpecular.png" />
   </WastesBasic>
   <!--
   

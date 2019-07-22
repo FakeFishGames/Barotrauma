@@ -179,7 +179,7 @@ namespace Barotrauma
         public bool Close(GUIButton button, object obj)
         {
             Close();
-
+            
             return true;
         }
 

@@ -126,6 +126,20 @@ namespace Barotrauma.Tutorials
             idCard.AddTag("com");
             idCard.AddTag("eng");
 
+            List<Entity> entities = Entity.GetEntityList();
+
+            for (int i = 0; i < entities.Count; i++)
+            {
+                if (entities[i] is Item)
+                {
+                    Door door = (entities[i] as Item).GetComponent<Door>();
+                    if (door != null)
+                    {
+                        door.CanBeWelded = false;
+                    }
+                }
+            }
+
             tutorialCoroutine = CoroutineManager.StartCoroutine(UpdateState());
         }
 

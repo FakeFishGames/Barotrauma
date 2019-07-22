@@ -23,7 +23,7 @@ namespace Barotrauma
             "CrewExperienceHigh"
         };
 
-        private readonly Point defaultPreviewImageSize = new Point(256, 128);
+        private readonly Point defaultPreviewImageSize = new Point(512, 368);
 
         private Camera cam;
 
@@ -115,7 +115,7 @@ namespace Barotrauma
             {
                 if (buoyancyVol / selectedVol < 1.0f)
                 {
-                    retVal += " (" + TextManager.Get("OptimalBallastLevel").Replace("[value]", (buoyancyVol / selectedVol).ToString("0.000")) + ")";
+                    retVal += " (" + TextManager.GetWithVariable("OptimalBallastLevel", "[value]", (buoyancyVol / selectedVol).ToString("0.000")) + ")";
                 }
                 else
                 {
@@ -572,7 +572,7 @@ namespace Barotrauma
                             ItemAssemblyPrefab assemblyPrefab = userData as ItemAssemblyPrefab;
                             var msgBox = new GUIMessageBox(
                                 TextManager.Get("DeleteDialogLabel"),
-                                TextManager.Get("DeleteDialogQuestion").Replace("[file]", assemblyPrefab.Name),
+                                TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", assemblyPrefab.Name),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
                             msgBox.Buttons[0].OnClicked += (deleteBtn, userData2) =>
                             {
@@ -584,7 +584,7 @@ namespace Barotrauma
                                 }
                                 catch (Exception e)
                                 {
-                                    DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", assemblyPrefab.Name), e);
+                                    DebugConsole.ThrowError(TextManager.GetWithVariable("DeleteFileError", "[file]", assemblyPrefab.Name), e);
                                 }
                                 return true;
                             };
@@ -847,6 +847,20 @@ namespace Barotrauma
             GameMain.World.ProcessChanges();
         }
 
+        private bool IsVanillaSub(Submarine sub)
+        {
+            if (sub == null) { return false; }
+
+            var vanilla = GameMain.VanillaContent;
+            if (vanilla != null)
+            {
+                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
+                string pathToCompare = sub.FilePath.Replace(@"\", @"/").ToLowerInvariant();
+                return (vanillaSubs.Any(s => s.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare));
+            }
+            return false;
+        }
+
         private bool SaveSub(GUIButton button, object obj)
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))
@@ -861,7 +875,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
+                    GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -907,7 +921,7 @@ namespace Barotrauma
             }
             Submarine.MainSub.CheckForErrors();
             
-            GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
+            GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", Submarine.MainSub.FilePath), Color.Green);
 
             Submarine.RefreshSavedSub(savePath);
             if (prevSavePath != null && prevSavePath != savePath)
@@ -1259,7 +1273,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
+                    GUI.AddMessage(TextManager.GetWithVariable("ItemAssemblyNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -1328,7 +1342,14 @@ namespace Barotrauma
                 ScrollBarVisible = true,
                 OnSelected = (GUIComponent selected, object userData) =>
                 {
-                    if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
+                    if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn)
+                    {
+#if DEBUG
+                        deleteBtn.Enabled = true;
+#else
+                        deleteBtn.Enabled = !IsVanillaSub(userData as Submarine);
+#endif
+                    }
                     return true;
                 }
             };
@@ -1476,7 +1497,7 @@ namespace Barotrauma
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),
-                TextManager.Get("DeleteDialogQuestion").Replace("[file]", sub.Name), 
+                TextManager.GetWithVariable("DeleteDialogQuestion", "[file]", sub.Name), 
                 new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
             msgBox.Buttons[0].OnClicked += (btn, userData) => 
             {
@@ -1489,7 +1510,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", sub.FilePath), e);
+                    DebugConsole.ThrowError(TextManager.GetWithVariable("DeleteFileError", "[file]", sub.FilePath), e);
                 }
                 return true;
             };
@@ -2088,10 +2109,7 @@ namespace Barotrauma
         
         public override void AddToGUIUpdateList()
         {
-            if (MapEntity.SelectedList.Count == 1)
-            {
-                MapEntity.SelectedList[0].AddToGUIUpdateList();
-            }
+            MapEntity.FilteredSelectedList.FirstOrDefault()?.AddToGUIUpdateList();
             if (MapEntity.HighlightedListBox != null)
             {
                 MapEntity.HighlightedListBox.AddToGUIUpdateList();
@@ -2272,9 +2290,9 @@ namespace Barotrauma
                         dummyCharacter.SelectedConstruction = null;
                     }*/
                 }
-                else if (MapEntity.SelectedList.Count == 1)
+                else if (MapEntity.FilteredSelectedList.Count == 1)
                 {
-                    (MapEntity.SelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
+                    (MapEntity.FilteredSelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                 }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);

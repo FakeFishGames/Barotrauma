@@ -208,7 +208,13 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-        
+
+        /// <summary>
+        /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
+        /// </summary>
+        [Serialize(0f, false)]
+        public float CombatPriority { get; private set; }
+
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;
@@ -685,6 +691,8 @@ namespace Barotrauma.Items.Components
         /// Called when all the components of the item have been loaded. Use to initialize connections between components and such.
         /// </summary>
         public virtual void OnItemLoaded() { }
+
+        public virtual void OnScaleChanged() { }
 
         // TODO: Consider using generics, interfaces, or inheritance instead of reflection -> would be easier to debug when something changes/goes wrong.
         // For example, currently we can edit the constructors but they will fail in runtime because the parameters are not changed here.

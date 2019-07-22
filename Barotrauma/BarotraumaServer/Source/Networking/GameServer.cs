@@ -26,6 +26,10 @@ namespace Barotrauma.Networking
         //for keeping track of disconnected clients in case the reconnect shortly after
         private List<Client> disconnectedClients = new List<Client>();
 
+        //keeps track of players who've previously been playing on the server
+        //so kick votes persist during the session and the server can let the clients know what name this client used previously
+        private readonly List<PreviousPlayer> previousPlayers = new List<PreviousPlayer>();
+
         private int roundStartSeed;
 
         //is the server running
@@ -34,7 +38,7 @@ namespace Barotrauma.Networking
         private NetServer server;
         
         private DateTime refreshMasterTimer;
-        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
+        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 60);
         private bool registeredToMaster;
 
         private DateTime roundStartTime;
@@ -93,6 +97,10 @@ namespace Barotrauma.Networking
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
+            if (name.Length > NetConfig.ServerNameMaxLength)
+            {
+                name = name.Substring(0, NetConfig.ServerNameMaxLength);
+            }
             
             this.name = name;
             
@@ -181,11 +189,7 @@ namespace Barotrauma.Networking
 
             if (SteamManager.USE_STEAM)
             {
-                SteamManager.CreateServer(this, isPublic);
-                if (isPublic)
-                {
-                    registeredToMaster = true;
-                }
+                registeredToMaster = SteamManager.CreateServer(this, isPublic);
             }
             if (isPublic && !GameMain.Config.UseSteamMatchmaking)
             {
@@ -415,7 +419,7 @@ namespace Barotrauma.Networking
                 {
                     if (endRoundTimer <= 0.0f)
                     {
-                        SendChatMessage(TextManager.Get("CrewDeadNoRespawns").Replace("[time]", "60"), ChatMessageType.Server);
+                        SendChatMessage(TextManager.GetWithVariable("CrewDeadNoRespawns", "[time]", "60"), ChatMessageType.Server);
                     }
                     endRoundTimer += deltaTime;
                 }
@@ -576,7 +580,7 @@ namespace Barotrauma.Networking
                                 HandleOwnership(msgContent, inc.SenderConnection);
                             }
 
-                            DebugConsole.NewMessage(packetHeader.ToString(), Color.Lime);
+                            DebugConsole.Log(packetHeader.ToString());
                             if (inc.SenderConnection != OwnerConnection && serverSettings.BanList.IsBanned(inc.SenderEndPoint.Address, 0))
                             {
                                 inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
@@ -657,17 +661,25 @@ namespace Barotrauma.Networking
                 updateTimer = DateTime.Now + updateInterval;
             }
 
-            if (!registeredToMaster || refreshMasterTimer >= DateTime.Now) return;
-
-            if (GameMain.Config.UseSteamMatchmaking)
+            if (registeredToMaster && (DateTime.Now > refreshMasterTimer || serverSettings.ServerDetailsChanged))
             {
-                SteamManager.RefreshServerDetails(this);
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    bool refreshSuccessful = SteamManager.RefreshServerDetails(this);
+                    if (GameSettings.VerboseLogging)
+                    {
+                        Log(refreshSuccessful ?
+                            "Refreshed server info on the server list." :
+                            "Refreshing server info on the server list failed.", ServerLog.MessageType.ServerMessage);
+                    }
+                }
+                else
+                {
+                    CoroutineManager.StartCoroutine(RefreshMaster());
+                }
+                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+                serverSettings.ServerDetailsChanged = false;
             }
-            else
-            {
-                CoroutineManager.StartCoroutine(RefreshMaster());
-            }
-            refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
         
         private void ReadDataMessage(NetIncomingMessage inc)
@@ -718,7 +730,7 @@ namespace Barotrauma.Networking
                     bool isNew = inc.ReadBoolean(); inc.ReadPadBits();
                     if (isNew)
                     {
-                        string savePath = inc.ReadString();
+                        string saveName = inc.ReadString();
                         string seed = inc.ReadString();
                         string subName = inc.ReadString();
                         string subHash = inc.ReadString();
@@ -728,12 +740,16 @@ namespace Barotrauma.Networking
                         if (matchingSub == null)
                         {
                             SendDirectChatMessage(
-                                TextManager.Get("CampaignStartFailedSubNotFound").Replace("[subname]", subName), 
+                                TextManager.GetWithVariable("CampaignStartFailedSubNotFound", "[subname]", subName), 
                                 connectedClient, ChatMessageType.MessageBox);
                         }
                         else
                         {
-                            if (connectedClient.HasPermission(ClientPermissions.SelectMode)) MultiPlayerCampaign.StartNewCampaign(savePath, matchingSub.FilePath, seed);
+                            string localSavePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveName);
+                            if (connectedClient.HasPermission(ClientPermissions.SelectMode))
+                            {
+                                MultiPlayerCampaign.StartNewCampaign(localSavePath, matchingSub.FilePath, seed);
+                            }
                         }
                      }
                     else
@@ -865,6 +881,8 @@ namespace Barotrauma.Networking
                         c.LastRecvLobbyUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvLobbyUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
                         c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, LastClientListUpdateID);
+                        
+                        TryChangeClientName(c, inc.ReadString());                        
 
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
@@ -1066,6 +1084,10 @@ namespace Barotrauma.Networking
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
                         KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? $"ServerMessage.KickedBy~[initiator]={sender.Name}" : kickReason);
                     }
+                    else
+                    {
+                        SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={kickedName}"), sender, ChatMessageType.Console);
+                    }
                     break;
                 case ClientPermissions.Ban:
                     string bannedName = inc.ReadString().ToLowerInvariant();
@@ -1086,11 +1108,15 @@ namespace Barotrauma.Networking
                             BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range);
                         }
                     }
+                    else
+                    {
+                        SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={bannedName}"), sender, ChatMessageType.Console);
+                    }
                     break;
                 case ClientPermissions.Unban:
-                    string unbannedName = inc.ReadString().ToLowerInvariant();
+                    string unbannedName = inc.ReadString();
                     string unbannedIP = inc.ReadString();
-                    UnbanPlayer(unbannedIP, unbannedIP);
+                    UnbanPlayer(unbannedName, unbannedIP);
                     break;
                 case ClientPermissions.ManageRound:
                     bool end = inc.ReadBoolean();
@@ -1480,6 +1506,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 outmsg.Write(client.Muted);
+                outmsg.Write(client.Connection != OwnerConnection); //is kicking the player allowed
                 outmsg.WritePadBits();
             }
         }
@@ -1765,6 +1792,8 @@ namespace Barotrauma.Networking
 
             if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
 
+            entityEventManager.RefreshEntityIDs();
+
             //assign jobs and spawnpoints separately for each team
             for (int n = 0; n < teamCount; n++)
             {
@@ -1950,6 +1979,7 @@ namespace Barotrauma.Networking
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
             msg.Write(serverSettings.AllowDisguises);
+            msg.Write(serverSettings.AllowRewiring);
 
             Traitor traitor = null;
             if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)
@@ -2066,9 +2096,42 @@ namespace Barotrauma.Networking
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
-            Log(message.TextWithSender, ServerLog.MessageType.Chat);            
+            Log(message.TextWithSender, ServerLog.MessageType.Chat);
 
             base.AddChatMessage(message);
+        }
+
+        private bool TryChangeClientName(Client c, string newName)
+        {
+            if (c == null || string.IsNullOrEmpty(newName)) { return false; }
+
+            newName = Client.SanitizeName(newName);
+            if (newName == c.Name) { return false; }
+
+            //update client list even if the name cannot be changed to the one sent by the client,
+            //so the client will be informed what their actual name is
+            LastClientListUpdateID++;
+
+            if (!Client.IsValidName(newName, this))
+            {
+                SendDirectChatMessage("Could not change your name to \"" + newName + "\" (the name contains disallowed symbols).", c, ChatMessageType.MessageBox);
+                return false;
+            }
+            if (c.Connection != OwnerConnection && Homoglyphs.Compare(newName.ToLower(), Name.ToLower()))
+            {
+                SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the server's name).", c, ChatMessageType.MessageBox);
+                return false;
+            }
+            Client nameTaken = ConnectedClients.Find(c2 => c != c2 && Homoglyphs.Compare(c2.Name.ToLower(), newName.ToLower()));
+            if (nameTaken != null)
+            {
+                SendDirectChatMessage("Could not change your name to \"" + newName + "\" (too similar to the name of the client \"" + nameTaken.Name + "\").", c, ChatMessageType.MessageBox);
+                return false;
+            }
+
+            SendChatMessage("Player \"" + c.Name + "\" has changed their name to \"" + newName + "\".", ChatMessageType.Server);
+            c.Name = newName;
+            return true;
         }
 
         public override void KickPlayer(string playerName, string reason)
@@ -2140,7 +2203,6 @@ namespace Barotrauma.Networking
 
         public override void UnbanPlayer(string playerName, string playerIP)
         {
-            playerName = playerName.ToLowerInvariant();
             if (!string.IsNullOrEmpty(playerIP))
             {
                 serverSettings.BanList.UnbanIP(playerIP);
@@ -2188,6 +2250,19 @@ namespace Barotrauma.Networking
 
             if (client.SteamID > 0) { SteamManager.StopAuthSession(client.SteamID); }
 
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+            if (previousPlayer == null)
+            {
+                previousPlayer = new PreviousPlayer(client);
+                previousPlayers.Add(previousPlayer);
+            }
+            previousPlayer.Name = client.Name;
+            previousPlayer.KickVoters.Clear();
+            foreach (Client c in connectedClients)
+            {
+                if (client.HasKickVoteFrom(c)) { previousPlayer.KickVoters.Add(c); }
+            }
+
             client.Connection.Disconnect(targetmsg);
             client.Dispose();
             connectedClients.Remove(client);
@@ -2198,6 +2273,7 @@ namespace Barotrauma.Networking
 
             UpdateCrewFrame();
 
+            serverSettings.ServerDetailsChanged = true;
             refreshMasterTimer = DateTime.Now;
         }
 
@@ -2516,6 +2592,13 @@ namespace Barotrauma.Networking
                 c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
+                var previousPlayer = previousPlayers.Find(p => p.MatchesClient(c));
+                if (previousPlayer != null)
+                {
+                    //reset the client's kick votes (they can rejoin after their ban expires)
+                    previousPlayer.KickVoters.Clear();
+                }
+
                 SendChatMessage($"ServerMessage.KickedFromServer~[client]={c.Name}", ChatMessageType.Server, null);
                 KickClient(c, "ServerMessage.KickedByVote");
                 BanClient(c, "ServerMessage.KickedByVoteAutoBan", duration: TimeSpan.FromSeconds(serverSettings.AutoBanTime));
@@ -2986,6 +3069,27 @@ namespace Barotrauma.Networking
         void FinishUPnP()
         {
             //do nothing
+        }
+    }
+    
+    partial class PreviousPlayer
+    {
+        public string Name;
+        public string IP;
+        public UInt64 SteamID;
+        public readonly List<Client> KickVoters = new List<Client>();
+
+        public PreviousPlayer(Client c)
+        {
+            Name = c.Name;
+            IP = c.Connection?.RemoteEndPoint?.Address?.ToString() ?? "";
+            SteamID = c.SteamID;
+        }
+
+        public bool MatchesClient(Client c)
+        {
+            if (c.SteamID > 0 && SteamID > 0) { return c.SteamID == SteamID; }
+            return c.IPMatches(IP);
         }
     }
 }

@@ -230,7 +230,7 @@ namespace Barotrauma.Tutorials
             } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
             RemoveCompletedObjective(segments[6]);
             yield return new WaitForSeconds(3f, false);
-            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Captain.Radio.Complete").Replace("[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.GetWithVariable("Captain.Radio.Complete", "[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
             SetHighlight(captain_navConsole.Item, false);
             SetHighlight(captain_sonar.Item, false);
             SetHighlight(captain_statusMonitor, false);

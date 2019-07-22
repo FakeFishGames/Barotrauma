@@ -50,9 +50,8 @@ namespace Barotrauma
 
         public static HashSet<ContentPackage> SelectedPackages
         {
-            get { return Config.SelectedContentPackages; }
+            get { return Config?.SelectedContentPackages; }
         }
-
 
         private static ContentPackage vanillaContent;
         public static ContentPackage VanillaContent
@@ -128,9 +127,7 @@ namespace Barotrauma
                 var exePaths = contentPackage.GetFilesOfType(ContentType.ServerExecutable);
                 if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
                 {
-                    DebugConsole.ShowQuestionPrompt(TextManager.Get("IncorrectExe")
-                            .Replace("[selectedpackage]", contentPackage.Name)
-                            .Replace("[exename]", exePaths.First()),
+                    DebugConsole.ShowQuestionPrompt(TextManager.GetWithVariables("IncorrectExe", new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
                         (option) =>
                         {
                             if (option.ToLower() == "y" || option.ToLower() == "yes")
@@ -298,7 +295,9 @@ namespace Barotrauma
             CloseServer();
 
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+
+            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
         }
 
         public static void ResetFrameTime()

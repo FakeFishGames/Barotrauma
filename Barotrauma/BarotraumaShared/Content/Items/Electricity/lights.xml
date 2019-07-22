@@ -13,7 +13,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -35,7 +35,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -54,7 +54,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -73,7 +73,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -92,7 +92,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -111,7 +111,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -130,7 +130,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -149,7 +149,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -168,7 +168,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -187,7 +187,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -206,7 +206,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -225,7 +225,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power" displayname="connection.power"/>
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
@@ -240,7 +240,7 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="toggle" displayname="connection.togglestate" />
       <input name="set_state" displayname="connection.setstate" />
     </ConnectionPanel>

@@ -297,6 +297,12 @@ namespace Barotrauma
             }
         }
 
+        public bool IsFileCorrupted
+        {
+            get;
+            private set;
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
@@ -322,12 +328,17 @@ namespace Barotrauma
                 int maxLoadRetries = 4;
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
-                    doc = OpenFile(filePath);
+                    doc = OpenFile(filePath, out Exception e);
+                    if (e != null && !(e is IOException)) { break; }
                     if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
                     DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null || doc.Root == null)
+                {
+                    IsFileCorrupted = true;
+                    return;
+                }
 
                 if (doc != null && doc.Root != null)
                 {
@@ -365,7 +376,9 @@ namespace Barotrauma
                         {
                             using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
                             {
-                                PreviewImage = new Sprite(TextureLoader.FromStream(mem, preMultiplyAlpha: false), null, null);
+                                var texture = TextureLoader.FromStream(mem, preMultiplyAlpha: false, path: filePath);
+                                if (texture == null) { throw new Exception("PreviewImage texture returned null"); }
+                                PreviewImage = new Sprite(texture, null, null);
                             }
                         }
                         catch (Exception e)
@@ -382,7 +395,6 @@ namespace Barotrauma
 
             DockedTo = new List<Submarine>();
 
-            ID = ushort.MaxValue;
             FreeID();
         }
 
@@ -1138,7 +1150,11 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
-            savedSubmarines.Add(new Submarine(filePath));
+            var sub = new Submarine(filePath);
+            if (!sub.IsFileCorrupted)
+            {
+                savedSubmarines.Add(sub);
+            }
             savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
         }
 
@@ -1192,7 +1208,11 @@ namespace Barotrauma
 
             foreach (string path in filePaths)
             {
-                savedSubmarines.Add(new Submarine(path));
+                var sub = new Submarine(path);
+                if (!sub.IsFileCorrupted)
+                {
+                    savedSubmarines.Add(sub);
+                }
             }
         }
 
@@ -1200,8 +1220,14 @@ namespace Barotrauma
 
         public static XDocument OpenFile(string file)
         {
+            return OpenFile(file, out _);
+        }
+
+        public static XDocument OpenFile(string file, out Exception exception)
+        {
             XDocument doc = null;
             string extension = "";
+            exception = null;
 
             try
             {
@@ -1228,6 +1254,7 @@ namespace Barotrauma
                 }
                 catch (Exception e) 
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed!", e);
                     return null;
                 }                
@@ -1242,6 +1269,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
@@ -1256,6 +1284,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
@@ -1405,7 +1434,7 @@ namespace Barotrauma
             }
 
 
-            ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
+            ID = (ushort)(ushort.MaxValue - 1 - Submarine.loaded.IndexOf(this));
         }
 
         public static Submarine Load(XElement element, bool unloadPrevious)
@@ -1433,7 +1462,7 @@ namespace Barotrauma
 
             Submarine sub = new Submarine(path);
             sub.Load(unloadPrevious);
-            
+
             return sub;            
         }
         
@@ -1553,7 +1582,7 @@ namespace Barotrauma
             if (MainSub == this) MainSub = null;
             if (MainSubs[1] == this) MainSubs[1] = null;
 
-            DockedTo.Clear();
+            DockedTo?.Clear();
         }
 
         public void Dispose()
@@ -1563,6 +1592,94 @@ namespace Barotrauma
             PreviewImage?.Remove();
             PreviewImage = null;
 #endif
+        }
+
+        private List<PathNode> outdoorNodes;
+        private List<PathNode> OutdoorNodes
+        {
+            get
+            {
+                if (outdoorNodes == null)
+                {
+                    outdoorNodes = PathNode.GenerateNodes(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path && wp.Submarine == this && wp.CurrentHull == null));
+                }
+                return outdoorNodes;
+            }
+        }
+        private HashSet<PathNode> obstructedNodes = new HashSet<PathNode>();
+
+        /// <summary>
+        /// Permanently disables obstructed waypoints obstructed by the level.
+        /// </summary>
+        public void DisableObstructedWayPoints()
+        {
+            // Check collisions to level
+            foreach (var node in OutdoorNodes)
+            {
+                if (node == null || node.Waypoint == null) { continue; }
+                var wp = node.Waypoint;
+                if (wp.isObstructed) { continue; }
+                foreach (var connection in node.connections)
+                {
+                    bool isObstructed = false;
+                    var connectedWp = connection.Waypoint;
+                    if (connectedWp.isObstructed) { continue; }
+                    Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
+                    Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition);
+                    var body = Submarine.PickBody(start, end, null, Physics.CollisionLevel, allowInsideFixture: false);
+                    if (body != null)
+                    {
+                        connectedWp.isObstructed = true;
+                        wp.isObstructed = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Temporarily disables waypoints obstructed by the other sub.
+        /// </summary>
+        public void DisableObstructedWayPoints(Submarine otherSub)
+        {
+            if (otherSub == null) { return; }
+            if (otherSub == this) { return; }
+            // Check collisions to other subs. Currently only walls are taken into account.
+            foreach (var node in OutdoorNodes)
+            {
+                if (node == null || node.Waypoint == null) { continue; }
+                var wp = node.Waypoint;
+                if (wp.isObstructed) { continue; }
+                foreach (var connection in node.connections)
+                {
+                    bool isObstructed = false;
+                    var connectedWp = connection.Waypoint;
+                    if (connectedWp.isObstructed) { continue; }
+                    Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
+                    Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
+                    var body = Submarine.PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: false);
+                    if (body != null && body.UserData is Structure && !((Structure)body.UserData).IsPlatform)
+                    {
+                        connectedWp.isObstructed = true;
+                        wp.isObstructed = true;
+                        obstructedNodes.Add(node);
+                        obstructedNodes.Add(connection);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Only affects temporarily disabled waypoints.
+        /// </summary>
+        public void EnableObstructedWaypoints()
+        {
+            foreach (var node in obstructedNodes)
+            {
+                node.Waypoint.isObstructed = false;
+            }
+            obstructedNodes.Clear();
         }
     }
 

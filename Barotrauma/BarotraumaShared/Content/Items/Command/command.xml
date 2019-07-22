@@ -24,8 +24,11 @@
     </Steering>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
-      <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="4000.0" />
-      <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="4000.0" />
+      <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
+      <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="1000.0" />
+      <StatusEffect type="OnUse">
+        <sound file="Content/Items/Command/SonarPingFar.ogg" type="OnUse" range="6000.0" />
+      </StatusEffect>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
       <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
@@ -78,8 +81,11 @@
     </Steering>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1">
       <GuiFrame relativesize="0.5,0.6" anchor="CenterLeft" absoluteoffset="30,0" />
-      <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="4000.0" />
-      <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="4000.0" />
+      <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
+      <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="1000.0" />
+      <StatusEffect type="OnUse">
+        <sound file="Content/Items/Command/SonarPingFar.ogg" type="OnUse" range="6000.0" />
+      </StatusEffect>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
       <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
@@ -144,7 +150,7 @@
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="812,1,113,192" depth="0.8" maxcondition="0" origin="0.5,0.5" />
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.5,0.5" anchor="CenterLeft" style="ItemUI" />
-      <AlternativeLayout relativesize="0.4,0.4" />
+      <AlternativeLayout relativesize="0.4,0.35" />
       <poweronsound file="Content/Items/PowerOnLight3.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />

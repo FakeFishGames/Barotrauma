@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienDoorAssembly2" description="" hideinmenus="false">
+<ItemAssembly name="AlienDoorAssembly2" description="" hideinmenus="true">
   <Item name="Alien Door" identifier="aliendoor" ID="7" rect="16,112,48,208" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="False" msg="itemmsgforceopencrowbar">
       <requireditem identifiers="crowbar" type="Equipped" optional="false" ignoreineditor="false" />
@@ -220,7 +220,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="90" />
         <link w="93" />
@@ -238,7 +238,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="91" />
         <link w="94" />
@@ -257,7 +257,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="92" />
         <link w="96" />
@@ -275,7 +275,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="87" />
         <link w="89" />
@@ -293,7 +293,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="86" />
         <link w="88" />
@@ -312,7 +312,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="85" />
         <link w="97" />
@@ -327,7 +327,7 @@
   <Item name="Alien Light Component" identifier="alienlightcomponent" ID="43" rect="175,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />
     <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="toggle" />
       <input name="set_state">
         <link w="50" />
@@ -338,7 +338,7 @@
   <Item name="Alien Light Component" identifier="alienlightcomponent" ID="42" rect="239,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />
     <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="toggle" />
       <input name="set_state">
         <link w="84" />
@@ -349,7 +349,7 @@
   <Item name="Alien Light Component" identifier="alienlightcomponent" ID="41" rect="-272,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />
     <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="toggle" />
       <input name="set_state">
         <link w="56" />
@@ -360,7 +360,7 @@
   <Item name="Alien Light Component" identifier="alienlightcomponent" ID="39" rect="-208,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />
     <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="toggle" />
       <input name="set_state">
         <link w="52" />
@@ -371,7 +371,7 @@
   <Item name="Alien Light Component" identifier="alienlightcomponent" ID="38" rect="-144,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />
     <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="toggle" />
       <input name="set_state">
         <link w="83" />
@@ -382,7 +382,7 @@
   <Item name="Alien Light Component" identifier="alienlightcomponent" ID="37" rect="112,48,16,16" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <LightComponent range="15" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="0,255,255,255" isactive="True" minvoltage="0.5" powerconsumption="0" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />
     <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="itemmsgrewirescrewdriver">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="toggle" />
       <input name="set_state">
         <link w="55" />

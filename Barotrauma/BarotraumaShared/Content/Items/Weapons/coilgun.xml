@@ -28,7 +28,7 @@
     </Turret>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
@@ -48,23 +48,26 @@
     </Repairable>
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="74,-281" iteminterval="0,0" itemrotation="0" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="coilgunammobox,physicoriumammobox" />
+      <Containable identifiers="coilgunammobox,physicoriumammobox,coilgunammo" />
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <RequiredItem identifiers="coilgunammobox,physicoriumammobox" type="Contained" />
+        <RequiredItem identifiers="coilgunammobox,physicoriumammobox,coilgunammo" type="Contained" />
         <Use />
       </StatusEffect>
     </ItemContainer>
   </Item>
   
-  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
+  <Item name="Coilgun Ammunition Box" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="200" />
+    <Deconstruct time="10">
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="aluminium" />
+    </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="25"/>
       <RequiredItem identifier="steel"/>
-      <RequiredItem identifier="aluminium"/>
       <RequiredItem identifier="aluminium"/>
     </Fabricate>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
@@ -109,7 +112,7 @@
     </Projectile>
   </Item>
   
-  <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
+  <Item name="Physicorium Ammunition Box" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
     <!--
     TODO: reallow fabrication after the name has been translated
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
@@ -118,7 +121,9 @@
       <RequiredItem identifier="physicorium"/>
       <RequiredItem identifier="aluminium"/>
     </Fabricate>-->
-    
+    <Deconstruct time="10">
+      <Item identifier="aluminium" />
+    </Deconstruct>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
     <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="344,197,117,89" origin="0.5,0.5" />
     <Body width="115" height="88" density="50" />

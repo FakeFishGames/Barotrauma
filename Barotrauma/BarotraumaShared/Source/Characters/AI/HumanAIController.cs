@@ -150,7 +150,23 @@ namespace Barotrauma
             bool run = objectiveManager.CurrentObjective.ForceRun || objectiveManager.GetCurrentPriority() > AIObjectiveManager.RunPriority;
             if (ObjectiveManager.CurrentObjective is AIObjectiveGoTo goTo && goTo.Target != null)
             {
-                run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
+                if (Character.CurrentHull == null)
+                {
+                    run = Vector2.DistanceSquared(Character.WorldPosition, goTo.Target.WorldPosition) > 300 * 300;
+                }
+                else
+                {
+                    float yDiff = goTo.Target.WorldPosition.Y - Character.WorldPosition.Y;
+                    if (Math.Abs(yDiff) > 100)
+                    {
+                        run = true;
+                    }
+                    else
+                    {
+                        float xDiff = goTo.Target.WorldPosition.X - Character.WorldPosition.X;
+                        run = Math.Abs(xDiff) > 300;
+                    }
+                }
             }
             if (run)
             {
@@ -202,6 +218,35 @@ namespace Barotrauma
             if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
             Character.ResetSpeedMultiplier();   // Reset, items will set the value before the next update
             Character.AnimController.TargetMovement = targetMovement;
+
+            if (!Character.LockHands)
+            {
+                DropUnnecessaryItems();
+            }
+
+            if (Character.IsKeyDown(InputType.Aim))
+            {
+                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
+                if (cursorDiffX > 10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Right;
+                }
+                else if (cursorDiffX < -10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Left;
+                }
+
+                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
+
+            }
+            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
+            {
+                Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
+            }
+        }
+
+        private void DropUnnecessaryItems()
+        {
             if (!NeedsDivingGear(Character.CurrentHull))
             {
                 bool oxygenLow = Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold;
@@ -261,26 +306,6 @@ namespace Barotrauma
                         }
                     }
                 }
-            }
-
-            if (Character.IsKeyDown(InputType.Aim))
-            {
-                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
-                if (cursorDiffX > 10.0f)
-                {
-                    Character.AnimController.TargetDir = Direction.Right;
-                }
-                else if (cursorDiffX < -10.0f)
-                {
-                    Character.AnimController.TargetDir = Direction.Left;
-                }
-
-                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
-
-            }
-            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
-            {
-                Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
         }
 
@@ -381,8 +406,8 @@ namespace Barotrauma
             }
 
             if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
-            {
-                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.DisplayName), null, 0, "pressure", 30.0f);
+            {                
+                Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, true), null, 0, "pressure", 30.0f);
             }
         }
 
@@ -412,16 +437,24 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float currentVitality = Character.CharacterHealth.Vitality;
-                    float dmgPercentage = damage / currentVitality * 100;
-                    if (dmgPercentage < currentVitality / 10)
+                    // If not on the same team, always stay defensive
+                    if (attacker.TeamID != Character.TeamID)
                     {
-                        // Don't retaliate on minor (accidental) dmg done by friendly characters
-                        AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
                     }
                     else
                     {
-                        AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        float currentVitality = Character.CharacterHealth.Vitality;
+                        float dmgPercentage = damage / currentVitality * 100;
+                        if (dmgPercentage < currentVitality / 10)
+                        {
+                            // Don't retaliate on minor (accidental) dmg done by characters that are in the same team
+                            AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        }
+                        else
+                        {
+                            AddCombatObjective(AIObjectiveCombat.CombatMode.Defensive, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                        }
                     }
                 }
             }
@@ -432,24 +465,25 @@ namespace Barotrauma
 
             void AddCombatObjective(AIObjectiveCombat.CombatMode mode, float delay = 0)
             {
+                bool holdPosition = Character.Info?.Job?.Prefab.Identifier == "watchman";
                 if (ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective)
                 {
                     if (combatObjective.Enemy != attacker || (combatObjective.Enemy == null && attacker == null))
                     {
                         // Replace the old objective with the new.
                         ObjectiveManager.Objectives.Remove(combatObjective);
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition});
                     }
                 }
                 else
                 {
                     if (delay > 0)
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager), delay);
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition }, delay);
                     }
                     else
                     {
-                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager));
+                        objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker, mode, objectiveManager) { HoldPosition = holdPosition });
                     }
                 }
             }

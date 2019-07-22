@@ -400,6 +400,42 @@ namespace Barotrauma
                     viewAreaOffset += moveSpeed.ToPoint();
                 }
             }
+            if (PlayerInput.KeyHit(Keys.Left))
+            {
+                foreach (var sprite in selectedSprites)
+                {
+                    var newRect = sprite.SourceRect;
+                    newRect.X--;
+                    UpdateSourceRect(sprite, newRect);
+                }
+            }
+            if (PlayerInput.KeyHit(Keys.Right))
+            {
+                foreach (var sprite in selectedSprites)
+                {
+                    var newRect = sprite.SourceRect;
+                    newRect.X++;
+                    UpdateSourceRect(sprite, newRect);
+                }
+            }
+            if (PlayerInput.KeyHit(Keys.Down))
+            {
+                foreach (var sprite in selectedSprites)
+                {
+                    var newRect = sprite.SourceRect;
+                    newRect.Y++;
+                    UpdateSourceRect(sprite, newRect);
+                }
+            }
+            if (PlayerInput.KeyHit(Keys.Up))
+            {
+                foreach (var sprite in selectedSprites)
+                {
+                    var newRect = sprite.SourceRect;
+                    newRect.Y--;
+                    UpdateSourceRect(sprite, newRect);
+                }
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -706,6 +742,13 @@ namespace Barotrauma
         {
             var sb = listBox.ScrollBar;
             sb.BarScroll = MathHelper.Clamp(MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, listBox.Content.CountChildren - 1, listBox.SelectedIndex)), sb.MinValue, sb.MaxValue);
+        }
+
+        private void UpdateSourceRect(Sprite sprite, Rectangle newRect)
+        {
+            sprite.SourceRect = newRect;
+            // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+            sprite.RelativeOrigin = sprite.RelativeOrigin;
         }
         #endregion
 

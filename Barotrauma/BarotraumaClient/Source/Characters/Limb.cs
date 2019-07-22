@@ -449,12 +449,11 @@ namespace Barotrauma
             {
                 float depth = ActiveSprite.Depth - 0.0000015f;
 
-                // TODO: enable when the damage overlay textures have been remade.
-                //DamagedSprite.Draw(spriteBatch,
-                //    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                //    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
-                //    -body.DrawRotation,
-                //    1.0f, spriteEffect, depth);
+                DamagedSprite.Draw(spriteBatch,
+                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                    color * Math.Min(damageOverlayStrength, 1.0f), ActiveSprite.Origin,
+                    -body.DrawRotation,
+                    1.0f, spriteEffect, depth);
             }
 
             if (GameMain.DebugDraw)
@@ -538,13 +537,10 @@ namespace Barotrauma
             if (wearable.InheritLimbDepth)
             {
                 depth = ActiveSprite.Depth - depthStep;
-                if (wearable.DepthLimb != LimbType.None)
+                Limb depthLimb = (wearable.DepthLimb == LimbType.None) ? this : character.AnimController.GetLimb(wearable.DepthLimb);
+                if (depthLimb != null)
                 {
-                    Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
-                    if (depthLimb != null)
-                    {
-                        depth = depthLimb.ActiveSprite.Depth - depthStep;
-                    }
+                    depth = depthLimb.ActiveSprite.Depth - depthStep;
                 }
             }
             var wearableItemComponent = wearable.WearableComponent;

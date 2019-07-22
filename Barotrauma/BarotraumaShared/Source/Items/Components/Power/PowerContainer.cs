@@ -244,9 +244,10 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
 #endif
-                    character.Speak(TextManager.Get("DialogChargeBatteries")
-                        .Replace("[itemname]", item.Name)
-                        .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
+                    
+                    character.Speak(TextManager.GetWithVariables("DialogChargeBatteries", new string[2] { "[itemname]", "[rate]" }, 
+                        new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
+                        new bool[2] { true, false }), null, 1.0f, "chargebattery", 10.0f);
                 }
             }
             else
@@ -260,9 +261,9 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
 #endif
-                    character.Speak(TextManager.Get("DialogStopChargingBatteries")
-                        .Replace("[itemname]", item.Name)
-                        .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
+                    character.Speak(TextManager.GetWithVariables("DialogStopChargingBatteries", new string[2] { "[itemname]", "[rate]" },
+                        new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
+                        new bool[2] { true, false }), null, 1.0f, "chargebattery", 10.0f);
                 }
             }
 

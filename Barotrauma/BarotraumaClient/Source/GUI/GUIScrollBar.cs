@@ -246,14 +246,12 @@ namespace Barotrauma
 
         private bool SelectBar()
         {
-            if (!enabled) return false;
-            // This doesn't work
-            if (barSize == 1.0f) return false;
+            if (!enabled || !PlayerInput.LeftButtonDown()) { return false; }
+            if (barSize >= 1.0f) { return false; }
 
             draggingBar = this;
 
             return true;
-
         }
 
         public void MoveButton(Vector2 moveAmount)

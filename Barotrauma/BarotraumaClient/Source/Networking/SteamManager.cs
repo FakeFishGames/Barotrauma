@@ -63,6 +63,15 @@ namespace Barotrauma.Steam
             return instance.client.SteamId;
         }
 
+        public static string GetUsername()
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return "";
+            }
+            return instance.client.Username;
+        }
+
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
             try
@@ -205,6 +214,11 @@ namespace Barotrauma.Steam
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
 
+                    if (s.Rules.ContainsKey("playercount"))
+                    {
+                       if (int.TryParse(s.Rules["playercount"], out int playerCount)) serverInfo.PlayerCount = playerCount;
+                    }
+
                     if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
                     if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
                     if (s.Rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(s.Rules["contentpackageurl"].Split(','));
@@ -226,6 +240,12 @@ namespace Barotrauma.Steam
                         if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
                     }
 
+                    if (s.Rules.ContainsKey("gamestarted")) serverInfo.GameStarted = s.Rules["gamestarted"] == "True";
+
+                    if (s.Rules.ContainsKey("gamemode"))
+                    {
+                        serverInfo.GameMode = s.Rules["gamemode"];
+                    }
                     if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
                         serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
                     {
@@ -243,7 +263,8 @@ namespace Barotrauma.Steam
 
         private static bool ValidateServerInfo(ServerList.Server server)
         {
-            if (string.IsNullOrEmpty(server.Name)) { return false; }
+            if (string.IsNullOrWhiteSpace(server.Name)) { return false; }
+            if (string.IsNullOrWhiteSpace(server.Name.Replace("\0", ""))) { return false; }
             if (server.Address == null) { return false; }
 
             return true;
@@ -579,12 +600,19 @@ namespace Barotrauma.Steam
             }
             else
             {
-                DebugConsole.ThrowError("Publishing workshop item " + item.Title + " failed. " + item.Error);
+                DebugConsole.NewMessage("Publishing workshop item " + item.Title + " failed. " + item.Error, Microsoft.Xna.Framework.Color.Red);
             }
 
             SaveUtil.ClearFolder(WorkshopItemStagingFolder);
-            Directory.Delete(WorkshopItemStagingFolder);
             File.Delete(PreviewImageName);
+            try
+            {
+                Directory.Delete(WorkshopItemStagingFolder);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to delete Workshop item staging folder.", e);
+            }
 
             yield return CoroutineStatus.Success;
         }
@@ -596,7 +624,7 @@ namespace Barotrauma.Steam
         {
             if (!item.Installed)
             {
-                errorMsg = TextManager.Get("WorkshopErrorInstallRequiredToEnable").Replace("[itemname]", item.Title);
+                errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item.Title);
                 DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
@@ -607,18 +635,15 @@ namespace Barotrauma.Steam
 
             if (!contentPackage.IsCompatible())
             {
-                errorMsg = TextManager.Get(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage")
-                            .Replace("[packagename]", contentPackage.Name)
-                            .Replace("[packageversion]", contentPackage.GameVersion.ToString())
-                            .Replace("[gameversion]", GameMain.Version.ToString());
+                errorMsg = TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
+                    new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
                 return false;
             }
 
             if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
             {
-                errorMsg = TextManager.Get("ContentPackageMissingCoreFiles")
-                            .Replace("[packagename]", contentPackage.Name)
-                            .Replace("[missingfiletypes]", string.Join(", ", missingContentTypes));
+                errorMsg = TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" }, 
+                    new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
                 return false;
             }
 
@@ -640,9 +665,7 @@ namespace Barotrauma.Steam
             {
                 if (File.Exists(newContentPackagePath) && !CheckFileEquality(newContentPackagePath, metaDataFilePath))
                 {
-                    errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
-                        .Replace("[itemname]", item.Title)
-                        .Replace("[filename]", newContentPackagePath);
+                    errorMsg = TextManager.GetWithVariables("WorkshopErrorOverwriteOnEnable", new string[2] { "[itemname]", "[filename]" }, new string[2] { item.Title, newContentPackagePath });
                     DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                     return false;
                 }
@@ -652,9 +675,7 @@ namespace Barotrauma.Steam
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
                     if (File.Exists(sourceFile) && File.Exists(contentFile.Path) && !CheckFileEquality(sourceFile, contentFile.Path))
                     {
-                        errorMsg = TextManager.Get("WorkshopErrorOverwriteOnEnable")
-                            .Replace("[itemname]", item.Title)
-                            .Replace("[filename]", contentFile.Path);
+                        errorMsg = TextManager.GetWithVariables("WorkshopErrorOverwriteOnEnable", new string[2] { "[itemname]", "[filename]" }, new string[2] { item.Title, contentFile.Path });
                         DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                         return false;
                     }
@@ -673,15 +694,14 @@ namespace Barotrauma.Steam
                         //the content package is trying to copy a file to a prohibited path, which is not allowed
                         if (File.Exists(sourceFile))
                         {
-                            errorMsg = TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", contentFile.Path);
+                            errorMsg = TextManager.GetWithVariable("WorkshopErrorIllegalPathOnEnable", "[filename]", contentFile.Path);
                             return false;
                         }
                         //not trying to copy anything, so this is a reference to an external file
                         //if the external file doesn't exist, we cannot enable the package
                         else if (!File.Exists(contentFile.Path))
                         {
-                            //TODO: add the error message to localization
-                            errorMsg = TextManager.Get("WorkshopErrorEnableFailed").Replace("[itemname]", item.Title) + " {File \"" + contentFile.Path + "\" not found.}";
+                            errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
                             return false;
                         }
                         continue;
@@ -696,8 +716,7 @@ namespace Barotrauma.Steam
                         else
                         {
                             //file not present in either the mod or the game folder -> cannot enable the package
-                            //TODO: add the error message to localization
-                            errorMsg = TextManager.Get("WorkshopErrorEnableFailed").Replace("[itemname]", item.Title) + " {File \"" + contentFile.Path + "\" not found.}";
+                            errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
                             return false;
                         }
                     }
@@ -713,7 +732,7 @@ namespace Barotrauma.Steam
                     if (!File.Exists(sourceFile)) { continue; }
                     if (!ContentPackage.IsModFilePathAllowed(nonContentFile))
                     {
-                        DebugConsole.ThrowError(TextManager.Get("WorkshopErrorIllegalPathOnEnable").Replace("[filename]", nonContentFile));
+                        DebugConsole.ThrowError(TextManager.GetWithVariable("WorkshopErrorIllegalPathOnEnable", "[filename]", nonContentFile));
                         continue;
                     }
                     Directory.CreateDirectory(Path.GetDirectoryName(nonContentFile));
@@ -722,7 +741,7 @@ namespace Barotrauma.Steam
             }
             catch (Exception e)
             {
-                errorMsg = TextManager.Get("WorkshopErrorEnableFailed").Replace("[itemname]", item.Title) + " {" + e.Message + "}";
+                errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item.Title) + " {" + e.Message + "}";
                 DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
             }
@@ -925,28 +944,50 @@ namespace Barotrauma.Steam
         {
             if (instance == null || !instance.isInitialized) { return false; }
 
-            bool itemsUpdated = false;
-            foreach (ulong subscribedItemId in instance.client.Workshop.GetSubscribedItemIds())
+            bool? itemsUpdated = null;
+            bool timedOut = false;
+            var query = instance.client.Workshop.CreateQuery();
+            query.FileId = new List<ulong>(instance.client.Workshop.GetSubscribedItemIds());
+            query.UploaderAppId = AppID;
+            query.Run();
+            query.OnResult = (Workshop.Query q) =>
             {
-                //TODO: fix this, GetItem doesn't query item.Modified
-                var item = instance.client.Workshop.GetItem(subscribedItemId);
-                if (item.Installed && CheckWorkshopItemEnabled(item) && !CheckWorkshopItemUpToDate(item))
+                if (timedOut) { return; }
+                itemsUpdated = false;
+                foreach (var item in q.Items)
                 {
-                    if (!UpdateWorkshopItem(item, out string errorMsg))
+                    if (item.Installed && CheckWorkshopItemEnabled(item) && !CheckWorkshopItemUpToDate(item))
                     {
-                        DebugConsole.ThrowError(errorMsg);
-                        new GUIMessageBox(
-                            TextManager.Get("Error"),
-                            TextManager.Get("WorkshopItemUpdateFailed").Replace("[itemname]", item.Title).Replace("[errormessage]", errorMsg));
-                    }
-                    else
-                    {
-                        new GUIMessageBox("", TextManager.Get("WorkshopItemUpdated").Replace("[itemname]", item.Title));
-                        itemsUpdated = true;
+                        if (!UpdateWorkshopItem(item, out string errorMsg))
+                        {
+                            DebugConsole.ThrowError(errorMsg);
+                            new GUIMessageBox(
+                                TextManager.Get("Error"),
+                                TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, errorMsg }));
+                        }
+                        else
+                        {
+                            new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
+                            itemsUpdated = true;
+                        }
                     }
                 }
+            };
+
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (!itemsUpdated.HasValue)
+            {
+                if (DateTime.Now > timeOut)
+                {
+                    itemsUpdated = false;
+                    timedOut = true;
+                    break;
+                }
+                instance.client.Update();
+                System.Threading.Thread.Sleep(10);
             }
-            return itemsUpdated;
+            
+            return itemsUpdated.Value;
         }
 
         public static bool UpdateWorkshopItem(Workshop.Item item, out string errorMsg)

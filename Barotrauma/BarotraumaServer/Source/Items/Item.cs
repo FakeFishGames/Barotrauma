@@ -193,7 +193,7 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
 
-            msg.Write(Prefab.Name);
+            msg.Write(Prefab.OriginalName);
             msg.Write(Prefab.Identifier);
             msg.Write(Description != prefab.Description);
             if (Description != prefab.Description)

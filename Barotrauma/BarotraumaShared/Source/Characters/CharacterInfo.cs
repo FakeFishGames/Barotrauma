@@ -747,7 +747,7 @@ namespace Barotrauma
 
         public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
         {
-            if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)) return;            
+            if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase);

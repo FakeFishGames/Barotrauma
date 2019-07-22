@@ -145,7 +145,7 @@ namespace Barotrauma
                 UnlockAchievement(c, "clowncostume");
             }
 
-            if (Submarine.MainSub != null && c.Submarine == null)
+            if (Submarine.MainSub != null && c.Submarine == null && c.ConfigPath == Character.HumanConfigFile)
             {
                 float dist = 500 / Physics.DisplayToRealWorldRatio;
                 if (Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition) >
@@ -311,11 +311,9 @@ namespace Barotrauma
             {
                 if (gameSession.Mission is CombatMission combatMission)
                 {
-#if CLIENT
                     //all characters that are alive and in the winning team get an achievement
                     UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true, 
                         c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
-#endif
                 }
                 else if (gameSession.Mission.Completed)
                 {

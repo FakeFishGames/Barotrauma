@@ -1,6 +1,6 @@
 ﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using OpenTK.Audio.OpenAL;
+using OpenAL;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -69,39 +69,55 @@ namespace Barotrauma.Networking
             VoipConfig.SetupEncoding();
 
             //set up capture device
-            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, ALFormat.Mono16, VoipConfig.BUFFER_SIZE * 5);
+            captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 5);
 
             if (captureDevice == IntPtr.Zero)
             {
+                DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 1 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(),Color.Orange);
+                //attempt using a smaller buffer size
+                captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 2);
+            }
+
+            if (captureDevice == IntPtr.Zero)
+            {
+                DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 2 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(), Color.Orange);
+                //attempt using the default device
+                captureDevice = Alc.CaptureOpenDevice("", VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 2);
+            }
+
+            if (captureDevice == IntPtr.Zero)
+            {
+                string errorCode = Alc.GetError(IntPtr.Zero).ToString();
                 if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
                 {
                     GUI.SettingsMenuOpen = false;
-                    new GUIMessageBox(TextManager.Get("Error"), 
-                        TextManager.Get("VoipCaptureDeviceNotFound", returnNull: true) ?? "Could not start voice capture, suitable capture device not found.")
+                    new GUIMessageBox(TextManager.Get("Error"),
+                        (TextManager.Get("VoipCaptureDeviceNotFound", returnNull: true) ?? "Could not start voice capture, suitable capture device not found.") + " (" + errorCode + ")")
                     {
                         UserData = "capturedevicenotfound"
                     };
                 }
+                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpen(" + deviceName + ") failed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,"Error code: "+errorCode);
                 GameMain.Config.VoiceSetting = GameSettings.VoiceMode.Disabled;
                 Instance?.Dispose();
                 Instance = null;
                 return;
             }
 
-            ALError alError = AL.GetError();
-            AlcError alcError = Alc.GetError(captureDevice);
-            if (alcError != AlcError.NoError)
+            int alError = Al.GetError();
+            int alcError = Alc.GetError(captureDevice);
+            if (alcError != Alc.NoError)
             {
                 throw new Exception("Failed to open capture device: " + alcError.ToString() + " (ALC)");
             }
-            if (alError != ALError.NoError)
+            if (alError != Al.NoError)
             {
                 throw new Exception("Failed to open capture device: " + alError.ToString() + " (AL)");
             }
 
             Alc.CaptureStart(captureDevice);
             alcError = Alc.GetError(captureDevice);
-            if (alcError != AlcError.NoError)
+            if (alcError != Alc.NoError)
             {
                 throw new Exception("Failed to start capturing: " + alcError.ToString());
             }
@@ -132,11 +148,11 @@ namespace Barotrauma.Networking
             short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
             while (capturing)
             {
-                AlcError alcError;
-                Alc.GetInteger(captureDevice, AlcGetInteger.CaptureSamples, 1, out int sampleCount);
+                int alcError;
+                Alc.GetInteger(captureDevice, Alc.EnumCaptureSamples, out int sampleCount);
 
                 alcError = Alc.GetError(captureDevice);
-                if (alcError != AlcError.NoError)
+                if (alcError != Alc.NoError)
                 {
                     throw new Exception("Failed to determine sample count: " + alcError.ToString());
                 }
@@ -160,7 +176,7 @@ namespace Barotrauma.Networking
                 }
 
                 alcError = Alc.GetError(captureDevice);
-                if (alcError != AlcError.NoError)
+                if (alcError != Alc.NoError)
                 {
                     throw new Exception("Failed to capture samples: " + alcError.ToString());
                 }
@@ -214,7 +230,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                Thread.Sleep(VoipConfig.BUFFER_SIZE * 800 / VoipConfig.FREQUENCY);
+                Thread.Sleep(10);
             }
         }
 

@@ -37,10 +37,12 @@ namespace Barotrauma.Steam
 
         public static bool RefreshServerDetails(Networking.GameServer server)
         {
-            if (instance == null || !instance.isInitialized)
+            if (instance?.server == null || !instance.isInitialized)
             {
                 return false;
             }
+
+            var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
 
             // These server state variables may be changed at any time.  Note that there is no longer a mechanism
             // to send the player count.  The player count is maintained by steam and you should use the player
@@ -51,9 +53,10 @@ namespace Barotrauma.Steam
             instance.server.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName ?? "";
             Instance.server.SetKey("message", GameMain.Server.ServerSettings.ServerMessageText);
             Instance.server.SetKey("version", GameMain.Version.ToString());
-            Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
-            Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
-            Instance.server.SetKey("contentpackageurl", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
+            Instance.server.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString());
+            Instance.server.SetKey("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
+            Instance.server.SetKey("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
+            Instance.server.SetKey("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
             Instance.server.SetKey("usingwhitelist", (server.ServerSettings.Whitelist != null && server.ServerSettings.Whitelist.Enabled).ToString());
             Instance.server.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Instance.server.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
@@ -72,7 +75,7 @@ namespace Barotrauma.Steam
         public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
             if (instance == null || !instance.isInitialized || instance.server == null) return false;
-
+            
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
             if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
             {

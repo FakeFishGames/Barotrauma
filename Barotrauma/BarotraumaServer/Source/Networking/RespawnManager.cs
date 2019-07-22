@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,19 +10,15 @@ namespace Barotrauma.Networking
     {
         private List<Client> GetClientsToRespawn()
         {
-            GameServer server = networkMember as GameServer;
-
             return networkMember.ConnectedClients.FindAll(c =>
                 c.InGame &&
-                (!c.SpectateOnly || (!server.ServerSettings.AllowSpectating && server.OwnerConnection != c.Connection)) &&
+                (!c.SpectateOnly || (!GameMain.Server.ServerSettings.AllowSpectating && GameMain.Server.OwnerConnection != c.Connection)) &&
                 (c.Character == null || c.Character.IsDead));
         }
 
         private List<CharacterInfo> GetBotsToRespawn()
         {
-            GameServer server = networkMember as GameServer;
-
-            if (server.ServerSettings.BotSpawnMode == BotSpawnMode.Normal)
+            if (GameMain.Server.ServerSettings.BotSpawnMode == BotSpawnMode.Normal)
             {
                 return Character.CharacterList
                     .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null && c.IsDead)
@@ -29,14 +26,14 @@ namespace Barotrauma.Networking
                     .ToList();
             }
 
-            int currPlayerCount = server.ConnectedClients.Count(c => 
+            int currPlayerCount = GameMain.Server.ConnectedClients.Count(c => 
                 c.InGame && 
-                (!c.SpectateOnly || (!server.ServerSettings.AllowSpectating && server.OwnerConnection != c.Connection)));
+                (!c.SpectateOnly || (!GameMain.Server.ServerSettings.AllowSpectating && GameMain.Server.OwnerConnection != c.Connection)));
 
             var existingBots = Character.CharacterList
                 .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null);
 
-            int requiredBots = server.ServerSettings.BotCount - currPlayerCount;
+            int requiredBots = GameMain.Server.ServerSettings.BotCount - currPlayerCount;
             requiredBots -= existingBots.Count(b => !b.IsDead);
 
             List<CharacterInfo> botsToRespawn = new List<CharacterInfo>();
@@ -58,21 +55,19 @@ namespace Barotrauma.Networking
 
         partial void UpdateWaiting(float deltaTime)
         {
-            var server = networkMember as GameServer;
-
             int characterToRespawnCount = GetClientsToRespawn().Count;
-            int totalCharacterCount = server.ConnectedClients.Count;
+            int totalCharacterCount = GameMain.Server.ConnectedClients.Count;
             /*if (server.Character != null)
             {
                 totalCharacterCount++;
                 if (server.Character.IsDead) characterToRespawnCount++;
             }*/
-            bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * server.ServerSettings.MinRespawnRatio, 1.0f);
+            bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * GameMain.Server.ServerSettings.MinRespawnRatio, 1.0f);
 
             if (startCountdown != CountdownStarted)
             {
                 CountdownStarted = startCountdown;
-                server.CreateEntityEvent(this);                
+                GameMain.Server.CreateEntityEvent(this);                
             }
 
             if (!CountdownStarted) return;
@@ -80,7 +75,7 @@ namespace Barotrauma.Networking
             respawnTimer -= deltaTime;
             if (respawnTimer <= 0.0f)
             {
-                respawnTimer = server.ServerSettings.RespawnInterval;
+                respawnTimer = GameMain.Server.ServerSettings.RespawnInterval;
 
                 DispatchShuttle();
             }
@@ -98,13 +93,10 @@ namespace Barotrauma.Networking
 
         partial void DispatchShuttle()
         {
-            var server = networkMember as GameServer;
-            if (server == null) return;
-
             if (respawnShuttle != null)
             {
                 state = State.Transporting;
-                server.CreateEntityEvent(this);
+                GameMain.Server.CreateEntityEvent(this);
 
                 ResetShuttle();
 
@@ -124,17 +116,78 @@ namespace Barotrauma.Networking
             {
                 state = State.Waiting;
                 GameServer.Log("Respawning everyone in main sub.", ServerLog.MessageType.Spawning);
-                server.CreateEntityEvent(this);
+                GameMain.Server.CreateEntityEvent(this);
 
                 RespawnCharacters();
             }
         }
 
+        partial void UpdateReturningProjSpecific()
+        {
+            foreach (Door door in shuttleDoors)
+            {
+                if (door.IsOpen) door.TrySetState(false, false, true);
+            }
+
+            var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
+            shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
+
+            var dockingPorts = Item.ItemList.FindAll(i => i.Submarine == respawnShuttle && i.GetComponent<DockingPort>() != null);
+            dockingPorts.ForEach(d => d.GetComponent<DockingPort>().Undock());
+
+            //shuttle has returned if the path has been traversed or the shuttle is close enough to the exit
+            if (!CoroutineManager.IsCoroutineRunning("forcepos"))
+            {
+                if ((shuttleSteering?.SteeringPath != null && shuttleSteering.SteeringPath.Finished)
+                    || (respawnShuttle.WorldPosition.Y + respawnShuttle.Borders.Y > Level.Loaded.StartPosition.Y - Level.ShaftHeight &&
+                        Math.Abs(Level.Loaded.StartPosition.X - respawnShuttle.WorldPosition.X) < 1000.0f))
+                {
+                    CoroutineManager.StopCoroutines("forcepos");
+                    CoroutineManager.StartCoroutine(
+                        ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f), "forcepos");
+
+                }
+            }
+
+            if (respawnShuttle.WorldPosition.Y > Level.Loaded.Size.Y || shuttleReturnTimer <= 0.0f)
+            {
+                CoroutineManager.StopCoroutines("forcepos");
+
+                ResetShuttle();
+
+                state = State.Waiting;
+                GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.Spawning);
+                GameMain.Server.CreateEntityEvent(this);
+
+                respawnTimer = GameMain.Server.ServerSettings.RespawnInterval;
+                CountdownStarted = false;
+            }
+        }
+
+        partial void UpdateTransportingProjSpecific(float deltaTime)
+        {
+            //if there are no living chracters inside, transporting can be stopped immediately
+            if (!Character.CharacterList.Any(c => c.Submarine == respawnShuttle && !c.IsDead))
+            {
+                shuttleTransportTimer = 0.0f;
+            }
+
+            if (shuttleTransportTimer <= 0.0f)
+            {
+                GameServer.Log("The respawn shuttle is leaving.", ServerLog.MessageType.ServerMessage);
+                state = State.Returning;
+
+                GameMain.Server.CreateEntityEvent(this);
+
+                CountdownStarted = false;
+                maxTransportTime = GameMain.Server.ServerSettings.MaxTransportTime;
+                shuttleReturnTimer = maxTransportTime;
+                shuttleTransportTimer = maxTransportTime;
+            }
+        }
+
         partial void RespawnCharactersProjSpecific()
         {
-            var server = networkMember as GameServer;
-            if (server == null) return;
-
             var respawnSub = respawnShuttle ?? Submarine.MainSub;
 
             var clients = GetClientsToRespawn();
@@ -150,7 +203,7 @@ namespace Barotrauma.Networking
             var botsToSpawn = GetBotsToRespawn();
             characterInfos.AddRange(botsToSpawn);
             
-            server.AssignJobs(clients);
+            GameMain.Server.AssignJobs(clients);
             foreach (Client c in clients)
             {
                 c.CharacterInfo.Job = new Job(c.AssignedJob);
@@ -232,7 +285,7 @@ namespace Barotrauma.Networking
                 //add the ID card tags they should've gotten when spawning in the shuttle
                 foreach (Item item in character.Inventory.Items)
                 {
-                    if (item == null || item.Prefab.Name != "ID Card") continue;
+                    if (item == null || item.Prefab.Identifier != "idcard") continue;
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);
@@ -241,7 +294,6 @@ namespace Barotrauma.Networking
                         item.Description = shuttleSpawnPoints[i].IdCardDesc;
                 }
             }
-
         }
     }
 }

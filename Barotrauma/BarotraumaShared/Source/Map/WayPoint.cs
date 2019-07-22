@@ -32,6 +32,8 @@ namespace Barotrauma
         public Ladder Ladders;
         public Structure Stairs;
 
+        public bool isObstructed;
+
         private ushort gapId;
         public Gap ConnectedGap
         {
@@ -91,7 +93,7 @@ namespace Barotrauma
         public WayPoint(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.MainSub)
         { 
-            if (prefab.Name.Contains("Spawn"))
+            if (prefab.Identifier.Contains("spawn"))
             {
                 spawnType = SpawnType.Human;
             }
@@ -122,6 +124,8 @@ namespace Barotrauma
 
             InsertToList();
             WayPointList.Add(this);
+
+            DebugConsole.Log("Created waypoint (" + ID + ")");
 
             currentHull = Hull.FindHull(WorldPosition);
         }

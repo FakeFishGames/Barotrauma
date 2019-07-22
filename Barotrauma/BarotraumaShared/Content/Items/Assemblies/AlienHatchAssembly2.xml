@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ItemAssembly name="AlienHatchAssembly2" description="" hideinmenus="false">
+<ItemAssembly name="AlienHatchAssembly2" description="" hideinmenus="true">
   <Item name="Alien Hatch" identifier="alienhatch" ID="7" rect="-112,31,208,48" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Door isopen="True" pickingtime="30" canbepicked="True" allowingameediting="False" msg="itemmsgforceopencrowbar">
       <requireditem identifiers="crowbar" type="Equipped" optional="false" ignoreineditor="false" />
@@ -78,7 +78,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="26" />
       </input>
@@ -93,7 +93,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="27" />
       </input>
@@ -108,7 +108,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="set_frequency">
         <link w="24" />
       </input>
@@ -126,7 +126,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="25" />
       </input>
@@ -141,7 +141,7 @@
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Holdable>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="Rewire [Screwdriver]">
-      <requireditem identifiers="screwdriver,wire" type="Equipped" optional="false" ignoreineditor="false" />
+      <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="signal_in">
         <link w="22" />
         <link w="23" />

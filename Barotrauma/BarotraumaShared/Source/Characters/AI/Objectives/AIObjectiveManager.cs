@@ -234,9 +234,10 @@ namespace Barotrauma
             switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
+                    if (orderGiver == null) { return null; }
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = 150,
+                        CloseEnough = 100,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
                         followControlledCharacter = orderGiver == character,

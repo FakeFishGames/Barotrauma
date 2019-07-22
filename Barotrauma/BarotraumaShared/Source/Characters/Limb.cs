@@ -444,6 +444,8 @@ namespace Barotrauma
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
             if (armorSector == Vector2.Zero) { return false; }
+            //sector 360 degrees or more -> always hits
+            if (Math.Abs(armorSector.Y - armorSector.X) >= MathHelper.TwoPi) { return true; }
             float rotation = body.TransformedRotation;
             float offset = (MathHelper.PiOver2 - GetArmorSectorRotationOffset(armorSector)) * Dir;
             float hitAngle = VectorExtensions.Angle(VectorExtensions.Forward(rotation + offset), SimPosition - simPosition);
@@ -460,9 +462,7 @@ namespace Barotrauma
 
         protected float GetArmorSectorSize(Vector2 armorSector)
         {
-            float min = Math.Min(armorSector.X, armorSector.Y);
-            float max = Math.Max(armorSector.X, armorSector.Y);
-            return max - min;
+            return Math.Abs(armorSector.X - armorSector.Y);
         }
 
         public void Update(float deltaTime)

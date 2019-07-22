@@ -153,20 +153,5 @@ namespace Barotrauma.Networking
         {
             return this.Permissions.HasFlag(permission);
         }
-
-        public static string SanitizeName(string name)
-        {
-            name = name.Trim();
-            if (name.Length > 20)
-            {
-                name = name.Substring(0, 20);
-            }
-            string rName = "";
-            for (int i = 0; i < name.Length; i++)
-            {
-                rName += name[i] < 32 ? '?' : name[i];
-            }
-            return rName;
-        }
     }
 }

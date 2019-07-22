@@ -79,6 +79,7 @@ namespace Barotrauma
 
         public int GetTotalItemCost()
         {
+            if (purchasedItems == null) return 0;
             return purchasedItems.Sum(i => i.ItemPrefab.GetPrice(campaign.Map.CurrentLocation).BuyPrice * i.Quantity);
         }
 
@@ -108,7 +109,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            new GUIMessageBox("", TextManager.Get("CargoSpawnNotification").Replace("[roomname]", cargoRoom.DisplayName));
+            new GUIMessageBox("", TextManager.GetWithVariable("CargoSpawnNotification", "[roomname]", cargoRoom.DisplayName, true));
 #endif
 
             Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();

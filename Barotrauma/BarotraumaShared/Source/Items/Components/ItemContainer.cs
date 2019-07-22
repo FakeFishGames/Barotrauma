@@ -97,6 +97,7 @@ namespace Barotrauma.Items.Components
             RelatedItem ri = containableItems.Find(x => x.MatchesItem(containedItem));
             if (ri != null)
             {
+                itemsWithStatusEffects.RemoveAll(i => i.First == containedItem);
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
                     itemsWithStatusEffects.Add(new Pair<Item, StatusEffect>(containedItem, effect));
@@ -107,12 +108,12 @@ namespace Barotrauma.Items.Components
             IsActive = itemsWithStatusEffects.Count > 0 || containedItem.body != null;
         }
 
-        public void OnItemRemoved(Item item)
+        public void OnItemRemoved(Item containedItem)
         {
-            itemsWithStatusEffects.RemoveAll(i => i.First == item);
+            itemsWithStatusEffects.RemoveAll(i => i.First == containedItem);
 
             //deactivate if the inventory is empty
-            IsActive = itemsWithStatusEffects.Count > 0 || item.body != null;
+            IsActive = itemsWithStatusEffects.Count > 0 || containedItem.body != null;
         }
 
         public bool CanBeContained(Item item)

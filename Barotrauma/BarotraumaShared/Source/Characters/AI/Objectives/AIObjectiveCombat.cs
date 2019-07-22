@@ -17,7 +17,8 @@ namespace Barotrauma
         const float coolDown = 10.0f;
 
         public Character Enemy { get; private set; }
-        
+        public bool HoldPosition { get; set; }
+
         private Item _weapon;
         private Item Weapon
         {
@@ -49,9 +50,7 @@ namespace Barotrauma
         public override bool ConcurrentObjectives => true;
 
         private readonly AIObjectiveFindSafety findSafety;
-        private readonly HashSet<RangedWeapon> rangedWeapons = new HashSet<RangedWeapon>();
-        private readonly HashSet<MeleeWeapon> meleeWeapons = new HashSet<MeleeWeapon>();
-        private readonly HashSet<Item> adHocWeapons = new HashSet<Item>();
+        private readonly HashSet<ItemComponent> weapons = new HashSet<ItemComponent>();
 
         private AIObjectiveContainItem seekAmmunition;
         private AIObjectiveGoTo retreatObjective;
@@ -127,7 +126,10 @@ namespace Barotrauma
             TryArm();
             if (seekAmmunition == null || !subObjectives.Contains(seekAmmunition))
             {
-                Move();
+                if (!HoldPosition)
+                {
+                    Move();
+                }
                 if (WeaponComponent != null)
                 {
                     OperateWeapon(deltaTime);
@@ -153,6 +155,8 @@ namespace Barotrauma
 
         private bool TryArm()
         {
+            if (character.LockHands) { return false; }
+
             if (Weapon != null)
             {
                 if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
@@ -162,7 +166,7 @@ namespace Barotrauma
                 else if (!WeaponComponent.HasRequiredContainedItems(false))
                 {
                     // Seek ammunition only if cannot find a new weapon
-                    if (!Reload(true, () => GetWeapon() == null))
+                    if (!Reload(!HoldPosition, () => GetWeapon(out _) == null))
                     {
                         if (seekAmmunition != null && subObjectives.Contains(seekAmmunition))
                         {
@@ -177,11 +181,11 @@ namespace Barotrauma
             }
             if (Weapon == null)
             {
-                Weapon = GetWeapon();
+                Weapon = GetWeapon(out _weaponComponent);
             }
             if (Weapon == null)
             {
-                Weapon = GetWeapon(ignoreRequiredItems: true);
+                Weapon = GetWeapon(out _weaponComponent, ignoreRequiredItems: true);
             }
             Mode = Weapon == null ? CombatMode.Retreat : initialMode;
             return Weapon != null;
@@ -205,30 +209,41 @@ namespace Barotrauma
             }
         }
 
-        private Item GetWeapon(bool ignoreRequiredItems = false)
+        private Item GetWeapon(out ItemComponent weaponComponent, bool ignoreRequiredItems = false)
         {
-            rangedWeapons.Clear();
-            meleeWeapons.Clear();
-            adHocWeapons.Clear();
-            Item weapon = null;
+            weapons.Clear();
             _weaponComponent = null;
             foreach (var item in character.Inventory.Items)
             {
                 if (item == null) { continue; }
+                SeekWeapons(item);
+                if (item.OwnInventory != null)
+                {
+                    item.OwnInventory.Items.ForEach(i => SeekWeapons(i));
+                }
+            }
+            weaponComponent = weapons.OrderByDescending(w => w.CombatPriority).FirstOrDefault();
+            if (weaponComponent == null) { return null; }
+            if (weaponComponent.CombatPriority < 1) { return null; }
+            return weaponComponent.Item;
+
+            void SeekWeapons(Item item)
+            {
+                if (item == null) { return; }
                 foreach (var component in item.Components)
                 {
                     if (component is RangedWeapon rw)
                     {
                         if (ignoreRequiredItems || rw.HasRequiredContainedItems(false))
                         {
-                            rangedWeapons.Add(rw);
+                            weapons.Add(rw);
                         }
                     }
                     else if (component is MeleeWeapon mw)
                     {
                         if (ignoreRequiredItems || mw.HasRequiredContainedItems(false))
                         {
-                            meleeWeapons.Add(mw);
+                            weapons.Add(mw);
                         }
                     }
                     else
@@ -244,7 +259,7 @@ namespace Barotrauma
                                     {
                                         if (ignoreRequiredItems || component.HasRequiredContainedItems(false))
                                         {
-                                            adHocWeapons.Add(item);
+                                            weapons.Add(component);
                                         }
                                     }
                                 }
@@ -253,26 +268,11 @@ namespace Barotrauma
                     }
                 }
             }
-            var rangedWeapon = rangedWeapons.OrderByDescending(w => w.CombatPriority).FirstOrDefault();
-            var meleeWeapon = meleeWeapons.OrderByDescending(w => w.CombatPriority).FirstOrDefault();
-            if (rangedWeapon != null)
-            {
-                weapon = rangedWeapon.Item;
-            }
-            else if (meleeWeapon != null)
-            {
-                weapon = meleeWeapon.Item;
-            }
-            if (weapon == null)
-            {
-                weapon = adHocWeapons.GetRandom(Rand.RandSync.Server);
-            }
-            return weapon;
         }
 
         private void Unequip()
         {
-            if (character.SelectedItems.Contains(Weapon))
+            if (!character.LockHands && character.SelectedItems.Contains(Weapon))
             {
                 if (!Weapon.AllowedSlots.Contains(InvSlotType.Any) || !character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Any }))
                 {
@@ -283,6 +283,7 @@ namespace Barotrauma
 
         private bool Equip()
         {
+            if (character.LockHands) { return false; }
             if (!WeaponComponent.HasRequiredContainedItems(false))
             {
                 Mode = CombatMode.Retreat;
@@ -328,6 +329,13 @@ namespace Barotrauma
 
         private void Engage()
         {
+            if (character.LockHands)
+            {
+                Mode = CombatMode.Retreat;
+                SteeringManager.Reset();
+                return;
+            }
+
             retreatTarget = null;
             RemoveSubObjective(ref retreatObjective);
             RemoveSubObjective(ref seekAmmunition);

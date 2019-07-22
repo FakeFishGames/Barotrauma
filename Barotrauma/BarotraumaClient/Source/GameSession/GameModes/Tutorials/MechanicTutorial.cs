@@ -188,6 +188,8 @@ namespace Barotrauma.Tutorials
             mechanic_brokenPump = Item.ItemList.Find(i => i.HasTag("mechanic_brokenpump")).GetComponent<Pump>();
             mechanic_brokenPump.Item.Indestructible = false;
             mechanic_brokenPump.Item.Condition = 0;
+            mechanic_brokenPump.CanBeSelected = false;
+            mechanic_brokenPump.Item.GetComponent<Repairable>().CanBeSelected = false;
             mechanic_brokenWall_2 = Structure.WallList.Find(i => i.SpecialTag == "mechanic_brokenwall_2");
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
@@ -525,7 +527,9 @@ namespace Barotrauma.Tutorials
             mechanic.RemoveActiveObjectiveEntity(mechanic_brokenWall_2);
             TriggerTutorialSegment(9, GameMain.Config.KeyBind(InputType.Use)); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
+            mechanic_brokenPump.CanBeSelected = true;
             Repairable repairablePumpComponent = mechanic_brokenPump.Item.GetComponent<Repairable>();
+            repairablePumpComponent.CanBeSelected = true;
             do
             {
                 yield return null;

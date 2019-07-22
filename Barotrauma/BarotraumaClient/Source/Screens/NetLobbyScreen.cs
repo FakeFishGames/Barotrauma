@@ -147,6 +147,12 @@ namespace Barotrauma
             get { return playerList; }
         }
 
+        public GUITextBox CharacterNameBox
+        {
+            get;
+            private set;
+        }
+
         public GUIButton StartButton
         {
             get;
@@ -329,8 +335,12 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), rightInfoColumn.RectTransform), style: null);
 
             //server info ------------------------------------------------------------------
-            
-            ServerName = new GUITextBox(new RectTransform(new Vector2(0.3f, 0.05f), infoFrameContent.RectTransform));
+
+            ServerName = new GUITextBox(new RectTransform(new Vector2(infoColumnContainer.RectTransform.RelativeSize.X, 0.05f), infoFrameContent.RectTransform))
+            {
+                MaxTextLength = NetConfig.ServerNameMaxLength,
+                OverflowClip = true
+            };
             ServerName.OnDeselected += (textBox, key) =>
             {
                 GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
@@ -920,7 +930,26 @@ namespace Barotrauma
                 UserData = characterInfo
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true);
+            CharacterNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), characterInfo.Name, font: GUI.LargeFont, textAlignment: Alignment.Center)
+            {
+                MaxTextLength = Client.MaxNameLength,
+                OverflowClip = true
+            };
+            CharacterNameBox.OnEnterPressed += (tb, text) => { CharacterNameBox.Deselect(); return true; };
+            CharacterNameBox.OnDeselected += (tb, key) =>
+            {
+                if (GameMain.Client == null) { return; }
+                string newName = Client.SanitizeName(tb.Text);
+                if (string.IsNullOrWhiteSpace(newName))
+                {
+                    tb.Text = GameMain.Client.Name;
+                }
+                else
+                {
+                    ReadyToStartBox.Selected = false;
+                    GameMain.Client.Name = tb.Text;
+                };
+            };
 
             GUIComponent headContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.2f), infoContainer.RectTransform, Anchor.TopCenter), isHorizontal: true)
             {
@@ -1309,6 +1338,7 @@ namespace Barotrauma
             {
                 Selected = true,
                 Enabled = false,
+                Visible = false,
                 ToolTip = TextManager.Get("ReadyToStartTickBox"),
                 UserData = "clientready"
             };
@@ -1511,7 +1541,7 @@ namespace Barotrauma
                     {
                         UserData = selectedClient
                     };
-                    banButton.OnClicked += BanPlayer;
+                    banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
                     banButton.OnClicked += ClosePlayerFrame;
 
                     var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
@@ -1519,30 +1549,32 @@ namespace Barotrauma
                     {
                         UserData = selectedClient
                     };
-                    rangebanButton.OnClicked += BanPlayerRange;
+                    rangebanButton.OnClicked = (bt, userdata) => { BanPlayerRange(selectedClient); return true; };
                     rangebanButton.OnClicked += ClosePlayerFrame;
                 }
 
 
-                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && selectedClient != null)
+                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && 
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("VoteToKick"))
                     {
                         Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
-                        OnClicked = GameMain.Client.VoteForKick,
+                        OnClicked = (btn, userdata) => { GameMain.Client.VoteForKick(selectedClient); btn.Enabled = false; return true; },
                         UserData = selectedClient
                     };
                 }
 
-                if (GameMain.Client.HasPermission(ClientPermissions.Kick))
+                if (GameMain.Client.HasPermission(ClientPermissions.Kick) &&
+                    selectedClient != null && selectedClient.AllowKicking)
                 {
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("Kick"))
                     {
                         UserData = selectedClient
                     };
-                    kickButton.OnClicked = KickPlayer;
+                    kickButton.OnClicked = (bt, userdata) => { KickPlayer(selectedClient); return true; };
                     kickButton.OnClicked += ClosePlayerFrame;
                 }
 
@@ -1571,28 +1603,22 @@ namespace Barotrauma
             return true;
         }
 
-        public bool KickPlayer(GUIButton button, object userData)
+        public void KickPlayer(Client client)
         {
-            Client client = userData as Client;
-            if (client == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(client.Name, false);            
-            return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, false);    
         }
 
-        public bool BanPlayer(GUIButton button, object userData)
+        public void BanPlayer(Client client)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true);
-            return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: false);
         }
 
-        public bool BanPlayerRange(GUIButton button, object userData)
+        public void BanPlayerRange(Client client)
         {
-            Client client = userData as Client;
-            if (userData == null || GameMain.NetworkMember == null) return false;
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
-            return false;
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: true);
         }
         
         public override void AddToGUIUpdateList()
@@ -1986,16 +2012,17 @@ namespace Barotrauma
                 string errorMsg = "";
                 if (sub == null)
                 {
-                    errorMsg = TextManager.Get("SubNotFoundError").Replace("[subname]", subName) + " ";
+                    errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
                 }
                 else if (sub.MD5Hash.Hash == null)
                 {
-                    errorMsg = TextManager.Get("SubLoadError").Replace("[subname]", subName) + " ";
+                    errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
                     if (matchingListSub != null) matchingListSub.GetChild<GUITextBox>().TextColor = Color.Red;
                 }
                 else
                 {
-                    errorMsg = TextManager.Get("SubDoesntMatchError").Replace("[subname]", sub.Name).Replace("[myhash]", sub.MD5Hash.ShortHash).Replace("[serverhash]", Md5Hash.GetShortHash(md5Hash)) + " ";
+                    errorMsg = TextManager.GetWithVariables("SubDoesntMatchError", new string[3] { "[subname]" , "[myhash]", "[serverhash]" }, 
+                        new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
                 }
 
                 errorMsg += TextManager.Get("DownloadSubQuestion");

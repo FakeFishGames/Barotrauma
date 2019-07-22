@@ -277,7 +277,7 @@ namespace Barotrauma
                     Stretch = true
                 };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
-                    TextManager.Get("LevelEditorLevelObjCommonness").Replace("[leveltype]", selectedParams.Name), textAlignment: Alignment.Center);
+                    TextManager.GetWithVariable("LevelEditorLevelObjCommonness", "[leveltype]", selectedParams.Name), textAlignment: Alignment.Center);
                 new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
                 {
                     MinValueFloat = 0,

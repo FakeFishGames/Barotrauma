@@ -126,7 +126,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light">
+  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -143,7 +143,7 @@
     </ItemContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,175" maxsize="480,210" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver,Wire" type="Equipped" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
       <input name="activate">
         <StatusEffect type="OnUse" target="Contained">
           <Use />
@@ -151,7 +151,7 @@
       </input>
     </ConnectionPanel>
   </Item>
-  <Item name="Nitroglycerin" identifier="nitroglycerin" category="Material" description="A highly unstable liquid that may explode when subjected to heat or physical shock." spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="4" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <Item name="Nitroglycerin" identifier="nitroglycerin" category="Material" description="A highly unstable liquid that may explode when subjected to heat or physical shock." spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="6" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="653,769,37,62" origin="0.5,0.5" />
     <Sprite texture="GrenadesExplosiveKnife.png" sourcerect="171,0,77,152" depth="0.6" origin="0.5,0.5" />
     <Body width="35" height="60" density="20" />
@@ -161,7 +161,7 @@
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" selectionmode="All" range="8000" />
         <sound file="Content/Items/Weapons/ExplosionDebris3.ogg" selectionmode="All" range="8000" />
-        <Explosion range="600.0" structuredamage="400" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
+        <Explosion range="600.0" structuredamage="100" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
           <Affliction identifier="burn" amount="100" />
           <Affliction identifier="internaldamage" amount="200" />
           <Affliction identifier="stun" amount="5" />

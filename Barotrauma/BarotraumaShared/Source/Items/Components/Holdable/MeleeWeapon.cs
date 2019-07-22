@@ -53,12 +53,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        /// <summary>
-        /// How useful the weapon is in combat? Used by AI to sort the used weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
-        /// </summary>
-        [Serialize(0f, false)]
-        public float CombatPriority { get; private set; }
-
         public MeleeWeapon(Item item, XElement element)
             : base(item, element)
         {
@@ -184,29 +178,35 @@ namespace Barotrauma.Items.Components
 
         private void SetUser(Character character)
         {
-            if (user == character) return;
-            if (user != null && user.Removed) user = null;
+            if (user == character) { return; }
+            if (user != null && user.Removed) { user = null; }
+
+            user = character;
+
+            if (item.body?.FarseerBody == null || item.Removed ||
+                !GameMain.World.BodyList.Contains(item.body.FarseerBody))
+            {
+                return;
+            }
 
             if (user != null)
             {
                 foreach (Limb limb in user.AnimController.Limbs)
                 {
-                    if (limb.body.FarseerBody != null)
+                    if (limb.body.FarseerBody != null && GameMain.World.BodyList.Contains(limb.body.FarseerBody))
                     {
-                        if (GameMain.World.BodyList.Contains(limb.body.FarseerBody))
-                        {
-                            item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
-                        }
+                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);                        
                     }
                 }
             }
 
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
+                if (limb.body.FarseerBody != null && GameMain.World.BodyList.Contains(limb.body.FarseerBody))
+                {
+                    item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
+                }
             }
-
-            user = character;
         }
 
         private void RestoreCollision()

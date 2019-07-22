@@ -123,7 +123,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Mission.Name, font: GUI.LargeFont);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), TextManager.Get("MissionReward").Replace("[reward]", Mission.Reward.ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), TextManager.GetWithVariable("MissionReward", "[reward]", Mission.Reward.ToString()));
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), Mission.Description, wrap: true);
         }
 

@@ -174,6 +174,12 @@ namespace Barotrauma.Items.Components
 
         private void Launch(Vector2 impulse)
         {
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
+                item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
+            }
+
             item.Drop(null);
 
             item.body.Enabled = true;            
@@ -269,7 +275,14 @@ namespace Barotrauma.Items.Components
             //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
             if (!hitSomething)
             {
-                Entity.Spawner.AddToRemoveQueue(item);
+                if (Entity.Spawner == null)
+                {
+                    item.Remove();
+                }
+                else
+                {
+                    Entity.Spawner.AddToRemoveQueue(item);
+                }
             }
         }
         

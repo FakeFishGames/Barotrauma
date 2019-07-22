@@ -41,8 +41,9 @@ namespace Barotrauma.Items.Components
             }
 
             Wire equippedWire = null;
-
-            if (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen)
+            
+            bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring;
+            if (allowRewiring && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
             {
                 //if the Character using the panel has a wire item equipped
                 //and the wire hasn't been connected yet, draw it on the panel
@@ -278,7 +279,8 @@ namespace Barotrauma.Items.Components
                 {
                     ConnectionPanel.HighlightedWire = wire;
 
-                    if (!wire.Locked && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
+                    bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring;
+                    if (allowRewiring && !wire.Locked && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
                         if (PlayerInput.LeftButtonHeld()) draggingConnected = wire;
