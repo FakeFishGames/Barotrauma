@@ -90,17 +90,24 @@
       <RequiredSkill identifier="medical" level="17"/>
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
-      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="60.0">
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="huskinfection" amount="0.5" />
-        <Affliction identifier="internaldamage" amount="0.55" />
+        <Conditional HuskInfectionState="lt 100.0" />
+        <ReduceAffliction identifier="huskinfection" amount="0.5"/>
         <Affliction identifier="huskinfectionresistance" amount="1.0"/>
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="60.0">
+        <Affliction identifier="internaldamage" amount="0.55" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="60.0">
+        <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
+        <Conditional HuskInfectionState="lt 100.0" />
+        <ReduceAffliction identifier="huskinfection" amount="0.25"/>
+        <Affliction identifier="huskinfectionresistance" amount="0.5"/>
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Limb" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="huskinfection" amount="0.25" />
         <Affliction identifier="internaldamage" amount="1.0" />
-        <Affliction identifier="huskinfectionresistance" amount="0.5"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
