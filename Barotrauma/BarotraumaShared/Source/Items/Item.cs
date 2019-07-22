@@ -1381,7 +1381,7 @@ namespace Barotrauma
             return connectedComponents;
         }
         
-        private static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
+        public static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
         {
             new Pair<string, string>("power_in", "power_out"),
             new Pair<string, string>("signal_in1", "signal_out1"),
