@@ -260,20 +260,19 @@ namespace Barotrauma.Lights
                         (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
                     spriteBatch.End();
                 }
-                else
+
+                visibleHulls = GetVisibleHulls(cam);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
+                foreach (Rectangle drawRect in visibleHulls.Values)
                 {
-                    visibleHulls = GetVisibleHulls(cam);
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
-                    foreach (Rectangle drawRect in visibleHulls.Values)
-                    {
-                        //TODO: draw some sort of smoothed rectangle
-                        GUI.DrawRectangle(spriteBatch,
-                            new Vector2(drawRect.X, -drawRect.Y),
-                            new Vector2(drawRect.Width, drawRect.Height),
-                            Color.Black, true);
-                    }                
-                    spriteBatch.End();
-                }
+                    //TODO: draw some sort of smoothed rectangle
+                    GUI.DrawRectangle(spriteBatch,
+                        new Vector2(drawRect.X, -drawRect.Y),
+                        new Vector2(drawRect.Width, drawRect.Height),
+                        Color.Black, true);
+                }                
+                spriteBatch.End();
+                
 
                 graphics.BlendState = BlendState.Additive;
             }
