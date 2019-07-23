@@ -247,6 +247,7 @@ namespace Barotrauma
         public void CloseServer()
         {
             Server?.Disconnect();
+            ShouldRun = false;
             Server = null;
         }
 
@@ -285,8 +286,9 @@ namespace Barotrauma
                 while (Timing.Accumulator >= Timing.Step)
                 {
                     DebugConsole.Update();
-                    if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
+                    Screen.Selected?.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);
+                    if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 
