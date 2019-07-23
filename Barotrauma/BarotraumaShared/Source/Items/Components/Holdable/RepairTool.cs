@@ -14,9 +14,9 @@ namespace Barotrauma.Items.Components
 {
     partial class RepairTool : ItemComponent
     {
-        enum UseEnvironment
+        public enum UseEnvironment
         {
-            Air, Water, Both
+            Air, Water, Both, None
         };
 
         private readonly List<string> fixableEntities;
@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
         private Vector2 debugRayStartPos, debugRayEndPos;
 
         [Serialize("Both", false)]
-        private UseEnvironment UsableIn
+        public UseEnvironment UsableIn
         {
             get; set;
         }
@@ -118,6 +118,12 @@ namespace Barotrauma.Items.Components
             float degreeOfSuccess = DegreeOfSuccess(character);
 
             if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
+            {
+                ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
+                return false;
+            }
+
+            if (UsableIn == UseEnvironment.None)
             {
                 ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
                 return false;
@@ -360,8 +366,7 @@ namespace Barotrauma.Items.Components
         private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            Gap leak = objective.OperateTarget as Gap;
-            if (leak == null) return true;
+            if (!(objective.OperateTarget is Gap leak)) return true;
 
             Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
             float dist = fromItemToLeak.Length();
