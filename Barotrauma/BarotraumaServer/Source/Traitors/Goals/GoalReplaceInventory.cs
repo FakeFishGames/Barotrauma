@@ -11,12 +11,18 @@ namespace Barotrauma
             private readonly HashSet<string> sabotageContainerIds = new HashSet<string>();
             private readonly HashSet<string> validReplacementIds = new HashSet<string>();
 
+            private readonly float replaceAmount;
+
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
+
+            public override IEnumerable<string> StatusTextKeys => base.StatusTextKeys.Concat(new string[] { "[percentage]" });
+            public override IEnumerable<string> StatusTextValues => base.StatusTextValues.Concat(new string[] { string.Format("{0:0}", replaceAmount * 100.0f) });
 
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
+                int totalAmount = 0, replacedAmount = 0;
                 foreach (var item in Item.ItemList)
                 {
                     if (item == null || item.Prefab == null)
@@ -33,19 +39,15 @@ namespace Barotrauma
                     }
                     if (sabotageContainerIds.Contains(item.prefab.Identifier))
                     {
-                        if (item.OwnInventory.Items.Length <= 0) {
-                            isCompleted = false;
-                            return;
+                        ++totalAmount;
+                        if (item.OwnInventory.Items.Length <= 0 || item.OwnInventory.Items.All(containedItem => !validReplacementIds.Contains(containedItem.Prefab.Identifier)))
+                        {
+                            continue;
                         }
-                        foreach (var containedItem in item.OwnInventory.Items) {
-                            if (!validReplacementIds.Contains(containedItem.ContainerIdentifier)) {
-                                isCompleted = false;
-                                return;
-                            }
-                        }
+                        ++replacedAmount;
                     }
                 }
-                isCompleted = true;
+                isCompleted = replacedAmount >= (int)(replaceAmount * totalAmount + 0.5f);
             }
 
             public override bool Start(GameServer server, Traitor traitor)
@@ -61,10 +63,11 @@ namespace Barotrauma
                 return true;
             }
 
-            public GoalReplaceInventory(string[] containerIds, string[] replacementIds)
+            public GoalReplaceInventory(string[] containerIds, string[] replacementIds, float replaceAmount)
             {
                 sabotageContainerIds.UnionWith(containerIds);
                 validReplacementIds.UnionWith(replacementIds);
+                this.replaceAmount = replaceAmount;
             }
         }
     }

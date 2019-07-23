@@ -16,7 +16,7 @@ namespace Barotrauma
             public override IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.Get(IsCompleted ? "done" : "pending") };
 
             public override IEnumerable<string> InfoTextKeys => goal.InfoTextKeys.Concat(new string[] { "[duration]" });
-            public override IEnumerable<string> InfoTextValues => goal.InfoTextValues.Concat(new string[] { string.Format("{0:f}", requiredDuration) });
+            public override IEnumerable<string> InfoTextValues => goal.InfoTextValues.Concat(new string[] { string.Format("{0:0}", requiredDuration) });
 
             public override IEnumerable<string> CompletedTextKeys => goal.CompletedTextKeys;
             public override IEnumerable<string> CompletedTextValues => goal.CompletedTextValues;

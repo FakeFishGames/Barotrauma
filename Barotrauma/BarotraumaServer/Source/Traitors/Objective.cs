@@ -18,7 +18,7 @@ namespace Barotrauma
             public bool IsPartiallyCompleted => completedGoals.Count > 0;
             public bool IsStarted { get; private set; } = false;
 
-            public string InfoText { get; private set; } // TODO
+            public string InfoText { get; private set; }
 
             public virtual string GoalInfoFormatId { get; set; } = "TraitorObjectiveGoalInfoFormat";
             public string GoalInfos => string.Join("", allGoals.ConvertAll(goal => TextManager.GetWithVariables(GoalInfoFormatId, new string[] {

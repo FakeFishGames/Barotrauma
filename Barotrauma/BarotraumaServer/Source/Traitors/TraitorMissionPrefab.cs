@@ -88,7 +88,7 @@ namespace Barotrauma {
                         goal = new Traitor.GoalFindItem(Config.GetAttributeString("identifier", null), Config.GetAttributeStringArray("allowedContainers", new string[] { "steelcabinet", "mediumsteelcabinet", "suppliescabinet" }));
                         break;
                     case "replaceinventory":
-                        goal = new Traitor.GoalReplaceInventory(Config.GetAttributeStringArray("containers", new string[] { }), Config.GetAttributeStringArray("replacements", new string[] { }));
+                        goal = new Traitor.GoalReplaceInventory(Config.GetAttributeStringArray("containers", new string[] { }), Config.GetAttributeStringArray("replacements", new string[] { }), Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
                         break;
                 }
                 if (goal == null)
