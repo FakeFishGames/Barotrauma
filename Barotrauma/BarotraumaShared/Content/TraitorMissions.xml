@@ -19,57 +19,73 @@
    </Objective>
  </TraitorMission>-->
 
-  <TraitorMission identifier="example2">
+  <TraitorMission identifier="MeltdownMission">
     <StartInfoText id="traitormissionstartmessage"/>
     <SuccessInfoText id="traitormissionsuccessmessage"/>
     <FailureInfoText id="traitormissionfailuremessage"/>
 
-    <!--Objective 1: Find next objective-->
     <Objective>
       <InfoText id="traitorobjectivestartmessage"/>
       <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
-      <!--"Find item" goal: Find next objective by interacting with the given item.-->
-      <Goal type="finditem" identifier="wrench"> <!--If target is not defined, fallback to a random item. Item and location are communicated in this goal's info text, e.g "Find your next objective in a [targetitem.name] in [targetitem.hull].-->
+      <Goal type="finditem" identifier="wrench"> 
         <InfoText id="traitorgoalfinditeminfo" />
-        <InfoTextFailure id="traitorgoalfinditemfailure"/> --><!--Goal is failed if someone interacts with the item first.-->
+        <InfoTextFailure id="traitorgoalfinditemfailure"/>
       </Goal>
     </Objective>
 
-    <Objective>
-      <Goal type="floodsub" percentage="2">
-        <InfoText id="traitorgoalfloodpercentofsub" />
-      </Goal>
-    </Objective>
-
-    <!--Objective 2: Assassinate an engineer, sabotage ballast pumps-->
     <Objective>
       <InfoText id="traitorobjectivestartmessage"/>
       <InfoTextFailure id="traitorobjectivefailure"/>
-
-      <!--"Kill target" goal. -->
       <Goal type="killtarget" target="engineer">
         <InfoText id="traitorgoalkilltargetinfo" />
         <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
       </Goal>
-
-      <!--"Sabotage target" goal. Sabotage item by equipping a repair tool and interacting with the item. -->
-      <Goal type="sabotage" targetid="pump" tag="ballast" numberoftargets="2" targetall="false" threshold="30">
-        --><!--Sometimes we want to find the item using both the id and tag. Separate parameters for the number of instances of the given item we want to sabotage and if we want to target all of them. Also parameters for how long they have to be sabotaged and a condition threshold for what counts as sabotaged.-->
+      <!--<Goal type="sabotage" targetid="pump" tag="ballast" numberoftargets="2" targetall="false" threshold="30">
         <InfoText id="traitorgoalsabotageinfo" />
         <Modifier type="duration" duration="30" cumulative="true" />
+      </Goal>-->
+    </Objective>
+
+    <Objective>
+      <InfoText id="traitorobjectivestart"/>
+      <!--<Goal type="causemeltdown" timelimit="90">
+        <InfoText id="traitorgoalcausemeltdowninfo" />
+        <InfoTextFailure id="traitorgoaltimelimitfailure"/>
+      </Goal>-->
+    </Objective>
+  </TraitorMission>
+
+  <TraitorMission identifier="FloodSubMission">
+    <StartInfoText id="traitormissionstartmessage"/>
+    <SuccessInfoText id="traitormissionsuccessmessage"/>
+    <FailureInfoText id="traitormissionfailuremessage"/>
+
+    <Objective>
+      <InfoText id="traitorobjectivestartmessage"/>
+      <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
+      <Goal type="finditem" identifier="wrench">
+        <InfoText id="traitorgoalfinditeminfo" />
+        <InfoTextFailure id="traitorgoalfinditemfailure"/>
       </Goal>
     </Objective>
 
-    <!--Objective 3: Cause a reactor meltdown in 90 seconds-->
+    <Objective>
+      <InfoText id="traitorobjectivestartmessage"/>
+      <InfoTextFailure id="traitorobjectivefailure"/>
+      <Goal type="replaceinventory" containers="divingmask,divingsuit" replacements="weldingfuel">
+        <InfoText id="traitorgoaltamperoxygeninfo" />
+        <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
+      </Goal>
+    </Objective>
+
     <Objective>
       <InfoText id="traitorobjectivestart"/>
-
-      <!--"Cause meltdown" goal. -->
-      <Goal type="causemeltdown" timelimit="90"> <!--90 second time limit. TODO: How to handle time limit failure message?-->
+      <Goal type="floodsub" percentage="50">
         <InfoText id="traitorgoalcausemeltdowninfo" />
         <InfoTextFailure id="traitorgoaltimelimitfailure"/>
       </Goal>
     </Objective>
   </TraitorMission>
+
 
 </TraitorMissions>
