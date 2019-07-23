@@ -407,7 +407,7 @@ namespace Barotrauma
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
             //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
-            afflictions = new List<Affliction>(afflictions);
+            afflictions = new List<Affliction>(afflictions.Where(a => Rand.Range(0.0f, 1.0f) <= a.ApplyProbability));
             for (int i = 0; i < afflictions.Count; i++)
             {
                 foreach (DamageModifier damageModifier in damageModifiers)

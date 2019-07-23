@@ -19,6 +19,11 @@ namespace Barotrauma
         public Affliction MultiplierSource;
 
         /// <summary>
+        /// Probability for the affliction to be applied. Used by attacks.
+        /// </summary>
+        public float ApplyProbability;
+
+        /// <summary>
         /// Which character gave this affliction
         /// </summary>
         public Character Source;

@@ -56,7 +56,7 @@
         <ReduceAffliction identifier="internaldamage" strength="5" />
       </StatusEffect>
       <Affliction identifier="bleeding" strength="10" />
-      <Affliction identifier="huskinfection" strength="5" />
+      <Affliction identifier="huskinfection" strength="5" probability="0.5"/>
       <Affliction identifier="stun" strength="0.5" />
     </attack>
   </limb>
