@@ -299,7 +299,7 @@ namespace Barotrauma.Particles
                     bool gapFound = false;
                     foreach (Gap gap in hullGaps)
                     {
-                        if (gap.Open <= 0.0f || gap.IsHorizontal != (collisionNormal.X != 0.0f)) continue;
+                        if (gap.Open <= 0.9f || gap.IsHorizontal != (collisionNormal.X != 0.0f)) continue;
 
                         if (gap.IsHorizontal)
                         {
