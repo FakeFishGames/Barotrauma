@@ -286,7 +286,7 @@ namespace Barotrauma
             var waistJoint = GetJointBetweenLimbs(LimbType.Waist, upperLegType);
             Vector2 localAnchorWaist = Vector2.Zero;
             Vector2 localAnchorKnee = Vector2.Zero;
-            if (shoulder != null)
+            if (waistJoint != null)
             {
                 localAnchorWaist = waistJoint.LimbA.type == upperLegType ? waistJoint.LocalAnchorA : waistJoint.LocalAnchorB;
             }
