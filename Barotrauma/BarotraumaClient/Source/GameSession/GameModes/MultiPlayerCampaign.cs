@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
+        public bool SuppressStateSending = false;
+
         private UInt16 startWatchmanID, endWatchmanID;
 
         public static GUIComponent StartCampaignSetup( IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles)
@@ -212,6 +214,8 @@ namespace Barotrauma
             
             if (NetIdUtils.IdMoreRecent(updateID, campaign.lastUpdateID))
             {
+                campaign.SuppressStateSending = true;
+
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                 campaign.Map.SelectMission(selectedMissionIndex);
@@ -235,6 +239,8 @@ namespace Barotrauma
                 }
 
                 campaign.lastUpdateID = updateID;
+
+                campaign.SuppressStateSending = false;
             }
         }
 
