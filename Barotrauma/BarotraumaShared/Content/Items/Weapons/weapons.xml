@@ -282,6 +282,8 @@
       <StatusEffect type="OnUse" target="Character">
         <Affliction identifier="burn" amount="0.1" />
       </StatusEffect>
+      <!-- consume oxygen from the hull -->
+      <StatusEffect type="OnUse" target="Hull" Oxygen="-10000"/>
       <!-- weapons skill 20 required to use the item -->
       <RequiredSkill identifier="weapons" level="20" />
       <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
