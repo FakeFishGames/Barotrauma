@@ -117,6 +117,14 @@ namespace Barotrauma.Networking
                 else
                 {
                     RespawnShuttle.SetPosition(spawnPos);
+                    RespawnShuttle.Velocity = Vector2.Zero;
+                    if (shuttleSteering != null)
+                    {
+                        shuttleSteering.AutoPilot = true;
+                        shuttleSteering.MaintainPos = true;
+                        shuttleSteering.PosToMaintain = RespawnShuttle.WorldPosition;
+                        shuttleSteering.UnsentChanges = true;
+                    }
                 }
             }
             else
