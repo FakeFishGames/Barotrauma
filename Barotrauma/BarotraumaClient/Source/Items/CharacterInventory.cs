@@ -468,6 +468,24 @@ namespace Barotrauma
                 }
             }
 
+            if (doubleClickedItem != null)
+            {
+                QuickUseItem(doubleClickedItem, true, true, true);
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                var item = Items[i];
+                if (item != null)
+                {
+                    var slot = slots[i];
+                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any))
+                    {
+                        HandleButtonEquipStates(item, slot, deltaTime);
+                    }
+                }
+            }
+            
             List<SlotReference> hideSubInventories = new List<SlotReference>();
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
@@ -477,14 +495,6 @@ namespace Barotrauma
                 }
 
                 if (!highlightedSubInventorySlot.Inventory.IsInventoryHoverAvailable(character)) continue;
-
-                /*if (highlightedSubInventorySlot.Inventory.Owner == draggingItem)
-                {
-                    highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
-                    highlightedSubInventorySlot.Inventory.OpenState = 0.0f;
-                    hideSubInventories.Add(highlightedSubInventorySlot);
-                    continue;
-                }*/
 
                 Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
                 if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)) || highlightedSubInventorySlot.Inventory?.Owner == draggingItem)
@@ -497,11 +507,6 @@ namespace Barotrauma
                 }
             }
 
-            if (doubleClickedItem != null)
-            {
-                QuickUseItem(doubleClickedItem, true, true, true);
-            }
-            
             //activate the subinventory of the currently selected slot
             if (selectedSlot?.ParentInventory == this)
             {
@@ -530,20 +535,14 @@ namespace Barotrauma
             {
                 var item = Items[i];
                 if (item != null)
-                {
-                    var slot = slots[i];
-                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any))
-                    {
-                        HandleButtonEquipStates(item, slot, deltaTime);
-                    }
-
+                {  
                     if (HideSlot(i) || CharacterHealth.OpenHealthWindow != null) continue;
                     if (character.HasEquippedItem(item)) // Keep a subinventory display open permanently when the container is equipped
                     {
                         var itemContainer = item.GetComponent<ItemContainer>();
                         if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                         {
-                            ShowSubInventory(new SlotReference(this, slot, i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
+                            ShowSubInventory(new SlotReference(this, slots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
                         }
                     }
                 } 

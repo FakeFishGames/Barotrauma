@@ -474,7 +474,7 @@ namespace Barotrauma
                     {
                         subRect.X = (int)(subInventory.slots[i].Rect.Right + spacing.X);
                     }
-                }        
+                }
                 slots[slotIndex].State = GUIComponent.ComponentState.Hover;
             }
             subInventory.isSubInventory = true;    
@@ -708,7 +708,7 @@ namespace Barotrauma
                     hoverArea.Height -= over;
                 }
             }
-            hoverArea.Inflate(-10, -10);
+            hoverArea.Inflate(10, 10);
             return hoverArea;
         }
 
