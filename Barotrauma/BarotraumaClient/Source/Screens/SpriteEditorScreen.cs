@@ -327,11 +327,12 @@ namespace Barotrauma
                     spriteFolder = Path.GetDirectoryName(parsedPath);
                 }
                 // Uncomment if we do multiple passes -> there can be duplicates
-                string identifier = Sprite.GetID(element);
-                if (loadedSprites.None(s => s.ID == identifier))
-                {
-                    loadedSprites.Add(new Sprite(element, spriteFolder));
-                }
+                //string identifier = Sprite.GetID(element);
+                //if (loadedSprites.None(s => s.ID == identifier))
+                //{
+                //    loadedSprites.Add(new Sprite(element, spriteFolder));
+                //}
+                loadedSprites.Add(new Sprite(element, spriteFolder));
             }
         }
 
