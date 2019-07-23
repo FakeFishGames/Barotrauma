@@ -467,24 +467,6 @@ namespace Barotrauma
                     }
                 }
             }
-
-            if (doubleClickedItem != null)
-            {
-                QuickUseItem(doubleClickedItem, true, true, true);
-            }
-
-            for (int i = 0; i < capacity; i++)
-            {
-                var item = Items[i];
-                if (item != null)
-                {
-                    var slot = slots[i];
-                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any))
-                    {
-                        HandleButtonEquipStates(item, slot, deltaTime);
-                    }
-                }
-            }
             
             List<SlotReference> hideSubInventories = new List<SlotReference>();
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
@@ -497,7 +479,7 @@ namespace Barotrauma
                 if (!highlightedSubInventorySlot.Inventory.IsInventoryHoverAvailable(character)) continue;
 
                 Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
-                if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)) || highlightedSubInventorySlot.Inventory?.Owner == draggingItem)
+                if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))
                 {
                     hideSubInventories.Add(highlightedSubInventorySlot);
                 }
@@ -546,7 +528,25 @@ namespace Barotrauma
                         }
                     }
                 } 
-            }            
+            }
+
+            if (doubleClickedItem != null)
+            {
+                QuickUseItem(doubleClickedItem, true, true, true);
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                var item = Items[i];
+                if (item != null)
+                {
+                    var slot = slots[i];
+                    if (item.AllowedSlots.Any(a => a != InvSlotType.Any))
+                    {
+                        HandleButtonEquipStates(item, slot, deltaTime);
+                    }
+                }
+            }
 
             //cancel dragging if too far away from the container of the dragged item
             if (draggingItem != null)
