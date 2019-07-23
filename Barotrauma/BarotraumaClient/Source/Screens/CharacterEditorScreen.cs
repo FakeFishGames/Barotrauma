@@ -2788,6 +2788,7 @@ namespace Barotrauma
                 if (editRagdoll || !editLimbs && !editJoints)
                 {
                     RagdollParams.AddToEditor(ParamsEditor.Instance, alsoChildren: false);
+                    RagdollParams.ColliderParams.ForEach(c => c.AddToEditor(ParamsEditor.Instance));
                 }
                 if (editJoints)
                 {
