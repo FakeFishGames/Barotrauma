@@ -74,6 +74,7 @@ namespace Barotrauma.Networking
 
         //has the client been given a character to control this round
         public bool HasSpawned;
+        public bool SpawnAsTraitor;
 
         public byte ID
         {
@@ -979,9 +980,7 @@ namespace Barotrauma.Networking
 
             bool disguisesAllowed   = inc.ReadBoolean();
             bool rewiringAllowed    = inc.ReadBoolean();
-            bool isTraitor          = inc.ReadBoolean();
-            // TODO(xxx): 
-            // string traitorTargetName = isTraitor ? inc.ReadString() : null;
+            SpawnAsTraitor          = inc.ReadBoolean();
 
             bool allowRagdollButton = inc.ReadBoolean();
 

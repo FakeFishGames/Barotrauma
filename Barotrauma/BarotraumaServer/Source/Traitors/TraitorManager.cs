@@ -54,7 +54,12 @@ namespace Barotrauma
         public string CodeWords => Mission?.CodeWords;
         public string CodeResponse => Mission?.CodeResponse;
 
-        public Dictionary<string, Traitor>.ValueCollection Traitors => Mission?.Traitors?.Values;
+        public Dictionary<string, Traitor>.ValueCollection Traitors => Mission.Traitors.Values;
+
+        public bool IsTraitor(Character character)
+        {
+            return Traitors.Any(traitor => traitor.Character == character);
+        }
 
         public TraitorManager(GameServer server, int traitorCount)
         {

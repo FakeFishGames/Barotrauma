@@ -36,24 +36,19 @@ namespace Barotrauma
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
 
-                foreach (Client client in server.ConnectedClients)
+                foreach(var character in Character.CharacterList)
                 {
-                    if (client.Character != null)
-                    {
-                        characters.Add(client.Character);
-#if !SERVER_IS_TRAITOR
-                        if (server.Character == null)
-#endif
-                        {
-                            traitorCandidates.Add(client.Character);
-                        }
-                    }
+                    characters.Add(character);
                 }
-
+#if SERVER_IS_TRAITOR
                 if (server.Character != null)
                 {
-                    characters.Add(server.Character); //Add host character
                     traitorCandidates.Add(server.Character);
+                }
+                else
+#endif
+                {
+                    traitorCandidates.AddRange(server.ConnectedClients.ConvertAll(client => client.Character));
                 }
 #if !ALLOW_SOLO_TRAITOR
                 if (characters.Count < 2)
@@ -107,14 +102,14 @@ namespace Barotrauma
             public delegate bool CharacterFilter(Character character);
             public Character FindKillTarget(GameServer server, Character traitor, CharacterFilter filter)
             {
-                int connectedClientsCount = server.ConnectedClients.Count;
-                int targetIndex = Rand.Int(connectedClientsCount);
-                for (int i = 0; i < connectedClientsCount; ++i)
+                int charactersCount = Character.CharacterList.Count;
+                int targetIndex = Rand.Int(charactersCount);
+                for (int i = 0; i < charactersCount; ++i)
                 {
-                    var client = server.ConnectedClients[(targetIndex + i) % connectedClientsCount];
-                    if (client.Character != null && client.Character != traitor && (filter == null || filter(client.Character)))
+                    var character = Character.CharacterList[(targetIndex + i) % charactersCount];
+                    if (character != null && character != traitor && (filter == null || filter(character)))
                     {
-                        return client.Character;
+                        return character;
                     }
                 }
 #if ALLOW_SOLO_TRAITOR

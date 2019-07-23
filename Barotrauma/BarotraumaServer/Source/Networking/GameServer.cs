@@ -1884,6 +1884,7 @@ namespace Barotrauma.Networking
                 int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
                 int traitorCount = Rand.Range(1, max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
+
                 /* TODO(xxx): Not yet accessible since TraitorManager.Mission.Start is still pending...
                 if (TraitorManager.Traitors != null)
                 {
@@ -1967,7 +1968,6 @@ namespace Barotrauma.Networking
             if (traitor != null)
             {
                 msg.Write(true);
-                // TODO(xxx): traitor.CurrentTask.WriteTask(msg);
             }
             else
             {

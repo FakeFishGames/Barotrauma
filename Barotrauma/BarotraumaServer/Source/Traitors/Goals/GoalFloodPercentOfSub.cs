@@ -19,13 +19,17 @@ namespace Barotrauma
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
-
-                var validHullsCount = Hull.hullList.Count(hull => hull.Submarine != null && !hull.Submarine.IsOutpost);
+                var validHullsCount = 0;
                 var floodingAmount = 0.0f;
                 foreach (Hull hull in Hull.hullList)
                 {
                     if (hull.Submarine == null || hull.Submarine.IsOutpost) { continue; }
-                    floodingAmount += hull.WaterVolume / hull.Volume / validHullsCount;
+                    ++validHullsCount;
+                    floodingAmount += hull.WaterVolume / hull.Volume;
+                }
+                if (validHullsCount > 0)
+                {
+                    floodingAmount /= validHullsCount;
                 }
                 isCompleted = floodingAmount >= minimumFloodingAmount;
             }
