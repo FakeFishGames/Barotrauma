@@ -36,6 +36,8 @@ namespace Barotrauma
         private List<ScriptedEventSet> selectedEventSets;
 
         private EventManagerSettings settings;
+
+        private readonly bool isClient;
         
         public float CurrentIntensity
         {
@@ -51,13 +53,15 @@ namespace Barotrauma
         {
             events = new List<ScriptedEvent>();
             selectedEventSets = new List<ScriptedEventSet>();
+
+            isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
         }
 
         public bool Enabled = true;
 
         public void StartRound(Level level)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
+            if (isClient) { return; }
 
             var suitableSettings = EventManagerSettings.List.FindAll(s =>
                 level.Difficulty >= s.MinLevelDifficulty &&
@@ -193,13 +197,13 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            if (!Enabled) return;
+            if (!Enabled) { return; }
 
             //clients only calculate the intensity but don't create any events
             //(the intensity is used for controlling the background music)
             CalculateCurrentIntensity(deltaTime);
-            
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
+
+            if (isClient) { return; }
 
             roundDuration += deltaTime;
 
