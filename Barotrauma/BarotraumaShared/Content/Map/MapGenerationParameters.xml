@@ -26,22 +26,22 @@
   ConnectionIndicatorDisplacementMultiplier="0.1"
   LocationIconSize="20">
   <ConnectionSprite texture="Content/Map/MapLine.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_01.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_02.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_03.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_04.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_05.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_06.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_07.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_08.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_09.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_10.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_11.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_12.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_13.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_14.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_15.png"/>
-  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_16.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="0,0,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="512,0,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1024,0,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1536,0,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="0,512,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="512,512,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1024,512,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1536,512,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="0,1024,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="512,1024,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1024,1024,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1536,1024,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="0,1536,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="512,1536,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1024,1536,512,512"/>
+  <BackgroundTile texture="Content/Map/MapPieces/MapPieces.png" sourcerect="1536,1536,512,512"/>
   <MapCircle texture="Content/Map/MapCircle.png" origin="0.5,0.5" premultiplyalpha="false"/>
   <DecorativeMapSprite texture="Content/Map/MapHUD.png" sourcerect="0,0,2048,640" columns="6" rows="5" premultiplyalpha="false"/>
   <DecorativeGraphSprite texture="Content/Map/MapHUD.png" sourcerect="0,636,1022,886" columns="5" rows="4" premultiplyalpha="false"/>
