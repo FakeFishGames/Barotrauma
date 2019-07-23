@@ -36,7 +36,7 @@ namespace Barotrauma
                 List<Character> characters = new List<Character>(); //ANYONE can be a target.
                 List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
 
-                foreach(var character in Character.CharacterList)
+                foreach (var character in Character.CharacterList)
                 {
                     characters.Add(character);
                 }
@@ -68,7 +68,12 @@ namespace Barotrauma
 
                     var traitor = new Traitor(this, role, traitorCharacter);
                     Traitors.Add(role, traitor);
+                }
+                Update(0.0f);
+                foreach (var traitor in Traitors.Values)
+                {
                     traitor.Greet(server, CodeWords, CodeResponse);
+
                 }
             }
 
