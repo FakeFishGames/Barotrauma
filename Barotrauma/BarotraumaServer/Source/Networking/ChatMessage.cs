@@ -83,8 +83,9 @@ namespace Barotrauma.Networking
 
             if (similarity + c.ChatSpamSpeed > 5.0f && !isOwner)
             {
-                c.ChatSpamCount++;
+                GameMain.Server.KarmaManager.OnSpamFilterTriggered(c);
 
+                c.ChatSpamCount++;
                 if (c.ChatSpamCount > 3)
                 {
                     //kick for spamming too much

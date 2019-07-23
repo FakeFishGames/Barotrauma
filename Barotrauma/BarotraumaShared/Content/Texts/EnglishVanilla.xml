@@ -293,8 +293,6 @@
   <setlegacybindingstooltip>Set key bindings to ones that were used in the old pre-alpha versions of Barotrauma (E to select and deselect items, left mouse button to use item the in hand).</setlegacybindingstooltip>
 
   <!-- Server settings -->
-  <serversettingsroundstab>Rounds</serversettingsroundstab>
-  <serversettingsservertab>Server</serversettingsservertab>
   <serversettingsbanlisttab>Banlist</serversettingsbanlisttab>
   <serversettingswhitelisttab>Whitelist</serversettingswhitelisttab>
   <serversettingssubselection>Submarine selection</serversettingssubselection>
@@ -725,6 +723,7 @@
   <clientpermission.manageround>Manage round</clientpermission.manageround>
   <clientpermission.managesettings>Manage settings</clientpermission.managesettings>
   <clientpermission.managepermissions>Manage permissions</clientpermission.managepermissions>
+  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Mission types -->
   <missiontype.none>None</missiontype.none>
@@ -2490,7 +2489,6 @@
   <resetkarma>Reset Karma</resetkarma>
   <karmadecreased>Your Karma decreased by [karmadecrease].</karmadecreased>
   <karmaincreased>Your Karma increased by [karmaincrease].</karmaincreased>
-  <karmabanwarning>Warning: You will be banned from the server if your Karma decreases below [banthreshold].</karmabanwarning>
   <karmabanned>You have been banned from the server because your Karma decreased below [banthreshold].</karmabanned>
   <karmajobdisallowed>You are not allowed to select this job because your Karma is too low ([yourkarma]/[minkarma]).</karmajobdisallowed>
 
@@ -3211,6 +3209,9 @@
 
   <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
 
+  <serversettingsgeneraltab>General</serversettingsgeneraltab>
+  <serversettingsantigriefingtab>Anti-griefing</serversettingsantigriefingtab>
+
   <serverlistdirectjoin>Direct Join</serverlistdirectjoin>
 
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
@@ -3326,6 +3327,75 @@
   <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
   <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
 
+  <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
+  <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
+  
+  <Karma.KarmaDecay>Karma decay speed</Karma.KarmaDecay>
+  <Karma.KarmaDecayTooltip>How much karma decreases per second when it's above the decay threshold.</Karma.KarmaDecayTooltip>
+  
+  <Karma.KarmaDecayThreshold>Karma decay threshold</Karma.KarmaDecayThreshold>
+  <Karma.KarmaDecayThresholdTooltip>Karma gradually decreases when it's above this threshold.</Karma.KarmaDecayThresholdTooltip>
+  
+  <Karma.KarmaIncrease>Karma increase speed</Karma.KarmaIncrease>
+  <Karma.KarmaIncreaseTooltip>How much karma increases per second when it's below the increase threshold.</Karma.KarmaIncreaseTooltip>  
+  
+  <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
+  <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
+  
+  <Karma.StructureRepairKarmaIncrease>Structure repaired</Karma.StructureRepairKarmaIncrease>
+  <Karma.StructureRepairKarmaIncreaseTooltip>How much karma increases when repairing structures (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a wall from 0 health to 100).</Karma.StructureRepairKarmaIncreaseTooltip>
+  
+  <Karma.StructureDamageKarmaDecrease>Structure damaged</Karma.StructureDamageKarmaDecrease>
+  <Karma.StructureDamageKarmaDecreaseTooltip>How much karma decreases when damaging structures (per amount of damage done, for example a value of 0.05 would mean that karma decreases by 5 when taking a wall from 100 health to 0).</Karma.StructureDamageKarmaDecreaseTooltip>
+  
+  <Karma.ItemRepairKarmaIncrease>Device repaired</Karma.ItemRepairKarmaIncrease>
+  <Karma.ItemRepairKarmaIncreaseTooltip>How much karma increases when repairing devices (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a device from 0 health to 100).</Karma.ItemRepairKarmaIncreaseTooltip>
+  
+  <Karma.DamageEnemyKarmaIncrease>Damage to enemy</Karma.DamageEnemyKarmaIncrease>
+  <Karma.DamageEnemyKarmaIncreaseTooltip>How much karma increases when damaging enemies (per amount of damage done).</Karma.DamageEnemyKarmaIncreaseTooltip>
+  
+  <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
+  <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
+  
+  <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
+  <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
+
+  <Karma.ReactorMeltdownKarmaDecrease>Reactor meltdown</Karma.ReactorMeltdownKarmaDecrease>
+  <Karma.ReactorMeltdownKarmaDecreaseTooltip>How much karma decreases if the player causes a reactor meltdown.</Karma.ReactorMeltdownKarmaDecreaseTooltip>
+
+  <Karma.ReactorOverheatKarmaDecrease>Reactor overheat</Karma.ReactorOverheatKarmaDecrease>
+  <Karma.ReactorOverheatKarmaDecreaseTooltip>How much karma decreases per second if a reactor's temperature stays critical while the player is operating it.</Karma.ReactorOverheatKarmaDecreaseTooltip>
+
+  <Karma.ExtinguishFireKarmaIncrease>Extinguish fires</Karma.ExtinguishFireKarmaIncrease>
+  <Karma.ExtinguishFireKarmaIncreaseTooltip>How much karma increases per second when attempting to extinguish fires.</Karma.ExtinguishFireKarmaIncreaseTooltip>
+
+  <Karma.AllowedWireDisconnectionsPerMinute>Allowed wire disconnections per minute</Karma.AllowedWireDisconnectionsPerMinute>
+  <Karma.AllowedWireDisconnectionsPerMinuteTooltip>How many wires a player is allowed to disconnect per minute before they start losing karma.</Karma.AllowedWireDisconnectionsPerMinuteTooltip>
+
+  <Karma.WireDisconnectionKarmaDecrease>Disconnect lots of wires</Karma.WireDisconnectionKarmaDecrease>
+  <Karma.WireDisconnectionKarmaDecreaseTooltip>How much karma decreases if a player disconnects more than the allowed number of wires per minute.</Karma.WireDisconnectionKarmaDecreaseTooltip>
+
+  <Karma.SpamFilterKarmaDecrease>Triggering the spam filter</Karma.SpamFilterKarmaDecrease>
+  <Karma.SpamFilterKarmaDecreaseTooltip>How much karma decreases if a player triggers the spam filter of the text chat.</Karma.SpamFilterKarmaDecreaseTooltip>
+
+  <Karma.HerpesThreshold>Space herpes threshold</Karma.HerpesThreshold>
+  <Karma.HerpesThresholdToolTip>How low does the karma have to decrease for the player to get the space herpes.</Karma.HerpesThresholdToolTip>
+  
+  <Karma.PositiveActions>Helpful actions</Karma.PositiveActions>
+  <Karma.NegativeActions>Harmful actions</Karma.NegativeActions>
+
+  <KarmaPreset.Default>Default</KarmaPreset.Default>
+  <KarmaPreset.Strict>Strict</KarmaPreset.Strict>
+  <KarmaPreset.Custom>Custom</KarmaPreset.Custom>
+
+  <karmadecreasedunknownamount>Your Karma has decreased.</karmadecreasedunknownamount>
+  <karmaincreasedunknownamount>Your Karma has increased.</karmaincreasedunknownamount>
+
+  <afflictionname.spaceherpes>Space herpes</afflictionname.spaceherpes>
+  <afflictiondescription.spaceherpes>The patient's face is filled with nasty-looking blisters and ulcers.</afflictiondescription.spaceherpes>
+
+  <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
+  <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
 
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
@@ -3340,6 +3410,8 @@
 
   <serverlisthaspassword>Password</serverlisthaspassword>
 
+  <serversettingsroundstab>Gameplay</serversettingsroundstab>
+
   <filterpassword>No password</filterpassword>
   <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
   <filterfullservers>Hide full</filterfullservers>
@@ -3351,4 +3423,6 @@
 
   <joinserver>Server browser</joinserver>
   <joinserverbutton>Server browser</joinserverbutton>
+
+  <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
 </infotexts>

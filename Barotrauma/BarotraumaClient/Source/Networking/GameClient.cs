@@ -209,7 +209,7 @@ namespace Barotrauma.Networking
 
             otherClients = new List<Client>();
 
-            serverSettings = new ServerSettings("Server", 0, 0, 0, false, false);
+            serverSettings = new ServerSettings(this, "Server", 0, 0, 0, false, false);
 
             ConnectToServer(ip, serverName);
 

@@ -167,6 +167,7 @@ namespace Barotrauma
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
+                statusEffect.SetUser(Source);
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
