@@ -240,7 +240,7 @@ namespace Barotrauma
                 case Layout.Default:
                     {
                         int personalSlotCount = SlotTypes.Count(s => PersonalSlots.HasFlag(s));
-                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s)) + 2;
+                        int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s));
 
                         int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (slotSize.X + spacing) / 2;
                         int upperX = HUDLayoutSettings.PortraitArea.X - slotSize.X * 2;
@@ -264,9 +264,6 @@ namespace Barotrauma
                             {
                                 SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                                 x += slotSize.X + spacing;
-
-                                // Add a bigger spacing between the hand slots & regular inventory slots to prevent overlapping of subinventories when a crate is equipped
-                                if (SlotTypes[i] == InvSlotType.RightHand) x += slotSize.X + spacing;
                             }
                         }
 
@@ -481,8 +478,16 @@ namespace Barotrauma
 
                 if (!highlightedSubInventorySlot.Inventory.IsInventoryHoverAvailable(character)) continue;
 
+                /*if (highlightedSubInventorySlot.Inventory.Owner == draggingItem)
+                {
+                    highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
+                    highlightedSubInventorySlot.Inventory.OpenState = 0.0f;
+                    hideSubInventories.Add(highlightedSubInventorySlot);
+                    continue;
+                }*/
+
                 Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
-                if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))
+                if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)) || highlightedSubInventorySlot.Inventory?.Owner == draggingItem)
                 {
                     hideSubInventories.Add(highlightedSubInventorySlot);
                 }
@@ -506,7 +511,7 @@ namespace Barotrauma
                     selectedSlot.Inventory = subInventory;
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
                     {
-                        ShowSubInventory(selectedSlot, deltaTime, cam, hideSubInventories, true);
+                        ShowSubInventory(selectedSlot, deltaTime, cam, hideSubInventories, false);
                     }
                 }
             }
@@ -515,7 +520,7 @@ namespace Barotrauma
             {
                 if (subInventorySlot.Inventory == null) continue;
                 subInventorySlot.Inventory.HideTimer -= deltaTime;
-                if (subInventorySlot.Inventory.HideTimer <= 0.0f)
+                if (subInventorySlot.Inventory.HideTimer < 0.25f)
                 {
                     highlightedSubInventorySlots.Remove(subInventorySlot);
                 }
@@ -538,7 +543,7 @@ namespace Barotrauma
                         var itemContainer = item.GetComponent<ItemContainer>();
                         if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                         {
-                            ShowSubInventory(new SlotReference(this, slot, i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, false);
+                            ShowSubInventory(new SlotReference(this, slot, i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
                         }
                     }
                 } 
@@ -624,15 +629,28 @@ namespace Barotrauma
             }
         }
 
-        private void ShowSubInventory(SlotReference slotRef, float deltaTime, Camera cam, List<SlotReference> hideSubInventories, bool useAnimation)
+        private void ShowSubInventory(SlotReference slotRef, float deltaTime, Camera cam, List<SlotReference> hideSubInventories, bool isEquippedSubInventory)
         {
+            Rectangle hoverArea = GetSubInventoryHoverArea(slotRef);
+            if (isEquippedSubInventory)
+            {
+                foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
+                {
+                    if (highlightedSubInventorySlot == slotRef) continue;
+                    if (hoverArea.Intersects(GetSubInventoryHoverArea(highlightedSubInventorySlot)))
+                    {
+                        return; // If an equipped one intersects with a currently active hover one, do not open
+                    }
+                }
+            }
+
+            slotRef.Inventory.OpenState = isEquippedSubInventory ? 1f : 0f; // Reset animation when initially equipped
+
             highlightedSubInventorySlots.Add(slotRef);
-            slotRef.Inventory.UseOpenStateAnimation = useAnimation;
             slotRef.Inventory.HideTimer = 1f;
             UpdateSubInventory(deltaTime, slotRef.SlotIndex, cam);
 
             //hide previously opened subinventories if this one overlaps with them
-            Rectangle hoverArea = GetSubInventoryHoverArea(slotRef);
             foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot == slotRef) continue;
@@ -829,7 +847,7 @@ namespace Barotrauma
                         }
                     }                            
 
-                    // No subinventory found or placing unsuccessful -> put in the character's inventory
+                    // No subinventory found or placing unsuccessful -> attempt to put in the character's inventory
                     if (!success)
                     {
                         success = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);

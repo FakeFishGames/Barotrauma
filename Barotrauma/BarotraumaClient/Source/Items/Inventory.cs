@@ -189,21 +189,6 @@ namespace Barotrauma
 
         protected static HashSet<SlotReference> highlightedSubInventorySlots = new HashSet<SlotReference>();
 
-        private bool useOpenStateAnimation = true;
-        public bool UseOpenStateAnimation
-        {
-            get
-            {
-                return useOpenStateAnimation;
-            }
-
-            set
-            {
-                if (value) openState = 0f;
-                useOpenStateAnimation = value;
-            }
-        }
-
         protected static SlotReference selectedSlot;
 
         public InventorySlot[] slots;
@@ -409,7 +394,7 @@ namespace Barotrauma
             return null;
         }
 
-        float openState;
+        public float OpenState;
 
         public void UpdateSubInventory(float deltaTime, int slotIndex, Camera cam)
         {
@@ -464,23 +449,16 @@ namespace Barotrauma
 
                 float totalHeight = itemCapacity / columns * (subRect.Height + spacing.Y);
 
-                if (subInventory.useOpenStateAnimation)
-                {
-                    subInventory.openState = subInventory.HideTimer >= 0.5f ?
-                        Math.Min(subInventory.openState + deltaTime * 5.0f, 1.0f) :
-                        Math.Max(subInventory.openState - deltaTime * 3.0f, 0.0f);
-                }
-                else
-                {
-                    subInventory.openState = subInventory.HideTimer >= 0.5f ? 1f : 0f;
-                }
-
+                subInventory.OpenState = subInventory.HideTimer >= 0.5f ?
+                    Math.Min(subInventory.OpenState + deltaTime * 5.0f, 1.0f) :
+                    Math.Max(subInventory.OpenState - deltaTime * 3.0f, 0.0f);
+                
                 for (int i = 0; i < itemCapacity; i++)
                 { 
                     subInventory.slots[i].Rect = subRect;
                     subInventory.slots[i].Rect.Location += new Point(0, (int)totalHeight * -dir);
 
-                    subInventory.slots[i].DrawOffset = Vector2.SmoothStep( new Vector2(0, -50 * dir), new Vector2(0, totalHeight * dir), subInventory.openState);
+                    subInventory.slots[i].DrawOffset = Vector2.SmoothStep( new Vector2(0, -50 * dir), new Vector2(0, totalHeight * dir), subInventory.OpenState);
                     
                     subInventory.slots[i].InteractRect = new Rectangle(
                         (int)(subInventory.slots[i].Rect.X - spacing.X / 2 - 1), (int)(subInventory.slots[i].Rect.Y - spacing.Y / 2 - 1),
@@ -730,7 +708,7 @@ namespace Barotrauma
                     hoverArea.Height -= over;
                 }
             }
-            hoverArea.Inflate(10, 10);
+            hoverArea.Inflate(-10, -10);
             return hoverArea;
         }
 
