@@ -210,8 +210,8 @@ namespace Barotrauma
         /// </summary>
         public static float GetMidAngle(float from, float to)
         {
-            float max = MathHelper.Max(from, to);
-            float min = MathHelper.Min(from, to);
+            float max = Math.Max(from, to);
+            float min = Math.Min(from, to);
             float diff = max - min;
             if (from < to)
             {

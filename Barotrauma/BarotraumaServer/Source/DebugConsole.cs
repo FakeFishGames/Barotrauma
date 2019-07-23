@@ -90,7 +90,16 @@ namespace Barotrauma
                             while (queuedMessages.Count > 0)
                             {
                                 ColoredText msg = queuedMessages.Dequeue();
-                                
+                                if (GameSettings.SaveDebugConsoleLogs)
+                                {
+                                    unsavedMessages.Add(msg);
+                                    if (unsavedMessages.Count >= messagesPerFile)
+                                    {
+                                        SaveLogs();
+                                        unsavedMessages.Clear();
+                                    }
+                                }
+
                                 string msgTxt = msg.Text;
 
                                 if (msg.IsCommand) commandMemory.Add(msgTxt);
@@ -167,7 +176,8 @@ namespace Barotrauma
                         RewriteInputToCommandLine(input);
                     }
                     
-                    Thread.Yield();
+                    //TODO: be more clever about it
+                    Thread.Sleep(10); //sleep for 10ms to not pin the CPU super hard
                 }
             }
             catch (ThreadAbortException)
@@ -778,11 +788,47 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
             });
 
-            commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
+            commands.Add(new Command("setpassword|setserverpassword|password", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+                GameMain.Server.ServerSettings.SetPassword(args.Length > 0 ? args[0] : "");
+                NewMessage(GameMain.Server.ServerSettings.HasPassword ? "Changed the server password." : "Removed password protection from the server.");
+            }));
+            AssignOnClientRequestExecute("setpassword", (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+                GameMain.Server.ServerSettings.SetPassword(args.Length > 0 ? args[0] : "");
+                NewMessage(client.Name + " " + (GameMain.Server.ServerSettings.HasPassword ? " changed the server password to \"" + args[0] + "\"." : " removed password protection from the server."));
+                GameMain.Server.SendConsoleMessage(GameMain.Server.ServerSettings.HasPassword ? "Changed the server password." : "Removed password protection from the server.", client);
+            });
+
+            commands.Add(new Command("setmaxplayers|maxplayers", "setmaxplayers [max players]: Sets the maximum player count of the server that's being hosted.", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
-                GameMain.Server.ServerSettings.SetPassword(args[0]);
+                if (!int.TryParse(args[0], out int maxPlayers))
+                {
+                    NewMessage(args[0] + " is not a valid player count.");
+                }
+                else
+                {
+                    GameMain.Server.ServerSettings.MaxPlayers = maxPlayers;
+                    NewMessage("Set the maximum player count to " + maxPlayers + ".");
+                }
             }));
+            AssignOnClientRequestExecute("setmaxplayers", (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                if (!int.TryParse(args[0], out int maxPlayers))
+                {
+                    GameMain.Server.SendConsoleMessage(args[0] + " is not a valid player count.", client);
+                }
+                else
+                {
+                    GameMain.Server.ServerSettings.MaxPlayers = maxPlayers;
+                    NewMessage(client.Name + " set the maximum player count to " + maxPlayers + ".");
+                    GameMain.Server.SendConsoleMessage("Set the maximum player count to " + maxPlayers + ".", client);
+                }
+            });
 
             commands.Add(new Command("restart|reset", "restart/reset: Close and restart the server.", (string[] args) =>
             {
@@ -1577,12 +1623,6 @@ namespace Barotrauma
                 {
                     NewMessage(tag, Color.Yellow);
                 }
-            }));
-
-            commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
-            {
-                if (GameMain.Server == null || args.Length == 0) return;
-                GameMain.Server.ServerSettings.SetPassword(args[0]);
             }));
 
 #if DEBUG

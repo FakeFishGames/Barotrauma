@@ -365,7 +365,7 @@ namespace Barotrauma
             {
                 string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
                     CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
-                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString());
+                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), fallBackTag: "Self_CauseOfDeathDescription.Damage");
 
                 if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
@@ -442,7 +442,8 @@ namespace Barotrauma
                 if (draggingItemToWorld)
                 {
                     if (item.OwnInventory == null || 
-                        !item.OwnInventory.CanBePut(CharacterInventory.draggingItem))
+                        !item.OwnInventory.CanBePut(CharacterInventory.draggingItem) ||
+                        !CanAccessInventory(item.OwnInventory))
                     {
                         continue;
                     }

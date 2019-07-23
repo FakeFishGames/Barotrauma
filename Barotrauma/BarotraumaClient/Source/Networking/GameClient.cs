@@ -1093,6 +1093,7 @@ namespace Barotrauma.Networking
             bool loadSecondSub      = inc.ReadBoolean();
 
             bool disguisesAllowed   = inc.ReadBoolean();
+            bool rewiringAllowed    = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
@@ -1114,6 +1115,7 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosMode = (LosMode)losMode;
 
             serverSettings.AllowDisguises = disguisesAllowed;
+            serverSettings.AllowRewiring = rewiringAllowed;
             serverSettings.AllowRagdollButton = allowRagdollButton;
 
             if (campaign == null)
@@ -1170,6 +1172,7 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
 
+            ServerSettings.ServerDetailsChanged = true;
             gameStarted = true;
 
             GameMain.GameScreen.Select();
@@ -1188,6 +1191,8 @@ namespace Barotrauma.Networking
             }
 
             if (GameMain.GameSession != null) { GameMain.GameSession.GameMode.End(endMessage); }
+
+            ServerSettings.ServerDetailsChanged = true;
 
             gameStarted = false;
             Character.Controlled = null;
@@ -1703,6 +1708,8 @@ namespace Barotrauma.Networking
                 case FileTransferType.Submarine:
                     new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.GetWithVariable("FileDownloadedNotification", "[filename]", transfer.FileName));
                     var newSub = new Submarine(transfer.FilePath);
+                    if (newSub.IsFileCorrupted) { return; }
+
                     var existingSubs = Submarine.SavedSubmarines.Where(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash).ToList();
                     foreach (Submarine existingSub in existingSubs)
                     {
@@ -1884,17 +1891,11 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public bool VoteForKick(GUIButton button, object userdata)
+        public void VoteForKick(Client votedClient)
         {
-            var votedClient = userdata is Client ? (Client)userdata : otherClients.Find(c => c.Character == userdata);
-            if (votedClient == null) return false;
-
+            if (votedClient == null) { return; }
             votedClient.AddKickVote(ConnectedClients.First(c => c.ID == ID));
             Vote(VoteType.Kick, votedClient);
-
-            button.Enabled = false;
-
-            return true;
         }
 
         public override void AddChatMessage(ChatMessage message)
@@ -2047,13 +2048,15 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void SetupNewCampaign(Submarine sub, string savePath, string mapSeed)
+        public void SetupNewCampaign(Submarine sub, string saveName, string mapSeed)
         {
+            saveName = Path.GetFileNameWithoutExtension(saveName);
+
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.CAMPAIGN_SETUP_INFO);
 
             msg.Write(true); msg.WritePadBits();
-            msg.Write(savePath);
+            msg.Write(saveName);
             msg.Write(mapSeed);
             msg.Write(sub.Name);
             msg.Write(sub.MD5Hash.Hash);
@@ -2377,12 +2380,12 @@ namespace Barotrauma.Networking
 
         public virtual bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
         {
-            if (character == null) return false;
+            if (character == null) { return false; }
 
             if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
-                if (client == null) return false;
+                if (client == null) { return false; }
 
                 var mute = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.1f), characterFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
                     TextManager.Get("Mute"))
@@ -2403,8 +2406,8 @@ namespace Barotrauma.Networking
                     var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("Ban"))
                     {
-                        UserData = character.Name,
-                        OnClicked = GameMain.NetLobbyScreen.BanPlayer
+                        UserData = client,
+                        OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.BanPlayer(client); return false; }
                     };
                 }
                 if (HasPermission(ClientPermissions.Kick))
@@ -2412,8 +2415,8 @@ namespace Barotrauma.Networking
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("Kick"))
                     {
-                        UserData = character.Name,
-                        OnClicked = GameMain.NetLobbyScreen.KickPlayer
+                        UserData = client,
+                        OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.KickPlayer(client); return false; }
                     };
                 }
                 else if (serverSettings.Voting.AllowVoteKick)
@@ -2421,8 +2424,8 @@ namespace Barotrauma.Networking
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
                         TextManager.Get("VoteToKick"))
                     {
-                        UserData = character,
-                        OnClicked = VoteForKick
+                        UserData = client,
+                        OnClicked = (btn, userdata) => { VoteForKick(client); btn.Enabled = false; return true; }
                     };
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
@@ -2495,7 +2498,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        BanPlayer(clientName, banReasonBox.Text, ban);
+                        BanPlayer(clientName, banReasonBox.Text, range: rangeBan);
                     }
                 }
                 else

@@ -164,6 +164,7 @@ namespace Barotrauma.Items.Components
             projectile.Item.SetTransform(projectilePos, rotation);
 
             projectile.Use(deltaTime);
+            if (projectile.Item.Removed) { return true; }
             projectile.User = character;
 
             projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));

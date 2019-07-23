@@ -66,12 +66,13 @@ namespace Barotrauma
             
             if (GameMain.Config?.SelectedContentPackages.Count > 0)
             {
-                StringBuilder sb = new StringBuilder("ContentPackage:");
+                StringBuilder sb = new StringBuilder("ContentPackage: ");
                 int i = 0;
                 foreach (ContentPackage cp in GameMain.Config.SelectedContentPackages)
                 {
-                    sb.Append(cp.Name.Replace(":", "").Substring(0, Math.Min(32, cp.Name.Length)));
-                    if (i < GameMain.Config.SelectedContentPackages.Count - 1) sb.Append(",");
+                    string trimmedName = cp.Name.Replace(":", "").Replace(" ", "");
+                    sb.Append(trimmedName.Substring(0, Math.Min(32, trimmedName.Length)));
+                    if (i < GameMain.Config.SelectedContentPackages.Count - 1) { sb.Append(" "); }
                 }
                 GameAnalytics.AddDesignEvent(sb.ToString());
             }

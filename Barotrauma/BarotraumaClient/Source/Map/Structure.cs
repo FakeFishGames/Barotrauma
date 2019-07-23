@@ -30,43 +30,14 @@ namespace Barotrauma
                 return HasBody ? ShowWalls : ShowStructures;;
             }
         }
-
-        // Only for testing in the debug build. Not saved.
-        protected Vector2 textureScale = Vector2.One;
         
-        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", false)]
-        public Vector2 TextureScale
-        {
-            get { return textureScale; }
-            set
-            {
-                textureScale = new Vector2(
-                    MathHelper.Clamp(value.X, 0.01f, 10),
-                    MathHelper.Clamp(value.Y, 0.01f, 10));
-            }
-        }
-
         private string specialTag;
         [Editable, Serialize("", true)]
         public string SpecialTag
         {
             get { return specialTag; }
             set { specialTag = value; }
-        }
-
-        // Only for testing in the debug build. Not saved.
-#if DEBUG
-        [Editable, Serialize(true, false)]
-#endif
-        public bool DrawTiled { get; protected set; } = true;
-        
-        protected Vector2 textureOffset = Vector2.Zero;
-        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
-        public Vector2 TextureOffset
-        {
-            get { return textureOffset; }
-            set { textureOffset = value; }
-        }
+        }        
 
         partial void InitProjSpecific()
         {

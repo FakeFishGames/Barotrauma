@@ -325,7 +325,9 @@ namespace Barotrauma.Sounds
                 if (ALSourceIndex < 0) return false;
                 if (IsStream && !reachedEndSample) return true;
                 int state;
-                Al.GetSourcei(Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.SourceState, out state);
+                uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
+                if (!Al.IsSource(alSource)) return false;
+                Al.GetSourcei(alSource, Al.SourceState, out state);
                 bool playing = state == Al.Playing;
                 int alError = Al.GetError();
                 if (alError != Al.NoError)

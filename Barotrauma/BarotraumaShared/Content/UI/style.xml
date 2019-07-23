@@ -206,6 +206,22 @@
       padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButton>
 
+  <GUIButtonSlicedTopAndBottom
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    pressedcolor="230,230,230,255">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="683, 79, 129, 31" slice="687, 83, 808, 104"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="888, 96, 129, 31" slice="893, 103, 1013, 120"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="553, 79, 129, 31" slice="557, 83, 676, 104"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="553, 79, 129, 31" slice="557, 83, 676, 104"/>
+
+    <GUITextBlock
+      textcolor="153,166,179,255"
+      padding="10.0, 0.0, 10.0, 0.0"/>
+  </GUIButtonSlicedTopAndBottom>
+  
   <MainMenuGUITextBlock
     textcolor="0,0,0,255"
     color="255,255,255,255"
@@ -392,6 +408,7 @@
     color="102,150,175,255"
     hovercolor="255,255,255,255"
     selectedcolor="255,255,255,255"
+    textcolor="127,140,153,255"
     pressedcolor="100,100,100,255">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" maintainaspectratio="true" sourcerect="907,428,22,22"/>

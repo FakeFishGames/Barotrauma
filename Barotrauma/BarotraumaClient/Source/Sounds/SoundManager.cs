@@ -174,8 +174,8 @@ namespace Barotrauma.Sounds
             sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
 
-            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(8);
-            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[8];
+            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
+            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
             Al.DistanceModel(Al.LinearDistanceClamped);
             
@@ -202,7 +202,10 @@ namespace Barotrauma.Sounds
             }
 
             Sound newSound = new OggSound(this, filename, stream);
-            loadedSounds.Add(newSound);
+            lock (loadedSounds)
+            {
+                loadedSounds.Add(newSound);
+            }
             return newSound;
         }
 
@@ -225,7 +228,10 @@ namespace Barotrauma.Sounds
                 newSound.BaseFar = range;
             }
 
-            loadedSounds.Add(newSound);
+            lock (loadedSounds)
+            {
+                loadedSounds.Add(newSound);
+            }
             return newSound;
         }
 
@@ -352,12 +358,15 @@ namespace Barotrauma.Sounds
 
         public void RemoveSound(Sound sound)
         {
-            for (int i = 0; i < loadedSounds.Count; i++)
+            lock (loadedSounds)
             {
-                if (loadedSounds[i] == sound)
+                for (int i = 0; i < loadedSounds.Count; i++)
                 {
-                    loadedSounds.RemoveAt(i);
-                    return;
+                    if (loadedSounds[i] == sound)
+                    {
+                        loadedSounds.RemoveAt(i);
+                        return;
+                    }
                 }
             }
         }

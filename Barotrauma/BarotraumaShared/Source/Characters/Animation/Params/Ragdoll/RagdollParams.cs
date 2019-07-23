@@ -30,11 +30,13 @@ namespace Barotrauma
         [Serialize(0f, true), Editable(-360, 360, ToolTip = "Rotation offset (in degrees) used for animations and widgets. If the sprites in the sheet are in different orientations, use the orientation of the torso for the final version of your character (while editing the character in the editor, you can change the orientation freely).")]
         public float SpritesheetOrientation { get; set; }
 
+        private float limbScale;
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
-        public float LimbScale { get; set; }
+        public float LimbScale { get { return limbScale; } set { limbScale = MathHelper.Clamp(value, MIN_SCALE, MAX_SCALE); } }
 
+        private float jointScale;
         [Serialize(1.0f, true), Editable(MIN_SCALE, MAX_SCALE, DecimalCount = 3)]
-        public float JointScale { get; set; }
+        public float JointScale { get { return jointScale; } set { jointScale = MathHelper.Clamp(value, MIN_SCALE, MAX_SCALE); } }
 
         // Don't show in the editor, because shouldn't be edited in runtime.  Requires that the limb scale and the collider sizes are adjusted. TODO: automatize.
         [Serialize(1f, false)]
@@ -368,16 +370,18 @@ namespace Barotrauma
         #endregion
 
 #if CLIENT
-        public override void AddToEditor(ParamsEditor editor)
+        public void AddToEditor(ParamsEditor editor, bool alsoChildren = true)
         {
             base.AddToEditor(editor);
-            var subParams = GetAllSubParams();
-            foreach (var subParam in subParams)
+            if (alsoChildren)
             {
-                subParam.AddToEditor(editor);   
-                //TODO: divider sprite
-                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform), 
-                    style: "ConnectionPanelWire");
+                var subParams = GetAllSubParams();
+                foreach (var subParam in subParams)
+                {
+                    subParam.AddToEditor(editor);
+                    new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 10), editor.EditorBox.Content.RectTransform),
+                        style: null, color: Color.Black);
+                }
             }
         }
 #endif

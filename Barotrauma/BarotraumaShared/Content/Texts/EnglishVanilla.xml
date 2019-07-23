@@ -71,7 +71,6 @@
   <tutorialbutton>Training</tutorialbutton>
   <newgamebutton>New Game</newgamebutton>
   <loadgamebutton>Load Game</loadgamebutton>
-  <joinserverbutton>Join Server</joinserverbutton>
   <hostserverbutton>Host Server</hostserverbutton>
   <subeditorbutton>Submarine Editor</subeditorbutton>
   <charactereditorbutton>Character Editor</charactereditorbutton>
@@ -163,7 +162,6 @@
   <workshopitemfilenotincluded>File is not present in the Workshop item folder and will not be included in the Workshop item. This may be desirable if you want the mod to use Vanilla files that the players already have—otherwise you should copy the file to the Workshop item folder.</workshopitemfilenotincluded>
   <workshopitemfilenotfound>File not found.</workshopitemfilenotfound>
   <workshopitemillegalpath>Workshop items are only allowed to modify files in the Mod folder or add submarine files to the Submarines folder. Please create a separate subfolder for the files.</workshopitemillegalpath>
-  <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (metadata.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
   <workshoppublishpleasewait>Please wait</workshoppublishpleasewait>
   <workshoppublishinprogress>Publishing '[itemname]' in the Steam Workshop.</workshoppublishinprogress>
   <workshopitempublished>[itemname] is now available in the Steam Workshop!</workshopitempublished>
@@ -531,13 +529,10 @@
   <cargospawnnotification>The purchased supplies have been delivered to [roomname].</cargospawnnotification>
 
   <!-- Server list -->
-  <joinserver>Join server</joinserver>
-  <yourname>Your name</yourname>
   <serverip>Server IP</serverip>
   <serverlistname>Name</serverlistname>
   <serverlistplayers>Players</serverlistplayers>
   <serverlistversion>Game version</serverlistversion>
-  <serverlisthaspassword>Password-protected</serverlisthaspassword>
   <serverlistusingwhitelist>Using whitelist</serverlistusingwhitelist>
   <serverlistcontentpackages>Content packages</serverlistcontentpackages>
   <serverlistsubselection>Submarine selection</serverlistsubselection>
@@ -548,7 +543,6 @@
   <serverlistroundstarted>Round started</serverlistroundstarted>
   <serverlistroundnotstarted>Round has not started</serverlistroundnotstarted>
   <serverlistinfo>Info</serverlistinfo>
-  <serverlistrefresh>Refresh</serverlistrefresh>
   <serverlistjoin>Join</serverlistjoin>
   <serverlistunknownversion>Could not determine compatibility (unknown game version)</serverlistunknownversion>
   <serverlistnosteamqueryresponse>Could not determine compatibility with the server because it did not respond to queries. This may happen if the server is down or if the host has not forwarded their query port, but you may still attempt to connect to the server.</serverlistnosteamqueryresponse>
@@ -561,10 +555,6 @@
   <serverlistsubscribemissingpackagestooltip>Subscribe to the missing content packages in the Steam Workshop and open the Workshop menu where you can download and enable them.</serverlistsubscribemissingpackagestooltip>
   <serverlistsubscribemissingpackagestooltipnosteam>The missing content packages are available in the Steam Workshop, but Steam features are not available if you don't own Barotrauma on Steam.</serverlistsubscribemissingpackagestooltipnosteam>
   <filterservers>Filter servers</filterservers>
-  <filterpassword>No password required</filterpassword>
-  <filterincompatibleservers>Hide incompatible servers</filterincompatibleservers>
-  <filterfullservers>Hide full servers</filterfullservers>
-  <filteremptyservers>Hide empty servers</filteremptyservers>
   <nomatchingservers>No matching servers found.</nomatchingservers>
   <refreshingserverlist>Refreshing server list...</refreshingserverlist>
   <noservers>Could not find any servers.</noservers>
@@ -1464,7 +1454,6 @@
   <entityname.nuclearshell>Nuclear Shell</entityname.nuclearshell>
   <entitydescription.nuclearshell>A nuclear shell for use with a railgun.</entitydescription.nuclearshell>
   <entityname.alienshell>Physicorium Shell</entityname.alienshell>
-  <entitydescription.alienshell>For firing from a coilgun.</entitydescription.alienshell>
 
   <!-- Alien -->
   <entityname.skyholderartifact>Sky Alien Artifact</entityname.skyholderartifact>
@@ -2960,22 +2949,22 @@
   <charactereditor.jointscale>Joint Scale</charactereditor.jointscale>
   <charactereditor.limbscale>Limb Scale</charactereditor.limbscale>
   <charactereditor.selectedanimation>Selected Animation</charactereditor.selectedanimation>
-  <charactereditor.previouscharacter>Previous \nCharacter</charactereditor.previouscharacter>
-  <charactereditor.nextcharacter>Next \nCharacter</charactereditor.nextcharacter>
-  <charactereditor.showparameters>Show Parameters</charactereditor.showparameters>
-  <charactereditor.showspritesheet>Show Spritesheet</charactereditor.showspritesheet>
-  <charactereditor.showragdoll>Show Ragdoll</charactereditor.showragdoll>
-  <charactereditor.editanimations>Edit Animations</charactereditor.editanimations>
-  <charactereditor.editlimbs>Edit Limbs</charactereditor.editlimbs>
-  <charactereditor.editjoints>Edit Joints</charactereditor.editjoints>
-  <charactereditor.editiktargets>Edit IK Targets</charactereditor.editiktargets>
+  <charactereditor.previouscharacter>Previous</charactereditor.previouscharacter>
+  <charactereditor.nextcharacter>Next</charactereditor.nextcharacter>
+  <charactereditor.showparameters>Parameters</charactereditor.showparameters>
+  <charactereditor.showspritesheet>Spritesheet</charactereditor.showspritesheet>
+  <charactereditor.showragdoll>Ragdoll</charactereditor.showragdoll>
+  <charactereditor.editanimations>ANIMATIONS</charactereditor.editanimations>
+  <charactereditor.editlimbs>LIMBS</charactereditor.editlimbs>
+  <charactereditor.editjoints>JOINTS</charactereditor.editjoints>
+  <charactereditor.editiktargets>IK Targets</charactereditor.editiktargets>
   <charactereditor.freeze>Freeze</charactereditor.freeze>
   <charactereditor.autofreeze>Auto Freeze</charactereditor.autofreeze>
   <charactereditor.limbpairediting>Limb Pair Editing</charactereditor.limbpairediting>
   <charactereditor.animationtestpose>Animation Test Pose</charactereditor.animationtestpose>
   <charactereditor.automove>Auto Move</charactereditor.automove>
   <charactereditor.followcursor>Follow Cursor</charactereditor.followcursor>
-  <charactereditor.displaycolliders>Display Colliders</charactereditor.displaycolliders>
+  <charactereditor.showcolliders>Colliders</charactereditor.showcolliders>
   <charactereditor.editbackgroundcolor>Edit Background Color</charactereditor.editbackgroundcolor>
   <charactereditor.quicksaveanimations>Quick Save Animations</charactereditor.quicksaveanimations>
   <charactereditor.canteditvanillacontent>Can't edit Vanilla content!</charactereditor.canteditvanillacontent>
@@ -3031,9 +3020,10 @@
   <charactereditor.lowerlimit>Lower Limit</charactereditor.lowerlimit>
   <charactereditor.defaultname>Character X</charactereditor.defaultname>
   <charactereditor.ishumanoid>Is a Humanoid?</charactereditor.ishumanoid>
-  <charactereditor.canentersubmarines>Can Enter Submarines?</charactereditor.canentersubmarines>
+  <charactereditor.canentersubmarines>Can Enter Submarines (and can walk)?</charactereditor.canentersubmarines>
   <charactereditor.configfileoutput>Config File Output</charactereditor.configfileoutput>
   <charactereditor.texturepath>Texture Path</charactereditor.texturepath>
+  <charactereditor.contentpackagename>Content Package Name</charactereditor.contentpackagename>
   <charactereditor.texturedoesnotexist>The texture file does not exist!</charactereditor.texturedoesnotexist>
   <charactereditor.defineragdoll>Define Ragdoll</charactereditor.defineragdoll>
   <charactereditor.loadfromhtml>Load From HTML</charactereditor.loadfromhtml>
@@ -3055,6 +3045,12 @@
   <charactereditor.cannoteditvanillacharacters>Cannot edit the characters defined in the Vanilla content package!</charactereditor.cannoteditvanillacharacters>
   <charactereditor.existingcharacterfoundreplaceverification>An existing character with the same name was found. Do you want to replace it?</charactereditor.existingcharacterfoundreplaceverification>
   <charactereditor.existingcharacterfound>An existing character with the same name was found.</charactereditor.existingcharacterfound>
+  <charactereditor.modespanel>Modes</charactereditor.modespanel>
+  <charactereditor.fileeditpanel>Files</charactereditor.fileeditpanel>
+  <charactereditor.optionspanel>Options</charactereditor.optionspanel>
+  <charactereditor.characterpanel>Character</charactereditor.characterpanel>
+  <charactereditor.toolspanel>Tools</charactereditor.toolspanel>
+  <charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
 
   <!-- Submarine editor -->
   <items>Items</items>
@@ -3192,14 +3188,52 @@
   <dialognorescuetargets>No-one seems to be in need of medical attention at the moment!</dialognorescuetargets>
   <dialognorescuetargets>I don't think anyone needs medical attention at the moment.</dialognorescuetargets>
 
-  <workshopitemupdated>Workshop item [itemname] was updated succesfully.</workshopitemupdated>
+  <workshoppublisherror.limitexceeded>Publishing the workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
+  <workshoppublisherror.limiteduseraccount>Publishing the workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
+  <workshoppublisherror.banned>Publishing the workshop item failed because your account has been banned.</workshoppublisherror.banned>
+  <workshoppublisherror.insufficientprivilege>Publishing the workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
+  <workshoppublisherror.serviceunavailable>Publishing the workshop item failed (service unavailable). The workshop servers may be having issues, please try again in a moment.</workshoppublisherror.serviceunavailable>
+
+  <workshopitemupdated>Workshop item [itemname] was updated successfully.</workshopitemupdated>
   <workshopitemupdatefailed>Failed to update workshop item [itemname]. [errormessage]</workshopitemupdatefailed>
   <workshopfilenotfound>File [path] not found.</workshopfilenotfound>
 
   <debugconsolehelptext> Debug console - Press F3 to open/close, enter "help" for a list of available commands</debugconsolehelptext>
-  
+
   <voipnodevices>No audio capture devices found</voipnodevices>
 
+  <wrongfiletype>Wrong file type!</wrongfiletype>
+
+  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
+
+  <servermessage.previousclientname>[client] previously used the name [previousname] on the server.</servermessage.previousclientname>
+
+  <serverlistdirectjoin>Direct Join</serverlistdirectjoin>
+
+  <causeofdeath.unknown>Unknown</causeofdeath.unknown>
+  <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
+  
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
+  <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
+  <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
+
+  <workshop.contenttag.eventset>Event set</workshop.contenttag.eventset>
+  <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
+  <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
+  <workshop.contenttag.language>Language</workshop.contenttag.language>
+
+  <serverlisthaspassword>Password</serverlisthaspassword>
+
+  <filterpassword>No password</filterpassword>
+  <filterincompatibleservers>Hide incompatible</filterincompatibleservers>
+  <filterfullservers>Hide full</filterfullservers>
+  <filteremptyservers>Hide empty</filteremptyservers>
+
+  <serverlistrefresh>Scan Servers</serverlistrefresh>
+
+  <yourname>Player name</yourname>
+
+  <joinserver>Server browser</joinserver>
+  <joinserverbutton>Server browser</joinserverbutton>
 </infotexts>

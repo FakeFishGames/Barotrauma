@@ -206,6 +206,7 @@ namespace Barotrauma
                 case "togglehud":
                 case "toggleupperhud":
                 case "togglecharacternames":
+                case "fpscounter":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -318,7 +319,7 @@ namespace Barotrauma
                     if (!(mp is ItemPrefab)) continue;
                     sb.AppendLine(mp.Name);
                 }
-                System.Windows.Clipboard.SetText(sb.ToString());
+                Clipboard.SetText(sb.ToString());
             }));
 #endif
 
@@ -452,6 +453,10 @@ namespace Barotrauma
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
             AssignRelayToServer("clientlist", true);
+            commands.Add(new Command("setmaxplayers|maxplayers", "", (string[] args) => { }));
+            AssignRelayToServer("setmaxplayers", true);
+            commands.Add(new Command("setpassword|password", "", (string[] args) => { }));
+            AssignRelayToServer("setpassword", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -1505,7 +1510,7 @@ namespace Barotrauma
                     return;
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
-                ragdollParams.LimbScale = value;
+                ragdollParams.LimbScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
                 var pos = character.WorldPosition;
                 character.AnimController.Recreate();
                 character.TeleportTo(pos);
@@ -1530,7 +1535,7 @@ namespace Barotrauma
                     return;
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
-                ragdollParams.JointScale = value;
+                ragdollParams.JointScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
                 var pos = character.WorldPosition;
                 character.AnimController.Recreate();
                 character.TeleportTo(pos);
@@ -1555,8 +1560,8 @@ namespace Barotrauma
                     return;
                 }
                 RagdollParams ragdollParams = character.AnimController.RagdollParams;
-                ragdollParams.LimbScale = value;
-                ragdollParams.JointScale = value;
+                ragdollParams.LimbScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
+                ragdollParams.JointScale = MathHelper.Clamp(value, RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE);
                 var pos = character.WorldPosition;
                 character.AnimController.Recreate();
                 character.TeleportTo(pos);

@@ -62,8 +62,7 @@
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="200" />
     <Deconstruct time="10">
-      <Item identifier="steel" />
-      <Item identifier="aluminium" />
+      <Item identifier="steel" copycondition="true"/>
       <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
@@ -123,7 +122,6 @@
       <RequiredItem identifier="aluminium"/>
     </Fabricate>-->
     <Deconstruct time="10">
-      <Item identifier="steel" />
       <Item identifier="aluminium" />
     </Deconstruct>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->

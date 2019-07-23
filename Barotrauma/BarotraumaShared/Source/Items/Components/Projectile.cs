@@ -275,7 +275,14 @@ namespace Barotrauma.Items.Components
             //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
             if (!hitSomething)
             {
-                Entity.Spawner.AddToRemoveQueue(item);
+                if (Entity.Spawner == null)
+                {
+                    item.Remove();
+                }
+                else
+                {
+                    Entity.Spawner.AddToRemoveQueue(item);
+                }
             }
         }
         

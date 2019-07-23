@@ -19,7 +19,8 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        public Character.TeamType TeamID;
+        [Serialize(Character.TeamType.None, false)]
+        public Character.TeamType TeamID { get; set; }
 
         [Serialize(20000.0f, false)]
         public float Range
@@ -82,8 +83,11 @@ namespace Barotrauma.Items.Components
 
         public bool CanReceive(WifiComponent sender)
         {
-            if (sender == null || sender.channel != channel || sender.TeamID != TeamID) return false;
-            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) return false;
+            if (sender == null || sender.channel != channel) { return false; }
+            if (sender.TeamID == Character.TeamType.Team1 && TeamID == Character.TeamType.Team2) { return false; }
+            if (sender.TeamID == Character.TeamType.Team2 && TeamID == Character.TeamType.Team1) { return false; }
+
+            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
 
             return HasRequiredContainedItems(false);
         }

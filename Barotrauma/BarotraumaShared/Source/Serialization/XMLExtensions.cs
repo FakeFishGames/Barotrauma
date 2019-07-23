@@ -116,7 +116,7 @@ namespace Barotrauma
             string stringValue = element.Attribute(name).Value;
             if (string.IsNullOrEmpty(stringValue)) return defaultValue;
 
-            string[] splitValue = stringValue.Split(',');
+            string[] splitValue = stringValue.Split(',', '，');
 
             if (convertToLowerInvariant)
             {

@@ -184,8 +184,12 @@ namespace Barotrauma
                 sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/DropItem.ogg", false);
             }
             // create 1x1 texture for line drawing
-            t = new Texture2D(GraphicsDevice, 1, 1);
-            t.SetData(new Color[] { Color.White });// fill the texture with white
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                t = new Texture2D(GraphicsDevice, 1, 1);
+                t.SetData(new Color[] { Color.White });// fill the texture with white
+            });
+            
             SubmarineIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
             arrow = new Sprite("Content/UI/IconAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
             SpeechBubbleIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
@@ -948,7 +952,6 @@ namespace Barotrauma
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
             int outerRadius = radius * 2 + 2; // So circle doesn't go out of bounds
-            Texture2D texture = new Texture2D(GraphicsDevice, outerRadius, outerRadius);
 
             Color[] data = new Color[outerRadius * outerRadius];
 
@@ -986,16 +989,19 @@ namespace Barotrauma
                 }
             }
 
-
-            texture.SetData(data);
+            Texture2D texture = null;
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(GraphicsDevice, outerRadius, outerRadius);
+                texture.SetData(data);
+            });
             return texture;
         }
 
         public static Texture2D CreateCapsule(int radius, int height)
         {
             int textureWidth = radius * 2, textureHeight = height + radius * 2;
-
-            Texture2D texture = new Texture2D(GraphicsDevice, textureWidth, textureHeight);
+            
             Color[] data = new Color[textureWidth * textureHeight];
 
             // Colour the entire texture transparent first.
@@ -1023,13 +1029,17 @@ namespace Barotrauma
                 TrySetArray(data, y * textureWidth + (textureWidth - 1), Color.White);
             }
 
-            texture.SetData(data);
+            Texture2D texture = null;
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(GraphicsDevice, textureWidth, textureHeight);
+                texture.SetData(data);
+            });
             return texture;
         }
 
         public static Texture2D CreateRectangle(int width, int height)
         {
-            Texture2D texture = new Texture2D(GraphicsDevice, width, height);
             Color[] data = new Color[width * height];
 
             for (int i = 0; i < data.Length; i++)
@@ -1047,7 +1057,13 @@ namespace Barotrauma
                 TrySetArray(data, (height - 1) * width + x, Color.White);
             }
 
-            texture.SetData(data);
+
+            Texture2D texture = null;
+            CrossThread.RequestExecutionOnMainThread(() =>
+            {
+                texture = new Texture2D(GraphicsDevice, width, height);
+                texture.SetData(data);
+            });
             return texture;
         }
 
@@ -1378,8 +1394,8 @@ namespace Barotrauma
                         Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
 
                         //make sure we don't move the interfaces out of the screen
-                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
-                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 10.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
 
                         //move by 10 units in the desired direction and repeat until nothing overlaps
                         //(or after 100 iterations, in which case we'll just give up and let them overlap)

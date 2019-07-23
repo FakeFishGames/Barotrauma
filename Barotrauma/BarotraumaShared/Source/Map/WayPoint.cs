@@ -125,6 +125,8 @@ namespace Barotrauma
             InsertToList();
             WayPointList.Add(this);
 
+            DebugConsole.Log("Created waypoint (" + ID + ")");
+
             currentHull = Hull.FindHull(WorldPosition);
         }
 

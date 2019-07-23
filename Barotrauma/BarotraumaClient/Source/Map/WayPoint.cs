@@ -1,6 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using Barotrauma.Items.Components;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -15,11 +18,16 @@ namespace Barotrauma
             return Screen.Selected == GameMain.SubEditorScreen || GameMain.DebugDraw;
         }
 
+        public override bool SelectableInEditor
+        {
+            get { return !IsHidden(); }
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!editing && !GameMain.DebugDraw) return;
+            if (!editing && !GameMain.DebugDraw) { return; }
 
-            if (IsHidden()) return;
+            if (IsHidden()) { return; }
 
             //Rectangle drawRect =
             //    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
@@ -45,6 +53,10 @@ namespace Barotrauma
                 iconSize = (int)(iconSize * 1.5f);
             }
             if (Ladders != null)
+            {
+                iconSize = (int)(iconSize * 1.5f);
+            }
+            if (Stairs != null)
             {
                 iconSize = (int)(iconSize * 1.5f);
             }
@@ -90,9 +102,48 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD();
             }
             
-            if (PlayerInput.LeftButtonClicked())
+            if (IsSelected && PlayerInput.LeftButtonClicked())
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+
+                // Update gaps, ladders, and stairs
+                UpdateLinkedEntity(position, Gap.GapList, gap => ConnectedGap = gap, gap =>
+                {
+                    if (ConnectedGap == gap)
+                    {
+                        ConnectedGap = null;
+                    }
+                });
+                UpdateLinkedEntity(position, Item.ItemList, i =>
+                {
+                    var ladder = i?.GetComponent<Ladder>();
+                    if (ladder != null)
+                    {
+                        Ladders = ladder;
+                    }
+                }, i =>
+                {
+                    var ladder = i?.GetComponent<Ladder>();
+                    if (ladder != null)
+                    {
+                        if (Ladders == ladder)
+                        {
+                            Ladders = null;
+                        }
+                    }
+                }, inflate: 5);
+                // TODO: Cannot check the rectangle, since the rectangle is not rotated -> Need to use the collider.
+                //var stairList = mapEntityList.Where(me => me is Structure s && s.StairDirection != Direction.None).Select(me => me as Structure);
+                //UpdateLinkedEntity(position, stairList, s =>
+                //{
+                //    Stairs = s;
+                //}, s =>
+                //{
+                //    if (Stairs == s)
+                //    {
+                //        Stairs = null;
+                //    }
+                //});
 
                 foreach (MapEntity e in mapEntityList)
                 {
@@ -103,6 +154,23 @@ namespace Barotrauma
 
                     linkedTo.Add(e);
                     e.linkedTo.Add(this);
+                }
+            }
+        }
+
+        private void UpdateLinkedEntity<T>(Vector2 worldPos, IEnumerable<T> list, Action<T> match, Action<T> noMatch, int inflate = 0) where T : MapEntity
+        {
+            foreach (var entity in list)
+            {
+                var rect = entity.WorldRect;
+                rect.Inflate(inflate, inflate);
+                if (Submarine.RectContains(rect, worldPos))
+                {
+                    match(entity);
+                }
+                else
+                {
+                    noMatch(entity);
                 }
             }
         }

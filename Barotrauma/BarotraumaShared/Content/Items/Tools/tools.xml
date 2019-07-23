@@ -7,6 +7,13 @@
     tags="smallitem"
     fireproof="true"
     description="" impactsoundtag="impact_metal_heavy">
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20">
+      <RequiredSkill identifier="mechanical" level="20"/>
+      <Item identifier="steel" />
+    </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,256,64,64" origin="0.5,0.6"/>
     <Sprite texture="Content/Items/InventoryIconAtlas.png" sourcerect="648,270,47,37"/>
     <!--<Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="1,0,68,39"/>-->
@@ -18,7 +25,7 @@
       </Attack>
     </MeleeWeapon>
     <ItemContainer capacity="12">
-      <Containable identifiers="smallitem"/>
+      <Containable identifiers="smallitem" excludedidentifiers="toolbox"/>
     </ItemContainer>
   </Item>
   
@@ -74,7 +81,7 @@
       </LightComponent>
     </RepairTool>
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->
-    <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
+    <ItemContainer capacity="1" hideitems="false" itempos="18,-32" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank,incendiumfueltank" />
     </ItemContainer>
@@ -96,8 +103,8 @@
       <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,0,64,64" />
-    <Sprite texture="tools_new.png" sourcerect="0,0,224,110" depth="0.55" origin="0.5,0.5" />
-    <Body width="220" height="105" density="40" />
+    <Sprite texture="tools_new.png" sourcerect="0,358,248,136" depth="0.55" origin="0.5,0.5" />
+    <Body radius="50" width="180" density="40" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-25" handle2="-10,-27" msg="ItemMsgPickUpSelect"/>
     <RepairTool structurefixamount="-0.125" range="150" barrelpos="45,10" combatpriority="20">
       <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="ItemMsgOxygenTankRequired" />
@@ -123,7 +130,7 @@
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
     </RepairTool>
-    <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
+    <ItemContainer capacity="1" hideitems="false" itempos="20,-30" containedspritedepth="0.56">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable identifiers="weldingfueltank,oxygentank,oxygenitetank" />
     </ItemContainer>
@@ -146,7 +153,7 @@
       <RequiredItem identifier="aluminium"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" />
-    <Sprite texture="tools_new.png" sourcerect="356,223,39,110" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
     <Body width="39" height="110" density="5" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
@@ -208,7 +215,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-2.0" />
       <sound file="Content/Items/Tools/Extinguisher.ogg" type="OnUse" range="500.0" loop="true" />
     </RepairTool>
-    <Propulsion force="-20" usablein="water" particles="bubbles" />
+    <Propulsion force="-80" usablein="water" particles="bubbles" />
   </Item>
   
   <Item name="Screwdriver" identifier="screwdriver" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
@@ -324,7 +331,7 @@
       <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,320,64,64" />
-    <Sprite texture="tools_new.png" sourcerect="485,29,27,63" depth="0.55" origin="0.5,0.5" />
+    <Sprite texture="tools_new.png" sourcerect="337,6,29,65" depth="0.55" origin="0.5,0.5" />
     <Body width="27" height="60" density="12" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect"/>
     <AiTarget soundrange="10000" sonarlabel="Sonar Beacon" />
@@ -405,6 +412,7 @@
         <sound file="Content/Items/Tools/FlareIgnite.ogg" range="800.0" />
       </StatusEffect>
       <StatusEffect type="OnActive" target="This" Condition="-0.25">
+        <Conditional PhysicsBodyActive="eq true"/>
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />
       </StatusEffect>

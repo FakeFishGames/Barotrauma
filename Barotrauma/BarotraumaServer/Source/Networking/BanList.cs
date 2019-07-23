@@ -35,7 +35,7 @@ namespace Barotrauma.Networking
 
         public bool CompareTo(string ipCompare)
         {
-            if (string.IsNullOrEmpty(IP)) { return false; }
+            if (string.IsNullOrEmpty(IP) || string.IsNullOrEmpty(IP)) { return false; }
             if (!IsRangeBan)
             {
                 return ipCompare == IP;
@@ -50,7 +50,7 @@ namespace Barotrauma.Networking
 
         public bool CompareTo(IPAddress ipCompare)
         {
-            if (string.IsNullOrEmpty(IP)) { return false; }
+            if (string.IsNullOrEmpty(IP) || ipCompare == null) { return false; }
             if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4().ToString()))
             {
                 return true;
@@ -184,7 +184,8 @@ namespace Barotrauma.Networking
 
         public void UnbanPlayer(string name)
         {
-            var player = bannedPlayers.Find(bp => bp.Name == name);
+            name = name.ToLower();
+            var player = bannedPlayers.Find(bp => bp.Name.ToLower() == name);
             if (player == null)
             {
                 DebugConsole.Log("Could not unban player \"" + name + "\". Matching player not found.");

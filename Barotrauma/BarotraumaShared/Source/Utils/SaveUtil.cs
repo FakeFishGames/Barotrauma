@@ -378,8 +378,6 @@ namespace Barotrauma
                     Thread.Sleep(250);
                 }
             }
-
-
             return true;
         }
 
@@ -470,7 +468,20 @@ namespace Barotrauma
             foreach (DirectoryInfo di in dir.GetDirectories())
             {
                 ClearFolder(di.FullName, ignoredFileNames);
-                di.Delete();
+                int maxRetries = 4;
+                for (int i = 0; i <= maxRetries; i++)
+                {
+                    try
+                    {
+                        di.Delete();
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        if (i >= maxRetries) { throw; }
+                        Thread.Sleep(250);
+                    }
+                }
             }
         }
     }

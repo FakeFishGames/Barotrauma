@@ -20,8 +20,8 @@ namespace Barotrauma
         /// </summary>
         const float CharacterWaitOnSwitch = 10.0f;
 
-        private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-        private List<Character> characters = new List<Character>();
+        private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private readonly List<Character> characters = new List<Character>();
 
         private Point screenResolution;
 
@@ -941,7 +941,7 @@ namespace Barotrauma
             else
             {
                 orderTargetFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f + order.Options.Length * 0.1f, 0.18f), GUI.Canvas)
-                    { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
+                    { AbsoluteOffset = new Point((int)(200 * GUI.Scale), orderButton.Rect.Bottom) },
                     isHorizontal: true, childAnchor: Anchor.BottomLeft)
                 {
                     UserData = character,
@@ -970,6 +970,12 @@ namespace Barotrauma
                             return true;
                         }
                     };
+                    new GUIFrame(new RectTransform(Vector2.One * 1.5f, optionButton.RectTransform, Anchor.Center), style: "OuterGlow")
+                    {
+                        Color = Color.Black,
+                        HoverColor = Color.CadetBlue,
+                        PressedColor = Color.Black
+                    }.RectTransform.SetAsFirstChild();
 
                     OrderOptionButtons.Add(optionButton);
 
@@ -1238,7 +1244,10 @@ namespace Barotrauma
                 }
                 hoverArea.Inflate(100, 100);
 
-                if (!hoverArea.Contains(PlayerInput.MousePosition)) orderTargetFrame = null;
+                if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.RightButtonClicked())
+                {
+                    orderTargetFrame = null;
+                }
             }
         }
 

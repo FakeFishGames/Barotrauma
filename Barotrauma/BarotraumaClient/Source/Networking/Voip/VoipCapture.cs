@@ -73,15 +73,31 @@ namespace Barotrauma.Networking
 
             if (captureDevice == IntPtr.Zero)
             {
+                DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 1 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(),Color.Orange);
+                //attempt using a smaller buffer size
+                captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 2);
+            }
+
+            if (captureDevice == IntPtr.Zero)
+            {
+                DebugConsole.NewMessage("Alc.CaptureOpenDevice attempt 2 failed: error code " + Alc.GetError(IntPtr.Zero).ToString(), Color.Orange);
+                //attempt using the default device
+                captureDevice = Alc.CaptureOpenDevice("", VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 2);
+            }
+
+            if (captureDevice == IntPtr.Zero)
+            {
+                string errorCode = Alc.GetError(IntPtr.Zero).ToString();
                 if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
                 {
                     GUI.SettingsMenuOpen = false;
-                    new GUIMessageBox(TextManager.Get("Error"), 
-                        TextManager.Get("VoipCaptureDeviceNotFound", returnNull: true) ?? "Could not start voice capture, suitable capture device not found.")
+                    new GUIMessageBox(TextManager.Get("Error"),
+                        (TextManager.Get("VoipCaptureDeviceNotFound", returnNull: true) ?? "Could not start voice capture, suitable capture device not found.") + " (" + errorCode + ")")
                     {
                         UserData = "capturedevicenotfound"
                     };
                 }
+                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpen(" + deviceName + ") failed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,"Error code: "+errorCode);
                 GameMain.Config.VoiceSetting = GameSettings.VoiceMode.Disabled;
                 Instance?.Dispose();
                 Instance = null;

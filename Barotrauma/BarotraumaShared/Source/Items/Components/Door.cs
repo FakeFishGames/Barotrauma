@@ -22,7 +22,6 @@ namespace Barotrauma.Items.Components
         private float openState;
         private Sprite doorSprite, weldedSprite, brokenSprite;
         private bool scaleBrokenSprite, fadeBrokenSprite;
-        private bool createdNewGap;
         private bool autoOrientGap;
 
         private bool isStuck;
@@ -87,17 +86,19 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (linkedGap != null) return linkedGap;
-
-                foreach (MapEntity e in item.linkedTo)
+                if (linkedGap == null)
                 {
-                    linkedGap = e as Gap;
-                    if (linkedGap != null)
-                    {
-                        linkedGap.PassAmbientLight = Window != Rectangle.Empty;
-                        return linkedGap;
-                    }
+                    GetLinkedGap();
                 }
+                return linkedGap;
+            }
+        }
+
+        private void GetLinkedGap()
+        {
+            linkedGap = item.linkedTo.FirstOrDefault(e => e is Gap) as Gap;
+            if (linkedGap == null)
+            {
                 Rectangle rect = item.Rect;
                 if (IsHorizontal)
                 {
@@ -109,17 +110,13 @@ namespace Barotrauma.Items.Components
                     rect.X -= 5;
                     rect.Width += 10;
                 }
-
                 linkedGap = new Gap(rect, !IsHorizontal, Item.Submarine)
                 {
-                    Submarine = item.Submarine,
-                    PassAmbientLight = Window != Rectangle.Empty,
-                    Open = openState
+                    Submarine = item.Submarine
                 };
                 item.linkedTo.Add(linkedGap);
-                createdNewGap = true;
-                return linkedGap;
             }
+            RefreshLinkedGap();
         }
 
         public bool IsHorizontal { get; private set; }
@@ -162,14 +159,14 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
+        
         public Door(Item item, XElement element)
             : base(item, element)
         {
             IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 string texturePath = subElement.GetAttributeString("texture", "");
@@ -370,12 +367,20 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void OnMapLoaded()
+        public void RefreshLinkedGap()
         {
             LinkedGap.ConnectedDoor = this;
+            if (autoOrientGap)
+            {
+                LinkedGap.AutoOrient();
+            }
             LinkedGap.Open = openState;
-            if (createdNewGap && autoOrientGap) linkedGap.AutoOrient();
+            LinkedGap.PassAmbientLight = Window != Rectangle.Empty;
+        }
 
+        public override void OnMapLoaded()
+        {
+            RefreshLinkedGap();
 #if CLIENT
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
 
@@ -384,6 +389,18 @@ namespace Barotrauma.Items.Components
 
             UpdateConvexHulls();
 #endif
+        }
+
+        public override void OnScaleChanged()
+        {
+#if CLIENT
+            UpdateConvexHulls();
+#endif
+            if (linkedGap != null)
+            {
+                RefreshLinkedGap();
+                linkedGap.Rect = item.Rect;
+            }
         }
 
         protected override void RemoveComponentSpecific()

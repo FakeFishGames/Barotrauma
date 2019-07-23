@@ -19,71 +19,87 @@ namespace Barotrauma
         //how often the client is allowed to refresh servers
         private TimeSpan AllowedRefreshInterval = new TimeSpan(0, 0, 3);
 
-        private GUIFrame menu;
+        private readonly GUIFrame menu;
 
-        private GUIListBox serverList;
-        private GUIListBox serverPreview;
+        private readonly GUIListBox serverList;
+        private readonly GUIFrame serverPreview;
 
-        private GUIButton joinButton;
+        private readonly GUIButton joinButton;
 
-        private GUITextBox clientNameBox, ipBox;
+        private readonly GUITextBox clientNameBox, ipBox;
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
-
-        private GUIButton refreshButton;
-
-        private float[] columnRelativeWidth;
+        
+        private readonly float[] columnRelativeWidth = new float[] { 0.1f, 0.1f, 0.7f, 0.12f, 0.08f, 0.08f };
+        private readonly string[] columnLabel = new string[] { "ServerListCompatible", "ServerListHasPassword", "ServerListName", "ServerListRoundStarted", "ServerListPlayers", "ServerListPing" };
+        
+        private readonly GUILayoutGroup labelHolder;
+        private readonly List<GUITextBlock> labelTexts = new List<GUITextBlock>();
 
         //filters
-        private GUITextBox searchBox;
-        private GUITickBox filterPassword;
-        private GUITickBox filterIncompatible;
-        private GUITickBox filterFull;
-        private GUITickBox filterEmpty;
+        private readonly GUITextBox searchBox;
+        private readonly GUITickBox filterPassword;
+        private readonly GUITickBox filterIncompatible;
+        private readonly GUITickBox filterFull;
+        private readonly GUITickBox filterEmpty;
 
-        //a timer for 
+        private string sortedBy;
+
+        private readonly GUIButton serverPreviewToggleButton;
+
+        //a timer for preventing the client from spamming the refresh button faster than AllowedRefreshInterval
         private DateTime refreshDisableTimer;
         private bool waitingForRefresh;
-                
+
         public ServerListScreen()
         {
-            menu = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
+            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
 
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center), isHorizontal: true)
-            { Stretch = true, RelativeSpacing = 0.02f };
+            menu = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
-            //-------------------------------------------------------------------------------------
-            //left column
-            //-------------------------------------------------------------------------------------
-
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), paddedFrame.RectTransform, Anchor.CenterLeft)) { Stretch = true, RelativeSpacing = 0.5f };
-
-            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), infoHolder.RectTransform, Anchor.Center), TextManager.Get("JoinServer"), font: GUI.LargeFont)
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 0.95f), menu.RectTransform, Anchor.Center))
             {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
+
+            //-------------------------------------------------------------------------------------
+            //Top row
+            //-------------------------------------------------------------------------------------
+
+            var topRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform)) { Stretch = true };
+
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), TextManager.Get("JoinServer"), font: GUI.LargeFont)
+            {
+                Padding = Vector4.Zero,
                 ForceUpperCase = true,
                 AutoScale = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("YourName"));
-            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "")
+            var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true) { RelativeSpacing = 0.05f, Stretch = true };
+
+            var clientNameHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), clientNameHolder.RectTransform), TextManager.Get("YourName"));
+            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), clientNameHolder.RectTransform), "")
             {
                 Text = GameMain.Config.DefaultPlayerName,
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
             };
+
             if (string.IsNullOrEmpty(clientNameBox.Text))
             {
                 clientNameBox.Text = SteamManager.GetUsername();
             }
-            clientNameBox.OnTextChanged += RefreshJoinButtonState;
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoHolder.RectTransform), TextManager.Get("ServerIP"));
-            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), infoHolder.RectTransform), "");
-            ipBox.OnTextChanged += RefreshJoinButtonState;
-            ipBox.OnSelected += (sender, key) => 
+            var ipBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), infoHolder.RectTransform)) { RelativeSpacing = 0.05f };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), ipBoxHolder.RectTransform), TextManager.Get("ServerIP"));
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), ipBoxHolder.RectTransform), "");
+            ipBox.OnTextChanged += (textBox, text) => { joinButton.Enabled = !string.IsNullOrEmpty(text); return true; };
+            ipBox.OnSelected += (sender, key) =>
             {
                 if (sender.UserData is ServerInfo)
                 {
@@ -92,88 +108,357 @@ namespace Barotrauma
                 }
             };
 
-            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), leftColumn.RectTransform)) { RelativeSpacing = 0.05f };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterHolder.RectTransform), TextManager.Get("FilterServers"));
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.13f), filterHolder.RectTransform), "");
-
-            var tickBoxHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), filterHolder.RectTransform));
-
-            searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
-            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterPassword"));
-            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"));
-            filterIncompatible.OnSelected += (tickBox) => { FilterServers(); return true; };
-
-            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterFullServers"));
-            filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.27f), tickBoxHolder.RectTransform), TextManager.Get("FilterEmptyServers"));
-            filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
-
             //-------------------------------------------------------------------------------------
-            //right column
+            // Bottom row
             //-------------------------------------------------------------------------------------
 
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.017f, 1.0f),
+            var bottomRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f - topRow.RectTransform.RelativeSize.Y),
                 paddedFrame.RectTransform, Anchor.CenterRight))
             {
-                RelativeSpacing = 0.02f,
                 Stretch = true
             };
 
-            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform)) { Stretch = true, RelativeSpacing = 0.02f };
-
-            serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center))
+            var serverListHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), bottomRow.RectTransform), isHorizontal: true)
             {
-                OnSelected = (btn, obj) => {
-                    if (obj is ServerInfo)
+                Stretch = true
+            };
+
+            // filters -------------------------------------------
+
+            var filters = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            {
+                Color = new Color(12, 14, 15, 255) * 0.5f,
+                OutlineColor = Color.Black
+            };
+            var filterToggle = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    filters.RectTransform.RelativeSize = new Vector2(0.25f, 1.0f);
+                    filters.Visible = !filters.Visible;
+                    filters.IgnoreLayoutGroups = !filters.Visible;
+                    serverListHolder.Recalculate();
+                    btn.Children.ForEach(c => c.SpriteEffects = !filters.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                    return true;
+                }
+            };
+            filterToggle.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
+
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.99f), filters.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.015f
+            };
+
+            var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), filterContainer.RectTransform), TextManager.Get("FilterServers"), font: GUI.LargeFont)
+            {
+                Padding = Vector4.Zero,
+                AutoScale = true
+            };
+
+            float elementHeight = 0.05f;
+
+            var searchHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementHeight), filterContainer.RectTransform), isHorizontal: true) { Stretch = true };
+
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), searchHolder.RectTransform), TextManager.Get("Search") + "...");
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), searchHolder.RectTransform), "");
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+            searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
+
+            var filterHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform)) { RelativeSpacing = 0.005f };
+
+            List<GUITextBlock> filterTextList = new List<GUITextBlock>();
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterPassword"))
+            {
+                ToolTip = TextManager.Get("FilterPassword"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterPassword.TextBlock);
+            filterIncompatible = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterIncompatibleServers"))
+            {
+                ToolTip = TextManager.Get("FilterIncompatibleServers"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterIncompatible.TextBlock);
+            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterFullServers"))
+            {
+                ToolTip = TextManager.Get("FilterFullServers"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterFull.TextBlock);
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filterHolder.RectTransform), TextManager.Get("FilterEmptyServers"))
+            {
+                ToolTip = TextManager.Get("FilterEmptyServers"),
+                OnSelected = (tickBox) => { FilterServers(); return true; }
+            };
+            filterTextList.Add(filterEmpty.TextBlock);
+
+            filterContainer.RectTransform.SizeChanged += () =>
+            {
+                filterContainer.RectTransform.RecalculateChildren(true, true);
+                filterTextList.ForEach(t => t.Text = t.ToolTip);
+                GUITextBlock.AutoScaleAndNormalize(filterTextList);
+                if (filterTextList[0].TextScale < 0.8f)
+                {
+                    filterTextList.ForEach(t => t.TextScale = 1.0f);
+                    filterTextList.ForEach(t => t.Text = ToolBox.LimitString(t.Text, t.Font, (int)(filterContainer.Rect.Width * 0.8f)));
+                }
+            };
+
+            // server list ---------------------------------------------------------------------
+
+            var serverListContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform)) { Stretch = true };
+
+            labelHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.99f, 0.05f), serverListContainer.RectTransform) { MinSize = new Point(0, 15) },
+                isHorizontal: true)
+            {
+                Stretch = true
+            };
+            
+            for (int i = 0; i < columnRelativeWidth.Length; i++)
+            {
+                var btn = new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), labelHolder.RectTransform),
+                    text: TextManager.Get(columnLabel[i]), textAlignment: Alignment.Center, style: null)
+                {
+                    Color = new Color(12, 14, 15, 255) * 0.5f,
+                    HoverColor = new Color(12, 14, 15, 255) * 2.5f,
+                    SelectedColor = Color.Gray * 0.7f,
+                    PressedColor = Color.Gray * 0.7f,
+                    OutlineColor = Color.Black,
+                    ToolTip = TextManager.Get(columnLabel[i]),
+                    ForceUpperCase = true,
+                    UserData = columnLabel[i],
+                    OnClicked = SortList
+                };
+                labelTexts.Add(btn.TextBlock);
+                
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.3f), btn.RectTransform, Anchor.BottomCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                {
+                    CanBeFocused = false,
+                    UserData = "arrowup",
+                    Visible = false
+                };
+                new GUIImage(new RectTransform(new Vector2(0.5f, 0.3f), btn.RectTransform, Anchor.BottomCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
+                {
+                    CanBeFocused = false,
+                    UserData = "arrowdown",
+                    SpriteEffects = SpriteEffects.FlipVertically,
+                    Visible = false
+                };
+            }
+
+            serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListContainer.RectTransform, Anchor.Center))
+            {
+                ScrollBarVisible = true,
+                OnSelected = (btn, obj) =>
+                {
+                    if (obj is ServerInfo serverInfo)
                     {
-                        ServerInfo serverInfo = (ServerInfo)obj;
+                        joinButton.Enabled = true;
+                        ipBox.UserData = serverInfo;
+                        ipBox.Text = serverInfo.ServerName;
+                        if (!serverPreview.Visible)
+                        {
+                            serverPreview.RectTransform.RelativeSize = new Vector2(0.3f, 1.0f);
+                            serverPreviewToggleButton.Visible = true;
+                            serverPreviewToggleButton.IgnoreLayoutGroups = false;
+                            serverPreview.Visible = true;
+                            serverPreview.IgnoreLayoutGroups = false;
+                            serverListHolder.Recalculate();
+                        }
                         serverInfo.CreatePreviewWindow(serverPreview);
+                        btn.Children.ForEach(c => c.SpriteEffects = serverPreview.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
                     }
                     return true;
                 }
             };
 
-            serverList.OnSelected += SelectServer;
+            //server preview panel --------------------------------------------------
 
-            serverPreview = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListHolder.RectTransform, Anchor.Center));
+            serverPreviewToggleButton = new GUIButton(new RectTransform(new Vector2(0.02f, 1.0f), serverListHolder.RectTransform, Anchor.CenterRight) { MinSize = new Point(20, 0) }, style: "UIToggleButton")
+            {
+                Visible = false,
+                OnClicked = (btn, userdata) =>
+                {
+                    serverPreview.RectTransform.RelativeSize = new Vector2(0.25f, 1.0f);
+                    serverPreview.Visible = !serverPreview.Visible;
+                    serverPreview.IgnoreLayoutGroups = !serverPreview.Visible;
+                    serverListHolder.Recalculate();
+                    btn.Children.ForEach(c => c.SpriteEffects = serverPreview.Visible ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
+                    return true;
+                }
+            };
 
-            columnRelativeWidth = new float[] { 0.04f, 0.02f, 0.044f, 0.77f, 0.02f, 0.075f, 0.06f };
+            serverPreview = new GUIFrame(new RectTransform(new Vector2(0.3f, 1.0f), serverListHolder.RectTransform, Anchor.Center), style: null)
+            {
+                Color = new Color(12, 14, 15, 255) * 0.5f,
+                OutlineColor = Color.Black,
+                IgnoreLayoutGroups = true,
+                Visible = false
+            };
 
-            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.075f), rightColumn.RectTransform), style: null);
+            // Spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), bottomRow.RectTransform), style: null);
 
-            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopLeft),
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.075f), bottomRow.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
+
+            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("Back"), style: "GUIButtonLarge")
             {
                 OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
 
-			refreshButton = new GUIButton(new RectTransform(new Vector2(buttonContainer.Rect.Height / (float)buttonContainer.Rect.Width, 0.9f), buttonContainer.RectTransform, Anchor.Center),
-				"", style: "GUIButtonRefresh") {
-
-				ToolTip = TextManager.Get("ServerListRefresh"),
-				OnClicked = RefreshServers
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
+                TextManager.Get("ServerListRefresh"), style: "GUIButtonLarge")
+            {
+				OnClicked = (btn, userdata) => { RefreshServers(); return true; }
 			};
 
-            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform, Anchor.TopRight),
+            /*var directJoinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
+                TextManager.Get("serverlistdirectjoin"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) => { ShowDirectJoinPrompt(); return true; }
+            };*/
+
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("ServerListJoin"), style: "GUIButtonLarge")
             {
-                OnClicked = JoinServer,
+                OnClicked = (btn, userdata) =>
+                {
+                    if (ipBox.UserData is ServerInfo selectedServer)
+                    {
+                        JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
+                    }
+                    else if (!string.IsNullOrEmpty(ipBox.Text))
+                    {
+                        JoinServer(ipBox.Text, "");
+                    }
+                    return true;
+                },
                 Enabled = false
             };
 
             //--------------------------------------------------------
 
-            button.SelectedColor = button.Color;
+            bottomRow.Recalculate();
+            serverListHolder.Recalculate();
+            serverListContainer.Recalculate();
+            labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+            labelHolder.Recalculate();
 
+            serverList.Content.RectTransform.SizeChanged += () =>
+            {
+                labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+                labelHolder.Recalculate();
+                foreach (GUITextBlock labelText in labelTexts)
+                {
+                    labelText.Text = ToolBox.LimitString(labelText.ToolTip, labelText.Font, labelText.Rect.Width);
+                }
+            };
+
+            button.SelectedColor = button.Color;
             refreshDisableTimer = DateTime.Now;
         }
 
+        private void OnResolutionChanged()
+        {
+            menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
+            labelHolder.RectTransform.MaxSize = new Point(serverList.Content.Rect.Width, int.MaxValue);
+            foreach (GUITextBlock labelText in labelTexts)
+            {
+                labelText.Text = ToolBox.LimitString(labelText.ToolTip, labelText.Font, labelText.Rect.Width);
+            }
+        }
+
+        private bool SortList(GUIButton button, object obj)
+        {
+            if (!(obj is string sortBy)) { return false; }
+            SortList(sortBy, toggle: true);
+            return true;
+        }
+
+        private void SortList(string sortBy, bool toggle)
+        {
+            GUIButton button = labelHolder.GetChildByUserData(sortBy) as GUIButton;
+            if (button == null) { return; }
+
+            sortedBy = sortBy;
+
+            var arrowUp = button.GetChildByUserData("arrowup");
+            var arrowDown = button.GetChildByUserData("arrowdown");
+            
+            //disable arrow buttons in other labels
+            foreach (var child in button.Parent.Children)
+            {
+                if (child != button)
+                {
+                    child.GetChildByUserData("arrowup").Visible = false;
+                    child.GetChildByUserData("arrowdown").Visible = false;
+                }
+            }
+
+            bool ascending = arrowUp.Visible;
+            if (toggle)
+            {
+                ascending = !ascending;
+            }
+
+            arrowUp.Visible = ascending;
+            arrowDown.Visible = !ascending;
+            serverList.Content.RectTransform.SortChildren((c1, c2) => 
+            {
+                ServerInfo s1 = c1.GUIComponent.UserData as ServerInfo;
+                ServerInfo s2 = c2.GUIComponent.UserData as ServerInfo;
+
+                switch (sortBy)
+                {
+                    case "ServerListCompatible":
+                        bool? s1Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s1.GameVersion);
+                        if (!s1.ContentPackageHashes.Any()) { s1Compatible = null; }
+                        if (s1Compatible.HasValue) { s1Compatible = s1Compatible.Value && s1.ContentPackagesMatch(GameMain.SelectedPackages); };
+
+                        bool? s2Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s2.GameVersion);
+                        if (!s2.ContentPackageHashes.Any()) { s2Compatible = null; }
+                        if (s2Compatible.HasValue) { s2Compatible = s2Compatible.Value && s2.ContentPackagesMatch(GameMain.SelectedPackages); };
+
+                        //convert to int to make sorting easier
+                        //1 Compatible
+                        //0 Unknown 
+                        //-1 Incompatible
+                        int s1CompatibleInt = s1Compatible.HasValue ?
+                            (s1Compatible.Value ? 1 : -1) :
+                            0;
+                        int s2CompatibleInt = s2Compatible.HasValue ?
+                            (s2Compatible.Value ? 1 : -1) :
+                            0;
+                        return s2CompatibleInt.CompareTo(s1CompatibleInt) * (ascending ? 1 : -1);
+                    case "ServerListHasPassword":
+                        if (s1.HasPassword == s2.HasPassword) { return 0; }
+                        return (s1.HasPassword ? 1 : -1) * (ascending ? 1 : -1);
+                    case "ServerListName":
+                        return s1.ServerName.CompareTo(s2.ServerName) * (ascending ? 1 : -1);
+                    case "ServerListRoundStarted":
+                        if (s1.GameStarted == s2.GameStarted) { return 0; }
+                        return (s1.GameStarted ? 1 : -1) * (ascending ? 1 : -1);
+                    case "ServerListPlayers":
+                        return s2.PlayerCount.CompareTo(s1.PlayerCount) * (ascending ? 1 : -1);
+                    case "ServerListPing":
+                        return s2.Ping.CompareTo(s1.Ping) * (ascending ? 1 : -1);
+                    default:
+                        return 0;
+                }
+            });
+        }
+        
         public override void Select()
         {
             base.Select();
-            RefreshServers(null, null);
+            RefreshServers();
         }
 
         private void FilterServers()
@@ -185,9 +470,15 @@ namespace Barotrauma
                 if (!(child.UserData is ServerInfo)) continue;
                 ServerInfo serverInfo = (ServerInfo)child.UserData;
 
+                Version remoteVersion = null;
+                if (!string.IsNullOrEmpty(serverInfo.GameVersion))
+                {
+                    Version.TryParse(serverInfo.GameVersion, out remoteVersion);
+                }
+
                 bool incompatible =
                     (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch(GameMain.Config.SelectedContentPackages)) ||
-                    (!string.IsNullOrEmpty(serverInfo.GameVersion) && serverInfo.GameVersion != GameMain.Version.ToString());
+                    (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
 
                 child.Visible =
                     serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
@@ -209,59 +500,48 @@ namespace Barotrauma
             serverList.UpdateScrollBarSize();
         }
 
-        private bool RefreshJoinButtonState(GUIComponent component, object obj)
+        /*private void ShowDirectJoinPrompt()
         {
-            if (obj == null || waitingForRefresh) { return false; }
+            var msgBox = new GUIMessageBox(TextManager.Get("ServerListDirectJoin"), "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
+                relativeSize: new Vector2(0.25f, 0.2f), minSize: new Point(400, 150));
 
-            if (!string.IsNullOrWhiteSpace(clientNameBox.Text) && !string.IsNullOrWhiteSpace(ipBox.Text))
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.3f), msgBox.InnerFrame.RectTransform, Anchor.Center) { MinSize = new Point(0, 50) })
             {
-                joinButton.Enabled = true;
-            }
-            else
+                IgnoreLayoutGroups = true,
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get("ServerIP"));
+            var ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform));
+
+            var okButton = msgBox.Buttons[0];
+            okButton.Enabled = false;
+            okButton.OnClicked = (btn, userdata) =>
             {
-                joinButton.Enabled = false;
-            }
+                JoinServer(ipBox.Text, "");
+                msgBox.Close();
+                return true;
+            };
 
-            return true;
-        }
+            var cancelButton = msgBox.Buttons[1];
+            cancelButton.OnClicked = msgBox.Close;
 
-        private bool SelectServer(GUIComponent component, object obj)
+            ipBox.OnTextChanged += (textBox, text) =>
+            {
+                okButton.Enabled = !string.IsNullOrEmpty(text);
+                return true;
+            };
+        }*/
+
+        private void RefreshServers()
         {
-            if (obj == null || waitingForRefresh || (!(obj is ServerInfo))) { return false; }
-
-            if (!string.IsNullOrWhiteSpace(clientNameBox.Text))
-            {
-                joinButton.Enabled = true;
-            }
-            else
-            {
-                clientNameBox.Flash();
-                joinButton.Enabled = false;
-            }
-
-            ServerInfo serverInfo;
-            try
-            {
-                serverInfo = (ServerInfo)obj;
-                ipBox.UserData = serverInfo;
-                ipBox.Text = ToolBox.LimitString(serverInfo.ServerName, ipBox.Font, ipBox.Rect.Width);
-            }
-            catch (InvalidCastException)
-            {
-                return false;
-            }
-            
-            return true;
-        }
-
-        private bool RefreshServers(GUIButton button, object obj)
-        {
-            if (waitingForRefresh) { return false; }
+            if (waitingForRefresh) { return; }
             serverList.ClearChildren();
             serverPreview.ClearChildren();
-
-            ipBox.Text = null;
             joinButton.Enabled = false;
+            ipBox.UserData = null;
+            ipBox.Text = "";
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), serverList.Content.RectTransform),
                 TextManager.Get("RefreshingServerList"), textAlignment: Alignment.Center)
@@ -270,8 +550,6 @@ namespace Barotrauma
             };
             
             CoroutineManager.StartCoroutine(WaitForRefresh());
-
-            return true;
         }
 
         private IEnumerable<object> WaitForRefresh()
@@ -385,12 +663,15 @@ namespace Barotrauma
             {
                 UserData = serverInfo
             };
-            var serverContent = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 1.0f), serverFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 1.0f), serverFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                //RelativeSpacing = 0.02f
             };
             UpdateServerInfo(serverInfo);
+
+            SortList(sortedBy, toggle: false);
+            FilterServers();
         }
 
         private void UpdateServerInfo(ServerInfo serverInfo)
@@ -398,7 +679,7 @@ namespace Barotrauma
             var serverFrame = serverList.Content.FindChild(serverInfo);
             if (serverFrame == null) return;
 
-            var serverContent = serverFrame.Children.First();
+            var serverContent = serverFrame.Children.First() as GUILayoutGroup;
             serverContent.ClearChildren();
 
             var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
@@ -418,21 +699,22 @@ namespace Barotrauma
                 UserData = "password"
             };
 
-			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
-			var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[4], 0.4f), serverContent.RectTransform, Anchor.Center),
-				label: "", style: "GUIServerListRoundStartedTickBox") {
+			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2] * 1.1f, 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
+
+            new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
+            {
 				ToolTip = TextManager.Get((serverInfo.GameStarted) ? "ServerListRoundStarted" : "ServerListRoundNotStarted"),
 				Selected = serverInfo.GameStarted,
 				Enabled = false
 			};
 
-            var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[5], 1.0f), serverContent.RectTransform),
+            var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[4], 1.0f), serverContent.RectTransform),
                 serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, style: "GUIServerListTextBox", textAlignment: Alignment.Right)
             {
                 ToolTip = TextManager.Get("ServerListPlayers")
             };
 
-            var serverPingText = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[6], 1.0f), serverContent.RectTransform), "?", 
+            var serverPingText = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[5], 1.0f), serverContent.RectTransform), "?", 
                 style: "GUIServerListTextBox", textColor: Color.White * 0.5f, textAlignment: Alignment.Right)
             {
                 ToolTip = TextManager.Get("ServerListPing")
@@ -441,6 +723,7 @@ namespace Barotrauma
             if (serverInfo.PingChecked)
             {
                 serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+                serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
             }
             else if (!string.IsNullOrEmpty(serverInfo.IP))
             {
@@ -494,6 +777,8 @@ namespace Barotrauma
                 serverPlayers.TextColor *= 0.5f;
             }
 
+            serverContent.Recalculate();
+            SortList(sortedBy, toggle: false);
             FilterServers();
         }
 
@@ -587,36 +872,16 @@ namespace Barotrauma
             masterServerResponded = true;
         }
 
-        private bool JoinServer(GUIButton button, object obj)
+        private bool JoinServer(string ip, string serverName)
         {
             if (string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
                 clientNameBox.Flash();
-                joinButton.Enabled = false;
                 return false;
             }
 
             GameMain.Config.DefaultPlayerName = clientNameBox.Text;
             GameMain.Config.SaveNewPlayerConfig();
-
-            string ip = null;
-            string serverName = null;
-            if (ipBox.UserData is ServerInfo serverInfo)
-            {
-                ip = serverInfo.IP + ":" + serverInfo.Port;
-                serverName = serverInfo.ServerName;
-            }
-            else if (!string.IsNullOrWhiteSpace(ipBox.Text))
-            {
-                ip = ipBox.Text;
-            }
-
-            if (string.IsNullOrWhiteSpace(ip))
-            {
-                ipBox.Flash();
-                joinButton.Enabled = false;
-                return false;
-            }
 
             CoroutineManager.StartCoroutine(ConnectToServer(ip, serverName));
 
@@ -664,18 +929,7 @@ namespace Barotrauma
                 {
                     if (serverInfo.Ping != -1)
                     {
-                        if (serverInfo.Ping < 50)
-                        {
-                            serverPingText.TextColor = Color.Green * 1.75f;
-                        }
-                        else if (serverInfo.Ping < 150)
-                        {
-                            serverPingText.TextColor = Color.Yellow * 0.85f;
-                        }
-                        else
-                        {
-                            serverPingText.TextColor = Color.Red * 0.75f;
-                        }
+                        serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
 					}
                     serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
                     yield return CoroutineStatus.Success;
@@ -684,6 +938,12 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
             yield return CoroutineStatus.Success;
+        }
+
+        private Color GetPingTextColor(int ping)
+        {
+            if (ping < 0) { return Color.DarkRed; }
+            return ToolBox.GradientLerp(ping / 200.0f, Color.LightGreen, Color.Yellow * 0.8f, Color.Red * 0.75f);
         }
 
         public void PingServer(ServerInfo serverInfo, int timeOut)

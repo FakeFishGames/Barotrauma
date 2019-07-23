@@ -23,7 +23,7 @@ namespace Barotrauma
             "CrewExperienceHigh"
         };
 
-        private readonly Point defaultPreviewImageSize = new Point(256, 128);
+        private readonly Point defaultPreviewImageSize = new Point(512, 368);
 
         private Camera cam;
 
@@ -2109,10 +2109,7 @@ namespace Barotrauma
         
         public override void AddToGUIUpdateList()
         {
-            if (MapEntity.SelectedList.Count == 1)
-            {
-                MapEntity.SelectedList[0].AddToGUIUpdateList();
-            }
+            MapEntity.FilteredSelectedList.FirstOrDefault()?.AddToGUIUpdateList();
             if (MapEntity.HighlightedListBox != null)
             {
                 MapEntity.HighlightedListBox.AddToGUIUpdateList();
@@ -2293,9 +2290,9 @@ namespace Barotrauma
                         dummyCharacter.SelectedConstruction = null;
                     }*/
                 }
-                else if (MapEntity.SelectedList.Count == 1)
+                else if (MapEntity.FilteredSelectedList.Count == 1)
                 {
-                    (MapEntity.SelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
+                    (MapEntity.FilteredSelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                 }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);

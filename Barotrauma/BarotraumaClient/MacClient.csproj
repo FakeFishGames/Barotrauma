@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">ReleaseMac</Configuration>
@@ -82,8 +82,8 @@
     <Reference Include="GameAnalytics.Mono, Version=1.0.7018.15293, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\lib\net45\GameAnalytics.Mono.dll</HintPath>
     </Reference>
-    <Reference Include="MonoGame.Framework, Version=3.7.1.189, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.7.1.189\lib\net45\MonoGame.Framework.dll</HintPath>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\..\Libraries\MonoGame.Framework\DesktopGL\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\..\Libraries\NuGet\NLog.4.3.8\lib\net45\NLog.dll</HintPath>
@@ -265,24 +265,61 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="barotrauma.icns" />
-    <None Include="osx\libMonoPosixHelper.dylib" />
-    <None Include="osx\libSDL2-2.0.0.dylib" />
-    <None Include="osx\libcairo.2.dylib" />
-    <None Include="osx\libexpat.1.5.2.dylib" />
-    <None Include="osx\libfontconfig.1.dylib" />
-    <None Include="osx\libfreetype.6.dylib" />
-    <None Include="osx\libgdiplus.0.dylib" />
-    <None Include="osx\libgdiplus.dylib" />
-    <None Include="osx\libgif.4.1.6.dylib" />
-    <None Include="osx\libglib-2.0.0.dylib" />
-    <None Include="osx\libintl.8.dylib" />
-    <None Include="osx\libjpeg.8.dylib" />
-    <None Include="osx\libopenal.1.dylib" />
-    <None Include="osx\libpixman-1.0.dylib" />
-    <None Include="osx\libpng14.14.dylib" />
-    <None Include="osx\libtiff.5.dylib" />
+    <None Include="osx\libMonoPosixHelper.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libcairo.2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libexpat.1.5.2.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libfontconfig.1.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libfreetype.6.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libgdiplus.0.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libgdiplus.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libgif.4.1.6.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libglib-2.0.0.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libintl.8.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libjpeg.8.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libopenal.1.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libpixman-1.0.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libpng14.14.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="osx\libtiff.5.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libSDL2-2.0.0.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp">
+      <LogicalName>Icon.bmp</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="ClientCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
   <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
@@ -291,10 +328,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.7.1.189\build\MonoGame.Framework.DesktopGL.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.7.1.189\build\MonoGame.Framework.DesktopGL.targets'))" />
     <Error Condition="!Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets'))" />
   </Target>
-  <Import Project="..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.7.1.189\build\MonoGame.Framework.DesktopGL.targets" Condition="Exists('..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.7.1.189\build\MonoGame.Framework.DesktopGL.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
