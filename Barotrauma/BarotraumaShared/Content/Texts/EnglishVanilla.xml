@@ -3238,13 +3238,16 @@
   <traitorgoaltimelimitfailure>You failed to complete your objective in time.</traitorgoaltimelimitfailure>
   <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
   <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
-  <traitorgoalfinditeminfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfinditeminfo>
-  <traitorgoalfinditeminfoalt>Find your next objective under a [target] in [targethullname].</traitorgoalfinditeminfoalt>
+  <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>
+  <traitorgoalfinditeminfo>Find your next objective under a [target] in [targethullname].</traitorgoalfinditeminfo>
   <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
   <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
   <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
   <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
+  <!--<traitorgoaltamperinfodefault>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
+  <traitorgoaltamperoxygeninfo>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
+  <traitorgoaltampercoilguninfo>Load dummy ammunition into [percentage] of coilgun loaders.</traitorgoaltampercoilguninfo>
   <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
 
   <entityname.flamer>Flamer</entityname.flamer>
