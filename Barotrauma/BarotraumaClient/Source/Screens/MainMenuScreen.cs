@@ -23,8 +23,8 @@ namespace Barotrauma
 
         private CampaignSetupUI campaignSetupUI;
 
-        private GUITextBox serverNameBox, portBox, queryPortBox, passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox, useUpnpBox;
+        private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
+        private GUITickBox isPublicBox/*, useUpnpBox*/;
 
         private GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
 
@@ -703,7 +703,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (!int.TryParse(portBox.Text, out int port) || port < 0 || port > 65535)
+            /*if (!int.TryParse(portBox.Text, out int port) || port < 0 || port > 65535)
             {
                 portBox.Text = NetConfig.DefaultPort.ToString();
                 portBox.Flash();
@@ -720,7 +720,7 @@ namespace Barotrauma
                     portBox.Flash();
                     return false;
                 }
-            }
+            }*/
 
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
@@ -735,13 +735,10 @@ namespace Barotrauma
                 int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
 
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
-                                   " -port " + port.ToString() +
-                                   " -queryport " + queryPort.ToString() +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
-                                   " -upnp " + useUpnpBox.Selected +
                                    " -maxplayers " + maxPlayersBox.Text +
-                                   " -steamid " + Steam.SteamManager.GetSteamID(); //TODO: let the player choose which peers to use
+                                   " -steamid " + Steam.SteamManager.GetSteamID();
 
                 string filename = exeName;
 #if LINUX || OSX
@@ -976,6 +973,7 @@ namespace Barotrauma
                 OverflowClip = true
             };
 
+            /* TODO: allow lidgren servers from client?
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
             portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
@@ -991,7 +989,7 @@ namespace Barotrauma
                     Text = queryPort.ToString(),
                     ToolTip = TextManager.Get("ServerQueryPortToolTip")
                 };
-            }
+            }*/
 
             var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
             var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
@@ -1027,10 +1025,11 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
             
+            /* TODO: remove UPnP altogether?
             useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
             {
                 ToolTip = TextManager.Get("AttemptUPnPToolTip")
-            };
+            };*/
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {
