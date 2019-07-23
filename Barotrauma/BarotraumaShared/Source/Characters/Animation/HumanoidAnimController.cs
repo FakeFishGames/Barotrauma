@@ -298,6 +298,7 @@ namespace Barotrauma
             upperLegLength = Vector2.Distance(localAnchorWaist, localAnchorKnee);
 
             LimbJoint ankleJoint = GetJointBetweenLimbs(lowerLegType, footType);
+            if (ankleJoint == null || kneeJoint == null) { return; }
             lowerLegLength = Vector2.Distance(
                 kneeJoint.LimbA.type == lowerLegType ? kneeJoint.LocalAnchorA : kneeJoint.LocalAnchorB,
                 ankleJoint.LimbA.type == lowerLegType ? ankleJoint.LocalAnchorA : ankleJoint.LocalAnchorB);
