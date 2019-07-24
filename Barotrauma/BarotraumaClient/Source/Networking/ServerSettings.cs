@@ -112,7 +112,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    UInt64 size = incMsg.Read7BitEncoded();
+                    UInt32 size = incMsg.ReadVariableUInt32();
                     incMsg.BitPosition += (int)(8 * size);
                 }
             }

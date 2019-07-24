@@ -359,8 +359,7 @@ namespace Barotrauma.Networking
                     string name = Client.SanitizeName(inc.ReadString());
                     UInt64 steamId = inc.ReadUInt64();
                     UInt16 ticketLength = inc.ReadUInt16();
-                    byte[] ticket = new byte[ticketLength];
-                    inc.ReadBytes(ticket, 0, ticketLength);
+                    byte[] ticket = inc.ReadBytes(ticketLength);
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
@@ -380,7 +379,7 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    int contentPackageCount = (int)inc.Read7BitEncoded();
+                    int contentPackageCount = (int)inc.ReadVariableUInt32();
                     List<ClientContentPackage> contentPackages = new List<ClientContentPackage>();
                     for (int i = 0; i < contentPackageCount; i++)
                     {
@@ -436,8 +435,7 @@ namespace Barotrauma.Networking
                     break;
                 case ConnectionInitialization.Password:
                     int pwLength = inc.ReadByte();
-                    byte[] incPassword = new byte[pwLength];
-                    inc.ReadBytes(incPassword, 0, pwLength);
+                    byte[] incPassword = inc.ReadBytes(pwLength);
                     if (pendingClient.PasswordSalt == null)
                     {
                         DebugConsole.ThrowError("Received password message from client without salt");

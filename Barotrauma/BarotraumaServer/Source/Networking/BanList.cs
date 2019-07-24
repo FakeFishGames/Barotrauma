@@ -285,7 +285,7 @@ namespace Barotrauma.Networking
             outMsg.Write(c.Connection == GameMain.Server.OwnerConnection);
 
             outMsg.WritePadBits();
-            outMsg.Write7BitEncoded((UInt64)bannedPlayers.Count);
+            outMsg.WriteVariableUInt32((UInt32)bannedPlayers.Count);
             for (int i = 0; i < bannedPlayers.Count; i++)
             {
                 BannedPlayer bannedPlayer = bannedPlayers[i];

@@ -138,7 +138,7 @@ namespace Barotrauma.Networking
             outMsg.Write(Enabled);
 
             outMsg.WritePadBits();
-            outMsg.Write7BitEncoded((UInt64)whitelistedPlayers.Count);
+            outMsg.WriteVariableUInt32((UInt32)whitelistedPlayers.Count);
             for (int i = 0; i < whitelistedPlayers.Count; i++)
             {
                 WhiteListedPlayer whitelistedPlayer = whitelistedPlayers[i];

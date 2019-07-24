@@ -498,8 +498,7 @@ namespace Barotrauma.Networking
                     UInt16 characterStateID = msg.ReadUInt16();
 
                     ReadWriteMessage buffer = new ReadWriteMessage();
-                    byte[] temp = new byte[msgLength-2];
-                    msg.ReadBytes(temp, 0, msgLength - 2);
+                    byte[] temp = msg.ReadBytes(msgLength - 2);
                     buffer.Write(temp, 0, msgLength - 2);
                     buffer.BitPosition = 0;
                     BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));

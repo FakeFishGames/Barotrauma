@@ -191,7 +191,7 @@ namespace Barotrauma.Networking
             incMsg.ReadPadBits();
 
             whitelistedPlayers.Clear();
-            UInt64 bannedPlayerCount = incMsg.Read7BitEncoded();
+            UInt32 bannedPlayerCount = incMsg.ReadVariableUInt32();
             for (int i = 0; i < (int)bannedPlayerCount; i++)
             {
                 string name = incMsg.ReadString();

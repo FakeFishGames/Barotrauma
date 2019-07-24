@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Lidgren.Network;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Barotrauma.Networking
@@ -9,7 +11,26 @@ namespace Barotrauma.Networking
     public static class MsgConstants
     {
         public const int MTU = 1200;
-        public const int CompressionThreshold = 1000;
+        public const int CompressionThreshold = 100000;
+    }
+
+    /// <summary>
+    /// Utility struct for writing Singles
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct SingleUIntUnion
+    {
+        /// <summary>
+        /// Value as a 32 bit float
+        /// </summary>
+        [FieldOffset(0)]
+        public float SingleValue;
+
+        /// <summary>
+        /// Value as an unsigned 32 bit integer
+        /// </summary>
+        [FieldOffset(0)]
+        public uint UIntValue;
     }
 
     internal static class MsgWriter
@@ -45,312 +66,114 @@ namespace Barotrauma.Networking
 
         internal static void Write(byte[] buf, ref int bitPos, byte val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            WritePadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            buf[bytePos] = val;
+            NetBitWriter.WriteByte(val, 8, buf, bitPos);
             bitPos += 8;
-
-#if DEBUG
-            byte testVal = MsgReader.ReadByte(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("Byte written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
         }
 
         internal static void Write(byte[] buf, ref int bitPos, UInt16 val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            WritePadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            buf[bytePos] = (byte)(val & 0xff);
-            buf[bytePos + 1] = (byte)((val >> 8) & 0xff);
+            NetBitWriter.WriteUInt16(val, 16, buf, bitPos);
             bitPos += 16;
-
-#if DEBUG
-            UInt16 testVal = MsgReader.ReadUInt16(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("UInt16 written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
         }
 
         internal static void Write(byte[] buf, ref int bitPos, Int16 val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            Write(buf, ref bitPos, (UInt16)val);
-
-#if DEBUG
-            Int16 testVal = MsgReader.ReadInt16(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("Int16 written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
+            NetBitWriter.WriteUInt16((UInt16)val, 16, buf, bitPos);
+            bitPos += 16;
         }
 
         internal static void Write(byte[] buf, ref int bitPos, UInt32 val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            WritePadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            buf[bytePos] = (byte)(val & 0xff);
-            buf[bytePos + 1] = (byte)((val >> 8) & 0xff);
-            buf[bytePos + 2] = (byte)((val >> 16) & 0xff);
-            buf[bytePos + 3] = (byte)((val >> 24) & 0xff);
+            NetBitWriter.WriteUInt32(val, 32, buf, bitPos);
             bitPos += 32;
-
-#if DEBUG
-            UInt32 testVal = MsgReader.ReadUInt32(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("UInt32 written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
         }
 
         internal static void Write(byte[] buf, ref int bitPos, Int32 val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            Write(buf, ref bitPos, (UInt32)val);
-
-#if DEBUG
-            Int32 testVal = MsgReader.ReadInt32(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("Int32 written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
+            NetBitWriter.WriteUInt32((UInt32)val, 32, buf, bitPos);
+            bitPos += 32;
         }
 
         internal static void Write(byte[] buf, ref int bitPos, UInt64 val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            WritePadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            buf[bytePos] = (byte)(val & 0xff);
-            buf[bytePos + 1] = (byte)((val >> 8) & 0xff);
-            buf[bytePos + 2] = (byte)((val >> 16) & 0xff);
-            buf[bytePos + 3] = (byte)((val >> 24) & 0xff);
-            buf[bytePos + 4] = (byte)((val >> 32) & 0xff);
-            buf[bytePos + 5] = (byte)((val >> 40) & 0xff);
-            buf[bytePos + 6] = (byte)((val >> 48) & 0xff);
-            buf[bytePos + 7] = (byte)((val >> 56) & 0xff);
+            NetBitWriter.WriteUInt64(val, 64, buf, bitPos);
             bitPos += 64;
-
-#if DEBUG
-            UInt64 testVal = MsgReader.ReadUInt64(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("UInt64 written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
         }
 
         internal static void Write(byte[] buf, ref int bitPos, Int64 val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            Write(buf, ref bitPos, (UInt64)val);
-
-#if DEBUG
-            Int64 testVal = MsgReader.ReadInt64(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("Int64 written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
+            NetBitWriter.WriteUInt64((UInt64)val, 64, buf, bitPos);
+            bitPos += 64;
         }
 
         internal static void Write(byte[] buf, ref int bitPos, Single val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
+            // Use union to avoid BitConverter.GetBytes() which allocates memory on the heap
+            SingleUIntUnion su;
+            su.UIntValue = 0; // must initialize every member of the union to avoid warning
+            su.SingleValue = val;
 
-            byte[] bytes = BitConverter.GetBytes(val);
-            WritePadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            for (int i = 0; i < 4; i++)
-            {
-                buf[bytePos + i] = bytes[i];
-            }
+            NetBitWriter.WriteUInt32(su.UIntValue, 32, buf, bitPos);
             bitPos += 32;
-
-#if DEBUG
-            Single testVal = MsgReader.ReadSingle(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("Single written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
         }
 
         internal static void Write(byte[] buf, ref int bitPos, Double val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            Write(buf, ref bitPos, BitConverter.DoubleToInt64Bits(val));
-
-#if DEBUG
-            Double testVal = MsgReader.ReadDouble(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("Double written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
+            byte[] bytes = BitConverter.GetBytes(val);
+            WriteBytes(buf, ref bitPos, bytes, 0, bytes.Length);
+            bitPos += 64;
         }
-
-        internal static void Write7BitEncoded(byte[] buf, ref int bitPos, UInt64 val)
+        internal static void Write(byte[] buf, ref int bitPos, string val)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            WritePadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            byte b = (byte)(val & 0x7f);
-            if (val > 0x7f)
+            if (string.IsNullOrEmpty(val))
             {
-                b |= 0x80;
-            }
-            buf[bytePos] = b;
-            bitPos += 8;
-            if (val > 0x7f)
-            {
-                Write7BitEncoded(buf, ref bitPos, val >> 7);
-            }
-
-#if DEBUG
-            UInt64 testVal = MsgReader.Read7BitEncoded(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("7BitEncoded written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
-        }
-
-        internal static void Write(byte[] buf, ref int bitPos, String val)
-        {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            if (val == null)
-            {
-                Write7BitEncoded(buf, ref bitPos, 0);
+                WriteVariableUInt32(buf, ref bitPos, (uint)0);
                 return;
             }
-
+            
             byte[] bytes = Encoding.UTF8.GetBytes(val);
-            Write7BitEncoded(buf, ref bitPos, (UInt64)bytes.Length);
-            for (int i = 0; i < val.Length; i++)
-            {
-                Write(buf, ref bitPos, bytes[i]);
-            }
+            WriteVariableUInt32(buf, ref bitPos, (uint)bytes.Length);
+            WriteBytes(buf, ref bitPos, bytes, 0, bytes.Length);
+        }
 
-#if DEBUG
-            String testVal = MsgReader.ReadString(buf, ref resetPos);
-            if (testVal != val || resetPos != bitPos)
+        internal static int WriteVariableUInt32(byte[] buf, ref int bitPos, uint value)
+        {
+            int retval = 1;
+            uint num1 = (uint)value;
+            while (num1 >= 0x80)
             {
-                DebugConsole.ThrowError("String written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
+                Write(buf, ref bitPos, (byte)(num1 | 0x80));
+                num1 = num1 >> 7;
+                retval++;
             }
-#endif
+            Write(buf, ref bitPos, (byte)num1);
+            return retval;
         }
 
         internal static void WriteRangedInteger(byte[] buf, ref int bitPos, int val, int min, int max)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-            if (max < min)
-            {
-                int temp = max;
-                max = min; min = temp;
-            }
-            if (val < min) val = min;
-            if (val > max) val = max;
+            uint range = (uint)(max - min);
+            int numberOfBits = NetUtility.BitsToHoldUInt(range);
 
-            int diff = max - min;
-            int normalized = val - min;
-            if (normalized < 0) normalized = 0;
-            if (normalized > diff) normalized = diff;
-            int requiredBits = 1;
-            while ((1 << requiredBits) <= diff) { requiredBits++; }
-            for (int i = 0; i < requiredBits; i++)
-            {
-                Write(buf, ref bitPos, ((normalized >> i) & 0x1) != 0);
-            }
-
-#if DEBUG
-            int testVal = MsgReader.ReadRangedInteger(buf, ref resetPos, min, max);
-            if (testVal != val || resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("RangedInteger("+min+", "+max+") written incorrectly! " + testVal + ", " + val + "; " + resetPos + ", " + bitPos);
-            }
-#endif
+            uint rvalue = (uint)(val - min);
+            NetBitWriter.WriteUInt32(rvalue, numberOfBits, buf, bitPos);
+            bitPos += numberOfBits;
         }
 
-        internal static void WriteRangedSingle(byte[] buf, ref int bitPos, Single val, Single min, Single max, int bitCount)
+        internal static void WriteRangedSingle(byte[] buf, ref int bitPos, Single val, Single min, Single max, int numberOfBits)
         {
-            int maxInt = (1 << bitCount) - 1;
-            Single range = max - min;
-            int normalized = (int)(maxInt * ((val - min) / range));
-            WriteRangedInteger(buf, ref bitPos, normalized, 0, maxInt);
+            float range = max - min;
+            float unit = ((val - min) / range);
+            int maxVal = (1 << numberOfBits) - 1;
+            
+            NetBitWriter.WriteUInt32((UInt32)((float)maxVal * unit), numberOfBits, buf, bitPos);
+            bitPos += numberOfBits;
         }
 
         internal static void WriteBytes(byte[] buf, ref int bitPos, byte[] val, int pos, int length)
         {
-#if DEBUG
-            int resetPos = bitPos;
-#endif
-
-            WritePadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            Array.Copy(val, pos, buf, bytePos, length);
+            NetBitWriter.WriteBytes(val, pos, length, buf, bitPos);
             bitPos += length * 8;
-
-#if DEBUG
-            byte[] testVal = new byte[length];
-            MsgReader.ReadBytes(buf, ref resetPos, testVal, pos, length);
-            if (resetPos != bitPos)
-            {
-                DebugConsole.ThrowError("Bytes written incorrectly (incorrect bitPos)! " + resetPos + ", " + bitPos);
-            }
-            for (int i=0;i<length;i++)
-            {
-                if (testVal[i+pos] != val[i+pos])
-                {
-                    DebugConsole.ThrowError("Bytes[" + (i + pos) + "] written incorrectly! " + testVal[i + pos] + ", " + val[i + pos]);
-                    return;
-                }
-            }
-#endif
         }
     }
 
@@ -358,10 +181,9 @@ namespace Barotrauma.Networking
     {
         internal static bool ReadBoolean(byte[] buf, ref int bitPos)
         {
-            int bytePos = bitPos / 8;
-            int bitOffset = bitPos % 8;
+            byte retval = NetBitWriter.ReadByte(buf, 1, bitPos);
             bitPos++;
-            return (buf[bytePos] & (1 << bitOffset)) != 0;
+            return (retval > 0 ? true : false);
         }
 
         internal static void ReadPadBits(byte[] buf, ref int bitPos)
@@ -372,20 +194,16 @@ namespace Barotrauma.Networking
 
         internal static byte ReadByte(byte[] buf, ref int bitPos)
         {
-            ReadPadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
+            byte retval = NetBitWriter.ReadByte(buf, 8, bitPos);
             bitPos += 8;
-            return buf[bytePos];
+            return retval;
         }
 
         internal static UInt16 ReadUInt16(byte[] buf, ref int bitPos)
         {
-            ReadPadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            UInt16 retVal = buf[bytePos];
-            retVal |= (UInt16)(((UInt32)buf[bytePos + 1]) << 8);
+            uint retval = NetBitWriter.ReadUInt16(buf, 16, bitPos);
             bitPos += 16;
-            return retVal;
+            return (ushort)retval;
         }
 
         internal static Int16 ReadInt16(byte[] buf, ref int bitPos)
@@ -395,14 +213,9 @@ namespace Barotrauma.Networking
 
         internal static UInt32 ReadUInt32(byte[] buf, ref int bitPos)
         {
-            ReadPadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            UInt32 retVal = buf[bytePos];
-            retVal |= ((UInt32)buf[bytePos + 1]) << 8;
-            retVal |= ((UInt32)buf[bytePos + 2]) << 16;
-            retVal |= ((UInt32)buf[bytePos + 3]) << 24;
+            uint retval = NetBitWriter.ReadUInt32(buf, 32, bitPos);
             bitPos += 32;
-            return retVal;
+            return retval;
         }
 
         internal static Int32 ReadInt32(byte[] buf, ref int bitPos)
@@ -412,18 +225,12 @@ namespace Barotrauma.Networking
 
         internal static UInt64 ReadUInt64(byte[] buf, ref int bitPos)
         {
-            ReadPadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            UInt64 retVal = buf[bytePos];
-            retVal |= ((UInt64)buf[bytePos + 1]) << 8;
-            retVal |= ((UInt64)buf[bytePos + 2]) << 16;
-            retVal |= ((UInt64)buf[bytePos + 3]) << 24;
-            retVal |= ((UInt64)buf[bytePos + 4]) << 32;
-            retVal |= ((UInt64)buf[bytePos + 5]) << 40;
-            retVal |= ((UInt64)buf[bytePos + 6]) << 48;
-            retVal |= ((UInt64)buf[bytePos + 7]) << 56;
-            bitPos += 64;
-            return retVal;
+            ulong low = NetBitWriter.ReadUInt32(buf, 32, bitPos);
+            bitPos += 32;
+            ulong high = NetBitWriter.ReadUInt32(buf, 32, bitPos);
+            ulong retval = low + (high << 32);
+            bitPos += 32;
+            return retval;
         }
 
         internal static Int64 ReadInt64(byte[] buf, ref int bitPos)
@@ -433,59 +240,84 @@ namespace Barotrauma.Networking
 
         internal static Single ReadSingle(byte[] buf, ref int bitPos)
         {
-            ReadPadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            Single retVal = BitConverter.ToSingle(buf, bytePos);
-            bitPos += 32;
-            return retVal;
+            if ((bitPos & 7) == 0) // read directly
+            {
+                float retval = BitConverter.ToSingle(buf, bitPos >> 3);
+                bitPos += 32;
+                return retval;
+            }
+
+            byte[] bytes = ReadBytes(buf, ref bitPos, 4);
+            return BitConverter.ToSingle(bytes, 0);
         }
 
         internal static Double ReadDouble(byte[] buf, ref int bitPos)
         {
-            return BitConverter.Int64BitsToDouble(ReadInt64(buf, ref bitPos));
+            if ((bitPos & 7) == 0) // read directly
+            {
+                // read directly
+                double retval = BitConverter.ToDouble(buf, bitPos >> 3);
+                bitPos += 64;
+                return retval;
+            }
+
+            byte[] bytes = ReadBytes(buf, ref bitPos, 8);
+            return BitConverter.ToDouble(bytes, 0);
         }
 
-        internal static UInt64 Read7BitEncoded(byte[] buf, ref int bitPos)
+        internal static UInt32 ReadVariableUInt32(byte[] buf, ref int bitPos)
         {
-            ReadPadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            UInt64 retVal = (UInt64)(buf[bytePos] & 0x7f);
-            bitPos += 8;
-            if ((buf[bytePos] & 0x80) != 0)
+            int bitLength = buf.Length * 8;
+
+            int num1 = 0;
+            int num2 = 0;
+            while (bitLength - bitPos >= 8)
             {
-                retVal |= Read7BitEncoded(buf, ref bitPos) << 7;
+                byte num3 = ReadByte(buf, ref bitPos);
+                num1 |= (num3 & 0x7f) << num2;
+                num2 += 7;
+                if ((num3 & 0x80) == 0)
+                    return (uint)num1;
             }
-            return retVal;
+
+            // ouch; failed to find enough bytes; malformed variable length number?
+            return (uint)num1;
         }
 
         internal static String ReadString(byte[] buf, ref int bitPos)
         {
-            UInt64 length = Read7BitEncoded(buf, ref bitPos);
-            byte[] bytes = new byte[length];
-            for (UInt64 i = 0; i < length; i++)
+            int bitLength = buf.Length * 8;
+            int byteLen = (int)ReadVariableUInt32(buf, ref bitPos);
+
+            if (byteLen <= 0) { return String.Empty; }
+
+            if ((ulong)(bitLength - bitPos) < ((ulong)byteLen * 8))
             {
-                bytes[i] = ReadByte(buf, ref bitPos);
+                // not enough data
+				return null;
             }
-            return Encoding.UTF8.GetString(bytes);
+
+            if ((bitPos & 7) == 0)
+            {
+                // read directly
+                string retval = System.Text.Encoding.UTF8.GetString(buf, bitPos >> 3, byteLen);
+                bitPos += (8 * byteLen);
+                return retval;
+            }
+
+            byte[] bytes = ReadBytes(buf, ref bitPos, byteLen);
+            return System.Text.Encoding.UTF8.GetString(bytes, 0, bytes.Length);
         }
 
         internal static int ReadRangedInteger(byte[] buf, ref int bitPos, int min, int max)
         {
-            if (max < min)
-            {
-                int temp = max;
-                max = min; min = temp;
-            }
+			uint range = (uint)(max - min);
+			int numBits = NetUtility.BitsToHoldUInt(range);
 
-            int diff = max - min;
-            int retVal = 0;
-            int requiredBits = 1;
-            while ((1 << requiredBits) <= diff) { requiredBits++; }
-            for (int i = 0; i < requiredBits; i++)
-            {
-                if (ReadBoolean(buf, ref bitPos)) retVal |= 1 << i;
-            }
-            return min+retVal;
+			uint rvalue = NetBitWriter.ReadUInt32(buf, numBits, bitPos);
+            bitPos += numBits;
+            
+            return (int)(min + rvalue);
         }
 
         internal static Single ReadRangedSingle(byte[] buf, ref int bitPos, Single min, Single max, int bitCount)
@@ -496,12 +328,12 @@ namespace Barotrauma.Networking
             return min + (range * ((Single)intVal) / ((Single)maxInt));
         }
 
-        internal static void ReadBytes(byte[] buf, ref int bitPos, byte[] ret, int pos, int length)
+        internal static byte[] ReadBytes(byte[] buf, ref int bitPos, int numberOfBytes)
         {
-            ReadPadBits(buf, ref bitPos);
-            int bytePos = bitPos / 8;
-            Array.Copy(buf, bytePos, ret, pos, length);
-            bitPos += length * 8;
+            byte[] retval = new byte[numberOfBytes];
+            NetBitWriter.ReadBytes(buf, numberOfBytes, bitPos, retval, 0);
+            bitPos += (8 * numberOfBytes);
+            return retval;
         }
     }
 
@@ -616,9 +448,9 @@ namespace Barotrauma.Networking
             MsgWriter.Write(buf, ref seekPos, val);
         }
 
-        public void Write7BitEncoded(UInt64 val)
+        public void WriteVariableUInt32(UInt32 val)
         {
-            MsgWriter.Write7BitEncoded(buf, ref seekPos, val);
+            MsgWriter.WriteVariableUInt32(buf, ref seekPos, val);
         }
 
         public void Write(String val)
@@ -814,9 +646,9 @@ namespace Barotrauma.Networking
             return MsgReader.ReadDouble(buf, ref seekPos);
         }
 
-        public UInt64 Read7BitEncoded()
+        public UInt32 ReadVariableUInt32()
         {
-            return MsgReader.Read7BitEncoded(buf, ref seekPos);
+            return MsgReader.ReadVariableUInt32(buf, ref seekPos);
         }
 
         public String ReadString()
@@ -834,9 +666,9 @@ namespace Barotrauma.Networking
             return MsgReader.ReadRangedSingle(buf, ref seekPos, min, max, bitCount);
         }
 
-        public void ReadBytes(byte[] ret, int startPos, int length)
+        public byte[] ReadBytes(int numberOfBytes)
         {
-            MsgReader.ReadBytes(buf, ref seekPos, ret, startPos, length);
+            return MsgReader.ReadBytes(buf, ref seekPos, numberOfBytes);
         }
     }
 
@@ -953,9 +785,9 @@ namespace Barotrauma.Networking
             MsgWriter.Write(buf, ref seekPos, val);
         }
 
-        public void Write7BitEncoded(UInt64 val)
+        public void WriteVariableUInt32(UInt32 val)
         {
-            MsgWriter.Write7BitEncoded(buf, ref seekPos, val);
+            MsgWriter.WriteVariableUInt32(buf, ref seekPos, val);
         }
 
         public void Write(String val)
@@ -1038,9 +870,9 @@ namespace Barotrauma.Networking
             return MsgReader.ReadDouble(buf, ref seekPos);
         }
 
-        public UInt64 Read7BitEncoded()
+        public UInt32 ReadVariableUInt32()
         {
-            return MsgReader.Read7BitEncoded(buf, ref seekPos);
+            return MsgReader.ReadVariableUInt32(buf, ref seekPos);
         }
 
         public String ReadString()
@@ -1058,9 +890,9 @@ namespace Barotrauma.Networking
             return MsgReader.ReadRangedSingle(buf, ref seekPos, min, max, bitCount);
         }
 
-        public void ReadBytes(byte[] ret, int startPos, int length)
+        public byte[] ReadBytes(int numberOfBytes)
         {
-            MsgReader.ReadBytes(buf, ref seekPos, ret, startPos, length);
+            return MsgReader.ReadBytes(buf, ref seekPos, numberOfBytes);
         }
 
         public void PrepareForSending(byte[] outBuf, out bool isCompressed, out int outLength)

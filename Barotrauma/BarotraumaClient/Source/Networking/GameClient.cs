@@ -1190,8 +1190,7 @@ namespace Barotrauma.Networking
                             UInt16 updateID     = inc.ReadUInt16();
 
                             UInt16 settingsLen = inc.ReadUInt16();
-                            byte[] settingsData = new byte[settingsLen];
-                            inc.ReadBytes(settingsData, 0, settingsLen);
+                            byte[] settingsData = inc.ReadBytes(settingsLen);
 
                             if (inc.ReadBoolean())
                             {

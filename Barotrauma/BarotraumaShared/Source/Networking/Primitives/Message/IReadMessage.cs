@@ -17,11 +17,11 @@ namespace Barotrauma.Networking
         Int64 ReadInt64();
         Single ReadSingle();
         Double ReadDouble();
-        UInt64 Read7BitEncoded();
+        UInt32 ReadVariableUInt32();
         String ReadString();
         int ReadRangedInteger(int min, int max);
         Single ReadRangedSingle(Single min, Single max, int bitCount);
-        void ReadBytes(byte[] ret, int startPos, int length);
+        byte[] ReadBytes(int numberOfBytes);
 
         int BitPosition { get; set; }
         int BytePosition { get; }

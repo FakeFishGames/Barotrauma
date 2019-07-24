@@ -115,8 +115,7 @@ namespace Barotrauma.Networking
                     bytesToRead -= (int)((Received + (ulong)bytesToRead) - FileSize);
                 }
 
-                byte[] all = new byte[bytesToRead];
-                inc.ReadBytes(all, 0, bytesToRead);
+                byte[] all = inc.ReadBytes(bytesToRead);
                 Received += (ulong)all.Length;
                 WriteStream.Write(all, 0, all.Length);
 

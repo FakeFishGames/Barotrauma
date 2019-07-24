@@ -137,7 +137,7 @@ namespace Barotrauma.Networking
                 for (int i = 0; i < BUFFER_COUNT; i++)
                 {
                     bufferLengths[i] = msg.ReadByte();
-                    msg.ReadBytes(buffers[i], 0, bufferLengths[i]);
+                    buffers[i] = msg.ReadBytes(bufferLengths[i]);
                 }
                 newestBufferInd = BUFFER_COUNT - 1;
                 LatestBufferID = incLatestBufferID;

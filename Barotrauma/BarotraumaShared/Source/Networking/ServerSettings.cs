@@ -107,7 +107,7 @@ namespace Barotrauma.Networking
             public void Read(IReadMessage msg)
             {
                 int oldPos = msg.BitPosition;
-                UInt64 size = msg.Read7BitEncoded();
+                UInt32 size = msg.ReadVariableUInt32();
 
                 float x; float y; float z; float w;
                 byte r; byte g; byte b; byte a;
@@ -173,36 +173,36 @@ namespace Barotrauma.Networking
                 switch (typeString)
                 {
                     case "float":
-                        msg.Write7BitEncoded(4);
+                        msg.WriteVariableUInt32(4);
                         msg.Write((float)overrideValue);
                         break;
                     case "vector2":
-                        msg.Write7BitEncoded(8);
+                        msg.WriteVariableUInt32(8);
                         msg.Write(((Vector2)overrideValue).X);
                         msg.Write(((Vector2)overrideValue).Y);
                         break;
                     case "vector3":
-                        msg.Write7BitEncoded(12);
+                        msg.WriteVariableUInt32(12);
                         msg.Write(((Vector3)overrideValue).X);
                         msg.Write(((Vector3)overrideValue).Y);
                         msg.Write(((Vector3)overrideValue).Z);
                         break;
                     case "vector4":
-                        msg.Write7BitEncoded(16);
+                        msg.WriteVariableUInt32(16);
                         msg.Write(((Vector4)overrideValue).X);
                         msg.Write(((Vector4)overrideValue).Y);
                         msg.Write(((Vector4)overrideValue).Z);
                         msg.Write(((Vector4)overrideValue).W);
                         break;
                     case "color":
-                        msg.Write7BitEncoded(4);
+                        msg.WriteVariableUInt32(4);
                         msg.Write(((Color)overrideValue).R);
                         msg.Write(((Color)overrideValue).G);
                         msg.Write(((Color)overrideValue).B);
                         msg.Write(((Color)overrideValue).A);
                         break;
                     case "rectangle":
-                        msg.Write7BitEncoded(16);
+                        msg.WriteVariableUInt32(16);
                         msg.Write(((Rectangle)overrideValue).X);
                         msg.Write(((Rectangle)overrideValue).Y);
                         msg.Write(((Rectangle)overrideValue).Width);
