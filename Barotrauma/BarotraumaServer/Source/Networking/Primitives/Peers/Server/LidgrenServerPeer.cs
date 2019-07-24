@@ -135,26 +135,39 @@ namespace Barotrauma.Networking
             {
                 HandleConnection(inc);
             }
-            
-            //after processing connections, go ahead with the rest of the messages
-            foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
+
+            try
             {
-                switch (inc.MessageType)
+                //after processing connections, go ahead with the rest of the messages
+                foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
                 {
-                    case NetIncomingMessageType.Data:
-                        HandleDataMessage(inc);
-                        break;
-                    case NetIncomingMessageType.StatusChanged:
-                        HandleStatusChanged(inc);
-                        break;
+                    switch (inc.MessageType)
+                    {
+                        case NetIncomingMessageType.Data:
+                            HandleDataMessage(inc);
+                            break;
+                        case NetIncomingMessageType.StatusChanged:
+                            HandleStatusChanged(inc);
+                            break;
+                    }
                 }
             }
 
-            for (int i=0;i<pendingClients.Count;i++)
+            catch (Exception e)
+            {
+                string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.ThrowError(errorMsg);
+                }
+            }
+
+            for (int i = 0; i < pendingClients.Count; i++)
             {
                 PendingClient pendingClient = pendingClients[i];
                 UpdatePendingClient(pendingClient);
-                if (i>=pendingClients.Count || pendingClients[i] != pendingClient) { i--; }
+                if (i >= pendingClients.Count || pendingClients[i] != pendingClient) { i--; }
             }
 
             incomingLidgrenMessages.Clear();

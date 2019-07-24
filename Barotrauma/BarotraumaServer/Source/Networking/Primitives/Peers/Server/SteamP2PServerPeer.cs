@@ -80,12 +80,14 @@ namespace Barotrauma.Networking
         {
             if (netServer != null) { return; }
 
-            netPeerConfiguration = new NetPeerConfiguration("barotrauma");
-            netPeerConfiguration.AcceptIncomingConnections = true;
-            netPeerConfiguration.AutoExpandMTU = false;
-            netPeerConfiguration.MaximumConnections = 1; //only allow owner to connect
-            netPeerConfiguration.EnableUPnP = false;
-            netPeerConfiguration.Port = Steam.SteamManager.STEAMP2P_OWNER_PORT;
+            netPeerConfiguration = new NetPeerConfiguration("barotrauma")
+            {
+                AcceptIncomingConnections = true,
+                AutoExpandMTU = false,
+                MaximumConnections = 1, //only allow owner to connect
+                EnableUPnP = false,
+                Port = Steam.SteamManager.STEAMP2P_OWNER_PORT
+            };
 
             netPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
                 NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
@@ -152,17 +154,31 @@ namespace Barotrauma.Networking
                 HandleConnection(inc);
             }
 
-            //after processing connections, go ahead with the rest of the messages
-            foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
+
+            try
             {
-                switch (inc.MessageType)
+                //after processing connections, go ahead with the rest of the messages
+                foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType != NetIncomingMessageType.ConnectionApproval))
                 {
-                    case NetIncomingMessageType.Data:
-                        HandleDataMessage(inc);
-                        break;
-                    case NetIncomingMessageType.StatusChanged:
-                        HandleStatusChanged(inc);
-                        break;
+                    switch (inc.MessageType)
+                    {
+                        case NetIncomingMessageType.Data:
+                            HandleDataMessage(inc);
+                            break;
+                        case NetIncomingMessageType.StatusChanged:
+                            HandleStatusChanged(inc);
+                            break;
+                    }
+                }
+            }
+
+            catch (Exception e)
+            {
+                string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.ThrowError(errorMsg);
                 }
             }
 
