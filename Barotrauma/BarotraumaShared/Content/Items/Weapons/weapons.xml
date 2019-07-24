@@ -269,8 +269,8 @@
       <sound file="Content/Items/Tools/WeldingLoop.ogg" type="OnUse" range="500.0" loop="true" />
       <!-- bubbles when usage fails (e.g. in water) -->
       <StatusEffect type="OnFailure" target="UseTarget">
-        <ParticleEmitter particle="bubbles" particlespersecond="20" anglemin="0" anglemax="360" velocitymin="50" velocitymax="100" />
-        <ParticleEmitter particle="fleshsmoke" particlespersecond="5" anglemin="0" anglemax="360" scalemin="1" scalemax="1.5" velocitymin="50" velocitymax="100"/>
+        <ParticleEmitter particle="bubbles" particlespersecond="20" anglemin="-10" anglemax="10" scalemin="0.3" scalemax="0.7" velocitymin="5" velocitymax="100" copyentityangle="true"/>
+        <ParticleEmitter particle="fleshsmoke" particlespersecond="10" anglemin="-10" anglemax="10" scalemin="1" scalemax="1.5" velocitymin="5" velocitymax="200" copyentityangle="true"/>
       </StatusEffect>
       <!-- make the item unusable when there's less than 10% oxygen -->
       <StatusEffect type="OnUse" target="Hull,This" UsableIn="None">
@@ -295,8 +295,8 @@
       <StatusEffect type="OnUse" target="Hull" Oxygen="-10000"/>
       <!-- weapons skill 20 required to use the item -->
       <RequiredSkill identifier="weapons" level="20" />
-      <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
-      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-12.0" />
+      <!-- if the skill requirement isn't met the welding fuel will be used 50% faster -->
+      <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank,incendiumfueltank" Condition="-9.0" />
       <LightComponent LightColor="255,174,121,255" Flicker="0.5" Range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
       </LightComponent>
