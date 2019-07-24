@@ -234,5 +234,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\OpenFileDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TextureLoader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Sabotageable.cs" />
   </ItemGroup>
 </Project>

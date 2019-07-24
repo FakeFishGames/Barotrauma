@@ -17,8 +17,9 @@
      <Goal type="floodsub" percentage="50">
      </Goal>
    </Objective>
- </TraitorMission>-->
-
+   </TraitorMission>-->
+ 
+<!--
   <TraitorMission identifier="MeltdownMission">
     <StartInfoText id="traitormissionstartmessage"/>
     <SuccessInfoText id="traitormissionsuccessmessage"/>
@@ -40,20 +41,20 @@
         <InfoText id="traitorgoalkilltargetinfo" />
         <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
       </Goal>
-      <!--<Goal type="sabotage" targetid="pump" tag="ballast" numberoftargets="2" targetall="false" threshold="30">
+      <Goal type="sabotage" targetid="pump" tag="ballast" numberoftargets="2" targetall="false" threshold="30">
         <InfoText id="traitorgoalsabotageinfo" />
         <Modifier type="duration" duration="30" cumulative="true" />
-      </Goal>-->
+      </Goal>
     </Objective>
 
     <Objective>
       <InfoText id="traitorobjectivestart"/>
-      <!--<Goal type="causemeltdown" timelimit="90">
+      <Goal type="causemeltdown" timelimit="90">
         <InfoText id="traitorgoalcausemeltdowninfo" />
         <InfoTextFailure id="traitorgoaltimelimitfailure"/>
-      </Goal>-->
+      </Goal>
     </Objective>
-  </TraitorMission>
+  </TraitorMission>-->
 
   <TraitorMission identifier="FloodSubMission">
     <StartInfoText id="traitormissionstartmessage"/>
@@ -63,7 +64,7 @@
     <Objective>
       <InfoText id="traitorobjectivestartmessage"/>
       <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
-      <Goal type="finditem" identifier="wrench">
+      <Goal type="finditem" identifier="sledgehammer">
         <InfoText id="traitorgoalfinditeminfo" />
         <InfoTextFailure id="traitorgoalfinditemfailure"/>
       </Goal>

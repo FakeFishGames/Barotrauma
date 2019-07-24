@@ -1739,6 +1739,8 @@
   <requiredrepairskills>Required skills:</requiredrepairskills>
   <repairbutton>Repair</repairbutton>
   <repairing>Repairing</repairing>
+  <sabotagebutton>Sabotage</sabotagebutton>
+  <sabotaging>Sabotaging</sabotaging>
   <electricalrepairsheader>Electrical Repairs</electricalrepairsheader>
   <mechanicalrepairsheader>Mechanical Repairs</mechanicalrepairsheader>
 
@@ -2064,6 +2066,7 @@
   <itemmsgrepairscrewdriver>[[use]] Repair (Screwdriver)</itemmsgrepairscrewdriver>
   <itemmsgrepairweldingtool>[[shoot]] Repair (Welding Tool)</itemmsgrepairweldingtool>
   <itemmsgrepairwrench>[[use]] Repair (Wrench)</itemmsgrepairwrench>
+  <itemmsgsabotagesledgehammer>[[use]] Sabotage (Sledgehammer)</itemmsgsabotagesledgehammer>
   <itemmsguseplasmacutter>[[shoot]] Cut (Plasma Cutter)</itemmsguseplasmacutter>
   <itemmsgbatterycellrequired>Battery cell required</itemmsgbatterycellrequired>
   <itemmsgweldingfuelrequired>Welding fuel required</itemmsgweldingfuelrequired>
