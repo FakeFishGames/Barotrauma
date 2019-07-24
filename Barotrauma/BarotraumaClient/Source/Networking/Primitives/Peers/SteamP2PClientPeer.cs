@@ -110,7 +110,7 @@ namespace Barotrauma.Networking
             {
                 IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
                 string msg = inc.ReadString();
-                Close(msg);
+                OnDisconnect?.Invoke(msg);
             }
             else
             {
@@ -303,7 +303,6 @@ namespace Barotrauma.Networking
             Steam.SteamManager.Instance.Networking.CloseSession(hostSteamId);
 
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
-            OnDisconnect?.Invoke(msg);
             hostSteamId = 0;
         }
     }

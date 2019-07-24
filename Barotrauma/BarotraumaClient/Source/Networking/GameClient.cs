@@ -675,8 +675,6 @@ namespace Barotrauma.Networking
         private void OnDisconnect(string disconnectMsg)
         {
             HandleDisconnectMessage(disconnectMsg);
-
-            Disconnect();
         }
 
         private void HandleDisconnectMessage(string disconnectMsg)
@@ -764,6 +762,8 @@ namespace Barotrauma.Networking
                         msg += TextManager.GetServerMessage(splitMsg[i]);
                     }
                 }
+
+                reconnectBox?.Close();
 
                 if (msg == Lidgren.Network.NetConnection.NoResponseMessage)
                 {
@@ -1681,7 +1681,8 @@ namespace Barotrauma.Networking
             if (GameMain.ServerChildProcess != null)
             {
                 int checks = 0;
-                while (!GameMain.ServerChildProcess.HasExited) {
+                while (!GameMain.ServerChildProcess.HasExited)
+                {
                     if (checks > 10)
                     {
                         GameMain.ServerChildProcess.Kill();
