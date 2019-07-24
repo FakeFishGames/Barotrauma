@@ -39,12 +39,12 @@ namespace Barotrauma
 
             public virtual string StartMessageServerText => TextManager.GetWithVariables(StartMessageServerTextId, StartMessageServerKeys.ToArray(), StartMessageServerValues.ToArray());
 
-            public virtual string EndMessageSuccessTextId { get; set; } = "TraitorObjectiveSuccess";
-            public virtual string EndMessageSuccessDeadTextId { get; set; } = "TraitorObjectiveSuccessDead";
-            public virtual string EndMessageSuccessDetainedTextId { get; set; } = "TraitorObjectiveSuccessDetained";
-            public virtual string EndMessageFailureTextId { get; set; } = "TraitorObjectiveFailure";
-            public virtual string EndMessageFailureDeadTextId { get; set; } = "TraitorObjectiveFailureDead";
-            public virtual string EndMessageFailureDetainedTextId { get; set; } = "TraitorObjectiveFailureDetained";
+            public virtual string EndMessageSuccessTextId { get; set; } = "TraitorObjectiveEndMessageSuccess";
+            public virtual string EndMessageSuccessDeadTextId { get; set; } = "TraitorObjectiveEndMessageSuccessDead";
+            public virtual string EndMessageSuccessDetainedTextId { get; set; } = "TraitorObjectiveEndMessageSuccessDetained";
+            public virtual string EndMessageFailureTextId { get; set; } = "TraitorObjectiveEndMessageFailure";
+            public virtual string EndMessageFailureDeadTextId { get; set; } = "TraitorObjectiveEndMessageFailureDead";
+            public virtual string EndMessageFailureDetainedTextId { get; set; } = "TraitorObjectiveEndMessageFailureDetained";
 
             public virtual IEnumerable<string> EndMessageKeys => new string[] { "[traitorname]", "[traitorgoalinfos]" };
             public virtual IEnumerable<string> EndMessageValues => new string[] { Traitor?.Character?.Name ?? "(unknown)", GoalInfos };
