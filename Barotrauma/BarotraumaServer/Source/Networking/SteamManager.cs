@@ -83,7 +83,7 @@ namespace Barotrauma.Steam
 
         public static ServerAuth.StartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
-            if (instance == null || !instance.isInitialized || instance.server == null) return ServerAuth.StartAuthSessionResult.GameMismatch;
+            if (instance == null || !instance.isInitialized || instance.server == null) return ServerAuth.StartAuthSessionResult.ServerNotConnectedToSteam;
             
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
             ServerAuth.StartAuthSessionResult startResult = instance.server.Auth.StartSession(authTicketData, clientSteamID);

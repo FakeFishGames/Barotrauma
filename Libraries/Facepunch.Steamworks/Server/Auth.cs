@@ -39,6 +39,7 @@ namespace Facepunch.Steamworks
             InvalidVersion = 3,
             GameMismatch = 4,
             ExpiredTicket = 5,
+            ServerNotConnectedToSteam = 6,
         }
 
         internal ServerAuth( Server s )
