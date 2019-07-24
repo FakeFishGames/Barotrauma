@@ -297,8 +297,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            sp.HandleExisting(sp.Identifier, allowOverride);
-            List.Add(sp);
+            if (sp.HandleExisting(sp.Identifier, allowOverride))
+            {
+                List.Add(sp);
+            }
             return sp;
         }
 

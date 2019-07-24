@@ -732,11 +732,13 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            HandleExisting(identifier, allowOverriding);
 
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
-            List.Add(this);
+            if (HandleExisting(identifier, allowOverriding))
+            {
+                List.Add(this);
+            }
         }
 
         public PriceInfo GetPrice(Location location)

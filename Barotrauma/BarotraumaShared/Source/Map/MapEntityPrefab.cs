@@ -291,7 +291,7 @@ namespace Barotrauma
             return (object)selected;            
         }
         
-        protected void HandleExisting(string identifier, bool allowOverriding)
+        protected bool HandleExisting(string identifier, bool allowOverriding)
         {
             if (!string.IsNullOrEmpty(identifier))
             {
@@ -307,9 +307,11 @@ namespace Barotrauma
                     {
                         DebugConsole.ThrowError("Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
                             "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
+                        return false;
                     }
                 }
             }
+            return true;
         }
     }
 }
