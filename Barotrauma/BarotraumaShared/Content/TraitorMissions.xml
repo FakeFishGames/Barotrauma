@@ -56,36 +56,34 @@
     </Objective>
   </TraitorMission>-->
 
-  <TraitorMission identifier="FloodSubMission">
+  <TraitorMission identifier="AllGoals">
     <StartInfoText id="traitormissionstartmessage"/>
-    <SuccessInfoText id="traitormissionsuccessmessage"/>
-    <FailureInfoText id="traitormissionfailuremessage"/>
-
+    
     <Objective>
-      <InfoText id="traitorobjectivestartmessage"/>
-      <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
+      
       <Goal type="finditem" identifier="sledgehammer">
         <InfoText id="traitorgoalfinditeminfo" />
-        <InfoTextFailure id="traitorgoalfinditemfailure"/>
       </Goal>
-    </Objective>
 
-    <Objective>
-      <InfoText id="traitorobjectivestartmessage"/>
-      <InfoTextFailure id="traitorobjectivefailure"/>
-      <Goal type="replaceinventory" containers="divingmask,divingsuit" replacements="weldingfuel" percentage="20">
+      <Goal type="replaceinventory" containers="divingmask,divingsuit" replacements="weldingfueltank" percentage="20">
         <InfoText id="traitorgoaltamperoxygeninfo" />
-        <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
       </Goal>
+
+      <Goal type="floodsub" percentage="20">
+        <InfoText id="traitorgoalfloodpercentofsub" />
+      </Goal>
+    
+      <Goal type="killtarget" job="captain">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+
+      <Goal type="destroyitems" tag="oxygensource" percentage="5">
+        <InfoText id="traitorgoaldestroyitems" />
+      </Goal>
+
     </Objective>
 
-    <Objective>
-      <InfoText id="traitorobjectivestart"/>
-      <Goal type="floodsub" percentage="50">
-        <InfoText id="traitorgoalcausemeltdowninfo" />
-        <InfoTextFailure id="traitorgoaltimelimitfailure"/>
-      </Goal>
-    </Objective>
+
   </TraitorMission>
 
 
