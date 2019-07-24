@@ -488,18 +488,30 @@ namespace Barotrauma.Networking
             }
             else
             {
-                isCompressed = true;
                 using (MemoryStream output = new MemoryStream())
                 {
                     using (DeflateStream dstream = new DeflateStream(output, CompressionLevel.Fastest))
                     {
                         dstream.Write(buf, 0, LengthBytes);
                     }
+                    
                     byte[] compressedBuf = output.ToArray();
-                    Array.Copy(compressedBuf, outBuf, compressedBuf.Length);
-                    length = compressedBuf.Length;
+                    //don't send the data as compressed if the data takes up more space after compression
+                    //(which may happen when sending a sub/save file that's already been compressed with a better compression ratio)
+                    if (compressedBuf.Length >= outBuf.Length)
+                    {
+                        isCompressed = false;
+                        Array.Copy(buf, outBuf, LengthBytes);
+                        length = LengthBytes;
+                    }
+                    else
+                    {
+                        isCompressed = true;
+                        Array.Copy(compressedBuf, outBuf, compressedBuf.Length);
+                        length = compressedBuf.Length;
+                        DebugConsole.NewMessage("Compressed message: " + LengthBytes + " to " + length);
+                    }
                 }
-                DebugConsole.NewMessage("Compressing message: " + LengthBytes + " to " + length);
             }
         }
     }
