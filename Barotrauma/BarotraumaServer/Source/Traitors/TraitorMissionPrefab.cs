@@ -27,7 +27,6 @@ namespace Barotrauma {
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            // TODO(xxx): Use MTRandom here? Add weighted selection support.
             return List.Count > 0 ? List[Rand.Int(List.Count)] : null;
         }
 
@@ -209,7 +208,7 @@ namespace Barotrauma {
         public Traitor.TraitorMission Instantiate()
         {
             return new Traitor.TraitorMission(
-                StartText, 
+                StartText ?? "TraiorMissionStartMessage", 
                 Objectives.ConvertAll(objective => objective.Instantiate()).ToArray());
         }
 
@@ -269,13 +268,13 @@ namespace Barotrauma {
 
         public TraitorMissionPrefab(XElement missionRoot)
         {
-            Identifier = missionRoot.GetAttributeString("identifier", "");
+            Identifier = missionRoot.GetAttributeString("identifier", null);
             foreach (var element in missionRoot.Elements())
             {
                 switch (element.Name.ToString().ToLowerInvariant())
                 {
                     case "startinfotext":
-                        StartText = element.GetAttributeString("id", "");
+                        StartText = element.GetAttributeString("id", null);
                         break;
                     case "objective":
                         {
