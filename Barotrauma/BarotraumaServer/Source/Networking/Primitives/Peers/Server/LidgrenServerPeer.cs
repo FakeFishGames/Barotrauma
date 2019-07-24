@@ -597,7 +597,7 @@ namespace Barotrauma.Networking
             }
 
             NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
-            byte[] msgData = new byte[1500];
+            byte[] msgData = new byte[msg.LengthBytes];
             bool isCompressed; int length;
             msg.PrepareForSending(msgData, out isCompressed, out length);
             lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
