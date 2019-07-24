@@ -202,6 +202,14 @@ namespace Barotrauma.Networking
         private void OnOwnerDetermined(NetworkConnection connection)
         {
             OwnerConnection = connection;
+
+            var ownerClient = ConnectedClients.Find(c => c.Connection == connection);
+            if (ownerClient == null)
+            {
+                DebugConsole.ThrowError("Owner client not found! Can't set permissions");
+                return;
+            }
+            ownerClient.SetPermissions(ClientPermissions.All, DebugConsole.Commands);
         }
 
         private void OnInitializationComplete(NetworkConnection connection)

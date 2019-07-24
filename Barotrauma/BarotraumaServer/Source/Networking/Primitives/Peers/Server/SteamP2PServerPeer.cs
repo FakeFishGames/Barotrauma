@@ -137,6 +137,12 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
+            if (OnOwnerDetermined != null && OwnerConnection != null)
+            {
+                OnOwnerDetermined?.Invoke(OwnerConnection);
+                OnOwnerDetermined = null;
+            }
+
             netServer.ReadMessages(incomingLidgrenMessages);
 
             foreach (SteamP2PConnection conn in connectedClients)
@@ -319,7 +325,6 @@ namespace Barotrauma.Networking
                         OwnerConnection.Status = NetworkConnectionStatus.Connected;
                         
                         OnInitializationComplete?.Invoke(OwnerConnection);
-                        OnOwnerDetermined?.Invoke(OwnerConnection);
                     }
                     return;
                 }
