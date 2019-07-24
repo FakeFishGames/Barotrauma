@@ -11,11 +11,11 @@ namespace Barotrauma.Networking
     {
         public class FileTransferOut
         {
-            private byte[] data;
+            private readonly byte[] data;
 
-            private DateTime startingTime;
+            private readonly DateTime startingTime;
 
-            private NetworkConnection connection;
+            private readonly NetworkConnection connection;
 
             public FileTransferStatus Status;
             
@@ -104,11 +104,11 @@ namespace Barotrauma.Networking
         public FileTransferDelegate OnStarted;
         public FileTransferDelegate OnEnded;
 
-        private List<FileTransferOut> activeTransfers;
+        private readonly List<FileTransferOut> activeTransfers;
 
-        private int chunkLen;
+        private readonly int chunkLen;
 
-        private ServerPeer peer;
+        private readonly ServerPeer peer;
 
         public List<FileTransferOut> ActiveTransfers
         {
@@ -196,55 +196,69 @@ namespace Barotrauma.Networking
                 
                 IWriteMessage message;
 
-                //first message; send length, chunk length, file name etc
-                if (transfer.SentOffset == 0)
+                try
                 {
-                    message = new WriteOnlyMessage();
-                    message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
-
-                    //if the recipient is the owner of the server (= a client running the server from the main exe)
-                    //we don't need to send anything, the client can just read the file directly
-                    if (transfer.Connection == GameMain.Server.OwnerConnection)
+                    //first message; send length, chunk length, file name etc
+                    if (transfer.SentOffset == 0)
                     {
-                        message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
-                        message.Write((byte)transfer.FileType);
-                        message.Write(transfer.FilePath);
-                        peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
-                        transfer.Status = FileTransferStatus.Finished;
-                        return;
-                    }
-                    else
-                    {
-                        message.Write((byte)FileTransferMessageType.Initiate);
-                        message.Write((byte)transfer.FileType);
-                        message.Write((ushort)chunkLen);
-                        message.Write((ulong)transfer.Data.Length);
-                        message.Write(transfer.FileName);
-                        peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
+                        message = new WriteOnlyMessage();
+                        message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
 
-                        transfer.Status = FileTransferStatus.Sending;
-
-                        if (GameSettings.VerboseLogging)
+                        //if the recipient is the owner of the server (= a client running the server from the main exe)
+                        //we don't need to send anything, the client can just read the file directly
+                        if (transfer.Connection == GameMain.Server.OwnerConnection)
                         {
-                            DebugConsole.Log("Sending file transfer initiation message: ");
-                            DebugConsole.Log("  File: " + transfer.FileName);
-                            DebugConsole.Log("  Size: " + transfer.Data.Length);
-                            DebugConsole.Log("  Sequence channel: " + transfer.SequenceChannel);
+                            message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
+                            message.Write((byte)transfer.FileType);
+                            message.Write(transfer.FilePath);
+                            peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
+                            transfer.Status = FileTransferStatus.Finished;
+                            return;
+                        }
+                        else
+                        {
+                            message.Write((byte)FileTransferMessageType.Initiate);
+                            message.Write((byte)transfer.FileType);
+                            message.Write((ushort)chunkLen);
+                            message.Write((ulong)transfer.Data.Length);
+                            message.Write(transfer.FileName);
+                            peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
+
+                            transfer.Status = FileTransferStatus.Sending;
+
+                            if (GameSettings.VerboseLogging)
+                            {
+                                DebugConsole.Log("Sending file transfer initiation message: ");
+                                DebugConsole.Log("  File: " + transfer.FileName);
+                                DebugConsole.Log("  Size: " + transfer.Data.Length);
+                                DebugConsole.Log("  Sequence channel: " + transfer.SequenceChannel);
+                            }
                         }
                     }
+
+                    message = new WriteOnlyMessage();
+                    message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
+                    message.Write((byte)FileTransferMessageType.Data);
+
+                    byte[] sendBytes = new byte[sendByteCount];
+                    Array.Copy(transfer.Data, transfer.SentOffset, sendBytes, 0, sendByteCount);
+
+                    message.Write(sendBytes, 0, sendByteCount);
+
+                    peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
+                    transfer.SentOffset += sendByteCount;
                 }
 
-                message = new WriteOnlyMessage();
-                message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
-                message.Write((byte)FileTransferMessageType.Data);
-
-                byte[] sendBytes = new byte[sendByteCount];
-                Array.Copy(transfer.Data, transfer.SentOffset, sendBytes, 0, sendByteCount);
-
-                message.Write(sendBytes, 0, sendByteCount);
-
-                peer.Send(message, transfer.Connection, DeliveryMethod.ReliableOrdered);
-                transfer.SentOffset += sendByteCount;
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("FileSender threw an exception when trying to send data", e);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "FileSender.Update:Exception", 
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error, 
+                        "FileSender threw an exception when trying to send data:\n" + e.Message + "\n" + e.StackTrace);
+                    transfer.Status = FileTransferStatus.Error;
+                    break;
+                }
 
                 if (GameSettings.VerboseLogging)
                 {
