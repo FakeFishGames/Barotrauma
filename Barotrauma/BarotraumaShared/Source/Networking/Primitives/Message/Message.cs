@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
     public static class MsgConstants
     {
         public const int MTU = 1200;
-        public const int CompressionThreshold = 100000;
+        public const int CompressionThreshold = 1000;
     }
 
     /// <summary>
