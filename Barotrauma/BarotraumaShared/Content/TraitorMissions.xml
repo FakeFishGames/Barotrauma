@@ -72,7 +72,7 @@
     <Objective>
       <InfoText id="traitorobjectivestartmessage"/>
       <InfoTextFailure id="traitorobjectivefailure"/>
-      <Goal type="replaceinventory" containers="divingmask,divingsuit" replacements="weldingfuel">
+      <Goal type="replaceinventory" containers="divingmask,divingsuit" replacements="weldingfuel" percentage="20">
         <InfoText id="traitorgoaltamperoxygeninfo" />
         <InfoTextFailure id="traitorobjectiveendmessagefailure"/>
       </Goal>

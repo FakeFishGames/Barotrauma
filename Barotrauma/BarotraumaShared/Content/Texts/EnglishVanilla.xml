@@ -3245,8 +3245,8 @@
   <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
   <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
   <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
-  <!--<traitorgoaltamperinfodefault>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
-  <traitorgoaltamperoxygeninfo>Swap at least [percentage] of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
+  <!--<traitorgoaltamperinfodefault>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
+  <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
   <traitorgoaltampercoilguninfo>Load dummy ammunition into [percentage] of coilgun loaders.</traitorgoaltampercoilguninfo>
   <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
 
