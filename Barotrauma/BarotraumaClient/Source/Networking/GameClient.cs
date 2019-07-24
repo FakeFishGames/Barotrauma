@@ -306,9 +306,12 @@ namespace Barotrauma.Networking
             clientPeer.OnDisconnect = OnDisconnect;
             clientPeer.OnInitializationComplete = () =>
             {
-                SteamManager.Instance.User.ClearRichPresence();
-                SteamManager.Instance.User.SetRichPresence("status", "Playing on " + serverName);
-                SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"","\\\"") + "\" " + serverEndpoint);
+                if (SteamManager.IsInitialized)
+                {
+                    SteamManager.Instance.User.ClearRichPresence();
+                    SteamManager.Instance.User.SetRichPresence("status", "Playing on " + serverName);
+                    SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"","\\\"") + "\" " + serverEndpoint);
+                }
 
                 canStart = true;
                 connected = true;
@@ -678,7 +681,10 @@ namespace Barotrauma.Networking
 
         private void HandleDisconnectMessage(string disconnectMsg)
         {
-            SteamManager.Instance.User.ClearRichPresence();
+            if (SteamManager.IsInitialized)
+            {
+                SteamManager.Instance.User.ClearRichPresence();
+            }
 
             disconnectMsg = disconnectMsg ?? "";
 

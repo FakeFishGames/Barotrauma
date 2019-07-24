@@ -337,7 +337,7 @@ namespace Barotrauma.Networking
 
                     Int32 contentPackageCount = inc.ReadVariableInt32();
                     List<ClientContentPackage> contentPackages = new List<ClientContentPackage>();
-                    for (int i=0;i<contentPackageCount;i++)
+                    for (int i = 0; i < contentPackageCount; i++)
                     {
                         string packageName = inc.ReadString();
                         string packageHash = inc.ReadString();
@@ -379,21 +379,32 @@ namespace Barotrauma.Networking
 
                     if (pendingClient.SteamID == null)
                     {
-                        ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
-                        if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
+                        //steam auth cannot be done (SteamManager not initialized or no ticket given),
+                        //but it's not required either -> let the client join without auth
+                        if ((!Steam.SteamManager.IsInitialized || ticket.Length == 0) &&
+                            !GameMain.Config.RequireSteamAuthentication)
                         {
-                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ Steam auth session failed to start: " +authSessionStartState.ToString());
-                            return;
+                            pendingClient.Name = name;
+                            pendingClient.InitializationStep = ConnectionInitialization.Success;
                         }
-                        pendingClient.SteamID = steamId;
-                        pendingClient.Name = name;
-                        pendingClient.AuthSessionStarted = true;
+                        else
+                        {
+                            ServerAuth.StartAuthSessionResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
+                            if (authSessionStartState != ServerAuth.StartAuthSessionResult.OK)
+                            {
+                                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam auth session failed to start: " + authSessionStartState.ToString());
+                                return;
+                            }
+                            pendingClient.SteamID = steamId;
+                            pendingClient.Name = name;
+                            pendingClient.AuthSessionStarted = true;
+                        }
                     }
                     else //TODO: could remove since this seems impossible
                     {
                         if (pendingClient.SteamID != steamId)
                         {
-                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString()+"/ SteamID mismatch");
+                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ SteamID mismatch");
                             return;
                         }
                     }

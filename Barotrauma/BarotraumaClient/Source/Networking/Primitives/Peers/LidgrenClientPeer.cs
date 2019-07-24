@@ -41,12 +41,15 @@ namespace Barotrauma.Networking
 
             netClient = new NetClient(netPeerConfiguration);
 
-            steamAuthTicket = SteamManager.GetAuthSessionTicket();
-            //TODO: wait for GetAuthSessionTicketResponse_t
-
-            if (steamAuthTicket == null)
+            if (SteamManager.IsInitialized)
             {
-                throw new Exception("GetAuthSessionTicket returned null");
+                steamAuthTicket = SteamManager.GetAuthSessionTicket();
+                //TODO: wait for GetAuthSessionTicketResponse_t
+
+                if (steamAuthTicket == null)
+                {
+                    throw new Exception("GetAuthSessionTicket returned null");
+                }
             }
 
             incomingLidgrenMessages = new List<NetIncomingMessage>();
@@ -149,8 +152,15 @@ namespace Barotrauma.Networking
                     outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
                     outMsg.Write(Name);
                     outMsg.Write(SteamManager.GetSteamID());
-                    outMsg.Write((UInt16)steamAuthTicket.Data.Length);
-                    outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
+                    if (steamAuthTicket == null)
+                    {
+                        outMsg.Write((UInt16)0);
+                    }
+                    else
+                    {
+                        outMsg.Write((UInt16)steamAuthTicket.Data.Length);
+                        outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
+                    }
 
                     outMsg.Write(GameMain.Version.ToString());
 
