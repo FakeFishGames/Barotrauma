@@ -773,12 +773,31 @@ namespace Barotrauma.Items.Components
 
                     if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
                     {
-                        for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
-                        {
-                            var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
-                            sonarBlips.Add(blip);
-                        }
+                        CreateBlipsForDisruption(disruptionPos, disruptionStrength);
                     }
+                }
+                foreach (AITarget aiTarget in AITarget.List)
+                {
+                    if (aiTarget.SonarDisruption <= 0.0f || !aiTarget.Enabled) { continue; }
+                    float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
+                    if (distSqr > worldPingRadiusSqr) { continue; }
+
+                    float disruptionDist = (float)Math.Sqrt(distSqr);
+                    disruptedDirections.Add(new Pair<Vector2, float>((aiTarget.WorldPosition - pingSource) / disruptionDist, aiTarget.SonarDisruption));
+
+                    if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
+                    {
+                        CreateBlipsForDisruption(aiTarget.WorldPosition, aiTarget.SonarDisruption);
+                    }
+                }
+            }
+
+            void CreateBlipsForDisruption(Vector2 disruptionPos, float disruptionStrength)
+            {
+                for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
+                {
+                    var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                    sonarBlips.Add(blip);
                 }
             }
         }
