@@ -210,6 +210,7 @@ namespace Barotrauma.Networking
                 return;
             }
             ownerClient.SetPermissions(ClientPermissions.All, DebugConsole.Commands);
+            UpdateClientPermissions(ownerClient);
         }
 
         private void OnInitializationComplete(NetworkConnection connection)
