@@ -153,17 +153,39 @@ namespace Barotrauma
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) return;
-
-                foreach (XElement el in doc.Root.Elements())
-                {        
-                    StructurePrefab sp = Load(el);
-                    
-                    List.Add(sp);
+                var rootElement = doc.Root;
+                switch (rootElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "override":
+                        foreach (var element in rootElement.Elements())
+                        {
+                            foreach (var childElement in element.Elements())
+                            {
+                                Load(childElement, true);
+                            }
+                        }
+                        break;
+                    default:
+                        foreach (var element in rootElement.Elements())
+                        {
+                            if (element.IsOverride())
+                            {
+                                foreach (var childElement in element.Elements())
+                                {
+                                    Load(childElement, true);
+                                }
+                            }
+                            else
+                            {
+                                Load(element, false);
+                            }
+                        }
+                        break;
                 }
             }
         }
         
-        public static StructurePrefab Load(XElement element)
+        public static StructurePrefab Load(XElement element, bool allowOverride)
         {
             StructurePrefab sp = new StructurePrefab
             {
@@ -275,16 +297,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            if (!string.IsNullOrEmpty(sp.identifier))
-            {
-                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == sp.identifier);
-                if (existingPrefab != null)
-                {
-                    DebugConsole.ThrowError(
-                        "Map entity prefabs \"" + sp.name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
-                }
-            }
-
+            sp.HandleExisting(sp.Identifier, allowOverride);
+            List.Add(sp);
             return sp;
         }
 

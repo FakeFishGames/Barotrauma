@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -288,6 +289,27 @@ namespace Barotrauma
         public static object GetSelected()
         {
             return (object)selected;            
-        }      
+        }
+        
+        protected void HandleExisting(string identifier, bool allowOverriding)
+        {
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    if (allowOverriding)
+                    {
+                        DebugConsole.NewMessage("Overriding an existing element with the id " + identifier, Color.Yellow);
+                        List.Remove(existingPrefab);
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
+                            "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
+                    }
+                }
+            }
+        }
     }
 }

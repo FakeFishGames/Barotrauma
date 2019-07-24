@@ -533,5 +533,17 @@ namespace Barotrauma
 
             return floatArray;
         }
+
+        public static bool IsOverride(this XElement element) => element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Returns the first child element that matches the name using the provided comparison method.
+        /// </summary>
+        public static XElement GetChildElement(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().FirstOrDefault(e => e.Name.ToString().Equals(name, comparisonMethod));
+
+        /// <summary>
+        /// Returns all child elements that match the name using the provided comparison method.
+        /// </summary>
+        public static IEnumerable<XElement> GetChildElements(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().Where(e => e.Name.ToString().Equals(name, comparisonMethod));
     }
 }
