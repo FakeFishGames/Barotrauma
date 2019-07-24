@@ -74,11 +74,11 @@ namespace Barotrauma.Items.Components
             sabotageButtonText = TextManager.Get("SabotageButton");
             sabotagingText = TextManager.Get("Sabotaging");
             sabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
-                sabotageButtonText)
+                sabotageButtonText/*, Alignment.Center, "", Color.Red*/)
             {
                 OnClicked = (btn, obj) =>
                 {
-                    currentFixer = Character.Controlled;
+                    CurrentFixer = Character.Controlled;
                     item.CreateClientEvent(this);
                     return true;
                 }

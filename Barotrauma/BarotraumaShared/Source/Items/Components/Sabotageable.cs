@@ -1,9 +1,9 @@
-﻿using Barotrauma.Networking;
-using Lidgren.Network;
-using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
@@ -14,15 +14,16 @@ namespace Barotrauma.Items.Components
         private string header;
         private Repairable repairable;
 
+        // TODO(xxx): Prevent repairable fixing while current fixer is set?
         private Character currentFixer;
         public Character CurrentFixer
         {
-            get => repairable.CurrentFixer;
+            get => currentFixer;
             set
             {
-                if (repairable.CurrentFixer == value) return;
-                repairable.CurrentFixer = value;
-                if (value != null) value.AnimController.Anim = AnimController.Animation.None;
+                if (currentFixer == value) return;
+                if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
+                currentFixer = value;
             }
         }
 
@@ -56,12 +57,6 @@ namespace Barotrauma.Items.Components
             Update(deltaTime, cam);
         }
 
-        public void ResetDeterioration()
-        {
-            // TODO(xxx): repairable.deteriorationTimer = 0.0f; 
-            item.Condition = 0.1f * item.Prefab.Health;
-        }
-
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
@@ -71,10 +66,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (CurrentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item))
+            if (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item))
             {
-                currentFixer.AnimController.Anim = AnimController.Animation.None;
-                currentFixer = null;
+                CurrentFixer = null;
                 return;
             }
 
@@ -110,9 +104,6 @@ namespace Barotrauma.Items.Components
                 item.CreateServerEvent(this);
 #endif
             }*/
-#if SERVER
-            item.CreateServerEvent(this);
-#endif
         }
 
         partial void UpdateProjSpecific(float deltaTime);

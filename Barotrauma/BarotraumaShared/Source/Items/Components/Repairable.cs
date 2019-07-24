@@ -81,7 +81,7 @@ namespace Barotrauma.Items.Components
             get { return currentFixer; }
             set
             {
-                if (currentFixer == value/* || item.IsFullCondition*/) return;
+                if (currentFixer == value || item.IsFullCondition) return;
                 if (currentFixer != null) currentFixer.AnimController.Anim = AnimController.Animation.None;
                 currentFixer = value;
             }
