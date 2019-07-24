@@ -75,6 +75,8 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, false)]
         public bool KeepOpenWhenEquipped { get; set; }
+        [Serialize(false, false)]
+        public bool MovableFrame { get; set; }
 
         public Vector2 DrawSize
         {

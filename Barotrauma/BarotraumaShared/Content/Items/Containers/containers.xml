@@ -139,7 +139,7 @@
     <Sprite texture="crates.png" depth="0.54" sourcerect="0,197,153,89" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
-    <ItemContainer capacity="12" canbeselected="false" hideitems="true" keepopenwhenequipped="true">
+    <ItemContainer capacity="12" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
