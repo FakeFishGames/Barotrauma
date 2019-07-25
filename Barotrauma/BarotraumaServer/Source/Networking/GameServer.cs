@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-
+        
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -109,7 +109,6 @@ namespace Barotrauma.Networking
             LastClientListUpdateID = 0;
 
             NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
-
             NetPeerConfiguration.Port = port;
             Port = port;
             QueryPort = queryPort;
@@ -119,12 +118,12 @@ namespace Barotrauma.Networking
                 NetPeerConfiguration.EnableUPnP = true;
             }
 
-            serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
             }
-
+            
             NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
             NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
@@ -353,6 +352,7 @@ namespace Barotrauma.Networking
             unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);
 
             fileSender.Update(deltaTime);
+            KarmaManager.UpdateClients(ConnectedClients, deltaTime);
 
             if (serverSettings.VoiceChatEnabled)
             {
@@ -361,7 +361,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (respawnManager != null) respawnManager.Update(deltaTime);
+                if (respawnManager != null) { respawnManager.Update(deltaTime); }
 
                 entityEventManager.Update(connectedClients);
 
@@ -2260,6 +2260,7 @@ namespace Barotrauma.Networking
                 previousPlayers.Add(previousPlayer);
             }
             previousPlayer.Name = client.Name;
+            previousPlayer.Karma = client.Karma;
             previousPlayer.KickVoters.Clear();
             foreach (Client c in connectedClients)
             {
@@ -2269,6 +2270,8 @@ namespace Barotrauma.Networking
             client.Connection.Disconnect(targetmsg);
             client.Dispose();
             connectedClients.Remove(client);
+
+            KarmaManager.OnClientDisconnected(client);
 
             UpdateVoteStatus();
 
@@ -3080,6 +3083,7 @@ namespace Barotrauma.Networking
         public string Name;
         public string IP;
         public UInt64 SteamID;
+        public float Karma;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)

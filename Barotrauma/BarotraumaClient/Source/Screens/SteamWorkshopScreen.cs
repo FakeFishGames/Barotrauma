@@ -51,7 +51,7 @@ namespace Barotrauma
 
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.8f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
+            menu = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.85f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
             var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
 
@@ -111,6 +111,7 @@ namespace Barotrauma
 
             var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Browse].RectTransform))
             {
+                RelativeSpacing = 0.01f,
                 Stretch = true
             };
 
@@ -125,7 +126,7 @@ namespace Barotrauma
             };
 
             var findModsButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), listContainer.RectTransform), style: null);
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), findModsButtonContainer.RectTransform, Anchor.Center), TextManager.Get("FindModsButton"), style: null)
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.9f), findModsButtonContainer.RectTransform, Anchor.Center), TextManager.Get("FindModsButton"), style: null)
             {
                 Color = new Color(38, 86, 38, 75),
                 HoverColor = new Color(85, 203, 99, 50),
@@ -260,7 +261,12 @@ namespace Barotrauma
 
         private void RefreshItemLists()
         {
-            SteamManager.GetSubscribedWorkshopItems((items) => { OnItemsReceived(items, subscribedItemList); });
+            SteamManager.GetSubscribedWorkshopItems((items) => 
+            {
+                //filter out the items published by the player (they're shown in the publish tab)
+                var mySteamID = SteamManager.GetSteamID();
+                OnItemsReceived(items.Where(it => it.OwnerId != mySteamID).ToList(), subscribedItemList);
+            });
             SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 20);
             SteamManager.GetPublishedWorkshopItems((items) => { OnItemsReceived(items, publishedItemList); });
 
@@ -704,19 +710,17 @@ namespace Barotrauma
                 }
             };
 
-            var headerAreaBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, maxSize: new Point(int.MaxValue, 235))) { Color = Color.Black };
-
-            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), headerAreaBackground.RectTransform), childAnchor: Anchor.Center);
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform)) { Color = Color.Black };
             
             if (itemPreviewSprites.ContainsKey(item.PreviewImageUrl))
             {
-                new GUIImage(new RectTransform(new Point(headerArea.Rect.Width, headerArea.Rect.Height), headerArea.RectTransform), itemPreviewSprites[item.PreviewImageUrl], scaleToFit: true);
+                new GUIImage(new RectTransform(Vector2.One, headerArea.RectTransform), itemPreviewSprites[item.PreviewImageUrl], scaleToFit: true);
             }
             else
             {
-                new GUIImage(new RectTransform(new Point(headerArea.Rect.Width, headerArea.Rect.Height), headerArea.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
+                new GUIImage(new RectTransform(Vector2.One, headerArea.RectTransform), SteamManager.Instance.DefaultPreviewImage, scaleToFit: true);
             }
-
+            
             var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform)) { ScrollBarVisible = true };
 
             //spacing
@@ -944,7 +948,11 @@ namespace Barotrauma
                 tagBtn.TextBlock.AutoScale = true;
                 tagBtn.Color *= 0.5f;
                 tagBtn.SelectedColor = Color.LightGreen;
+                tagBtn.HoverColor = Color.Lerp(tagBtn.HoverColor, Color.LightGreen, 0.5f);
                 tagBtn.Selected = itemEditor.Tags.Any(t => t.ToLowerInvariant() == tag);
+
+                Color defaultTextColor = tagBtn.TextColor;
+                tagBtn.TextColor = tagBtn.Selected ? Color.LightGreen : defaultTextColor;
 
                 tagBtn.OnClicked = (btn, userdata) =>
                 {
@@ -952,13 +960,13 @@ namespace Barotrauma
                     {
                         if (!itemEditor.Tags.Any(t => t.ToLowerInvariant() == tag)) { itemEditor.Tags.Add(tagBtn.Text); }
                         tagBtn.Selected = true;
-                        tagBtn.TextBlock.TextColor = Color.LightGreen;
+                        tagBtn.TextColor = Color.LightGreen;
                     }
                     else
                     {
                         itemEditor.Tags.RemoveAll(t => t.ToLowerInvariant() == tagBtn.Text.ToLowerInvariant());
                         tagBtn.Selected = false;
-                        tagBtn.TextBlock.TextColor = tagBtn.TextColor;
+                        tagBtn.TextColor = defaultTextColor;
                     }
                     return true;
                 };

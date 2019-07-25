@@ -230,6 +230,9 @@ namespace Barotrauma.Items.Components
                 foreach (FireSource fs in fireSourcesInRange)
                 {
                     fs.Extinguish(deltaTime, ExtinguishAmount);
+#if SERVER
+                    GameMain.Server.KarmaManager.OnExtinguishingFire(user, deltaTime);                    
+#endif
                 }
             }
         }
@@ -298,7 +301,7 @@ namespace Barotrauma.Items.Components
                         targetItem.WorldPosition,
                         levelResource.DeattachTimer / levelResource.DeattachDuration,
                         Color.Red, Color.Green);
-#endif                    
+#endif
                 }
                 FixItemProjSpecific(user, deltaTime, targetItem);
                 return true;
@@ -313,8 +316,7 @@ namespace Barotrauma.Items.Components
         private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            Gap leak = objective.OperateTarget as Gap;
-            if (leak == null) return true;
+            if (!(objective.OperateTarget is Gap leak)) { return true; }
 
             Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
             float dist = fromItemToLeak.Length();
@@ -459,7 +461,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-#endif    
+#endif
             }
         }
     }

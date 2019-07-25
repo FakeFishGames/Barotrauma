@@ -110,7 +110,15 @@ namespace Barotrauma
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
         {
-            commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0).OnExecute = onExecute;
+            var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (matchingCommand == null)
+            {
+                throw new Exception("AssignOnExecute failed. Command matching the name(s) \""+names+"\" not found.");
+            }
+            else
+            {
+                matchingCommand.OnExecute = onExecute;
+            }
         }
 
         static DebugConsole()
@@ -251,16 +259,11 @@ namespace Barotrauma
                 spawnPosParams.ToArray()
                 };
             }, isCheat: true));
-
-
+            
             commands.Add(new Command("disablecrewai", "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
             {
                 HumanAIController.DisableCrewAI = true;
                 NewMessage("Crew AI disabled", Color.Red);
-                // This is probably not where it should be?
-                //ThrowError("Karma has not been fully implemented yet, and is disabled in this version of Barotrauma.");
-                /*if (GameMain.Server == null) return;
-                GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;*/
             }));
 
             commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
@@ -304,8 +307,31 @@ namespace Barotrauma
             commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", null));
             
             commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
+            
+            commands.Add(new Command("respawnnow", "respawnnow: Trigger a respawn immediately if there are any clients waiting to respawn.", null));
 
-            //commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", null));
+            commands.Add(new Command("showkarma", "showkarma: Show the current karma values of the players.", null));
+            commands.Add(new Command("togglekarma", "togglekarma: Toggle the karma system on/off.", null));
+            commands.Add(new Command("resetkarma", "resetkarma [client]: Resets the karma value of the specified client to 100.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember?.ConnectedClients == null) { return null; }
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                };
+            }));
+            commands.Add(new Command("setkarma", "setkarma [client] [0-100]: Sets the karma of the specified client to the specified value.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember?.ConnectedClients == null) { return null; }
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                    new string[] { "50" }
+                };
+            }));
+            commands.Add(new Command("togglekarmatestmode", "togglekarmatestmode: Toggle the karma test mode on/off. When test mode is enabled, clients get notified when their karma value changes (including the reason for the increase/decrease) and the server doesn't ban clients whose karma decreases below the ban threshold.", null));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {

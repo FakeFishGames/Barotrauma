@@ -20,6 +20,8 @@ namespace Barotrauma
         private GUIFrame bottomPanel;
         private GUIFrame backgroundColorPanel;
 
+        private bool drawGrid, snapToGrid;
+
         private GUIFrame topPanelContents;
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
@@ -137,11 +139,31 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.05f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.055f, 0.3f) }, "Reset Zoom")
+            var resetBtn = new GUIButton(new RectTransform(new Vector2(0.05f, 0.35f), topPanelContents.RectTransform, Anchor.TopCenter, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.055f, 0.3f) }, "Reset Zoom")
             {
                 OnClicked = (box, data) =>
                 {
                     ResetZoom();
+                    return true;
+                }
+            };
+            resetBtn.TextBlock.AutoScale = true;
+
+            new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0, 0.3f) }, "Show grid")
+            {
+                Selected = drawGrid,
+                OnSelected = (tickBox) =>
+                {
+                    drawGrid = tickBox.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0.17f, 0.3f) }, "Snap to grid")
+            {
+                Selected = snapToGrid,
+                OnSelected = (tickBox) =>
+                {
+                    snapToGrid = tickBox.Selected;
                     return true;
                 }
             };
@@ -466,6 +488,11 @@ namespace Barotrauma
                 //GUI.DrawRectangle(spriteBatch, viewArea, Color.Green, isFilled: false);
                 GUI.DrawRectangle(spriteBatch, textureRect, Color.Gray, isFilled: false);
 
+                if (drawGrid)
+                {
+                    DrawGrid(spriteBatch, textureRect, zoom, Submarine.GridSize);
+                }
+
                 foreach (GUIComponent element in spriteList.Content.Children)
                 {
                     Sprite sprite = element.UserData as Sprite;
@@ -507,8 +534,11 @@ namespace Barotrauma
                             w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             w.MouseHeld += dTime =>
                             {
-                                w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(((w.DrawPos + new Vector2(w.size / 2) - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
+                                w.DrawPos = (drawGrid && snapToGrid) ?
+                                    SnapToGrid(PlayerInput.MousePosition, textureRect, zoom, Submarine.GridSize, Submarine.GridSize.X / 4.0f * zoom) :
+                                    PlayerInput.MousePosition;
+                                w.DrawPos = new Vector2((float)Math.Ceiling(w.DrawPos.X), (float)Math.Ceiling(w.DrawPos.Y));
+                                sprite.SourceRect = new Rectangle(((w.DrawPos - textureRect.Location.ToVector2()) / zoom).ToPoint(), sprite.SourceRect.Size);
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
                                 {
                                     // TODO: cache the sprite name?
@@ -516,15 +546,18 @@ namespace Barotrauma
                                 }
                                 w.tooltip = $"Position: {sprite.SourceRect.Location}";
                             };
-                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom - new Vector2(w.size / 2);
+                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + sprite.SourceRect.Location.ToVector2() * zoom;
                         });
                         var sizeWidget = GetWidget($"{id}_size", sprite, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                         {
                             w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             w.MouseHeld += dTime =>
                             {
-                                w.DrawPos = PlayerInput.MousePosition;
-                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - new Vector2(w.size) - positionWidget.DrawPos) / zoom).ToPoint());
+                                w.DrawPos = (drawGrid && snapToGrid) ?
+                                    SnapToGrid(PlayerInput.MousePosition, textureRect, zoom, Submarine.GridSize, Submarine.GridSize.X / 4.0f * zoom) :
+                                    PlayerInput.MousePosition;
+                                w.DrawPos = new Vector2((float)Math.Ceiling(w.DrawPos.X), (float)Math.Ceiling(w.DrawPos.Y));
+                                sprite.SourceRect = new Rectangle(sprite.SourceRect.Location, ((w.DrawPos - positionWidget.DrawPos) / zoom).ToPoint());
                                 // TODO: allow to lock the origin
                                 sprite.RelativeOrigin = sprite.RelativeOrigin;
                                 if (spriteList.SelectedComponent is GUITextBlock textBox)
@@ -534,7 +567,7 @@ namespace Barotrauma
                                 }
                                 w.tooltip = $"Size: {sprite.SourceRect.Size}";
                             };
-                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom + new Vector2(w.size / 2);
+                            w.refresh = () => w.DrawPos = textureRect.Location.ToVector2() + new Vector2(sprite.SourceRect.Right, sprite.SourceRect.Bottom) * zoom;
                         });
                         if (isSelected)
                         {
@@ -551,6 +584,58 @@ namespace Barotrauma
             spriteCount = 0;
 
             spriteBatch.End();
+        }
+
+        private void DrawGrid(SpriteBatch spriteBatch, Rectangle gridArea, float zoom, Vector2 gridSize)
+        {
+            gridSize *= zoom;
+            if (gridSize.X < 1.0f) { return; }
+            if (gridSize.Y < 1.0f) { return; }
+            int xLines = (int)(gridArea.Width / gridSize.X);
+            int yLines = (int)(gridArea.Height / gridSize.Y);
+
+            for (int x = 0; x <= xLines; x++)
+            {
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(gridArea.X + x * gridSize.X, gridArea.Y),
+                    new Vector2(gridArea.X + x * gridSize.X, gridArea.Bottom),
+                    Color.White * 0.25f);
+            }
+            for (int y = 0; y <= yLines; y++)
+            {
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(gridArea.X, gridArea.Y + y * gridSize.Y),
+                    new Vector2(gridArea.Right, gridArea.Y + y * gridSize.Y),
+                    Color.White * 0.25f);
+            }
+        }
+
+        private Vector2 SnapToGrid(Vector2 position, Rectangle gridArea, float zoom, Vector2 gridSize, float tolerance)
+        {
+            gridSize *= zoom;
+            if (gridSize.X < 1.0f) { return position; }
+            if (gridSize.Y < 1.0f) { return position; }
+
+            Vector2 snappedPos = position;
+            snappedPos.X -= gridArea.X;
+            snappedPos.Y -= gridArea.Y;
+
+            Vector2 gridPos = new Vector2(
+                MathUtils.RoundTowardsClosest(snappedPos.X, gridSize.X),
+                MathUtils.RoundTowardsClosest(snappedPos.Y, gridSize.Y));
+
+            if (Math.Abs(gridPos.X - snappedPos.X) < tolerance)
+            {
+                snappedPos.X = gridPos.X;
+            }
+            if (Math.Abs(gridPos.Y - snappedPos.Y) < tolerance)
+            {
+                snappedPos.Y = gridPos.Y;
+            }
+
+            snappedPos.X += gridArea.X;
+            snappedPos.Y += gridArea.Y;
+            return snappedPos;
         }
 
         public override void Select()

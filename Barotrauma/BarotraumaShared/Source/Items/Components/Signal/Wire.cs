@@ -16,8 +16,8 @@ namespace Barotrauma.Items.Components
             private Vector2 start;
             private Vector2 end;
 
-            private float angle;
-            private float length;
+            private readonly float angle;
+            private readonly float length;
 
             public Vector2 Start
             {
@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
         const int MaxNodesPerNetworkEvent = 30;
 
         private List<Vector2> nodes;
-        private List<WireSection> sections;
+        private readonly List<WireSection> sections;
 
         private Connection[] connections;
 
@@ -85,24 +85,23 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (wireSprite == null)
             {
-                wireSprite = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f));
-                wireSprite.Depth = 0.85f;
+                wireSprite = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f))
+                {
+                    Depth = 0.85f
+                };
             }
 #endif
 
             nodes = new List<Vector2>();
             sections = new List<WireSection>();
-
-            connections = new Connection[2];
-            
+            connections = new Connection[2];            
             IsActive = false;
         }
-                
+
         public Connection OtherConnection(Connection connection)
         {
-            if (connection == null) return null;
-            if (connection == connections[0]) return connections[1];
-            if (connection == connections[1]) return connections[0];
+            if (connection == connections[0]) { return connections[1]; }
+            if (connection == connections[1]) { return connections[0]; }
 
             return null;
         }
@@ -133,8 +132,8 @@ namespace Barotrauma.Items.Components
 
         public void RemoveConnection(Connection connection)
         {
-            if (connection == connections[0]) connections[0] = null;            
-            if (connection == connections[1]) connections[1] = null;
+            if (connection == connections[0]) { connections[0] = null; }
+            if (connection == connections[1]) { connections[1] = null; }
 
             SetConnectedDirty();
         }
@@ -143,10 +142,10 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] == newConnection) return false;
+                if (connections[i] == newConnection) { return false; }
             }
 
-            if (!connections.Any(c => c == null)) return false;
+            if (!connections.Any(c => c == null)) { return false; }
 
             for (int i = 0; i < 2; i++)
             {
@@ -156,37 +155,39 @@ namespace Barotrauma.Items.Components
                     break;
                 }
             }
+            if (item.body != null) { item.Submarine = newConnection.Item.Submarine; }
 
-            if (item.body != null) item.Submarine = newConnection.Item.Submarine;
+            newConnection.ConnectionPanel.DisconnectedWires.Remove(this);
 
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] != null) continue;
+                if (connections[i] != null) { continue; }
 
                 connections[i] = newConnection;
+                FixNodeEnds();
 
-                if (!addNode) break;
+                if (!addNode) { break; }
 
                 Submarine refSub = newConnection.Item.Submarine;
                 if (refSub == null)
                 {
                     Structure attachTarget = Structure.GetAttachTarget(newConnection.Item.WorldPosition);
-                    if (attachTarget == null) continue;
+                    if (attachTarget == null) { continue; }
                     refSub = attachTarget.Submarine;
                 }
 
                 Vector2 nodePos = refSub == null ? 
                     newConnection.Item.Position : 
                     newConnection.Item.Position - refSub.HiddenSubPosition;
-                
-                if (nodes.Count > 0 && nodes[0] == nodePos) break;
-                if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) break;
+
+                if (nodes.Count > 0 && nodes[0] == nodePos) { break; }
+                if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) { break; }
 
                 //make sure we place the node at the correct end of the wire (the end that's closest to the new node pos)
                 int newNodeIndex = 0;
                 if (nodes.Count > 1)
                 {
-                    if (Vector2.DistanceSquared(nodes[nodes.Count-1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
+                    if (Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
                     {
                         newNodeIndex = nodes.Count;
                     }
@@ -244,21 +245,18 @@ namespace Barotrauma.Items.Components
         public override void Equip(Character character)
         {
             ClearConnections(character);
-
             IsActive = true;
         }
 
         public override void Unequip(Character character)
         {
             ClearConnections(character);
-
             IsActive = false;
         }
 
         public override void Drop(Character dropper)
         {
-            ClearConnections(dropper);
-            
+            ClearConnections(dropper);            
             IsActive = false;
         }
 
@@ -399,7 +397,6 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             ClearConnections(picker);
-
             return true;
         }
 
@@ -467,9 +464,26 @@ namespace Barotrauma.Items.Components
             nodes.Clear();
             sections.Clear();
 
+            foreach (Item item in Item.ItemList)
+            {
+                var connectionPanel = item.GetComponent<ConnectionPanel>();
+                if (connectionPanel != null && connectionPanel.DisconnectedWires.Contains(this))
+                {
+#if SERVER
+                    item.CreateServerEvent(connectionPanel);
+#endif
+                    connectionPanel.DisconnectedWires.Remove(this);
+                }
+            }
+
 #if SERVER
             if (user != null)
             {
+                if (connections[0] != null || connections[1] != null)
+                {
+                    GameMain.Server.KarmaManager.OnWireDisconnected(user, this);
+                }
+
                 if (connections[0] != null && connections[1] != null)
                 {
                     GameServer.Log(user.LogName + " disconnected a wire from " + 
@@ -488,17 +502,21 @@ namespace Barotrauma.Items.Components
                 }
             }
 #endif
-            
+
             SetConnectedDirty();
 
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] == null) continue;
+                if (connections[i] == null) { continue; }
                 int wireIndex = connections[i].FindWireIndex(item);
-
-                if (wireIndex == -1) continue;
+                if (wireIndex == -1) { continue; }
+#if SERVER
+                if (!connections[i].Item.Removed)
+                {
+                    connections[i].Item.CreateServerEvent(connections[i].Item.GetComponent<ConnectionPanel>());
+                }
+#endif
                 connections[i].SetWire(wireIndex, null);
-
                 connections[i] = null;
             }
 
@@ -565,7 +583,27 @@ namespace Barotrauma.Items.Components
                 }
 
             } while (removed);
+        }
 
+        private void FixNodeEnds()
+        {
+            if (connections[0] == null || connections[1] == null || nodes.Count == 0) { return; }
+
+            Vector2 nodePos = nodes[0];
+
+            Submarine refSub = connections[0].Item.Submarine ?? connections[1].Item.Submarine;
+            if (refSub != null) { nodePos += refSub.HiddenSubPosition; }
+
+            float dist1 = Vector2.DistanceSquared(connections[0].Item.Position, nodePos);
+            float dist2 = Vector2.DistanceSquared(connections[1].Item.Position, nodePos);
+
+            //first node is closer to the second item
+            //= the nodes are "backwards", need to reverse them
+            if (dist1 > dist2)
+            {
+                nodes.Reverse();
+                UpdateSections();
+            }
         }
 
         private int GetClosestNodeIndex(Vector2 pos, float maxDist, out float closestDist)
@@ -640,12 +678,8 @@ namespace Barotrauma.Items.Components
             string[] nodeCoords = nodeString.Split(';');
             for (int i = 0; i < nodeCoords.Length / 2; i++)
             {
-                float x = 0.0f, y = 0.0f;
-
-                float.TryParse(nodeCoords[i * 2], NumberStyles.Float, CultureInfo.InvariantCulture, out x);
-
-                float.TryParse(nodeCoords[i * 2 + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out y);
-
+                float.TryParse(nodeCoords[i * 2], NumberStyles.Float, CultureInfo.InvariantCulture, out float x);
+                float.TryParse(nodeCoords[i * 2 + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
                 nodes.Add(new Vector2(x, y));
             }
 
@@ -687,7 +721,6 @@ namespace Barotrauma.Items.Components
         protected override void RemoveComponentSpecific()
         {
             ClearConnections();
-
             base.RemoveComponentSpecific();
         }
 

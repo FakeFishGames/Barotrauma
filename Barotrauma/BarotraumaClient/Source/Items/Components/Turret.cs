@@ -25,6 +25,9 @@ namespace Barotrauma.Items.Components
         private SoundChannel moveSoundChannel;
 
         private Vector2 crosshairPos, crosshairPointerPos;
+
+        private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
+        private float prevAngle;
         
         private bool flashLowPower;
         private bool flashNoAmmo;
@@ -117,6 +120,25 @@ namespace Barotrauma.Items.Components
             barSize: 0.0f);
         }
 
+        private void InitializeRotationLimitWidget(Widget widget)
+        {
+            widget.Hovered += () =>
+            {
+                widget.secondaryColor = Color.Green;
+            };
+            widget.Selected += () =>
+            {
+                widget.color = Color.Green;
+            };
+            widget.MouseHeld += (deltaTime) =>
+            {
+                widget.DrawPos = PlayerInput.MousePosition;
+            };
+            widget.Deselected += () =>
+            {
+                widget.color = Color.Red;
+            };
+        }
 
         partial void LaunchProjSpecific()
         {
@@ -246,24 +268,153 @@ namespace Barotrauma.Items.Components
                 item.SpriteColor,
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
-            
-    
-            if (!editing) return;
+
+            if (!editing) { return; }
+
+            float widgetRadius = 60.0f;
 
             GUI.DrawLine(spriteBatch,
                 drawPos,
-                drawPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * 60.0f,
+                drawPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius,
                 Color.Green);
 
             GUI.DrawLine(spriteBatch,
                 drawPos,
-                drawPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * 60.0f,
+                drawPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * widgetRadius,
                 Color.Green);
 
             GUI.DrawLine(spriteBatch,
                 drawPos,
-                drawPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * 60.0f,
+                drawPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * widgetRadius,
                 Color.LightGreen);
+
+            if (!item.IsSelected) { return; }
+
+            Widget minRotationWidget = GetWidget("minrotation", spriteBatch, size: 10, initMethod: (widget) =>
+             {
+                 widget.MouseDown += () =>
+                 {
+                     widget.color = Color.Green;
+                     prevAngle = minRotation;
+                 };
+                 widget.Deselected += () =>
+                 {
+                     widget.color = Color.Yellow;
+                     item.CreateEditingHUD();
+                 };
+                 widget.MouseHeld += (deltaTime) =>
+                 {
+                     minRotation = GetRotationAngle(drawPos);
+                     if (minRotation > maxRotation)
+                     {
+                         float temp = minRotation;
+                         minRotation = maxRotation;
+                         maxRotation = temp;
+                     }
+                     MapEntity.DisableSelect = true;
+                 };
+                 widget.PreUpdate += (deltaTime) =>
+                 {
+                     widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
+                     widget.DrawPos = Screen.Selected.Cam.WorldToScreen(widget.DrawPos);
+                 };
+                 widget.PostUpdate += (deltaTime) =>
+                 {
+                     widget.DrawPos = Screen.Selected.Cam.ScreenToWorld(widget.DrawPos);
+                     widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
+                 };
+                 widget.PreDraw += (sprtBtch, deltaTime) =>
+                 {
+                     widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
+                     widget.DrawPos = drawPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius;
+                     widget.Update(deltaTime);
+                 };
+             });
+            
+            Widget maxRotationWidget = GetWidget("maxrotation", spriteBatch, size: 10, initMethod: (widget) =>
+            {
+                widget.MouseDown += () =>
+                {
+                    widget.color = Color.Green;
+                    prevAngle = minRotation;
+                };
+                widget.Deselected += () =>
+                {
+                    widget.color = Color.Yellow;
+                    item.CreateEditingHUD();
+                };
+                widget.MouseHeld += (deltaTime) =>
+                {
+                    maxRotation = GetRotationAngle(drawPos);
+                    if (minRotation > maxRotation)
+                    {
+                        float temp = minRotation;
+                        minRotation = maxRotation;
+                        maxRotation = temp;
+                    }
+                    MapEntity.DisableSelect = true;
+                };
+                widget.PreUpdate += (deltaTime) =>
+                {
+                    widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
+                    widget.DrawPos = Screen.Selected.Cam.WorldToScreen(widget.DrawPos);
+                };
+                widget.PostUpdate += (deltaTime) =>
+                {
+                    widget.DrawPos = Screen.Selected.Cam.ScreenToWorld(widget.DrawPos);
+                    widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
+                };
+                widget.PreDraw += (sprtBtch, deltaTime) =>
+                {
+                    widget.tooltip = "Max: " + (int)MathHelper.ToDegrees(maxRotation);
+                    widget.DrawPos = drawPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * widgetRadius;
+                    widget.Update(deltaTime);
+                };
+            });
+            minRotationWidget.Draw(spriteBatch, (float)Timing.Step);
+            maxRotationWidget.Draw(spriteBatch, (float)Timing.Step);
+        }
+
+        private Widget GetWidget(string id, SpriteBatch spriteBatch, int size = 5, Action<Widget> initMethod = null)
+        {
+            if (!widgets.TryGetValue(id, out Widget widget))
+            {
+                widget = new Widget(id, size, Widget.Shape.Rectangle)
+                {
+                    color = Color.Yellow,
+                    tooltipOffset = new Vector2(size / 2 + 5, -10),
+                    inputAreaMargin = 20,
+                    RequireMouseOn = false
+                };               
+                widgets.Add(id, widget);
+                initMethod?.Invoke(widget);
+            }
+            return widget;
+        }
+
+        /// <summary>
+        /// Returns correct angle between -2PI and +2PI
+        /// </summary>
+        /// <param name="drawPosition"></param>
+        /// <returns></returns>
+        private float GetRotationAngle(Vector2 drawPosition)
+        {
+            Vector2 mouseVector = Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition);
+            mouseVector.Y = -mouseVector.Y;
+            Vector2 rotationVector = mouseVector - drawPosition;
+            rotationVector.Normalize();
+            double angle = Math.Atan2(MathHelper.ToRadians(rotationVector.Y), MathHelper.ToRadians(rotationVector.X));
+            if (angle < 0)
+            {// calculates which coterminal angle is closer to previous angle
+                angle = Math.Abs(angle - prevAngle) < Math.Abs((angle + Math.PI * 2) - prevAngle) ? angle : angle + Math.PI * 2;
+            }
+            else if (angle > 0)
+            {
+                angle = Math.Abs(angle - prevAngle) < Math.Abs((angle - Math.PI * 2) - prevAngle) ? angle : angle - Math.PI * 2;
+            }
+            angle = MathHelper.Clamp((float)angle, -((float)Math.PI * 2), (float)Math.PI * 2);
+            prevAngle = (float)angle;
+            return (float)angle;
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)

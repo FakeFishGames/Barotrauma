@@ -722,6 +722,7 @@
   <clientpermission.manageround>Manage round</clientpermission.manageround>
   <clientpermission.managesettings>Manage settings</clientpermission.managesettings>
   <clientpermission.managepermissions>Manage permissions</clientpermission.managepermissions>
+  <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <!-- Mission types -->
   <missiontype.none>None</missiontype.none>
@@ -3216,6 +3217,8 @@
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
 
+  <!-- New generic strings -->
+
   <pending>Pending</pending>
   <inprogress>In progress</inprogress>
   <complete>Complete</complete>
@@ -3387,7 +3390,7 @@
 
   <entityname.accordion>Accordion</entityname.accordion>
   <entitydescription.accordion>An old handmade accordion.</entitydescription.accordion>
-  
+
   <entityname.bongodrums>Bongo Drums</entityname.bongodrums>
   <entitydescription.bongodrums>An old handmade pair of bongo drums.</entitydescription.bongodrums>
 
@@ -3436,7 +3439,6 @@
 
   <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 
-  
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
@@ -3469,10 +3471,5 @@
   <karmabanwarning>WARNING: Your karma is dangerously low. You will be banned from the server if it decreases further.</karmabanwarning>
 
   <nosubscribedmods>You haven't subscribed to any mods on the Steam Workshop. Select the 'Popular mods' tab to find some!</nosubscribedmods>
-
-
-
-
-
 
 </infotexts>
