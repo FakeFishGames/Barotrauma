@@ -941,8 +941,8 @@ namespace Barotrauma
                 if (tickBox.Selected)
                 {
                     //make sure no other core packages are selected
-                    SelectedContentPackages.RemoveWhere(cp => cp.CorePackage && cp != contentPackage);
-                    SelectedContentPackages.Add(contentPackage);
+                    SelectedContentPackages.RemoveAll(cp => cp.CorePackage && cp != contentPackage);
+                    SelectContentPackage(contentPackage);
                     foreach (GUITickBox otherTickBox in tickBox.Parent.Children)
                     {
                         ContentPackage otherContentPackage = otherTickBox.UserData as ContentPackage;
@@ -962,7 +962,7 @@ namespace Barotrauma
             {
                 if (tickBox.Selected)
                 {
-                    SelectedContentPackages.Add(contentPackage);
+                    SelectContentPackage(contentPackage);
                 }
                 else
                 {

@@ -48,7 +48,7 @@ namespace Barotrauma
 
         private static Stopwatch stopwatch;
 
-        public static HashSet<ContentPackage> SelectedPackages
+        public static IEnumerable<ContentPackage> SelectedPackages
         {
             get { return Config?.SelectedContentPackages; }
         }

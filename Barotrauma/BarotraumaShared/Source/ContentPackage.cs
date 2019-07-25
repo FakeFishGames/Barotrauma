@@ -443,7 +443,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns all xml files.
+        /// Returns all xml files from all the loaded content packages.
         /// </summary>
         public static IEnumerable<string> GetAllContentFiles(IEnumerable<ContentPackage> contentPackages)
         {
@@ -484,6 +484,10 @@ namespace Barotrauma
                 ContentPackage package = new ContentPackage(filePath);
                 List.Add(package);                               
             }
+
+            // TODO: sorting: core, selected content order, rest
+            var sortedList = List.OrderByDescending(p => p.CorePackage);
+            List = sortedList.ToList();
         }
     }
 

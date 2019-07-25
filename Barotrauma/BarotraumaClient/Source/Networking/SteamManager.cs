@@ -756,9 +756,9 @@ namespace Barotrauma.Steam
             if (newPackage.CorePackage)
             {
                 //if enabling a core package, disable all other core packages
-                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => cp.CorePackage);
+                GameMain.Config.SelectedContentPackages.RemoveAll(cp => cp.CorePackage);
             }
-            GameMain.Config.SelectedContentPackages.Add(newPackage);
+            GameMain.Config.SelectContentPackage(newPackage);
             GameMain.Config.SaveNewPlayerConfig();
 
             if (newPackage.Files.Any(f => f.Type == ContentType.Submarine))
@@ -854,7 +854,7 @@ namespace Barotrauma.Steam
                 }
 
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
-                GameMain.Config.SelectedContentPackages.RemoveWhere(cp => !ContentPackage.List.Contains(cp));
+                GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
                 GameMain.Config.SaveNewPlayerConfig();
             }
             catch (Exception e)

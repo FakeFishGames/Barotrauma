@@ -4988,7 +4988,7 @@ namespace Barotrauma
                                             contentPackageNameElement.Text,
                                             Path.Combine(ContentPackage.Folder, $"{fileName}.xml"), false);
                                         ContentPackage.List.Add(ContentPackage);
-                                        GameMain.Config.SelectedContentPackages.Add(ContentPackage);
+                                        GameMain.Config.SelectContentPackage(ContentPackage);
                                         contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
                                         contentPackageDropDown.SelectItem(ContentPackage);
                                         contentPackageNameElement.Text = "";

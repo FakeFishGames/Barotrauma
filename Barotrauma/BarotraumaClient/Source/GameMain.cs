@@ -16,6 +16,7 @@ using System.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
 using Barotrauma.Media;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -52,7 +53,7 @@ namespace Barotrauma
 
         public static Thread MainThread { get; private set; }
 
-        public static HashSet<ContentPackage> SelectedPackages
+        public static IEnumerable<ContentPackage> SelectedPackages
         {
             get { return Config?.SelectedContentPackages; }
         }
@@ -395,7 +396,7 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedPackages.Count == 0)
+            if (SelectedPackages.None())
             {
                 DebugConsole.Log("No content packages selected");
             }
