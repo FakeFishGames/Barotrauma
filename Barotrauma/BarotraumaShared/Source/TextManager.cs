@@ -15,11 +15,17 @@ namespace Barotrauma
         //key = language
         private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
 
-        private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
+        private static readonly string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
         public static string Language;
 
-        private static HashSet<string> availableLanguages = new HashSet<string>();
+        public static bool Initialized
+        {
+            get;
+            private set;
+        }
+
+        private static readonly HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
         {
             get { return availableLanguages; }
@@ -99,6 +105,7 @@ namespace Barotrauma
                 availableLanguages.Add(textPack.Language);
                 textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
             }
+            Initialized = true;
         }
 
         public static bool ContainsTag(string textTag)

@@ -25,12 +25,12 @@ namespace Barotrauma.Items.Components
         {
             noPowerTip = TextManager.Get("SteeringNoPowerTip");
 
-            GuiFrame.RectTransform.RelativeOffset = new Vector2(0.4f, 0.0f);
-            new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
+            GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
+            new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center),
                 DrawHUDBack, null);
-            submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center), style: null);
+            submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
+            new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center),
                 DrawHUDFront, null)
             {
                 CanBeFocused = false

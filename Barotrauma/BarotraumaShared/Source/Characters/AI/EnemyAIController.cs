@@ -841,7 +841,7 @@ namespace Barotrauma
         private Limb GetAttackLimb(Vector2 attackWorldPos, Limb ignoredLimb = null)
         {
             AttackContext currentContext = Character.GetAttackContext();
-            var target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget.Entity;
+            var target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity;
             Limb selectedLimb = null;
             float currentPriority = 0;
             foreach (Limb limb in Character.AnimController.Limbs)

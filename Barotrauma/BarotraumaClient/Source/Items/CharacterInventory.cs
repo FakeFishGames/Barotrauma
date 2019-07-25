@@ -752,11 +752,11 @@ namespace Barotrauma
                         character.SelectedBy.Inventory != null)
                     {
                         //item is in the inventory of another character -> attempt to get the item from there
-                        success = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                        success = character.SelectedBy.Inventory.TryPutItemWithAutoEquipCheck(item, Character.Controlled, item.AllowedSlots, true);
                     }
                     break;
                 case QuickUseAction.TakeFromContainer:
-                    success = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    success = TryPutItemWithAutoEquipCheck(item, Character.Controlled, item.AllowedSlots, true);
                     break;  
             }
 

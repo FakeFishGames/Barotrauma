@@ -14,6 +14,13 @@ namespace Barotrauma
             {
                 if (this != Controlled)
                 {
+                    if (GameMain.Client.EndCinematic != null) // Freezes the characters during the ending cinematic
+                    {
+                        AnimController.Frozen = true;
+                        memState.Clear();
+                        return;
+                    }
+
                     //freeze AI characters if more than 1 seconds have passed since last update from the server
                     if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
                     {

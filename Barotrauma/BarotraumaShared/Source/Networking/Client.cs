@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +40,27 @@ namespace Barotrauma.Networking
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
 #endif
                 }
+            }
+        }
+
+        private Vector2 spectate_position;
+        public Vector2? SpectatePos
+        {
+            get
+            {
+                if (character == null || character.IsDead)
+                {
+                    return spectate_position;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            set
+            {
+                spectate_position = value.Value;
             }
         }
 
