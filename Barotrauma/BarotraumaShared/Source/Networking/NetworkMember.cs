@@ -35,7 +35,8 @@ namespace Barotrauma.Networking
         CHAT_MESSAGE,   //also self-explanatory
         VOTE,           //you get the idea
         CHARACTER_INPUT,
-        ENTITY_STATE
+        ENTITY_STATE,
+        SPECTATING_POS
     }
 
     enum ClientNetError

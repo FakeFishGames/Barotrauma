@@ -329,6 +329,10 @@ namespace Barotrauma
                         item.AiTarget?.Draw(spriteBatch);
                     }
                 }
+                if (body != null)
+                {
+                    body.DebugDraw(spriteBatch, Color.White);
+                }
             }
 
             if (!editing || (body != null && !body.Enabled))
@@ -451,7 +455,7 @@ namespace Barotrauma
 
         public override void UpdateEditing(Camera cam)
         {
-            if (editingHUD == null || editingHUD.UserData == null)
+            if (editingHUD == null || editingHUD.UserData as Item != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
@@ -880,7 +884,6 @@ namespace Barotrauma
                         }
                     }
                     break;
-
                 case NetEntityEvent.Type.InventoryState:
                     {
                         int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
@@ -968,6 +971,10 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData, true);
+                    break;
+                case NetEntityEvent.Type.Combine:
+                    UInt16 combineTargetID = (UInt16)extraData[1];
+                    msg.Write(combineTargetID);
                     break;
             }
             msg.WritePadBits();

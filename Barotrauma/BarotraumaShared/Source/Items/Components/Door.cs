@@ -250,17 +250,14 @@ namespace Barotrauma.Items.Components
             if (item.Condition <= RepairThreshold) { return true; }
             if (requiredItems.Any() && !hasValidIdCard)
             {
-                ForceOpen(ActionType.OnPicked);
+                ToggleState(ActionType.OnPicked);
             }
             return false;
         }
 
-        private void ForceOpen(ActionType actionType)
+        private void ToggleState(ActionType actionType)
         {
-            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true); //crowbar function
-#if CLIENT
-            PlaySound(actionType, item.WorldPosition, picker);
-#endif
+            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
 
         public override bool Select(Character character)
@@ -272,7 +269,7 @@ namespace Barotrauma.Items.Components
                 {
                     float originalPickingTime = PickingTime;
                     PickingTime = 0;
-                    ForceOpen(ActionType.OnUse);
+                    ToggleState(ActionType.OnUse);
                     PickingTime = originalPickingTime;
                 }
                 else if (hasRequiredItems)
@@ -538,11 +535,11 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name == "toggle")
             {
-                SetState(!wasOpen, false, true);
+                SetState(!wasOpen, false, true, forcedOpen: false);
             }
             else if (connection.Name == "set_state")
             {
-                SetState(signal != "0", false, true);
+                SetState(signal != "0", false, true, forcedOpen: false);
             }
 
 #if SERVER
@@ -555,9 +552,9 @@ namespace Barotrauma.Items.Components
 
         public void TrySetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            SetState(open, isNetworkMessage, sendNetworkMessage);
+            SetState(open, isNetworkMessage, sendNetworkMessage, forcedOpen: false);
         }
 
-        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage);
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen);
     }
 }

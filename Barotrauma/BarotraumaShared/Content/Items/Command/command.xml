@@ -37,7 +37,7 @@
       <LineSprite texture="Content/Items/Command/NavUI.png" sourcerect="181,141,109,4" origin="0,0.5"/>
     </Sonar>
     <CustomInterface canbeselected="true">
-      <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI" />
+      <GuiFrame relativesize="0.15,0.15" anchor="TopRight" relativeoffset="0.25,0.75" style="ItemUI" />
       <Button text="Signal out #1" connection="signal_out1" />
       <Button text="Signal out #2" connection="signal_out2" />
       <Button text="Signal out #3" connection="signal_out3" />
@@ -149,8 +149,8 @@
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="701,1,113,192" depth="0.8" maxcondition="40" fadein="true" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Command/CommandDevices.png" sourcerect="812,1,113,192" depth="0.8" maxcondition="0" origin="0.5,0.5" />
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected="true" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.5,0.5" anchor="CenterLeft" style="ItemUI" />
-      <AlternativeLayout relativesize="0.4,0.35" />
+      <GuiFrame relativesize="0.5,0.5" anchor="CenterRight" style="ItemUI" />
+      <AlternativeLayout relativesize="0.35,0.35" />
       <poweronsound file="Content/Items/PowerOnLight3.ogg" range="1000" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap1.ogg" range="500" loop="false" />
       <sparksound file="Content/Items/Electricity/Zap2.ogg" range="500" loop="false" />

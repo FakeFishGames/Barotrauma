@@ -15,11 +15,17 @@ namespace Barotrauma
         //key = language
         private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
 
-        private static string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
+        private static readonly string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
         public static string Language;
 
-        private static HashSet<string> availableLanguages = new HashSet<string>();
+        public static bool Initialized
+        {
+            get;
+            private set;
+        }
+
+        private static readonly HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
         {
             get { return availableLanguages; }
@@ -99,6 +105,7 @@ namespace Barotrauma
                 availableLanguages.Add(textPack.Language);
                 textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
             }
+            Initialized = true;
         }
 
         public static bool ContainsTag(string textTag)
@@ -322,6 +329,8 @@ namespace Barotrauma
 
             string[] messages = serverMessage.Split('/');
 
+            bool translationsFound = false;
+
             try
             {
                 for (int i = 0; i < messages.Length; i++)
@@ -333,6 +342,7 @@ namespace Barotrauma
                         if (msg != null) // If a translation was found, otherwise use the original
                         {
                             messages[i] = msg;
+                            translationsFound = true;
                         }
                     }
                     else
@@ -343,6 +353,7 @@ namespace Barotrauma
                         if (msg != null) // If a translation was found, otherwise use the original
                         {
                             messages[i] = msg;
+                            translationsFound = true;
                         }
                         else
                         {
@@ -358,12 +369,19 @@ namespace Barotrauma
                     }
                 }
 
-                string translatedServerMessage = string.Empty;
-                for (int i = 0; i < messages.Length; i++)
+                if (translationsFound)
                 {
-                    translatedServerMessage += messages[i];
+                    string translatedServerMessage = string.Empty;
+                    for (int i = 0; i < messages.Length; i++)
+                    {
+                        translatedServerMessage += messages[i];
+                    }
+                    return translatedServerMessage;
                 }
-                return translatedServerMessage;
+                else
+                {
+                    return serverMessage;
+                }
             }
 
             catch (IndexOutOfRangeException exception)

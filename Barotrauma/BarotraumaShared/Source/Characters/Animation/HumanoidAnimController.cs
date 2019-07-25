@@ -579,7 +579,7 @@ namespace Barotrauma
             if (limpAmount > 0.0f)
             {
                 //make the footpos oscillate when limping
-                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f));
+                footMid += (Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f)) * Dir;
             }
 
             movement = overrideTargetMovement == Vector2.Zero ?
@@ -705,6 +705,15 @@ namespace Barotrauma
                         footPos.Y *= 2.0f;
                     }
                     footPos.Y = Math.Min(waistPos.Y - colliderPos.Y - 0.4f, footPos.Y);
+
+#if CLIENT
+                    if ((i == 1 && Math.Sign(Math.Sin(WalkPos)) > 0 && Math.Sign(walkPosY) < 0) ||
+                        (i == -1 && Math.Sign(Math.Sin(WalkPos)) < 0 && Math.Sign(walkPosY) > 0))
+                    {
+                        PlayImpactSound(foot);
+                    }
+
+#endif
 
                     if (!foot.Disabled)
                     {

@@ -14,9 +14,9 @@ namespace Barotrauma.Items.Components
 {
     partial class RepairTool : ItemComponent
     {
-        enum UseEnvironment
+        public enum UseEnvironment
         {
-            Air, Water, Both
+            Air, Water, Both, None
         };
 
         private readonly List<string> fixableEntities;
@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
         private Vector2 debugRayStartPos, debugRayEndPos;
 
         [Serialize("Both", false)]
-        private UseEnvironment UsableIn
+        public UseEnvironment UsableIn
         {
             get; set;
         }
@@ -123,6 +123,12 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
+            if (UsableIn == UseEnvironment.None)
+            {
+                ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
+                return false;
+            }
+
             if (character.AnimController.InWater)
             {
                 if (UsableIn == UseEnvironment.Air)
@@ -193,9 +199,12 @@ namespace Barotrauma.Items.Components
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+
+            float lastPickedFraction = 0.0f;
             if (RepairMultiple)
             {
                 var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories, ignoreSensors: false, allowInsideFixture: true);
+                lastPickedFraction = Submarine.LastPickedFraction;
                 Type lastHitType = null;
                 hitCharacters.Clear();
                 foreach (Body body in bodies)
@@ -225,6 +234,7 @@ namespace Barotrauma.Items.Components
 
                     if (FixBody(user, deltaTime, degreeOfSuccess, body))
                     {
+                        lastPickedFraction = Submarine.LastPickedBodyDist(body);
                         if (bodyType != null) { lastHitType = bodyType; }
                     }
                 }
@@ -236,13 +246,14 @@ namespace Barotrauma.Items.Components
                     ignoredBodies, collisionCategories, ignoreSensors: false, 
                     customPredicate: (Fixture f) => { return f?.Body?.UserData != null; },
                     allowInsideFixture: true));
+                lastPickedFraction = Submarine.LastPickedFraction;
             }
             
             if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
             {
                 fireSourcesInRange.Clear();
                 //step along the ray in 10% intervals, collecting all fire sources in the range
-                for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
+                for (float x = 0.0f; x <= lastPickedFraction; x += 0.1f)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * x);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
@@ -269,7 +280,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
                 {
-                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f);
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
                     new FireSource(displayPos);
                 }
@@ -284,11 +295,11 @@ namespace Barotrauma.Items.Components
 
             if (targetBody.UserData is Structure targetStructure)
             {
-                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return false; }
                 if (targetStructure.IsPlatform) { return false; }
-
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
                 if (sectionIndex < 0) { return false; }
+
+                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
 
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
@@ -325,9 +336,7 @@ namespace Barotrauma.Items.Components
             else if (targetBody.UserData is Item targetItem)
             {
                 targetItem.IsHighlighted = true;
-
-                float prevCondition = targetItem.Condition;
-
+                
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
@@ -344,7 +353,7 @@ namespace Barotrauma.Items.Components
                         Color.Red, Color.Green);
 #endif                    
                 }
-                FixItemProjSpecific(user, deltaTime, targetItem, prevCondition);
+                FixItemProjSpecific(user, deltaTime, targetItem);
                 return true;
             }
             return false;
@@ -352,13 +361,12 @@ namespace Barotrauma.Items.Components
     
         partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
-        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition);
+        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem);
 
         private float sinTime;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            Gap leak = objective.OperateTarget as Gap;
-            if (leak == null) return true;
+            if (!(objective.OperateTarget is Gap leak)) return true;
 
             Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
             float dist = fromItemToLeak.Length();

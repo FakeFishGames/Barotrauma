@@ -79,6 +79,7 @@ namespace Barotrauma
 
         public int GetTotalItemCost()
         {
+            if (purchasedItems == null) return 0;
             return purchasedItems.Sum(i => i.ItemPrefab.GetPrice(campaign.Map.CurrentLocation).BuyPrice * i.Quantity);
         }
 

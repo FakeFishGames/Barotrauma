@@ -12,9 +12,13 @@ namespace Barotrauma
             private set;
         }
 
+        public Camera AssignedCamera;
+
         private float duration;
+
+        private CoroutineHandle updateCoroutine;
         
-        public RoundEndCinematic(Submarine submarine, Camera cam, float duration)
+        public RoundEndCinematic(Submarine submarine, Camera cam, float duration = 10.0f)
             : this(new List<Submarine>() { submarine }, cam, duration)
         {
 
@@ -25,9 +29,19 @@ namespace Barotrauma
             if (!submarines.Any(s => s != null)) return;
 
             this.duration = duration;
+            AssignedCamera = cam;
 
             Running = true;
-            CoroutineManager.StartCoroutine(Update(submarines, cam));
+            updateCoroutine = CoroutineManager.StartCoroutine(Update(submarines, cam));
+        }
+
+        public void Stop()
+        {
+            CoroutineManager.StopCoroutines(updateCoroutine);
+            Running = false;
+#if CLIENT
+            GUI.ScreenOverlayColor = Color.TransparentBlack;
+#endif
         }
 
         private IEnumerable<object> Update(List<Submarine> subs, Camera cam)

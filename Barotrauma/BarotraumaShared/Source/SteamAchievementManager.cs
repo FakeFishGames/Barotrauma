@@ -145,7 +145,7 @@ namespace Barotrauma
                 UnlockAchievement(c, "clowncostume");
             }
 
-            if (Submarine.MainSub != null && c.Submarine == null)
+            if (Submarine.MainSub != null && c.Submarine == null && c.ConfigPath == Character.HumanConfigFile)
             {
                 float dist = 500 / Physics.DisplayToRealWorldRatio;
                 if (Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition) >

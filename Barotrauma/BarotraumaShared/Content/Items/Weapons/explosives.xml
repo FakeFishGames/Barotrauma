@@ -138,6 +138,7 @@
       <RequiredItem identifier="wrench" type="Equipped" />
     </Holdable>
     <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
+      <GuiFrame relativesize="0.13,0.18" anchor="Center" style="ItemUI" />
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,204,110,27" />
       <Containable identifiers="explosive" />
     </ItemContainer>

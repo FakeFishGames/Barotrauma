@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
 
         private Character activePicker;
 
+        private CoroutineHandle pickingCoroutine;
+
         public List<InvSlotType> AllowedSlots
         {
             get { return allowedSlots; }
@@ -69,7 +71,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     item.CreateServerEvent(this);
 #endif
-                    CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
+                    pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
                 }
                 return false;
             }
@@ -81,7 +83,7 @@ namespace Barotrauma.Items.Components
 
         public virtual bool OnPicked(Character picker)
         {
-            if (picker.Inventory.TryPutItem(item, picker, allowedSlots))
+            if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots))
             {
                 if (!picker.HasSelectedItem(item) && item.body != null) item.body.Enabled = false;
                 this.picker = picker;
@@ -136,7 +138,7 @@ namespace Barotrauma.Items.Components
                 }
 
 #if CLIENT
-                picker.UpdateHUDProgressBar(
+                Character.Controlled?.UpdateHUDProgressBar(
                     this,
                     item.WorldPosition,
                     pickTimer / requiredTime,
@@ -160,12 +162,17 @@ namespace Barotrauma.Items.Components
             yield return CoroutineStatus.Success;
         }
 
-        private void StopPicking(Character picker)
+        protected void StopPicking(Character picker)
         {
             if (picker != null)
             {
                 picker.AnimController.Anim = AnimController.Animation.None;
                 picker.PickingItem = null;
+            }
+            if (pickingCoroutine != null)
+            {
+                CoroutineManager.StopCoroutines(pickingCoroutine);
+                pickingCoroutine = null;
             }
             activePicker = null;
             pickTimer = 0.0f;

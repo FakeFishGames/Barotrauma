@@ -291,16 +291,16 @@ namespace Barotrauma.Items.Components
             else
             {
                 float volume = GetSoundVolume(itemSound);
-                if (volume <= 0.0f) return;
+                if (volume <= 0.0f) { return; }
                 SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, item.CurrentHull);
             }
         }
 
         public void StopSounds(ActionType type)
         {
-            if (loopingSound == null) return;
+            if (loopingSound == null) { return; }
 
-            if (loopingSound.Type != type) return;
+            if (loopingSound.Type != type) { return; }
 
             if (loopingSoundChannel != null)
             {

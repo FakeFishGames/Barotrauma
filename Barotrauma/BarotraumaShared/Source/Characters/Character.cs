@@ -130,16 +130,20 @@ namespace Barotrauma
         {
             get
             {
-                if (ViewTarget == null) return AnimController.AimSourcePos;
+                if (ViewTarget == null) { return AnimController.AimSourcePos; }
+
+                Vector2 viewTargetWorldPos = ViewTarget.WorldPosition;
                 if (ViewTarget is Item targetItem)
                 {
                     Turret turret = targetItem.GetComponent<Turret>();
                     if (turret != null)
                     {
-                        return new Vector2(targetItem.Rect.X + turret.TransformedBarrelPos.X, targetItem.Rect.Y - turret.TransformedBarrelPos.Y);
+                        viewTargetWorldPos = new Vector2(
+                            targetItem.WorldRect.X + turret.TransformedBarrelPos.X, 
+                            targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
-                return ViewTarget.Position;
+                return Position + (viewTargetWorldPos - WorldPosition);
             }
         }
 
@@ -739,31 +743,33 @@ namespace Barotrauma
                 PressureProtection = 100.0f;
             }
 
+            List<XElement> inventoryElements = new List<XElement>();
+            List<float> inventoryCommonness = new List<float>();
+            List<XElement> healthElements = new List<XElement>();
+            List<float> healthCommonness = new List<float>();
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "inventory":
-                        Inventory = new CharacterInventory(subElement, this);
+                        inventoryElements.Add(subElement);
+                        inventoryCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
                         break;
                     case "health":
-                        CharacterHealth = new CharacterHealth(subElement, this);
+                        healthElements.Add(subElement);
+                        healthCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
                         break;
                     case "statuseffect":
                         statusEffects.Add(StatusEffect.Load(subElement, Name));
                         break;
                 }
             }
-            
-            List<XElement> healthElements = new List<XElement>();
-            List<float> healthCommonness = new List<float>();
-            foreach (XElement element in doc.Root.Elements())
+            if (inventoryElements.Count > 0)
             {
-                if (element.Name.ToString().ToLowerInvariant() != "health") continue;
-                healthElements.Add(element);
-                healthCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));
+                Inventory = new CharacterInventory(
+                    inventoryElements.Count == 1 ? inventoryElements[0] : ToolBox.SelectWeightedRandom(inventoryElements, inventoryCommonness, random), 
+                    this);
             }
-
             if (healthElements.Count == 0)
             {
                 CharacterHealth = new CharacterHealth(this);
@@ -1517,7 +1523,7 @@ namespace Barotrauma
 
         public bool CanAccessInventory(Inventory inventory)
         {
-            if (!CanInteract) return false;
+            if (!CanInteract || inventory.Locked) { return false; }
 
             //the inventory belongs to some other character
             if (inventory.Owner is Character && inventory.Owner != this)
@@ -1887,15 +1893,30 @@ namespace Barotrauma
                                 distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.WorldPosition, c.WorldPosition));
                             }
 
+#if SERVER
+                            for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
+                            {
+                                var spectatePos = GameMain.Server.ConnectedClients[i].SpectatePos;
+                                if (spectatePos != null)
+                                {
+                                    distSqr = Math.Min(distSqr, Vector2.DistanceSquared(spectatePos.Value, c.WorldPosition));
+                                }
+                            }
+#endif
+
                             if (distSqr > NetConfig.DisableCharacterDistSqr)
                             {
                                 c.Enabled = false;
+                                if (c.IsDead && c.AIController is EnemyAIController)
+                                {
+                                    Entity.Spawner?.AddToRemoveQueue(c);
+                                }
                             }
                             else if (distSqr < NetConfig.EnableCharacterDistSqr)
                             {
                                 c.Enabled = true;
                             }
-                        }                        
+                        }
                     }
                     else if (Submarine.MainSub != null)
                     {
@@ -1905,17 +1926,24 @@ namespace Barotrauma
                         {
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition));
                         }
+                        else
+                        {
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.GetPosition(), c.WorldPosition));
+                        }
                         
                         if (distSqr > NetConfig.DisableCharacterDistSqr)
                         {
                             c.Enabled = false;
+                            if (c.IsDead && c.AIController is EnemyAIController)
+                            {
+                                Entity.Spawner?.AddToRemoveQueue(c);
+                            }
                         }
-                        else if ( distSqr < NetConfig.EnableCharacterDistSqr)
+                        else if (distSqr < NetConfig.EnableCharacterDistSqr)
                         {
                             c.Enabled = true;
                         }
                     }
-
                 }
             }
 

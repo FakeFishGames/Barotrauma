@@ -15,6 +15,7 @@
 
     <Fabricator canbeselected="true" powerconsumption="500.0" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.3,0.6" maxsize="600,1000" style="ItemUI" anchor="Center"/>
+      <AlternativeLayout absoluteoffset="15,0"/>
       <sound file="Content/Items/Fabricators/Fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
       <poweronsound file="Content/Items/PowerOnLight1.ogg" range="600" loop="false" />
     </Fabricator>

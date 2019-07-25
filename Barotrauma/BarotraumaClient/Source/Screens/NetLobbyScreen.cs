@@ -1612,13 +1612,13 @@ namespace Barotrauma
         public void BanPlayer(Client client)
         {
             if (GameMain.NetworkMember == null || client == null) { return; }
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: false);
         }
 
         public void BanPlayerRange(Client client)
         {
             if (GameMain.NetworkMember == null || client == null) { return; }
-            GameMain.Client.CreateKickReasonPrompt(client.Name, true, true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: true);
         }
         
         public override void AddToGUIUpdateList()

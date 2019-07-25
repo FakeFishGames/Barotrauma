@@ -297,6 +297,12 @@ namespace Barotrauma
             }
         }
 
+        public bool IsFileCorrupted
+        {
+            get;
+            private set;
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
@@ -322,12 +328,17 @@ namespace Barotrauma
                 int maxLoadRetries = 4;
                 for (int i = 0; i <= maxLoadRetries; i++)
                 {
-                    doc = OpenFile(filePath);
+                    doc = OpenFile(filePath, out Exception e);
+                    if (e != null && !(e is IOException)) { break; }
                     if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
                     DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
                     Thread.Sleep(250);
                 }
-                if (doc == null || doc.Root == null) { return; }
+                if (doc == null || doc.Root == null)
+                {
+                    IsFileCorrupted = true;
+                    return;
+                }
 
                 if (doc != null && doc.Root != null)
                 {
@@ -734,6 +745,12 @@ namespace Barotrauma
         private static readonly Dictionary<Body, float> bodyDist = new Dictionary<Body, float>();
         private static readonly List<Body> bodies = new List<Body>();
 
+        public static float LastPickedBodyDist(Body body)
+        {
+            if (!bodyDist.ContainsKey(body)) { return 0.0f; }
+            return bodyDist[body];
+        }
+
         /// <summary>
         /// Returns a list of physics bodies the ray intersects with, sorted according to distance (the closest body is at the beginning of the list).
         /// </summary>
@@ -1056,16 +1073,14 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false)
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                if (ignoreOutposts && sub.IsOutpost)
-                {
-                    continue;
-                }
+                if (ignoreOutposts && sub.IsOutpost) { continue; }
+                if (ignoreOutsideLevel && Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                 float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {
@@ -1139,7 +1154,11 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
-            savedSubmarines.Add(new Submarine(filePath));
+            var sub = new Submarine(filePath);
+            if (!sub.IsFileCorrupted)
+            {
+                savedSubmarines.Add(sub);
+            }
             savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
         }
 
@@ -1193,7 +1212,38 @@ namespace Barotrauma
 
             foreach (string path in filePaths)
             {
-                savedSubmarines.Add(new Submarine(path));
+                var sub = new Submarine(path);
+                if (sub.IsFileCorrupted)
+                {
+#if CLIENT
+                    if (DebugConsole.IsOpen) { DebugConsole.Toggle(); }
+                    var deleteSubPrompt = new GUIMessageBox(
+                        TextManager.Get("Error"), 
+                        TextManager.GetWithVariable("SubLoadError", "[subname]", sub.name) +"\n"+
+                        TextManager.GetWithVariable("DeleteFileVerification", "[filename]", sub.name),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                    string filePath = path;
+                    deleteSubPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                    {
+                        try
+                        {
+                            File.Delete(filePath);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Failed to delete file \"{filePath}\".", e);
+                        }
+                        deleteSubPrompt.Close();
+                        return true;
+                    };
+                    deleteSubPrompt.Buttons[1].OnClicked += deleteSubPrompt.Close;
+#endif
+                }
+                else
+                {
+                    savedSubmarines.Add(sub);
+                }
             }
         }
 
@@ -1201,8 +1251,14 @@ namespace Barotrauma
 
         public static XDocument OpenFile(string file)
         {
+            return OpenFile(file, out _);
+        }
+
+        public static XDocument OpenFile(string file, out Exception exception)
+        {
             XDocument doc = null;
             string extension = "";
+            exception = null;
 
             try
             {
@@ -1229,6 +1285,7 @@ namespace Barotrauma
                 }
                 catch (Exception e) 
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed!", e);
                     return null;
                 }                
@@ -1243,6 +1300,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
@@ -1257,6 +1315,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
+                    exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
@@ -1593,7 +1652,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
@@ -1624,7 +1682,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;

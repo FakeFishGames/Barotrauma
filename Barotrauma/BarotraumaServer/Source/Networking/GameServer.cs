@@ -189,11 +189,7 @@ namespace Barotrauma.Networking
 
             if (SteamManager.USE_STEAM)
             {
-                SteamManager.CreateServer(this, isPublic);
-                if (isPublic)
-                {
-                    registeredToMaster = true;
-                }
+                registeredToMaster = SteamManager.CreateServer(this, isPublic);
             }
             if (isPublic && !GameMain.Config.UseSteamMatchmaking)
             {
@@ -1033,6 +1029,9 @@ namespace Barotrauma.Networking
                     case ClientNetObject.VOTE:
                         serverSettings.Voting.ServerRead(inc, c);
                         break;
+                    case ClientNetObject.SPECTATING_POS:
+                        c.SpectatePos = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+                        break;
                     default:
                         return;
                 }
@@ -1088,6 +1087,10 @@ namespace Barotrauma.Networking
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
                         KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? $"ServerMessage.KickedBy~[initiator]={sender.Name}" : kickReason);
                     }
+                    else
+                    {
+                        SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={kickedName}"), sender, ChatMessageType.Console);
+                    }
                     break;
                 case ClientPermissions.Ban:
                     string bannedName = inc.ReadString().ToLowerInvariant();
@@ -1108,11 +1111,15 @@ namespace Barotrauma.Networking
                             BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range);
                         }
                     }
+                    else
+                    {
+                        SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={bannedName}"), sender, ChatMessageType.Console);
+                    }
                     break;
                 case ClientPermissions.Unban:
-                    string unbannedName = inc.ReadString().ToLowerInvariant();
+                    string unbannedName = inc.ReadString();
                     string unbannedIP = inc.ReadString();
-                    UnbanPlayer(unbannedIP, unbannedIP);
+                    UnbanPlayer(unbannedName, unbannedIP);
                     break;
                 case ClientPermissions.ManageRound:
                     bool end = inc.ReadBoolean();
@@ -1342,11 +1349,20 @@ namespace Barotrauma.Networking
                 foreach (Character character in Character.CharacterList)
                 {
                     if (!character.Enabled) continue;
-                    if (c.Character != null &&
-                        Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.DisableCharacterDistSqr)
+
+                    if (c.SpectatePos == null)
                     {
-                        continue;
+                        if (c.Character != null && Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (Vector2.DistanceSquared(character.WorldPosition, c.SpectatePos.Value) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
                     }
 
                     float updateInterval = character.GetPositionUpdateInterval(c);
@@ -1788,6 +1804,8 @@ namespace Barotrauma.Networking
 
             if (serverSettings.AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null);
 
+            entityEventManager.RefreshEntityIDs();
+
             //assign jobs and spawnpoints separately for each team
             for (int n = 0; n < teamCount; n++)
             {
@@ -1999,8 +2017,16 @@ namespace Barotrauma.Networking
 
         public void EndGame()
         {
-            if (!gameStarted) return;
-            Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            if (!gameStarted) { return; }
+            if (GameSettings.VerboseLogging)
+            {
+                Log("Ending the round...\n" + Environment.StackTrace, ServerLog.MessageType.ServerMessage);
+
+            }
+            else
+            {
+                Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            }
 
             string endMessage = "The round has ended." + '\n';
 
@@ -2062,31 +2088,14 @@ namespace Barotrauma.Networking
                 }
             }
 
-            CoroutineManager.StartCoroutine(EndCinematic(), "EndCinematic");
-
-            GameMain.NetLobbyScreen.RandomizeSettings();
-        }
-
-        public IEnumerable<object> EndCinematic()
-        {
-            float endPreviewLength = 10.0f;
-
-            var cinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-
-            do
-            {
-                yield return CoroutineStatus.Running;
-            } while (cinematic.Running);
-
             Submarine.Unload();
             entityEventManager.Clear();
-
             GameMain.NetLobbyScreen.Select();
             Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
-            yield return CoroutineStatus.Success;
+            GameMain.NetLobbyScreen.RandomizeSettings();
         }
-
+        
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }

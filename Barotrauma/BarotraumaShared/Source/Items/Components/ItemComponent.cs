@@ -65,20 +65,25 @@ namespace Barotrauma.Items.Components
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
-                
+
+        public float IsActiveTimer;
         public virtual bool IsActive
         {
             get { return isActive; }
             set 
             {
 #if CLIENT
-                if (!value && isActive)
+                if (!value)
                 {
-                    StopSounds(ActionType.OnActive);                    
+                    IsActiveTimer = 0.0f;
+                    if (isActive)
+                    {
+                        StopSounds(ActionType.OnActive);
+                    }
                 }
 #endif
                 if (AITarget != null) AITarget.Enabled = value;
-                isActive = value; 
+                isActive = value;
             }
         }
 
@@ -384,7 +389,10 @@ namespace Barotrauma.Items.Components
                     item.Use(1.0f);
                     break;
                 case "toggle":
-                    IsActive = !isActive;
+                    if (signal != "0")
+                    {
+                        IsActive = !isActive;
+                    }
                     break;
                 case "set_active":
                 case "set_state":
@@ -410,8 +418,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (item.ParentInventory != null)
                         {
-                            Character owner = (Character)item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(item)) item.Unequip(owner);
+                            if (item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(item))
+                            {
+                                item.Unequip(owner);
+                            }
                             item.ParentInventory.RemoveItem(item);
                         }
                         Entity.Spawner.AddToRemoveQueue(item);
@@ -424,8 +434,10 @@ namespace Barotrauma.Items.Components
                     {
                         if (this.Item.ParentInventory != null)
                         {
-                            Character owner = (Character)this.Item.ParentInventory.Owner;
-                            if (owner != null && owner.HasSelectedItem(this.Item)) this.Item.Unequip(owner);
+                            if (this.Item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(this.Item))
+                            {
+                                this.Item.Unequip(owner);
+                            }
                             this.Item.ParentInventory.RemoveItem(this.Item);
                         }
                         Entity.Spawner.AddToRemoveQueue(this.Item);

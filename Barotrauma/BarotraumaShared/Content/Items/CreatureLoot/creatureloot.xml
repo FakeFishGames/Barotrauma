@@ -79,13 +79,13 @@
       </StatusEffect>-->
     </Wearable>
   </Item>
-  <Item name="Husk Stinger" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  <Item name="Husk Stinger" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.4">
     <InventoryIcon texture="Content/Characters/Husk/HuskStinger.png" sourcerect="54,0,56,151" />
     <Sprite texture="Content/Characters/Husk/HuskStinger.png" sourcerect="54,0,56,151" depth="0.55" origin="0.44,0.80" />
     <Body width="31" height="6" density="50" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
+    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="5,-5" holdangle="0" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="5" stun="0.2">
-        <Affliction identifier="bleeding" strength="5" />
+        <Affliction identifier="internaldamage" strength="5" />
         <Affliction identifier="bleeding" strength="10" />
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
       </Attack>
