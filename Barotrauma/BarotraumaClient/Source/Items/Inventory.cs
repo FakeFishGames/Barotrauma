@@ -278,6 +278,11 @@ namespace Barotrauma
         {
         }
 
+        public bool Movable()
+        {
+            return movableFrameRect.Size != Point.Zero;
+        }
+
         public virtual bool IsInventoryHoverAvailable(Character owner)
         {
             return true;
@@ -740,9 +745,20 @@ namespace Barotrauma
 
         protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
         {
-            Rectangle hoverArea = subSlot.Slot.Rect;
-            hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
-            hoverArea = Rectangle.Union(hoverArea, subSlot.Slot.EquipButtonRect);
+            Rectangle hoverArea;
+            if (!subSlot.Inventory.Movable())
+            {
+                hoverArea = subSlot.Slot.Rect;
+                hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
+                hoverArea = Rectangle.Union(hoverArea, subSlot.Slot.EquipButtonRect);
+            }
+            else
+            {
+                hoverArea = subSlot.Inventory.BackgroundFrame;
+                hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
+                hoverArea = Rectangle.Union(hoverArea, subSlot.Inventory.movableFrameRect);
+            }
+
             if (subSlot.Inventory?.slots != null)
             {
                 foreach (InventorySlot slot in subSlot.Inventory.slots)
