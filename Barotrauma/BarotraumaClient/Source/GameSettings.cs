@@ -966,7 +966,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    SelectedContentPackages.Remove(contentPackage);
+                    DeselectContentPackage(contentPackage);
                 }
             }
             UnsavedSettings = true;

@@ -856,6 +856,7 @@ namespace Barotrauma.Steam
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
                 GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
                 GameMain.Config.SaveNewPlayerConfig();
+                ContentPackage.SortContentPackages();
             }
             catch (Exception e)
             {

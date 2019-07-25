@@ -1390,6 +1390,7 @@ namespace Barotrauma
             {
                 GameMain.Config.SelectedContentPackages.Add(contentPackage);
                 GameMain.Config.SaveNewPlayerConfig();
+                ContentPackage.SortContentPackages();
             }
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)

@@ -230,6 +230,16 @@ namespace Barotrauma
             if (!SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Add(contentPackage);
+                ContentPackage.SortContentPackages();
+            }
+        }
+
+        public void DeselectContentPackage(ContentPackage contentPackage)
+        {
+            if (SelectedContentPackages.Contains(contentPackage))
+            {
+                SelectedContentPackages.Remove(contentPackage);
+                ContentPackage.SortContentPackages();
             }
         }
 
@@ -674,6 +684,7 @@ namespace Barotrauma
                 }
             }
 
+            ContentPackage.SortContentPackages();
             TextManager.LoadTextPacks(SelectedContentPackages);
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)

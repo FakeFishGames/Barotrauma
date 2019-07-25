@@ -484,10 +484,21 @@ namespace Barotrauma
                 ContentPackage package = new ContentPackage(filePath);
                 List.Add(package);                               
             }
+        }
 
-            // TODO: sorting: core, selected content order, rest
-            var sortedList = List.OrderByDescending(p => p.CorePackage);
-            List = sortedList.ToList();
+        public static void SortContentPackages()
+        {
+            List = List
+                .OrderByDescending(p => p.CorePackage)
+                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
+                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
+                .ToList();
+
+            if (GameMain.Config != null)
+            {
+                var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
+                DebugConsole.NewMessage($"Content package load order: { new string(reportList.SelectMany(cp => cp.Name + "  |  ").ToArray()) }");
+            }
         }
     }
 
