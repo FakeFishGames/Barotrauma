@@ -654,11 +654,11 @@ namespace Barotrauma
 
                 if (args.Length > 0 && args[0].ToLowerInvariant() == "start")
                 {
-                    Submarine.MainSub.SetPosition(Level.Loaded.StartPosition);
+                    Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
                 }
                 else
                 {
-                    Submarine.MainSub.SetPosition(Level.Loaded.EndPosition);
+                    Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
                 }
             }, isCheat: true));
 
