@@ -473,15 +473,21 @@ namespace Barotrauma
                     startY += (int)subInventory.savedPosition.Y - subInventory.originalPos.Y;
                 }
 
+                float totalHeight = itemCapacity / columns * (subRect.Height + spacing.Y);
+                int padding = (int)(20 * UIScale);
+
                 //prevent the inventory from extending outside the left side of the screen
-                startX = Math.Max(startX, 10);
+                startX = Math.Max(startX, padding);
                 //same for the right side of the screen
-                startX -= Math.Max((startX + width) - GameMain.GraphicsWidth, 0);
+                startX -= Math.Max(startX + width - GameMain.GraphicsWidth + padding, 0);
+
+                //prevent the inventory from extending outside the top of the screen
+                startY = Math.Max(startY, (int)totalHeight - padding / 2);
+                //same for the bottom side of the screen
+                startY -= Math.Max(startY - GameMain.GraphicsHeight + padding, 0);               
 
                 subRect.X = startX;
                 subRect.Y = startY;
-
-                float totalHeight = itemCapacity / columns * (subRect.Height + spacing.Y);
 
                 subInventory.OpenState = subInventory.HideTimer >= 0.5f ?
                     Math.Min(subInventory.OpenState + deltaTime * 5.0f, 1.0f) :
@@ -510,8 +516,9 @@ namespace Barotrauma
                     }
                 }
 
-                subInventory.movableFrameRect.X = subRect.X - 5;
-                subInventory.movableFrameRect.Y = subRect.Y + 12;
+                // TODO: test other resolutions
+                subInventory.movableFrameRect.X = subRect.X - (int)spacing.X;
+                subInventory.movableFrameRect.Y = subRect.Y + (int)(spacing.Y / 2f);
                 slots[slotIndex].State = GUIComponent.ComponentState.Hover;
             }
             subInventory.isSubInventory = true;
