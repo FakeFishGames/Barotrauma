@@ -71,7 +71,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-                targetCount = (int)((1.0f - destroyPercent) * totalCount + 0.5f);
+                targetCount = (int)((1.0f - destroyPercent) * totalCount - 0.5f);
                 return true;
             }
 
