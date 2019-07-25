@@ -597,7 +597,7 @@ namespace Barotrauma.Sounds
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
                         float readAmplitude = 0.0f;
 
-                        for (int i=0;i<readSamples;i++)
+                        for (int i=0;i<Math.Min(readSamples, buffer.Length);i++)
                         {
                             float sampleF = ((float)buffer[i]) / ((float)short.MaxValue);
                             readAmplitude = Math.Max(readAmplitude, Math.Abs(sampleF));
