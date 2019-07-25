@@ -146,6 +146,7 @@ namespace Barotrauma
         private bool isSubInventory;
 
         private const float movableFrameRectHeight = 40f;
+        private Color movableFrameRectColor = new Color(60, 60, 60);
         private Rectangle movableFrameRect;
         private Vector2 savedPosition;
         private Point originalPos;
@@ -361,7 +362,7 @@ namespace Barotrauma
 
             slot.State = GUIComponent.ComponentState.None;
 
-            if (mouseOn && (draggingItem != null || selectedSlot == null || selectedSlot.Slot == slot))
+            if (mouseOn && (draggingItem != null || selectedSlot == null || selectedSlot.Slot == slot) && DraggingInventory == null)
             // &&
             //(highlightedSubInventories.Count == 0 || highlightedSubInventories.Contains(this) || highlightedSubInventorySlot?.Slot == slot || highlightedSubInventory.Owner == item))
             {
@@ -558,7 +559,7 @@ namespace Barotrauma
         {
             if (Character.Controlled == null) return false;
 
-            if (draggingItem != null) return true;
+            if (draggingItem != null || DraggingInventory != null) return true;
 
             if (Character.Controlled.Inventory != null)
             {
@@ -675,7 +676,7 @@ namespace Barotrauma
                 }
 
                 //spriteBatch.Draw(EquipIndicator.Texture, container.Inventory.movableFrameRect, EquipIndicator.SourceRect, Color.White);
-                GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, Color.White, true);
+                GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, movableFrameRectColor, true);
             }
         }
 

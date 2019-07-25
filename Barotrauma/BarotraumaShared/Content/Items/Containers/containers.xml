@@ -125,7 +125,7 @@
     <Sprite texture="crates.png" depth="0.54" sourcerect="165,0,152,87" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect" />
-    <ItemContainer capacity="20" canbeselected="false" hideitems="true" keepopenwhenequipped="true">
+    <ItemContainer capacity="20" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
       <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true"/>
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
@@ -152,7 +152,7 @@
     <Sprite texture="crates.png" depth="0.54" sourcerect="1,103,148,87" origin="0.5,0.5" />
     <Body width="145" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
-    <ItemContainer capacity="12" canbeselected="false" hideitems="true" keepopenwhenequipped="true">
+    <ItemContainer capacity="12" canbeselected="false" hideitems="true" keepopenwhenequipped="true" movableframe="true">
       <Containable identifiers="smallitem" />
     </ItemContainer>
   </Item>
