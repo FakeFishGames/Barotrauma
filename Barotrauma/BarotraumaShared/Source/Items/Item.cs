@@ -206,7 +206,7 @@ namespace Barotrauma
             set
             {
                 if (scale == value) { return; }
-                scale = MathHelper.Clamp(value, 0.1f, 10.0f);
+                scale = MathHelper.Clamp(value, 0.01f, 10.0f);
 
                 float relativeScale = scale / prefab.Scale;
 
