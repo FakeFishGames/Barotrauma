@@ -145,9 +145,11 @@ namespace Barotrauma
 
         private bool isSubInventory;
 
+        private const float movableFrameRectHeight = 40f;
         private Rectangle movableFrameRect;
         private Vector2 savedPosition;
         private Point originalPos;
+        private bool resolutionChanged = false;
 
         public class SlotReference
         {
@@ -662,15 +664,25 @@ namespace Barotrauma
 
             if (container.MovableFrame)
             {
-                if (container.Inventory.movableFrameRect.Size == Point.Zero)
+                if (container.Inventory.movableFrameRect.Size == Point.Zero || resolutionChanged)
                 {
-                    container.Inventory.movableFrameRect = new Rectangle(container.Inventory.BackgroundFrame.X, container.Inventory.BackgroundFrame.Y - 25, container.Inventory.BackgroundFrame.Width, 25);
+                    resolutionChanged = false;
+                    int height = (int)(movableFrameRectHeight * UIScale);
+                    container.Inventory.movableFrameRect = new Rectangle(container.Inventory.BackgroundFrame.X, container.Inventory.BackgroundFrame.Y - height, container.Inventory.BackgroundFrame.Width, height);
                     container.Inventory.originalPos = container.Inventory.movableFrameRect.Center;
+                    container.Inventory.savedPosition = Vector2.Zero;
+                    GameMain.Instance.OnResolutionChanged += TriggerResolutionChanged;
                 }
 
                 //spriteBatch.Draw(EquipIndicator.Texture, container.Inventory.movableFrameRect, EquipIndicator.SourceRect, Color.White);
                 GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, Color.White, true);
             }
+        }
+
+        private void TriggerResolutionChanged()
+        {
+            GameMain.Instance.OnResolutionChanged -= TriggerResolutionChanged;
+            resolutionChanged = true;
         }
 
         public static void UpdateDragging()
