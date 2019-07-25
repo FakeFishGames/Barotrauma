@@ -58,6 +58,23 @@ cinematic has finished server-side.
 when the only free inventory space was the hand slots.
 - Fixed a rare race condition that occasionally caused the game to crash during the loading screen with 
 a "no text packs available in English!" error message.
+- Fixed husk infection being healable with broad-spectrum antibiotics even when the infection has reached 
+the final stage.
+- Fixed attachable items (detonators, electrical components) becoming deattachable without any tools 
+if the sub is saved after deattaching them.
+- Fixed projectile raycasts not taking wall rotation into account, causing the projectiles to hit sloped 
+walls when standing next to them.
+- Fixed crashing in the character editor when no textures were found for the selected character.
+- Fixed crashing if a humanoid character has no knees or ankles.
+- Fixed EventManager calculating flooding amount incorrectly, causing floods to only have a very small
+effect on the intensity value.
+- Fixed batteries and supercapacitors being able to provide power through their signal connections 
+(e.g. "set_charge_rate", "charge_rate_out").
+- Lighting fix: obstruct background lights behind hulls. Previously the background lights would only get 
+obstructed by background structures, causing light to "bleed through" parts with no structures (e.g. 
+humpback's docking port) and windows in the background walls.
+- Fixed item loading being interrupted if any item XML cannot be loaded, causing some items not to be
+loaded if any of the selected content packages are missing files or contain corrupted item XMLs.
 
 Misc additions and changes:
 - Search for default animation/ragdoll folders from the folder where the character file is located, not
@@ -80,6 +97,11 @@ distinguish which rooms are actually flooding and which are supposed to have wat
 - More reliable human walk sounds (played at specific points of the walk cycle instead of relying on 
 impacts between the feet and the floor).
 - Option to show a 16x16 grid and snap the cursor to it in the sprite editor.
+- Reactor can be controlled with movement keys.
+- Option to add a probability for afflictions applied by an attack.
+- Husk attacks have a 50% chance of causing a husk infection.
+- Decreased minimum item scale from 0.1 to 0.01.
+- The amount of materials received from deconstructing fuel rods depends on the condition of the fuel rod.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.1.0
