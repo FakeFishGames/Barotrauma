@@ -81,7 +81,7 @@ namespace Barotrauma.Sounds
             if (playbackAmplitude == null) { return 0.0f; }
             int index = playbackPos / AMPLITUDE_SAMPLE_COUNT;
             if (index < 0) { return 0.0f; }
-            if (index > playbackAmplitude.Count) { index = playbackAmplitude.Count - 1; }
+            if (index >= playbackAmplitude.Count) { index = playbackAmplitude.Count - 1; }
             return playbackAmplitude[index];
         }
 

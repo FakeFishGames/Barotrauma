@@ -101,6 +101,35 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public float PlaybackAmplitude
+        {
+            get
+            {
+                float aggregateAmplitude = 0.0f;
+                //NOTE: this is obviously not entirely accurate;
+                //It assumes a linear falloff model, and assumes that audio
+                //is simply added together to produce the final result.
+                //Adjustments may be needed under certain scenarios.
+                for (int i=0;i<2;i++)
+                {
+                    foreach (SoundChannel soundChannel in playingChannels[i].Where(ch => ch != null))
+                    {
+                        float amplitude = soundChannel.CurrentAmplitude;
+                        amplitude *= soundChannel.Gain;
+                        float dist = Vector3.Distance(ListenerPosition, soundChannel.Position ?? ListenerPosition);
+                        if (dist > soundChannel.Near)
+                        {
+                            amplitude *= 1.0f - Math.Min(1.0f, (dist - soundChannel.Near) / (soundChannel.Far - soundChannel.Near));
+                        }
+                        aggregateAmplitude += amplitude;
+                    }
+                }
+                return aggregateAmplitude;
+            }
+        }
+        
+        public float PlaybackCompressedGain { get; private set; }
+
         public int LoadedSoundCount
         {
             get { return loadedSounds.Count; }
@@ -190,6 +219,8 @@ namespace Barotrauma.Sounds
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
+
+            PlaybackCompressedGain = 1.0f;
         }
 
         public Sound LoadSound(string filename, bool stream = false)
@@ -442,6 +473,21 @@ namespace Barotrauma.Sounds
             category = category.ToLower();
             if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return false;
             return categoryModifiers[category].Second;
+        }
+
+        public void Update()
+        {
+            float targetGain = Math.Min(1.0f, 1.0f / PlaybackAmplitude);
+            if (targetGain < PlaybackCompressedGain)
+            {
+                //if the target gain is lower than the current gain, lower the current gain immediately to prevent clipping
+                PlaybackCompressedGain = targetGain;
+            }
+            else
+            {
+                //otherwise, let it rise back smoothly
+                PlaybackCompressedGain = (targetGain) * 0.05f + PlaybackCompressedGain * 0.95f;
+            }
         }
 
         public void InitStreamThread()

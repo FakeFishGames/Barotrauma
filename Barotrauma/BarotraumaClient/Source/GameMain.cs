@@ -613,7 +613,7 @@ namespace Barotrauma
             {
                 if (WindowActive || !Config.MuteOnFocusLost)
                 {
-                    SoundManager.ListenerGain = 1.0f;
+                    SoundManager.ListenerGain = SoundManager.PlaybackCompressedGain;
                 }
                 else
                 {
@@ -738,6 +738,8 @@ namespace Barotrauma
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
+
+                SoundManager.Update();
 
                 Timing.Accumulator -= Timing.Step;
 

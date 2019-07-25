@@ -79,7 +79,7 @@ namespace Barotrauma.Sounds
 
     public class SoundChannel : IDisposable
     {
-        private const int STREAM_BUFFER_SIZE = 65536;
+        private const int STREAM_BUFFER_SIZE = 8820;
         private short[] streamShortBuffer;
 
         private Vector3? position;
@@ -467,6 +467,8 @@ namespace Barotrauma.Sounds
                 this.Near = near;
                 this.Far = far;
                 this.Category = category;
+
+                Sound.Owner.Update();
             }            
         }
 
