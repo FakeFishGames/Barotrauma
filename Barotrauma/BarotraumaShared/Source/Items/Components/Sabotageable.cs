@@ -66,7 +66,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item))
+            float minCondition = repairable?.MinDeteriorationCondition ?? 0.1f;
+
+            if (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item) || item.Condition <= minCondition)
             {
                 CurrentFixer = null;
                 return;
@@ -76,21 +78,29 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            bool itemWasFunctional = item.Condition > 0.2f;
+            bool itemWasFunctional = item.Condition >= 0.5f * (minCondition + item.MaxCondition);
             float successFactor = DegreeOfSuccess(CurrentFixer);
             
-            float fixDuration = MathHelper.Lerp(repairable.FixDurationLowSkill, repairable.FixDurationHighSkill, successFactor);
-            if (fixDuration <= 0.0f)
+            if (repairable != null)
             {
-                item.Condition = 0.1f;
-            } else {
-                item.Condition = Math.Max(0.1f, item.Condition - deltaTime / (fixDuration / item.MaxCondition));
+                float fixDuration = MathHelper.Lerp(repairable.FixDurationLowSkill, repairable.FixDurationHighSkill, successFactor);
+                if (fixDuration <= 0.0f)
+                {
+                    item.Condition = minCondition;
+                } else {
+                    item.Condition = Math.Max(minCondition, item.Condition - deltaTime / (fixDuration / item.MaxCondition));
+                }
+            }
+            else 
+            {
+                item.Condition = minCondition;
             }
 
-            if (itemWasFunctional && item.Condition <= 0.1f)
+            if (itemWasFunctional && item.Condition <= minCondition)
             {
-                if (repairable != null) {
-                    repairable.ResetDeteriorationTimerTo(0f, 0.5f);
+                if (repairable != null)
+                {
+                    repairable.ResetDeteriorationTimerTo(0f, 0.9f);
                 }
                 // skill increase
                 foreach (Skill skill in requiredSkills)
