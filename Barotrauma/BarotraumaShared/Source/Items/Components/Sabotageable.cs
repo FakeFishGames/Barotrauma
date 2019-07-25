@@ -9,7 +9,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Sabotageable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static float SkillIncreasePerSabotage = 5.0f;
+        public static float SkillIncreasePerSabotage = 3.0f;
 
         private string header;
         private Repairable repairable;
@@ -76,34 +76,34 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
+            bool itemWasFunctional = item.Condition > 0.2f;
+            float successFactor = DegreeOfSuccess(CurrentFixer);
             
             float fixDuration = MathHelper.Lerp(repairable.FixDurationLowSkill, repairable.FixDurationHighSkill, successFactor);
             if (fixDuration <= 0.0f)
             {
-                item.Condition = 0.0f;
+                item.Condition = 0.1f;
+            } else {
+                item.Condition = Math.Max(0.1f, item.Condition - deltaTime / (fixDuration / item.MaxCondition));
             }
-            else
+
+            if (itemWasFunctional && item.Condition <= 0.1f)
             {
-                item.Condition -= deltaTime / (fixDuration / item.MaxCondition);
-            }
-            /*
-            if (wasBroken && item.IsFullCondition)
-            {
+                if (repairable != null) {
+                    repairable.ResetDeteriorationTimerTo(0f, 0.5f);
+                }
+                // skill increase
                 foreach (Skill skill in requiredSkills)
                 {
                     float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                    CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                        SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
-                        CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
+                    CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier, SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f), CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
                 }
-                SteamAchievementManager.OnItemRepaired(item, currentFixer);
-                deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-                wasBroken = false;
+                // TODO(xxx): Sabotage achievements on steam?
+                // SteamAchievementManager.OnItemRepaired(item, currentFixer);
+            }
 #if SERVER
-                item.CreateServerEvent(this);
+            item.CreateServerEvent(this);
 #endif
-            }*/
         }
 
         partial void UpdateProjSpecific(float deltaTime);

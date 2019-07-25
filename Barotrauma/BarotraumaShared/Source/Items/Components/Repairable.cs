@@ -128,6 +128,15 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
+        public void ResetDeteriorationTimerTo(float relativeValue, float relativeAdjustment)
+        {
+            deteriorationTimer = MathHelper.Lerp((1.0f - relativeAdjustment) * MinDeteriorationDelay, MaxDeteriorationDelay, relativeValue);
+#if SERVER
+            //let the clients know the initial deterioration delay
+            item.CreateServerEvent(this);
+#endif
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
