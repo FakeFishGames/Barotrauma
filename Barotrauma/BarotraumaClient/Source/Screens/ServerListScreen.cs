@@ -422,9 +422,22 @@ namespace Barotrauma
                 ServerInfo s1 = c1.GUIComponent.UserData as ServerInfo;
                 ServerInfo s2 = c2.GUIComponent.UserData as ServerInfo;
 
+                if (s1 == null && s2 == null)
+                {
+                    return 0;
+                }
+                else if (s1 == null)
+                {
+                    return ascending ? 1 : -1;
+                }
+                else if (s2 == null)
+                {
+                    return ascending ? -1 : 1;
+                }
+
                 switch (sortBy)
                 {
-                    case "ServerListCompatible":
+                    case "ServerListCompatible":                        
                         bool? s1Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s1.GameVersion);
                         if (!s1.ContentPackageHashes.Any()) { s1Compatible = null; }
                         if (s1Compatible.HasValue) { s1Compatible = s1Compatible.Value && s1.ContentPackagesMatch(GameMain.SelectedPackages); };
@@ -448,7 +461,7 @@ namespace Barotrauma
                         if (s1.HasPassword == s2.HasPassword) { return 0; }
                         return (s1.HasPassword ? 1 : -1) * (ascending ? 1 : -1);
                     case "ServerListName":
-                        return s1.ServerName.CompareTo(s2.ServerName) * (ascending ? 1 : -1);
+                        return string.Compare(s1.ServerName, s2.ServerName) * (ascending ? 1 : -1);
                     case "ServerListRoundStarted":
                         if (s1.GameStarted == s2.GameStarted) { return 0; }
                         return (s1.GameStarted ? 1 : -1) * (ascending ? 1 : -1);

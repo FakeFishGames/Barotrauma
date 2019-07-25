@@ -412,8 +412,12 @@ namespace Barotrauma
                 }
 
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc?.Root == null) { return; }
-                
+                if (doc?.Root == null)
+                {
+                    DebugConsole.ThrowError("File \"" + filePath + "\" could not be loaded.");
+                    continue;
+                }
+
                 if (doc.Root.Name.ToString().ToLowerInvariant() == "items")
                 {
                     foreach (XElement element in doc.Root.Elements())

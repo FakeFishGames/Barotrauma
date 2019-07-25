@@ -149,7 +149,7 @@ namespace Barotrauma.Items.Components
             Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
             Vector2 barrelPos = TransformedBarrelPos;
             //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
-            if (Submarine.PickBody(sourcePos, barrelPos, projectile.IgnoredBodies) == null)
+            if (Submarine.PickBody(sourcePos, barrelPos, projectile.IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
             {
                 //no obstacles -> we can spawn the projectile at the barrel
                 projectilePos = barrelPos;

@@ -2788,6 +2788,7 @@ namespace Barotrauma
                 if (editRagdoll || !editLimbs && !editJoints)
                 {
                     RagdollParams.AddToEditor(ParamsEditor.Instance, alsoChildren: false);
+                    RagdollParams.ColliderParams.ForEach(c => c.AddToEditor(ParamsEditor.Instance));
                 }
                 if (editJoints)
                 {
@@ -3041,14 +3042,16 @@ namespace Barotrauma
 
         private void CalculateSpritesheetZoom()
         {
-            float width = textures.OrderByDescending(t => t.Width).First().Width;
+            var texture = textures.OrderByDescending(t => t.Width).FirstOrDefault();
+            if (texture == null)
+            {
+                spriteSheetZoom = 1;
+                return;
+            }
+            float width = texture.Width;
             float height = textures.Sum(t => t.Height);
             float margin = 20;
-            if (textures == null || textures.None())
-            {
-                spriteSheetMaxZoom = 1;
-            }
-            else if (height > width)
+            if (height > width)
             {
                 spriteSheetMaxZoom = (centerArea.Rect.Bottom - spriteSheetOffsetY - margin) / height;
             }

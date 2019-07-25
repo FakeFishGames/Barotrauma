@@ -11,11 +11,6 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class WallSection
-    {
-        public ConvexHull hull;
-    }
-
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
         public static bool ShowWalls = true, ShowStructures = true;        

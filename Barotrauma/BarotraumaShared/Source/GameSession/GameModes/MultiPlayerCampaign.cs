@@ -80,10 +80,8 @@ namespace Barotrauma
 
             bool success =
                 GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
-
-#if CLIENT
+            
             success = success || (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
-#endif
 
             /*if (success)
             {
@@ -118,11 +116,7 @@ namespace Barotrauma
             {
                 c.Inventory?.DeleteAllItems();
             }
-
-#if CLIENT
-            GameMain.GameSession.CrewManager.EndRound();
-#endif
-
+            
             if (success)
             {
                 bool atEndPosition = Submarine.MainSub.AtEndPosition;

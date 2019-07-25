@@ -20,29 +20,25 @@ namespace Barotrauma
         {
             if (!Enabled) { return 1000.0f; }
 
-            if (recipient.Character == null || recipient.Character.IsDead)
-            {
-                return 0.2f;
-            }
-            else
-            {
-                float distance = Vector2.Distance(recipient.Character.WorldPosition, WorldPosition);
-                float priority = 1.0f - MathUtils.InverseLerp(
-                    NetConfig.HighPrioCharacterPositionUpdateDistance, 
-                    NetConfig.LowPrioCharacterPositionUpdateDistance,
-                    distance);
+            Vector2 comparePosition = recipient.SpectatePos == null ? recipient.Character.WorldPosition : recipient.SpectatePos.Value;
 
-                float interval = MathHelper.Lerp(
-                    NetConfig.LowPrioCharacterPositionUpdateInterval, 
-                    NetConfig.HighPrioCharacterPositionUpdateInterval,
-                    priority);
+            float distance = Vector2.Distance(comparePosition, WorldPosition);
+            float priority = 1.0f - MathUtils.InverseLerp(
+                NetConfig.HighPrioCharacterPositionUpdateDistance, 
+                NetConfig.LowPrioCharacterPositionUpdateDistance,
+                distance);
 
-                if (IsDead)
-                {
-                    interval = Math.Max(interval * 2, 0.1f);
-                }
-                return interval;
+            float interval = MathHelper.Lerp(
+                NetConfig.LowPrioCharacterPositionUpdateInterval, 
+                NetConfig.HighPrioCharacterPositionUpdateInterval,
+                priority);
+
+            if (IsDead)
+            {
+                interval = Math.Max(interval * 2, 0.1f);
             }
+
+            return interval;
         }
 
         partial void UpdateNetInput()

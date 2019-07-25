@@ -556,7 +556,31 @@ namespace Barotrauma.Items.Components
                 DeattachFromWall();
             }
         }
+        
+        public override XElement Save(XElement parentElement)
+        {
+            if (!attachable)
+            {
+                return base.Save(parentElement);
+            }
 
+            var tempMsg = DisplayMsg;
+            var tempPickKey = PickKey;
+            var tempRequiredItems = requiredItems;
+
+            DisplayMsg = prevMsg;
+            PickKey = prevPickKey;
+            requiredItems = prevRequiredItems;
+            
+            XElement saveElement = base.Save(parentElement);
+
+            DisplayMsg = tempMsg;
+            PickKey = tempPickKey;
+            requiredItems = tempRequiredItems;
+
+            return saveElement;
+        }
+        
         public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             base.ServerWrite(msg, c, extraData);

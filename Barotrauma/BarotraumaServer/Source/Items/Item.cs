@@ -185,6 +185,15 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg, true, c);
                     break;
+                case NetEntityEvent.Type.Combine:
+                    UInt16 combineTargetID = msg.ReadUInt16();
+                    Item combineTarget = FindEntityByID(combineTargetID) as Item;
+                    if (combineTarget == null || !c.Character.CanInteractWith(this) || !c.Character.CanInteractWith(combineTarget))
+                    {
+                        return;
+                    }
+                    Combine(combineTarget);
+                    break;
             }
         }
 

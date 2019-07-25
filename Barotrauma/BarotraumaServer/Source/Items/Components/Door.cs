@@ -5,7 +5,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Door
     {
-        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage)
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
             if (isStuck || isOpen == open)
             {
@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
 
             if (sendNetworkMessage)
             {
-                item.CreateServerEvent(this);
+                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), forcedOpen });
             }
         }
 
@@ -27,6 +27,7 @@ namespace Barotrauma.Items.Components
             base.ServerWrite(msg, c, extraData);
 
             msg.Write(isOpen);
+            msg.Write(extraData.Length == 3 ? (bool)extraData[2] : false); //forced open
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
         }
     }

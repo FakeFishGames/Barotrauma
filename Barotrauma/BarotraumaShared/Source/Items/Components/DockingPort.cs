@@ -312,6 +312,30 @@ namespace Barotrauma.Items.Components
             joint.CollideConnected = true;
         }
 
+        public int GetDir()
+        {
+            if (DockingDir != 0) { return DockingDir; }
+
+            if (door != null)
+            {
+                if (door.LinkedGap.linkedTo.Count == 1)
+                {
+                    return IsHorizontal ?
+                        Math.Sign(door.Item.WorldPosition.X - door.LinkedGap.linkedTo[0].WorldPosition.X) :
+                        Math.Sign(door.Item.WorldPosition.Y - door.LinkedGap.linkedTo[0].WorldPosition.Y);
+                }
+            }
+
+            if (item.Submarine != null)
+            {
+                return IsHorizontal ?
+                    Math.Sign(item.WorldPosition.X - item.Submarine.WorldPosition.X) :
+                    Math.Sign(item.WorldPosition.Y - item.Submarine.WorldPosition.Y);
+            }
+
+            return 0;
+        }
+
         private void ConnectWireBetweenPorts()
         {
             Wire wire = item.GetComponent<Wire>();

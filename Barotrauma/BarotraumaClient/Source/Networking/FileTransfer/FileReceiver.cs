@@ -208,8 +208,7 @@ namespace Barotrauma.Networking
                         ulong fileSize = inc.ReadUInt64();
                         string fileName = inc.ReadString();
 
-                        string errorMsg;
-                        if (!ValidateInitialData(fileType, fileName, fileSize, out errorMsg))
+                        if (!ValidateInitialData(fileType, fileName, fileSize, out string errorMsg))
                         {
                             GameMain.Client.CancelFileTransfer(0);//inc.SequenceChannel);
                             DebugConsole.ThrowError("File transfer failed (" + errorMsg + ")");

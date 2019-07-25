@@ -50,23 +50,13 @@ namespace Barotrauma
 
             if (!IsRemotePlayer)
             {
-                float characterDist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
-#if SERVER
+                float characterDist = float.MaxValue;
+#if CLIENT
+                characterDist = Vector2.DistanceSquared(cam.GetPosition(), WorldPosition);
+#elif SERVER
                 if (GameMain.Server != null)
                 {
-                    //get the distance from the closest player to this character
-                    foreach (Character c in CharacterList)
-                    {
-                        if (c != this && c.IsRemotePlayer)
-                        {
-                            float dist = Vector2.DistanceSquared(c.WorldPosition, WorldPosition);
-                            if (dist < characterDist)
-                            {
-                                characterDist = dist;
-                                if (characterDist < DisableSimplePhysicsDistSqr) break;
-                            }
-                        }
-                    }
+                    characterDist = GetClosestDistance();
                 }
 #endif
 
@@ -90,5 +80,50 @@ namespace Barotrauma
                 aiController.Update(deltaTime);
             }
         }
+
+#if SERVER
+        // Gets the closest distance, either an active player character or spectator
+        private float GetClosestDistance()
+        {
+            float minDist = float.MaxValue;
+
+            for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
+            {
+                var spectatePos = GameMain.Server.ConnectedClients[i].SpectatePos;
+                if (spectatePos != null)
+                {
+                    float dist = Vector2.DistanceSquared(spectatePos.Value, WorldPosition);
+
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                    }
+                    if (dist < DisableSimplePhysicsDistSqr)
+                    {
+                        return dist;
+                    }
+                }
+            }
+
+            foreach (Character c in CharacterList)
+            {
+                if (c != this && c.IsRemotePlayer)
+                {
+                    float dist = Vector2.DistanceSquared(c.WorldPosition, WorldPosition);
+
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                    }
+                    if (dist < DisableSimplePhysicsDistSqr)
+                    {
+                        return dist;
+                    }
+                }
+            }
+
+            return minDist;
+        }
+#endif
     }
 }

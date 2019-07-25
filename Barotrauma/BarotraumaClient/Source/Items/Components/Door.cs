@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage)
+        partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
             if (isStuck ||
                 (PredictedState == null && isOpen == open) ||
@@ -200,12 +200,16 @@ namespace Barotrauma.Items.Components
                 //sent by the server, or reverting it back to its old state if no msg from server was received
                 PredictedState = open;
                 resetPredictionTimer = CorrectionDelay;
-                if (stateChanged) PlaySound(ActionType.OnUse, item.WorldPosition);
+                if (stateChanged) PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse, item.WorldPosition);
             }
             else
             {
                 isOpen = open;
-                if (!isNetworkMessage || open != PredictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
+                if (!isNetworkMessage || open != PredictedState)
+                {
+                    StopPicking(null);
+                    PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse, item.WorldPosition);
+                }
             }
 
             //opening a partially stuck door makes it less stuck
@@ -217,7 +221,9 @@ namespace Barotrauma.Items.Components
         {
             base.ClientRead(type, msg, sendingTime);
 
-            SetState(msg.ReadBoolean(), isNetworkMessage: true, sendNetworkMessage: false);
+            bool open = msg.ReadBoolean();
+            bool forcedOpen = msg.ReadBoolean();
+            SetState(open, isNetworkMessage: true, sendNetworkMessage: false, forcedOpen: forcedOpen);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
             PredictedState = null;
