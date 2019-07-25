@@ -89,7 +89,7 @@
   
   <Item name="Coilgun Bolt" identifier="coilgunbolt" category="Misc" scale="0.32" sonarsize="2">
     <Sprite texture="weapons_new.png" sourcerect="0,484,177,14" depth="0.55" />
-    <Body width="64" height="5" density="20" />
+    <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="10" severlimbsprobability="0.5">
@@ -143,7 +143,7 @@
   
   <Item name="Physicorium Bolt" identifier="physicoriumbolt" category="Misc" scale="0.32" sonarsize="2">
     <Sprite texture="weapons_new.png" sourcerect="0,498,177,14" depth="0.55" />
-    <Body width="64" height="5" density="20" />
+    <Body width="160" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="10" severlimbsprobability="0.5">
@@ -200,7 +200,7 @@
 
   <Item name="Exploding Coilgun Bolt" identifier="coilgunboltexplosive" category="Misc" scale="0.32" sonarsize="2">
     <Sprite texture="weapons_new.png" sourcerect="0,470,177,14" depth="0.55" />
-    <Body width="64" height="5" density="20" />
+    <Body width="160" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <StatusEffect type="OnActive" target="This">
@@ -255,7 +255,7 @@
 
   <Item name="Piercing Coilgun Bolt" identifier="coilgunboltpiercing" category="Misc" scale="0.32" sonarsize="2">
     <Sprite texture="weapons_new.png" sourcerect="186,484,175,19" depth="0.55" />
-    <Body width="64" height="5" density="20" />
+    <Body width="160" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="10" severlimbsprobability="0.5">

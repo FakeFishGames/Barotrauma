@@ -174,7 +174,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,0,64,64" origin="0.5,0.5" />
     <Sprite texture="battery.png" sourcerect="3,336,57,40" depth="0.8" />
-    <Body width="25" height="17" density="30" />
+    <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" scale="0.3" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
@@ -186,9 +186,9 @@
       <RequiredItem identifier="fulgurium" />
       <RequiredItem identifier="zinc" />
     </Fabricate>
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="514,832,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="514,832,62,64" origin="0.5,0.5" />
     <Sprite texture="battery.png" sourcerect="64,336,62,41" depth="0.8" />
-    <Body width="23" height="17" density="30" />
+    <Body width="55" height="38" density="30" />
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Charging Dock" identifier="chargingdock" category="Electrical" scale="0.5" description="A wall-mounted battery cell charging dock.">

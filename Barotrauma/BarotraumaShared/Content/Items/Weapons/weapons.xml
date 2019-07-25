@@ -138,7 +138,7 @@
     <Price locationtype="Outpost" buyprice="30" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,384,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="238,6,29,11" depth="0.55" origin="0.5,0.5" />
-    <Body width="8" height="3" density="40" />
+    <Body width="29" height="10" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
       <Attack structuredamage="5" stun="0.5" targetforce="10">
@@ -159,7 +159,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="0,1,117,64" depth="0.55" origin="0.5,0.5" />
-    <Body width="28" height="20" density="50" />
+    <Body width="110" height="60" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect" />
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="60">
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
@@ -180,7 +180,7 @@
   <Item name="SMG Round" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light" scale="0.2">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="128,3,40,14" depth="0.55" origin="0.5,0.5" />
-    <Body width="8" height="3" density="40" />
+    <Body width="40" height="14" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="8" unskilledspread="15">
       <Attack structuredamage="2.5" stun="0.125" targetforce="5">
@@ -200,7 +200,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,960,64,64" />
     <Sprite texture="weapons_new.png" depth="0.54" sourcerect="136,296,52,69" origin="0.5,0.5" />
-    <Body width="115" height="88" density="50" />
+    <Body width="50" height="65" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
@@ -221,7 +221,7 @@
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,830,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="288,94,224,124" depth="0.55" origin="0.5,0.5" />
-    <Body width="90" height="30" density="50" />
+    <Body width="220" height="120" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
     <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="90">
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
@@ -509,7 +509,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="835,385,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="296,3,110,28" depth="0.55" origin="0.5,0.5" />
-    <Body width="150" height="30" density="50" />
+    <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="40" msg="ItemMsgPickUpSelect">
       <Attack stun="0.2">
         <Affliction identifier="internaldamage" strength="10" />
@@ -527,13 +527,8 @@
       <Item identifier="titaniumaluminiumalloy" />
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,831,64,64" origin="0.5,0.5" />
-<<<<<<< HEAD
-    <Sprite texture="weapons_new.png" sourcerect="241,277,266,85" depth="0.55" origin="0.5,0.5" />
-    <Body width="90" height="30" density="50" />
-=======
     <Sprite texture="weapons_new.png" sourcerect="219,274,290,102" depth="0.55" origin="0.5,0.5" />
-    <Body width="280" height="100" density="50" />
->>>>>>> 078e7985402a31f663d9507358524c183b96cc8b
+    <Body width="280" height="60" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="50">
       <Sound file="Content/Items/Weapons/HarpoonGun1.ogg" type="OnUse" />
@@ -665,7 +660,7 @@
     <Price locationtype="Military" buyprice="10" />
     <Price locationtype="City" buyprice="15" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,960,64,64" origin="0.5,0.5" />
-    <Sprite texture="weapons_new.png" sourcerect="127,23,36,17" depth="0.55" origin="0.9999992,0.9999997" />
+    <Sprite texture="weapons_new.png" sourcerect="127,23,36,17" depth="0.55" origin="0.5,0.5" />
     <Body width="35" height="15" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <!--When fired, spawns 8 projectiles simultaneously.-->
@@ -734,9 +729,8 @@
       <RequiredItem identifier="plastic"/>
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="641,960,64,64" origin="0.5,0.5" />
-
-    <Sprite texture="weapons_new.png" sourcerect="241,420,68,55" depth="0.55" origin="0.5,0.5" />
-    <Body width="65" height="48" density="50" />
+    <Sprite texture="weapons_new.png" sourcerect="242,420,121,55" depth="0.55" origin="0.5,0.5" />
+    <Body width="120" height="48" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" stun="0.6">
         <Sound file="Content/Items/Weapons/honk.ogg" range="800" />
