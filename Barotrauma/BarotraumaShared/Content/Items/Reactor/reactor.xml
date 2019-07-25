@@ -59,7 +59,7 @@
         <StatusEffect type="OnUse" target="This">
           <ParticleEmitter particle="smoke" particlespersecond="8" scalemin="1" scalemax="2" anglemin="0" anglemax="360" velocitymin="0" velocitymax="200"/>
           <ParticleEmitter particle="swirlysmoke" particlespersecond="3" scalemin="1" scalemax="2" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10"/>
-          <sound file="Content/Items/WarningSiren.ogg" type="OnUse" range="8000.0" loop="true" volume="0.3" />
+          <sound file="Content/Items/Reactor/ReactorOverheatAlarm.ogg" type="OnUse" range="10000.0" loop="true" volume="1.0" />
         </StatusEffect>
       </output>
     </ConnectionPanel>

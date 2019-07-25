@@ -2141,6 +2141,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\PowerOnLight3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Reactor\ReactorOverheatAlarm.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\ElectricalDischarger.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
