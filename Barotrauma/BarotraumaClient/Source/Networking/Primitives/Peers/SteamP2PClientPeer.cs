@@ -235,7 +235,7 @@ namespace Barotrauma.Networking
 
             byte[] bufAux = new byte[msg.LengthBytes];
             bool isCompressed; int length;
-            msg.PrepareForSending(bufAux, out isCompressed, out length);
+            msg.PrepareForSending(ref bufAux, out isCompressed, out length);
 
             buf[1] = (byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None);
 

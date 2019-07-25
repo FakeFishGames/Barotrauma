@@ -653,8 +653,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
             byte[] msgData = new byte[1500];
-            bool isCompressed; int length;
-            msg.PrepareForSending(msgData, out isCompressed, out length);
+            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
             lidgrenMsg.Write(conn.SteamID);
             lidgrenMsg.Write((byte)((isCompressed ? PacketHeader.IsCompressed : PacketHeader.None) | PacketHeader.IsServerMessage));
             lidgrenMsg.Write((UInt16)length);

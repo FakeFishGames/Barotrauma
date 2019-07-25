@@ -478,11 +478,12 @@ namespace Barotrauma.Networking
             MsgWriter.WriteBytes(buf, ref seekPos, val, startPos, length);
         }
 
-        public void PrepareForSending(byte[] outBuf, out bool isCompressed, out int length)
+        public void PrepareForSending(ref byte[] outBuf, out bool isCompressed, out int length)
         {
             if (LengthBytes <= MsgConstants.CompressionThreshold)
             {
                 isCompressed = false;
+                if (LengthBytes > outBuf.Length) { Array.Resize(ref outBuf, LengthBytes); }
                 Array.Copy(buf, outBuf, LengthBytes);
                 length = LengthBytes;
             }
@@ -501,12 +502,14 @@ namespace Barotrauma.Networking
                     if (compressedBuf.Length >= outBuf.Length)
                     {
                         isCompressed = false;
+                        if (LengthBytes > outBuf.Length) { Array.Resize(ref outBuf, LengthBytes); }
                         Array.Copy(buf, outBuf, LengthBytes);
                         length = LengthBytes;
                     }
                     else
                     {
                         isCompressed = true;
+                        if (compressedBuf.Length > outBuf.Length) { Array.Resize(ref outBuf, compressedBuf.Length); }
                         Array.Copy(compressedBuf, outBuf, compressedBuf.Length);
                         length = compressedBuf.Length;
                         DebugConsole.NewMessage("Compressed message: " + LengthBytes + " to " + length);
@@ -907,7 +910,7 @@ namespace Barotrauma.Networking
             return MsgReader.ReadBytes(buf, ref seekPos, numberOfBytes);
         }
 
-        public void PrepareForSending(byte[] outBuf, out bool isCompressed, out int outLength)
+        public void PrepareForSending(ref byte[] outBuf, out bool isCompressed, out int outLength)
         {
             throw new InvalidOperationException("ReadWriteMessages are not to be sent");
         }

@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
         void WriteRangedSingle(Single val, Single min, Single max, int bitCount);
         void Write(byte[] val, int startIndex, int length);
 
-        void PrepareForSending(byte[] outBuf, out bool isCompressed, out int outLength);
+        void PrepareForSending(ref byte[] outBuf, out bool isCompressed, out int outLength);
 
         int BitPosition { get; set; }
         int BytePosition { get; }
