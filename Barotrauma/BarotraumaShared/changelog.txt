@@ -77,6 +77,10 @@ humpback's docking port) and windows in the background walls.
 loaded if any of the selected content packages are missing files or contain corrupted item XMLs.
 
 Misc additions and changes:
+- Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning
+at the beginning of the level.
+- Respawn shuttles don't leave and despawn until a new respawn is pending.
+- Added "respawnnow" console command which immediately dispatches the respawn shuttle.
 - Search for default animation/ragdoll folders from the folder where the character file is located, not
 from "Content/Characters". Fixes mods not being able to load animation/ragdoll files if the file paths
 are not defined explicitly in the character configuration file.
