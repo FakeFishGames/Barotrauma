@@ -38,11 +38,11 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (!matchInventory && item.ParentInventory?.Owner is Character)
+                    if (!matchInventory && item.ParentInventory?.Owner is Character && item.ParentInventory?.Owner != Traitor.Character)
                     {
                         continue;
                     }
-                    if (!includeDestroyed && (item.Condition <= 0.0f || /* item.CurrentHull == null || */!Traitor.Character.Submarine.IsEntityFoundOnThisSub(item, true)))
+                    if (!includeDestroyed && (item.Condition <= 0.0f || !Traitor.Character.Submarine.IsEntityFoundOnThisSub(item, true)))
                     {
                         continue;
                     }
@@ -71,7 +71,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-                targetCount = (int)(destroyPercent * totalCount + 0.5f);
+                targetCount = (int)((1.0f - destroyPercent) * totalCount + 0.5f);
                 return true;
             }
 
