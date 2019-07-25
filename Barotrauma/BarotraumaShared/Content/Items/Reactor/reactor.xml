@@ -84,8 +84,8 @@
     <Price locationtype="Mine" buyprice="200" />
     
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="uranium" mincondition="0.5"/>
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="uranium" copycondition="true"/>
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="uranium"/>
@@ -109,8 +109,8 @@
     scale="0.5">
 
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="fulgurium" mincondition="0.95"/>
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="fulgurium" copycondition="true"/>
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="fulgurium"/>
@@ -134,8 +134,8 @@
     scale="0.5">
 
     <Deconstruct time="10">
-      <Item identifier="steel"/>
-      <Item identifier="thorium" mincondition="0.95"/>
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="thorium" copycondition="true"/>
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="thorium"/>

@@ -207,6 +207,12 @@ namespace Barotrauma.Items.Components
         {
             get { return damageModifiers; }
         }
+
+        private bool autoEquipWhenFull;
+        public bool AutoEquipWhenFull
+        {
+            get { return autoEquipWhenFull; }
+        }               
         
         public Wearable(Item item, XElement element) : base(item, element)
         {
@@ -220,6 +226,7 @@ namespace Barotrauma.Items.Components
             wearableSprites = new WearableSprite[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
+            autoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
             int i = 0;
             foreach (XElement subElement in element.Elements())
             {

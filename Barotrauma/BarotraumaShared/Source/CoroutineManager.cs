@@ -136,7 +136,7 @@ namespace Barotrauma
                     if (!handle.Coroutine.MoveNext()) return;
                 }
             }
-            catch (ThreadAbortException tae)
+            catch (ThreadAbortException)
             {
                 //not an error, don't worry about it
             }

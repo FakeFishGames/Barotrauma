@@ -32,7 +32,6 @@ namespace Barotrauma.Tutorials
         private LightComponent mechanic_thirdDoorLight;
         private Structure mechanic_brokenWall_1;
         private Hull mechanic_brokenhull_1;
-        private MotionSensor mechanic_ladderSensor;
 
         // Room 4
         private MotionSensor mechanic_craftingObjectiveSensor;

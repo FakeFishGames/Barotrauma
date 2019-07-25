@@ -3285,8 +3285,6 @@
   <Karma.HealFriendlyKarmaIncrease>Heal friendly</Karma.HealFriendlyKarmaIncrease>
   <Karma.HealFriendlyKarmaIncreaseTooltip>How much karma increases when healing other members of the crew (per amount of damage healed).</Karma.HealFriendlyKarmaIncreaseTooltip>
 
-  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
-  
   <Karma.DamageFriendlyKarmaDecrease>Damage to friendly</Karma.DamageFriendlyKarmaDecrease>
   <Karma.DamageFriendlyKarmaDecreaseTooltip>How much karma decreases when damaging other members of the crew (per amount of damage done).</Karma.DamageFriendlyKarmaDecreaseTooltip>
 
@@ -3327,8 +3325,6 @@
   <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
   <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
 
-  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
-  
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
   
@@ -3437,6 +3433,9 @@
   <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <viewsteamprofile>View Steam profile</viewsteamprofile>
+
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+
   
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>

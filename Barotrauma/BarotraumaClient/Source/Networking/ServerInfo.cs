@@ -51,7 +51,22 @@ namespace Barotrauma.Networking
         
         public bool ContentPackagesMatch(IEnumerable<ContentPackage> myContentPackages)
         {
-            return ContentPackagesMatch(myContentPackages.Select(cp => cp.MD5hash.Hash));
+            //make sure we have all the packages the server requires
+            foreach (string hash in ContentPackageHashes)
+            {
+                if (!myContentPackages.Any(myPackage => myPackage.MD5hash.Hash == hash)) { return false; }
+            }            
+
+            //make sure the server isn't missing any of our packages that cause multiplayer incompatibility
+            foreach (ContentPackage myPackage in myContentPackages)
+            {
+                if (myPackage.HasMultiplayerIncompatibleContent)
+                {
+                    if (!ContentPackageHashes.Any(hash => hash == myPackage.MD5hash.Hash)) { return false; }
+                }
+            }
+
+            return true;
         }
 
         public bool ContentPackagesMatch(IEnumerable<string> myContentPackageHashes)
