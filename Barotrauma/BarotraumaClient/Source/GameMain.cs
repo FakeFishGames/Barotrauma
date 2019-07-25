@@ -454,6 +454,10 @@ namespace Barotrauma
             TitleScreen.LoadState = 30.0f;
         yield return CoroutineStatus.Running;
 
+            Character.CheckAllConfigFiles();
+            TitleScreen.LoadState = 50.0f;
+        yield return CoroutineStatus.Running;
+
             Debug.WriteLine("sounds");
 
             int i = 0;

@@ -108,7 +108,11 @@ namespace Barotrauma
 
         public static List<Limb> AttachHuskAppendage(Character character, Ragdoll ragdoll = null)
         {
-            var huskDoc = XMLExtensions.TryLoadXml(Character.GetConfigFile("humanhusk"));
+            if (!Character.TryGetConfigFile(Character.GetConfigFile("humanhusk"), out XDocument huskDoc))
+            {
+                DebugConsole.ThrowError("Failed to load the husk config file!");
+                return new List<Limb>();
+            }
             string pathToAppendage = huskDoc.Root.Element("huskappendage").GetAttributeString("path", string.Empty);
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
             if (doc == null || doc.Root == null) { return null; }

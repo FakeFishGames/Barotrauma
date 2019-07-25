@@ -86,8 +86,6 @@ namespace Barotrauma
             }
         }
 
-        private static Dictionary<string, XDocument> cachedConfigs = new Dictionary<string, XDocument>();
-
         private static ushort idCounter;
 
         public string Name;
@@ -348,7 +346,11 @@ namespace Barotrauma
             idCounter++;
             File = file;
             SpriteTags = new List<string>();
-            XDocument doc = GetConfig(file);
+            if (!Character.TryGetConfigFile(File, out XDocument doc))
+            {
+                DebugConsole.ThrowError($"Failed to load the character config file from '{File}'");
+                return;
+            }
             SourceElement = doc.Root;
             head = new HeadInfo();
             HasGenders = doc.Root.GetAttributeBool("genders", false);
@@ -367,16 +369,16 @@ namespace Barotrauma
             else
             {
                 name = "";
-                if (doc.Root.Element("name") != null)
+                if (SourceElement.Element("name") != null)
                 {
-                    string firstNamePath = doc.Root.Element("name").GetAttributeString("firstname", "");
+                    string firstNamePath = SourceElement.Element("name").GetAttributeString("firstname", "");
                     if (firstNamePath != "")
                     {
                         firstNamePath = firstNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
                         Name = ToolBox.GetRandomLine(firstNamePath);
                     }
 
-                    string lastNamePath = doc.Root.Element("name").GetAttributeString("lastname", "");
+                    string lastNamePath = SourceElement.Element("name").GetAttributeString("lastname", "");
                     if (lastNamePath != "")
                     {
                         lastNamePath = lastNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
@@ -402,7 +404,7 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", "");
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
             File = element.GetAttributeString("file", "");
-            SourceElement = GetConfig(File).Root;
+            SourceElement = element;
             HasGenders = SourceElement.GetAttributeBool("genders", false);
             Salary = element.GetAttributeInt("salary", 1000);
             Enum.TryParse(element.GetAttributeString("race", "White"), true, out Race race);
@@ -460,17 +462,6 @@ namespace Barotrauma
                 break;
             }
             LoadHeadAttachments();
-        }
-
-        private XDocument GetConfig(string file)
-        {
-            if (!cachedConfigs.TryGetValue(file, out XDocument doc))
-            {
-                doc = XMLExtensions.TryLoadXml(file);
-                if (doc == null) { return null; }
-                cachedConfigs.Add(file, doc);
-            }
-            return doc;
         }
 
         public int SetRandomHead() => HeadSpriteId = GetRandomHeadID();

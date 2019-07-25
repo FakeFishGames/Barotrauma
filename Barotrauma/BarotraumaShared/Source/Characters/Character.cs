@@ -14,7 +14,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable, ISpatialEntity
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
 
@@ -706,8 +706,11 @@ namespace Barotrauma
                 keys[i] = new Key((InputType)i);
             }
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
+            if (!TryGetConfigFile(file, out XDocument doc))
+            {
+                DebugConsole.ThrowError($"Failed to load config file: {file}");
+                return;
+            }
 
             InitProjSpecific(doc);
             SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
@@ -842,6 +845,7 @@ namespace Barotrauma
         {
             get
             {
+                // TODO: allow to override the human config file
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
                     humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
@@ -850,7 +854,7 @@ namespace Barotrauma
                     if (humanConfigFile == null)
                     {
                         DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
-                        DebugConsole.ThrowError($"(The config file must end with \"human.xml\")");
+                        DebugConsole.ThrowError($"(The config file must be named \"Human.xml\")");
                         return string.Empty;
                     }
                 }
@@ -896,6 +900,51 @@ namespace Barotrauma
                 return string.Empty;
             }
             return configFile;
+        }
+
+        private static Dictionary<string, XDocument> cachedConfigs = new Dictionary<string, XDocument>();
+        public static bool TryGetConfigFile(string file, out XDocument doc)
+        {
+            if (!cachedConfigs.TryGetValue(file, out doc))
+            {
+                doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null || doc.Root == null) { return false; }
+                cachedConfigs.Add(file, doc);
+            }
+            return doc != null;
+        }
+
+        public static void CheckAllConfigFiles()
+        {
+            var allFiles = new Dictionary<string, XDocument>();
+            foreach (var file in ContentPackage.GetFilesOfType(ContentPackage.List, ContentType.Character))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null || doc.Root == null)
+                {
+                    DebugConsole.ThrowError($"Loading the document failed: {file}");
+                    continue;
+                }
+                if (allFiles.ContainsKey(file))
+                {
+                    DebugConsole.ThrowError($"Duplicate path: {file}");
+                    continue;
+                }
+                var name = doc.Root.GetAttributeString("name", null);
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    DebugConsole.ThrowError($"No character name defined for: {file}");
+                    continue;
+                }
+                if (allFiles.Values.Any(f => f.Root.GetAttributeString("name", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    DebugConsole.ThrowError($"Duplicate character name '{name}' in {file}");
+                    continue;
+                }
+                // TODO: remove
+                DebugConsole.NewMessage($"{file} ok", Color.Green);
+                allFiles.Add(file, doc);
+            }
         }
 
         public bool IsKeyHit(InputType inputType)
