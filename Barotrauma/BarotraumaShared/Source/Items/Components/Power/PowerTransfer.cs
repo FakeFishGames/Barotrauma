@@ -198,11 +198,7 @@ namespace Barotrauma.Items.Components
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
 #if CLIENT
-                    if (sparkSounds.Count > 0)
-                    {
-                        var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
-                        SoundPlayer.PlaySound(sparkSound.Sound, pt.item.WorldPosition, sparkSound.Volume, sparkSound.Range,  pt.item.CurrentHull);
-                    }
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);                    
 
                     Vector2 baseVel = Rand.Vector(300.0f);
                     for (int i = 0; i < 10; i++)
@@ -455,7 +451,7 @@ namespace Barotrauma.Items.Components
                     }
 
                     bool broken = recipient.Item.Condition <= 0.0f;
-                    foreach (StatusEffect effect in recipient.effects)
+                    foreach (StatusEffect effect in recipient.Effects)
                     {
                         if (broken && effect.type != ActionType.OnBroken) continue;
                         recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);

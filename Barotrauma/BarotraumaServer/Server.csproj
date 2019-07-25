@@ -211,6 +211,7 @@
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="Source\Networking\GameServer.cs" />
+    <Compile Include="Source\Networking\KarmaManager.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\OrderChatMessage.cs" />

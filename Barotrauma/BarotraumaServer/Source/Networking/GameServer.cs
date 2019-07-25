@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-
+        
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
             
             LastClientListUpdateID = 0;
 
-            serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
@@ -225,13 +225,14 @@ namespace Barotrauma.Networking
             var previousPlayer = previousPlayers.Find(p => p.MatchesClient(newClient));
             if (previousPlayer != null)
             {
+                newClient.Karma = previousPlayer.Karma;
                 foreach (Client c in previousPlayer.KickVoters)
                 {
                     if (!connectedClients.Contains(c)) { continue; }
                     newClient.AddKickVote(c);
                 }
             }
-
+            
             LastClientListUpdateID++;
 
             if (newClient.Connection == OwnerConnection)
@@ -415,6 +416,7 @@ namespace Barotrauma.Networking
             base.Update(deltaTime);
             
             fileSender.Update(deltaTime);
+            KarmaManager.UpdateClients(ConnectedClients, deltaTime);
 
             if (serverSettings.VoiceChatEnabled)
             {
@@ -423,7 +425,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (respawnManager != null) respawnManager.Update(deltaTime);
+                if (respawnManager != null) { respawnManager.Update(deltaTime); }
 
                 entityEventManager.Update(connectedClients);
 
@@ -2188,6 +2190,7 @@ namespace Barotrauma.Networking
                 previousPlayers.Add(previousPlayer);
             }
             previousPlayer.Name = client.Name;
+            previousPlayer.Karma = client.Karma;
             previousPlayer.KickVoters.Clear();
             foreach (Client c in connectedClients)
             {
@@ -2197,6 +2200,8 @@ namespace Barotrauma.Networking
             serverPeer.Disconnect(client.Connection, targetmsg);
             client.Dispose();
             connectedClients.Remove(client);
+
+            KarmaManager.OnClientDisconnected(client);
 
             UpdateVoteStatus();
             
@@ -2993,6 +2998,7 @@ namespace Barotrauma.Networking
         public string Name;
         public string EndPoint;
         public UInt64 SteamID;
+        public float Karma;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)

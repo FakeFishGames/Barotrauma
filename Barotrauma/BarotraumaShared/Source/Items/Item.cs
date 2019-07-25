@@ -1387,7 +1387,7 @@ namespace Barotrauma
             return connectedComponents;
         }
         
-        private static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
+        public static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
         {
             new Pair<string, string>("power_in", "power_out"),
             new Pair<string, string>("signal_in1", "signal_out1"),
@@ -1459,11 +1459,11 @@ namespace Barotrauma
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
             LastSentSignalRecipients.Clear();
-            if (connections == null) return;
+            if (connections == null) { return; }
 
             stepsTaken++;
 
-            if (!connections.TryGetValue(connectionName, out Connection c)) return;
+            if (!connections.TryGetValue(connectionName, out Connection c)) { return; }
 
             if (stepsTaken > 10)
             {
@@ -1473,6 +1473,11 @@ namespace Barotrauma
             }
             else
             {
+                foreach (StatusEffect effect in c.Effects)
+                {
+                    if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
+                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false); }
+                }
                 c.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
             }            
         }
@@ -1722,7 +1727,7 @@ namespace Barotrauma
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
 
-                if (GameMain.NetworkMember!=null && GameMain.NetworkMember.IsServer)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     GameMain.NetworkMember.CreateEntityEvent(this, new object[]
                     {

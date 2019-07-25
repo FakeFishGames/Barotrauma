@@ -9,6 +9,12 @@ namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        public enum Mode
+        {
+            Active,
+            Passive
+        };
+
         public const float DefaultSonarRange = 10000.0f;
 
         class ConnectedTransducer
@@ -35,17 +41,29 @@ namespace Barotrauma.Items.Components
 
         private float range;
 
-        private float pingState;
+        private const float PingFrequency = 0.5f;
+
+        private Mode currentMode = Mode.Passive;
+
+        private class ActivePing
+        {
+            public float State;
+            public bool IsDirectional;
+            public Vector2 Direction;
+            public float PrevPingRadius;
+        }
+        // rotating list of currently active pings
+        private ActivePing[] activePings = new ActivePing[8];
+        // total number of currently active pings, range [0, activePings.Length[
+        private int activePingsCount;
+        // currently active ping index on the above list
+        private int currentPingIndex = -1;
 
         private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
 
         private bool useDirectionalPing = false;
-        private Vector2 lastPingDirection = new Vector2(1.0f, 0.0f);
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
-
-        //was the last ping sent with directional pinging
-        private bool isLastPingDirectional;
 
         private Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
         private Sprite sonarBlip;
@@ -86,24 +104,24 @@ namespace Barotrauma.Items.Components
         {
             get { return zoom; }
         }
-        
-        public override bool IsActive
-        {
-            get
-            {
-                return base.IsActive;
-            }
 
+        public Mode CurrentMode
+        {
+            get => currentMode;
             set
             {
-                base.IsActive = value;
-                if (!value && item.CurrentHull != null)
+                currentMode = value;
+                if (value == Mode.Passive)
                 {
-                    item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                    currentPingIndex = -1;
+                    if (item.CurrentHull != null)
+                    {
+                        item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                    }
                 }
 #if CLIENT
-                if (activeTickBox != null) activeTickBox.Selected = value;
-                if (passiveTickBox != null) passiveTickBox.Selected = !value;
+                if (activeTickBox != null) activeTickBox.Selected = value == Mode.Active;
+                if (passiveTickBox != null) passiveTickBox.Selected = value == Mode.Passive;
 #endif
             }
         }
@@ -112,8 +130,9 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             connectedTransducers = new List<ConnectedTransducer>();
-                        
-            IsActive = false;
+
+            CurrentMode = Mode.Passive;
+            IsActive = true;
             InitProjSpecific(element);
         }
 
@@ -133,40 +152,80 @@ namespace Barotrauma.Items.Components
                 }
                 connectedTransducers.RemoveAll(t => t.DisconnectTimer <= 0.0f);
             }
-            
-            if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
-                (!UseTransducers || connectedTransducers.Count > 0))
+
+            for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
-                pingState = pingState + deltaTime * 0.5f;
-                if (pingState > 1.0f)
+                activePings[pingIndex].State += deltaTime * PingFrequency;
+            }
+
+            if (currentMode == Mode.Active)
+            {
+                if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
+                    (!UseTransducers || connectedTransducers.Count > 0))
+                {
+                    if (currentPingIndex != -1)
+                    {
+                        var activePing = activePings[currentPingIndex];
+                        if (activePing.State > 1.0f)
+                        {
+                            if (item.CurrentHull != null)
+                            {
+                                item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * activePing.State / zoom, item.CurrentHull.AiTarget.SoundRange);
+                                item.CurrentHull.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
+                                item.CurrentHull.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                            }
+                            if (item.AiTarget != null)
+                            {
+                                item.AiTarget.SoundRange = Math.Max(Range * activePing.State / zoom, item.AiTarget.SoundRange);
+                                item.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
+                                item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                            }
+                            aiPingCheckPending = true;
+                            currentPingIndex = -1;
+                        }
+                    }
+                    if (currentPingIndex == -1 && activePingsCount < activePings.Length)
+                    {
+                        currentPingIndex = activePingsCount++;
+                        if (activePings[currentPingIndex] == null)
+                        {
+                            activePings[currentPingIndex] = new ActivePing();
+                        }
+                        activePings[currentPingIndex].IsDirectional = useDirectionalPing;
+                        activePings[currentPingIndex].Direction = pingDirection;
+                        activePings[currentPingIndex].State = 0.0f;
+                        activePings[currentPingIndex].PrevPingRadius = 0.0f;
+                        item.Use(deltaTime);
+                    }
+                }
+                else
                 {
                     if (item.CurrentHull != null)
                     {
-                        item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.CurrentHull.AiTarget.SoundRange);
-                        item.CurrentHull.AiTarget.SectorDegrees = isLastPingDirectional ? DirectionalPingSector : 360.0f;
-                        item.CurrentHull.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                        item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
                     }
-                    if (item.AiTarget != null)
-                    {
-                        item.AiTarget.SoundRange = Math.Max(Range * pingState / zoom, item.AiTarget.SoundRange);
-                        item.AiTarget.SectorDegrees = isLastPingDirectional ? DirectionalPingSector : 360.0f;
-                        item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                    }
-                    aiPingCheckPending = true;
-                    isLastPingDirectional = useDirectionalPing;
-                    lastPingDirection = pingDirection;
-                    item.Use(deltaTime);
-                    pingState = 0.0f;
+                    currentPingIndex = -1;
+                    aiPingCheckPending = false;
                 }
             }
-            else
+
+            for (var pingIndex = 0; pingIndex < activePingsCount;)
             {
-                if (item.CurrentHull != null)
+                if (activePings[pingIndex].State > 1.0f)
                 {
-                    item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                    var lastIndex = --activePingsCount;
+                    var oldActivePing = activePings[pingIndex];
+                    activePings[pingIndex] = activePings[lastIndex];
+                    activePings[lastIndex] = oldActivePing;
+                    if (currentPingIndex == lastIndex)
+                    {
+                        currentPingIndex = pingIndex;
+                    }
                 }
-                aiPingCheckPending = false;
-                pingState = 0.0f;
+                else
+                {
+                    ++pingIndex;
+                }
             }
 
             Voltage -= deltaTime;
@@ -174,7 +233,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return pingState > 1.0f;
+            return currentPingIndex != -1;
         }
 
         protected override void RemoveComponentSpecific()
@@ -189,7 +248,7 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (!IsActive || !aiPingCheckPending) return false;
+            if (currentMode == Mode.Passive || !aiPingCheckPending) return false;
 
             Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
@@ -301,13 +360,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!item.CanClientAccess(c)) return; 
+            if (!item.CanClientAccess(c)) return;
 
-            IsActive = isActive;
+            CurrentMode = isActive ? Mode.Active : Mode.Passive;
 
             //TODO: cleanup
 #if CLIENT
-            activeTickBox.Selected = IsActive;
+            activeTickBox.Selected = currentMode == Mode.Active;
 #endif
             if (isActive)
             {
@@ -331,8 +390,8 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.Write(IsActive);
-            if (IsActive)
+            msg.Write(currentMode == Mode.Active);
+            if (currentMode == Mode.Active)
             {
                 msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
                 msg.Write(useDirectionalPing);

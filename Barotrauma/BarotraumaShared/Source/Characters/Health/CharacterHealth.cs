@@ -411,7 +411,7 @@ namespace Barotrauma
                     amount -= reduceAmount;
                 }
             }
-            
+            CalculateVitality();
         }
 
         public void ApplyDamage(Limb hitLimb, AttackResult attackResult)

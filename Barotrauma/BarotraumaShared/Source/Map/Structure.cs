@@ -815,8 +815,7 @@ namespace Barotrauma
 
 
         }
-
-        partial void AdjustKarma(IDamageable attacker, float amount);
+        
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
@@ -971,23 +970,18 @@ namespace Barotrauma
             bool hadHole = SectionBodyDisabled(sectionIndex);
             Sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, Prefab.Health);
             
-            //otherwise it's possible to infinitely gain karma by welding fixed things
             if (attacker != null && damageDiff != 0.0f)
             {
-                AdjustKarma(attacker, damageDiff);
-#if CLIENT
-                if (GameMain.Client == null)
+                OnHealthChangedProjSpecific(attacker, damageDiff);
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-#endif
                     if (damageDiff < 0.0f)
                     {
                         attacker.Info.IncreaseSkillLevel("mechanical", 
                             -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
                             SectionPosition(sectionIndex, true));                                    
                     }
-#if CLIENT
                 }
-#endif
             }
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
@@ -996,6 +990,8 @@ namespace Barotrauma
                         
             UpdateSections();
         }
+
+        partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount);
 
         public void SetCollisionCategory(Category collisionCategory)
         {

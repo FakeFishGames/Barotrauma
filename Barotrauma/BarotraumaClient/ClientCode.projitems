@@ -160,6 +160,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\KarmaManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetStats.cs" />

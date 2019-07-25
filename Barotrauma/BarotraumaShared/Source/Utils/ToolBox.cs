@@ -260,19 +260,20 @@ namespace Barotrauma
 
         public static string SecondsToReadableTime(float seconds)
         {
+            int s = (int)(seconds % 60.0f);
             if (seconds < 60.0f)
             {
-                return (int)seconds + " s";
+                return s + " s";
             }
-            else
-            {
-                int m = (int)(seconds / 60.0f);
-                int s = (int)(seconds % 60.0f);
 
-                return s == 0 ?
-                    m + " m" :
-                    m + " m " + s + " s";
-            }
+            int h = (int)(seconds / (60.0f * 60.0f));
+            int m = (int)((seconds / 60.0f) % 60);
+
+            string text = "";
+            if (h != 0) { text = h + " h"; }
+            if (m != 0) { text = string.IsNullOrEmpty(text) ? m + " m" : string.Join(" ", text, m, "m"); }
+            if (s != 0) { text = string.IsNullOrEmpty(text) ? s + " s" : string.Join(" ", text, s, "s"); }
+            return text;
         }
 
         private static Dictionary<string, List<string>> cachedLines = new Dictionary<string, List<string>>();

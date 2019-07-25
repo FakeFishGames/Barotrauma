@@ -17,7 +17,8 @@ namespace Barotrauma
         Moustache,
         FaceAttachment,
         JobIndicator,
-        Husk
+        Husk,
+        Herpes
     }
 
     class WearableSprite
@@ -101,6 +102,7 @@ namespace Barotrauma
                 case WearableType.FaceAttachment:
                 case WearableType.JobIndicator:
                 case WearableType.Husk:
+                case WearableType.Herpes:
                     Limb = LimbType.Head;
                     HideLimb = false;
                     HideOtherWearables = false;

@@ -45,7 +45,7 @@ namespace Barotrauma
             {
                 if (!body.Enabled)
                 {
-                    color = Color.Gray;
+                    color = Color.Black;
                 }
                 else if (!body.Awake)
                 {

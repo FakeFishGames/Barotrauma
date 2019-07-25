@@ -100,8 +100,12 @@ namespace Barotrauma.Networking
 
                     if (netProperties.ContainsKey(key))
                     {
+                        object prevValue = netProperties[key].Value;
                         netProperties[key].Read(incMsg);
-                        GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                        if (!netProperties[key].PropEquals(prevValue, netProperties[key]))
+                        {
+                            GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                        }
                         changed = true;
                     }
                     else
@@ -204,6 +208,12 @@ namespace Barotrauma.Networking
             {
                 doc.Save(writer);
             }
+
+            if (KarmaPreset == "custom")
+            {
+                GameMain.Server?.KarmaManager?.SaveCustomPreset();
+            }
+            GameMain.Server?.KarmaManager?.Save();
         }
 
         private void LoadSettings()
@@ -299,9 +309,6 @@ namespace Barotrauma.Networking
             {
                 if (!MonsterEnabled.ContainsKey(s)) MonsterEnabled.Add(s, true);
             }
-            
-            AutoBanTime = doc.Root.GetAttributeFloat("autobantime", 60);
-            MaxAutoBanTime = doc.Root.GetAttributeFloat("maxautobantime", 360);
         }
 
         public void LoadClientPermissions()

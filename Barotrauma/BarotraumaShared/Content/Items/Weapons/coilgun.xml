@@ -3,7 +3,7 @@
   
   <Item name="Coilgun" 
         description="A rapid-firing turret that propels metal bolts using electromagnets. Generally not very effective against large or heavily armored targets, but ideal for taking down smaller enemies."
-        identifier="coilgun" Tags="turret" category="Machine" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="coligunequipment">
+        identifier="coilgun" Tags="turret" category="Machine" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="coilgunequipment">
     <Sprite texture="coilgunbase.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
     <StaticBody width="80" radius="80" />
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="128,88" rotationlimits="180,360" powerconsumption="1000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="0.25" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
