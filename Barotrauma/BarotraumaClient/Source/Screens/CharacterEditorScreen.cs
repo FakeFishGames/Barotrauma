@@ -1386,12 +1386,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("NoContentPackageSelected"));
                 return false;
             }
-            if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
-            {
-                GameMain.Config.SelectedContentPackages.Add(contentPackage);
-                GameMain.Config.SaveNewPlayerConfig();
-                ContentPackage.SortContentPackages();
-            }
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
             {
@@ -1402,11 +1396,18 @@ namespace Barotrauma
             string speciesName = name;
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{speciesName}.xml").Replace(@"\", @"/");
-            if (ContentPackage.GetFilesOfType(GameMain.SelectedPackages, ContentType.Character).Any(path => path.Contains(speciesName)))
+            if (Character.ConfigFiles.Any(f => f.Root.GetAttributeString("name", "").Equals(speciesName, StringComparison.OrdinalIgnoreCase)))
             {
                 GUI.AddMessage(GetCharacterEditorTranslation("ExistingCharacterFound"), Color.Red, font: GUI.LargeFont);
                 // TODO: add a prompt: "Do you want to replace it?" + functionality
                 return false;
+            }
+
+            if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
+            {
+                GameMain.Config.SelectedContentPackages.Add(contentPackage);
+                GameMain.Config.SaveNewPlayerConfig();
+                ContentPackage.SortContentPackages();
             }
 
             // Create the config file
@@ -1428,9 +1429,11 @@ namespace Barotrauma
             contentPackage.AddFile(configFilePath, ContentType.Character);
             contentPackage.Save(contentPackage.Path);
             DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));
+            
+            // TODO: allow overriding if explicitly accepted
+            Character.TryAddConfigFile(configFilePath, allowOverriding: false);
 
             // Ragdoll
-            string ragdollFolder = RagdollParams.GetFolder(speciesName);
             string ragdollPath = RagdollParams.GetDefaultFile(speciesName);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, speciesName, ragdollConfig)

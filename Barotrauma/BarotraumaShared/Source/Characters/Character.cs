@@ -877,6 +877,48 @@ namespace Barotrauma
         public static IEnumerable<string> ConfigFilePaths => configFiles.Keys;
         public static IEnumerable<XDocument> ConfigFiles => configFiles.Values;
 
+        public static bool TryAddConfigFile(string file, bool allowOverriding = false)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(file);
+            if (doc == null || doc.Root == null)
+            {
+                DebugConsole.ThrowError($"Loading character file failed: {file}");
+                return false;
+            }
+            if (configFilePaths.ContainsKey(file))
+            {
+                DebugConsole.ThrowError($"Duplicate path: {file}");
+                return false;
+            }
+            var name = doc.Root.GetAttributeString("name", string.Empty).ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                DebugConsole.ThrowError($"No character name defined for: {file}");
+                return false;
+            }
+            var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("name", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (duplicate.Value != null)
+            {
+                if (allowOverriding)
+                {
+                    DebugConsole.NewMessage($"Overriding the existing character '{duplicate.Value.Root.GetAttributeString("name", "name not defined")}' defined in '{duplicate.Key}' with '{file}'");
+                    configFiles.Remove(file);
+                    configFilePaths.Remove(name);
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Duplicate character name '{name}' in {file}! Add [override][/override] tags as the parent of the character definition to override an existing character.");
+                    return false;
+                }
+
+            }
+            configFiles.Add(file, doc);
+            configFilePaths.Add(name, file);
+            // TODO: remove
+            DebugConsole.NewMessage($"{file} ok", Color.Green);
+            return true;
+        }
+
         public static bool TryGetConfigFile(string file, out XDocument doc)
         {
             configFiles.TryGetValue(file, out doc);
@@ -889,33 +931,7 @@ namespace Barotrauma
             configFilePaths.Clear();
             foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc == null || doc.Root == null)
-                {
-                    DebugConsole.ThrowError($"Loading character file failed: {file}");
-                    continue;
-                }
-                if (configFilePaths.ContainsKey(file))
-                {
-                    DebugConsole.ThrowError($"Duplicate path: {file}");
-                    continue;
-                }
-                var name = doc.Root.GetAttributeString("name", string.Empty).ToLowerInvariant();
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    DebugConsole.ThrowError($"No character name defined for: {file}");
-                    continue;
-                }
-                var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("name", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
-                if (duplicate.Value != null)
-                {
-                    DebugConsole.NewMessage($"Overriding an existing character: '{duplicate.Value.Root.GetAttributeString("name", "name not defined")}' defined in {duplicate.Key} with {file}");
-                    configFiles.Remove(file);
-                    configFilePaths.Remove(name);
-                }
-                configFiles.Add(file, doc);
-                configFilePaths.Add(name, file);
-                DebugConsole.NewMessage($"{file} ok", Color.Green);
+                TryAddConfigFile(file, allowOverriding: true);
             }
         }
 
