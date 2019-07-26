@@ -745,6 +745,12 @@ namespace Barotrauma
         private static readonly Dictionary<Body, float> bodyDist = new Dictionary<Body, float>();
         private static readonly List<Body> bodies = new List<Body>();
 
+        public static float LastPickedBodyDist(Body body)
+        {
+            if (!bodyDist.ContainsKey(body)) { return 0.0f; }
+            return bodyDist[body];
+        }
+
         /// <summary>
         /// Returns a list of physics bodies the ray intersects with, sorted according to distance (the closest body is at the beginning of the list).
         /// </summary>

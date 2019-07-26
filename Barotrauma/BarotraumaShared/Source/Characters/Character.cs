@@ -1957,7 +1957,6 @@ namespace Barotrauma
                         {
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.GetPosition(), c.WorldPosition));
                         }
-
                         if (distSqr > NetConfig.DisableCharacterDistSqr)
                         {
                             c.Enabled = false;

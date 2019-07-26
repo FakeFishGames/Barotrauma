@@ -10,14 +10,14 @@
   <Item name="Medium Steel Cabinet" identifier="mediumsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="545,2,175,374" origin="0.5,0.5" />
     <ItemContainer capacity="15" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
-    <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
   <Item name="Medium Windowed Steel Cabinet" aliases="Diving Gear Cabinet" identifier="mediumwindowedsteelcabinet" tags="cabinet" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="375,0,168,377" origin="0.5,0.5" />
     <ItemContainer capacity="15" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
-    <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.25,0.3" anchor="Center" style="ItemUI" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
@@ -33,7 +33,7 @@
     <Sprite texture="containers.png" depth="0.84" sourcerect="197,350,105,160" origin="0.5,0.5" />
     <ItemContainer capacity="20" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.45" anchor="Center" style="ItemUI" />
-      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
@@ -110,7 +110,7 @@
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />-->
     <Sprite texture="crates.png" depth="0.54" sourcerect="0,5,152,89" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect" />
     <ItemContainer capacity="20" canbeselected="false" hideitems="true">
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
@@ -122,11 +122,11 @@
       <Item identifier="steel" />
     </Deconstruct>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,128,64,64" />-->
-    <Sprite texture="crates.png" depth="0.54" sourcerect="165,0,152,87" origin="0.5,0.5" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="165,5,151,86" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect" />
     <ItemContainer capacity="20" canbeselected="false" hideitems="true">
-      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="ItemMsgUnauthorizedAccess" ignoreineditor="true" />
       <Containable identifiers="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
@@ -136,9 +136,9 @@
       <Item identifier="steel" />
     </Deconstruct>
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,128,64,64" />-->
-    <Sprite texture="crates.png" depth="0.54" sourcerect="0,197,153,89" origin="0.5,0.5" />
+    <Sprite texture="crates.png" depth="0.54" sourcerect="320,101,150,88" origin="0.5,0.5" />
     <Body width="150" height="85" density="50" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect" />
     <ItemContainer capacity="12" canbeselected="false" hideitems="true">
       <Containable identifiers="smallitem" />
     </ItemContainer>
@@ -151,7 +151,7 @@
     <!--<InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,128,64,64" />-->
     <Sprite texture="crates.png" depth="0.54" sourcerect="1,103,148,87" origin="0.5,0.5" />
     <Body width="145" height="85" density="50" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false" msg="ItemMsgPickUpSelect" />
     <ItemContainer capacity="12" canbeselected="false" hideitems="true">
       <Containable identifiers="smallitem" />
     </ItemContainer>

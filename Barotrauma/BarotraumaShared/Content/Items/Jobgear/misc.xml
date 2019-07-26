@@ -6,7 +6,7 @@
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
     <Price locationtype="Mine" buyprice="100" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" origin="0.5,0.5" />
     <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="0,96,96,96" origin="0.5,0.5" />
     <Body radius="15" height="10" density="30" />
     <Deconstruct time="10">
