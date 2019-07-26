@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Guitar" identifier="guitar" category="Misc" Tags="bigitem" description="An old acoustic guitar." price="300" isshootable="true">
+  <Item name="Guitar" identifier="guitar" category="Misc" Tags="bigitem" scale="0.5" description="An old acoustic guitar." price="300" isshootable="true">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="Misc.png" sourcerect="0,0,53,128" depth="0.5" origin="0.5,0.5" />
+    <Sprite texture="Misc.png" sourcerect="0,0,97,254" depth="0.5" origin="0.5,0.5" />
     <Body radius="20" height="83" density="12" />
     <Holdable slots="RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-2,0" handle2="10,50" swingamount="10,20" swingspeed="1" swingwhenusing="true" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnUse" target="Character">
@@ -17,9 +17,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Harmonica" identifier="harmonica" category="Misc" Tags="smallitem" description="An old hand-made harmonica." price="300" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Harmonica" identifier="harmonica" category="Misc" Tags="smallitem" scale="0.5" description="An old hand-made harmonica." price="300" impactsoundtag="impact_metal_light" isshootable="true">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,256,64,64" origin="0.5,0.5" />
-    <Sprite texture="Misc.png" sourcerect="54,1,27,9" depth="0.5" origin="0.5,0.5" />
+    <Sprite texture="Misc.png" sourcerect="102,16,58,21" depth="0.5" origin="0.5,0.5" />
     <Body width="23" height="7" />
     <Holdable slots="RightHand+LeftHand,Any" aimable="false" aimpos="20,20" handle1="-5,0" handle2="5,0" swingamount="20,0" swingspeed="1" swingwhenusing="true" msg="ItemMsgPickUpSelect">
       <sound file="Content/Items/Misc/Harmonica1.ogg" type="OnUse" selectionmode="CharacterSpecific" range="600" loop="true" />
