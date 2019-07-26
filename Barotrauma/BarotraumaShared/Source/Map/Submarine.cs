@@ -1207,7 +1207,34 @@ namespace Barotrauma
             foreach (string path in filePaths)
             {
                 var sub = new Submarine(path);
-                if (!sub.IsFileCorrupted)
+                if (sub.IsFileCorrupted)
+                {
+#if CLIENT
+                    if (DebugConsole.IsOpen) { DebugConsole.Toggle(); }
+                    var deleteSubPrompt = new GUIMessageBox(
+                        TextManager.Get("Error"), 
+                        TextManager.GetWithVariable("SubLoadError", "[subname]", sub.name) +"\n"+
+                        TextManager.GetWithVariable("DeleteFileVerification", "[filename]", sub.name),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                    string filePath = path;
+                    deleteSubPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                    {
+                        try
+                        {
+                            File.Delete(filePath);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Failed to delete file \"{filePath}\".", e);
+                        }
+                        deleteSubPrompt.Close();
+                        return true;
+                    };
+                    deleteSubPrompt.Buttons[1].OnClicked += deleteSubPrompt.Close;
+#endif
+                }
+                else
                 {
                     savedSubmarines.Add(sub);
                 }
@@ -1619,7 +1646,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition);
@@ -1650,7 +1676,6 @@ namespace Barotrauma
                 if (wp.isObstructed) { continue; }
                 foreach (var connection in node.connections)
                 {
-                    bool isObstructed = false;
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;

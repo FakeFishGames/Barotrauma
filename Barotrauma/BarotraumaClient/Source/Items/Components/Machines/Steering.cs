@@ -735,9 +735,7 @@ namespace Barotrauma.Items.Components
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
                 if (sourcePort.Item.Submarine != controlledSub) { continue; }
 
-                int sourceDir = sourcePort.IsHorizontal ?
-                    Math.Sign(sourcePort.Item.WorldPosition.X - sourcePort.Item.Submarine.WorldPosition.X) :
-                    Math.Sign(sourcePort.Item.WorldPosition.Y - sourcePort.Item.Submarine.WorldPosition.Y);
+                int sourceDir = sourcePort.GetDir();
 
                 foreach (DockingPort targetPort in DockingPort.List)
                 {
@@ -745,9 +743,7 @@ namespace Barotrauma.Items.Components
                     if (targetPort.Item.Submarine == controlledSub || targetPort.IsHorizontal != sourcePort.IsHorizontal) { continue; }
                     if (Level.Loaded != null && targetPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
-                    int targetDir = targetPort.IsHorizontal ?
-                        Math.Sign(targetPort.Item.WorldPosition.X - targetPort.Item.Submarine.WorldPosition.X) :
-                        Math.Sign(targetPort.Item.WorldPosition.Y - targetPort.Item.Submarine.WorldPosition.Y);
+                    int targetDir = targetPort.GetDir();
 
                     if (sourceDir == targetDir) { continue; }
 

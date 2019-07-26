@@ -64,14 +64,19 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Shoot))
-                throwing = true;
+            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Shoot)) { throwing = true; }
+            if (!picker.IsKeyDown(InputType.Aim) && !throwing) { throwPos = 0.0f; }
+            bool aim = picker.IsKeyDown(InputType.Aim) && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
 
-            if (!picker.IsKeyDown(InputType.Aim) && !throwing) throwPos = 0.0f;
+            if (picker.IsUnconscious || picker.IsDead || !picker.AllowInput)
+            {
+                throwing = false;
+                aim = false;
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip();
+            if (item.body.Dir != picker.AnimController.Dir) { Flip(); }
 
             AnimController ac = picker.AnimController;
 
@@ -79,7 +84,6 @@ namespace Barotrauma.Items.Components
 
             if (!throwing)
             {
-                bool aim = picker.IsKeyDown(InputType.Aim) && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
                 if (aim)
                 {
                     throwPos = MathUtils.WrapAnglePi(System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.PiOver2));

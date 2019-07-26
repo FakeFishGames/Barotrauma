@@ -329,22 +329,22 @@ namespace Barotrauma.Items.Components
                 var recipients = c.Recipients;
                 foreach (Connection recipient in recipients)
                 {
-                    if (recipient?.Item == null) continue;
+                    if (recipient?.Item == null || !recipient.IsPower) { continue; }
 
                     Item it = recipient.Item;
-                    if (it.Condition <= 0.0f) continue;
+                    if (it.Condition <= 0.0f) { continue; }
 
                     foreach (ItemComponent ic in it.Components)
                     {
-                        if (!(ic is Powered powered) || !powered.IsActive) continue;
-                        if (connectedList.Contains(powered)) continue;
+                        if (!(ic is Powered powered) || !powered.IsActive) { continue; }
+                        if (connectedList.Contains(powered)) { continue; }
 
                         if (powered is PowerTransfer powerTransfer)
                         {
                             RelayComponent otherRelayComponent = powerTransfer as RelayComponent;
                             if ((thisRelayComponent == null) == (otherRelayComponent == null))
                             {
-                                if (!powerTransfer.CanTransfer) continue;
+                                if (!powerTransfer.CanTransfer) { continue; }
                                 powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, clampPower, clampLoad);
                             }
                             else
@@ -354,7 +354,7 @@ namespace Barotrauma.Items.Components
                                 float maxPowerOut = (thisRelayComponent != null && !c.IsOutput) ? 0.0f : clampLoad;
                                 if (maxPowerIn > 0.0f || maxPowerOut > 0.0f)
                                 {
-                                    powerTransfer.CheckJunctions(deltaTime, false,  maxPowerIn, maxPowerOut);
+                                    powerTransfer.CheckJunctions(deltaTime, false, maxPowerIn, maxPowerOut);
                                 }
                             }
 
