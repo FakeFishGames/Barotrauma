@@ -29,11 +29,17 @@
   <sound file="Content/Characters/Moloch/MOLOCH_death1.ogg" state="Die" range="5000"/>
   <sound file="Content/Characters/Moloch/MOLOCH_death2.ogg" state="Die" range="5000"/>
   
-  <Inventory slots="Any, Any, Any" accessiblewhenalive="false">
+  <Inventory slots="Any, Any, Any" accessiblewhenalive="false" commonness="2">
     <Item identifier="hydroxyapatite"/>
     <Item identifier="hydroxyapatite"/>
     <Item identifier="brockite"/>
   </Inventory>
+  <Inventory slots="Any, Any, Any" accessiblewhenalive="false" commonness="1">
+    <Item identifier="hydroxyapatite"/>
+    <Item identifier="shellshield"/>
+    <Item identifier="brockite"/>
+  </Inventory>
+
 
   <ai
     combatstrength="1200"

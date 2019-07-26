@@ -86,6 +86,11 @@ namespace Barotrauma
                     (minPos.Y + maxPos.Y) / 2.0f);
                 cam.Translate(cameraPos - cam.Position);
 
+                foreach (Submarine sub in subs)
+                {
+                    sub.PhysicsBody?.ResetDynamics();
+                }
+
 #if CLIENT
                 cam.Zoom = MathHelper.SmoothStep(initialZoom, 0.5f, timer / duration);
                 if (timer / duration > 0.9f)

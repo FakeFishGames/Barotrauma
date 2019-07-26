@@ -3403,6 +3403,21 @@
   <serverbanner>Server banner</serverbanner>
   <serverlogo>Server logo</serverlogo>
   <servertagline>Tagline</servertagline>
+
+  <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
+  <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
+  
+  <Karma.KarmaDecay>Karma decay speed</Karma.KarmaDecay>
+  <Karma.KarmaDecayTooltip>How much karma decreases per second when it's above the decay threshold.</Karma.KarmaDecayTooltip>
+  
+  <Karma.KarmaDecayThreshold>Karma decay threshold</Karma.KarmaDecayThreshold>
+  <Karma.KarmaDecayThresholdTooltip>Karma gradually decreases when it's above this threshold.</Karma.KarmaDecayThresholdTooltip>
+  
+  <Karma.KarmaIncrease>Karma increase speed</Karma.KarmaIncrease>
+  <Karma.KarmaIncreaseTooltip>How much karma increases per second when it's below the increase threshold.</Karma.KarmaIncreaseTooltip>  
+  
+  <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
+  <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
   
   <servertag.casual>Casual</servertag.casual>
   <servertagdescription.casual>Having fun is more important than completing the objective. A good choice for new players.</servertagdescription.casual>
@@ -3436,6 +3451,8 @@
   <clientpermission.karmaimmunity>Karma immunity</clientpermission.karmaimmunity>
 
   <viewsteamprofile>View Steam profile</viewsteamprofile>
+
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 
   <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 

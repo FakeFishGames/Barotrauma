@@ -415,25 +415,32 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (isCrewDead && respawnManager == null)
+                float endRoundDelay = 1.0f;
+                if (serverSettings.AutoRestart && isCrewDead)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (isCrewDead && respawnManager == null)
                 {
                     if (endRoundTimer <= 0.0f)
                     {
                         SendChatMessage(TextManager.GetWithVariable("CrewDeadNoRespawns", "[time]", "60"), ChatMessageType.Server);
                     }
+                    endRoundDelay = 60.0f;
                     endRoundTimer += deltaTime;
                 }
                 else
                 {
                     endRoundTimer = 0.0f;
                 }
-
-                //restart if all characters are dead or submarine is at the end of the level
-                if ((serverSettings.AutoRestart && isCrewDead)
-                    ||
-                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
-                    ||
-                    (isCrewDead && respawnManager == null && endRoundTimer >= 60.0f))
+                
+                if (endRoundTimer >= endRoundDelay)
                 {
                     if (serverSettings.AutoRestart && isCrewDead)
                     {

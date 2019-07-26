@@ -221,7 +221,7 @@ namespace Barotrauma.Networking
                        
             var radioComponent = radio.GetComponent<WifiComponent>();
             if (radioComponent == null) return false;
-            return radioComponent.HasRequiredContainedItems(false);
+            return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
         public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null)

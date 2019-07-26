@@ -54,7 +54,9 @@ namespace Barotrauma
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull hull)
         {
-            if (entity != null && sounds.Count > 0)
+            if (entity == null) { return; }
+
+            if (sounds.Count > 0)
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
@@ -95,22 +97,20 @@ namespace Barotrauma
                 }
             }
 
-            if (entity != null)
+            foreach (ParticleEmitter emitter in particleEmitters)
             {
-                foreach (ParticleEmitter emitter in particleEmitters)
+                float angle = 0.0f;
+                if (emitter.Prefab.CopyEntityAngle)
                 {
-                    float angle = 0.0f;
-                    if (emitter.Prefab.CopyEntityAngle)
+                    if (entity is Item item && item.body != null)
                     {
-                        if (entity is Item it)
-                        {
-                            angle = it.body == null ? 0.0f : it.body.Rotation;
-                        }
+                        angle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                     }
-
-                    emitter.Emit(deltaTime, entity.WorldPosition, hull, angle);
                 }
+
+                emitter.Emit(deltaTime, entity.WorldPosition, hull, angle);
             }
+            
         }
 
         static partial void UpdateAllProjSpecific(float deltaTime)
