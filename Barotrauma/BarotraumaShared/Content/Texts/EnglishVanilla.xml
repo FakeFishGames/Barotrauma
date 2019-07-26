@@ -3327,6 +3327,13 @@
   <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
   <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
 
+  <serverplaystyle>Play style</serverplaystyle>
+  <servertags>Server tags</servertags>
+  <servermotd>Message of the day</servermotd>
+  <serverbanner>Server banner</serverbanner>
+  <serverlogo>Server logo</serverlogo>
+  <servertagline>Tagline</servertagline>
+
   <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
   <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
   
