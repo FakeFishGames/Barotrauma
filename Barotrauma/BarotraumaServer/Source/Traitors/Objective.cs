@@ -85,6 +85,8 @@ namespace Barotrauma
                 Client traitorClient = server.ConnectedClients.Find(c => c.Character == traitor.Character);
                 GameMain.Server.SendDirectChatMessage(StartMessageText, traitorClient);
                 GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, StartMessageText, ChatMessageType.MessageBox, null), traitorClient);
+                Traitor.Character.TraitorCurrentObjective = GoalInfos;
+                GameMain.NetworkMember.CreateEntityEvent(Traitor.Character, new object[] { NetEntityEvent.Type.Status });
                 return true;
             }
 
@@ -120,6 +122,8 @@ namespace Barotrauma
                             if (traitorClient != null)
                             {
                                 GameMain.Server.SendDirectChatMessage(goal.CompletedText, traitorClient);
+                                Traitor.Character.TraitorCurrentObjective = GoalInfos;
+                                GameMain.NetworkMember.CreateEntityEvent(Traitor.Character, new object[] { NetEntityEvent.Type.Status });
                             }
                         }
                     }

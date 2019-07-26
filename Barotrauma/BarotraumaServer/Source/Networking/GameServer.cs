@@ -1884,16 +1884,6 @@ namespace Barotrauma.Networking
                 int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
                 int traitorCount = Rand.Range(1, max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
-
-                /* TODO(xxx): Not yet accessible since TraitorManager.Mission.Start is still pending...
-                if (TraitorManager.Traitors != null)
-                {
-                    foreach(var traitor in TraitorManager.Traitors)
-                    {
-                        Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos ?? "(empty)"), ServerLog.MessageType.ServerMessage);
-                    }
-                }
-                */
             }
 
             GameAnalyticsManager.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
@@ -1959,20 +1949,6 @@ namespace Barotrauma.Networking
 
             msg.Write(serverSettings.AllowDisguises);
             msg.Write(serverSettings.AllowRewiring);
-
-            Traitor traitor = null;
-            if (TraitorManager != null && TraitorManager.Traitors != null && TraitorManager.Traitors.Count > 0)
-            {
-                traitor = TraitorManager.Traitors.FirstOrDefault(t => t.Character == client.Character);
-            }
-            if (traitor != null)
-            {
-                msg.Write(true);
-            }
-            else
-            {
-                msg.Write(false);
-            }
 
             msg.Write(serverSettings.AllowRagdollButton);
 

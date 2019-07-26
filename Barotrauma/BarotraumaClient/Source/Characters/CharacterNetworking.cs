@@ -304,7 +304,6 @@ namespace Barotrauma
 
                                 Controlled = this;
                                 IsRemotePlayer = false;
-                                IsTraitor = GameMain.Client.SpawnAsTraitor;
                                 GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
@@ -320,6 +319,7 @@ namespace Barotrauma
                             break;
                         case 2:
                             ReadStatus(msg);
+                            ReadTraitorStatus(msg);
                             break;
                         case 3:
                             int skillCount = msg.ReadByte();
@@ -398,7 +398,6 @@ namespace Barotrauma
 
                 if (GameMain.Client.ID == ownerId)
                 {
-                    character.IsTraitor = GameMain.Client.SpawnAsTraitor;
                     GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
                     Controlled = character;
@@ -414,6 +413,15 @@ namespace Barotrauma
             character.Enabled = Controlled == character || enabled;
 
             return character;
+        }
+
+        private void ReadTraitorStatus(IReadBuffer msg)
+        {
+            IsTraitor = msg.ReadBoolean();
+            if (IsTraitor)
+            {
+                TraitorCurrentObjective = msg.ReadString();
+            }
         }
         
         private void ReadStatus(IReadMessage msg)
@@ -451,7 +459,7 @@ namespace Barotrauma
             else
             {
                 if (IsDead) Revive();
-                
+
                 CharacterHealth.ClientRead(msg);
             }
         }

@@ -73,8 +73,13 @@ namespace Barotrauma
                 foreach (var traitor in Traitors.Values)
                 {
                     traitor.Greet(server, CodeWords, CodeResponse);
-
                 }
+#if SERVER
+                foreach(var traitor in Traitors.Values)
+                {
+                    GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos ?? "(empty)"), ServerLog.MessageType.ServerMessage);
+                }
+#endif
             }
 
             public virtual void Update(float deltaTime)
@@ -83,11 +88,14 @@ namespace Barotrauma
                 while (pendingObjectives.Count > 0)
                 {
                     var objective = pendingObjectives[0];
-                    if (!objective.IsStarted && !objective.Start(GameMain.Server, Traitors["traitor"]))
+                    if (!objective.IsStarted)
                     {
-                        pendingObjectives.RemoveAt(0);
-                        completedObjectives.Add(objective);
-                        continue;
+                        if (!objective.Start(GameMain.Server, Traitors["traitor"]))
+                        {
+                            pendingObjectives.RemoveAt(0);
+                            completedObjectives.Add(objective);
+                            continue;
+                        }
                     }
                     objective.Update(deltaTime);
                     if (objective.IsCompleted)
@@ -98,7 +106,8 @@ namespace Barotrauma
                     }
                     break;
                 }
-                for (int i = previousCompletedCount; i < completedObjectives.Count; ++i) {
+                for (int i = previousCompletedCount; i < completedObjectives.Count; ++i)
+                {
                     var objective = completedObjectives[i];
                     objective.End(GameMain.Server);
                 }

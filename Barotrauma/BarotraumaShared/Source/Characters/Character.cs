@@ -104,8 +104,8 @@ namespace Barotrauma
 
         public readonly bool IsHumanoid;
 
-        // Only the traitor's client has this set
         public bool IsTraitor;
+        public string TraitorCurrentObjective = "";
 
         //the name of the species (e.q. human)
         public readonly string SpeciesName;

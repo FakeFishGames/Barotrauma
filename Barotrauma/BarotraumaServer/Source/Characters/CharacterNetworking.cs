@@ -274,6 +274,7 @@ namespace Barotrauma
                     case NetEntityEvent.Type.Status:
                         msg.WriteRangedIntegerDeprecated(0, 3, 2);
                         WriteStatus(msg);
+                        WriteTraitorStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
                         msg.WriteRangedIntegerDeprecated(0, 3, 3);
@@ -403,6 +404,17 @@ namespace Barotrauma
 
                 msg.Write((byte)tempBuffer.LengthBytes);
                 msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
+            }
+        }
+
+        private void WriteTraitorStatus(IWriteMessage msg)
+        {
+            msg.Write(IsTraitor);
+            if (IsTraitor)
+            {
+                // TODO(xxx): Proper handling that avoids net packet buffer length issues
+                var text = TraitorCurrentObjective ?? "";
+                msg.Write(text.Substring(0, Math.Min(text.Length, 200)));
             }
         }
 
