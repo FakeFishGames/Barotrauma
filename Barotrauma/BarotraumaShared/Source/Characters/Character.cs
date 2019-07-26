@@ -871,8 +871,8 @@ namespace Barotrauma
             return configFile;
         }
 
-        private static Dictionary<string, string> configFilePaths = new Dictionary<string, string>();
-        private static Dictionary<string, XDocument> configFiles = new Dictionary<string, XDocument>();
+        private readonly static Dictionary<string, string> configFilePaths = new Dictionary<string, string>();
+        private readonly static Dictionary<string, XDocument> configFiles = new Dictionary<string, XDocument>();
 
         public static IEnumerable<string> ConfigFilePaths => configFiles.Keys;
         public static IEnumerable<XDocument> ConfigFiles => configFiles.Values;
@@ -885,6 +885,8 @@ namespace Barotrauma
 
         public static void LoadAllConfigFiles()
         {
+            configFiles.Clear();
+            configFilePaths.Clear();
             foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
