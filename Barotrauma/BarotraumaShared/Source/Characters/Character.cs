@@ -840,40 +840,7 @@ namespace Barotrauma
 #endif
         }
 
-        private static string humanConfigFile;
-        public static string HumanConfigFile
-        {
-            get
-            {
-                // TODO: allow to override the human config file
-                if (string.IsNullOrEmpty(humanConfigFile))
-                {
-                    humanConfigFile = GameMain.Instance.GetFilesOfType(ContentType.Character)?
-                            .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == "human.xml");
-
-                    if (humanConfigFile == null)
-                    {
-                        DebugConsole.ThrowError($"Couldn't find a human config file from the selected content packages!");
-                        DebugConsole.ThrowError($"(The config file must be named \"Human.xml\")");
-                        return string.Empty;
-                    }
-                }
-                return humanConfigFile;
-            }
-        }
-
-        private static IEnumerable<string> characterConfigFiles;
-        private static IEnumerable<string> CharacterConfigFiles
-        {
-            get
-            {
-                if (characterConfigFiles == null)
-                {
-                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-                }
-                return characterConfigFiles;
-            }
-        }
+        public static string HumanConfigFile => GetConfigFile("human");
 
         /// <summary>
         /// Searches for a character config file from all currently selected content packages, 
@@ -882,68 +849,71 @@ namespace Barotrauma
         public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
         {
             string configFile = null;
-            if (contentPackage == null)
-            {
-                configFile = GameMain.Instance.GetFilesOfType(ContentType.Character)
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
-            else
+            if (contentPackage != null)
             {
                 configFile = contentPackage.GetFilesOfType(ContentType.Character)?
                     .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-            }
 
-            if (configFile == null)
+                if (configFile == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the specified content package {contentPackage.Name} defined in {contentPackage.Path}!");
+                    DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                    return string.Empty;
+                }
+            }
+            else
             {
-                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
-                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
-                return string.Empty;
+                if (!configFilePaths.TryGetValue(speciesName.ToLowerInvariant(), out configFile))
+                {
+                    DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                }
             }
             return configFile;
         }
 
-        private static Dictionary<string, XDocument> cachedConfigs = new Dictionary<string, XDocument>();
+        private static Dictionary<string, string> configFilePaths = new Dictionary<string, string>();
+        private static Dictionary<string, XDocument> configFiles = new Dictionary<string, XDocument>();
+
+        public static IEnumerable<string> ConfigFilePaths => configFiles.Keys;
+        public static IEnumerable<XDocument> ConfigFiles => configFiles.Values;
+
         public static bool TryGetConfigFile(string file, out XDocument doc)
         {
-            if (!cachedConfigs.TryGetValue(file, out doc))
-            {
-                doc = XMLExtensions.TryLoadXml(file);
-                if (doc == null || doc.Root == null) { return false; }
-                cachedConfigs.Add(file, doc);
-            }
+            configFiles.TryGetValue(file, out doc);
             return doc != null;
         }
 
-        public static void CheckAllConfigFiles()
+        public static void LoadAllConfigFiles()
         {
-            var allFiles = new Dictionary<string, XDocument>();
-            foreach (var file in ContentPackage.GetFilesOfType(ContentPackage.List, ContentType.Character))
+            foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
                 if (doc == null || doc.Root == null)
                 {
-                    DebugConsole.ThrowError($"Loading the document failed: {file}");
+                    DebugConsole.ThrowError($"Loading character file failed: {file}");
                     continue;
                 }
-                if (allFiles.ContainsKey(file))
+                if (configFilePaths.ContainsKey(file))
                 {
                     DebugConsole.ThrowError($"Duplicate path: {file}");
                     continue;
                 }
-                var name = doc.Root.GetAttributeString("name", null);
+                var name = doc.Root.GetAttributeString("name", string.Empty).ToLowerInvariant();
                 if (string.IsNullOrWhiteSpace(name))
                 {
                     DebugConsole.ThrowError($"No character name defined for: {file}");
                     continue;
                 }
-                if (allFiles.Values.Any(f => f.Root.GetAttributeString("name", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase)))
+                var duplicate = configFiles.FirstOrDefault(kvp => kvp.Value.Root.GetAttributeString("name", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+                if (duplicate.Value != null)
                 {
-                    DebugConsole.ThrowError($"Duplicate character name '{name}' in {file}");
-                    continue;
+                    DebugConsole.NewMessage($"Overriding an existing character: '{duplicate.Value.Root.GetAttributeString("name", "name not defined")}' defined in {duplicate.Key} with {file}");
+                    configFiles.Remove(file);
+                    configFilePaths.Remove(name);
                 }
-                // TODO: remove
+                configFiles.Add(file, doc);
+                configFilePaths.Add(name, file);
                 DebugConsole.NewMessage($"{file} ok", Color.Green);
-                allFiles.Add(file, doc);
             }
         }
 

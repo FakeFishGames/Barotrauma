@@ -1146,7 +1146,7 @@ namespace Barotrauma
             {
                 if (allFiles == null)
                 {
-                    allFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).OrderBy(f => f).ToList();
+                    allFiles = Character.ConfigFilePaths.ToList();
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;

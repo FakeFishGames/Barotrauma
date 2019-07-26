@@ -424,6 +424,7 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
+            Character.LoadAllConfigFiles();
             MissionPrefab.Init();
             MapEntityPrefab.Init();
             Tutorials.Tutorial.Init();
@@ -453,10 +454,7 @@ namespace Barotrauma
 
             ItemAssemblyPrefab.LoadAll();
             TitleScreen.LoadState = 30.0f;
-        yield return CoroutineStatus.Running;
 
-            Character.CheckAllConfigFiles();
-            TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
