@@ -744,7 +744,12 @@
     <Body width="120" height="48" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="30" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" stun="0.6">
-        <Sound file="Content/Items/Weapons/honk.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/ToyHammerHit1.ogg" range="800" selectionmode="Random"/>
+        <Sound file="Content/Items/Weapons/ToyHammerHit2.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/ToyHammerHit3.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/ToyHammerHit4.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/ToyHammerHit5.ogg" range="800" />
+        <Sound file="Content/Items/Weapons/ToyHammerHit6.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
   </Item>
