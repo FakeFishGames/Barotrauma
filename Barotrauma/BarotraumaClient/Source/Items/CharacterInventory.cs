@@ -476,7 +476,7 @@ namespace Barotrauma
                     UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex, cam);
                 }
 
-                if (!highlightedSubInventorySlot.Inventory.IsInventoryHoverAvailable(character)) continue;
+                if (!highlightedSubInventorySlot.Inventory.IsInventoryHoverAvailable(character, null)) continue;
 
                 Rectangle hoverArea = GetSubInventoryHoverArea(highlightedSubInventorySlot);
                 if (highlightedSubInventorySlot.Inventory?.slots == null || (!hoverArea.Contains(PlayerInput.MousePosition)))
@@ -493,7 +493,7 @@ namespace Barotrauma
             if (selectedSlot?.ParentInventory == this)
             {
                 var subInventory = GetSubInventory(selectedSlot.SlotIndex);
-                if (subInventory != null && subInventory.IsInventoryHoverAvailable(character))
+                if (subInventory != null && subInventory.IsInventoryHoverAvailable(character, null))
                 {
                     selectedSlot.Inventory = subInventory;
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
