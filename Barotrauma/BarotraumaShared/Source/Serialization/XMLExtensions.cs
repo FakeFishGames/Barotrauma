@@ -15,7 +15,9 @@ namespace Barotrauma
         public static string ParseContentPathFromUri(this XObject element)
         {
             string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+            string currentFolder = Environment.CurrentDirectory.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Last();
+            // Filter out the current folder -> result is "Content/blaahblaah" or "Mods/blaahblaah" etc.
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
             return string.Join("/", filtered);
         }
 
