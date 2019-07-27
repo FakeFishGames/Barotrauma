@@ -1460,6 +1460,9 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
+                Inventory.draggingItem = null;
+                Inventory.DraggingInventory = null;
+
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
                     
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.35f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });

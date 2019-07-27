@@ -809,6 +809,8 @@ namespace Barotrauma
 
         public static void DrawFront(SpriteBatch spriteBatch)
         {
+            if (GUI.PauseMenuOpen || GUI.SettingsMenuOpen) return;
+
             foreach (var slot in highlightedSubInventorySlots)
             {
                 int slotIndex = Array.IndexOf(slot.ParentInventory.slots, slot.Slot);
@@ -816,7 +818,7 @@ namespace Barotrauma
                 {
                     slot.ParentInventory.DrawSubInventory(spriteBatch, slotIndex);
                 }
-            }
+            }  
 
             if (draggingItem != null)
             {
