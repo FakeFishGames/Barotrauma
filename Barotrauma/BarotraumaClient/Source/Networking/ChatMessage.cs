@@ -63,17 +63,20 @@ namespace Barotrauma.Networking
                 }
                 txt = order.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == senderCharacter, orderOption: orderOption);
 
-                if (order.TargetAllCharacters)
+                if (GameMain.Client.GameStarted)
                 {
-                    GameMain.GameSession?.CrewManager?.AddOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter), 
-                        order.Prefab.FadeOutTime);
-                }
-                else if (targetCharacter != null)
-                {
-                    targetCharacter.SetOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter),
-                            orderOption, senderCharacter);
+                    if (order.TargetAllCharacters)
+                    {
+                        GameMain.GameSession?.CrewManager?.AddOrder(
+                            new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter), 
+                            order.Prefab.FadeOutTime);
+                    }
+                    else if (targetCharacter != null)
+                    {
+                        targetCharacter.SetOrder(
+                            new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter),
+                                orderOption, senderCharacter);
+                    }
                 }
 
                 if (NetIdUtils.IdMoreRecent(ID, LastID))
