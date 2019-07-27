@@ -93,7 +93,11 @@ namespace Barotrauma.Networking
                 switch (type)
                 {
                     case ChatMessageType.MessageBox:
-                        new GUIMessageBox("", txt);
+                        //only show the message box if the text differs from the text in the currently visible box
+                        if ((GUIMessageBox.VisibleBox as GUIMessageBox)?.Text?.Text != txt)
+                        {
+                            new GUIMessageBox("", txt);
+                        }
                         break;
                     case ChatMessageType.Console:
                         DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
