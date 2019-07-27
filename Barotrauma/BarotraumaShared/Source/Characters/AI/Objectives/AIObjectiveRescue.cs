@@ -207,7 +207,7 @@ namespace Barotrauma
             bool remove = false;
             foreach (ItemComponent ic in item.Components)
             {
-                if (!ic.HasRequiredContainedItems(addMessage: false)) { continue; }
+                if (!ic.HasRequiredContainedItems(user: character, addMessage: false)) { continue; }
 #if CLIENT
                 ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
 #endif

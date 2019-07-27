@@ -32,6 +32,8 @@ namespace Barotrauma.Items.Components
         private List<ParticleEmitter> ParticleEmitterHitCharacter = new List<ParticleEmitter>();
         private List<Pair<RelatedItem, ParticleEmitter>> ParticleEmitterHitItem = new List<Pair<RelatedItem, ParticleEmitter>>();
 
+        private float prevProgressBarState;
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -70,7 +72,7 @@ namespace Barotrauma.Items.Components
                 float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 ParticleEmitter.Emit(
                     deltaTime, item.WorldPosition + TransformedBarrelPos,
-                    item.CurrentHull, particleAngle, -particleAngle);
+                    item.CurrentHull, particleAngle, ParticleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0);
             }
         }
 
@@ -110,18 +112,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, float prevCondition)
+        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem)
         {
-            if (prevCondition != targetItem.Condition)
+            float progressBarState = targetItem.ConditionPercentage / 100.0f;
+            if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState))
             {
                 Vector2 progressBarPos = targetItem.DrawPosition;
                 var progressBar = user.UpdateHUDProgressBar(
                     targetItem,
                     progressBarPos,
-                    targetItem.Condition / item.MaxCondition,
+                    progressBarState,
                     Color.Red, Color.Green);
                 if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
             }
+
+            prevProgressBarState = progressBarState;
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
             if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;

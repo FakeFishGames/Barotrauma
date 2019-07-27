@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-
+        
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -109,7 +109,6 @@ namespace Barotrauma.Networking
             LastClientListUpdateID = 0;
 
             NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
-
             NetPeerConfiguration.Port = port;
             Port = port;
             QueryPort = queryPort;
@@ -119,12 +118,12 @@ namespace Barotrauma.Networking
                 NetPeerConfiguration.EnableUPnP = true;
             }
 
-            serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
             }
-
+            
             NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
             NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
@@ -353,6 +352,7 @@ namespace Barotrauma.Networking
             unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);
 
             fileSender.Update(deltaTime);
+            KarmaManager.UpdateClients(ConnectedClients, deltaTime);
 
             if (serverSettings.VoiceChatEnabled)
             {
@@ -361,7 +361,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (respawnManager != null) respawnManager.Update(deltaTime);
+                if (respawnManager != null) { respawnManager.Update(deltaTime); }
 
                 entityEventManager.Update(connectedClients);
 
@@ -415,25 +415,32 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (isCrewDead && respawnManager == null)
+                float endRoundDelay = 1.0f;
+                if (serverSettings.AutoRestart && isCrewDead)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (isCrewDead && respawnManager == null)
                 {
                     if (endRoundTimer <= 0.0f)
                     {
                         SendChatMessage(TextManager.GetWithVariable("CrewDeadNoRespawns", "[time]", "60"), ChatMessageType.Server);
                     }
+                    endRoundDelay = 60.0f;
                     endRoundTimer += deltaTime;
                 }
                 else
                 {
                     endRoundTimer = 0.0f;
                 }
-
-                //restart if all characters are dead or submarine is at the end of the level
-                if ((serverSettings.AutoRestart && isCrewDead)
-                    ||
-                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
-                    ||
-                    (isCrewDead && respawnManager == null && endRoundTimer >= 60.0f))
+                
+                if (endRoundTimer >= endRoundDelay)
                 {
                     if (serverSettings.AutoRestart && isCrewDead)
                     {
@@ -1029,6 +1036,9 @@ namespace Barotrauma.Networking
                     case ClientNetObject.VOTE:
                         serverSettings.Voting.ServerRead(inc, c);
                         break;
+                    case ClientNetObject.SPECTATING_POS:
+                        c.SpectatePos = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+                        break;
                     default:
                         return;
                 }
@@ -1346,11 +1356,20 @@ namespace Barotrauma.Networking
                 foreach (Character character in Character.CharacterList)
                 {
                     if (!character.Enabled) continue;
-                    if (c.Character != null &&
-                        Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.DisableCharacterDistSqr)
+
+                    if (c.SpectatePos == null)
                     {
-                        continue;
+                        if (c.Character != null && Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (Vector2.DistanceSquared(character.WorldPosition, c.SpectatePos.Value) >= NetConfig.DisableCharacterDistSqr)
+                        {
+                            continue;
+                        }
                     }
 
                     float updateInterval = character.GetPositionUpdateInterval(c);
@@ -2005,8 +2024,16 @@ namespace Barotrauma.Networking
 
         public void EndGame()
         {
-            if (!gameStarted) return;
-            Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            if (!gameStarted) { return; }
+            if (GameSettings.VerboseLogging)
+            {
+                Log("Ending the round...\n" + Environment.StackTrace, ServerLog.MessageType.ServerMessage);
+
+            }
+            else
+            {
+                Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+            }
 
             string endMessage = "The round has ended." + '\n';
 
@@ -2068,31 +2095,14 @@ namespace Barotrauma.Networking
                 }
             }
 
-            CoroutineManager.StartCoroutine(EndCinematic(), "EndCinematic");
-
-            GameMain.NetLobbyScreen.RandomizeSettings();
-        }
-
-        public IEnumerable<object> EndCinematic()
-        {
-            float endPreviewLength = 10.0f;
-
-            var cinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-
-            do
-            {
-                yield return CoroutineStatus.Running;
-            } while (cinematic.Running);
-
             Submarine.Unload();
             entityEventManager.Clear();
-
             GameMain.NetLobbyScreen.Select();
             Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
-            yield return CoroutineStatus.Success;
+            GameMain.NetLobbyScreen.RandomizeSettings();
         }
-
+        
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
@@ -2257,6 +2267,7 @@ namespace Barotrauma.Networking
                 previousPlayers.Add(previousPlayer);
             }
             previousPlayer.Name = client.Name;
+            previousPlayer.Karma = client.Karma;
             previousPlayer.KickVoters.Clear();
             foreach (Client c in connectedClients)
             {
@@ -2266,6 +2277,8 @@ namespace Barotrauma.Networking
             client.Connection.Disconnect(targetmsg);
             client.Dispose();
             connectedClients.Remove(client);
+
+            KarmaManager.OnClientDisconnected(client);
 
             UpdateVoteStatus();
 
@@ -3077,6 +3090,7 @@ namespace Barotrauma.Networking
         public string Name;
         public string IP;
         public UInt64 SteamID;
+        public float Karma;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)

@@ -12,11 +12,11 @@ bld/
 [Dd]ebug*/
 [Rr]elease*/
 
-# Barotrauma content folder
-BarotraumaShared/Content/
-
+# Misc vs crap 
 *.v12.suo
 *.suo
+*.csproj.user
+*.shproj.user
 
 #performance reports & sessions
 *.vsp
@@ -25,3 +25,6 @@ BarotraumaShared/Content/
 
 # Mac
 *.DS_Store
+
+#Merge script
+temp.txt

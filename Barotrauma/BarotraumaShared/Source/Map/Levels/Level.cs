@@ -853,7 +853,7 @@ namespace Barotrauma
             return tooCloseCells;
         }
 
-        private List<VoronoiCell> GetTooCloseCells(Vector2 position, float minDistance)
+        public List<VoronoiCell> GetTooCloseCells(Vector2 position, float minDistance)
         {
             List<VoronoiCell> tooCloseCells = new List<VoronoiCell>();
 

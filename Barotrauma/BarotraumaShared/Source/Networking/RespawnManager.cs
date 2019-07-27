@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -18,10 +17,6 @@ namespace Barotrauma.Networking
         }
 
         private NetworkMember networkMember;
-
-        private State state;
-        
-        private Submarine respawnShuttle;
         private Steering shuttleSteering;
         private List<Door> shuttleDoors;
 
@@ -31,46 +26,40 @@ namespace Barotrauma.Networking
 
         public bool UsingShuttle
         {
-            get { return respawnShuttle != null; }
+            get { return RespawnShuttle != null; }
         }
 
         /// <summary>
-        /// How long until the shuttle is dispatched with respawned characters
+        /// When will the shuttle be dispatched with respawned characters
         /// </summary>
-        public float RespawnTimer
-        {
-            get { return respawnTimer; }
-        }
+        public DateTime RespawnTime { get; private set; }
 
         /// <summary>
-        /// how long until the shuttle starts heading back out of the level
+        /// When will the sub start heading back out of the level
         /// </summary>
-        public float TransportTimer
-        {
-            get { return shuttleTransportTimer; }
-        }
+        public DateTime ReturnTime { get; private set; }
 
-        public bool CountdownStarted
+        public bool RespawnCountdownStarted
         {
             get;
             private set;
         }
 
-        public State CurrentState
+        public bool ReturnCountdownStarted
         {
-            get { return state; }
+            get;
+            private set;
         }
 
-        private float respawnTimer, shuttleReturnTimer, shuttleTransportTimer;
+        public State CurrentState { get; private set; }
+
+        private DateTime despawnTime;
 
         private float maxTransportTime;
 
         private float updateReturnTimer;
 
-        public Submarine RespawnShuttle
-        {
-            get { return respawnShuttle; }
-        }
+        public Submarine RespawnShuttle { get; private set; }
 
         public RespawnManager(NetworkMember networkMember, Submarine shuttle)
             : base(shuttle)
@@ -79,8 +68,8 @@ namespace Barotrauma.Networking
 
             if (shuttle != null)
             {
-                respawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
-                respawnShuttle.Load(false);
+                RespawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
+                RespawnShuttle.Load(false);
 
                 ResetShuttle();
                 
@@ -89,7 +78,7 @@ namespace Barotrauma.Networking
                 shuttleDoors = new List<Door>();
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.Submarine != respawnShuttle) continue;
+                    if (item.Submarine != RespawnShuttle) continue;
 
                     var steering = item.GetComponent<Steering>();
                     if (steering != null) shuttleSteering = steering;
@@ -113,13 +102,12 @@ namespace Barotrauma.Networking
             }
             else
             {
-                respawnShuttle = null;
+                RespawnShuttle = null;
             }
 
 #if SERVER
             if (networkMember is GameServer server)
             {
-                respawnTimer = server.ServerSettings.RespawnInterval;
                 maxTransportTime = server.ServerSettings.MaxTransportTime;
             }
 #endif
@@ -127,15 +115,15 @@ namespace Barotrauma.Networking
         
         public void Update(float deltaTime)
         {
-            if (respawnShuttle == null)
+            if (RespawnShuttle == null)
             {
-                if (state != State.Waiting)
+                if (CurrentState != State.Waiting)
                 {
-                    state = State.Waiting;
+                    CurrentState = State.Waiting;
                 }
             }
 
-            switch (state)
+            switch (CurrentState)
             {
                 case State.Waiting:
                     UpdateWaiting(deltaTime);
@@ -155,32 +143,25 @@ namespace Barotrauma.Networking
         {
             //infinite transport time -> shuttle wont return
             if (maxTransportTime <= 0.0f) return;
-
-            shuttleTransportTimer -= deltaTime;
-
             UpdateTransportingProjSpecific(deltaTime);
         }
 
         partial void UpdateTransportingProjSpecific(float deltaTime);
 
+        public void ForceRespawn()
+        {
+            ResetShuttle();
+            RespawnTime = DateTime.Now;
+            CurrentState = State.Waiting;
+        }
+
         private void UpdateReturning(float deltaTime)
         {
-            //if (shuttleReturnTimer == maxTransportTime && 
-            //    networkMember.Character != null && 
-            //    networkMember.Character.Submarine == respawnShuttle)
-            //{
-            //    networkMember.AddChatMessage("The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.", ChatMessageType.Server);
-            //}
-
-            shuttleReturnTimer -= deltaTime;
-
             updateReturnTimer += deltaTime;
-
             if (updateReturnTimer > 1.0f)
             {
                 updateReturnTimer = 0.0f;
-
-                respawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
+                RespawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
 
                 if (shuttleSteering != null)
                 {
@@ -196,41 +177,41 @@ namespace Barotrauma.Networking
         
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {
-            if (respawnShuttle == null)
+            if (RespawnShuttle == null)
             {
                 yield return CoroutineStatus.Success;
             }
 
-            respawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
+            RespawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
 
-            while (Math.Abs(position.Y - respawnShuttle.WorldPosition.Y) > 100.0f)
+            while (Math.Abs(position.Y - RespawnShuttle.WorldPosition.Y) > 100.0f)
             {
-                Vector2 diff = position - respawnShuttle.WorldPosition;
+                Vector2 diff = position - RespawnShuttle.WorldPosition;
                 if (diff.LengthSquared() > 0.01f)
                 {
                     Vector2 displayVel = Vector2.Normalize(diff) * speed;
-                    respawnShuttle.SubBody.Body.LinearVelocity = ConvertUnits.ToSimUnits(displayVel);
+                    RespawnShuttle.SubBody.Body.LinearVelocity = ConvertUnits.ToSimUnits(displayVel);
                 }
                 yield return CoroutineStatus.Running;
 
-                if (respawnShuttle.SubBody == null) yield return CoroutineStatus.Success;
+                if (RespawnShuttle.SubBody == null) yield return CoroutineStatus.Success;
             }
 
-            respawnShuttle.PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.TopBarrier);
+            RespawnShuttle.PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.TopBarrier);
 
             yield return CoroutineStatus.Success;
         }
 
         private void ResetShuttle()
         {
-            shuttleTransportTimer = maxTransportTime;
-            shuttleReturnTimer = maxTransportTime;
+            ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
+            despawnTime = ReturnTime + new TimeSpan(0, 0, seconds: 30);
 
-            if (respawnShuttle == null) return;
+            if (RespawnShuttle == null) return;
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != respawnShuttle) continue;
+                if (item.Submarine != RespawnShuttle) continue;
                 
                 //remove respawn items that have been left in the shuttle
                 if (respawnItems.Contains(item))
@@ -251,7 +232,7 @@ namespace Barotrauma.Networking
 
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != respawnShuttle) continue;
+                if (wall.Submarine != RespawnShuttle) continue;
 
                 for (int i = 0; i < wall.SectionCount; i++)
                 {
@@ -259,12 +240,12 @@ namespace Barotrauma.Networking
                 }            
             }
 
-            var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
+            var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == RespawnShuttle && g.ConnectedWall != null);
             shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
 
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull.Submarine != respawnShuttle) continue;
+                if (hull.Submarine != RespawnShuttle) continue;
 
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
@@ -272,7 +253,7 @@ namespace Barotrauma.Networking
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Submarine != respawnShuttle) continue;
+                if (c.Submarine != RespawnShuttle) continue;
 
 #if CLIENT
                 if (Character.Controlled == c) Character.Controlled = null;
@@ -288,15 +269,12 @@ namespace Barotrauma.Networking
                         if (item == null) continue;
                         Spawner.AddToRemoveQueue(item);
                     }
-                }                
+                }
             }
 
-            respawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + respawnShuttle.Borders.Height));
-
-            respawnShuttle.Velocity = Vector2.Zero;
-
-            respawnShuttle.PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.TopBarrier);
-
+            RespawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + RespawnShuttle.Borders.Height));
+            RespawnShuttle.Velocity = Vector2.Zero;
+            RespawnShuttle.PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.TopBarrier);
         }
 
         partial void RespawnCharactersProjSpecific();
@@ -305,55 +283,92 @@ namespace Barotrauma.Networking
             RespawnCharactersProjSpecific();
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public Vector2 FindSpawnPos()
         {
-            msg.WriteRangedInteger(0, Enum.GetNames(typeof(State)).Length, (int)state);
+            if (Level.Loaded == null || Submarine.MainSub == null) { return Vector2.Zero; }
 
-            switch (state)
+            Rectangle dockedBorders = RespawnShuttle.GetDockedBorders();
+            Vector2 diffFromDockedBorders =
+                new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
+                - new Vector2(RespawnShuttle.Borders.Center.X, RespawnShuttle.Borders.Y - RespawnShuttle.Borders.Height / 2);
+
+            int minWidth = Math.Max(dockedBorders.Width, 1000);
+            int minHeight = Math.Max(dockedBorders.Height, 1000);
+
+            List<Level.InterestingPosition> potentialSpawnPositions = new List<Level.InterestingPosition>();
+            foreach (Level.InterestingPosition potentialSpawnPos in Level.Loaded.PositionsOfInterest.Where(p => p.PositionType == Level.PositionType.MainPath))
             {
-                case State.Transporting:
-                    msg.Write(TransportTimer);
-                    break;
-                case State.Waiting:
-                    msg.Write(CountdownStarted);
-                    msg.Write(respawnTimer);
-                    break;
-                case State.Returning:
-                    break;
-            }
+                bool invalid = false;
+                //make sure the shuttle won't overlap with any ruins
+                foreach (var ruin in Level.Loaded.Ruins)
+                {
+                    if (Math.Abs(ruin.Area.Center.X - potentialSpawnPos.Position.X) < (minWidth + ruin.Area.Width) / 2) { invalid = true; break; }
+                    if (Math.Abs(ruin.Area.Center.Y - potentialSpawnPos.Position.Y) < (minHeight + ruin.Area.Height) / 2) { invalid = true; break; }
+                }
+                if (invalid) { continue; }
 
-            msg.WritePadBits();
-        }
+                //make sure there aren't any walls too close
+                var tooCloseCells = Level.Loaded.GetTooCloseCells(potentialSpawnPos.Position.ToVector2(), Math.Max(minWidth, minHeight));
+                if (tooCloseCells.Any()) { continue; }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
+                //make sure the spawnpoint is far enough from other subs
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    if (sub == RespawnShuttle || RespawnShuttle.DockedTo.Contains(sub)) { continue; }
 
-            switch (newState)
-            {
-                case State.Transporting:
-                    maxTransportTime = msg.ReadSingle();
-                    shuttleTransportTimer = maxTransportTime;
-                    CountdownStarted = false;
-
-                    if (state != newState)
+                    float minDist = Math.Max(Math.Max(minWidth, minHeight) + Math.Max(sub.Borders.Width, sub.Borders.Height), 10000.0f);
+                    if (Vector2.DistanceSquared(sub.WorldPosition, potentialSpawnPos.Position.ToVector2()) < minDist * minDist)
                     {
-                        CoroutineManager.StopCoroutines("forcepos");
-                        CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+                        invalid = true;
+                        break;
                     }
-                    break;
-                case State.Waiting:
-                    CountdownStarted = msg.ReadBoolean();
-                    ResetShuttle();
-                    respawnTimer = msg.ReadSingle();
-                    break;
-                case State.Returning:
-                    CountdownStarted = false;
-                    break;
-            }
-            state = newState;
+                }
+                if (invalid) { continue; }
 
-            msg.ReadPadBits();
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (character.IsDead)
+                    {
+                        //cannot spawn directly over dead bodies
+                        if (Math.Abs(character.WorldPosition.X - potentialSpawnPos.Position.X) < minWidth) { invalid = true; break; }
+                        if (Math.Abs(character.WorldPosition.Y - potentialSpawnPos.Position.Y) < minHeight) { invalid = true; break; }
+                    }
+                    else
+                    {
+                        //cannot spawn near alive characters (to prevent other players from seeing the shuttle 
+                        //appear out of nowhere, or monsters from immediatelly wrecking the shuttle)
+                        if (Vector2.DistanceSquared(character.WorldPosition, potentialSpawnPos.Position.ToVector2()) < 5000.0f * 5000.0f)
+                        {
+                            invalid = true;
+                            break;
+                        }
+                    }
+                }
+                if (invalid) { continue; }
+
+                potentialSpawnPositions.Add(potentialSpawnPos);
+            }
+            Vector2 bestSpawnPos = new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + RespawnShuttle.Borders.Height);
+            float bestSpawnPosValue = 0.0f;
+            foreach (var potentialSpawnPos in potentialSpawnPositions)
+            {
+                //the closer the spawnpos is to the main sub, the better
+                float spawnPosValue = 100000.0f / Math.Max(Vector2.Distance(potentialSpawnPos.Position.ToVector2(), Submarine.MainSub.WorldPosition), 1.0f);
+
+                //prefer spawnpoints that are at the left side of the sub (so the shuttle doesn't have to go backwards)
+                if (potentialSpawnPos.Position.X > Submarine.MainSub.WorldPosition.X)
+                {
+                    spawnPosValue *= 0.1f;
+                }
+
+                if (spawnPosValue > bestSpawnPosValue)
+                {
+                    bestSpawnPos = potentialSpawnPos.Position.ToVector2();
+                    bestSpawnPosValue = spawnPosValue;
+                }
+            }
+
+            return bestSpawnPos;
         }
     }
 }

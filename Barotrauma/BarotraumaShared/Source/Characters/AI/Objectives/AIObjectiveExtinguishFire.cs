@@ -108,6 +108,7 @@ namespace Barotrauma
                         else
                         {
                             move = false;
+                            character.SetInput(extinguisher.Item.IsShootable ? InputType.Shoot : InputType.Use, false, true);
                             extinguisher.Use(deltaTime, character);
                             if (!targetHull.FireSources.Contains(fs))
                             {                                

@@ -203,6 +203,8 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
+            if (!Initialized) { return; }
+
             UpdateMusic(deltaTime);
 
             if (startUpSound != null && !GameMain.SoundManager.IsPlaying(startUpSound))
@@ -629,7 +631,7 @@ namespace Barotrauma
         {
             if (OverrideMusicType != null) return OverrideMusicType;
 
-            if (Screen.Selected != GameMain.GameScreen)
+            if (Screen.Selected == null || Screen.Selected != GameMain.GameScreen)
             {
                 return "menu";
             }
@@ -644,7 +646,7 @@ namespace Barotrauma
             Submarine targetSubmarine = Character.Controlled?.Submarine;
 
             if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
-                (Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
+                (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
             {
                 return "deep";
             }

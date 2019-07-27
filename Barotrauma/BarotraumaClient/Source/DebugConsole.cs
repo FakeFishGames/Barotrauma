@@ -133,17 +133,7 @@ namespace Barotrauma
 
             if (PlayerInput.KeyHit(Keys.F3))
             {
-                isOpen = !isOpen;
-                if (isOpen)
-                {
-                    textBox.Select();
-                    AddToGUIUpdateList();
-                }
-                else
-                {
-                    GUI.ForceMouseOn(null);
-                    textBox.Deselect();
-                }
+                Toggle();
             }
             else if (isOpen && PlayerInput.KeyHit(Keys.Escape))
             {
@@ -176,6 +166,21 @@ namespace Barotrauma
                     ExecuteCommand(textBox.Text);
                     textBox.Text = "";
                 }
+            }
+        }
+
+        public static void Toggle()
+        {
+            isOpen = !isOpen;
+            if (isOpen)
+            {
+                textBox.Select();
+                AddToGUIUpdateList();
+            }
+            else
+            {
+                GUI.ForceMouseOn(null);
+                textBox.Deselect();
             }
         }
 
@@ -298,9 +303,16 @@ namespace Barotrauma
 
         private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)
         {
-            Command command = commands.First(c => c.names.Intersect(names.Split('|')).Count() > 0);
-            command.OnClientExecute = onClientExecute;
-            command.RelayToServer = false;
+            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            if (command == null)
+            {
+                throw new Exception("AssignOnClientExecute failed. Command matching the name(s) \"" + names + "\" not found.");
+            }
+            else
+            {
+                command.OnClientExecute = onClientExecute;
+                command.RelayToServer = false;
+            }
         }
 
         private static void AssignRelayToServer(string names, bool relay)
@@ -1796,6 +1808,11 @@ namespace Barotrauma
                 {
                     limb.HuskSprite.Sprite.ReloadXML();
                     limb.HuskSprite.Sprite.ReloadTexture();
+                }
+                if (limb.HerpesSprite != null)
+                {
+                    limb.HerpesSprite.Sprite.ReloadXML();
+                    limb.HerpesSprite.Sprite.ReloadTexture();
                 }
             }
         }

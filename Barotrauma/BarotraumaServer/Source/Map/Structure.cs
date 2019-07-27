@@ -5,24 +5,9 @@ namespace Barotrauma
 {
     partial class Structure : MapEntity, IDamageable, IServerSerializable, ISerializableEntity
     {
-        partial void AdjustKarma(IDamageable attacker, float amount)
+        partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount)
         {
-            if (GameMain.Server != null)
-            {
-                if (Submarine == null) return;
-                if (attacker == null) return;
-                if (attacker is Character attackerCharacter)
-                {
-                    Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
-                    if (attackerClient != null)
-                    {
-                        if (attackerCharacter.TeamID == Submarine.TeamID)
-                        {
-                            attackerClient.Karma -= amount * 0.001f;
-                        }
-                    }
-                }
-            }
+            GameMain.Server.KarmaManager.OnStructureHealthChanged(this, attacker, damageAmount);
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)

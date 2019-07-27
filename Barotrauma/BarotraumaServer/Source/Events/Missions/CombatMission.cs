@@ -8,6 +8,9 @@ namespace Barotrauma
     {
         private bool[] teamDead = new bool[2];
 
+        private bool initialized = false;
+        private int state = 0;
+
         public override string Description
         {
             get

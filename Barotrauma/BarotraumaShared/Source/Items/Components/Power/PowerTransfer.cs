@@ -198,11 +198,7 @@ namespace Barotrauma.Items.Components
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
 #if CLIENT
-                    if (sparkSounds.Count > 0)
-                    {
-                        var sparkSound = sparkSounds[Rand.Int(sparkSounds.Count)];
-                        SoundPlayer.PlaySound(sparkSound.Sound, pt.item.WorldPosition, sparkSound.Volume, sparkSound.Range,  pt.item.CurrentHull);
-                    }
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);                    
 
                     Vector2 baseVel = Rand.Vector(300.0f);
                     for (int i = 0; i < 10; i++)
@@ -333,22 +329,22 @@ namespace Barotrauma.Items.Components
                 var recipients = c.Recipients;
                 foreach (Connection recipient in recipients)
                 {
-                    if (recipient?.Item == null) continue;
+                    if (recipient?.Item == null || !recipient.IsPower) { continue; }
 
                     Item it = recipient.Item;
-                    if (it.Condition <= 0.0f) continue;
+                    if (it.Condition <= 0.0f) { continue; }
 
                     foreach (ItemComponent ic in it.Components)
                     {
-                        if (!(ic is Powered powered) || !powered.IsActive) continue;
-                        if (connectedList.Contains(powered)) continue;
+                        if (!(ic is Powered powered) || !powered.IsActive) { continue; }
+                        if (connectedList.Contains(powered)) { continue; }
 
                         if (powered is PowerTransfer powerTransfer)
                         {
                             RelayComponent otherRelayComponent = powerTransfer as RelayComponent;
                             if ((thisRelayComponent == null) == (otherRelayComponent == null))
                             {
-                                if (!powerTransfer.CanTransfer) continue;
+                                if (!powerTransfer.CanTransfer) { continue; }
                                 powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, clampPower, clampLoad);
                             }
                             else
@@ -358,7 +354,7 @@ namespace Barotrauma.Items.Components
                                 float maxPowerOut = (thisRelayComponent != null && !c.IsOutput) ? 0.0f : clampLoad;
                                 if (maxPowerIn > 0.0f || maxPowerOut > 0.0f)
                                 {
-                                    powerTransfer.CheckJunctions(deltaTime, false,  maxPowerIn, maxPowerOut);
+                                    powerTransfer.CheckJunctions(deltaTime, false, maxPowerIn, maxPowerOut);
                                 }
                             }
 
@@ -455,7 +451,7 @@ namespace Barotrauma.Items.Components
                     }
 
                     bool broken = recipient.Item.Condition <= 0.0f;
-                    foreach (StatusEffect effect in recipient.effects)
+                    foreach (StatusEffect effect in recipient.Effects)
                     {
                         if (broken && effect.type != ActionType.OnBroken) continue;
                         recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);

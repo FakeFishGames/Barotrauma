@@ -32,6 +32,8 @@ namespace Barotrauma.Networking
 
         protected GUITickBox cameraFollowsSub;
 
+        public RoundEndCinematic EndCinematic;
+
         private ClientPermissions permissions = ClientPermissions.None;
         private List<string> permittedConsoleCommands = new List<string>();
 
@@ -209,7 +211,7 @@ namespace Barotrauma.Networking
 
             otherClients = new List<Client>();
 
-            serverSettings = new ServerSettings("Server", 0, 0, 0, false, false);
+            serverSettings = new ServerSettings(this, "Server", 0, 0, 0, false, false);
 
             ConnectToServer(ip, serverName);
 
@@ -800,7 +802,7 @@ namespace Barotrauma.Networking
                                     GameMain.GameSession.WinningTeam = winningTeam;
                                     GameMain.GameSession.Mission.Completed = true;
                                 }
-                                CoroutineManager.StartCoroutine(EndGame(endMessage));
+                                CoroutineManager.StartCoroutine(EndGame(endMessage), "EndGame");
                                 break;
                             case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
                                 UInt16 saveCount = inc.ReadUInt16();
@@ -1059,6 +1061,12 @@ namespace Barotrauma.Networking
             if (Character != null) Character.Remove();
             HasSpawned = false;
 
+            while (CoroutineManager.IsCoroutineRunning("EndGame"))
+            {
+                if (EndCinematic != null) { EndCinematic.Stop(); }
+                yield return CoroutineStatus.Running;
+            }
+
             GameMain.LightManager.LightingEnabled = true;
 
             //enable spectate button in case we fail to start the round now
@@ -1192,6 +1200,15 @@ namespace Barotrauma.Networking
 
             if (GameMain.GameSession != null) { GameMain.GameSession.GameMode.End(endMessage); }
 
+            // Enable characters near the main sub for the endCinematic
+            foreach (Character c in Character.CharacterList)
+            {
+                if (Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.EnableCharacterDistSqr)
+                {
+                    c.Enabled = true;
+                }
+            }
+
             ServerSettings.ServerDetailsChanged = true;
 
             gameStarted = false;
@@ -1199,17 +1216,15 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
             respawnManager = null;
-
-            float endPreviewLength = 10.0f;
+            
             if (Screen.Selected == GameMain.GameScreen)
             {
-                new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-                float secondsLeft = endPreviewLength;
-                do
+                EndCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam);
+                while (EndCinematic.Running && Screen.Selected == GameMain.GameScreen)
                 {
-                    secondsLeft -= CoroutineManager.UnscaledDeltaTime;
                     yield return CoroutineStatus.Running;
-                } while (secondsLeft > 0.0f && Screen.Selected == GameMain.GameScreen);
+                }
+                EndCinematic = null;
             }
 
             Submarine.Unload();
@@ -1628,6 +1643,7 @@ namespace Barotrauma.Networking
             outmsg.Write(LastClientListUpdateID);
 
             Character.Controlled?.ClientWrite(outmsg);
+            GameMain.GameScreen.Cam?.ClientWrite(outmsg);
 
             entityEventManager.Write(outmsg, client.ServerConnection);
 
@@ -1829,9 +1845,10 @@ namespace Barotrauma.Networking
             steamAuthTicket?.Cancel();
             steamAuthTicket = null;
 
-            foreach (var fileTransfer in FileReceiver.ActiveTransfers)
+            List<FileReceiver.FileTransferIn> activeTransfers = new List<FileReceiver.FileTransferIn>(FileReceiver.ActiveTransfers);
+            foreach (var fileTransfer in activeTransfers)
             {
-                fileTransfer.Dispose();
+                FileReceiver.StopTransfer(fileTransfer, deleteFile: true);
             }
 
             if (HasPermission(ClientPermissions.ServerLog))
@@ -1842,7 +1859,8 @@ namespace Barotrauma.Networking
             if (GameMain.ServerChildProcess != null)
             {
                 int checks = 0;
-                while (!GameMain.ServerChildProcess.HasExited) {
+                while (!GameMain.ServerChildProcess.HasExited)
+                {
                     if (checks > 10)
                     {
                         GameMain.ServerChildProcess.Kill();
@@ -2329,24 +2347,34 @@ namespace Barotrauma.Networking
 
             if (respawnManager != null)
             {
-                string respawnInfo = "";
+                string respawnText = "";
+                float textScale = 1.0f;
+                Color textColor = Color.White;
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.CountdownStarted)
+                    respawnManager.RespawnCountdownStarted)
                 {
-                    respawnInfo = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer));
+                    float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
+                    respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
                 }
-                else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
+                else if (respawnManager.CurrentState == RespawnManager.State.Transporting && 
+                    respawnManager.ReturnCountdownStarted)
                 {
-                    respawnInfo = respawnManager.TransportTimer <= 0.0f ?
+                    float timeLeft = (float)(respawnManager.ReturnTime - DateTime.Now).TotalSeconds;
+                    respawnText = timeLeft <= 0.0f ?
                         "" :
-                        TextManager.GetWithVariable("RespawnShuttleLeavingIn", "[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
+                        TextManager.GetWithVariable("RespawnShuttleLeavingIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                    if (timeLeft < 20.0f)
+                    {
+                        //oscillate between 0-1
+                        float phase = (float)(Math.Sin(timeLeft * MathHelper.Pi) + 1.0f) * 0.5f;
+                        textScale = 1.0f + phase * 0.5f;
+                        textColor = Color.Lerp(Color.Red, Color.White, 1.0f - phase);
+                    }
                 }
-
-                if (respawnManager != null)
+                
+                if (!string.IsNullOrEmpty(respawnText))
                 {
-                    GUI.DrawString(spriteBatch,
-                        new Vector2(120.0f, 10),
-                        respawnInfo, Color.White, null, 0, GUI.SmallFont);
+                    GUI.SmallFont.DrawString(spriteBatch, respawnText, new Vector2(120.0f, 10), textColor, 0.0f, Vector2.Zero, textScale, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0.0f);
                 }
             }
 
