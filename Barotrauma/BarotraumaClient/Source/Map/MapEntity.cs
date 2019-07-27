@@ -382,7 +382,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        selectedList = newSelection;
+                        selectedList = new List<MapEntity>(newSelection);
                         //selectedList.Clear();
                         //newSelection.ForEach(e => AddSelection(e));
                         foreach (var entity in newSelection)
