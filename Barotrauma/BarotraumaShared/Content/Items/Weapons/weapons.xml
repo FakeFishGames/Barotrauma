@@ -455,7 +455,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" Scale="0.32" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission." impactsoundtag="impact_metal_light">
+  <Item name="Stun Baton" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" Scale="0.5" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission." impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="500" />
