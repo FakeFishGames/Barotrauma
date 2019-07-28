@@ -271,7 +271,7 @@
       <sound file="Content/Items/Alien/AlienTurret1.ogg" type="OnUse" range="500.0" loop="false" />
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
-      <ParticleEmitter particle="plasma" particlespersecond="50" />
+      <ParticleEmitter particle="plasma" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitItem particle="plasmaspark" particleamount="10" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="plasmasmoke" particleamount="5" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
@@ -303,7 +303,7 @@
     <RepairTool structurefixamount="-3.0" range="600" barrelpos="30,15">
       <RequiredItems identifier="alienpowercell" type="Contained" />
       <Fixable identifier="structure" />
-      <ParticleEmitter particle="largeplasma" particlespersecond="50" />
+      <ParticleEmitter particle="largeplasma" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitItem particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
