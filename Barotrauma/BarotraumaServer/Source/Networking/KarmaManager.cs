@@ -79,7 +79,7 @@ namespace Barotrauma
                 if (TestMode)
                 {
                     string msg =
-                        karmaChange < 0 ? $"You karma has decreased to {client.Karma}" : $"You karma has increased to {client.Karma}";
+                        karmaChange < 0 ? $"Your karma has decreased to {client.Karma}" : $"Your karma has increased to {client.Karma}";
                     if (!string.IsNullOrEmpty(debugKarmaChangeReason))
                     {
                         msg += $". Reason: {debugKarmaChangeReason}";
