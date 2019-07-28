@@ -163,7 +163,7 @@ namespace Barotrauma
                 {
                     Weapon = null;
                 }
-                else if (!WeaponComponent.HasRequiredContainedItems(false))
+                else if (!WeaponComponent.HasRequiredContainedItems(character, addMessage: false))
                 {
                     // Seek ammunition only if cannot find a new weapon
                     if (!Reload(!HoldPosition, () => GetWeapon(out _) == null))
@@ -234,14 +234,14 @@ namespace Barotrauma
                 {
                     if (component is RangedWeapon rw)
                     {
-                        if (ignoreRequiredItems || rw.HasRequiredContainedItems(false))
+                        if (ignoreRequiredItems || rw.HasRequiredContainedItems(character, addMessage: false))
                         {
                             weapons.Add(rw);
                         }
                     }
                     else if (component is MeleeWeapon mw)
                     {
-                        if (ignoreRequiredItems || mw.HasRequiredContainedItems(false))
+                        if (ignoreRequiredItems || mw.HasRequiredContainedItems(character, addMessage: false))
                         {
                             weapons.Add(mw);
                         }
@@ -257,7 +257,7 @@ namespace Barotrauma
                                 {
                                     if (statusEffect.Afflictions.Any())
                                     {
-                                        if (ignoreRequiredItems || component.HasRequiredContainedItems(false))
+                                        if (ignoreRequiredItems || component.HasRequiredContainedItems(character, addMessage: false))
                                         {
                                             weapons.Add(component);
                                         }
@@ -284,7 +284,7 @@ namespace Barotrauma
         private bool Equip()
         {
             if (character.LockHands) { return false; }
-            if (!WeaponComponent.HasRequiredContainedItems(false))
+            if (!WeaponComponent.HasRequiredContainedItems(character, addMessage: false))
             {
                 Mode = CombatMode.Retreat;
                 return false;
@@ -428,7 +428,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (WeaponComponent.HasRequiredContainedItems(false))
+            if (WeaponComponent.HasRequiredContainedItems(character, addMessage: false))
             {
                 return true;
             }

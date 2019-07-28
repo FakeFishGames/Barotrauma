@@ -139,8 +139,9 @@ namespace Barotrauma
                 Collider.FarseerBody.FixedRotation = false;
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-                    Collider.LinearVelocity = MainLimb.LinearVelocity;
+                    Collider.Enabled = false;
                     Collider.FarseerBody.FixedRotation = false;
+                    Collider.LinearVelocity = MainLimb.LinearVelocity;
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
                 }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)

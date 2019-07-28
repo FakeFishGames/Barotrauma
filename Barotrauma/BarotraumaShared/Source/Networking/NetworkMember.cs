@@ -169,7 +169,13 @@ namespace Barotrauma.Networking
                 updateInterval = new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / serverSettings.TickRate, 1, 500));
             }
         }
-        
+
+        public KarmaManager KarmaManager
+        {
+            get;
+            private set;
+        } = new KarmaManager();
+
         public string Name
         {
             get { return name; }
@@ -215,7 +221,7 @@ namespace Barotrauma.Networking
                        
             var radioComponent = radio.GetComponent<WifiComponent>();
             if (radioComponent == null) return false;
-            return radioComponent.HasRequiredContainedItems(false);
+            return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
         public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null)

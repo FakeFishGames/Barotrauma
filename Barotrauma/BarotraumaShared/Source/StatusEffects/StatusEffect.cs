@@ -121,6 +121,8 @@ namespace Barotrauma
 
         private List<ItemSpawnInfo> spawnItems;
 
+        private Character user;
+
         public readonly float FireSize;
         
         public HashSet<string> TargetIdentifiers
@@ -494,6 +496,7 @@ namespace Barotrauma
 
         public void SetUser(Character user)
         {
+            this.user = user;
             foreach (Affliction affliction in Afflictions)
             {
                 affliction.Source = user;
@@ -627,7 +630,7 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null && entity != null) explosion.Explode(entity.WorldPosition, entity);
+            if (explosion != null && entity != null) { explosion.Explode(entity.WorldPosition, damageSource: entity, attacker: user); }
 
             foreach (ISerializableEntity target in targets)
             {
@@ -655,14 +658,26 @@ namespace Barotrauma
                 foreach (Pair<string, float> reduceAffliction in ReduceAffliction)
                 {
                     float reduceAmount = disableDeltaTime ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
+                    Limb targetLimb = null;
+                    Character targetCharacter = null;
                     if (target is Character character)
                     {
-                        character.CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAmount);
+                        targetCharacter = character;
                     }
                     else if (target is Limb limb)
                     {
-                        limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAmount);
+                        targetLimb = limb;
+                        targetCharacter = limb.character;
                     }
+                    if (targetCharacter != null)
+                    {
+                        float prevVitality = targetCharacter.Vitality;
+                        targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAmount);
+#if SERVER
+                        GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, prevVitality - targetCharacter.Vitality);
+#endif
+                    }
+
                 }
             }
 
@@ -822,13 +837,24 @@ namespace Barotrauma
 
                     foreach (Pair<string, float> reduceAffliction in element.Parent.ReduceAffliction)
                     {
-                        if (target is Character)
+                        Limb targetLimb = null;
+                        Character targetCharacter = null;
+                        if (target is Character character)
                         {
-                            ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                            targetCharacter = character;
                         }
                         else if (target is Limb limb)
                         {
-                            limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                            targetLimb = limb;
+                            targetCharacter = limb.character;
+                        }
+                        if (targetCharacter != null)
+                        {
+                            float prevVitality = targetCharacter.Vitality;
+                            targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+#if SERVER
+                            GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.Parent.user, prevVitality - targetCharacter.Vitality);
+#endif
                         }
                     }
                 }

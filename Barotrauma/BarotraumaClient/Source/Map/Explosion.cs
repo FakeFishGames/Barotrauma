@@ -90,6 +90,15 @@ namespace Barotrauma
             }
         }
 
+        private Vector2 ClampParticlePos(Vector2 particlePos, Hull hull)
+        {
+            if (hull == null) return particlePos;
+
+            return new Vector2(
+                MathHelper.Clamp(particlePos.X, hull.WorldRect.X, hull.WorldRect.Right),
+                MathHelper.Clamp(particlePos.Y, hull.WorldRect.Y - hull.WorldRect.Height, hull.WorldRect.Y));
+        }
+
         private IEnumerable<object> DimLight(LightSource light)
         {
             float currBrightness = 1.0f;
