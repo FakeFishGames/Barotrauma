@@ -160,6 +160,7 @@
     </Repairable>
   </Item>
   <Item name="Battery Cell" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable" scale="0.3" cargocontaineridentifier="metalcrate" description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells." impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.2.0" scale="0.3"/>
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="125" />
     <Price locationtype="Military" buyprice="125" />
@@ -178,6 +179,7 @@
     <Pickable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Fulgurium Battery Cell" identifier="fulguriumbatterycell" category="Equipment,Electrical" tags="smallitem,loadable" scale="0.3" cargocontaineridentifier="metalcrate" description="A battery cell constructed of the rare and poorly understood compound Fulgurium." impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.2.0" scale="0.3"/>
     <Deconstruct time="10">
       <Item identifier="zinc" />
       <Item identifier="fulgurium" />
