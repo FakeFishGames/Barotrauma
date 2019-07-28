@@ -453,6 +453,7 @@ namespace Barotrauma.Items.Components
                 if (PlayerInput.KeyDown(InputType.Up)) input.Y += 1.0f;
                 if (PlayerInput.KeyDown(InputType.Down)) input.Y += -1.0f;
                 if (PlayerInput.KeyDown(InputType.Run)) rate = 200.0f;
+                else if (PlayerInput.KeyDown(InputType.Crouch)) rate = 20.0f;
 
                 rate *= deltaTime;
                 input.X *= rate;
