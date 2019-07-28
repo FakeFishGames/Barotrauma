@@ -205,7 +205,7 @@ namespace Barotrauma
                 }
             }
 
-            if (target.AIController is EnemyAIController || target.TeamID != attacker.TeamID)
+            if (isEnemy)
             {
                 if (damage > 0)
                 {
