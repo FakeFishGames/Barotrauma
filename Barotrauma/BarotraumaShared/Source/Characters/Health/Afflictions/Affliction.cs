@@ -21,7 +21,7 @@ namespace Barotrauma
         /// <summary>
         /// Probability for the affliction to be applied. Used by attacks.
         /// </summary>
-        public float ApplyProbability;
+        public float ApplyProbability = 1.0f;
 
         /// <summary>
         /// Which character gave this affliction
