@@ -674,9 +674,6 @@ namespace Barotrauma
             }
 
             InitProjSpecific();
-                        
-            InsertToList();
-            ItemList.Add(this);
 
             if (callOnItemLoaded)
             {
@@ -685,6 +682,9 @@ namespace Barotrauma
                     ic.OnItemLoaded();
                 }
             }
+
+            InsertToList();
+            ItemList.Add(this);
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
