@@ -135,7 +135,7 @@ namespace Barotrauma
                     RelativeSpacing = 0.05f
                 };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), traitorFrame.RectTransform), TextManager.Get("Traitors"), font: GUI.LargeFont);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionFrame.RectTransform), GameMain.Client.Character.TraitorCurrentObjective, wrap: true);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), traitorFrame.RectTransform), GameMain.Client.Character.TraitorCurrentObjective, wrap: true);
             }
         }
 

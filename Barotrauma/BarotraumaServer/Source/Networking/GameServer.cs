@@ -1883,7 +1883,10 @@ namespace Barotrauma.Networking
                 
                 int max = Math.Max(serverSettings.TraitorUseRatio ? (int)Math.Round(characters.Count * serverSettings.TraitorRatio, 1) : 1, 1);
                 int traitorCount = Rand.Range(1, max + 1);
-                TraitorManager = new TraitorManager(this, traitorCount);
+                              
+                TraitorManager = new TraitorManager();
+
+                TraitorManager.Start(this, traitorCount);
             }
 
             GameAnalyticsManager.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
@@ -2660,6 +2663,20 @@ namespace Barotrauma.Networking
             msg.Write(achievementIdentifier);
             
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        public void SendTraitorCurrentObjective(Client client, string objectiveText)
+        {
+            if (!TraitorManager.IsTraitor(client.Character))
+            {
+                return;
+            }
+            var msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.TRAITOR_OBJECTIVE);
+            msg.Write(objectiveText);
+
+            CompressOutgoingMessage(msg);
+            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void UpdateCheatsEnabled()

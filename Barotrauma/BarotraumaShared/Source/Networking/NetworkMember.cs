@@ -60,7 +60,9 @@ namespace Barotrauma.Networking
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
-        ENDGAME
+        ENDGAME,
+
+        TRAITOR_OBJECTIVE
     }
     enum ServerNetObject
     {

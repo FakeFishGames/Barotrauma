@@ -83,10 +83,12 @@ namespace Barotrauma
                 }
                 IsStarted = true;
                 Client traitorClient = server.ConnectedClients.Find(c => c.Character == traitor.Character);
-                GameMain.Server.SendDirectChatMessage(StartMessageText, traitorClient);
-                GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, StartMessageText, ChatMessageType.MessageBox, null), traitorClient);
+                server.SendDirectChatMessage(StartMessageText, traitorClient);
+                server.SendDirectChatMessage(ChatMessage.Create(null, StartMessageText, ChatMessageType.MessageBox, null), traitorClient);
+
                 Traitor.Character.TraitorCurrentObjective = GoalInfos;
-                GameMain.NetworkMember.CreateEntityEvent(Traitor.Character, new object[] { NetEntityEvent.Type.Status });
+                server.SendTraitorCurrentObjective(traitorClient, Traitor.Character.TraitorCurrentObjective);
+
                 return true;
             }
 
@@ -95,6 +97,9 @@ namespace Barotrauma
                 Client traitorClient = server.ConnectedClients.Find(c => c.Character == Traitor.Character);
                 GameMain.Server.SendDirectChatMessage(EndMessageText, traitorClient);
                 GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, EndMessageText, ChatMessageType.MessageBox, null), traitorClient);
+
+                // Traitor.Character.TraitorCurrentObjective = "";
+                // server.SendTraitorCurrentObjective(traitorClient, Traitor.Character.TraitorCurrentObjective);
             }
 
             public void Update(float deltaTime)
@@ -122,8 +127,10 @@ namespace Barotrauma
                             if (traitorClient != null)
                             {
                                 GameMain.Server.SendDirectChatMessage(goal.CompletedText, traitorClient);
+                                GameMain.Server.SendDirectChatMessage(ChatMessage.Create(null, goal.CompletedText, ChatMessageType.MessageBox, null), traitorClient);
+
                                 Traitor.Character.TraitorCurrentObjective = GoalInfos;
-                                GameMain.NetworkMember.CreateEntityEvent(Traitor.Character, new object[] { NetEntityEvent.Type.Status });
+                                GameMain.Server.SendTraitorCurrentObjective(traitorClient, Traitor.Character.TraitorCurrentObjective);
                             }
                         }
                     }

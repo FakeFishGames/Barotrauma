@@ -19,21 +19,20 @@ namespace Barotrauma
             return Traitors.Any(traitor => traitor.Character == character);
         }
 
-        public TraitorManager(GameServer server, int traitorCount)
+        public TraitorManager()
         {
+        }
+
+        public void Start(GameServer server, int traitorCount)
+        {
+#if DISABLE_MISSIONS
+            return;
+#endif
             if (traitorCount < 1) //what why how
             {
                 traitorCount = 1;
                 DebugConsole.ThrowError("Traitor Manager: TraitorCount somehow ended up less than 1, setting it to 1.");
             }
-            Start(server, traitorCount);
-        }
-
-        private void Start(GameServer server, int traitorCount)
-        {
-#if DISABLE_MISSIONS
-            return;
-#endif
             if (server == null) return;
             Mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
             if (Mission != null)

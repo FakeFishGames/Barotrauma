@@ -75,6 +75,9 @@ namespace Barotrauma.Networking
         //has the client been given a character to control this round
         public bool HasSpawned;
 
+        public bool SpawnAsTraitor;
+        public string TraitorFirstObjective;
+
         public byte ID
         {
             get { return myID; }
@@ -673,7 +676,6 @@ namespace Barotrauma.Networking
                     {
                         saveFiles.Add(inc.ReadString());
                     }
-
                     GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
                     break;
                 case ServerPacketHeader.PERMISSIONS:
@@ -687,7 +689,7 @@ namespace Barotrauma.Networking
                     inc.ReadPadBits();
                     if (cheatsEnabled == DebugConsole.CheatsEnabled)
                     {
-                        return;
+                        continue;
                     }
                     else
                     {
@@ -701,6 +703,9 @@ namespace Barotrauma.Networking
                     break;
                 case ServerPacketHeader.FILE_TRANSFER:
                     fileReceiver.ReadMessage(inc);
+                    break;
+                case ServerPacketHeader.TRAITOR_OBJECTIVE:
+                    ReadTraitorObjective(inc);
                     break;
             }
         }
@@ -858,7 +863,22 @@ namespace Barotrauma.Networking
             SteamAchievementManager.UnlockAchievement(achievementIdentifier);
         }
 
-        private void ReadPermissions(IReadMessage inc)
+        private void ReadTraitorObjective(NetIncomingMessage inc)
+        {
+            string objectiveText = inc.ReadString();
+            if (Character != null)
+            {
+                Character.IsTraitor = true;
+                Character.TraitorCurrentObjective = objectiveText;
+            }
+            else
+            {
+                SpawnAsTraitor = true;
+                TraitorFirstObjective = objectiveText;
+            }
+        }
+
+        private void ReadPermissions(NetIncomingMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
             byte clientID = inc.ReadByte();

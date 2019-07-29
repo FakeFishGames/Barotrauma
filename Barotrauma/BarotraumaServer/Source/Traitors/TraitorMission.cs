@@ -1,6 +1,7 @@
 ﻿#define SERVER_IS_TRAITOR
 #define ALLOW_SOLO_TRAITOR
 using Barotrauma.Networking;
+using Lidgren.Network;
 using System.Collections.Generic;
 using System.IO;
 
@@ -75,6 +76,7 @@ namespace Barotrauma
                     traitor.Greet(server, CodeWords, CodeResponse);
                 }
 #if SERVER
+                // SendObjectiveMessage(server);
                 foreach(var traitor in Traitors.Values)
                 {
                     GameServer.Log(string.Format("{0} is the traitor and the current goals are:\n{1}", traitor.Character.Name, traitor.CurrentObjective?.GoalInfos ?? "(empty)"), ServerLog.MessageType.ServerMessage);

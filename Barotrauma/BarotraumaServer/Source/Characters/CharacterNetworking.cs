@@ -274,7 +274,6 @@ namespace Barotrauma
                     case NetEntityEvent.Type.Status:
                         msg.WriteRangedIntegerDeprecated(0, 3, 2);
                         WriteStatus(msg);
-                        WriteTraitorStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
                         msg.WriteRangedIntegerDeprecated(0, 3, 3);

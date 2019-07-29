@@ -319,7 +319,6 @@ namespace Barotrauma
                             break;
                         case 2:
                             ReadStatus(msg);
-                            ReadTraitorStatus(msg);
                             break;
                         case 3:
                             int skillCount = msg.ReadByte();
