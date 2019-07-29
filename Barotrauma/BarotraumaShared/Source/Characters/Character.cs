@@ -913,8 +913,8 @@ namespace Barotrauma
             {
                 if (allowOverriding)
                 {
-                    DebugConsole.NewMessage($"Overriding the existing character '{duplicate.Value.Root.GetAttributeString("name", "name not defined")}' defined in '{duplicate.Key}' with '{file}'");
-                    configFiles.Remove(file);
+                    DebugConsole.NewMessage($"Overriding the existing character '{name}' defined in '{duplicate.Key}' with '{file}'");
+                    configFiles.Remove(duplicate.Key);
                     configFilePaths.Remove(name);
                 }
                 else
