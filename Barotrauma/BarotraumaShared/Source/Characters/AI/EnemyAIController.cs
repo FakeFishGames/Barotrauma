@@ -169,15 +169,18 @@ namespace Barotrauma
 
         public EnemyAIController(Character c, string file, string seed) : base(c)
         {
+            if (!Character.TryGetConfigFile(file, out XDocument doc))
+            {
+                DebugConsole.ThrowError("Failed to find a character config file at: " + file);
+                return;
+            }
+            var mainElement = doc.Root.IsOverride() ? doc.Root.Elements().FirstOrDefault() : doc.Root;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
             steeringManager = outsideSteering;
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
-
             List<XElement> aiElements = new List<XElement>();
             List<float> aiCommonness = new List<float>();
-            foreach (XElement element in doc.Root.Elements())
+            foreach (XElement element in mainElement.Elements())
             {
                 if (element.Name.ToString().ToLowerInvariant() != "ai") continue;                
                 aiElements.Add(element);
