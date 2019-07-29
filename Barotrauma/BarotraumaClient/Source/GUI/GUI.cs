@@ -311,7 +311,12 @@ namespace Barotrauma
                     y += 15;
 
                     DrawString(spriteBatch, new Vector2(500, y),
-                        "Current playback amplitude: "+GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+                        "Current playback amplitude: " + GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                    y += 15;
+
+                    DrawString(spriteBatch, new Vector2(500, y),
+                        "Compressed dynamic range gain: " + GameMain.SoundManager.CompressionDynamicRangeGain.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     y += 15;
 

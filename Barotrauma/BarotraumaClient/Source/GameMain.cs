@@ -613,7 +613,7 @@ namespace Barotrauma
             {
                 if (WindowActive || !Config.MuteOnFocusLost)
                 {
-                    SoundManager.ListenerGain = SoundManager.PlaybackCompressedGain;
+                    SoundManager.ListenerGain = SoundManager.CompressionDynamicRangeGain;
                 }
                 else
                 {

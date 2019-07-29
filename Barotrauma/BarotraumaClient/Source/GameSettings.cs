@@ -428,7 +428,7 @@ namespace Barotrauma
                 Step = 0.05f
             };
             voiceChatScrollBar.OnMoved(voiceChatScrollBar, voiceChatScrollBar.BarScroll);
-
+            
             GUITickBox muteOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("MuteOnFocusLost"));
             muteOnFocusLostBox.Selected = MuteOnFocusLost;
             muteOnFocusLostBox.ToolTip = TextManager.Get("MuteOnFocusLostToolTip");
@@ -438,7 +438,17 @@ namespace Barotrauma
                 UnsavedSettings = true;
                 return true;
             };
-
+            
+            GUITickBox dynamicRangeCompressionTickBox = new GUITickBox(new RectTransform(tickBoxScale, audioSliders.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("DynamicRangeCompression"));
+            dynamicRangeCompressionTickBox.Selected = DynamicRangeCompressionEnabled;
+            dynamicRangeCompressionTickBox.ToolTip = TextManager.Get("DynamicRangeCompressionToolTip");
+            dynamicRangeCompressionTickBox.OnSelected = (tickBox) =>
+            {
+                DynamicRangeCompressionEnabled = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
+            };
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), audioSliders.RectTransform), TextManager.Get("VoiceChat"));
 
             IList<string> deviceNames = Alc.GetStringList((IntPtr)null, Alc.CaptureDeviceSpecifier);

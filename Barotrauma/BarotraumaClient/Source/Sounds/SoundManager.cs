@@ -100,7 +100,7 @@ namespace Barotrauma.Sounds
                 }
             }
         }
-
+        
         public float PlaybackAmplitude
         {
             get
@@ -128,7 +128,7 @@ namespace Barotrauma.Sounds
             }
         }
         
-        public float PlaybackCompressedGain { get; private set; }
+        public float CompressionDynamicRangeGain { get; private set; }
 
         public int LoadedSoundCount
         {
@@ -220,7 +220,7 @@ namespace Barotrauma.Sounds
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
             ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
 
-            PlaybackCompressedGain = 1.0f;
+            CompressionDynamicRangeGain = 1.0f;
         }
 
         public Sound LoadSound(string filename, bool stream = false)
@@ -477,16 +477,23 @@ namespace Barotrauma.Sounds
 
         public void Update()
         {
-            float targetGain = Math.Min(1.0f, 1.0f / PlaybackAmplitude);
-            if (targetGain < PlaybackCompressedGain)
+            if (GameMain.Config.DynamicRangeCompressionEnabled)
             {
-                //if the target gain is lower than the current gain, lower the current gain immediately to prevent clipping
-                PlaybackCompressedGain = targetGain;
+                float targetGain = (Math.Min(1.0f, 1.0f / PlaybackAmplitude) - 1.0f) * 0.5f + 1.0f;
+                if (targetGain < CompressionDynamicRangeGain)
+                {
+                    //if the target gain is lower than the current gain, lower the current gain immediately to prevent clipping
+                    CompressionDynamicRangeGain = targetGain;
+                }
+                else
+                {
+                    //otherwise, let it rise back smoothly
+                    CompressionDynamicRangeGain = (targetGain) * 0.05f + CompressionDynamicRangeGain * 0.95f;
+                }
             }
             else
             {
-                //otherwise, let it rise back smoothly
-                PlaybackCompressedGain = (targetGain) * 0.05f + PlaybackCompressedGain * 0.95f;
+                CompressionDynamicRangeGain = 1.0f;
             }
         }
 
