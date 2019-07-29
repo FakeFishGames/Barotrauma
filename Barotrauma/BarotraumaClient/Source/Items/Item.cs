@@ -656,10 +656,11 @@ namespace Barotrauma
             List<Rectangle> disallowedAreas = new List<Rectangle>();
             if (GameMain.GameSession?.CrewManager != null && Screen.Selected == GameMain.GameScreen)
             {
+                int disallowedPadding = (int)(50 * GUI.Scale);
                 disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
                 disallowedAreas.Add(new Rectangle(
-                    HUDLayoutSettings.ChatBoxArea.X - 50, HUDLayoutSettings.ChatBoxArea.Y, 
-                    HUDLayoutSettings.ChatBoxArea.Width + 50, HUDLayoutSettings.ChatBoxArea.Height));                
+                    HUDLayoutSettings.ChatBoxArea.X - disallowedPadding, HUDLayoutSettings.ChatBoxArea.Y, 
+                    HUDLayoutSettings.ChatBoxArea.Width + disallowedPadding, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
