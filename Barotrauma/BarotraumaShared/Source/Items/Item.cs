@@ -2105,7 +2105,7 @@ namespace Barotrauma
 
             item.SetActiveSprite();
 
-            if (submarine != null)
+            if (submarine?.GameVersion != null)
             {
                 SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, submarine.GameVersion);
             }
