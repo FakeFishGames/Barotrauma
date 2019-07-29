@@ -301,7 +301,7 @@ namespace Barotrauma
                     }
                 };
                 jobDropDown.AddItem(TextManager.Get("Any"), null);
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
                 {
                     jobDropDown.AddItem(jobPrefab.Name, jobPrefab);
                 }

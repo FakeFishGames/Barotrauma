@@ -536,6 +536,8 @@ namespace Barotrauma
 
         public static bool IsOverride(this XElement element) => element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase);
 
+        public static XElement GetFirstChild(this XElement element) => element.Elements().FirstOrDefault();
+
         /// <summary>
         /// Returns the first child element that matches the name using the provided comparison method.
         /// </summary>

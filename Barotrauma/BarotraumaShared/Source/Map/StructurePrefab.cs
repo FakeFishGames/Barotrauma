@@ -154,33 +154,32 @@ namespace Barotrauma
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) return;
                 var rootElement = doc.Root;
-                switch (rootElement.Name.ToString().ToLowerInvariant())
+                if (rootElement.IsOverride())
                 {
-                    case "override":
-                        foreach (var element in rootElement.Elements())
+                    foreach (var element in rootElement.Elements())
+                    {
+                        foreach (var childElement in element.Elements())
+                        {
+                            Load(childElement, true);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var element in rootElement.Elements())
+                    {
+                        if (element.IsOverride())
                         {
                             foreach (var childElement in element.Elements())
                             {
                                 Load(childElement, true);
                             }
                         }
-                        break;
-                    default:
-                        foreach (var element in rootElement.Elements())
+                        else
                         {
-                            if (element.IsOverride())
-                            {
-                                foreach (var childElement in element.Elements())
-                                {
-                                    Load(childElement, true);
-                                }
-                            }
-                            else
-                            {
-                                Load(element, false);
-                            }
+                            Load(element, false);
                         }
-                        break;
+                    }
                 }
             }
         }

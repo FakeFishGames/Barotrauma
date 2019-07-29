@@ -440,9 +440,9 @@ namespace Barotrauma
                 MasterServerUrl = "";
                 SelectContentPackage(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
                 jobPreferences = new List<string>();
-                foreach (JobPrefab job in JobPrefab.List)
+                foreach (string job in JobPrefab.List.Keys)
                 {
-                    jobPreferences.Add(job.Identifier);
+                    jobPreferences.Add(job);
                 }
                 return;
             }

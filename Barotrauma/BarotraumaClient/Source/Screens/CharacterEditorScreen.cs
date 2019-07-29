@@ -1223,7 +1223,7 @@ namespace Barotrauma
             }
             if (configFile == Character.HumanConfigFile && selectedJob != null)
             {
-                var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List.First(job => job.Identifier == selectedJob));
+                var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List[selectedJob]);
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
                 HideWearables();
@@ -2245,7 +2245,7 @@ namespace Barotrauma
                 }, elementCount: 8, style: null);
                 jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
                 jobDropDown.AddItem("None");
-                JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
+                JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Value.Name, j.Value.Identifier));
                 jobDropDown.SelectItem(selectedJob);
                 jobDropDown.OnSelected = (component, data) =>
                 {

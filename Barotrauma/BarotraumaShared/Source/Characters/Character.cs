@@ -713,7 +713,7 @@ namespace Barotrauma
             }
 
             var rootElement = doc.Root;
-            var mainElement = rootElement.IsOverride() ? rootElement.Elements().FirstOrDefault() : rootElement;
+            var mainElement = rootElement.IsOverride() ? rootElement.GetFirstChild() : rootElement;
             InitProjSpecific(mainElement);
             SpeciesName = mainElement.GetAttributeString("name", "Unknown");
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
@@ -895,7 +895,7 @@ namespace Barotrauma
             XElement mainElement;
             if (allowOverriding && doc.Root.IsOverride())
             {
-                mainElement = doc.Root.Elements().FirstOrDefault();
+                mainElement = doc.Root.GetFirstChild();
             }
             else
             {
@@ -913,7 +913,7 @@ namespace Barotrauma
             {
                 if (allowOverriding)
                 {
-                    DebugConsole.NewMessage($"Overriding the existing character '{name}' defined in '{duplicate.Key}' with '{file}'");
+                    DebugConsole.NewMessage($"Overriding the existing character '{name}' defined in '{duplicate.Key}' with '{file}'", Color.Yellow);
                     configFiles.Remove(duplicate.Key);
                     configFilePaths.Remove(name);
                 }
@@ -926,8 +926,6 @@ namespace Barotrauma
             }
             configFiles.Add(file, doc);
             configFilePaths.Add(name, file);
-            // TODO: remove
-            DebugConsole.NewMessage($"{file} ok", Color.Green);
             return true;
         }
 

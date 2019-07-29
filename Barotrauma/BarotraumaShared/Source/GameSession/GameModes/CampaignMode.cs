@@ -170,7 +170,7 @@ namespace Barotrauma
             string seed = outpost == Level.Loaded.StartOutpost ? map.SelectedLocation.Name : map.CurrentLocation.Name;
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            JobPrefab watchmanJob = JobPrefab.List.Find(jp => jp.Identifier == "watchman");
+            JobPrefab watchmanJob = JobPrefab.List["watchman"];
             CharacterInfo characterInfo = new CharacterInfo(Character.HumanConfigFile, jobPrefab: watchmanJob);
             var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition,
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));

@@ -106,12 +106,10 @@ namespace Barotrauma
                         if (jobIdentifier == "")
                         {
                             DebugConsole.ThrowError("Error in location type \""+ Identifier + "\" - hireable jobs should be configured using identifiers instead of names.");
-                            jobIdentifier = subElement.GetAttributeString("name", "");
-                            jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
                         }
                         else
                         {
-                            jobPrefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
+                            jobPrefab = JobPrefab.List[jobIdentifier.ToLowerInvariant()];
                         }
                         if (jobPrefab == null)
                         {
