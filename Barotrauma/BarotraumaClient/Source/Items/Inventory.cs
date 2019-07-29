@@ -150,6 +150,7 @@ namespace Barotrauma
         private Rectangle movableFrameRect;
         private Point savedPosition, originalPos;
         private bool resolutionChanged = false;
+        private bool canMove = false;
 
         public class SlotReference
         {
@@ -425,7 +426,7 @@ namespace Barotrauma
             var subInventory = container.Inventory;
             if (subInventory.slots == null) subInventory.CreateSlots();
 
-            bool canMove = container.MovableFrame && !subInventory.IsInventoryHoverAvailable(Owner as Character, container) && subInventory.originalPos != Point.Zero;
+            canMove = container.MovableFrame && !subInventory.IsInventoryHoverAvailable(Owner as Character, container) && subInventory.originalPos != Point.Zero;
 
             if (canMove)
             {
@@ -646,25 +647,32 @@ namespace Barotrauma
             if (slotIndex < 0 || slotIndex >= Items.Length) return;
 #endif
 
-            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
-            if (slots[slotIndex].SubInventoryDir > 0)
+            if (!canMove)
             {
-                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
-                    new Point(0, slots[slotIndex].Rect.Bottom),
-                    new Point(GameMain.GraphicsWidth, (int)Math.Max(GameMain.GraphicsHeight - slots[slotIndex].Rect.Bottom, 0)));
+                Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                if (slots[slotIndex].SubInventoryDir > 0)
+                {
+                    spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
+                        new Point(0, slots[slotIndex].Rect.Bottom),
+                        new Point(GameMain.GraphicsWidth, (int)Math.Max(GameMain.GraphicsHeight - slots[slotIndex].Rect.Bottom, 0)));
+                }
+                else
+                {
+                    spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
+                        new Point(0, 0),
+                        new Point(GameMain.GraphicsWidth, slots[slotIndex].Rect.Y));
+                }
+                container.Inventory.Draw(spriteBatch, true);
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+                spriteBatch.Begin(SpriteSortMode.Deferred);
             }
             else
             {
-                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
-                    new Point(0, 0),
-                    new Point(GameMain.GraphicsWidth, slots[slotIndex].Rect.Y));
+                container.Inventory.Draw(spriteBatch, true);
             }
-            container.Inventory.Draw(spriteBatch, true);
-            spriteBatch.End();
-            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-            spriteBatch.Begin(SpriteSortMode.Deferred);
 
             container.InventoryBottomSprite?.Draw(spriteBatch,
                 new Vector2(slots[slotIndex].Rect.Center.X, slots[slotIndex].Rect.Y) + slots[slotIndex].DrawOffset,
