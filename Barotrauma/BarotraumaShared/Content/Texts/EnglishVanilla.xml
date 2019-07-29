@@ -3242,13 +3242,15 @@
   <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
   <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
   <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>
-  <traitorgoalfinditeminfo>Find a [target] in [targethullname].</traitorgoalfinditeminfo>
+  <traitorgoalfinditeminfo>Find a [identifier] in [targethullname].</traitorgoalfinditeminfo>
   <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
   <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
   <traitorgoaldestroyoxygen>Destroy at least [percentage] percent of all non-inventory oxygen tanks on the sub.</traitorgoaldestroyoxygen>
   <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
   <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
   <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
+  <traitorgoalsabotageinfo>Sabotage [target] so that it's condition is under [threshold]%.</traitorgoalsabotageinfo>
+  <traitorgoalsabotagedurationinfo>Sabotage [tag] so that it's condition is under [threshold]% for at least [duration] seconds.</traitorgoalsabotagedurationinfo>
   <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
   <!--<traitorgoaltamperinfodefault>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
   <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
@@ -3479,6 +3481,27 @@
   <pending>Pending</pending>
   <inprogress>In progress</inprogress>
   <complete>Complete</complete>
+
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+
+  <pumpautocontrol>Automatic control</pumpautocontrol>
+
+  <entityname.sledgehammer>Sledgehammer</entityname.sledgehammer>
+  <entitydescription.sledgehammer>A crude tool used for breaking things down.</entitydescription.sledgehammer>
+
+  <entityname.wirecutters>Wire Cutters</entityname.wirecutters>
+  <entitydescription.wirecutters>Handy for cutting wires and dismantling electrical components.</entitydescription.wirecutters>
+
+  <!-- MODIFIED -->
+  <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
+  <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>
+  <entitydescription.alienshell>For firing from a railgun.</entitydescription.alienshell>
+
+  <workshop.contenttag.eventset>Event set</workshop.contenttag.eventset>
+  <workshop.contenttag.totalconversion>Total conversion</workshop.contenttag.totalconversion>
+  <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
+  <workshop.contenttag.language>Language</workshop.contenttag.language>
+  <entitydescription.brockite>A mineral containing thorium and phosphorus.</entitydescription.brockite>
 
   <!-- Traitor goals (new) -->
   <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>

@@ -81,6 +81,10 @@
         <InfoText id="traitorgoaldestroyitems" />
       </Goal>
 
+      <Goal type="sabotage" tag="pump" threshold="30">
+        <InfoText id="traitorgoalsabotageinfo" />
+      </Goal>
+
     </Objective>
 
 
