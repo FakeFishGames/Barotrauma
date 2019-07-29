@@ -504,7 +504,7 @@ namespace Barotrauma
                 //prevent the inventory from extending outside the top of the screen
                 startY = Math.Max(startY, (int)totalHeight - padding / 2);
                 //same for the bottom side of the screen
-                startY -= Math.Max(startY - GameMain.GraphicsHeight + padding, 0);               
+                startY -= Math.Max(startY - GameMain.GraphicsHeight + padding * 2 + (canMove ? (int)(movableFrameRectHeight * UIScale) : 0), 0);               
 
                 subRect.X = startX;
                 subRect.Y = startY;
