@@ -129,6 +129,10 @@ namespace Barotrauma
                 else if (existingAffliction != null)
                 {
                     existingAffliction.Strength = herpesStrength;
+                    if (herpesStrength <= 0.0f)
+                    {
+                        client.Character.CharacterHealth.ReduceAffliction(null, "invertcontrols", 100.0f);
+                    }
                 }
 
                 //check if the client has disconnected an excessive number of wires

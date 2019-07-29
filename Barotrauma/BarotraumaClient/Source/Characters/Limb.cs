@@ -441,7 +441,7 @@ namespace Barotrauma
                     float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
                     if (herpesStrength > 0.0f)
                     {
-                        DrawWearable(HerpesSprite, depthStep, spriteBatch, color * (herpesStrength / 100.0f), spriteEffect);
+                        DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
                         depthStep += 0.000001f;
                     }
                 }
