@@ -989,7 +989,24 @@ namespace Barotrauma
             }
             return false;
         }
-        
+
+        private bool ConditionalMatches(PropertyConditional conditional)
+        {
+            if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
+            {
+                if (!conditional.Matches(this)) { return false; }
+            }
+            else
+            {
+                foreach (ItemComponent component in components)
+                {
+                    if (component.Name != conditional.TargetItemComponentName) { continue; }
+                    if (!conditional.Matches(component)) { return false; }
+                }
+            }
+            return true;
+        }
+
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (!hasStatusEffectsOfType[(int)type]) { return; }
@@ -1132,7 +1149,11 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
+                if (ic.Parent != null) { ic.IsActive = ic.Parent.IsActive; }
+                if (ic.IsActiveConditionals != null)
+                {
+                    ic.IsActive = ic.IsActiveConditionals.All(conditional => ConditionalMatches(conditional));
+                }
 
 #if CLIENT
                 if (!ic.WasUsed)

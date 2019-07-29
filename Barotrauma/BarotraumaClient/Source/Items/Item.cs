@@ -432,23 +432,6 @@ namespace Barotrauma
                     if (!animate) { continue; }
                     spriteState.OffsetState += deltaTime;
                     spriteState.RotationState += deltaTime;
-
-                    bool ConditionalMatches(PropertyConditional conditional)
-                    {
-                        if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
-                        {
-                            if (!conditional.Matches(this)) { return false; }
-                        }
-                        else
-                        {
-                            foreach (ItemComponent component in components)
-                            {
-                                if (component.Name != conditional.TargetItemComponentName) { continue; }
-                                if (!conditional.Matches(component)) { return false; }
-                            }
-                        }
-                        return true;
-                    }
                 }
             }            
         }
