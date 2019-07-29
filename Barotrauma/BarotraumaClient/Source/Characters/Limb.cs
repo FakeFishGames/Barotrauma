@@ -133,7 +133,7 @@ namespace Barotrauma
         {
             var info = character.Info;
             if (info == null) { return; }
-            var element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), WearableType.Husk).FirstOrDefault();
+            var element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), WearableType.Husk)?.FirstOrDefault();
             if (element != null)
             {
                 HuskSprite = new WearableSprite(element.Element("sprite"), WearableType.Husk);

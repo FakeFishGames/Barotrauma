@@ -494,6 +494,7 @@ namespace Barotrauma
 
         public IEnumerable<XElement> FilterByTypeAndHeadID(IEnumerable<XElement> elements, WearableType targetType)
         {
+            if (elements == null) { return elements; }
             return elements.Where(e =>
             {
                 if (Enum.TryParse(e.GetAttributeString("type", ""), true, out WearableType type) && type != targetType) { return false; }
