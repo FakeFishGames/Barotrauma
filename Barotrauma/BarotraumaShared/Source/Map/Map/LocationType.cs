@@ -109,7 +109,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            jobPrefab = JobPrefab.List[jobIdentifier.ToLowerInvariant()];
+                            jobPrefab = JobPrefab.Get(jobIdentifier.ToLowerInvariant());
                         }
                         if (jobPrefab == null)
                         {

@@ -24,6 +24,23 @@ namespace Barotrauma
     partial class JobPrefab
     {
         public static Dictionary<string, JobPrefab> List;
+        public static JobPrefab Get(string identifier)
+        {
+            if (List == null)
+            {
+                DebugConsole.ThrowError("Issue in the code execution order: job prefabs not loaded.");
+                return null;
+            }
+            if (List.TryGetValue(identifier, out JobPrefab job))
+            {
+                return job;
+            }
+            else
+            {
+                DebugConsole.ThrowError("Couldn't find a job prefab with the given identifier: " + identifier);
+                return null;
+            }
+        }
 
         public readonly XElement Items;
         public readonly List<string> ItemNames = new List<string>();

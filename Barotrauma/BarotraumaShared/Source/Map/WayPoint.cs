@@ -648,7 +648,7 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(jobIdentifier))
             {
                 w.assignedJob = 
-                    JobPrefab.List[jobIdentifier] ??
+                    JobPrefab.Get(jobIdentifier) ??
                     JobPrefab.List.Values.FirstOrDefault(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
             }
 

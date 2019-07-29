@@ -63,30 +63,30 @@ namespace Barotrauma.Tutorials
             var patientHull2 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "airlock").CurrentHull;
             medBay = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "medbay").CurrentHull;
 
-            var assistantInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List["assistant"]);
+            var assistantInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.Get("assistant"));
             patient1 = Character.Create(assistantInfo, patientHull1.WorldPosition, "1");
             patient1.GiveJobItems(null);
             patient1.CanSpeak = false;
             patient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 45.0f) }, stun: 0, playSound: false);
             patient1.AIController.Enabled = false;
 
-            assistantInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List["assistant"]);
+            assistantInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.Get("assistant"));
             patient2 = Character.Create(assistantInfo, patientHull2.WorldPosition, "2");
             patient2.GiveJobItems(null);
             patient2.CanSpeak = false;
             patient2.AIController.Enabled = false;
 
-            var mechanicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List["engineer"]);
+            var mechanicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.Get("engineer"));
             var subPatient1 = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "3");
             subPatient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient1);
 
-            var securityInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List["securityofficer"]);
+            var securityInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.Get("securityofficer"));
             var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "3");
             subPatient2.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.InternalDamage, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient2);
 
-            var engineerInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List["engineer"]);
+            var engineerInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.Get("engineer"));
             var subPatient3 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "3");
             subPatient3.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 20.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient3);

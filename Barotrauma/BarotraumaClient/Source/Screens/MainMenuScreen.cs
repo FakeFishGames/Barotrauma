@@ -592,7 +592,7 @@ namespace Barotrauma
                 }
                 var characterInfo = new CharacterInfo(
                     Character.HumanConfigFile,
-                    jobPrefab: JobPrefab.List[jobIdentifiers[i]]);
+                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");

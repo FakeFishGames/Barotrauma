@@ -1223,7 +1223,7 @@ namespace Barotrauma
             }
             if (configFile == Character.HumanConfigFile && selectedJob != null)
             {
-                var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.List[selectedJob]);
+                var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.Get(selectedJob));
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
                 HideWearables();
