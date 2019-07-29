@@ -5,12 +5,6 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        void InitProjSpecific()
-        {
-            //let the clients know the initial deterioration delay
-            item.CreateServerEvent(this);
-        }
-
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             if (c.Character == null) return;

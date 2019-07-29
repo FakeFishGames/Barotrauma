@@ -252,8 +252,7 @@ namespace Barotrauma
                 }, style: null, color: Color.Black * 0.6f);
                 var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
                     font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
-                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Int)
                 {
                     Font = GUI.SmallFont
                 };
@@ -281,26 +280,32 @@ namespace Barotrauma
             }
         }
 
-        private HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
+        private readonly HashSet<Sprite> loadedSprites = new HashSet<Sprite>();
         private void LoadSprites()
         {
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
-            //foreach (string filePath in ContentPackage.GetAllContentFiles(GameMain.SelectedPackages))
-            //{
-            //    XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            //    if (doc != null && doc.Root != null)
-            //    {
-            //        LoadSprites(doc.Root);
-            //    }
-            //}
+            var contentPackages = GameMain.Config.SelectedContentPackages.ToList();
 
-            foreach (string filePath in Directory.GetFiles("Content/", "*.xml", SearchOption.AllDirectories))
+#if !DEBUG
+            var vanilla = GameMain.VanillaContent;
+            if (vanilla != null)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc != null && doc.Root != null)
+                contentPackages.Remove(vanilla);
+            }
+#endif
+            foreach (var contentPackage in contentPackages)
+            {
+                foreach (var file in contentPackage.Files)
                 {
-                    LoadSprites(doc.Root);
+                    if (file.Path.EndsWith(".xml"))
+                    {
+                        XDocument doc = XMLExtensions.TryLoadXml(file.Path);
+                        if (doc != null && doc.Root != null)
+                        {
+                            LoadSprites(doc.Root);
+                        }
+                    }
                 }
             }
 
@@ -326,11 +331,12 @@ namespace Barotrauma
             {
                 string spriteFolder = "";
                 string textureElement = element.GetAttributeString("texture", "");
-                // TODO: parse and create
+                // TODO: parse and create?
                 if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]")) { return; }
                 if (!textureElement.Contains("/"))
                 {
-                    spriteFolder = Path.GetDirectoryName(element.ParseContentPathFromUri());
+                    var parsedPath = element.ParseContentPathFromUri();
+                    spriteFolder = Path.GetDirectoryName(parsedPath);
                 }
                 // Uncomment if we do multiple passes -> there can be duplicates
                 //string identifier = Sprite.GetID(element);
@@ -366,7 +372,7 @@ namespace Barotrauma
             xmlPathText.TextColor = Color.LightGreen;
             return true;
         }
-        #endregion
+#endregion
 
         #region Public methods
         public override void AddToGUIUpdateList()
@@ -791,7 +797,7 @@ namespace Barotrauma
             zoomBar.BarScroll = GetBarScrollValue();
             viewAreaOffset = Point.Zero;
         }
-        #endregion
+#endregion
 
         #region Helpers
         private Point viewAreaOffset;
@@ -835,7 +841,7 @@ namespace Barotrauma
             // Keeps the relative origin unchanged. The absolute origin will be recalculated.
             sprite.RelativeOrigin = sprite.RelativeOrigin;
         }
-        #endregion
+#endregion
 
         #region Widgets
         private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
@@ -877,6 +883,6 @@ namespace Barotrauma
             widgets.Clear();
             Widget.selectedWidgets.Clear();
         }
-        #endregion
+#endregion
     }
 }

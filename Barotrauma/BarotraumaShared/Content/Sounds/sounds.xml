@@ -109,6 +109,12 @@
   <splash file="Content/Sounds/Water/Splash8.ogg"/>
   <splash file="Content/Sounds/Water/Splash9.ogg"/>
 
+  <zap file="Content/Items/Electricity/Zap1.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap2.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap3.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap4.ogg" volume="1.0" range="500"/>
+  <zap file="Content/Items/Electricity/Zap5.ogg" volume="1.0" range="500"/>
+  
   <flow file="Content/Sounds/Water/FlowSmall.ogg"/>
   <flow file="Content/Sounds/Water/FlowMedium.ogg"/>
   <flow file="Content/Sounds/Water/FlowLarge.ogg"/>

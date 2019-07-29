@@ -89,6 +89,8 @@ namespace Barotrauma.Items.Components
 
         private bool drawable = true;
 
+        public List<PropertyConditional> IsActiveConditionals;
+
         public bool Drawable
         {
             get { return drawable; }
@@ -267,6 +269,15 @@ namespace Barotrauma.Items.Components
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "activeconditional":
+                    case "isactive":
+                        IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
+                            IsActiveConditionals.Add(new PropertyConditional(attribute));
+                        }
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement, item.Name);

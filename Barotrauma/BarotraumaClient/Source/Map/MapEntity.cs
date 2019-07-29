@@ -382,8 +382,28 @@ namespace Barotrauma
                     }
                     else
                     {
-                        selectedList.Clear();
-                        newSelection.ForEach(e => AddSelection(e));
+                        selectedList = new List<MapEntity>(newSelection);
+                        //selectedList.Clear();
+                        //newSelection.ForEach(e => AddSelection(e));
+                        foreach (var entity in newSelection)
+                        {
+                            HandleDoorGapLinks(entity,
+                                onGapFound: (door, gap) =>
+                                {
+                                    door.RefreshLinkedGap();
+                                    if (!selectedList.Contains(gap))
+                                    {
+                                        selectedList.Add(gap);
+                                    }
+                                },
+                                onDoorFound: (door, gap) =>
+                                {
+                                    if (!selectedList.Contains(door.Item))
+                                    {
+                                        selectedList.Add(door.Item);
+                                    }
+                                });
+                        }
                     }
 
                     //select wire if both items it's connected to are selected

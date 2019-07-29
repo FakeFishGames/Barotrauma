@@ -272,6 +272,9 @@ namespace Barotrauma.Items.Components
                 foreach (FireSource fs in fireSourcesInRange)
                 {
                     fs.Extinguish(deltaTime, ExtinguishAmount);
+#if SERVER
+                    GameMain.Server.KarmaManager.OnExtinguishingFire(user, deltaTime);                    
+#endif
                 }
             }
 
@@ -321,6 +324,7 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Character targetCharacter)
             {
+                if (targetCharacter.Removed) { return false; }
                 targetCharacter.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetCharacter });
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
@@ -328,6 +332,7 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Limb targetLimb)
             {
+                if (targetLimb.character == null || targetLimb.character.Removed) { return false; }
                 targetLimb.character.LastDamageSource = item;
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new List<ISerializableEntity>() { targetLimb.character, targetLimb });
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
@@ -351,7 +356,7 @@ namespace Barotrauma.Items.Components
                         targetItem.WorldPosition,
                         levelResource.DeattachTimer / levelResource.DeattachDuration,
                         Color.Red, Color.Green);
-#endif                    
+#endif
                 }
                 FixItemProjSpecific(user, deltaTime, targetItem);
                 return true;
@@ -511,7 +516,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-#endif    
+#endif
             }
         }
     }

@@ -348,10 +348,21 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            for (int i = 0; i < Sections.Length; i++)
+            byte sectionCount = msg.ReadByte();
+            if (sectionCount != Sections.Length)
+            {
+                string errorMsg = $"Error while reading a network event for the structure \"{Name}\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
+                DebugConsole.NewMessage(errorMsg, Color.Red);
+                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
+            for (int i = 0; i < sectionCount; i++)
             {
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
-                SetDamage(i, damage);
+                if (i < Sections.Length)
+                {
+                    SetDamage(i, damage);
+                }
             }
         }
     }

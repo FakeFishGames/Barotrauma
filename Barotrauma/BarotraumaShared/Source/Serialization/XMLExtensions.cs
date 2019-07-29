@@ -15,7 +15,9 @@ namespace Barotrauma
         public static string ParseContentPathFromUri(this XObject element)
         {
             string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != "Content");
+            string currentFolder = Environment.CurrentDirectory.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Last();
+            // Filter out the current folder -> result is "Content/blaahblaah" or "Mods/blaahblaah" etc.
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
             return string.Join("/", filtered);
         }
 
@@ -286,6 +288,30 @@ namespace Barotrauma
             }
 
             return intValue;
+        }
+        public static ushort[] GetAttributeUshortArray(this XElement element, string name, ushort[] defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            string stringValue = element.Attribute(name).Value;
+            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+
+            string[] splitValue = stringValue.Split(',');
+            ushort[] ushortValue = new ushort[splitValue.Length];
+            for (int i = 0; i < splitValue.Length; i++)
+            {
+                try
+                {
+                    ushort val = ushort.Parse(splitValue[i]);
+                    ushortValue[i] = val;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                }
+            }
+
+            return ushortValue;
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)

@@ -105,11 +105,6 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-
-#if SERVER
-            //let the clients know the initial deterioration delay
-            item.CreateServerEvent(this);
-#endif
         }
 
         partial void InitProjSpecific(XElement element);
@@ -129,7 +124,7 @@ namespace Barotrauma.Items.Components
             deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
             item.Condition = item.Prefab.Health;
 #if SERVER
-            //let the clients know the initial deterioration delay
+            //let the clients know the deterioration delay
             item.CreateServerEvent(this);
 #endif
         }
@@ -189,7 +184,11 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                item.Condition += deltaTime / (fixDuration / item.MaxCondition);
+                float conditionIncrease = deltaTime / (fixDuration / item.MaxCondition);
+                item.Condition += conditionIncrease;
+#if SERVER
+                GameMain.Server.KarmaManager.OnItemRepaired(CurrentFixer, this, conditionIncrease);
+#endif
             }
 
             if (wasBroken && item.IsFullCondition)

@@ -18,7 +18,7 @@
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
-    <ItemContainer capacity="12">
+    <ItemContainer capacity="12" keepopenwhenequipped="true" movableframe="true">
       <Containable identifiers="smallitem" excludedidentifiers="toolbox" />
     </ItemContainer>
   </Item>
@@ -47,7 +47,7 @@
     <RepairTool structurefixamount="5.0" range="150" barrelpos="35,13" particles="weld" repairmultiple="true" repairthroughwalls="false" combatpriority="20">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems identifier="weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgWeldingFuelRequired" />
-      <ParticleEmitter particle="weld" particlespersecond="50" />
+      <ParticleEmitter particle="weld" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
       <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
@@ -106,7 +106,7 @@
       <StatusEffect type="OnUse" target="UseTarget">
         <Affliction identifier="burn" amount="0.25" />
       </StatusEffect>
-      <ParticleEmitter particle="plasma" particlespersecond="50" />
+      <ParticleEmitter particle="plasma" particlespersecond="50" copyentityangle="true"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
       <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
       <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />

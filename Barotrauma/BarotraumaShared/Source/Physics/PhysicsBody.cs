@@ -512,11 +512,9 @@ namespace Barotrauma
 #endif
         }
         
-        public bool IsValidValue(float value, string valueName, float? minValue = null, float? maxValue = null)
+        public bool IsValidValue(float value, string valueName, float minValue = float.MinValue, float maxValue = float.MaxValue)
         {
-            if (!MathUtils.IsValid(value) ||
-                (minValue.HasValue && value < minValue.Value) ||
-                (maxValue.HasValue && value > maxValue.Value))
+            if (!MathUtils.IsValid(value) || value < minValue || value > maxValue)
             {
                 string userData = UserData == null ? "null" : UserData.ToString();
                 string errorMsg =
@@ -539,11 +537,11 @@ namespace Barotrauma
             return true;
         }
 
-        private bool IsValidValue(Vector2 value, string valueName, float? minValue = null, float? maxValue = null)
+        private bool IsValidValue(Vector2 value, string valueName, float minValue = float.MinValue, float maxValue = float.MaxValue)
         {
             if (!MathUtils.IsValid(value) ||
-                (minValue.HasValue && (value.X < minValue.Value || value.Y < minValue.Value)) ||
-                (maxValue.HasValue && (value.X > maxValue.Value || value.Y > maxValue)))
+                (value.X < minValue || value.Y < minValue) ||
+                (value.X > maxValue || value.Y > maxValue))
             {
                 string userData = UserData == null ? "null" : UserData.ToString();
                 string errorMsg =

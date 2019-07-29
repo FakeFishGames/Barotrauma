@@ -5,18 +5,18 @@
     <Sprite texture="reactor.png" sourcerect="0,0,321,192" depth="0.8" />
     <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="40" />
     <BrokenSprite texture="reactor.png" sourcerect="0,384,321,192" depth="0.8" maxcondition="0" />
-    <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.5,0.38" minsize="900,400" maxsize="2688,1166" anchor="Center" style="ItemUI" />
-      <GraphLine texture="Content/Items/Reactor/graphLine.png" />
-      <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65" />
-      <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65" />
-      <MeterPointer texture="Content/Items/MachineInterface.png" sourcerect="367,22,14,118" origin="0.5,0.93" />
-      <SectorSprite texture="Content/Items/MachineInterface.png" sourcerect="329,160,90,172" origin="0.98,0.5" />
-      <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0" />
-      <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0" />
-      <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5" />
-      <RequiredSkill identifier="electrical" level="30" />
-      <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true" />
+    <Reactor canbeselected="true" firedelay="20" meltdowndelay="120" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.5,0.38" minsize="900,400" maxsize="2688,1166" anchor="Center" style="ItemUI"/>
+      <GraphLine texture="Content/Items/Reactor/graphLine.png"/>
+      <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65"/>
+      <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65"/>
+      <MeterPointer texture="Content/Items/MachineInterface.png" sourcerect="367,22,14,118" origin="0.5,0.93"/>
+      <SectorSprite texture="Content/Items/MachineInterface.png" sourcerect="329,160,90,172" origin="0.98,0.5"/>
+      <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0"/>
+      <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0"/>
+      <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5"/>      
+      <RequiredSkill identifier="electrical" level="30"/>
+      <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
@@ -27,14 +27,29 @@
           <Affliction identifier="stun" strength="5" />
         </Explosion>
       </StatusEffect>
-    </Reactor>
-    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
-      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
-      <output name="power_out" displayname="connection.powerout" />
-      <output name="temperature_out" displayname="connection.temperatureout" />
-      <input name="shutdown" displayname="connection.shutdown" />
-      <output name="meltdown_warning" displayname="connection.meltdownwarning" />
+    </Reactor>    
+    <LightComponent range="10.0" lightcolor="255,0,0,50" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1">
+      <StatusEffect type="OnActive" target="This" IsOn="false">
+        <Conditional targetitemcomponent="Reactor" TemperatureCritical="eq false"/>
+      </StatusEffect>
+      <StatusEffect type="Always" target="This" IsOn="true">
+        <Conditional targetitemcomponent="Reactor" TemperatureCritical="eq true"/>
+      </StatusEffect>
+      <sprite texture="Content/Items/Reactor/reactor.png" depth="0.025" sourcerect="326,192,186,192" origin="0.45,0.5" alpha="1.0" />
+    </LightComponent>    
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
+      <output name="power_out" displayname="connection.powerout"/>
+      <output name="temperature_out" displayname="connection.temperatureout"/>
+      <input name="shutdown" displayname="connection.shutdown"/>
+      <output name="meltdown_warning" displayname="connection.meltdownwarning">
+        <StatusEffect type="OnUse" target="This">
+          <ParticleEmitter particle="smoke" particlespersecond="8" scalemin="1" scalemax="2" anglemin="0" anglemax="360" velocitymin="0" velocitymax="200"/>
+          <ParticleEmitter particle="swirlysmoke" particlespersecond="3" scalemin="1" scalemax="2" anglemin="0" anglemax="360" velocitymin="0" velocitymax="10"/>
+          <sound file="Content/Items/Reactor/ReactorOverheatAlarm.ogg" type="OnUse" range="10000.0" loop="true" volume="1.0" />
+        </StatusEffect>
+      </output>
     </ConnectionPanel>
     <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="FuelRods">
       <Containable identifiers="fuelrod">
@@ -63,8 +78,8 @@
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Mine" buyprice="200" />
     <Deconstruct time="10">
-      <Item identifier="steel" />
-      <Item identifier="uranium" mincondition="0.5" />
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="uranium" copycondition="true"/>
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="uranium" />
@@ -77,8 +92,8 @@
   </Item>
   <Item name="Fulgurium Fuel Rod" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5">
     <Deconstruct time="10">
-      <Item identifier="steel" />
-      <Item identifier="fulgurium" mincondition="0.95" />
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="fulgurium" copycondition="true"/>
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="fulgurium" />
@@ -91,8 +106,8 @@
   </Item>
   <Item name="Thorium Fuel Rod" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5">
     <Deconstruct time="10">
-      <Item identifier="steel" />
-      <Item identifier="thorium" mincondition="0.95" />
+      <Item identifier="steel" copycondition="true"/>
+      <Item identifier="thorium" copycondition="true"/>
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="thorium" />

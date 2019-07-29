@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-
+        
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -109,7 +109,6 @@ namespace Barotrauma.Networking
             LastClientListUpdateID = 0;
 
             NetPeerConfiguration = new NetPeerConfiguration("barotrauma");
-
             NetPeerConfiguration.Port = port;
             Port = port;
             QueryPort = queryPort;
@@ -119,12 +118,12 @@ namespace Barotrauma.Networking
                 NetPeerConfiguration.EnableUPnP = true;
             }
 
-            serverSettings = new ServerSettings(name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
+            serverSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
             if (!string.IsNullOrEmpty(password))
             {
                 serverSettings.SetPassword(password);
             }
-
+            
             NetPeerConfiguration.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
             NetPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
@@ -353,6 +352,7 @@ namespace Barotrauma.Networking
             unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);
 
             fileSender.Update(deltaTime);
+            KarmaManager.UpdateClients(ConnectedClients, deltaTime);
 
             if (serverSettings.VoiceChatEnabled)
             {
@@ -361,7 +361,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (respawnManager != null) respawnManager.Update(deltaTime);
+                if (respawnManager != null) { respawnManager.Update(deltaTime); }
 
                 entityEventManager.Update(connectedClients);
 
@@ -415,25 +415,32 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (isCrewDead && respawnManager == null)
+                float endRoundDelay = 1.0f;
+                if (serverSettings.AutoRestart && isCrewDead)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
+                {
+                    endRoundDelay = 5.0f;
+                    endRoundTimer += deltaTime;
+                }
+                else if (isCrewDead && respawnManager == null)
                 {
                     if (endRoundTimer <= 0.0f)
                     {
                         SendChatMessage(TextManager.GetWithVariable("CrewDeadNoRespawns", "[time]", "60"), ChatMessageType.Server);
                     }
+                    endRoundDelay = 60.0f;
                     endRoundTimer += deltaTime;
                 }
                 else
                 {
                     endRoundTimer = 0.0f;
                 }
-
-                //restart if all characters are dead or submarine is at the end of the level
-                if ((serverSettings.AutoRestart && isCrewDead)
-                    ||
-                    (serverSettings.EndRoundAtLevelEnd && subAtLevelEnd)
-                    ||
-                    (isCrewDead && respawnManager == null && endRoundTimer >= 60.0f))
+                
+                if (endRoundTimer >= endRoundDelay)
                 {
                     if (serverSettings.AutoRestart && isCrewDead)
                     {
@@ -2260,6 +2267,7 @@ namespace Barotrauma.Networking
                 previousPlayers.Add(previousPlayer);
             }
             previousPlayer.Name = client.Name;
+            previousPlayer.Karma = client.Karma;
             previousPlayer.KickVoters.Clear();
             foreach (Client c in connectedClients)
             {
@@ -2269,6 +2277,8 @@ namespace Barotrauma.Networking
             client.Connection.Disconnect(targetmsg);
             client.Dispose();
             connectedClients.Remove(client);
+
+            KarmaManager.OnClientDisconnected(client);
 
             UpdateVoteStatus();
 
@@ -3080,6 +3090,7 @@ namespace Barotrauma.Networking
         public string Name;
         public string IP;
         public UInt64 SteamID;
+        public float Karma;
         public readonly List<Client> KickVoters = new List<Client>();
 
         public PreviousPlayer(Client c)

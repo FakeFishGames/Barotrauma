@@ -7,11 +7,17 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
-        private Camera cam;
+        private readonly Camera cam;
 
         public override Camera Cam
         {
             get { return cam; }
+        }
+
+        public double GameTime
+        {
+            get;
+            private set;
         }
         
         public GameScreen()
@@ -74,6 +80,9 @@ namespace Barotrauma
                     closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
             }
 #endif
+
+            GameTime += deltaTime;
+
             foreach (PhysicsBody body in PhysicsBody.List)
             {
                 body.Update((float)deltaTime);
