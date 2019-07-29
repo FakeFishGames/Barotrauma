@@ -192,7 +192,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.32" category="Equipment" linkable="true" impactsoundtag="impact_metal_light">
+  <Item name="SMG Magazine" identifier="smgmagazine" scale="0.32" category="Equipment" cargocontaineridentifier="metalcrate" linkable="true" tags="smallitem" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Deconstruct time="10">
@@ -203,6 +203,7 @@
     <Body width="50" height="65" density="50" />
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
+      <Containable identifiers="smground" />
       <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
       <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
         <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
