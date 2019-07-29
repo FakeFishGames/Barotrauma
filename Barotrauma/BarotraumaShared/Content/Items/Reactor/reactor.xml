@@ -27,16 +27,15 @@
           <Affliction identifier="stun" strength="5" />
         </Explosion>
       </StatusEffect>
-    </Reactor>    
-    <LightComponent range="10.0" lightcolor="255,0,0,50" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1">
-      <StatusEffect type="OnActive" target="This" IsOn="false">
-        <Conditional targetitemcomponent="Reactor" TemperatureCritical="eq false"/>
-      </StatusEffect>
-      <StatusEffect type="Always" target="This" IsOn="true">
-        <Conditional targetitemcomponent="Reactor" TemperatureCritical="eq true"/>
-      </StatusEffect>
+    </Reactor>
+    <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false">
+      <IsActive targetitemcomponent="Reactor" temperature="gt 2" />
+      <sprite texture="Content/Items/Reactor/reactor.png" depth="0.025" sourcerect="326,0,186,192" origin="0.45,0.5" alpha="1.0" />
+    </LightComponent>
+    <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="0" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1">
+      <IsActive targetitemcomponent="Reactor" temperaturecritical="eq true" />
       <sprite texture="Content/Items/Reactor/reactor.png" depth="0.025" sourcerect="326,192,186,192" origin="0.45,0.5" alpha="1.0" />
-    </LightComponent>    
+    </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
