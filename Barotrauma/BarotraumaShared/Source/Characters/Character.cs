@@ -850,6 +850,10 @@ namespace Barotrauma
         /// </summary>
         public static string GetConfigFile(string speciesName, ContentPackage contentPackage = null)
         {
+            if (configFilePaths.None() || configFiles.None())
+            {
+                LoadAllConfigFiles();
+            }
             string configFile = null;
             if (contentPackage != null)
             {
@@ -880,6 +884,15 @@ namespace Barotrauma
         public static IEnumerable<XDocument> ConfigFiles => configFiles.Values;
 
         public static bool TryAddConfigFile(string file, bool allowOverriding = false)
+        {
+            if (configFilePaths.None() || configFiles.None())
+            {
+                LoadAllConfigFiles();
+            }
+            return AddConfigFile(file, allowOverriding);
+        }
+
+        private static bool AddConfigFile(string file, bool allowOverriding)
         {
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null)
@@ -931,6 +944,7 @@ namespace Barotrauma
 
         public static bool TryGetConfigFile(string file, out XDocument doc)
         {
+            if (configFiles.None()) { LoadAllConfigFiles(); }
             configFiles.TryGetValue(file, out doc);
             return doc != null;
         }
@@ -941,7 +955,7 @@ namespace Barotrauma
             configFilePaths.Clear();
             foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
             {
-                TryAddConfigFile(file, allowOverriding: true);
+                AddConfigFile(file, allowOverriding: true);
             }
         }
 
