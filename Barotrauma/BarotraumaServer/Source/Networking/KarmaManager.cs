@@ -100,17 +100,17 @@ namespace Barotrauma
 
         private void UpdateClient(Client client, float deltaTime)
         {
-            if (client.Karma > KarmaDecayThreshold)
-            {
-                client.Karma -= KarmaDecay * deltaTime;
-            }
-            else if (client.Karma < KarmaIncreaseThreshold)
-            {
-                client.Karma += KarmaIncrease * deltaTime;
-            }
-
             if (client.Character != null && !client.Character.Removed)
             {
+                if (client.Karma > KarmaDecayThreshold)
+                {
+                    client.Karma -= KarmaDecay * deltaTime;
+                }
+                else if (client.Karma < KarmaIncreaseThreshold)
+                {
+                    client.Karma += KarmaIncrease * deltaTime;
+                }
+
                 //increase the strength of the herpes affliction in steps instead of linearly
                 //otherwise clients could determine their exact karma value from the strength
                 float herpesStrength = 0.0f;
