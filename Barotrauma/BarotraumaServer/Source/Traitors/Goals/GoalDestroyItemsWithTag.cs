@@ -42,7 +42,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (!includeDestroyed && (item.Condition <= 0.0f || !Traitor.Character.Submarine.IsEntityFoundOnThisSub(item, true)))
+                    if (!includeDestroyed && (item.Condition <= 0.0f || !(Traitor.Character.Submarine?.IsEntityFoundOnThisSub(item, true) ?? true)))
                     {
                         continue;
                     }
