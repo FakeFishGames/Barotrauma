@@ -137,15 +137,15 @@ namespace Barotrauma
             get { return activeObjectiveEntities; }
         }
 
-        partial void InitProjSpecific(XDocument doc)
+        partial void InitProjSpecific(XElement mainElement)
         {
-            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
+            soundInterval = mainElement.GetAttributeFloat("soundinterval", 10.0f);
             soundTimer = Rand.Range(0.0f, soundInterval);
 
-            BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
+            BloodDecalName = mainElement.GetAttributeString("blooddecal", "");
 
             sounds = new List<CharacterSound>();
-            foreach (XElement subElement in doc.Root.Elements())
+            foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

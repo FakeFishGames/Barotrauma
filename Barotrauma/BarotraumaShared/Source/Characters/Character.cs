@@ -712,14 +712,16 @@ namespace Barotrauma
                 return;
             }
 
-            InitProjSpecific(doc);
-            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
+            var rootElement = doc.Root;
+            var mainElement = rootElement.IsOverride() ? rootElement.Elements().FirstOrDefault() : rootElement;
+            InitProjSpecific(mainElement);
+            SpeciesName = mainElement.GetAttributeString("name", "Unknown");
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
 
-            IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
-            CanSpeak = doc.Root.GetAttributeBool("canspeak", false);
-            needsAir = doc.Root.GetAttributeBool("needsair", false);
-            Noise = doc.Root.GetAttributeFloat("noise", 100f);
+            IsHumanoid = mainElement.GetAttributeBool("humanoid", false);
+            CanSpeak = mainElement.GetAttributeBool("canspeak", false);
+            needsAir = mainElement.GetAttributeBool("needsair", false);
+            Noise = mainElement.GetAttributeFloat("noise", 100f);
 
             //List<XElement> ragdollElements = new List<XElement>();
             //List<float> ragdollCommonness = new List<float>();
@@ -746,7 +748,7 @@ namespace Barotrauma
                 PressureProtection = 100.0f;
             }
 
-            foreach (XElement subElement in doc.Root.Elements())
+            foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -764,7 +766,7 @@ namespace Barotrauma
             
             List<XElement> healthElements = new List<XElement>();
             List<float> healthCommonness = new List<float>();
-            foreach (XElement element in doc.Root.Elements())
+            foreach (XElement element in mainElement.Elements())
             {
                 if (element.Name.ToString().ToLowerInvariant() != "health") continue;
                 healthElements.Add(element);
@@ -801,7 +803,7 @@ namespace Barotrauma
                 LoadHeadAttachments();
             }
         }
-        partial void InitProjSpecific(XDocument doc);
+        partial void InitProjSpecific(XElement mainElement);
 
         public void ReloadHead(int? headId = null, int hairIndex = -1, int beardIndex = -1, int moustacheIndex = -1, int faceAttachmentIndex = -1)
         {
@@ -890,7 +892,17 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Duplicate path: {file}");
                 return false;
             }
-            var name = doc.Root.GetAttributeString("name", string.Empty).ToLowerInvariant();
+            XElement mainElement;
+            if (allowOverriding && doc.Root.IsOverride())
+            {
+                mainElement = doc.Root.Elements().FirstOrDefault();
+            }
+            else
+            {
+                allowOverriding = false;
+                mainElement = doc.Root;
+            }
+            var name = mainElement.GetAttributeString("name", string.Empty).ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(name))
             {
                 DebugConsole.ThrowError($"No character name defined for: {file}");
