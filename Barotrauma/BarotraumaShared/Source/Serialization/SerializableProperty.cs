@@ -420,6 +420,9 @@ namespace Barotrauma
                 case "Charge":
                     if (parentObject is PowerContainer powerContainer) { return powerContainer.Charge; }
                     break;
+                case "Overload":
+                    if (parentObject is PowerTransfer powerTransfer) { return powerTransfer.Overload; }
+                    break;
                 case "AvailableFuel":
                     { if (parentObject is Reactor reactor) { return reactor.AvailableFuel; } }
                     break;
