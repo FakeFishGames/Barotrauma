@@ -3258,6 +3258,7 @@
   <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
   <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
   <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
+  <traitorgoalescape>Escape to the nearby shuttle.</traitorgoalescape>
 
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
@@ -3491,6 +3492,12 @@
 
   <entityname.wirecutters>Wire Cutters</entityname.wirecutters>
   <entitydescription.wirecutters>Handy for cutting wires and dismantling electrical components.</entitydescription.wirecutters>
+
+  <entityname.dummycoilgunammobox>Dummy Ammo Box</entityname.dummycoilgunammobox>
+  <entitydescription.dummycoilgunammobox>Filled with ammunition that explodes in the loader, damaging it.</entitydescription.dummycoilgunammobox>
+
+  <entityname.dummyrailgunshell>Dummy Railgun Shell</entityname.dummyrailgunshell>
+  <entitydescription.dummyrailgunshell>Damages the railgun loader when fired.</entitydescription.dummyrailgunshell>
 
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
