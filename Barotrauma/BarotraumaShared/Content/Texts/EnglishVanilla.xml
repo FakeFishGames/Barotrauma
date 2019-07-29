@@ -244,6 +244,8 @@
   <microphonevolume>Microphone volume</microphonevolume>
   <muteonfocuslost>Mute on focus lost</muteonfocuslost>
   <muteonfocuslosttooltip>Mutes the game when its window is not in focus.</muteonfocuslosttooltip>
+  <dynamicrangecompression>Dynamic range compression</dynamicrangecompression>
+  <dynamicrangecompressiontooltip>Adjusts the game's volume automatically to prevent audio distortion.</dynamicrangecompressiontooltip>
   <voicechat>Voice chat</voicechat>
   <currentdevice>Current device</currentdevice>
   <currentdevicetooltip.osx>This device will be used for voice chat. Unfortunately there is no way to change the input device on Mac OS X—it will only use your system's default.</currentdevicetooltip.osx>
