@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -366,12 +367,20 @@ namespace Barotrauma
             {
                 case ContentType.Character:
                     XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                    string speciesName = doc.Root.GetAttributeString("name", "");
-                    //TODO: check non-default paths if defined
-                    filePaths.Add(RagdollParams.GetDefaultFile(speciesName, this));
-                    foreach (AnimationType animationType in Enum.GetValues(typeof(AnimationType)))
+                    var rootElement = doc.Root;
+                    var element = rootElement.IsOverride() ? rootElement.GetFirstChild() : rootElement;
+                    var speciesName = element.GetAttributeString("name", "");
+                    var ragdollFolder = RagdollParams.GetFolder(speciesName);
+                    if (Directory.Exists(ragdollFolder))
                     {
-                        filePaths.Add(AnimationParams.GetDefaultFile(speciesName, animationType, this));
+                        Directory.GetFiles(ragdollFolder).Where(f => f.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
+                            .ForEach(f => filePaths.Add(f));
+                    }
+                    var animationFolder = AnimationParams.GetFolder(speciesName);
+                    if (Directory.Exists(animationFolder))
+                    {
+                        Directory.GetFiles(animationFolder).Where(f => f.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
+                            .ForEach(f => filePaths.Add(f));
                     }
                     break;
             }
