@@ -3242,16 +3242,20 @@
   <traitorgoalkilltargetinfo>Assassinate [targetname].</traitorgoalkilltargetinfo>
   <traitorgoalkilleveryoneinfo>Kill all crew members.</traitorgoalkilleveryoneinfo>
   <traitorgoalfindcontainerinfo>Find your next objective inside a [target] in [targethullname].</traitorgoalfindcontainerinfo>
-  <traitorgoalfinditeminfo>Find your next objective under a [target] in [targethullname].</traitorgoalfinditeminfo>
+  <traitorgoalfinditeminfo>Find a [target] in [targethullname].</traitorgoalfinditeminfo>
   <traitorgoalcausereactormeltdown>Cause a reactor meltdown.</traitorgoalcausereactormeltdown>
   <traitorgoaldestroyitems>Destroy at least [percentage] percent of all non-inventory [tag] on the sub.</traitorgoaldestroyitems>
+  <traitorgoaldestroyoxygen>Destroy at least [percentage] percent of all non-inventory oxygen tanks on the sub.</traitorgoaldestroyoxygen>
+  <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
   <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
   <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
   <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
   <!--<traitorgoaltamperinfodefault>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
   <traitorgoaltamperoxygeninfo>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperoxygeninfo>
-  <traitorgoaltampercoilguninfo>Load dummy ammunition into [percentage] of coilgun loaders.</traitorgoaltampercoilguninfo>
+  <traitorgoaltampercoilguninfo>Load dummy ammunition into all coilgun loaders.</traitorgoaltampercoilguninfo>
   <traitorgoaltampercoilguninfomulti>Load dummy ammunition into [number] coilgun loaders.</traitorgoaltampercoilguninfomulti>
+  <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
+  <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
 
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>
