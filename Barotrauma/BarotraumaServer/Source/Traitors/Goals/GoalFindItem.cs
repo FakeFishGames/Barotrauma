@@ -21,15 +21,21 @@ namespace Barotrauma
 
             public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
 
-            protected ItemPrefab FindRandomItemPrefab(string identifier)
+            protected ItemPrefab FindItemPrefab(string identifier)
             {
-                var prefabsCount = MapEntityPrefab.List.Count;
-                var startIndex = Rand.Int(prefabsCount);
-                for(int i = 0; i < prefabsCount; ++i) {
-                    var prefab = MapEntityPrefab.List[(startIndex + i) % prefabsCount];
-                    if (prefab is ItemPrefab && prefab.Identifier == identifier)
+                return (ItemPrefab)MapEntityPrefab.List.Find(prefab => prefab is ItemPrefab && prefab.Identifier == identifier);
+            }
+
+            protected Item FindRandomContainer()
+            {
+                int itemsCount = Item.ItemList.Count;
+                int startIndex = Rand.Int(itemsCount);
+                for (int i = 0; i < itemsCount; ++i)
+                {
+                    var item = Item.ItemList[(i + startIndex) % itemsCount];
+                    if (item.GetComponent<ItemContainer>() != null && !item.OwnInventory.IsFull() && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
                     {
-                        return (ItemPrefab)prefab;
+                        return item;
                     }
                 }
                 return null;
@@ -41,12 +47,12 @@ namespace Barotrauma
                 {
                     return false;
                 }
-                targetPrefab = FindRandomItemPrefab(identifier);
+                targetPrefab = FindItemPrefab(identifier);
                 if (targetPrefab == null)
                 {
                     return false;
                 }
-                targetContainer = Item.ItemList.Find(item => item.GetComponent<ItemContainer>() != null && !item.OwnInventory.IsFull() && allowedContainerIdentifiers.Contains(item.prefab.Identifier));
+                targetContainer = FindRandomContainer();
                 if (targetContainer == null)
                 {
                     return false;
