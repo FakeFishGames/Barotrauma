@@ -102,7 +102,7 @@ namespace Barotrauma.Tutorials
             Submarine.MainSub.GodMode = true;
 
             CharacterInfo charInfo = configElement.Element("Character") == null ?
-                new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List["engineer"]) :
+                new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.Get("engineer")) :
                 new CharacterInfo(configElement.Element("Character"));
 
             WayPoint wayPoint = GetSpawnPoint(charInfo);
