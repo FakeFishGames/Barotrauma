@@ -1,84 +1,84 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ItemAssembly name="Large Diving Suit Cabinet" description="" hideinmenus="false">
   <Item name="Diving Suit" identifier="divingsuit" ID="44" rect="84,-142,120,36" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="diving,divingsuit" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgEquipSelect" />
-    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="45" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <Wearable pickingtime="0" allowingameediting="True" msg="ItemMsgEquipSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" allowingameediting="True" msg="" contained="45" />
   </Item>
   <Item name="Diving Suit" identifier="divingsuit" ID="42" rect="84,-142,120,36" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="diving,divingsuit" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgEquipSelect" />
-    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="43" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <Wearable pickingtime="0" allowingameediting="True" msg="ItemMsgEquipSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" allowingameediting="True" msg="" contained="43" />
   </Item>
   <Item name="Diving Suit" identifier="divingsuit" ID="40" rect="84,-142,120,36" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="diving,divingsuit" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgEquipSelect" />
-    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="41" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <Wearable pickingtime="0" allowingameediting="True" msg="ItemMsgEquipSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" allowingameediting="True" msg="" contained="41" />
   </Item>
   <Item name="Diving Suit" identifier="divingsuit" ID="38" rect="84,-142,120,36" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="diving,divingsuit" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgEquipSelect" />
-    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="39" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <Wearable pickingtime="0" allowingameediting="True" msg="ItemMsgEquipSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" allowingameediting="True" msg="" contained="39" />
   </Item>
   <Item name="Diving Suit" identifier="divingsuit" ID="36" rect="84,-142,120,36" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="diving,divingsuit" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.5" hideinassemblypreview="true">
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" />
-    <Wearable pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgEquipSelect" />
-    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" canbepicked="False" allowingameediting="True" msg="" contained="37" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <LightComponent range="200" castshadows="True" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="250,224,165,255" isactive="True" minvoltage="0.5" powerconsumption="10" vulnerabletoemp="True" pickingtime="0" allowingameediting="True" msg="" />
+    <Wearable pickingtime="0" allowingameediting="True" msg="ItemMsgEquipSelect" />
+    <ItemContainer itempos="0,0" iteminterval="0,0" pickingtime="0" allowingameediting="True" msg="" contained="37" />
   </Item>
   <Item name="Large Diving Suit Locker" identifier="divingsuitlocker2" ID="35" rect="-56,112,148,202" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="divingsuitcontainerhorizontal" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.6">
-    <ItemContainer itempos="124,-45" iteminterval="0,-66" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgInteractSelect" contained="36,38,40,42,44" />
+    <ItemContainer itempos="124,-45" iteminterval="0,-66" pickingtime="0" allowingameediting="True" msg="ItemMsgInteractSelect" contained="36,38,40,42,44" />
   </Item>
   <Item name="Oxygen Tank Shelf" identifier="oxygentankshelf" ID="24" rect="-112,112,55,202" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="" displaysidebysidewhenlinked="False" spritedepth="0.84" scale="0.6">
-    <ItemContainer itempos="26,-43" iteminterval="42,-65" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgInteractSelect" contained="25,26,27,28,29,30,31,32,33,34" />
+    <ItemContainer itempos="26,-43" iteminterval="42,-65" pickingtime="0" allowingameediting="True" msg="ItemMsgInteractSelect" contained="25,26,27,28,29,30,31,32,33,34" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="45" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="43" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="41" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="39" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="37" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="34" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="33" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="32" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="31" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="30" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="29" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="28" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="27" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="26" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="Oxygen Tank" identifier="oxygentank" ID="25" rect="138,-144,13,33" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem,oxygensource" displaysidebysidewhenlinked="False" spritedepth="0.55" scale="0.3" hideinassemblypreview="true">
-    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgPickUpSelect" />
+    <Holdable holdpos="30,-15" holdangle="0" swingamount="0,0" swingspeed="0" swingwhenholding="False" swingwhenaiming="False" swingwhenusing="False" pickingtime="0" allowingameediting="True" msg="ItemMsgPickUpSelect" />
   </Item>
 </ItemAssembly>

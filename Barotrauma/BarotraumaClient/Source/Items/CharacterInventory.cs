@@ -690,7 +690,7 @@ namespace Barotrauma
             if (item.ParentInventory != this)
             {
                 //in another inventory -> attempt to place in the character's inventory
-                if (item.ParentInventory.Locked)
+                if (item.ParentInventory.Locked || item.ParentInventory == null)
                 {
                     return QuickUseAction.None;
                 }

@@ -597,6 +597,7 @@ namespace Barotrauma
                     case "fabricate":
                     case "fabricable":
                     case "fabricableitem":
+                    case "upgrade":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -674,9 +675,6 @@ namespace Barotrauma
             }
 
             InitProjSpecific();
-                        
-            InsertToList();
-            ItemList.Add(this);
 
             if (callOnItemLoaded)
             {
@@ -685,6 +683,9 @@ namespace Barotrauma
                     ic.OnItemLoaded();
                 }
             }
+
+            InsertToList();
+            ItemList.Add(this);
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
@@ -2038,7 +2039,7 @@ namespace Barotrauma
             {
                 return null;
             }
-
+                                   
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
             if (rect.Width == 0 && rect.Height == 0)
             {
@@ -2090,7 +2091,7 @@ namespace Barotrauma
             foreach (XElement subElement in element.Elements())
             {
                 ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
-                if (component == null) continue;
+                if (component == null) { continue; }
 
                 component.Load(subElement);
                 unloadedComponents.Remove(component);
@@ -2103,6 +2104,11 @@ namespace Barotrauma
             item.lastSentCondition = item.condition;
 
             item.SetActiveSprite();
+
+            if (submarine?.GameVersion != null)
+            {
+                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, submarine.GameVersion);
+            }
 
             foreach (ItemComponent component in item.components)
             {
