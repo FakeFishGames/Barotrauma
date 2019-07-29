@@ -21,7 +21,7 @@ namespace Barotrauma
             public virtual string CompletedTextId { get => completedTextId; set { completedTextId = value; } }
 
             public virtual IEnumerable<string> StatusTextKeys => new string[] { "[infotext]", "[status]" };
-            public virtual IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.Get(IsCompleted ? "done" : "pending") };
+            public virtual IEnumerable<string> StatusTextValues => new string[] { InfoText, TextManager.Get(IsCompleted ? "complete" : "inprogress") };
 
             public virtual IEnumerable<string> InfoTextKeys => new string[] { };
             public virtual IEnumerable<string> InfoTextValues => new string[] { };
