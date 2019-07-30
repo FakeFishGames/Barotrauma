@@ -267,6 +267,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             light.Color = Color.Transparent;
+            lightBrightness = 0.0f;
         }
 
         protected override void RemoveComponentSpecific()
