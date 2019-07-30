@@ -12,6 +12,7 @@ namespace Barotrauma
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
+            msg.Write((byte)Sections.Length);
             for (int i = 0; i < Sections.Length; i++)
             {
                 msg.WriteRangedSingle(Sections[i].damage / Health, 0.0f, 1.0f, 8);

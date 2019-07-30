@@ -1467,6 +1467,7 @@ namespace Barotrauma
 
         private void ShowWearables()
         {
+            if (character.Inventory == null) { return; }
             foreach (var item in character.Inventory.Items)
             {
                 if (item == null) { continue; }
@@ -1478,7 +1479,7 @@ namespace Barotrauma
 
         private void HideWearables()
         {
-            character.Inventory.Items.ForEachMod(i => i?.Unequip(character));
+            character.Inventory?.Items.ForEachMod(i => i?.Unequip(character));
         }
         #endregion
 

@@ -1141,22 +1141,31 @@ namespace Barotrauma
             }
 
             Inventory inventory = null;
-
-            var inventoryOwner = FindEntityByID(inventoryId);
-            if (inventoryOwner != null)
+            if (inventoryId > 0)
             {
-                if (inventoryOwner is Character)
+                var inventoryOwner = FindEntityByID(inventoryId);
+                if (inventoryOwner is Character character)
                 {
-                    inventory = (inventoryOwner as Character).Inventory;
+                    inventory = character.Inventory;
                 }
-                else if (inventoryOwner is Item)
+                else if (inventoryOwner is Item parentItem)
                 {
-                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
+                    if (itemContainerIndex < 0 || itemContainerIndex >= parentItem.components.Count)
+                    {
+                        string errorMsg = "Failed to spawn item \"" + (itemIdentifier ?? "null") +
+                            "\" in the inventory of \"" + parentItem.prefab.Identifier + "\" (component index out of range). Index: " + itemContainerIndex + ", components: " + parentItem.components.Count + ".";
+                        GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:ContainerIndexOutOfRange" + (itemName ?? "null") + (itemIdentifier ?? "null"),
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            errorMsg);
+                        DebugConsole.ThrowError(errorMsg);
+                    }
+                    else if (parentItem.components[itemContainerIndex] is ItemContainer container)
                     {
                         inventory = container.Inventory;
                     }
-                }
+                }                
             }
+
 
             var item = new Item(itemPrefab, pos, sub)
             {

@@ -2353,15 +2353,19 @@ namespace Barotrauma.Networking
                     default:
                         if (command != "")
                         {
-                            if (command == name.ToLowerInvariant())
+                            if (command.ToLower() == name.ToLower())
                             {
                                 //a private message to the host
+                                if (OwnerConnection != null)
+                                {
+                                    targetClient = connectedClients.Find(c => c.Connection == OwnerConnection);
+                                }
                             }
                             else
                             {
                                 targetClient = connectedClients.Find(c =>
-                                    command == c.Name.ToLowerInvariant() ||
-                                    (c.Character != null && command == c.Character.Name.ToLowerInvariant()));
+                                    command.ToLower() == c.Name.ToLower() ||
+                                    command.ToLower() == c.Character?.Name?.ToLower());
 
                                 if (targetClient == null)
                                 {
@@ -2370,13 +2374,7 @@ namespace Barotrauma.Networking
                                         var chatMsg = ChatMessage.Create(
                                             "", $"ServerMessage.PlayerNotFound~[player]={command}",
                                             ChatMessageType.Error, null);
-
-                                        chatMsg.NetStateID = senderClient.ChatMsgQueue.Count > 0 ?
-                                            (ushort)(senderClient.ChatMsgQueue.Last().NetStateID + 1) :
-                                            (ushort)(senderClient.LastRecvChatMsgID + 1);
-
-                                        senderClient.ChatMsgQueue.Add(chatMsg);
-                                        senderClient.LastChatMsgQueueID = chatMsg.NetStateID;
+                                        SendDirectChatMessage(chatMsg, targetClient);
                                     }
                                     else
                                     {
@@ -2532,8 +2530,7 @@ namespace Barotrauma.Networking
             if (type.Value != ChatMessageType.MessageBox)
             {
                 string myReceivedMessage = type == ChatMessageType.Server || type == ChatMessageType.Error ? TextManager.GetServerMessage(message) : message;
-                if (!string.IsNullOrWhiteSpace(myReceivedMessage) &&
-                    (targetClient == null || senderClient == null))
+                if (!string.IsNullOrWhiteSpace(myReceivedMessage))
                 {
                     AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter);
                 }
