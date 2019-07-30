@@ -3249,7 +3249,7 @@
   <traitorgoalfloodpercentofsub>Flood at least [percentage] percent of the submarine.</traitorgoalfloodpercentofsub>
   <traitorgoaljamsonarinfo>Hide an active sonar jammer somewhere it can't be found for [duration] seconds.</traitorgoaljamsonarinfo>
   <traitorgoaljamsonarinfoalt>Jam the submarine's sonar for [duration] seconds.</traitorgoaljamsonarinfoalt>
-  <traitorgoalsabotageinfo>Sabotage [target] so that it's condition is under [threshold]%.</traitorgoalsabotageinfo>
+  <traitorgoalsabotageinfo>Sabotage [target] so that its condition is under [threshold]%.</traitorgoalsabotageinfo>
   <traitorgoalsabotagedurationinfo>Sabotage [tag] so that it's condition is under [threshold]% for at least [duration] seconds.</traitorgoalsabotagedurationinfo>
   <traitorgoalpoisoninfo>Inject [targetname] with [poison].</traitorgoalpoisoninfo>
   <!--<traitorgoaltamperinfodefault>Swap at least [percentage] percent of oxygen tanks inside diving equipment with welding fuel.</traitorgoaltamperinfodefault>-->
