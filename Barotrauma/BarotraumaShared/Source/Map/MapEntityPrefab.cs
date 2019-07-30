@@ -300,7 +300,7 @@ namespace Barotrauma
                 {
                     if (allowOverriding)
                     {
-                        DebugConsole.NewMessage("Overriding an existing element with the id " + identifier, Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding an existing map entity with the identifier '{identifier}'", Color.Yellow);
                         List.Remove(existingPrefab);
                     }
                     else
