@@ -193,7 +193,6 @@ namespace Barotrauma
                     //traitors always count as enemies
                     isEnemy = true;
                 }
-                // TODO(xxx): Add interface into Goal that allows for querying whether traitor's goal allows attacking given target character.
                 if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == attacker && t.CurrentObjective.IsEnemy(target)))
                 {
                     //target counts as an enemy to the traitor
