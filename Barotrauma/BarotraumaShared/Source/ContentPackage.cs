@@ -373,14 +373,12 @@ namespace Barotrauma
                     var ragdollFolder = RagdollParams.GetFolder(speciesName);
                     if (Directory.Exists(ragdollFolder))
                     {
-                        Directory.GetFiles(ragdollFolder).Where(f => f.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
-                            .ForEach(f => filePaths.Add(f));
+                        Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
                     }
                     var animationFolder = AnimationParams.GetFolder(speciesName);
                     if (Directory.Exists(animationFolder))
                     {
-                        Directory.GetFiles(animationFolder).Where(f => f.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
-                            .ForEach(f => filePaths.Add(f));
+                        Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
                     }
                     break;
             }
