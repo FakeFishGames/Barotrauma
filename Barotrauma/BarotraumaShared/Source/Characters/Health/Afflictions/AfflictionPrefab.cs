@@ -3,11 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
     public static class CPRSettings
     {
+        public static bool IsLoaded { get; private set; }
         public static float ReviveChancePerSkill { get; private set; }
         public static float ReviveChanceExponent { get; private set; }
         public static float ReviveChanceMin { get; private set; }
@@ -31,6 +33,7 @@ namespace Barotrauma
 
             DamageSkillThreshold = MathHelper.Clamp(element.GetAttributeFloat("damageskillthreshold", 40.0f), 0.0f, 100.0f);
             DamageSkillMultiplier = MathHelper.Clamp(element.GetAttributeFloat("damageskillmultiplier", 0.1f), 0.0f, 100.0f);
+            IsLoaded = true;
         }
     }
 
@@ -185,41 +188,83 @@ namespace Barotrauma
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) continue;
-
-                foreach (XElement element in doc.Root.Elements())
+                var mainElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    switch (element.Name.ToString().ToLowerInvariant())
+                    DebugConsole.ThrowError("Cannot override all afflictions, because many of them are required by the main game! Please try overriding them one by one.");
+                }
+                foreach (XElement element in mainElement.Elements())
+                {
+                    bool isOverride = element.IsOverride();
+                    XElement sourceElement = isOverride ? element.GetFirstChild() : element;
+                    string elementName = sourceElement.Name.ToString().ToLowerInvariant();
+                    string identifier = sourceElement.GetAttributeString("identifier", null);
+                    if (!elementName.Equals("cprsettings", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (string.IsNullOrWhiteSpace(identifier))
+                        {
+                            DebugConsole.ThrowError($"No identifier defined for the affliction '{sourceElement.GetAttributeString("name", string.Empty)}' defined in {elementName}");
+                            continue;
+                        }
+                        var duplicate = List.FirstOrDefault(a => a.Identifier == identifier);
+                        if (duplicate != null)
+                        {
+                            if (isOverride)
+                            {
+                                DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}'", Color.Yellow);
+                                List.Remove(duplicate);
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName}");
+                                continue;
+                            }
+                        }
+                    }
+                    switch (elementName)
                     {
                         case "internaldamage":
-                            List.Add(InternalDamage = new AfflictionPrefab(element, typeof(Affliction)));
+                            List.Add(InternalDamage = new AfflictionPrefab(sourceElement, typeof(Affliction)));
                             break;
                         case "bleeding":
-                            List.Add(Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding)));
+                            List.Add(Bleeding = new AfflictionPrefab(sourceElement, typeof(AfflictionBleeding)));
                             break;
                         case "burn":
-                            List.Add(Burn = new AfflictionPrefab(element, typeof(Affliction)));
+                            List.Add(Burn = new AfflictionPrefab(sourceElement, typeof(Affliction)));
                             break;
                         case "oxygenlow":
-                            List.Add(OxygenLow = new AfflictionPrefab(element, typeof(Affliction)));
+                            List.Add(OxygenLow = new AfflictionPrefab(sourceElement, typeof(Affliction)));
                             break;
                         case "bloodloss":
-                            List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
+                            List.Add(Bloodloss = new AfflictionPrefab(sourceElement, typeof(Affliction)));
                             break;
                         case "pressure":
-                            List.Add(Pressure = new AfflictionPrefab(element, typeof(Affliction)));
+                            List.Add(Pressure = new AfflictionPrefab(sourceElement, typeof(Affliction)));
                             break;
                         case "stun":
-                            List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
+                            List.Add(Stun = new AfflictionPrefab(sourceElement, typeof(Affliction)));
                             break;
                         case "husk":
                         case "afflictionhusk":
-                            List.Add(Husk = new AfflictionPrefab(element, typeof(AfflictionHusk)));
+                            List.Add(Husk = new AfflictionPrefab(sourceElement, typeof(AfflictionHusk)));
                             break;
                         case "cprsettings":
-                            CPRSettings.Load(element);
+                            if (CPRSettings.IsLoaded)
+                            {
+                                if (isOverride)
+                                {
+                                    DebugConsole.NewMessage($"Overriding the CPR settings.", Color.Yellow);
+                                }
+                                else
+                                {
+                                    DebugConsole.ThrowError($"CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
+                                    break;
+                                }
+                            }
+                            CPRSettings.Load(sourceElement);
                             break;
                         default:
-                            List.Add(new AfflictionPrefab(element));
+                            List.Add(new AfflictionPrefab(sourceElement));
                             break;
                     }
                 }
