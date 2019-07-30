@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    abstract class CampaignMode : GameMode
+    abstract partial class CampaignMode : GameMode
     {
         public readonly CargoManager CargoManager;
 
@@ -111,9 +111,8 @@ namespace Barotrauma
             base.Update(deltaTime);
 
             if (!IsRunning) { return; }
-#if CLIENT
-            if (GameMain.Client != null) { return; }
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
             if (!watchmenSpawned)
             {
                 if (Level.Loaded.StartOutpost != null) { startWatchman = SpawnWatchman(Level.Loaded.StartOutpost); }

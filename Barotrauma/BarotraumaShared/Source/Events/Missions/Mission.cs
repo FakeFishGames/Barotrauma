@@ -155,6 +155,13 @@ namespace Barotrauma
             return false; 
         }
 
+        protected void ShowMessage(int index)
+        {
+            ShowMessageProjSpecific(index);
+        }
+
+        partial void ShowMessageProjSpecific(int index);
+
         /// <summary>
         /// End the mission and give a reward if it was completed successfully
         /// </summary>

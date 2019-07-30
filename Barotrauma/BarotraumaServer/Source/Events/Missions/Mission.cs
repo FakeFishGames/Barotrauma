@@ -11,7 +11,7 @@ namespace Barotrauma
             string header = index < Headers.Count ? Headers[index] : "";
             string message = index < Messages.Count ? Messages[index] : "";
 
-            new GUIMessageBox(header, message);
+            GameServer.Log(TextManager.Get("MissionInfo") + ": " + header + " - " + message, ServerLog.MessageType.ServerMessage);
         }
     }
 }
