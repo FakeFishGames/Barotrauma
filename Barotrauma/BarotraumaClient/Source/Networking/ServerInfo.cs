@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
         public string IP;
         public string Port;
 
-        public string SteamID;
+        public UInt64 SteamID;
 
         public string ServerName;
         public string ServerMessage;
