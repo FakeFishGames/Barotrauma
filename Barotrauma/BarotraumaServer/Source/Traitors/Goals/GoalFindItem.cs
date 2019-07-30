@@ -21,6 +21,8 @@ namespace Barotrauma
 
             public override bool IsCompleted => target != null && target.ParentInventory == Traitor.Character.Inventory;
 
+            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (target != null && target.ParentInventory == character.Inventory);
+
             protected ItemPrefab FindItemPrefab(string identifier)
             {
                 return (ItemPrefab)MapEntityPrefab.List.Find(prefab => prefab is ItemPrefab && prefab.Identifier == identifier);
