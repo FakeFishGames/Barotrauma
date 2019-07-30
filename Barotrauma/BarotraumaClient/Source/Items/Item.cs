@@ -431,23 +431,6 @@ namespace Barotrauma
                     if (!animate) { continue; }
                     spriteState.OffsetState += deltaTime;
                     spriteState.RotationState += deltaTime;
-
-                    bool ConditionalMatches(PropertyConditional conditional)
-                    {
-                        if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
-                        {
-                            if (!conditional.Matches(this)) { return false; }
-                        }
-                        else
-                        {
-                            foreach (ItemComponent component in components)
-                            {
-                                if (component.Name != conditional.TargetItemComponentName) { continue; }
-                                if (!conditional.Matches(component)) { return false; }
-                            }
-                        }
-                        return true;
-                    }
                 }
             }            
         }
@@ -655,10 +638,11 @@ namespace Barotrauma
             List<Rectangle> disallowedAreas = new List<Rectangle>();
             if (GameMain.GameSession?.CrewManager != null && Screen.Selected == GameMain.GameScreen)
             {
+                int disallowedPadding = (int)(50 * GUI.Scale);
                 disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
                 disallowedAreas.Add(new Rectangle(
-                    HUDLayoutSettings.ChatBoxArea.X - 50, HUDLayoutSettings.ChatBoxArea.Y, 
-                    HUDLayoutSettings.ChatBoxArea.Width + 50, HUDLayoutSettings.ChatBoxArea.Height));                
+                    HUDLayoutSettings.ChatBoxArea.X - disallowedPadding, HUDLayoutSettings.ChatBoxArea.Y, 
+                    HUDLayoutSettings.ChatBoxArea.Width + disallowedPadding, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
             GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
@@ -1139,22 +1123,31 @@ namespace Barotrauma
             }
 
             Inventory inventory = null;
-
-            var inventoryOwner = FindEntityByID(inventoryId);
-            if (inventoryOwner != null)
+            if (inventoryId > 0)
             {
-                if (inventoryOwner is Character)
+                var inventoryOwner = FindEntityByID(inventoryId);
+                if (inventoryOwner is Character character)
                 {
-                    inventory = (inventoryOwner as Character).Inventory;
+                    inventory = character.Inventory;
                 }
-                else if (inventoryOwner is Item)
+                else if (inventoryOwner is Item parentItem)
                 {
-                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
+                    if (itemContainerIndex < 0 || itemContainerIndex >= parentItem.components.Count)
+                    {
+                        string errorMsg = "Failed to spawn item \"" + (itemIdentifier ?? "null") +
+                            "\" in the inventory of \"" + parentItem.prefab.Identifier + "\" (component index out of range). Index: " + itemContainerIndex + ", components: " + parentItem.components.Count + ".";
+                        GameAnalyticsManager.AddErrorEventOnce("Item.ReadSpawnData:ContainerIndexOutOfRange" + (itemName ?? "null") + (itemIdentifier ?? "null"),
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            errorMsg);
+                        DebugConsole.ThrowError(errorMsg);
+                    }
+                    else if (parentItem.components[itemContainerIndex] is ItemContainer container)
                     {
                         inventory = container.Inventory;
                     }
-                }
+                }                
             }
+
 
             var item = new Item(itemPrefab, pos, sub)
             {

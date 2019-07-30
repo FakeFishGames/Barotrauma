@@ -3330,6 +3330,13 @@
   <entityname.captainspipe>Captain's Pipe</entityname.captainspipe>
   <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
 
+  <serverplaystyle>Play style</serverplaystyle>
+  <servertags>Server tags</servertags>
+  <servermotd>Message of the day</servermotd>
+  <serverbanner>Server banner</serverbanner>
+  <serverlogo>Server logo</serverlogo>
+  <servertagline>Tagline</servertagline>
+
   <Karma.KickBanThreshold>Ban threshold</Karma.KickBanThreshold>
   <Karma.KickBanThresholdTooltip>The players whose karma decreases below this threshold get automatically banned from the server.</Karma.KickBanThresholdTooltip>
   
@@ -3399,6 +3406,8 @@
 
   <afflictionname.invertcontrols>Disoriented</afflictionname.invertcontrols>
   <afflictiondescription.invertcontrols>The patient's eyes are darting around and they seem to be having trouble orienting to their surroundings.</afflictiondescription.invertcontrols>
+
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>

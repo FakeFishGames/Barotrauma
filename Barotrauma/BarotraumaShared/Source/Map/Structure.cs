@@ -459,15 +459,16 @@ namespace Barotrauma
             {
                 if (IsHorizontal)
                 {
-                    xsections = (int)Math.Ceiling((float)rect.Width / WallSectionSize);
+                    //equivalent to (int)Math.Ceiling((double)rect.Width / WallSectionSize) without the potential for floating point indeterminism
+                    xsections = (rect.Width + WallSectionSize - 1) / WallSectionSize;
                     Sections = new WallSection[xsections];
-                    width = (int)WallSectionSize;
+                    width = WallSectionSize;
                 }
                 else
                 {
-                    ysections = (int)Math.Ceiling((float)rect.Height / WallSectionSize);
+                    ysections = (rect.Height + WallSectionSize - 1) / WallSectionSize;
                     Sections = new WallSection[ysections];
-                    height = (int)WallSectionSize;
+                    height = WallSectionSize;
                 }
             }
 
@@ -1183,21 +1184,32 @@ namespace Barotrauma
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
 
+            SerializableProperty.DeserializeProperties(s, element);
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
                     case "section":
                         int index = subElement.GetAttributeInt("i", -1);
-                        if (index == -1) continue;
-                        s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                        if (index == -1) { continue; }
+
+                        if (index < 0 || index >= s.SectionCount)
+                        {
+                            string errorMsg = $"Error while loading structure \"{s.Name}\". Section damage index out of bounds. Index: {index}, section count: {s.SectionCount}.";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Structure.Load:SectionIndexOutOfBounds", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        }
+                        else
+                        {
+                            s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                        }
                         break;
                 }
             }
 
             if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
-            SerializableProperty.DeserializeProperties(s, element);
 
             //structures with a body drop a shadow by default
             if (element.Attribute("usedropshadow") == null)

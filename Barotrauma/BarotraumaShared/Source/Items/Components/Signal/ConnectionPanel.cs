@@ -18,7 +18,9 @@ namespace Barotrauma.Items.Components
         /// Wires that have been disconnected from the panel, but not removed completely (visible at the bottom of the connection panel).
         /// </summary>
         public readonly HashSet<Wire> DisconnectedWires = new HashSet<Wire>();
-        
+
+        private List<ushort> disconnectedWireIds;
+
         [Serialize(false, true), Editable(ToolTip = "Locked connection panels cannot be rewired in-game.")]
         public bool Locked
         {
@@ -62,6 +64,19 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in Connections)
             {
                 c.ConnectLinked();
+            }
+
+            if (disconnectedWireIds != null)
+            {
+                foreach (ushort disconnectedWireId in disconnectedWireIds)
+                {
+                    if (!(Entity.FindEntityByID(disconnectedWireId) is Item wireItem)) { continue; }
+                    Wire wire = wireItem.GetComponent<Wire>();
+                    if (wire != null)
+                    {
+                        DisconnectedWires.Add(wire);
+                    }
+                }
             }
         }
 
@@ -192,6 +207,8 @@ namespace Barotrauma.Items.Components
             {
                 loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
             }
+
+            disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", new ushort[0]).ToList();
         }
 
         public override XElement Save(XElement parentElement)
@@ -201,6 +218,11 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in Connections)
             {
                 c.Save(componentElement);
+            }
+
+            if (DisconnectedWires.Count > 0)
+            {
+                componentElement.Add(new XAttribute("disconnectedwires", string.Join(",", DisconnectedWires.Select(w => w.Item.ID))));
             }
 
             return componentElement;

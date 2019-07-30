@@ -438,6 +438,8 @@ namespace Barotrauma.Items.Components
         {
             base.UpdateBroken(deltaTime, cam);
 
+            item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
+
             currPowerConsumption = 0.0f;
             Temperature -= deltaTime * 1000.0f;
             targetFissionRate = Math.Max(targetFissionRate - deltaTime * 10.0f, 0.0f);

@@ -596,6 +596,7 @@ namespace Barotrauma
                     case "fabricate":
                     case "fabricable":
                     case "fabricableitem":
+                    case "upgrade":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -673,9 +674,6 @@ namespace Barotrauma
             }
 
             InitProjSpecific();
-                        
-            InsertToList();
-            ItemList.Add(this);
 
             if (callOnItemLoaded)
             {
@@ -684,6 +682,9 @@ namespace Barotrauma
                     ic.OnItemLoaded();
                 }
             }
+
+            InsertToList();
+            ItemList.Add(this);
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
         }
@@ -987,7 +988,24 @@ namespace Barotrauma
             }
             return false;
         }
-        
+
+        private bool ConditionalMatches(PropertyConditional conditional)
+        {
+            if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
+            {
+                if (!conditional.Matches(this)) { return false; }
+            }
+            else
+            {
+                foreach (ItemComponent component in components)
+                {
+                    if (component.Name != conditional.TargetItemComponentName) { continue; }
+                    if (!conditional.Matches(component)) { return false; }
+                }
+            }
+            return true;
+        }
+
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (!hasStatusEffectsOfType[(int)type]) { return; }
@@ -1130,7 +1148,11 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
+                if (ic.Parent != null) { ic.IsActive = ic.Parent.IsActive; }
+                if (ic.IsActiveConditionals != null)
+                {
+                    ic.IsActive = ic.IsActiveConditionals.All(conditional => ConditionalMatches(conditional));
+                }
 
 #if CLIENT
                 if (!ic.WasUsed)
@@ -1635,8 +1657,8 @@ namespace Barotrauma
                 return;
             }
 
-            if (condition == 0.0f) return;
-
+            if (condition == 0.0f) { return; }
+        
             bool remove = false;
 
             foreach (ItemComponent ic in components)
@@ -1645,7 +1667,7 @@ namespace Barotrauma
 #if CLIENT
                 isControlled = character == Character.Controlled;
 #endif
-                if (!ic.HasRequiredContainedItems(isControlled)) continue;
+                if (!ic.HasRequiredContainedItems(character, isControlled)) { continue; }
                 if (ic.Use(deltaTime, character))
                 {
                     ic.WasUsed = true;
@@ -1656,7 +1678,7 @@ namespace Barotrauma
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
-                    if (ic.DeleteOnUse) remove = true;
+                    if (ic.DeleteOnUse) { remove = true; }
                 }
             }
 
@@ -1668,7 +1690,7 @@ namespace Barotrauma
 
         public void SecondaryUse(float deltaTime, Character character = null)
         {
-            if (condition == 0.0f) return;
+            if (condition == 0.0f) { return; }
 
             bool remove = false;
 
@@ -1678,7 +1700,7 @@ namespace Barotrauma
 #if CLIENT
                 isControlled = character == Character.Controlled;
 #endif
-                if (!ic.HasRequiredContainedItems(isControlled)) continue;
+                if (!ic.HasRequiredContainedItems(character, isControlled)) { continue; }
                 if (ic.SecondaryUse(deltaTime, character))
                 {
                     ic.WasUsed = true;
@@ -1689,7 +1711,7 @@ namespace Barotrauma
 
                     ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
 
-                    if (ic.DeleteOnUse) remove = true;
+                    if (ic.DeleteOnUse) { remove = true; }
                 }
             }
 
@@ -1716,7 +1738,7 @@ namespace Barotrauma
             bool remove = false;
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredContainedItems(user == Character.Controlled)) continue;
+                if (!ic.HasRequiredContainedItems(user, addMessage: user == Character.Controlled)) continue;
 
                 bool success = Rand.Range(0.0f, 0.5f) < ic.DegreeOfSuccess(user);
                 ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
@@ -2037,7 +2059,7 @@ namespace Barotrauma
             {
                 return null;
             }
-
+                                   
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
             if (rect.Width == 0 && rect.Height == 0)
             {
@@ -2089,7 +2111,7 @@ namespace Barotrauma
             foreach (XElement subElement in element.Elements())
             {
                 ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
-                if (component == null) continue;
+                if (component == null) { continue; }
 
                 component.Load(subElement);
                 unloadedComponents.Remove(component);
@@ -2102,6 +2124,11 @@ namespace Barotrauma
             item.lastSentCondition = item.condition;
 
             item.SetActiveSprite();
+
+            if (submarine?.GameVersion != null)
+            {
+                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, submarine.GameVersion);
+            }
 
             foreach (ItemComponent component in item.components)
             {

@@ -104,11 +104,6 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-
-#if SERVER
-            //let the clients know the initial deterioration delay
-            item.CreateServerEvent(this);
-#endif
         }
 
         partial void InitProjSpecific(XElement element);
@@ -128,7 +123,7 @@ namespace Barotrauma.Items.Components
             deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
             item.Condition = item.Prefab.Health;
 #if SERVER
-            //let the clients know the initial deterioration delay
+            //let the clients know the deterioration delay
             item.CreateServerEvent(this);
 #endif
         }

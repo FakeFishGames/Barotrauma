@@ -1040,6 +1040,8 @@ namespace Barotrauma
 
         public static Texture2D CreateRectangle(int width, int height)
         {
+            width = Math.Max(width, 1);
+            height = Math.Max(height, 1);
             Color[] data = new Color[width * height];
 
             for (int i = 0; i < data.Length; i++)
@@ -1056,7 +1058,6 @@ namespace Barotrauma
                 TrySetArray(data, x, Color.White);
                 TrySetArray(data, (height - 1) * width + x, Color.White);
             }
-
 
             Texture2D texture = null;
             CrossThread.RequestExecutionOnMainThread(() =>
@@ -1460,6 +1461,9 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
+                Inventory.draggingItem = null;
+                Inventory.DraggingInventory = null;
+
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
                     
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.35f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });

@@ -89,6 +89,8 @@ namespace Barotrauma.Items.Components
 
         private bool drawable = true;
 
+        public List<PropertyConditional> IsActiveConditionals;
+
         public bool Drawable
         {
             get { return drawable; }
@@ -267,6 +269,15 @@ namespace Barotrauma.Items.Components
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "activeconditional":
+                    case "isactive":
+                        IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
+                            IsActiveConditionals.Add(new PropertyConditional(attribute));
+                        }
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement, item.Name);
@@ -573,14 +584,14 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool HasRequiredContainedItems(bool addMessage, string msg = null)
+        public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
             
             foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
-                if (!item.OwnInventory.Items.Any(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)))
+                if (!ri.CheckRequirements(user, item))
                 {
 #if CLIENT
                     msg = msg ?? ri.Msg;
