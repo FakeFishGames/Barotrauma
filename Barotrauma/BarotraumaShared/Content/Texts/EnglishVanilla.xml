@@ -642,6 +642,7 @@
   <rank>Rank</rank>
   <customrank>Custom</customrank>
   <permissions>Permissions</permissions>
+  <viewsteamprofile>View Steam profile</viewsteamprofile>
   <kick>Kick</kick>
   <votetokick>Vote to kick</votetokick>
   <ban>Ban</ban>
@@ -3217,6 +3218,8 @@
   <causeofdeath.unknown>Unknown</causeofdeath.unknown>
   <self_causeofdeathdescription.unknown>You have died.</self_causeofdeathdescription.unknown>
 
+  <deletefileverification>Do you want to delete [filename]?</deletefileverification>
+
   <!-- New generic strings -->
   <pending>Pending</pending>
   <inprogress>In progress</inprogress>
@@ -3348,7 +3351,7 @@
   
   <Karma.KarmaIncreaseThreshold>Karma increase threshold</Karma.KarmaIncreaseThreshold>
   <Karma.KarmaIncreaseThresholdTooltip>Karma gradually increases when it's below this threshold.</Karma.KarmaIncreaseThresholdTooltip>
-  
+
   <Karma.StructureRepairKarmaIncrease>Structure repaired</Karma.StructureRepairKarmaIncrease>
   <Karma.StructureRepairKarmaIncreaseTooltip>How much karma increases when repairing structures (per amount of damage repaired, for example a value of 0.05 would mean you get 5 points of karma when you repair a wall from 0 health to 100).</Karma.StructureRepairKarmaIncreaseTooltip>
   
@@ -3406,6 +3409,8 @@
 
   <deletefileverification>Do you want to delete [filename]?</deletefileverification>
 
+  <pumpautocontrol>Automatic control</pumpautocontrol>
+  
   <!-- MODIFIED -->
   <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
   <workshopitemrefreshfilelisttooltip>Reload the configuration file of the Workshop item (filelist.xml inside the item's folder) and add all new files in it to the file list.</workshopitemrefreshfilelisttooltip>

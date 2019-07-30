@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -10,7 +9,7 @@ namespace Barotrauma
             GameMain.Server.KarmaManager.OnStructureHealthChanged(this, attacker, damageAmount);
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write((byte)Sections.Length);
             for (int i = 0; i < Sections.Length; i++)

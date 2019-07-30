@@ -11,67 +11,57 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-        private static List<string> initializationErrors = new List<string>();
-        public static IEnumerable<string> InitializationErrors
-        {
-            get { return initializationErrors; }
-        }
+        public Facepunch.Steamworks.Networking Networking => client?.Networking;
+        public Facepunch.Steamworks.User User => client?.User;
+        public Facepunch.Steamworks.Friends Friends => client?.Friends;
+        public Facepunch.Steamworks.Overlay Overlay => client?.Overlay;
 
         private SteamManager()
         {
+            client = null;
+            isInitialized = InitializeClient();
+        }
+
+        private bool InitializeClient()
+        {
+            if (client != null) { return true; }
+            bool clientInitialized = false;
             try
             {
                 client = new Facepunch.Steamworks.Client(AppID);
-                isInitialized = client.IsSubscribed && client.IsValid;
+                clientInitialized = client.IsSubscribed && client.IsValid;
 
-                if (isInitialized)
+                if (clientInitialized)
                 {
-                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
+                    DebugConsole.NewMessage("Logged in as " + client.Username + " (SteamID " + SteamIDUInt64ToString(client.SteamId) + ")");
                 }
             }
             catch (DllNotFoundException)
             {
-                isInitialized = false;
+                clientInitialized = false;
                 initializationErrors.Add("SteamDllNotFound");
             }
             catch (Exception)
             {
-                isInitialized = false;
+                clientInitialized = false;
                 initializationErrors.Add("SteamClientInitFailed");
             }
 
-            if (!isInitialized)
+            if (!clientInitialized)
             {
                 try
                 {
-
                     Facepunch.Steamworks.Client.Instance.Dispose();
                 }
                 catch (Exception e)
                 {
                     if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
                 }
+                client = null;
             }
+            return clientInitialized;
         }
-
-        public static ulong GetSteamID()
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return 0;
-            }
-            return instance.client.SteamId;
-        }
-
-        public static string GetUsername()
-        {
-            if (instance == null || !instance.isInitialized)
-            {
-                return "";
-            }
-            return instance.client.Username;
-        }
-
+        
         public static ulong GetWorkshopItemIDFromUrl(string url)
         {
             try
@@ -210,6 +200,8 @@ namespace Barotrauma.Steam
                 s.OnReceivedRules += (bool rulesReceived) =>
                 {
                     if (!rulesReceived || s.Rules == null) { return; }
+
+                    if (s.Rules.ContainsKey("steamid")) serverInfo.SteamID = s.Rules["steamid"];
 
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];

@@ -146,10 +146,24 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 targetPosition = item.WorldPosition;
-            targetPosition += new Vector2(
-                (float)Math.Cos(item.body.Rotation),
-                (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir;
+            Vector2 rayStart;
+            Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
+            Vector2 barrelPos = item.SimPosition + ConvertUnits.ToSimUnits(TransformedBarrelPos);
+            //make sure there's no obstacles between the base of the item (or the shoulder of the character) and the end of the barrel
+            if (Submarine.PickBody(sourcePos, barrelPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
+            {
+                //no obstacles -> we start the raycast at the end of the barrel
+                rayStart = ConvertUnits.ToSimUnits(item.WorldPosition + TransformedBarrelPos);
+            }
+            else
+            {
+                rayStart = ConvertUnits.ToSimUnits(item.WorldPosition);
+            }
+
+            Vector2 rayEnd = rayStart + 
+                ConvertUnits.ToSimUnits(new Vector2(
+                    (float)Math.Cos(item.body.Rotation),
+                    (float)Math.Sin(item.body.Rotation)) * Range * item.body.Dir);
 
             List<Body> ignoredBodies = new List<Body>();
             foreach (Limb limb in character.AnimController.Limbs)
@@ -161,11 +175,8 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
             activeTimer = 0.1f;
-
-            Vector2 rayStart    = ConvertUnits.ToSimUnits(item.WorldPosition);
-            Vector2 rayEnd      = ConvertUnits.ToSimUnits(targetPosition);
-
-            debugRayStartPos = item.WorldPosition;
+            
+            debugRayStartPos = ConvertUnits.ToDisplayUnits(rayStart);
             debugRayEndPos = ConvertUnits.ToDisplayUnits(rayEnd);
 
             if (character.Submarine == null)

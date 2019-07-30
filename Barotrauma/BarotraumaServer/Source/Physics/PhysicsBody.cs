@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 
@@ -7,7 +6,7 @@ namespace Barotrauma
 {
     partial class PhysicsBody
     {
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;

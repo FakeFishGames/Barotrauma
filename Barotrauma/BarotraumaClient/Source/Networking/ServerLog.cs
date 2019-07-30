@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class ServerLog
+    public partial class ServerLog
     {
         public GUIButton LogFrame;
         private GUIListBox listBox;

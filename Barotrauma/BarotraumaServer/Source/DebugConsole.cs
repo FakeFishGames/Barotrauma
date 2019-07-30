@@ -692,11 +692,11 @@ namespace Barotrauma
                 NewMessage(GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.", Color.LightGreen);
             });
 
-            AssignOnExecute("banip", (string[] args) =>
+            AssignOnExecute("banendpoint", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
 
-                ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
                 {
                     ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                     {
@@ -711,7 +711,7 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.IPMatches(args[0]));
+                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.EndpointMatches(args[0]));
                         if (clients.Count == 0)
                         {
                             GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
@@ -816,7 +816,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.EndPointString, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             }));
@@ -825,7 +825,7 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("***************", client);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), client);
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.EndPointString, client);
                 }
                 GameMain.Server.SendConsoleMessage("***************", client);
             });
@@ -1117,6 +1117,11 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("printsendertransfers", "", (string[] args) =>
+            {
+                GameMain.Server.PrintSenderTransters();
+            }));
+
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
@@ -1154,11 +1159,11 @@ namespace Barotrauma
             );
 
             AssignOnClientRequestExecute(
-                "banip",
+                "banendpoint|banip",
                 (Client client, Vector2 cursorPos, string[] args) =>
                 {
                     if (args.Length < 1) return;
-                    var clients = GameMain.Server.ConnectedClients.FindAll(c => c.IPMatches(args[0]));
+                    var clients = GameMain.Server.ConnectedClients.FindAll(c => c.EndpointMatches(args[0]));
                     TimeSpan? duration = null;
                     if (args.Length > 1)
                     {

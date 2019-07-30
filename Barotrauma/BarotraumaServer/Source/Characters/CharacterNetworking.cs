@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public string OwnerClientIP;
+        public string OwnerClientEndPoint;
         public string OwnerClientName;
         public bool ClientDisconnected;
         public float KillDisconnectedTimer;
@@ -138,7 +137,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public virtual void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             if (GameMain.Server == null) return;
 
@@ -255,7 +254,7 @@ namespace Barotrauma
             msg.ReadPadBits();
         }
 
-        public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public virtual void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             if (GameMain.Server == null) return;
 
@@ -264,20 +263,20 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 3, 0);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 0);
                         Inventory.SharedWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(0, 3, 1);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 1);
                         Client owner = ((Client)extraData[1]);
                         msg.Write(owner == null ? (byte)0 : owner.ID);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 3, 2);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 2);
                         WriteStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
-                        msg.WriteRangedInteger(0, 3, 3);
+                        msg.WriteRangedIntegerDeprecated(0, 3, 3);
                         if (Info?.Job == null)
                         {
                             msg.Write((byte)0);
@@ -302,7 +301,7 @@ namespace Barotrauma
             {
                 msg.Write(ID);
 
-                NetBuffer tempBuffer = new NetBuffer();
+                IWriteMessage tempBuffer = new WriteOnlyMessage();
 
                 if (this == c.Character)
                 {
@@ -403,19 +402,19 @@ namespace Barotrauma
                 tempBuffer.WritePadBits();
 
                 msg.Write((byte)tempBuffer.LengthBytes);
-                msg.Write(tempBuffer);
+                msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             }
         }
 
-        private void WriteStatus(NetBuffer msg)
+        private void WriteStatus(IWriteMessage msg)
         {
             msg.Write(IsDead);
             if (IsDead)
             {
-                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
+                msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
                 if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
-                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
+                    msg.WriteRangedIntegerDeprecated(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
                 }
 
                 if (AnimController?.LimbJoints == null)
@@ -446,7 +445,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(NetBuffer msg)
+        public void WriteSpawnData(IWriteMessage msg)
         {
             if (GameMain.Server == null) return;
             

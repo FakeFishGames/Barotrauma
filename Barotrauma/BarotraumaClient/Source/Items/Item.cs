@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -842,7 +841,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (type == ServerNetObject.ENTITY_POSITION)
             {
@@ -852,7 +851,7 @@ namespace Barotrauma
 
             NetEntityEvent.Type eventType =
                 (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
-
+            
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -923,7 +922,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
             {
@@ -931,17 +930,17 @@ namespace Barotrauma
             }
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
+            msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
+                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, componentIndex);
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
                     int containerIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, containerIndex);
                     (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.Treatment:
@@ -994,7 +993,7 @@ namespace Barotrauma
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
         }
 
-        public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientReadPosition(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (body == null)
             {
@@ -1062,7 +1061,7 @@ namespace Barotrauma
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
         
-        public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
+        public static Item ReadSpawnData(IReadMessage msg, bool spawn = true)
         {
             string itemName = msg.ReadString();
             string itemIdentifier = msg.ReadString();

@@ -128,7 +128,7 @@ namespace Barotrauma
                 foreach (Character character in Character.CharacterList)
                 {
 #if SERVER
-                    if (string.IsNullOrEmpty(character.OwnerClientIP)) { continue; }
+                    if (string.IsNullOrEmpty(character.OwnerClientEndPoint)) { continue; }
 #else
                     if (!CrewManager.GetCharacters().Contains(character)) { continue; }
 #endif

@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;

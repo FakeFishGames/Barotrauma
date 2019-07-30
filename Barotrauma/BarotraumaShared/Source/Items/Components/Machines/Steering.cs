@@ -522,7 +522,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
             bool dockingButtonClicked   = msg.ReadBoolean();
@@ -537,8 +537,8 @@ namespace Barotrauma.Items.Components
                 if (maintainPos)
                 {
                     newPosToMaintain = new Vector2(
-                        msg.ReadFloat(), 
-                        msg.ReadFloat());
+                        msg.ReadSingle(), 
+                        msg.ReadSingle());
                 }
                 else
                 {
@@ -547,7 +547,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newSteeringInput = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                newSteeringInput = new Vector2(msg.ReadSingle(), msg.ReadSingle());
             }
 
             if (!item.CanClientAccess(c)) return;
@@ -587,7 +587,7 @@ namespace Barotrauma.Items.Components
             unsentChanges = true;
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             msg.Write(autoPilot);
 

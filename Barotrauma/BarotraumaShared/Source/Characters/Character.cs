@@ -1955,8 +1955,13 @@ namespace Barotrauma
                         float distSqr = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition);
                         if (Controlled != null)
                         {
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(Controlled.WorldPosition, c.WorldPosition));
+                        }
+                        else
+                        {
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.GetPosition(), c.WorldPosition));
                         }
+
                         if (distSqr > NetConfig.DisableCharacterDistSqr)
                         {
                             c.Enabled = false;

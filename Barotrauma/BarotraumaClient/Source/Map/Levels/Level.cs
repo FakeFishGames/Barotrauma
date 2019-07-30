@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FarseerPhysics.Dynamics;
@@ -95,7 +94,7 @@ namespace Barotrauma
             renderer.DrawBackground(spriteBatch, cam, levelObjectManager, backgroundCreatureManager);
         }
         
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             foreach (LevelWall levelWall in extraWalls)
             {
