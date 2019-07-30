@@ -33,7 +33,7 @@ namespace Barotrauma
                 for (int i = 0; i < itemsCount; ++i)
                 {
                     var item = Item.ItemList[(i + startIndex) % itemsCount];
-                    if (!(Traitor.Character.Submarine?.IsEntityFoundOnThisSub(item, true) ?? true))
+                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
                     {
                         continue;
                     }

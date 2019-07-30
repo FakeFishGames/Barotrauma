@@ -27,6 +27,10 @@ namespace Barotrauma
                 }
                 foreach (var item in Item.ItemList)
                 {
+                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
+                    {
+                        continue;
+                    }
                     if (item.Condition > conditionThreshold && (item.Prefab?.Identifier == tag || item.HasTag(tag)))
                     {
                         targetItems.Add(item);

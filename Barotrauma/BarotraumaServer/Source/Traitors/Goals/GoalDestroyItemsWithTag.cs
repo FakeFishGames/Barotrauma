@@ -25,24 +25,26 @@ namespace Barotrauma
             private int totalCount = 0;
             private int targetCount = 0;
 
-            protected int CountMatchingItems(bool includeDestroyed)
+            protected int CountMatchingItems()
             {
                 int result = 0;
                 foreach (var item in Item.ItemList)
                 {
-                    if (item == null || item.Prefab == null)
-                    {
-                        continue;
-                    }
-                    if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
-                    {
-                        continue;
-                    }
                     if (!matchInventory && item.ParentInventory?.Owner is Character && item.ParentInventory?.Owner != Traitor.Character)
                     {
                         continue;
                     }
-                    if (!includeDestroyed && (item.Condition <= 0.0f || !(Traitor.Character.Submarine?.IsEntityFoundOnThisSub(item, true) ?? true)))
+
+                    if (item.Submarine == null)
+                    {
+                        if (!(item.ParentInventory?.Owner is Character)) { continue; }
+                    }
+                    else
+                    {
+                        if (item.Submarine.TeamID != Traitor.Character.TeamID) { continue; }
+                    }
+
+                    if (item.Condition <= 0.0f)
                     {
                         continue;
                     }
@@ -57,7 +59,7 @@ namespace Barotrauma
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
-                isCompleted = CountMatchingItems(false) <= targetCount;
+                isCompleted = CountMatchingItems() <= targetCount;
             }
 
             public override bool Start(GameServer server, Traitor traitor)
@@ -66,7 +68,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-                totalCount = CountMatchingItems(true);
+                totalCount = CountMatchingItems();
                 if (totalCount <= 0)
                 {
                     return false;

@@ -25,10 +25,6 @@ namespace Barotrauma
                 int totalAmount = 0, replacedAmount = 0;
                 foreach (var item in Item.ItemList)
                 {
-                    if (item == null || item.Prefab == null)
-                    {
-                        continue;
-                    }
                     if (item.Submarine == null || item.Submarine.TeamID != Traitor.Character.TeamID)
                     {
                         continue;
