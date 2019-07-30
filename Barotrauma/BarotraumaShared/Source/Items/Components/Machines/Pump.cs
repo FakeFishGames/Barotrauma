@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
         private float maxFlow;
 
         private float? targetLevel;
+
+        private float controlLockTimer;
         
         private bool hasPower;
 
@@ -57,18 +59,24 @@ namespace Barotrauma.Items.Components
             currFlow = 0.0f;
             hasPower = false;
 
+            controlLockTimer -= deltaTime;
             if (targetLevel != null)
             {
                 float hullPercentage = 0.0f;
-                if (item.CurrentHull != null) hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f;
+                if (item.CurrentHull != null) { hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f; }
                 FlowPercentage = ((float)targetLevel - hullPercentage) * 10.0f;
+
+                if (controlLockTimer <= 0.0f)
+                {
+                    targetLevel = null;
+                }
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
             //pumps consume more power when in a bad condition
             currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
 
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage) { return; }
 
             UpdateProjSpecific(deltaTime);
 
@@ -109,6 +117,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
+                    controlLockTimer = 0.1f;
                 }
             }
             else if (connection.Name == "set_targetlevel")
@@ -116,6 +125,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
                     targetLevel = MathHelper.Clamp((tempTarget + 100.0f) / 2.0f, 0.0f, 100.0f);
+                    controlLockTimer = 0.1f;
                 }
             }
 

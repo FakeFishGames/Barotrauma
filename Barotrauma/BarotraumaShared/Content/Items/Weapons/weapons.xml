@@ -478,21 +478,33 @@
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
         <Affliction identifier="internaldamage" strength="4" />
       </Attack>
-      <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
+      <!-- 4 usages with normal battery -->
+      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true">
+        <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+      </StatusEffect>
+      <!-- 7 usages with a fulgurium battery -->
+      <StatusEffect type="OnUse" target="Contained" Condition="-15.0" disabledeltatime="true">
+        <RequiredItem identifier="fulguriumcatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
+      </StatusEffect>
+      <!-- normal batteries cause 15 seconds of stun to anything with a mass smaller than 60 -->
+      <StatusEffect type="OnUse" target="Character" stun="15.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/StunBaton1.ogg" selectionmode="random" range="500" />
         <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
-        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
+        <Explosion range="60.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
+        <Conditional mass="lt 100"/>
       </StatusEffect>
-      <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
+      <!-- fulgurium batteries cause 30 seconds of stun to anything with a mass smaller than 150 -->
+      <StatusEffect type="OnUse" target="Character" stun="30.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/StunBaton1.ogg" selectionmode="random" range="500" />
         <sound file="Content/Items/Weapons/StunBaton2.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
-        <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
+        <Explosion range="150.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
+        <Conditional mass="lt 100"/>
       </StatusEffect>
     </MeleeWeapon>
     <ItemContainer capacity="1" hideitems="true">

@@ -82,7 +82,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
+
         public DockingPort(Item item, XElement element)
             : base(item, element)
         {
@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
             if (DockingTarget != null)
             {
                 Undock();
-            }
+            }         
 
             if (target.item.Submarine == item.Submarine)
             {
@@ -168,7 +168,7 @@ namespace Barotrauma.Items.Components
                 DockingTarget = null;
                 return;
             }
-            
+
             target.InitializeLinks();
 
             if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
@@ -193,7 +193,7 @@ namespace Barotrauma.Items.Components
                 Math.Sign(DockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                 Math.Sign(DockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
             DockingTarget.DockingDir = -DockingDir;
-
+           
             if (door != null && DockingTarget.door != null)
             {
                 WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
                     targetWayPoint.linkedTo.Add(myWayPoint);
                 }
             }
-            
+
             CreateJoint(false);
 
 #if SERVER
@@ -246,7 +246,7 @@ namespace Barotrauma.Items.Components
                 else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
                    item.Submarine.IsOutpost)
                 {
-                    DockingTarget.item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                    DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
                 }
 
                 ConnectWireBetweenPorts();
@@ -401,7 +401,7 @@ namespace Barotrauma.Items.Components
         }
 
         private void CreateHulls()
-        {
+        {            
             var hullRects = new Rectangle[] { item.WorldRect, DockingTarget.item.WorldRect };
             var subs = new Submarine[] { item.Submarine, DockingTarget.item.Submarine };
 
@@ -416,18 +416,18 @@ namespace Barotrauma.Items.Components
             {
                 DockingTarget.CreateDoorBody();
             }
-            
+
             if (IsHorizontal)
             {
                 if (hullRects[0].Center.X > hullRects[1].Center.X)
                 {
                     hullRects = new Rectangle[] { DockingTarget.item.WorldRect, item.WorldRect };
-                    subs = new Submarine[] { DockingTarget.item.Submarine,item.Submarine };
+                    subs = new Submarine[] { DockingTarget.item.Submarine, item.Submarine };
                 }
 
                 hullRects[0] = new Rectangle(hullRects[0].Center.X, hullRects[0].Y, ((int)DockedDistance / 2), hullRects[0].Height);
                 hullRects[1] = new Rectangle(hullRects[1].Center.X - ((int)DockedDistance / 2), hullRects[1].Y, ((int)DockedDistance / 2), hullRects[1].Height);
-                
+
                 //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
                 int leftSubRightSide = int.MinValue, rightSubLeftSide = int.MaxValue;
                 foreach (Hull hull in Hull.hullList)
@@ -478,7 +478,7 @@ namespace Barotrauma.Items.Components
                         hullRects[1].Width += rightHullDiff;
                     }
                 }
-                
+
                 for (int i = 0; i < 2; i++)
                 {
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
@@ -503,7 +503,7 @@ namespace Barotrauma.Items.Components
                     hullRects = new Rectangle[] { DockingTarget.item.WorldRect, item.WorldRect };
                     subs = new Submarine[] { DockingTarget.item.Submarine, item.Submarine };
                 }
-                
+
                 hullRects[0] = new Rectangle(hullRects[0].X, hullRects[0].Y + (int)(-hullRects[0].Height + DockedDistance) / 2, hullRects[0].Width, ((int)DockedDistance / 2));
                 hullRects[1] = new Rectangle(hullRects[1].X, hullRects[1].Y - hullRects[1].Height / 2, hullRects[1].Width, ((int)DockedDistance / 2));
 

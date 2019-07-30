@@ -1779,6 +1779,21 @@ namespace Barotrauma
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
                 }
             }, isCheat: true));
+
+            commands.Add(new Command("spawnsub", "spawnsub [subname]: Spawn a submarine at the position of the cursor", (string[] args) =>
+            {
+                try
+                {
+                    Submarine spawnedSub = Submarine.Load(args[0], false);
+                    spawnedSub.SetPosition(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+                }
+                catch (Exception e)
+                {
+                    string errorMsg = "Failed to spawn a submarine. Arguments: \"" + string.Join(" ", args) + "\".";
+                    ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
+                }
+            }, isCheat: true));
         }
 
         private static void ReloadWearables(Character character, int variant = 0)
