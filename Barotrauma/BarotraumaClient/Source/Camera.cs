@@ -185,9 +185,9 @@ namespace Barotrauma
             position += amount;
         }
 
-        public void ClientWrite(NetOutgoingMessage msg)
+        public void ClientWrite(IWriteMessage msg)
         {
-            if (Character.Controlled != null && !Character.Controlled.IsDead) return;
+            if (Character.Controlled != null && !Character.Controlled.IsDead) { return; }
 
             msg.Write((byte)ClientNetObject.SPECTATING_POS);
             msg.Write(position.X);

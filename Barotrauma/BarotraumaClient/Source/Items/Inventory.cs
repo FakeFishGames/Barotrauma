@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -1072,7 +1071,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             receivedItemIDs = new ushort[capacity];
 
@@ -1152,7 +1151,7 @@ namespace Barotrauma
             receivedItemIDs = null;
         }
 
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             SharedWrite(msg, extraData);
             syncItemsDelay = 1.0f;

@@ -4,7 +4,7 @@ namespace Barotrauma
 {
     partial class EntitySpawner : Entity, IServerSerializable
     {
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer message, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage message, float sendingTime)
         {
             bool remove = message.ReadBoolean();
 

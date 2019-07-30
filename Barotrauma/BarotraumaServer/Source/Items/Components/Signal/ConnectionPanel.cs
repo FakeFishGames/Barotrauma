@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,7 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             List<Wire>[] wires = new List<Wire>[Connections.Count];
 
@@ -175,7 +174,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             ClientWrite(msg, extraData);
         }

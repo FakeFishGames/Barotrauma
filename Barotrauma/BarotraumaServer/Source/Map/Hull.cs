@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -49,7 +48,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWrite(NetBuffer message, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage message, Client c, object[] extraData = null)
         {
             message.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
             message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
@@ -57,7 +56,7 @@ namespace Barotrauma
             message.Write(FireSources.Count > 0);
             if (FireSources.Count > 0)
             {
-                message.WriteRangedInteger(0, 16, Math.Min(FireSources.Count, 16));
+                message.WriteRangedIntegerDeprecated(0, 16, Math.Min(FireSources.Count, 16));
                 for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
                 {
                     var fireSource = FireSources[i];
@@ -73,7 +72,7 @@ namespace Barotrauma
         }
 
         //used when clients use the water/fire console commands
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             float newWaterVolume  = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
 

@@ -175,14 +175,14 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
+            msg.WriteRangedIntegerDeprecated(-10, 10, (int)(flowPercentage / 10.0f));
             msg.Write(IsActive);
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {

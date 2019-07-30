@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -105,7 +104,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(NetBuffer msg, VoteType voteType, object data)
+        public void ClientWrite(IWriteMessage msg, VoteType voteType, object data)
         {
             msg.Write((byte)voteType);
 
@@ -141,7 +140,7 @@ namespace Barotrauma
             msg.WritePadBits();
         }
         
-        public void ClientRead(NetBuffer inc)
+        public void ClientRead(IReadMessage inc)
         {
             AllowSubVoting = inc.ReadBoolean();
             if (allowSubVoting)

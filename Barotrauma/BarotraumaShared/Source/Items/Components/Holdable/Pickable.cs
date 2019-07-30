@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
@@ -233,12 +232,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public virtual void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(activePicker == null ? (ushort)0 : activePicker.ID);
         }
 
-        public virtual void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public virtual void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             ushort pickerID = msg.ReadUInt16();
             if (pickerID == 0)

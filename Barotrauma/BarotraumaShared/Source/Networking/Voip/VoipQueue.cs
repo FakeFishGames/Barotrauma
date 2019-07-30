@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
@@ -113,7 +112,7 @@ namespace Barotrauma.Networking
             outBuf = null;
         }
 
-        public virtual void Write(NetBuffer msg)
+        public virtual void Write(IWriteMessage msg)
         {
             if (!CanSend) throw new Exception("Called Write on a VoipQueue not set up for sending");
 
@@ -127,7 +126,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public virtual bool Read(NetBuffer msg)
+        public virtual bool Read(IReadMessage msg)
         {
             if (!CanReceive) throw new Exception("Called Read on a VoipQueue not set up for receiving");
 
@@ -138,7 +137,7 @@ namespace Barotrauma.Networking
                 for (int i = 0; i < BUFFER_COUNT; i++)
                 {
                     bufferLengths[i] = msg.ReadByte();
-                    msg.ReadBytes(buffers[i], 0, bufferLengths[i]);
+                    buffers[i] = msg.ReadBytes(bufferLengths[i]);
                 }
                 newestBufferInd = BUFFER_COUNT - 1;
                 LatestBufferID = incLatestBufferID;
@@ -150,7 +149,7 @@ namespace Barotrauma.Networking
                 for (int i = 0; i < BUFFER_COUNT; i++)
                 {
                     byte len = msg.ReadByte();
-                    msg.Position += len * 8;
+                    msg.BitPosition += len * 8;
                 }
                 return false;
             }

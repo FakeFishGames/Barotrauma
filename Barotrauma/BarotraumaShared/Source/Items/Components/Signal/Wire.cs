@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -724,7 +723,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             int eventIndex = msg.ReadRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
             int nodeCount = msg.ReadRangedInteger(0, MaxNodesPerNetworkEvent);
@@ -738,7 +737,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < nodeCount; i++)
             {
-                nodePositions[nodeStartIndex + i] = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                nodePositions[nodeStartIndex + i] = new Vector2(msg.ReadSingle(), msg.ReadSingle());
             }
 
             if (nodePositions.Any(n => !MathUtils.IsValid(n)))

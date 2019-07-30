@@ -2,7 +2,6 @@
 using System;
 using System.Xml.Linq;
 using Barotrauma.Networking;
-using Lidgren.Network;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
@@ -298,7 +297,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(IsOn);
         }

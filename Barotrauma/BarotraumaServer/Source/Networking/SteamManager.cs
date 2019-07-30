@@ -29,7 +29,8 @@ namespace Barotrauma.Steam
 
             RefreshServerDetails(server);
 
-            instance.server.Auth.OnAuthChange = server.OnAuthChange;
+            server.ServerPeer.InitializeSteamServerCallbacks(instance.server);
+
             Instance.server.LogOnAnonymous();
 
             return true;
@@ -66,23 +67,32 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
             Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
             Instance.server.SetKey("gamemode", server.ServerSettings.GameModeIdentifier);
+            if (server.ServerPeer is Networking.SteamP2PServerPeer serverPeer)
+            {
+                Instance.server.SetKey("steamid", SteamIDUInt64ToString(serverPeer.OwnerSteamID));
+            }
+            else
+            {
+                Instance.server.SetKey("steamid", "n/a");
+            }
             
             instance.server.DedicatedServer = true;
 
             return true;
         }
 
-        public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
+        public static ServerAuth.StartAuthSessionResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
         {
-            if (instance == null || !instance.isInitialized || instance.server == null) return false;
+            if (instance == null || !instance.isInitialized || instance.server == null) return ServerAuth.StartAuthSessionResult.ServerNotConnectedToSteam;
             
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
-            if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
+            ServerAuth.StartAuthSessionResult startResult = instance.server.Auth.StartSession(authTicketData, clientSteamID);
+            if (startResult != ServerAuth.StartAuthSessionResult.OK)
             {
-                DebugConsole.Log("Authentication failed");
-                return false;
+                DebugConsole.Log("Authentication failed: failed to start auth session (" + startResult.ToString() + ")");
             }
-            return true;
+
+            return startResult;
         }
 
         public static void StopAuthSession(ulong clientSteamID)

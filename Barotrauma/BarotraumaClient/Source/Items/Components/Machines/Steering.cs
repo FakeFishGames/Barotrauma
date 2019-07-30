@@ -786,7 +786,7 @@ namespace Barotrauma.Items.Components
             steeringIndicator?.Remove();
         }
 
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             msg.Write(autoPilot);
             msg.Write(dockingNetworkMessagePending);
@@ -813,9 +813,9 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            long msgStartPos = msg.Position;
+            int msgStartPos = msg.BitPosition;
 
             bool autoPilot                  = msg.ReadBoolean();
             Vector2 newSteeringInput        = steeringInput;
@@ -831,8 +831,8 @@ namespace Barotrauma.Items.Components
                 if (maintainPos)
                 {
                     newPosToMaintain = new Vector2(
-                        msg.ReadFloat(),
-                        msg.ReadFloat());
+                        msg.ReadSingle(),
+                        msg.ReadSingle());
                 }
                 else
                 {
@@ -841,15 +841,15 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newSteeringInput = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-                newTargetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-                newSteeringAdjustSpeed = msg.ReadFloat();
+                newSteeringInput = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                newTargetVelocity = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                newSteeringAdjustSpeed = msg.ReadSingle();
             }
 
             if (correctionTimer > 0.0f)
             {
-                int msgLength = (int)(msg.Position - msgStartPos);
-                msg.Position = msgStartPos;
+                int msgLength = (int)(msg.BitPosition - msgStartPos);
+                msg.BitPosition = msgStartPos;
                 StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
                 return;
             }

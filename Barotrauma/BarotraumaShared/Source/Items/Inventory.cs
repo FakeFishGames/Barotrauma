@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -375,7 +374,7 @@ namespace Barotrauma
             }
         }
 
-        public void SharedWrite(NetBuffer msg, object[] extraData = null)
+        public void SharedWrite(IWriteMessage msg, object[] extraData = null)
         {
             for (int i = 0; i < capacity; i++)
             {
