@@ -181,9 +181,25 @@ namespace Barotrauma.Steam
                 {
                     DebugConsole.Log(s.Name + " did not respond to server query.");
                 }
+
+                string serverName = "";
+                UInt64 serverSteamId = 0;
+
+                if (!string.)
+                string[] nameSplit = s.Name.Split('|');
+                serverSteamId = SteamManager.SteamIDStringToUInt64(nameSplit[0]);
+                if (serverSteamId == 0)
+                {
+                    serverName = s.Name;
+                }
+                else
+                {
+                    serverName = string.Join("|",nameSplit.Skip(1));
+                }
+                
                 var serverInfo = new ServerInfo()
                 {
-                    ServerName = s.Name,
+                    ServerName = serverName,
                     Port = s.ConnectionPort.ToString(),
                     IP = s.Address.ToString(),
                     PlayerCount = s.Players,
@@ -193,6 +209,7 @@ namespace Barotrauma.Steam
                 };
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
+                serverInfo.SteamID = serverSteamId;
                 if (responded)
                 {
                     s.FetchRules();
@@ -200,9 +217,7 @@ namespace Barotrauma.Steam
                 s.OnReceivedRules += (bool rulesReceived) =>
                 {
                     if (!rulesReceived || s.Rules == null) { return; }
-
-                    if (s.Rules.ContainsKey("steamid")) serverInfo.SteamID = s.Rules["steamid"];
-
+                    
                     if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
 

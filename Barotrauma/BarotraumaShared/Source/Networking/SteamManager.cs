@@ -185,6 +185,7 @@ namespace Barotrauma.Steam
 
         public static UInt64 SteamIDStringToUInt64(string str)
         {
+            if (string.IsNullOrWhiteSpace(str)) { return 0; }
             UInt64 retVal;
             if (UInt64.TryParse(str, out retVal) && retVal >(1<<52)) { return retVal; }
             if (str.ToUpper().IndexOf("STEAM_") != 0) { return 0; }
