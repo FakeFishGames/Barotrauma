@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -103,12 +103,19 @@ namespace Barotrauma
             foreach (string configFile in configFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null) continue;
+                if (doc == null || doc.Root == null) { continue; }
+
+                var mainElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    DebugConsole.NewMessage("Overriding all random events.", Color.Yellow);
+                    List.Clear();
+                }
 
                 int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    if (element.Name.ToString().ToLowerInvariant() != "eventset") continue;
+                    if (element.Name.ToString().ToLowerInvariant() != "eventset") { continue; }
                     List.Add(new ScriptedEventSet(element, i.ToString()));
                     i++;
                 }
