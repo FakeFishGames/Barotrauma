@@ -56,7 +56,7 @@
     </Objective>
   </TraitorMission>-->
 
-  <TraitorMission identifier="AllGoals">
+  <!--<TraitorMission identifier="AllGoals">
     <StartInfoText id="traitormissionstartmessage"/>
     
     <Objective>
@@ -81,14 +81,84 @@
         <InfoText id="traitorgoaldestroyitems" />
       </Goal>
 
-      <Goal type="sabotage" tag="pump" threshold="30">
+      <Goal type="sabotage" tag="reactor" threshold="30">
         <InfoText id="traitorgoalsabotageinfo" />
       </Goal>
 
     </Objective>
+  </TraitorMission>-->
 
+  <TraitorMission identifier="SabotageReactor">
+    <StartInfoText id="traitormissionstartmessage"/>
+
+    <Objective>
+      <Goal type="finditem" identifier="sledgehammer">
+        <InfoText id="traitorgoalfinditeminfo" />
+      </Goal>
+    </Objective>
+    
+    <Objective>
+      <Goal type="destroyitems" tag="wrench" percentage="80" >
+      <InfoText id="traitorgoaldestroyitems" />
+    </Goal>
+    </Objective>
+    
+    <Objective>
+      <Goal type="sabotage" tag="reactor" threshold="20">
+        <InfoText id="traitorgoalsabotageinfo" />
+        <Modifier type="duration" duration="10" cumulative="true" />
+      </Goal>
+    </Objective>
 
   </TraitorMission>
+
+  <TraitorMission identifier="KillCrew">
+    <StartInfoText id="traitormissionstartmessage"/>
+
+    <Objective>
+      <Goal type="killtarget" job="engineer">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <Goal type="killtarget" job="mechanic">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <Goal type="killtarget" job="medicaldoctor">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <Goal type="killtarget" job="captain">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+  </TraitorMission>
+
+  <TraitorMission identifier="FloodSub">
+      <StartInfoText id="traitormissionstartmessage"/>
+      <Objective>
+        <Goal type="replaceinventory" containers="divingmask,divingsuit" replacements="weldingfueltank" percentage="20">
+          <InfoText id="traitorgoaltamperoxygeninfo" />
+        </Goal>
+
+        <Goal type="destroyitems" tag="oxygensource" percentage="20">
+          <InfoText id="traitorgoaldestroyitems" />
+        </Goal>
+      </Objective>
+
+      <Objective>
+        <Goal type="floodsub" percentage="75">
+          <InfoText id="traitorgoalfloodpercentofsub" />
+        </Goal>
+      </Objective>
+    </TraitorMission>
+
 
 
 </TraitorMissions>
