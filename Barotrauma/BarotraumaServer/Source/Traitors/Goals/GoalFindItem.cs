@@ -33,6 +33,10 @@ namespace Barotrauma
                 for (int i = 0; i < itemsCount; ++i)
                 {
                     var item = Item.ItemList[(i + startIndex) % itemsCount];
+                    if (!(Traitor.Character.Submarine?.IsEntityFoundOnThisSub(item, true) ?? true))
+                    {
+                        continue;
+                    }
                     if (item.GetComponent<ItemContainer>() != null && !item.OwnInventory.IsFull() && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
                     {
                         return item;
