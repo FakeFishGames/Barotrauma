@@ -10,6 +10,14 @@
         <Conditional currPowerConsumption="lt -10" />
       </StatusEffect>
     </PowerTransfer>
+    <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Electricity/FF_junctionboxAdditive.png" sourcerect="0,0,73,121" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+      <IsActive targetitemcomponent="PowerTransfer" overload="eq False" />
+    </LightComponent>
+    <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1.5">
+      <sprite texture="Content/Items/Electricity/FF_junctionboxAdditive.png" sourcerect="73,0,73,123" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+      <IsActive targetitemcomponent="PowerTransfer" overload="eq True" />
+    </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredSkill identifier="electrical" level="30" />
