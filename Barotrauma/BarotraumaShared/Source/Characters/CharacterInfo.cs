@@ -351,9 +351,9 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Failed to load the character config file from '{File}'");
                 return;
             }
-            CharacterConfigElement = doc.Root;
+            CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
             head = new HeadInfo();
-            HasGenders = doc.Root.GetAttributeBool("genders", false);
+            HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders)
             {
                 Head.gender = GetRandomGender();
