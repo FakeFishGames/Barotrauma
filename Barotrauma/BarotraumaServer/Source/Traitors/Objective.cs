@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,6 +18,8 @@ namespace Barotrauma
             public bool IsCompleted => pendingGoals.Count <= 0;
             public bool IsPartiallyCompleted => completedGoals.Count > 0;
             public bool IsStarted { get; private set; } = false;
+
+            public bool IsEnemy(Character character) => pendingGoals.Any(goal => goal.IsEnemy(character));
 
             public string InfoText { get; private set; }
 

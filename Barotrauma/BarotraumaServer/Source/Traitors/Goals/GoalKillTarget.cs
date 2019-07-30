@@ -17,6 +17,8 @@ namespace Barotrauma
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
+            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (!isCompleted && character == Target);
+
             public override void Update(float deltaTime)
             {
                 base.Update(deltaTime);
