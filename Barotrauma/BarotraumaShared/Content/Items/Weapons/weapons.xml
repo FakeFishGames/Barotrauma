@@ -247,7 +247,7 @@
     </ItemContainer>
   </Item>
 
-  <Item name="Flamer" identifier="flamer" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="Flamethrower text. REPLACE ME!" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="Flamer" identifier="flamer" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" description="An incendiary weapon that fires a stream of burning welding fuel." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
