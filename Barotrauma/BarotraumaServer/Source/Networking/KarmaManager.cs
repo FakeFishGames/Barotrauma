@@ -188,12 +188,13 @@ namespace Barotrauma
             bool isEnemy = target.AIController is EnemyAIController || target.TeamID != attacker.TeamID;
             if (GameMain.Server.TraitorManager != null)
             {
-                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == target))
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == target))
                 {
                     //traitors always count as enemies
                     isEnemy = true;
                 }
-                if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == attacker && t.TargetCharacter == target))
+                // TODO(xxx): Add interface into Goal that allows for querying whether traitor's goal allows attacking given target character.
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == attacker/* && t.TargetCharacter == target*/))
                 {
                     //target counts as an enemy to the traitor
                     isEnemy = true;
