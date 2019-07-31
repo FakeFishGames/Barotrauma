@@ -3221,7 +3221,10 @@
   <complete>Complete</complete>
 
   <!-- Traitor mission (new) -->
-  <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
+  <!--<traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>-->
+
+  <SabotageReactor_Assassinate_startmessage>The cult of the Husk calls you to service. When the sub is underway, search the storage lockers for your orders - they'll be hidden under some spare oxygen tanks.</SabotageReactor_Assassinate_startmessage>
+  
   <traitormissionfailuremessage>You have failed in your mission. As a result, the mission has been canceled and you are now part of the crew. Keep a low profile until you are contacted again.</traitormissionfailuremessage>
   <traitormissionsuccessmessage>You have successfully sabotaged the crew's efforts. An escape shuttle has been dispatched for you.</traitormissionsuccessmessage>
 
@@ -3259,6 +3262,10 @@
   <traitorgoaltamperrailguninfo>Load a dummy shell into all railgun loaders.</traitorgoaltamperrailguninfo>
   <traitorgoaltamperrailguninfomulti>Load [number] dummy shells into a railgun loader.</traitorgoaltamperrailguninfomulti>
   <traitorgoalescape>Escape to the nearby shuttle.</traitorgoalescape>
+
+  <traitorgoals_SabotageReactor_Assassinate>First, sabotage the reactor. Then only after you've achieved this goal, kill the captain, and escape the sub. The Husk commands you!</traitorgoals_SabotageReactor_Assassinate>
+  <traitorgoal_SabotagedReactor_Assassinate>Our plans begin to bloom, like the stalk of the blessed Husk. Now kill the captain.</traitorgoal_SabotagedReactor_Assassinate>
+
 
   <entityname.flamer>Flamer</entityname.flamer>
   <entitydescription.flamer>An incendiary weapon that fires a stream of burning welding fuel.</entitydescription.flamer>

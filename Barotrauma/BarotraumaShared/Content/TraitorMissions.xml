@@ -88,6 +88,9 @@
     </Objective>
   </TraitorMission>-->
 
+
+  <!-- Daniel's missions
+  
   <TraitorMission identifier="SabotageReactor">
     <StartInfoText id="traitormissionstartmessage"/>
 
@@ -157,8 +160,31 @@
           <InfoText id="traitorgoalfloodpercentofsub" />
         </Goal>
       </Objective>
-    </TraitorMission>
+    </TraitorMission> -->
+  
+  <TraitorMission identifier="SabotageReactor_Assassinate">
+    <StartInfoText id="SabotageReactor_Assassinate_startmessage"/>
 
+    <Objective>
+      <Goal type="finditem" identifier="oxygentank">
+        <InfoText id="traitorgoals_SabotageReactor_Assassinate" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <Goal type="sabotage" tag="reactor" threshold="20">
+        <InfoText id="traitorgoal_SabotagedReactor_Assassinate" />
+        <Modifier type="duration" duration="10" cumulative="true" />
+      </Goal>
+    </Objective>
+
+    <Objective>
+      <Goal type="killtarget" job="captain">
+        <InfoText id="traitorgoalkilltargetinfo" />
+      </Goal>
+    </Objective>
+
+  </TraitorMission>
 
 
 </TraitorMissions>
