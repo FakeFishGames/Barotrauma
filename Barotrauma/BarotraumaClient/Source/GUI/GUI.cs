@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -153,18 +154,36 @@ namespace Barotrauma
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GUI.graphicsDevice = graphicsDevice;
-            var uiStyles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle).ToList();
-            if (uiStyles.Count == 0)
+            var files = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle);
+            XElement selectedStyle = null;
+            foreach (var file in files)
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc?.Root == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.GetFirstChild();
+                    if (selectedStyle != null)
+                    {
+                        DebugConsole.NewMessage($"Overriding the ui styles with '{file}'", Color.Yellow);
+                    }
+                }
+                else if (selectedStyle != null)
+                {
+                    DebugConsole.ThrowError("Another ui style already loaded! Use <override></override> tags to override it.");
+                    break;
+                }
+                selectedStyle = mainElement;
+            }
+            if (selectedStyle == null)
             {
                 DebugConsole.ThrowError("No UI styles defined in the selected content package!");
-                return;
             }
-            else if (uiStyles.Count > 1)
+            else
             {
-                DebugConsole.ThrowError("Multiple UI styles defined in the selected content package! Selecting the first one.");
+                Style = new GUIStyle(selectedStyle, graphicsDevice);
             }
-
-            Style = new GUIStyle(uiStyles[0], graphicsDevice);
         }
 
         public static void LoadContent(bool loadSounds = true)
