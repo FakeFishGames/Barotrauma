@@ -22,6 +22,7 @@ namespace Barotrauma
         {
             LoadConfig(configPath);
         }
+
         public BackgroundCreatureManager(IEnumerable<string> files)
         {
             foreach(var file in files)
@@ -29,14 +30,26 @@ namespace Barotrauma
                 LoadConfig(file);
             }
         }
+
         private void LoadConfig(string configPath)
         {
             try
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configPath);
-                if (doc == null || doc.Root == null) return;
+                if (doc == null || doc.Root == null) { return; }
+                var mainElement = doc.Root;
+                if (mainElement.IsOverride())
+                {
+                    mainElement = doc.Root.GetFirstChild();
+                    prefabs.Clear();
+                    DebugConsole.NewMessage($"Overriding all background creatures with '{configPath}'", Color.Yellow);
+                }
+                else
+                {
+                    DebugConsole.NewMessage($"Loading background creatures from file '{configPath}'");
+                }
 
-                foreach (XElement element in doc.Root.Elements())
+                foreach (XElement element in mainElement.Elements())
                 {
                     prefabs.Add(new BackgroundCreaturePrefab(element));
                 };
@@ -46,6 +59,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", configPath), e);
             }
         }
+
         public void SpawnSprites(int count, Vector2? position = null)
         {
             activeSprites.Clear();
