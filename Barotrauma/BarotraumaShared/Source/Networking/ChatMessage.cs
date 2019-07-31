@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
 {
     public enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog
+        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog, ServerMessageBox
     }
 
     partial class ChatMessage

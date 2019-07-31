@@ -314,7 +314,16 @@ namespace Barotrauma
             return string.Format(text, args);     
         }
 
+        public static string FormatServerMessage(string serverMessage, string[] variables, string[] values)
+        {
+            return serverMessage + string.Join("", variables.Zip(values, (variable, value) => $"~{variable}={value}"));
+        }
+
+        static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9]+?)=(?<message>.*)$", RegexOptions.Compiled);
+        static readonly Regex reIsVariable = new Regex(@"^\[\S+\]$", RegexOptions.Compiled);
+
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
+        // Also: replacement=ServerMessage.Identifier1~[variable1]=value/ServerMessage.Identifier2~[variable2]=replacement
         public static string GetServerMessage(string serverMessage)
         {
             if (!textPacks.ContainsKey(Language))
@@ -328,6 +337,7 @@ namespace Barotrauma
             }
 
             string[] messages = serverMessage.Split('/');
+            var replacedMessages = new Dictionary<string, string>();
 
             bool translationsFound = false;
 
@@ -335,8 +345,18 @@ namespace Barotrauma
             {
                 for (int i = 0; i < messages.Length; i++)
                 {
-                    if (!IsServerMessageWithVariables(messages[i])) // No variables, try to translate
+                    Console.WriteLine($"MESSAGES[{i}]: {messages[i]}");
+                    if (!IsServerMessageWithVariables(messages[i]) && !messages[i].Contains('=')) // No variables, try to translate
                     {
+                        foreach (var replacedMessage in replacedMessages)
+                        {
+                            if (messages[i].Contains(replacedMessage.Key))
+                            {
+                                Console.WriteLine($"REPLACE({replacedMessage.Key} => {replacedMessage.Value}): {messages[i]} -> {messages[i].Replace(replacedMessage.Key, replacedMessage.Value)}");
+                            }
+                            messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
+                        }
+
                         if (messages[i].Contains(" ")) continue; // Spaces found, do not translate
                         string msg = Get(messages[i], true);
                         if (msg != null) // If a translation was found, otherwise use the original
@@ -347,7 +367,34 @@ namespace Barotrauma
                     }
                     else
                     {
-                        string[] messageWithVariables = messages[i].Split('~');
+                        var match = reReplacedMessage.Match(messages[i]);
+                        string messageVariable = null;
+                        if (match.Success)
+                        {
+                            messageVariable = match.Groups["variable"].ToString();
+                            messages[i] = match.Groups["message"].ToString();
+                            Console.WriteLine($"VARIABLE[{messageVariable}] = {messages[i]}");
+                        }
+
+                        foreach (var replacedMessage in replacedMessages)
+                        {
+                            if (messages[i].Contains(replacedMessage.Key))
+                            {
+                                Console.WriteLine($"REPLACE({replacedMessage.Key} => {replacedMessage.Value}): {messages[i]} -> {messages[i].Replace(replacedMessage.Key, replacedMessage.Value)}");
+                            }
+                            messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
+                        }
+
+
+                        string[] messageWithVariables/*;
+                        if (reIsVariable.IsMatch(messages[i]) && replacedMessages.TryGetValue(messages[i], out var value))
+                        {
+                            messageWithVariables = value.Split('~');
+                        }
+                        else
+                        {
+                            messageWithVariables */= messages[i].Split('~');
+                        //}
                         string msg = Get(messageWithVariables[0], true);
 
                         if (msg != null) // If a translation was found, otherwise use the original
@@ -355,7 +402,7 @@ namespace Barotrauma
                             messages[i] = msg;
                             translationsFound = true;
                         }
-                        else
+                        else if (messageVariable == null)
                         {
                             continue; // No translation found, probably caused by player input -> skip variable handling
                         }
@@ -366,6 +413,12 @@ namespace Barotrauma
                             string[] variableAndValue = messageWithVariables[j].Split('=');
                             messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
                         }
+
+                        if (messageVariable != null)
+                        {
+                            replacedMessages[messageVariable] = messages[i];
+                            messages[i] = null;
+                        }
                     }
                 }
 
@@ -374,7 +427,10 @@ namespace Barotrauma
                     string translatedServerMessage = string.Empty;
                     for (int i = 0; i < messages.Length; i++)
                     {
-                        translatedServerMessage += messages[i];
+                        if (messages[i] != null)
+                        {
+                            translatedServerMessage += messages[i];
+                        }
                     }
                     return translatedServerMessage;
                 }

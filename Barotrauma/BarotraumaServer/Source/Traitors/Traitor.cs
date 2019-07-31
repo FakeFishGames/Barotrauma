@@ -24,13 +24,13 @@ namespace Barotrauma
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            string greetingMessage = TextManager.GetWithVariables(Mission.StartText, new string[] {
+            string greetingMessage = TextManager.FormatServerMessage(Mission.StartText, new string[] {
                 "[codewords]", "[coderesponse]"
             }, new string[] {
                 codeWords, codeResponse
             });
             var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
-            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
+            var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.ServerMessageBox, null);
 
             Client traitorClient = server.ConnectedClients.Find(c => c.Character == Character);
             GameMain.Server.SendDirectChatMessage(greetingChatMsg, traitorClient);

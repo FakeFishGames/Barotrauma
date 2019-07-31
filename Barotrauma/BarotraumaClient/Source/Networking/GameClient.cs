@@ -866,6 +866,7 @@ namespace Barotrauma.Networking
         private void ReadTraitorObjective(NetIncomingMessage inc)
         {
             string objectiveText = inc.ReadString();
+            objectiveText = TextManager.GetServerMessage(objectiveText);
             if (Character != null)
             {
                 Character.IsTraitor = true;
