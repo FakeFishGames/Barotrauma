@@ -335,8 +335,8 @@
       <RequiredItem identifier="iron" />
     </Fabricate>
     <Deconstruct time="5">
-      <Item identifier="carbon" />
-      <Item identifier="iron" />
+      <Item identifier="carbon" copycondition="true"/>
+      <Item identifier="iron" copycondition="true"/>
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,128,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="8,343,108,54" depth="0.55" origin="0.5,0.5" />
@@ -360,8 +360,8 @@
       <RequiredItem identifier="aluminium" />
     </Fabricate>
     <Deconstruct time="5">
-      <Item identifier="aluminium" />
-      <Item identifier="titanium" />
+      <Item identifier="aluminium" copycondition="true"/>
+      <Item identifier="titanium" copycondition="true"/>
     </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,768,64,64" />
     <Sprite texture="CraftingElements1.png" sourcerect="125,407,111,55" depth="0.55" origin="0.5,0.5" />
