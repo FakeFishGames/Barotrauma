@@ -494,8 +494,8 @@
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="batterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
-        <Explosion range="60.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
-        <Conditional mass="lt 100"/>
+        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" underwaterbubble="false" camerashake="6.0" />
+        <Conditional mass="lt 60"/>
       </StatusEffect>
       <!-- fulgurium batteries cause 30 seconds of stun to anything with a mass smaller than 150 -->
       <StatusEffect type="OnUse" target="Character" stun="30.0" disabledeltatime="true">
@@ -504,8 +504,8 @@
         <sound file="Content/Items/Weapons/StunBaton3.ogg" range="500" />
         <sound file="Content/Items/Weapons/StunBaton4.ogg" range="500" />
         <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
-        <Explosion range="150.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
-        <Conditional mass="lt 100"/>
+        <Explosion range="100.0" force="0.5" shockwave="false" flames="false" smoke="true" underwaterbubble="false" camerashake="6.0" />
+        <Conditional mass="lt 150"/>
       </StatusEffect>
     </MeleeWeapon>
     <ItemContainer capacity="1" hideitems="true">
