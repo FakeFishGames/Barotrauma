@@ -320,7 +320,6 @@ namespace Barotrauma
         }
 
         static readonly Regex reReplacedMessage = new Regex(@"^(?<variable>[\[\].A-Za-z0-9]+?)=(?<message>.*)$", RegexOptions.Compiled);
-        static readonly Regex reIsVariable = new Regex(@"^\[\S+\]$", RegexOptions.Compiled);
 
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
         // Also: replacement=ServerMessage.Identifier1~[variable1]=value/ServerMessage.Identifier2~[variable2]=replacement
@@ -345,15 +344,15 @@ namespace Barotrauma
             {
                 for (int i = 0; i < messages.Length; i++)
                 {
-                    Console.WriteLine($"MESSAGES[{i}]: {messages[i]}");
+                    // Console.WriteLine($"MESSAGES[{i}]: {messages[i]}");
                     if (!IsServerMessageWithVariables(messages[i]) && !messages[i].Contains('=')) // No variables, try to translate
                     {
                         foreach (var replacedMessage in replacedMessages)
                         {
-                            if (messages[i].Contains(replacedMessage.Key))
+                            /*if (messages[i].Contains(replacedMessage.Key))
                             {
                                 Console.WriteLine($"REPLACE({replacedMessage.Key} => {replacedMessage.Value}): {messages[i]} -> {messages[i].Replace(replacedMessage.Key, replacedMessage.Value)}");
-                            }
+                            }*/
                             messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
                         }
 
@@ -373,28 +372,23 @@ namespace Barotrauma
                         {
                             messageVariable = match.Groups["variable"].ToString();
                             messages[i] = match.Groups["message"].ToString();
-                            Console.WriteLine($"VARIABLE[{messageVariable}] = {messages[i]}");
+                            // Console.WriteLine($"VARIABLE[{messageVariable}] = {messages[i]}");
                         }
 
                         foreach (var replacedMessage in replacedMessages)
                         {
+                            /*
                             if (messages[i].Contains(replacedMessage.Key))
                             {
                                 Console.WriteLine($"REPLACE({replacedMessage.Key} => {replacedMessage.Value}): {messages[i]} -> {messages[i].Replace(replacedMessage.Key, replacedMessage.Value)}");
                             }
+                            */
                             messages[i] = messages[i].Replace(replacedMessage.Key, replacedMessage.Value);
                         }
 
 
-                        string[] messageWithVariables/*;
-                        if (reIsVariable.IsMatch(messages[i]) && replacedMessages.TryGetValue(messages[i], out var value))
-                        {
-                            messageWithVariables = value.Split('~');
-                        }
-                        else
-                        {
-                            messageWithVariables */= messages[i].Split('~');
-                        //}
+                        string[] messageWithVariables = messages[i].Split('~');
+
                         string msg = Get(messageWithVariables[0], true);
 
                         if (msg != null) // If a translation was found, otherwise use the original
