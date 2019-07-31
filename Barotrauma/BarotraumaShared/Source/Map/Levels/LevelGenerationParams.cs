@@ -472,7 +472,7 @@ namespace Barotrauma
                     break;
                 }
 
-                foreach (XElement element in doc.Root.Elements())
+                foreach (XElement element in mainElement.Elements())
                 {
                     if (element.Name.ToString().ToLowerInvariant() == "biomes")
                     {
