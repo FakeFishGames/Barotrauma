@@ -19,6 +19,7 @@ namespace Barotrauma.Networking
         private class PendingClient
         {
             public string Name;
+            public int OwnerKey;
             public NetConnection Connection;
             public ConnectionInitialization InitializationStep;
             public double UpdateTime;
@@ -30,6 +31,7 @@ namespace Barotrauma.Networking
 
             public PendingClient(NetConnection conn)
             {
+                OwnerKey = 0;
                 Connection = conn;
                 InitializationStep = ConnectionInitialization.SteamTicketAndVersion;
                 Retries = 0;
@@ -127,6 +129,12 @@ namespace Barotrauma.Networking
         public override void Update()
         {
             if (netServer == null) { return; }
+
+            if (OnOwnerDetermined != null && OwnerConnection != null)
+            {
+                OnOwnerDetermined?.Invoke(OwnerConnection);
+                OnOwnerDetermined = null;
+            }
 
             netServer.ReadMessages(incomingLidgrenMessages);
             
@@ -281,8 +289,15 @@ namespace Barotrauma.Networking
                     LidgrenConnection conn = connectedClients.Find(c => c.NetConnection == inc.SenderConnection);
                     if (conn != null)
                     {
-                        disconnectMsg = $"ServerMessage.HasDisconnected~[client]={conn.Name}";
-                        Disconnect(conn, disconnectMsg);
+                        if (conn == OwnerConnection)
+                        {
+                            Close(DisconnectReason.ServerShutdown.ToString() + "/ Owner disconnected");
+                        }
+                        else
+                        {
+                            disconnectMsg = $"ServerMessage.HasDisconnected~[client]={conn.Name}";
+                            Disconnect(conn, disconnectMsg);
+                        }
                     }
                     else
                     {
@@ -313,6 +328,7 @@ namespace Barotrauma.Networking
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
                     string name = Client.SanitizeName(inc.ReadString());
+                    int ownKey = inc.ReadInt32();
                     UInt64 steamId = inc.ReadUInt64();
                     UInt16 ticketLength = inc.ReadUInt16();
                     byte[] ticket = inc.ReadBytes(ticketLength);
@@ -389,6 +405,7 @@ namespace Barotrauma.Networking
                             !requireSteamAuth)
                         {
                             pendingClient.Name = name;
+                            pendingClient.OwnerKey = ownKey;
                             pendingClient.InitializationStep = ConnectionInitialization.Success;
                         }
                         else
@@ -401,6 +418,7 @@ namespace Barotrauma.Networking
                             }
                             pendingClient.SteamID = steamId;
                             pendingClient.Name = name;
+                            pendingClient.OwnerKey = ownKey;
                             pendingClient.AuthSessionStarted = true;
                         }
                     }
@@ -486,6 +504,15 @@ namespace Barotrauma.Networking
                 newConnection.Status = NetworkConnectionStatus.Connected;
                 connectedClients.Add(newConnection);
                 pendingClients.Remove(pendingClient);
+
+                if (OwnerConnection == null &&
+                    IPAddress.IsLoopback(pendingClient.Connection.RemoteEndPoint.Address.MapToIPv4()) &&
+                    ownerKey != null && pendingClient.OwnerKey != 0 && pendingClient.OwnerKey == ownerKey)
+                {
+                    ownerKey = null;
+                    OwnerConnection = newConnection;
+                }
+
                 OnInitializationComplete?.Invoke(newConnection);
             }
 

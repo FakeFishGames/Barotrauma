@@ -339,7 +339,7 @@ namespace Barotrauma.Networking
             // Connect client, to endpoint previously requested from user
             try
             {
-                clientPeer.Start(translatedEndpoint);
+                clientPeer.Start(translatedEndpoint, ownerKey);
             }
             catch (Exception e)
             {

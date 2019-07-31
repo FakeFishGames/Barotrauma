@@ -45,7 +45,7 @@ namespace Barotrauma.Networking
             selfSteamID = Steam.SteamManager.GetSteamID();
         }
 
-        public override void Start(object endPoint)
+        public override void Start(object endPoint, int ownerKey)
         {
             if (isActive) { return; }
 
