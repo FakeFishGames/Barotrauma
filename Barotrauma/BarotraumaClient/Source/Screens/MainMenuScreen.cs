@@ -732,13 +732,22 @@ namespace Barotrauma
                     exeName = "DedicatedServer.exe";
                 }
 
-                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
-
                 string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
-                                   " -maxplayers " + maxPlayersBox.Text +
-                                   " -steamid " + Steam.SteamManager.GetSteamID();
+                                   " -maxplayers " + maxPlayersBox.Text;
+
+                int ownerKey = 0;
+
+                if (Steam.SteamManager.GetSteamID()!=0)
+                {
+                    arguments += " -steamid " + Steam.SteamManager.GetSteamID();
+                }
+                else
+                {
+                    ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
+                    arguments += " -ownerkey " + ownerKey;
+                }
 
                 string filename = exeName;
 #if LINUX || OSX

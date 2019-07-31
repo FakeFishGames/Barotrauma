@@ -30,7 +30,7 @@ namespace Barotrauma.Networking
             isActive = false;
         }
 
-        public override void Start(object endPoint)
+        public override void Start(object endPoint, int ownerKey)
         {
             steamAuthTicket = SteamManager.GetAuthSessionTicket();
             //TODO: wait for GetAuthSessionTicketResponse_t

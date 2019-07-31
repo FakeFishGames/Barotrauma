@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
 
         public NetworkConnection ServerConnection { get; protected set; }
 
-        public abstract void Start(object endPoint);
+        public abstract void Start(object endPoint, int ownerKey);
         public abstract void Close(string msg=null);
         public abstract void Update();
         public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod);
