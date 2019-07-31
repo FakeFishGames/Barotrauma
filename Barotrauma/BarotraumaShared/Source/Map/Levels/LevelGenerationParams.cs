@@ -468,7 +468,7 @@ namespace Barotrauma
                 }
                 else if (biomeElements.Any() || levelParamElements.Any())
                 {
-                    DebugConsole.ThrowError("Another level generation parameter file already loaded! Use <override></override> tags to override it.");
+                    DebugConsole.ThrowError($"Error in '{file}': Another level generation parameter file already loaded! Use <override></override> tags to override it.");
                     break;
                 }
 

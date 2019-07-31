@@ -203,7 +203,7 @@ namespace Barotrauma
                     {
                         if (string.IsNullOrWhiteSpace(identifier))
                         {
-                            DebugConsole.ThrowError($"No identifier defined for the affliction '{sourceElement.GetAttributeString("name", string.Empty)}' defined in {elementName}");
+                            DebugConsole.ThrowError($"No identifier defined for the affliction '{elementName}' in file '{filePath}'");
                             continue;
                         }
                         var duplicate = List.FirstOrDefault(a => a.Identifier == identifier);
@@ -211,12 +211,12 @@ namespace Barotrauma
                         {
                             if (isOverride)
                             {
-                                DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}'", Color.Yellow);
+                                DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{filePath}'", Color.Yellow);
                                 List.Remove(duplicate);
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName}");
+                                DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName} of '{filePath}'");
                                 continue;
                             }
                         }
@@ -253,11 +253,11 @@ namespace Barotrauma
                             {
                                 if (isOverride)
                                 {
-                                    DebugConsole.NewMessage($"Overriding the CPR settings.", Color.Yellow);
+                                    DebugConsole.NewMessage($"Overriding the CPR settings with '{filePath}'", Color.Yellow);
                                 }
                                 else
                                 {
-                                    DebugConsole.ThrowError($"CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
+                                    DebugConsole.ThrowError($"Error in '{filePath}': CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
                                     break;
                                 }
                             }

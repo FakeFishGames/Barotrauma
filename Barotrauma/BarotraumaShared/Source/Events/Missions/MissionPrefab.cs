@@ -80,12 +80,12 @@ namespace Barotrauma
                     {
                         if (allowOverride || sourceElement.IsOverride())
                         {
-                            DebugConsole.NewMessage($"Overriding a mission with the identifier '{identifier}'", Color.Yellow);
+                            DebugConsole.NewMessage($"Overriding a mission with the identifier '{identifier}' using the file '{file}'", Color.Yellow);
                             List.Remove(duplicate);
                         }
                         else
                         {
-                            DebugConsole.ThrowError($"Duplicate mission found with the identifier '{identifier}'. Add <override></override> tags as the parent of the mission definition to allow overriding.");
+                            DebugConsole.ThrowError($"Duplicate mission found with the identifier '{identifier}' in file '{file}'! Add <override></override> tags as the parent of the mission definition to allow overriding.");
                             continue;
                         }
                     }

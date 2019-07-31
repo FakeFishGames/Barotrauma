@@ -201,8 +201,9 @@ namespace Barotrauma
                     DebugConsole.NewMessage($"Overriding all location types with '{file}'", Color.Yellow);
                     List.Clear();
                 }
-                else
+                else if (List.Any())
                 {
+                    // Report only when loading additional content
                     DebugConsole.NewMessage($"Loading location types from file '{file}'");
                 }
                 foreach (XElement sourceElement in mainElement.Elements())

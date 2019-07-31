@@ -295,8 +295,9 @@ namespace Barotrauma
                     DebugConsole.NewMessage($"Overriding all level object prefabs with '{configPath}'", Color.Yellow);
                     list.Clear();
                 }
-                else
+                else if (list.Any())
                 {
+                    // Report only when loading additional content.
                     DebugConsole.NewMessage($"Loading level object prefabs from file '{configPath}'");
                 }
                 foreach (XElement element in mainElement.Elements())

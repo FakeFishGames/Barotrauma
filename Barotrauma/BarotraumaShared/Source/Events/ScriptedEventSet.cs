@@ -108,7 +108,7 @@ namespace Barotrauma
                 var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    DebugConsole.NewMessage("Overriding all random events.", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all random events using the file {configFile}", Color.Yellow);
                     List.Clear();
                 }
 

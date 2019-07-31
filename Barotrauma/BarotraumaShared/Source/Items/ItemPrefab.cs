@@ -735,7 +735,7 @@ namespace Barotrauma
 
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
-            if (HandleExisting(identifier, allowOverriding))
+            if (HandleExisting(identifier, allowOverriding, filePath))
             {
                 List.Add(this);
             }

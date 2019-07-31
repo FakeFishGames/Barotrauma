@@ -932,7 +932,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Duplicate character name '{name}' in {file}! Add [override][/override] tags as the parent of the character definition to override an existing character.");
+                    DebugConsole.ThrowError($"Duplicate character name '{name}' in '{file}'! Add <override></override> tags as the parent of the character definition to override an existing character.");
                     return false;
                 }
 

@@ -85,12 +85,12 @@ namespace Barotrauma.Particles
                     {
                         if (allowOverriding || sourceElement.IsOverride())
                         {
-                            DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}'", Color.Yellow);
+                            DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}' using the file '{configFile}'", Color.Yellow);
                             prefabs.Remove(name);
                         }
                         else
                         {
-                            DebugConsole.ThrowError($"Error in '{configFile}': Duplicate particle prefab '{name}' found! Each particle prefab must have a unique name. " +
+                            DebugConsole.ThrowError($"Error in '{configFile}': Duplicate particle prefab '{name}' found in '{configFile}'! Each particle prefab must have a unique name. " +
                                 "Use <override></override> tags to override prefabs.");
                             continue;
                         }

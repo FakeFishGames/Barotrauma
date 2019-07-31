@@ -90,7 +90,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Error in file {file}: Duplicate element with the idenfitier '{identifier}' found! All orders must have a unique identifier. Use <override></override> tags to override an order with the same identifier.");
+                                DebugConsole.ThrowError($"Error in file {file}: Duplicate element with the idenfitier '{identifier}' found in '{file}'! All orders must have a unique identifier. Use <override></override> tags to override an order with the same identifier.");
                                 continue;
                             }
                         }

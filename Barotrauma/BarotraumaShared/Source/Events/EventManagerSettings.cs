@@ -54,7 +54,7 @@ namespace Barotrauma
                 {
                     if (allowOverriding || subElement.IsOverride())
                     {
-                        DebugConsole.NewMessage($"Overriding the existing preset '{name}' in the event manager settings.", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the existing preset '{name}' in the event manager settings using the file '{file}'", Color.Yellow);
                         List.Remove(duplicate);
                     }
                     else

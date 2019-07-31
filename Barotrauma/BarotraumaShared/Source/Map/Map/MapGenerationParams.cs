@@ -189,7 +189,7 @@ namespace Barotrauma
                 }
                 else if (selectedElement != null)
                 {
-                    DebugConsole.ThrowError("Another map generation parameter file already loaded! Use <override></override> tags to override it.");
+                    DebugConsole.ThrowError($"Error in {file}: Another map generation parameter file already loaded! Use <override></override> tags to override it.");
                     break;
                 }
                 selectedElement = mainElement;

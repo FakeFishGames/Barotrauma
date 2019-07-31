@@ -291,7 +291,7 @@ namespace Barotrauma
             return (object)selected;            
         }
         
-        protected bool HandleExisting(string identifier, bool allowOverriding)
+        protected bool HandleExisting(string identifier, bool allowOverriding, string file = null)
         {
             if (!string.IsNullOrEmpty(identifier))
             {
@@ -300,13 +300,27 @@ namespace Barotrauma
                 {
                     if (allowOverriding)
                     {
-                        DebugConsole.NewMessage($"Overriding an existing map entity with the identifier '{identifier}'", Color.Yellow);
+                        string msg = $"Overriding an existing map entity with the identifier '{identifier}'";
+                        if (!string.IsNullOrWhiteSpace(file))
+                        {
+                            msg += $" using the file '{file}'";
+                        }
+                        msg += ".";
+                        DebugConsole.NewMessage(msg, Color.Yellow);
                         List.Remove(existingPrefab);
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
-                            "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
+                        if (!string.IsNullOrWhiteSpace(file))
+                        {
+                            DebugConsole.ThrowError($"Error in '{file}': Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
+                                "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError("Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
+                                "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
+                        }
                         return false;
                     }
                 }

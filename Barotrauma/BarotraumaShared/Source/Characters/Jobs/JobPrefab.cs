@@ -216,7 +216,7 @@ namespace Barotrauma
                 var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;            
                 if (doc.Root.IsOverride())
                 {
-                    DebugConsole.ThrowError("Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
+                    DebugConsole.ThrowError($"Error in '{filePath}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
                 }
                 foreach (XElement element in mainElement.Elements())
                 {
@@ -225,7 +225,7 @@ namespace Barotrauma
                         var job = new JobPrefab(element.FirstElement());
                         if (List.TryGetValue(job.Identifier, out JobPrefab duplicate))
                         {
-                            DebugConsole.NewMessage($"Overriding the job '{duplicate.Identifier}' with another.", Color.Yellow);
+                            DebugConsole.NewMessage($"Overriding the job '{duplicate.Identifier}' with another defined in '{filePath}'", Color.Yellow);
                             List.Remove(duplicate.Identifier);
                         }
                         List.Add(job.Identifier, job);
@@ -234,7 +234,7 @@ namespace Barotrauma
                     {
                         if (List.TryGetValue(element.GetAttributeString("identifier", "").ToLowerInvariant(), out JobPrefab duplicate))
                         {
-                            DebugConsole.ThrowError($"Duplicate job definition found for: '{duplicate.Identifier}'. Use the <override> XML element as the parent of job element's definition to override the existing job.");
+                            DebugConsole.ThrowError($"Error in '{filePath}': Duplicate job definition found for: '{duplicate.Identifier}'. Use the <override> XML element as the parent of job element's definition to override the existing job.");
                         }
                         else
                         {
