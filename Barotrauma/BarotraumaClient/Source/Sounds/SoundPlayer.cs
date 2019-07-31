@@ -116,10 +116,15 @@ namespace Barotrauma
             foreach (string soundFile in soundFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(soundFile);
-                if (doc != null && doc.Root != null)
+                if (doc?.Root == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    soundElements.AddRange(doc.Root.Elements());
+                    mainElement = doc.Root.FirstElement();
+                    DebugConsole.NewMessage($"Overriding all sounds with {soundFile}", Color.Yellow);
+                    soundElements.Clear();
                 }
+                soundElements.AddRange(mainElement.Elements());
             }
             
             SoundCount = 1 + soundElements.Count();
