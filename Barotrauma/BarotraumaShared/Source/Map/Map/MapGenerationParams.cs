@@ -177,7 +177,7 @@ namespace Barotrauma
             foreach (string file in files)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc?.Root == null) { return; }
+                if (doc?.Root == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
