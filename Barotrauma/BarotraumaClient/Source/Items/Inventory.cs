@@ -129,6 +129,7 @@ namespace Barotrauma
 
         protected float prevUIScale = UIScale;
         protected float prevHUDScale = GUI.Scale;
+        protected Point prevScreenResolution;
 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorHighlight;
@@ -148,7 +149,6 @@ namespace Barotrauma
         private Color movableFrameRectColor = new Color(60, 60, 60);
         private Rectangle movableFrameRect;
         private Point savedPosition, originalPos;
-        private bool resolutionChanged = false;
         private bool canMove = false;
 
         public class SlotReference
@@ -488,8 +488,8 @@ namespace Barotrauma
 
                 if (canMove)
                 {
-                    startX += (int)subInventory.savedPosition.X - subInventory.originalPos.X;
-                    startY += (int)subInventory.savedPosition.Y - subInventory.originalPos.Y;
+                    startX += subInventory.savedPosition.X - subInventory.originalPos.X;
+                    startY += subInventory.savedPosition.Y - subInventory.originalPos.Y;
                 }
 
                 float totalHeight = itemCapacity / columns * (subRect.Height + spacing.Y);
@@ -685,24 +685,20 @@ namespace Barotrauma
 
             if (container.MovableFrame && !IsInventoryHoverAvailable(Owner as Character, container))
             {
-                if (container.Inventory.movableFrameRect.Size == Point.Zero || resolutionChanged)
+                if (container.Inventory.movableFrameRect.Size == Point.Zero || GUI.HasSizeChanged(prevScreenResolution, prevUIScale, prevHUDScale))
                 {
-                    resolutionChanged = false;
+                    // Reset the movable container's values
+                    prevScreenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                    prevUIScale = UIScale;
+                    prevHUDScale = GUI.Scale;
                     int height = (int)(movableFrameRectHeight * UIScale);
                     container.Inventory.movableFrameRect = new Rectangle(container.Inventory.BackgroundFrame.X, container.Inventory.BackgroundFrame.Y - height, container.Inventory.BackgroundFrame.Width, height);
                     container.Inventory.originalPos = container.Inventory.savedPosition = container.Inventory.movableFrameRect.Center;
-                    GameMain.Instance.OnResolutionChanged += TriggerResolutionChanged;
                 }
 
                 //spriteBatch.Draw(EquipIndicator.Texture, container.Inventory.movableFrameRect, EquipIndicator.SourceRect, Color.White);
                 GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, movableFrameRectColor, true);
             }
-        }
-
-        private void TriggerResolutionChanged()
-        {
-            GameMain.Instance.OnResolutionChanged -= TriggerResolutionChanged;
-            resolutionChanged = true;
         }
 
         public static void UpdateDragging()
