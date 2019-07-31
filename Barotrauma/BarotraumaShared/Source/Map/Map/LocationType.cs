@@ -122,7 +122,7 @@ namespace Barotrauma
                         hireableJobs.Add(hireableJob);
                         break;
                     case "symbol":
-                        symbolSprite = new Sprite(subElement);
+                        symbolSprite = new Sprite(subElement, lazyLoad: true);
                         SpriteColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "changeto":
@@ -190,14 +190,50 @@ namespace Barotrauma
         public static void Init()
         {
             var locationTypeFiles = GameMain.Instance.GetFilesOfType(ContentType.LocationTypes);
-
             foreach (string file in locationTypeFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc?.Root == null) continue;                
-
-                foreach (XElement element in doc.Root.Elements())
+                if (doc?.Root == null) { continue; }    
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
                 {
+                    mainElement = doc.Root.GetFirstChild();
+                    DebugConsole.NewMessage($"Overriding all location types with '{file}'", Color.Yellow);
+                    List.Clear();
+                }
+                else
+                {
+                    DebugConsole.NewMessage($"Loading location types from file '{file}'");
+                }
+                foreach (XElement sourceElement in mainElement.Elements())
+                {
+                    var element = sourceElement;
+                    bool allowOverriding = false;
+                    if (sourceElement.IsOverride())
+                    {
+                        element = sourceElement.GetFirstChild();
+                        allowOverriding = true;
+                    }
+                    string identifier = element.GetAttributeString("identifier", null);
+                    if (string.IsNullOrWhiteSpace(identifier))
+                    {
+                        DebugConsole.ThrowError($"Error in '{file}': No identifier defined for {element.Name.ToString()}");
+                        continue;
+                    }
+                    var duplicate = List.FirstOrDefault(l => l.Identifier == identifier);
+                    if (duplicate != null)
+                    {
+                        if (allowOverriding)
+                        {
+                            List.Remove(duplicate);
+                            DebugConsole.NewMessage($"Overriding the location type with the identifier '{identifier}' with '{file}'", Color.Yellow);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Error in '{file}': Duplicate identifier defined with the identifier '{identifier}'");
+                            continue;
+                        }
+                    }
                     LocationType locationType = new LocationType(element);
                     List.Add(locationType);
                 }
