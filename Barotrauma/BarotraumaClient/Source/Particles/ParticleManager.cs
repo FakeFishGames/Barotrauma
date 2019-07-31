@@ -67,16 +67,36 @@ namespace Barotrauma.Particles
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null || doc.Root == null) { continue; }
 
-                foreach (XElement element in doc.Root.Elements())
+                bool allowOverriding = false;
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    if (prefabs.ContainsKey(element.Name.ToString()))
+                    mainElement = doc.Root.FirstElement();
+                    allowOverriding = true;
+                }
+
+                foreach (XElement sourceElement in mainElement.Elements())
+                {
+                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                    string name = element.Name.ToString().ToLowerInvariant();
+                    if (prefabs.TryGetValue(name, out ParticlePrefab duplicate))
                     {
-                        DebugConsole.ThrowError("Error in " + configFile + "! Each particle prefab must have a unique name.");
-                        continue;
+                        if (allowOverriding || sourceElement.IsOverride())
+                        {
+                            DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}'", Color.Yellow);
+                            prefabs.Remove(name);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Error in '{configFile}': Duplicate particle prefab '{name}' found! Each particle prefab must have a unique name. " +
+                                "Use <override></override> tags to override prefabs.");
+                            continue;
+                        }
+
                     }
-                    prefabs.Add(element.Name.ToString(), new ParticlePrefab(element));
+                    prefabs.Add(name, new ParticlePrefab(element));
                 }
             }         
         }

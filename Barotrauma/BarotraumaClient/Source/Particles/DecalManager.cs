@@ -14,19 +14,38 @@ namespace Barotrauma.Particles
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null || doc.Root == null) continue;
+                if (doc == null || doc.Root == null) { continue; }
 
-                foreach (XElement element in doc.Root.Elements())
+                bool allowOverriding = false;
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    if (prefabs.ContainsKey(element.Name.ToString()))
+                    mainElement = doc.Root.FirstElement();
+                    allowOverriding = true;
+                }
+
+                foreach (XElement sourceElement in mainElement.Elements())
+                {
+                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                    string name = element.Name.ToString().ToLowerInvariant();
+                    if (prefabs.TryGetValue(name, out DecalPrefab duplicate))
                     {
-                        DebugConsole.ThrowError("Error in " + configFile + "! Each decal prefab must have a unique name.");
-                        continue;
+                        if (allowOverriding || sourceElement.IsOverride())
+                        {
+                            DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}'", Color.Yellow);
+                            prefabs.Remove(name);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Error in '{configFile}': Duplicate decal prefab '{name}' found! Each decal prefab must have a unique name. " +
+                                "Use <override></override> tags to override prefabs.");
+                            continue;
+                        }
+
                     }
-                    prefabs.Add(element.Name.ToString(), new DecalPrefab(element));
+                    prefabs.Add(name, new DecalPrefab(element));
                 }
             }
-
         }
 
         public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull)
