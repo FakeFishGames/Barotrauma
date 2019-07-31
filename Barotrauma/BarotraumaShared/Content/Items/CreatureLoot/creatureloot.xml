@@ -99,7 +99,7 @@
       <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />
     </Holdable>
   </Item>
-  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light">
+  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light" scale="0.4">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,384,64,64" />
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="9,152,110,154" depth="0.6" />
     <Body radius="100" height="140" density="40" />
