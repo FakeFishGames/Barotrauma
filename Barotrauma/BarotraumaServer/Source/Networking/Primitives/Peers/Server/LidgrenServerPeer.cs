@@ -291,6 +291,8 @@ namespace Barotrauma.Networking
                     {
                         if (conn == OwnerConnection)
                         {
+                            DebugConsole.NewMessage("Owner disconnected: closing the server...");
+                            GameServer.Log("Owner disconnected: closing the server...", ServerLog.MessageType.ServerMessage);
                             Close(DisconnectReason.ServerShutdown.ToString() + "/ Owner disconnected");
                         }
                         else

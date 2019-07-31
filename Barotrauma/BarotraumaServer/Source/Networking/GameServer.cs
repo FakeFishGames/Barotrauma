@@ -136,12 +136,14 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                if (!ownerSteamId.HasValue || ownerSteamId.Value==0)
+                if (!ownerSteamId.HasValue || ownerSteamId.Value == 0)
                 {
+                    Log("Using Lidgren networking)", ServerLog.MessageType.ServerMessage);
                     serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
                 }
                 else
                 {
+                    Log("Using SteamP2P", ServerLog.MessageType.ServerMessage);
                     serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, serverSettings);
                 }
 
