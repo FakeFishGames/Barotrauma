@@ -461,7 +461,7 @@ namespace Barotrauma
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    mainElement = doc.Root.GetFirstChild();
+                    mainElement = doc.Root.FirstElement();
                     biomeElements.Clear();
                     levelParamElements.Clear();
                     DebugConsole.NewMessage($"Overriding the level generation parameters with '{file}'", Color.Yellow);

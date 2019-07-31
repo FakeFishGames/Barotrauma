@@ -197,7 +197,7 @@ namespace Barotrauma
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    mainElement = doc.Root.GetFirstChild();
+                    mainElement = doc.Root.FirstElement();
                     DebugConsole.NewMessage($"Overriding all location types with '{file}'", Color.Yellow);
                     List.Clear();
                 }
@@ -211,7 +211,7 @@ namespace Barotrauma
                     bool allowOverriding = false;
                     if (sourceElement.IsOverride())
                     {
-                        element = sourceElement.GetFirstChild();
+                        element = sourceElement.FirstElement();
                         allowOverriding = true;
                     }
                     string identifier = element.GetAttributeString("identifier", null);

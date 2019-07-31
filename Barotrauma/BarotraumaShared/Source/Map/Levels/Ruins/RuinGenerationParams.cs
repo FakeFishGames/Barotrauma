@@ -144,7 +144,7 @@ namespace Barotrauma.RuinGeneration
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    mainElement = doc.Root.GetFirstChild();
+                    mainElement = doc.Root.FirstElement();
                     paramsList.Clear();
                     DebugConsole.NewMessage("Overriding all ruin configuration parameters.", Color.Yellow);
                 }

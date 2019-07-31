@@ -213,7 +213,7 @@ namespace Barotrauma
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) return;
-                var mainElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;            
+                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;            
                 if (doc.Root.IsOverride())
                 {
                     DebugConsole.ThrowError("Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
@@ -222,7 +222,7 @@ namespace Barotrauma
                 {
                     if (element.IsOverride())
                     {
-                        var job = new JobPrefab(element.GetFirstChild());
+                        var job = new JobPrefab(element.FirstElement());
                         if (List.TryGetValue(job.Identifier, out JobPrefab duplicate))
                         {
                             DebugConsole.NewMessage($"Overriding the job '{duplicate.Identifier}' with another.", Color.Yellow);

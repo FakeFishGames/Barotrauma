@@ -163,7 +163,7 @@ namespace Barotrauma
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    mainElement = doc.Root.GetFirstChild();
+                    mainElement = doc.Root.FirstElement();
                     if (selectedStyle != null)
                     {
                         DebugConsole.NewMessage($"Overriding the ui styles with '{file}'", Color.Yellow);

@@ -40,7 +40,7 @@ namespace Barotrauma
                 var mainElement = doc.Root;
                 if (mainElement.IsOverride())
                 {
-                    mainElement = doc.Root.GetFirstChild();
+                    mainElement = doc.Root.FirstElement();
                     prefabs.Clear();
                     DebugConsole.NewMessage($"Overriding all background creatures with '{configPath}'", Color.Yellow);
                 }

@@ -351,7 +351,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Failed to load the character config file from '{File}'");
                 return;
             }
-            CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
+            CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             head = new HeadInfo();
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders)
@@ -412,7 +412,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Cannot find character config file " + File);
                 return;
             }
-            CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
+            CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders && gender == Gender.None)
             {

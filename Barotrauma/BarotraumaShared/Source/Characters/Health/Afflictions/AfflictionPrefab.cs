@@ -188,7 +188,7 @@ namespace Barotrauma
             {
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) continue;
-                var mainElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
+                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
                 if (doc.Root.IsOverride())
                 {
                     DebugConsole.ThrowError("Cannot override all afflictions, because many of them are required by the main game! Please try overriding them one by one.");
@@ -196,7 +196,7 @@ namespace Barotrauma
                 foreach (XElement element in mainElement.Elements())
                 {
                     bool isOverride = element.IsOverride();
-                    XElement sourceElement = isOverride ? element.GetFirstChild() : element;
+                    XElement sourceElement = isOverride ? element.FirstElement() : element;
                     string elementName = sourceElement.Name.ToString().ToLowerInvariant();
                     string identifier = sourceElement.GetAttributeString("identifier", null);
                     if (!elementName.Equals("cprsettings", StringComparison.OrdinalIgnoreCase))

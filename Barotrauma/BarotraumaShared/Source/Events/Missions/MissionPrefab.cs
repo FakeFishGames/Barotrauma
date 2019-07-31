@@ -68,12 +68,12 @@ namespace Barotrauma
                 if (mainElement.IsOverride())
                 {
                     allowOverride = true;
-                    mainElement = mainElement.GetFirstChild();
+                    mainElement = mainElement.FirstElement();
                 }
 
                 foreach (XElement sourceElement in mainElement.Elements())
                 {
-                    var element = sourceElement.IsOverride() ? sourceElement.GetFirstChild() : sourceElement;
+                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
                     var identifier = element.GetAttributeString("identifier", string.Empty);
                     var duplicate = List.Find(m => m.Identifier == identifier);
                     if (duplicate != null)

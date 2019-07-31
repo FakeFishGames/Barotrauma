@@ -174,7 +174,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to find a character config file at: " + file);
                 return;
             }
-            var mainElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
+            var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
             steeringManager = outsideSteering;
 

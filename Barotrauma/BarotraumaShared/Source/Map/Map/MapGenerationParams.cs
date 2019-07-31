@@ -181,7 +181,7 @@ namespace Barotrauma
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    mainElement = doc.Root.GetFirstChild();
+                    mainElement = doc.Root.FirstElement();
                     if (selectedElement != null)
                     {
                         DebugConsole.NewMessage($"Overriding the map generation parameters with '{file}'", Color.Yellow);

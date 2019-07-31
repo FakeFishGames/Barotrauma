@@ -713,7 +713,7 @@ namespace Barotrauma
             }
 
             var rootElement = doc.Root;
-            var mainElement = rootElement.IsOverride() ? rootElement.GetFirstChild() : rootElement;
+            var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
             SpeciesName = mainElement.GetAttributeString("name", "Unknown");
             displayName = TextManager.Get($"Character.{Path.GetFileName(Path.GetDirectoryName(file))}", true);
@@ -908,7 +908,7 @@ namespace Barotrauma
             XElement mainElement;
             if (allowOverriding && doc.Root.IsOverride())
             {
-                mainElement = doc.Root.GetFirstChild();
+                mainElement = doc.Root.FirstElement();
             }
             else
             {

@@ -291,7 +291,7 @@ namespace Barotrauma
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    mainElement = doc.Root.GetFirstChild();
+                    mainElement = doc.Root.FirstElement();
                     DebugConsole.NewMessage($"Overriding all level object prefabs with '{configPath}'", Color.Yellow);
                     list.Clear();
                 }

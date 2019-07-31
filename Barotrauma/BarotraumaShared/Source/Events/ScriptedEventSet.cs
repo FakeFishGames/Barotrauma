@@ -105,7 +105,7 @@ namespace Barotrauma
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null || doc.Root == null) { continue; }
 
-                var mainElement = doc.Root.IsOverride() ? doc.Root.GetFirstChild() : doc.Root;
+                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
                 if (doc.Root.IsOverride())
                 {
                     DebugConsole.NewMessage("Overriding all random events.", Color.Yellow);
