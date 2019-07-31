@@ -930,6 +930,7 @@ namespace Barotrauma
                 NewMessage("*****************", Color.Lime);
                 NewMessage("RESTARTING SERVER", Color.Lime);
                 NewMessage("*****************", Color.Lime);
+                GameServer.Log("Console command \"restart\" executed: closing the server...", ServerLog.MessageType.ServerMessage);
                 GameMain.Instance.CloseServer();
                 GameMain.Instance.StartServer();
             }));
