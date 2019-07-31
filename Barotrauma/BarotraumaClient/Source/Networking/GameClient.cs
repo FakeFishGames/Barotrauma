@@ -406,9 +406,25 @@ namespace Barotrauma.Networking
             {
                 if (reconnectBox == null)
                 {
+                    string serverDisplayName = serverName;
+                    if (string.IsNullOrEmpty(serverDisplayName)) { serverDisplayName = serverIP; }
+                    if (string.IsNullOrEmpty(serverDisplayName) && clientPeer?.ServerConnection is SteamP2PConnection steamConnection)
+                    {
+                        serverDisplayName = steamConnection.SteamID.ToString();
+                        if (SteamManager.IsInitialized)
+                        {
+                            string steamUserName = SteamManager.Instance.Friends.GetName(steamConnection.SteamID);
+                            if (!string.IsNullOrEmpty(steamUserName) && steamUserName != "[unknown]")
+                            {
+                                serverDisplayName = steamUserName;
+                            }
+                        }
+                    }
+                    if (string.IsNullOrEmpty(serverDisplayName)) { serverDisplayName = TextManager.Get("Unknown"); }
+
                     reconnectBox = new GUIMessageBox(
                         connectingText,
-                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", string.IsNullOrEmpty(serverName) ? serverIP : serverName),
+                        TextManager.GetWithVariable("ConnectingTo", "[serverip]", serverDisplayName),
                         new string[] { TextManager.Get("Cancel") });
                     reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
