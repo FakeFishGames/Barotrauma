@@ -2118,8 +2118,14 @@ namespace Barotrauma.Networking
 
         public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
         {
-            if (client == null) return;
-            if (client.Connection == OwnerConnection) return;
+            if (client == null || client.Connection == OwnerConnection) { return; }
+
+            var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
+            if (previousPlayer != null)
+            {
+                //reset karma to a neutral value, so if/when the ban is revoked the client wont get immediately punished by long karma again
+                previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
+            }
 
             string targetMsg = DisconnectReason.Banned.ToString();
             DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", targetMsg, reason);
