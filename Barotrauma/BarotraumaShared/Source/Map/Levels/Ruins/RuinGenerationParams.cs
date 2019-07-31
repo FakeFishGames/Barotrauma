@@ -140,8 +140,16 @@ namespace Barotrauma.RuinGeneration
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc?.Root == null) continue;
-                var newParams = new RuinGenerationParams(doc.Root)
+                if (doc?.Root == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    mainElement = doc.Root.GetFirstChild();
+                    paramsList.Clear();
+                    DebugConsole.NewMessage("Overriding all ruin configuration parameters.", Color.Yellow);
+                }
+                DebugConsole.NewMessage($"Adding new ruin configuration parameters from file '{configFile}'");
+                var newParams = new RuinGenerationParams(mainElement)
                 {
                     filePath = configFile
                 };
