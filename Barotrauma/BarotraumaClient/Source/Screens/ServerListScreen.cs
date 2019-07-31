@@ -338,7 +338,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            JoinServer(selectedServer.SteamID, selectedServer.ServerName);
+                            JoinServer(selectedServer.SteamID.ToString(), selectedServer.ServerName);
                         }
                     }
                     else if (!string.IsNullOrEmpty(ipBox.Text))
