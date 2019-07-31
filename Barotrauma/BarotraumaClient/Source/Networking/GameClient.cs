@@ -436,8 +436,7 @@ namespace Barotrauma.Networking
 
                 if (DateTime.Now > timeOut)
                 {
-                    clientPeer?.Close(Lidgren.Network.NetConnection.NoResponseMessage);
-                    clientPeer = null;
+                    OnDisconnect(Lidgren.Network.NetConnection.NoResponseMessage);
                     if (reconnectBox != null)
                     {
                         reconnectBox.Close(null, null);
