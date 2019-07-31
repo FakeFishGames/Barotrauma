@@ -185,16 +185,18 @@ namespace Barotrauma.Steam
                 string serverName = "";
                 UInt64 serverSteamId = 0;
 
-                //if (!string.) // FIX NEEDED
-                string[] nameSplit = s.Name.Split('|');
-                serverSteamId = SteamManager.SteamIDStringToUInt64(nameSplit[0]);
-                if (serverSteamId == 0)
+                if (!string.IsNullOrWhiteSpace(s.Name))
                 {
-                    serverName = s.Name;
-                }
-                else
-                {
-                    serverName = string.Join("|",nameSplit.Skip(1));
+                    string[] nameSplit = s.Name.Split('|');
+                    serverSteamId = SteamManager.SteamIDStringToUInt64(nameSplit[0]);
+                    if (serverSteamId == 0)
+                    {
+                        serverName = s.Name;
+                    }
+                    else
+                    {
+                        serverName = string.Join("|", nameSplit.Skip(1));
+                    }
                 }
                 
                 var serverInfo = new ServerInfo()
